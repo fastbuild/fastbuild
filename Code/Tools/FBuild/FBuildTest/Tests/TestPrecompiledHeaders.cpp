@@ -36,6 +36,10 @@ private:
     void CacheUniqueness() const;
     void CacheUniqueness2() const;
     void Deoptimization() const;
+    void PCHOnly() const;
+    void PCHReuse() const;
+    void PCHRedefinitionError() const;
+    void PCHNotDefinedError() const;
     void PrecompiledHeaderCacheAnalyze_MSVC() const;
     void TestPCH_DifferentObj_MSVC() const;
 
@@ -60,6 +64,10 @@ REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( CacheUniqueness )
     REGISTER_TEST( CacheUniqueness2 )
     REGISTER_TEST( Deoptimization )
+    REGISTER_TEST( PCHOnly )
+    REGISTER_TEST( PCHReuse )
+    REGISTER_TEST( PCHRedefinitionError )
+    REGISTER_TEST( PCHNotDefinedError )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestPCH_DifferentObj_MSVC )
         REGISTER_TEST( PrecompiledHeaderCacheAnalyze_MSVC )
@@ -498,6 +506,72 @@ void TestPrecompiledHeaders::Deoptimization() const
 
     // Make sure nothing was deoptimized
     TEST_ASSERT( GetRecordedOutput().FindI( "**Deoptimized**" ) == nullptr );
+}
+
+// PCHOnly
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::PCHOnly() const
+{
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHOnly/fbuild.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+    TEST_ASSERT( fBuild.Build( "PCHOnly" ) );
+
+    CheckStatsNode ( 1,      1,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,      1,      Node::OBJECT_LIST_NODE );
+}
+
+// PCHReuse
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::PCHReuse() const
+{
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse/fbuild.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+    TEST_ASSERT( fBuild.Build( "PCHReuse" ) );
+
+    CheckStatsNode ( 2,      2,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,      1,      Node::OBJECT_LIST_NODE );
+}
+
+// PCHRedefinitionError
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::PCHRedefinitionError() const
+{
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHRedefinitionError/fbuild.bff";
+
+    FBuild fBuild( options );
+
+    // Expect failure
+    TEST_ASSERT( fBuild.Initialize( nullptr ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1301 - ObjectList() - Precompiled Header target" ) &&
+                 GetRecordedOutput().Find( "has already been defined" ) );
+}
+
+// PCHNotDefinedError
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::PCHNotDefinedError() const
+{
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHNotDefinedError/fbuild.bff";
+
+    FBuild fBuild( options );
+
+    // Expect failure
+    TEST_ASSERT( fBuild.Initialize( nullptr ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1104 - ObjectList() - 'PCHOutputFile'" ) &&
+                 GetRecordedOutput().Find( " is not defined" ) );
 }
 
 // PrecompiledHeaderCacheAnalyze_MSVC

@@ -30,7 +30,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile() )
     REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
     REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
-    REFLECT( m_CompilerOutputPath,                  "CompilerOutputPath",               MetaPath() )
+    REFLECT( m_CompilerOutputPath,                  "CompilerOutputPath",               MetaOptional() + MetaPath() )
     REFLECT( m_CompilerOutputPrefix,                "CompilerOutputPrefix",             MetaOptional() )
     REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
     REFLECT( m_CompilerOutputKeepBaseExtension,     "CompilerOutputKeepBaseExtension",  MetaOptional() )
@@ -112,56 +112,99 @@ ObjectListNode::ObjectListNode()
         return false;
     }
 
-    // .PCHInputFile
-    const bool usingPCH = ( m_PCHInputFile.IsEmpty() == false );
+    // Creating a PCH?
+    const bool creatingPCH = ( m_PCHInputFile.IsEmpty() == false );
     Node * precompiledHeader = nullptr;
-    if ( usingPCH )
+    if ( creatingPCH )
     {
-        // .PCHOutput and .PCHOptions are required is .PCHInputFile is set
+        // .PCHOptions are required to create PCH
         if ( m_PCHOutputFile.IsEmpty() || m_PCHOptions.IsEmpty() )
         {
             Error::Error_1300_MissingPCHArgs( iter, function );
             return false;
         }
 
-        // Determine flags for PCH - TODO:B Move this into ObjectNode::Initialize
+        // Check PCH creation command line options
         AStackString<> pchObjectName; // TODO:A Use this
         const uint32_t pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
         if ( pchFlags & ObjectNode::FLAG_MSVC )
         {
-            if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags( iter, m_CompilerOptions, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
+            if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
             {
-                return false; // CheckMSVCPCHFlags will have emitted an error
+                return false; // CheckMSVCPCHFlags_Create will have emitted an error
             }
         }
 
-        // .PCHOutputFile
+        // PCH can be shared between ObjectLists, but must only be defined once
         if ( nodeGraph.FindNode( m_PCHOutputFile ) )
         {
-            // TODO:C - Allow existing definition if settings are identical for better multi-ObjectList use of PCH
             Error::Error_1301_AlreadyDefinedPCH( iter, function, m_PCHOutputFile.Get() );
             return false;
         }
 
+        // Create the PCH node
         precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
         if ( precompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
         }
+
         m_UsingPrecompiledHeader = true;
     }
 
-    // .CompilerOptions
-    const uint32_t objFlags = ObjectNode::DetermineFlags( compilerNode, m_CompilerOptions, false, usingPCH );
-    if ( ( objFlags & ObjectNode::FLAG_MSVC ) && ( objFlags & ObjectNode::FLAG_CREATING_PCH ) )
+    // Are wo compiling and files?
+    const bool compilingFiles = ( ( m_CompilerInputPath.IsEmpty() == false ) ||
+                                  ( m_CompilerInputFiles.IsEmpty() == false ) ||
+                                  ( m_CompilerInputUnity.IsEmpty() == false ) );
+    if ( compilingFiles )
     {
-        // must not specify use of precompiled header (must use the PCH specific options)
-        Error::Error_1303_PCHCreateOptionOnlyAllowedOnPCH( iter, function, "Yc", "CompilerOptions" );
-        return false;
-    }
-    if ( ((FunctionObjectList *)function)->CheckCompilerOptions( iter, m_CompilerOptions, objFlags ) == false )
-    {
-        return false; // CheckCompilerOptions will have emitted an error
+        // Using a PCH?
+        const bool usingPCH = ( m_PCHOutputFile.IsEmpty() == false );
+        const uint32_t objFlags = ObjectNode::DetermineFlags( compilerNode, m_CompilerOptions, false, usingPCH );
+        if ( usingPCH )
+        {
+            // Check for correct PCH usage options
+            if ( objFlags & ObjectNode::FLAG_MSVC )
+            {
+                if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Use( iter, m_CompilerOptions, objFlags ) == false )
+                {
+                    return false; // CheckMSVCPCHFlags_Use will have emitted an error
+                }
+            }
+
+            // Get the PCH node
+            if ( creatingPCH )
+            {
+                ASSERT( precompiledHeader ); // This ObjectList also should have created it above
+            }
+            else
+            {
+                // If we are not creating it, we must be re-using it from another object list
+                precompiledHeader = nodeGraph.FindNode( m_PCHOutputFile );
+                if ( ( precompiledHeader == nullptr ) ||
+                     ( precompiledHeader->GetType() != Node::OBJECT_NODE ) ||
+                     ( precompiledHeader->CastTo<ObjectNode>()->GetFlag( ObjectNode::FLAG_CREATING_PCH ) == false ) )
+                {
+                    // PCH was not defined
+                    Error::Error_1104_TargetNotDefined( iter, function, "PCHOutputFile", m_PCHOutputFile );
+                    return false;
+                }
+            }
+
+            m_UsingPrecompiledHeader = true;
+        }
+
+        // .CompilerOptions
+        if ( ((FunctionObjectList *)function)->CheckCompilerOptions( iter, m_CompilerOptions, objFlags ) == false )
+        {
+            return false; // CheckCompilerOptions will have emitted an error
+        }
+
+        // .CompilerOutputPath is required when compiling files (not needed if only creating a PCH)
+        if ( m_CompilerOutputPath.IsEmpty() )
+        {
+            Error::Error_1101_MissingProperty( iter, function, AStackString<>( "CompilerOutputPath" ) );
+        }
     }
 
     // .Preprocessor
