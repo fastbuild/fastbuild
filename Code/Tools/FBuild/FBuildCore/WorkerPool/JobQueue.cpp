@@ -239,20 +239,6 @@ void JobQueue::AddJobToBatch( Node * node )
     // mark as building
     node->SetState( Node::BUILDING );
 
-    // trivial build tasks are processed immediately and returned
-    if ( node->GetControlFlags() & Node::FLAG_TRIVIAL_BUILD )
-    {
-        Job localJob( node );
-        Node::BuildResult result = DoBuild( &localJob );
-        switch( result )
-        {
-            case Node::NODE_RESULT_FAILED:  node->SetState( Node::FAILED ); break;
-            case Node::NODE_RESULT_OK:      node->SetState( Node::UP_TO_DATE ); break;
-            default:                        ASSERT( false ); break;
-        }
-        return;
-    }
-
     m_LocalJobs_Staging.Append( node );
 }
 

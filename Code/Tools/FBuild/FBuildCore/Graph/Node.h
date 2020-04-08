@@ -86,8 +86,7 @@ public:
     enum ControlFlag
     {
         FLAG_NONE                   = 0x00,
-        FLAG_TRIVIAL_BUILD          = 0x01, // DoBuild is performed locally in main thread
-        FLAG_ALWAYS_BUILD           = 0x02, // DoBuild is always performed (for e.g. directory listings)
+        FLAG_ALWAYS_BUILD           = 0x01, // DoBuild is always performed (for e.g. directory listings)
     };
 
     enum StatsFlag

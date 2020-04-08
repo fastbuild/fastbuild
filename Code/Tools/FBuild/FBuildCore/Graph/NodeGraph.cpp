@@ -804,11 +804,11 @@ FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
     {
         AStackString< 512 > fullPath;
         CleanPath( fileName, fullPath );
-        node = FNEW( FileNode( fullPath, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD ) );
+        node = FNEW( FileNode( fullPath, Node::FLAG_ALWAYS_BUILD ) );
     }
     else
     {
-        node = FNEW( FileNode( fileName, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD) );
+        node = FNEW( FileNode( fileName, Node::FLAG_ALWAYS_BUILD ) );
     }
 
     AddNode( node );
@@ -1081,32 +1081,19 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
         for ( const Dependency * it = nodeToBuild->GetStaticDependencies().Begin(); it != end; ++it )
         {
             Node * n = it->GetNode();
-            if ( n->GetState() == Node::FAILED )
-            {
-                failedCount++;
-                continue;
-            }
-            else if ( n->GetState() == Node::UP_TO_DATE )
-            {
-                upToDateCount++;
-                continue;
-            }
-            if ( n->GetState() != Node::BUILDING )
+            if ( n->GetState() < Node::BUILDING )
             {
                 BuildRecurse( n, 0 );
+            }
 
-                // check for nodes that become up-to-date immediately (trivial build)
-                if ( n->GetState() == Node::UP_TO_DATE )
-                {
-                    upToDateCount++;
-                }
-
-                // Check for failure again propagatating overall state more quickly. This aallows failed
-                // builds to terminate moe quickly
-                if ( n->GetState() == Node::FAILED )
-                {
-                    failedCount++;
-                }
+            // check result of recursion (which may or may not be complete)
+            if ( n->GetState() == Node::UP_TO_DATE )
+            {
+                upToDateCount++;
+            }
+            else if ( n->GetState() == Node::FAILED )
+            {
+                failedCount++;
             }
         }
 
