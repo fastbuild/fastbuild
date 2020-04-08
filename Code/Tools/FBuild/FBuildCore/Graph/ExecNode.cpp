@@ -93,6 +93,7 @@ ExecNode::ExecNode()
                                               m_ExecInputExcludedFiles,
                                               m_ExecInputExcludePattern,
                                               m_ExecInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_ExecInputPattern,
                                               "ExecInputPath",
                                               execInputPaths ) )

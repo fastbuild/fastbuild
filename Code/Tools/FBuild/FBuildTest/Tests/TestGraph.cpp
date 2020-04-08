@@ -257,6 +257,7 @@ void TestGraph::TestDirectoryListNode() const
     DirectoryListNode::FormatName( testFolder,
                                    &patterns,
                                    true, // recursive
+                                   false, // Don't include read-only status in hash
                                    Array< AString >(), // excludePaths,
                                    Array< AString >(), // excludeFiles,
                                    Array< AString >(), // excludePatterns,

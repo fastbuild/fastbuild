@@ -137,8 +137,8 @@ void TestUnity::TestGenerate_NoRebuild() const
     // Check stats
     //                      Seen,   Built,  Type
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      2 );
+    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2,      1 );
 }
 
 // TestGenerate_NoRebuild_BFFChange
@@ -172,8 +172,8 @@ void TestUnity::TestGenerate_NoRebuild_BFFChange() const
     // Check stats
     //                      Seen,   Built,  Type
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      2 );
+    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2,      1 );
 }
 
 // BuildCompile
@@ -237,13 +237,13 @@ void TestUnity::TestCompile_NoRebuild() const
         numF++; // pch.cpp
     #endif
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
+    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
     CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 3+numF );
+    CheckStatsTotal( stats, 8+numF, 2+numF );
 }
 
 // TestCompile_NoRebuild_BFFChange
@@ -262,13 +262,13 @@ void TestUnity::TestCompile_NoRebuild_BFFChange() const
         numF++; // pch.cpp
     #endif
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
+    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
     CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 3+numF );
+    CheckStatsTotal( stats, 8+numF, 2+numF );
 }
 
 // TestGenerateFromExplicitList

@@ -106,7 +106,18 @@ XCodeProjectNode::XCodeProjectNode()
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
     Dependencies dirNodes( m_ProjectInputPaths.GetSize() );
-    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, m_PatternToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              function,
+                                              m_ProjectInputPaths,
+                                              m_ProjectInputPathsExclude,
+                                              m_ProjectFilesToExclude,
+                                              m_PatternToExclude,
+                                              true, // Resursive
+                                              false, // Don't include read-only status in hash
+                                              &m_ProjectAllowedFileExtensions,
+                                              "ProjectInputPaths",
+                                              dirNodes ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }

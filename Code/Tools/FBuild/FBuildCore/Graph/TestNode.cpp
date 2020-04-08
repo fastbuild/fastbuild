@@ -92,6 +92,7 @@ TestNode::TestNode()
                                               m_TestInputExcludedFiles,
                                               m_TestInputExcludePattern,
                                               m_TestInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_TestInputPattern,
                                               "TestInputPath",
                                               testInputPaths ) )

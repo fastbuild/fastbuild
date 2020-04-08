@@ -47,7 +47,7 @@ REFLECT_END( UnityNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 UnityNode::UnityNode()
-    : Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_ALWAYS_BUILD )
+    : Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_NONE )
     , m_InputPathRecurse( true )
     , m_InputPattern( 1, true )
     , m_Files( 0, true )
@@ -78,7 +78,18 @@ UnityNode::UnityNode()
     }
 
     Dependencies dirNodes( m_InputPaths.GetSize() );
-    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_ExcludePatterns, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              function,
+                                              m_InputPaths,
+                                              m_PathsToExclude,
+                                              m_FilesToExclude,
+                                              m_ExcludePatterns,
+                                              m_InputPathRecurse,
+                                              true, // Include Read-Only status change in hash
+                                              &m_InputPattern,
+                                              "UnityInputPath",
+                                              dirNodes ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }
@@ -133,7 +144,14 @@ UnityNode::~UnityNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult UnityNode::DoBuild( Job * /*job*/ )
 {
-    bool hasEmittedMessage = false; // print msg first time we actually save a file
+    // Emit build summary message
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        AStackString< 512 > buffer( "Uni: " );
+        buffer += GetName();
+        buffer += '\n';
+        FLOG_OUTPUT( buffer );
+    }
 
     // Ensure dest path exists
     // NOTE: Normally a node doesn't need to worry about this, but because
@@ -364,18 +382,6 @@ UnityNode::~UnityNode()
         // needs updating?
         if ( needToWrite )
         {
-            if ( hasEmittedMessage == false )
-            {
-                if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
-                {
-                    AStackString< 512 > buffer( "Uni: " );
-                    buffer += GetName();
-                    buffer += '\n';
-                    FLOG_OUTPUT( buffer );
-                }
-                hasEmittedMessage = true;
-            }
-
             if ( f.Open( unityName.Get(), FileStream::WRITE_ONLY ) == false )
             {
                 FLOG_ERROR( "Failed to create Unity file '%s'", unityName.Get() );
