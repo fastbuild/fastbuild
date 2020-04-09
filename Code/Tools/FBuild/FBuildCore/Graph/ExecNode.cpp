@@ -162,7 +162,7 @@ ExecNode::~ExecNode() = default;
 {
     if ( m_ExecAlways )
     {
-        FLOG_VERBOSE( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
+        FLOG_BUILD_REASON( "Need to build '%s' (ExecAlways = true)\n", GetName().Get() );
         return true;
     }
     return Node::DetermineNeedToBuild( deps );

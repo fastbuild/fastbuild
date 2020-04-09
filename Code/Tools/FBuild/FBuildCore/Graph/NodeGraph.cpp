@@ -1221,7 +1221,10 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     }
     else
     {
-        FLOG_VERBOSE( "Up-To-Date '%s'", nodeToBuild->GetName().Get() );
+        if ( FLog::ShowVerbose() )
+        {
+            FLOG_BUILD_REASON( "Up-To-Date '%s'\n", nodeToBuild->GetName().Get() );
+        }
         nodeToBuild->SetState( Node::UP_TO_DATE );
     }
 }

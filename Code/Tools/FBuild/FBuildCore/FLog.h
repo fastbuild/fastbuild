@@ -20,6 +20,16 @@ PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wgnu-zero-variadic-macro-arguments" ) // to
     } while ( false );                              \
     PRAGMA_DISABLE_POP_MSVC
 
+#define FLOG_BUILD_REASON( fmtString, ... )         \
+    do {                                            \
+        if ( FLog::ShowBuildReason() )              \
+        {                                           \
+            FLog::Output( fmtString, ##__VA_ARGS__ ); \
+        }                                           \
+    PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
+    } while ( false );                              \
+    PRAGMA_DISABLE_POP_MSVC
+
 #define FLOG_OUTPUT( fmtString, ... )               \
     do {                                            \
         FLog::Output( fmtString, ##__VA_ARGS__ );   \
@@ -66,6 +76,7 @@ class FLog
 {
 public:
     inline static bool ShowVerbose() { return s_ShowVerbose; }
+    inline static bool ShowBuildReason() { return s_ShowBuildReason; }
     inline static bool ShowErrors() { return s_ShowErrors; }
     inline static bool IsMonitorEnabled() { return s_MonitorEnabled; }
 
@@ -88,6 +99,7 @@ public:
 private:
     friend class FBuild;
     static inline void SetShowVerbose( bool showVerbose ) { s_ShowVerbose = showVerbose; }
+    static inline void SetShowBuildReason( bool showBuildReason ) { s_ShowBuildReason = showBuildReason; }
     static inline void SetShowErrors( bool showErrors ) { s_ShowErrors = showErrors; }
     static inline void SetShowProgress( bool showProgress ) { s_ShowProgress = showProgress; }
     static inline void SetMonitorEnabled( bool enabled ) { s_MonitorEnabled = enabled; }
@@ -97,6 +109,7 @@ private:
     static bool TracingOutputCallback( const char * message );
 
     static bool s_ShowVerbose;
+    static bool s_ShowBuildReason;
     static bool s_ShowErrors;
     static bool s_ShowProgress;
     static bool s_MonitorEnabled;

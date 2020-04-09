@@ -186,6 +186,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 m_AllowDistributed = true;
                 m_DistVerbose = true;
+                m_ShowBuildReason = true;
                 continue;
             }
             else if ( thisArg == "-fastcancel" )
@@ -335,6 +336,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-wait" )
             {
                 m_WaitMode = true;
+                continue;
+            }
+            else if ( thisArg == "-why" )
+            {
+                m_ShowBuildReason = true;
                 continue;
             }
             #if defined( __WINDOWS__ )
@@ -559,6 +565,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -vs               VisualStudio mode. Same as -ide.\n"
             " -wait             Wait for a previous build to complete before starting.\n"
             "                   (Slower than building both targets in one invocation).\n"
+            " -why              Show build reason for each item.\n"
             " -wrapper          (Windows) Spawn a sub-process to gracefully handle\n"
             "                   termination from Visual Studio.\n"
             "--------------------------------------------------------------------------------\n" );

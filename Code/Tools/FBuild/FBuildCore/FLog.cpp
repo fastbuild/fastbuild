@@ -36,6 +36,7 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ bool FLog::s_ShowVerbose = false;
+/*static*/ bool FLog::s_ShowBuildReason = false;
 /*static*/ bool FLog::s_ShowErrors = true;
 /*static*/ bool FLog::s_ShowProgress = false;
 /*static*/ bool FLog::s_MonitorEnabled = false;

@@ -168,7 +168,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
     // can also occur if explicitly dirtied in a previous build
     if ( m_Stamp == 0 )
     {
-        FLOG_VERBOSE( "Need to build '%s' (first time or dirtied)", GetName().Get() );
+        FLOG_BUILD_REASON( "Need to build '%s' (first time or dirtied)\n", GetName().Get() );
         return true;
     }
 
@@ -179,7 +179,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         if ( lastWriteTime == 0 )
         {
             // file is missing on disk
-            FLOG_VERBOSE( "Need to build '%s' (missing)", GetName().Get() );
+            FLOG_BUILD_REASON( "Need to build '%s' (missing)\n", GetName().Get() );
             return true;
         }
 
@@ -187,7 +187,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         {
             // on disk file doesn't match our file
             // (modified by some external process)
-            FLOG_VERBOSE( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")", GetName().Get(), m_Stamp, lastWriteTime );
+            FLOG_BUILD_REASON( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")\n", GetName().Get(), m_Stamp, lastWriteTime );
             return true;
         }
     }
@@ -207,7 +207,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         if ( stamp == 0 )
         {
             // file missing - this may be ok, but node needs to build to find out
-            FLOG_VERBOSE( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
+            FLOG_BUILD_REASON( "Need to build '%s' (dep missing: '%s')\n", GetName().Get(), n->GetName().Get() );
             return true;
         }
 
@@ -216,7 +216,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         const uint64_t oldStamp = dep.GetNodeStamp();
         if ( stamp != oldStamp )
         {
-            FLOG_VERBOSE( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
+            FLOG_BUILD_REASON( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")\n", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
             return true;
         }
     }

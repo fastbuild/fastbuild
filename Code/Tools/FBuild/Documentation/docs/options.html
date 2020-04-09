@@ -185,6 +185,10 @@
     <td>Wait for a previous build to complete before starting.</td>
   </tr>  
   <tr>
+    <td><a href="#why">-why</a></td>
+    <td>For each item that builds, show the trigger reason.</td>
+  </tr>
+  <tr>
     <td><a href="#wrapper">-wrapper</a></td>
     <td>Wrapper mode for Visual Studio. (Windows only)</td>
   </tr>
@@ -554,6 +558,12 @@ This allows for paralellization across both targets.</p>
 <p>Alternatively, the -wait command line arg allows you to queue the second build, so instead of failing, it will start 
 after the first build completes.  This will be slower than if both targets were invoked together 
 on the original command line.</p>
+</div>
+
+    <div class='newsitemheader' id="why">-why</div>
+    <div class='newsitembody'>
+<p>While building, the reason for each item being built is shown. This can be useful for diagnosing
+unexpected dependencies.</p>
 </div>
 
 
