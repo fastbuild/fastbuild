@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Troubleshooting - Cache</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='../home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>Cache Troubleshooting</h1>
+    <div id='alias' class='newsitemheader'>
+      Overview
+    </div>
+    <div class='newsitembody'>
+      <p>If you've followed the <a href="../features/caching.html">setup instructions</a> and still can't
+         seem to make it work, this guide is for you.</p>
+      <p>Try each each section in order.</p>
+      <table width="90%">
+        <tr><th>Section</th><th>Check that...</th></tr>
+        <tr><td><a href="#debugging">Debugging</a></a></td><td>... cache misses.</td></tr>
+        <tr><td><a href="#distributed">Distributed</a></a></td><td>... cache miss debugging across multiple computers.</td></tr>
+        <tr><td><a href="#CommandLineKey">CommandLineKey</a></a></td><td>... diffing inputs to <b>commandLineKey</b> cache misses.</td></tr>
+        <tr><td><a href="#PreprocessedSourceKey">PreprocessedSourceKey</a></a></td><td>... diffing inputs to <b>preprocessedSourceKey</b> cache misses.</td></tr>
+        <tr><td><a href="#ToolchainKey">ToolchainKey</a></a></td><td>... diffing inputs to <b>toolchainKey</b> cache misses.</td></tr>
+        <tr><td><a href="#PCHKey">PCHKey</a></a></td><td>... diffing inputs to <b>pchKey</b> cache misses.</td></tr>
+        <tr><td><a href="#LightCache">LightCache</a></td><td>... known issues with the <b>LightCache</b>.</tr>
+        <tr><td><a href="#GitHub">GitHub</a></td><td>... discussions about shared cache debugging.</tr>
+      </table>
+</div>
+
+<div id='debugging' class='newsitemheader'>Debugging Cache Misses</div>
+<div class='newsitembody'>
+  <h4>1. Enable <b>-cacheverbose</b></h4>
+     <p>You can use <b>-cacheverbose</b> to see what cache keys are being generated for each <b>object file</b> being compiled.</p>
+     <p>This is particularly useful when debugging <a href="#distributed">shared/distributed cache issues</a> across two (or more) different machines.</p>
+     <p>When combined with <b>-cache</b>, <b>-cacheread</b>, or <b>-cachewrite</b>, this will output additional information in the following format:</p>
+     <div class='output'>
+12>Obj: C:\p4\depot\tmp\x64-Debug\Tools\FBuild\FBuildCore\FBuildCore_Unity3.obj
+ - Cache Miss: 35 ms 'E90519265A1719FA_3AC8C650_6C30067E14AB4880-0000000000000000.A'
+
+12>Obj: C:\p4\depot\tmp\x64-Release\TestFramework\TestFramework_Unity1.obj
+ - Cache Store: 157 ms (Store: 150 ms - Compress: 1 ms) (Compressed: 25684 - Uncompressed: 51916) 'BA4252DC6B561582_97907E3A_6C30067E14AB4880-0000000000000000.A'
+
+10>Obj: C:\p4\depot\tmp\x64-Profile\Core\Core_Unity1.obj <CACHE>
+    - Cache Hit: 81 ms (Retrieve: 73 ms - Decompress: 1 ms) (Compressed: 452262 - Uncompressed: 1044600) 'FD9B691EF509B98D_3409CAAE_6C30067E14AB4880-0000000000000000.A'
+     </div>
+     <p>Each line contains the cache keys, which are comprised of hashes of the various cache inputs, formatted by the following function:</p>
+    <div class='output'>
+// GetCacheId
+//------------------------------------------------------------------------------
+/*static*/ void ICache::GetCacheId( const uint64_t preprocessedSourceKey,
+                                    const uint32_t commandLineKey,
+                                    const uint64_t toolChainKey,
+                                    const uint64_t pchKey,
+                                    AString & outCacheId )
+{
+    // cache version - bump if cache format is changed
+    static const char cacheVersion( 'A' );
+
+    // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
+    outCacheId.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%c",
+                        preprocessedSourceKey,
+                        commandLineKey,
+                        toolChainKey,
+                        pchKey,
+                        cacheVersion );
+}
+    </div>
+    <p>TODO: Describe what each key "means".</p>
+    <ul>
+        <li><a href="#PreprocessedSourceKey">preprocessedSourceKey</a></li>
+        <li><a href="#CommandLineKey">commandLineKey</a></li>
+        <li><a href="#ToolchainKey">toolchainKey</a></li>
+        <li><a href="#PCHKey">pchKey</a>
+    </ul>
+</div>
+
+<div id='distributed' class='newsitemheader'>Debugging Shared/Distributed Cache Misses</div>
+<div class='newsitembody'>
+    <p>By comparing the cache keys generated by <a href="#debugging">-cacheverbose</a> from two machines you expect to match, you can see which components differ.</p>
+    <p><b>If <i>any</i> of these components differ between computers, then they will not be able to resolve each-other(s) shared cache entries!</b></p>
+
+    <p>For each differing component, you'll want to investigate the source of the difference using the techniques described below:</p>
+    <ul>
+        <li><a href="#CommandLineKey">commandLineKey</a></li>
+        <li><a href="#PreprocessedSourceKey">preprocessedSourceKey</a></li>
+        <li><a href="#ToolchainKey">toolchainKey</a></li>
+        <li><a href="#PCHKey">pchKey</a>
+    </ul>
+
+    <p>Note that there are two distinct scenarios that can occur when keys to the shared cache are generated differently between computers:</p>
+    <ul>
+        <p><b>1. If all computers are allowed to write to the shared cache:</b></p>
+        <ul>
+            <p>In this situation, each computer will independently write its own cache entries, and will "hit" on its own entries.</p>
+            <p>However, other machines will not be able to hit on those cache entries, eliminating most of the benefit of using a shared network cache!</p>
+            <p>That is, <b>PC A</b> will see no benefit to <b>PC B</b> storing an entry into the cache, and vice-versa.</p>
+            <p>But, this situation can be difficult to recognize, because after storing new cache entries, a given machine will be able to "hit" on those entries again in the future.</p>
+            <p>So, this scenario won't result in any machines <i>never</i> having cache hits, which makes it more difficult to detect.</p>
+        </ul>
+        <p><b>2. When only a subset of computers are allowed to write to the shared cache:</b></p>
+        <ul>
+            <p>If only a subset of computers are allowed to write to the shared cache, then the computers with <b>read-only</b> access will fail to get cache hits.</p>
+        </ul>
+    </ul>
+</div>
+
+<div id='CommandLineKey' class='newsitemheader'>Diffing Inputs To <b>commandLineKey</b> Cache Misses</div>
+<div class='newsitembody'>
+    <h4><b>A.</b> Using <b>-showcmds</b> together with <b>-cacheverbose</b> to diff <b>commandLineKey</b> inputs:</h4>
+    <p><b>-showcmds</b> will output the build command lines which are used to build the cached object files (and which are hashed into <b>commandLineKey</b>(s)).</p>
+
+    <p><b>NOTE: LightCache</b> won't emit the command-line for preprocessing. You may want to disable <b>LightCache</b> before attempting this diagnostic.</p>
+
+    <h4>1. On machine A, perform a write-only operation:</h4>
+    <div class='output'>fbuild.exe [target] -cachewrite -cacheverbose -showcmds -clean > CACHE_WRITE_INFO.TXT</div>
+    <h4>2. On machine(s) B., C., ..., perform a read-only operation:</h4>
+    <div class='output'>fbuild.exe [target] -cacheread -cacheverbose -showcmds -clean > CACHE_READ_INFO.TXT</div>
+    <p><b>3.</b> After gathering the .TXT files for each machine, find and compare the two <b>Obj:</b> invocations for a given <b>object file</b> with a diff tool.</p>
+
+    <p>
+        If the <b>commandLineKey</b>(s) match, then diffing the command lines output by <b>-showcmds</b> for a given <b>object file</b> should not result in any differences.
+        However, if any <b>commandLineKey</b>(s) do differ between computers, then diffing the command lines should reveal where the discrepancies are coming from, and give you a lead on fixing the issue(s) preventing cache hits.
+    </p>
+</div>
+
+<div id='PreprocessedSourceKey' class='newsitemheader'>Diffing Inputs To <b>preprocessedSourceKey</b> Cache Misses</div>
+<div class='newsitembody'>
+    <p>If you have verified that the <b>commandLineKey</b> matches for a given <b>object file</b>, but the <b>preprocessedSourceKey</b> differs, then this section can help you.</p>
+    <p><b>1.</b> Following the same procedure used to diff <b><a href="#CommandLineKey">commandLineKey</a></b> inputs:</p>
+    <p><b>2.</b> Copy a given command line found via <b>-showcmds</b>, and execute it on each computer you wish to compare.</p>
+    <ul>
+        <p>For example:</p>
+        <div class='output'>cl.exe someCpp.cpp someObj.obj /E > CACHE_OBJ_PP_SOURCE.TXT</div>
+        <li>NOTE: If you are using <b>LightCache</b>, you will need to manually append <b>/E</b></li>
+    </ul>
+    <p><b>3.</b> After gathering the .TXT files from each machine, compare the preprocessed source with a diff tool.</p>
+    <p>This should reveal any discrepancies causing cache-key mismatch between the two machines.</p>
+</div>
+
+<div id='ToolchainKey' class='newsitemheader'>Diffing Inputs To <b>toolchainKey</b> Cache Misses</div>
+<div class='newsitembody'>
+    <p>If you have verified that the <b>commandLineKey</b> matches for a given <b>object file</b>, but the <b>toolchainKey</b> differs, then this section can help you.</p>
+    <p>TODO: Elaborate on the best way to root-cause <b>toolchainKey</b> mismatches. Diff <b>.bff</b> files?</p>
+</div>
+
+<div id='PCHKey' class='newsitemheader'>Diffing Inputs To <b>pchKey</b> Cache Misses</div>
+<div class='newsitembody'>
+    <p>If you have verified that the <b>commandLineKey</b> matches for a given <b>object file</b>, but the <b>pchKey</b> differs, then this section can help you.</p>
+    <p>TODO: Elaborate on the best way to root-cause <b>pchKey</b> mismatches.</p>
+    <p>Follow the instructions for <b><a href="#PreprocessedSourceKey">preprocessedSourceKey</a></b> mismatches but applied to the <b>.pch</b> file preprocessing?</p>
+</div>
+
+<div id='LightCache' class='newsitemheader'>Known LightCache Issues</div>
+<div class='newsitembody'>
+  <p><b>1.</b> <b>LightCache</b> currently doesn't emit the command line used for pre-processing.</p>
+  <p><b>2.</b> When executing a <b>LightCache -showcmds</b> derived command with the desire to see the preprocessed output, you'll need to manually append <b>/E</b>.</p>
+  <p><b>3.</b> <b>BUG: LightCache</b> occasionally randomly generates different cache keys for the same inputs.</p>
+    <ul><li><a href="https://github.com/fastbuild/fastbuild/pull/716">https://github.com/fastbuild/fastbuild/pull/716</a></li></ul>
+</div>
+
+<div id='GitHub' class='newsitemheader'>GitHub Discussions about Shared Cache Debugging</div>
+<div class='newsitembody'>
+  <p><b>1.</b> <a href="https://github.com/fastbuild/fastbuild/issues/727">https://github.com/fastbuild/fastbuild/issues/727</a> - Unexpected Shared Network Cache Misses</p>
+</div>
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+</body>
+</html>
