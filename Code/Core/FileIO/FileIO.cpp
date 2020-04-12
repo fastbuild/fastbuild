@@ -1105,7 +1105,7 @@
 
         // recurse into directories
         WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchLimitToDirectories, nullptr, 0 );
+        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
         if ( hFind == INVALID_HANDLE_VALUE)
         {
             return;
@@ -1128,24 +1128,6 @@
                 pathCopy += findData.cFileName;
                 pathCopy += NATIVE_SLASH;
                 GetFilesRecurseEx( pathCopy, patterns, results );
-            }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
-        FindClose( hFind );
-
-        // do files in this directory
-        pathCopy.SetLength( baseLength );
-        pathCopy += '*';
-        hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
-        {
-            return;
-        }
-
-        do
-        {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-            {
                 continue;
             }
 
