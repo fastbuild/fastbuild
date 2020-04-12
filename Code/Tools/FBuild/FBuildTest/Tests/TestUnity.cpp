@@ -472,6 +472,10 @@ void TestUnity::LinkMultiple() const
         CheckStatsNode ( 1,     1,      Node::EXE_NODE );
     }
 
+    #if defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #endif
+
     // Isolate one of the files
     {
         // Make file writeable so it is isolated
@@ -489,6 +493,10 @@ void TestUnity::LinkMultiple() const
         CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
         CheckStatsNode ( 1,     1,      Node::EXE_NODE );
     }
+
+    #if defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #endif
 
     // De-Isolate one of the files
     {
@@ -564,6 +572,10 @@ void TestUnity::LinkMultiple_InputFiles() const
         CheckStatsNode ( 1,     1,      Node::EXE_NODE );
     }
 
+    #if defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #endif
+
     // Isolate one of the files
     {
         // Make file writeable so it is isolated
@@ -581,6 +593,10 @@ void TestUnity::LinkMultiple_InputFiles() const
         CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
         CheckStatsNode ( 1,     1,      Node::EXE_NODE );
     }
+
+    #if defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #endif
 
     // De-Isolate one of the files
     {
