@@ -395,15 +395,12 @@ ObjectListNode::~ObjectListNode() = default;
             }
 
             // files from unity to build individually
-            const Array< UnityNode::FileAndOrigin > & isolatedFiles = un->GetIsolatedFileNames();
-            for ( Array< UnityNode::FileAndOrigin >::Iter it = isolatedFiles.Begin();
-                  it != isolatedFiles.End();
-                  it++ )
+            for ( const UnityIsolatedFile & isolatedFile : un->GetIsolatedFileNames() )
             {
-                Node * n = nodeGraph.FindNode( it->GetName() );
+                Node * n = nodeGraph.FindNode( isolatedFile.GetFileName() );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( it->GetName() );
+                    n = nodeGraph.CreateFileNode( isolatedFile.GetFileName() );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -412,8 +409,7 @@ ObjectListNode::~ObjectListNode() = default;
                 }
 
                 // create the object that will compile the above file
-                const AString & baseDir = it->GetDirListOrigin() ? it->GetDirListOrigin()->GetPath() : AString::GetEmpty();
-                if ( CreateDynamicObjectNode( nodeGraph, n, baseDir, false, true ) == false )
+                if ( CreateDynamicObjectNode( nodeGraph, n, isolatedFile.GetDirListOriginPath(), false, true ) == false )
                 {
                     return false; // CreateDynamicObjectNode will have emitted error
                 }

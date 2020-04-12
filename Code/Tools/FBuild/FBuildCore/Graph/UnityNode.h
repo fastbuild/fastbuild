@@ -12,6 +12,25 @@
 //------------------------------------------------------------------------------
 class DirectoryListNode;
 class Function;
+class UnityFileAndOrigin;
+
+// UnityIsolatedFile
+//------------------------------------------------------------------------------
+class UnityIsolatedFile : public Struct
+{
+    REFLECT_STRUCT_DECLARE( UnityIsolatedFile )
+public:
+    UnityIsolatedFile();
+    UnityIsolatedFile( const AString & fileName, const DirectoryListNode * dirListOrigin );
+    ~UnityIsolatedFile();
+
+    inline const AString &      GetFileName() const             { return m_FileName; }
+    inline const AString &      GetDirListOriginPath() const    { return m_DirListOriginPath; }
+
+protected:
+    AString m_FileName;
+    AString m_DirListOriginPath;
+};
 
 // UnityNode
 //------------------------------------------------------------------------------
@@ -28,49 +47,19 @@ public:
     static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }
 
     inline const Array< AString > & GetUnityFileNames() const { return m_UnityFileNames; }
-
-    // For each file isolated from Unity, we track the original dir list (if available)
-    // This allows ObjectList/Library to create a sensible (relative) output dir.
-    class FileAndOrigin
-    {
-    public:
-        FileAndOrigin()
-            : m_Info( nullptr )
-            , m_DirListOrigin( nullptr )
-            , m_Isolated( false )
-        {}
-
-        FileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
-            : m_Info( info )
-            , m_DirListOrigin( dirListOrigin )
-            , m_Isolated( false )
-        {}
-
-        inline const AString &              GetName() const             { return m_Info->m_Name; }
-        inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
-        inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
-
-        inline bool                         IsIsolated() const          { return m_Isolated; }
-        inline void                         SetIsolated( bool value )   { m_Isolated = value; }
-
-
-    protected:
-        FileIO::FileInfo *      m_Info;
-        DirectoryListNode *     m_DirListOrigin;
-        bool                    m_Isolated;
-    };
-    inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
+    inline const Array< UnityIsolatedFile > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
     void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
 private:
+    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     virtual bool IsAFile() const override { return false; }
 
-    bool GetFiles( Array< FileAndOrigin > & files );
+    bool GetFiles( Array< UnityFileAndOrigin > & files );
     bool GetIsolatedFilesFromList( Array< AString > & files ) const;
-    void FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles );
+    void FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array< UnityIsolatedFile > & isolatedFiles );
 
     // Exposed properties
     Array< AString > m_InputPaths;
@@ -89,12 +78,14 @@ private:
     uint32_t m_MaxIsolatedFiles;
     AString m_IsolateListFile;
     Array< AString > m_ExcludePatterns;
-    Array< FileAndOrigin > m_IsolatedFiles;
     Array< AString > m_PreBuildDependencyNames;
 
     // Temporary data
-    Array< AString > m_UnityFileNames;
     Array< FileIO::FileInfo* > m_FilesInfo;
+
+    // Internal data persisted between builds
+    Array< UnityIsolatedFile > m_IsolatedFiles;
+    Array< AString > m_UnityFileNames;
 };
 
 //------------------------------------------------------------------------------

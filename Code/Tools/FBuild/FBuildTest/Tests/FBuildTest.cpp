@@ -107,6 +107,16 @@ void FBuildTest::LoadFileContentsAsString( const char * fileName, AString & outS
     TEST_ASSERT( f.ReadBuffer( outString.Get(), fileSize ) );
 }
 
+// MakeFile
+//------------------------------------------------------------------------------
+void FBuildTest::MakeFile( const char * fileName, const char * fileContents ) const
+{
+    FileStream f;
+    TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
+    const size_t len = AString::StrLen( fileContents );
+    TEST_ASSERT( f.WriteBuffer( fileContents, len ) == len );
+}
+
 // Parse
 //------------------------------------------------------------------------------
 void FBuildTest::Parse( const char * fileName, bool expectFailure ) const

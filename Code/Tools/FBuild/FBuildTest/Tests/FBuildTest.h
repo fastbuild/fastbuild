@@ -26,7 +26,7 @@ protected:
     virtual void PreTest() const override;
     virtual void PostTest( bool pased ) const override;
 
-    // helpers to clear and check for generated files
+    // helpers to manage generated files
     void EnsureFileDoesNotExist( const char * fileName ) const;
     void EnsureFileDoesNotExist( const AString & fileName ) const { EnsureFileDoesNotExist( fileName.Get() ); }
     void EnsureFileExists( const char * fileName ) const;
@@ -36,6 +36,7 @@ protected:
     void EnsureDirExists( const char * dirPath ) const;
     void EnsureDirExists( const AString & dirPath ) const { EnsureDirExists( dirPath.Get() ); }
     void LoadFileContentsAsString( const char * fileName, AString & outString ) const;
+    void MakeFile( const char * fileName, const char * fileContents ) const;
 
     // Helpers to invoke builds or parse bff files
     void Parse( const char * fileName, bool expectFailure = false ) const;

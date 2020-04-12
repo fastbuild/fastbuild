@@ -42,6 +42,8 @@ private:
     void IsolateListFile() const;
     void ClangStaticAnalysis() const;
     void ClangStaticAnalysis_InjectHeader() const;
+    void LinkMultiple() const;
+    void LinkMultiple_InputFiles() const;
 };
 
 // Register Tests
@@ -60,6 +62,8 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( IsolateListFile )
     REGISTER_TEST( ClangStaticAnalysis )
     REGISTER_TEST( ClangStaticAnalysis_InjectHeader )
+    REGISTER_TEST( LinkMultiple )
+    REGISTER_TEST( LinkMultiple_InputFiles )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -412,4 +416,188 @@ void TestUnity::ClangStaticAnalysis_InjectHeader() const
     TEST_ASSERT( GetRecordedOutput().Find( "Division by zero" ) );
     TEST_ASSERT( GetRecordedOutput().Find( "Address of stack memory" ) );
 }
+
+// LinkMultiple
+//------------------------------------------------------------------------------
+void TestUnity::LinkMultiple() const
+{
+    // Test multiple Unity items with an additional loose file.
+    // Ensure that builds occur as expected when items are isolated, and
+    // that linker is passed correct objects can links successfully.
+
+    // Code files generated/used by this test
+    const char* fileA = "../tmp/Test/Unity/LinkMultiple/Generated/A/a.cpp";
+    const char* fileB = "../tmp/Test/Unity/LinkMultiple/Generated/B/b.cpp";
+    const char* main = "../tmp/Test/Unity/LinkMultiple/Generated/main.cpp";
+    const char* fileAContents = "void FunctionA() {}\n";
+    const char* fileBContents = "void FunctionB() {}\n";
+    const char* mainContents = "extern void FunctionA();\n"
+                               "extern void FunctionB();\n"
+                               "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
+
+    // Cleanup from previous runs (if files exist)
+    FileIO::SetReadOnly( fileA, false );
+    FileIO::SetReadOnly( fileB, false );
+    EnsureFileDoesNotExist( fileA );
+    EnsureFileDoesNotExist( fileB );
+
+    // Create files
+    EnsureDirExists( "../tmp/Test/Unity/LinkMultiple/Generated/A/" );
+    EnsureDirExists( "../tmp/Test/Unity/LinkMultiple/Generated/B/" );
+    MakeFile( fileA, fileAContents );
+    MakeFile( fileB, fileBContents );
+    MakeFile( main, mainContents );
+
+    // Make files in unity read-only so they are not isolated
+    FileIO::SetReadOnly( fileA, true );
+    FileIO::SetReadOnly( fileB, true );
+
+    // Common options
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/LinkMultiple/fbuild.bff";
+    const char * dbFile = "../tmp/Test/Unity/LinkMultiple/fbuild.fdb";
+
+    // Compile
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
+        CheckStatsNode ( 3,     3,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    }
+
+    // Isolate one of the files
+    {
+        // Make file writeable so it is isolated
+        FileIO::SetReadOnly( fileA, false );
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    }
+
+    // De-Isolate one of the files
+    {
+        // Make file read-only so it is put back in Unity
+        FileIO::SetReadOnly( fileA, true );
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    }
+}
+
+// LinkMultiple_InputFiles
+//------------------------------------------------------------------------------
+void TestUnity::LinkMultiple_InputFiles() const
+{
+    // Same as LinkMultiple but with files explicitily specified instead o
+    // discovering them via directory listings
+
+    // Code files generated/used by this test
+    const char* fileA = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/A/a.cpp";
+    const char* fileB = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/B/b.cpp";
+    const char* main = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/main.cpp";
+    const char* fileAContents = "void FunctionA() {}\n";
+    const char* fileBContents = "void FunctionB() {}\n";
+    const char* mainContents = "extern void FunctionA();\n"
+                               "extern void FunctionB();\n"
+                               "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
+
+    // Cleanup from previous runs (if files exist)
+    FileIO::SetReadOnly( fileA, false );
+    FileIO::SetReadOnly( fileB, false );
+    EnsureFileDoesNotExist( fileA );
+    EnsureFileDoesNotExist( fileB );
+
+    // Create files
+    EnsureDirExists( "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/A/" );
+    EnsureDirExists( "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/B/" );
+    MakeFile( fileA, fileAContents );
+    MakeFile( fileB, fileBContents );
+    MakeFile( main, mainContents );
+
+    // Make files in unity read-only so they are not isolated
+    FileIO::SetReadOnly( fileA, true );
+    FileIO::SetReadOnly( fileB, true );
+
+    // Common options
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/LinkMultiple_InputFiles/fbuild.bff";
+    const char * dbFile = "../tmp/Test/Unity/LinkMultiple_InputFiles/fbuild.fdb";
+
+    options.m_NumWorkerThreads = 1; // DO NOT SUBMIT
+
+    // Compile
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
+        CheckStatsNode ( 3,     3,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    }
+
+    // Isolate one of the files
+    {
+        // Make file writeable so it is isolated
+        FileIO::SetReadOnly( fileA, false );
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
+        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    }
+
+    // De-Isolate one of the files
+    {
+        // Make file read-only so it is put back in Unity
+        FileIO::SetReadOnly( fileA, true );
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
+        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    }
+}
+
 //------------------------------------------------------------------------------

@@ -42,7 +42,62 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT( m_PrecompiledHeader,       "UnityPCH",                             MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_Hidden,                  "Hidden",                               MetaOptional() )
+
+    // Internal state
+    REFLECT_ARRAY( m_UnityFileNames,    "UnityFileNames",                       MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT_ARRAY_OF_STRUCT( m_IsolatedFiles, "IsolatedFiles", UnityIsolatedFile, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( UnityNode )
+
+REFLECT_STRUCT_BEGIN( UnityIsolatedFile, Struct, MetaNone() )
+    REFLECT( m_FileName,                "FileName",                             MetaNone() )
+    REFLECT( m_DirListOriginPath,       "DirListOriginPath",                    MetaNone() )
+REFLECT_END( UnityIsolatedFile )
+
+// CONSTRUCTOR (UnityIsolatedFile)
+//------------------------------------------------------------------------------
+UnityIsolatedFile::UnityIsolatedFile() = default;
+
+// CONSTRUCTOR (UnityIsolatedFile)
+//------------------------------------------------------------------------------
+UnityIsolatedFile::UnityIsolatedFile( const AString & fileName, const DirectoryListNode * dirListOrigin )
+    : m_FileName( fileName )
+    , m_DirListOriginPath( dirListOrigin ? dirListOrigin->GetPath() : AString:: GetEmpty() )
+{
+}
+
+// UnityFileAndOrigin
+//------------------------------------------------------------------------------
+class UnityFileAndOrigin
+{
+public:
+    UnityFileAndOrigin()
+        : m_Info( nullptr )
+        , m_DirListOrigin( nullptr )
+        , m_Isolated( false )
+    {}
+
+    UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
+        : m_Info( info )
+        , m_DirListOrigin( dirListOrigin )
+        , m_Isolated( false )
+    {}
+
+    inline const AString &              GetName() const             { return m_Info->m_Name; }
+    inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
+    inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
+
+    inline bool                         IsIsolated() const          { return m_Isolated; }
+    inline void                         SetIsolated( bool value )   { m_Isolated = value; }
+
+protected:
+    FileIO::FileInfo *      m_Info;
+    DirectoryListNode *     m_DirListOrigin;
+    bool                    m_Isolated;
+};
+
+// DESTRUCTOR (FileAndOrigin)
+//------------------------------------------------------------------------------
+UnityIsolatedFile::~UnityIsolatedFile() = default;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -134,10 +189,31 @@ UnityNode::UnityNode()
 UnityNode::~UnityNode()
 {
     // cleanup extra FileInfo structures
-    for ( auto* info : m_FilesInfo )
+    // (normally cleaned up at end of DoBuild, but we need to clean up here
+    // if there was an error)
+    for ( FileIO::FileInfo * info : m_FilesInfo )
     {
         FDELETE info;
     }
+}
+
+
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool UnityNode::DetermineNeedToBuild( const Dependencies & deps ) const
+{
+    // Of IsolateWriteableFiles is enabled and files come from a directory list
+    // then we'll be triggered for a build and don't need any special logic.
+    // However, if we directly depend on files, the Stamp for those files only
+    // contains the modification time and thus won't trigger a build by themselves.
+    // To work around this, we force an evaluation in that case.
+    // It would be good to eliminate this special case in the future.
+    if ( m_IsolateWritableFiles && ( m_Files.IsEmpty() == false ) )
+    {
+        FLOG_BUILD_REASON( "Need to build '%s' (UnityInputIsolateWritableFiles = true & UnityInputFiles not empty)\n", GetName().Get() );
+        return true;
+    }
+    return Node::DetermineNeedToBuild( deps );
 }
 
 // DoBuild
@@ -153,6 +229,10 @@ UnityNode::~UnityNode()
         FLOG_OUTPUT( buffer );
     }
 
+    // Clear lists of files as we'll regenerate them
+    m_UnityFileNames.Destruct();
+    m_IsolatedFiles.Destruct();
+
     // Ensure dest path exists
     // NOTE: Normally a node doesn't need to worry about this, but because
     // UnityNode outputs files that do not match the node-name (and doesn't
@@ -166,7 +246,7 @@ UnityNode::~UnityNode()
     m_UnityFileNames.SetCapacity( m_NumUnityFilesToCreate );
 
     // get the files
-    Array< FileAndOrigin > files( 4096, true );
+    Array< UnityFileAndOrigin > files( 4096, true );
 
     if ( !GetFiles( files ) )
     {
@@ -221,7 +301,7 @@ UnityNode::~UnityNode()
         // for floating point imprecision
 
         // determine allocation of includes for this unity file
-        Array< FileAndOrigin > filesInThisUnity( 256, true );
+        Array< UnityFileAndOrigin > filesInThisUnity( 256, true );
         uint32_t numIsolated( 0 );
         const bool lastUnity = ( i == ( m_NumUnityFilesToCreate - 1 ) );
         while ( ( remainingInThisUnity > 0.0f ) || lastUnity )
@@ -267,9 +347,9 @@ UnityNode::~UnityNode()
         }
 
         // write allocation of includes for this unity file
-        const FileAndOrigin * const end = filesInThisUnity.End();
+        const UnityFileAndOrigin * const end = filesInThisUnity.End();
         size_t numFilesActuallyIsolatedInThisUnity( 0 );
-        for ( const FileAndOrigin * file = filesInThisUnity.Begin(); file != end; ++file )
+        for ( const UnityFileAndOrigin * file = filesInThisUnity.Begin(); file != end; ++file )
         {
             // files which are modified can optionally be excluded from the unity
             bool isolateThisFile = noUnity;
@@ -285,7 +365,7 @@ UnityNode::~UnityNode()
             if ( isolateThisFile )
             {
                 // disable compilation of this file (comment it out)
-                m_IsolatedFiles.Append( *file );
+                m_IsolatedFiles.EmplaceBack( file->GetName(), file->GetDirListOrigin() );
                 numFilesActuallyIsolatedInThisUnity++;
             }
 
@@ -405,12 +485,19 @@ UnityNode::~UnityNode()
     ASSERT( stamps.GetSize() == m_NumUnityFilesToCreate );
     m_Stamp = xxHash::Calc64( &stamps[ 0 ], stamps.GetSize() * sizeof( uint64_t ) );
 
+    // cleanup extra FileInfo structures
+    for ( FileIO::FileInfo * info : m_FilesInfo )
+    {
+        FDELETE info;
+    }
+    m_FilesInfo.Destruct();
+
     return NODE_RESULT_OK;
 }
 
 // GetFiles
 //------------------------------------------------------------------------------
-bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
+bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
 {
     bool ok = true;
 
@@ -507,15 +594,15 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 
 // FilterForceIsolated
 //------------------------------------------------------------------------------
-void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles )
+void UnityNode::FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array< UnityIsolatedFile > & isolatedFiles )
 {
     if ( m_FilesToIsolate.IsEmpty() )
     {
         return;
     }
 
-    FileAndOrigin* writeIt = files.Begin();
-    const FileAndOrigin * readIt = writeIt;
+    UnityFileAndOrigin * writeIt = files.Begin();
+    const UnityFileAndOrigin * readIt = writeIt;
 
     for ( ; readIt != files.End(); ++readIt )
     {
@@ -531,7 +618,7 @@ void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< File
 
         if ( isolate )
         {
-            isolatedFiles.Append( *readIt );
+            isolatedFiles.EmplaceBack( readIt->GetName(), readIt->GetDirListOrigin() );
         }
         else if ( writeIt != readIt )
         {
