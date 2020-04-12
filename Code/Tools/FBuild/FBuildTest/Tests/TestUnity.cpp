@@ -33,6 +33,7 @@ private:
     void TestGenerate() const;
     void TestGenerate_NoRebuild() const;
     void TestGenerate_NoRebuild_BFFChange() const;
+    void DetectDeletedUnityFiles() const;
     void TestCompile() const;
     void TestCompile_NoRebuild() const;
     void TestCompile_NoRebuild_BFFChange() const;
@@ -54,6 +55,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( TestGenerate )           // clean build of unity files
     REGISTER_TEST( TestGenerate_NoRebuild ) // check nothing rebuilds
     REGISTER_TEST( TestGenerate_NoRebuild_BFFChange ) // check nothing rebuilds after a BFF change
+    REGISTER_TEST( DetectDeletedUnityFiles )
     REGISTER_TEST( TestCompile )            // compile a library using unity inputs
     REGISTER_TEST( TestCompile_NoRebuild )  // check nothing rebuilds
     REGISTER_TEST( TestCompile_NoRebuild_BFFChange )  // check nothing rebuilds after a BFF change
@@ -181,6 +183,45 @@ void TestUnity::TestGenerate_NoRebuild_BFFChange() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
     CheckStatsTotal( stats, 2,      1 );
+}
+
+// DetectDeletedUnityFiles
+//------------------------------------------------------------------------------
+void TestUnity::DetectDeletedUnityFiles() const
+{
+    // Ensure that a generated Unity file that has been deleted is
+    // detected and regenerated
+    
+    EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity1.cpp" );
+    EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity2.cpp" );
+
+    // Build
+    FBuildTestOptions options;
+    options.m_ShowBuildReason = true;
+    BuildGenerate( options, false ); // don't laod DB
+
+    EnsureFileExists( "../tmp/Test/Unity/Unity1.cpp" );
+    EnsureFileExists( "../tmp/Test/Unity/Unity2.cpp" );
+
+    // Delete one of the generated files
+    EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity2.cpp" );
+
+    // Build again
+    FBuildStats stats = BuildGenerate( options, true ); // load DB
+
+    // File should have been recreated
+    EnsureFileExists( "../tmp/Test/Unity/Unity2.cpp" );
+
+    // Ensure build has the expected cause
+    TEST_ASSERT( GetRecordedOutput().Find( "Need to build" ) &&
+                 GetRecordedOutput().Find( "(Output" ) &&
+                 GetRecordedOutput().Find( "missing)" ) );
+
+    // Check stats
+    //                      Seen,   Built,  Type
+    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2,      2 );
 }
 
 // BuildCompile

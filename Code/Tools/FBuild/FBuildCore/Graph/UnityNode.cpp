@@ -251,6 +251,19 @@ UnityNode::~UnityNode()
         FLOG_BUILD_REASON( "Need to build '%s' (UnityInputIsolateWritableFiles = true & UnityInputFiles not empty)\n", GetName().Get() );
         return true;
     }
+
+    // Check if any output files have been deleted. This special case is required
+    // because we output multiple files. It would be good to eliminate this in
+    // the future.
+    for ( const AString & unityFileName : m_UnityFileNames )
+    {
+        if ( FileIO::FileExists( unityFileName.Get() ) == false )
+        {
+            FLOG_BUILD_REASON( "Need to build '%s' (Output '%s' missing)\n", GetName().Get(), unityFileName.Get() );
+            return true;
+        }
+    }
+
     return Node::DetermineNeedToBuild( deps );
 }
 
