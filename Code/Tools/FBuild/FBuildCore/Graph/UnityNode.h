@@ -51,11 +51,33 @@ public:
 
     void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
-private:
+protected:
     virtual bool DetermineNeedToBuild( const Dependencies & deps ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     virtual bool IsAFile() const override { return false; }
+
+    class UnityFileAndOrigin
+    {
+    public:
+        UnityFileAndOrigin();
+        UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin );
+
+        inline const AString &              GetName() const             { return m_Info->m_Name; }
+        inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
+        inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
+
+        inline bool                         IsIsolated() const          { return m_Isolated; }
+        inline void                         SetIsolated( bool value )   { m_Isolated = value; }
+
+        bool operator < ( const UnityFileAndOrigin & other ) const;
+
+    protected:
+        FileIO::FileInfo *      m_Info              = nullptr;
+        DirectoryListNode *     m_DirListOrigin     = nullptr;
+        uint32_t                m_LastSlashIndex    = 0;
+        bool                    m_Isolated          = false;
+    };
 
     bool GetFiles( Array< UnityFileAndOrigin > & files );
     bool GetIsolatedFilesFromList( Array< AString > & files ) const;

@@ -8,6 +8,7 @@
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
@@ -44,6 +45,7 @@ private:
     void ClangStaticAnalysis_InjectHeader() const;
     void LinkMultiple() const;
     void LinkMultiple_InputFiles() const;
+    void SortFiles() const;
 };
 
 // Register Tests
@@ -64,6 +66,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( ClangStaticAnalysis_InjectHeader )
     REGISTER_TEST( LinkMultiple )
     REGISTER_TEST( LinkMultiple_InputFiles )
+    REGISTER_TEST( SortFiles )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -614,6 +617,150 @@ void TestUnity::LinkMultiple_InputFiles() const
         CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
         CheckStatsNode ( 1,     1,      Node::EXE_NODE );
     }
+}
+
+// SortFiles
+//------------------------------------------------------------------------------
+void TestUnity::SortFiles() const
+{
+    // Ensure sorting logic works as expected:
+    //  - case insensitive (consistent regardless of file system or OS)
+    //  - files before directories
+
+    // Helper which allows access to UnityNode sorting functionality
+    class Helper : public UnityNode
+    {
+    public:
+        ~Helper()
+        {
+            for ( FileIO::FileInfo * info : m_FileInfos )
+            {
+                FDELETE info;
+            }
+        }
+
+        void AddFile( const char * fileName )
+        {
+            // Create dummy FileIO::FileInfo structure
+            FileIO::FileInfo * info = FNEW( FileIO::FileInfo );
+            info->m_Name = fileName; // Only the name is important
+            #if defined( __WINDOWS__ )
+                info->m_Name.Replace( '/', '\\' ); // Allow test to specify unix style slashes
+            #endif
+            m_FileInfos.Append( info );
+
+            // Add entry
+            m_Files.EmplaceBack( info, nullptr );
+        }
+
+        void Sort()
+        {
+            m_Files.Sort();
+            #if defined( __WINDOWS__ )
+                for ( FileIO::FileInfo * info : m_FileInfos )
+                {
+                    info->m_Name.Replace( '\\', '/' ); // Allow test to specify unix style slashes
+                }
+            #endif
+        }
+
+        const AString & operator[] ( size_t index ) const { return m_Files[ index ].GetName(); }
+
+        Array< UnityNode::UnityFileAndOrigin >  m_Files;
+        Array< FileIO::FileInfo * >             m_FileInfos;
+    };
+
+    // Helper marcos to reduce boilerplate code
+    #define SORT( ... )                                                         \
+    {                                                                           \
+        const char * inputs[] = { __VA_ARGS__ };                                \
+        Helper h;                                                               \
+        for ( const char * input : inputs )                                     \
+        {                                                                       \
+            h.AddFile( input );                                                 \
+        }                                                                       \
+        h.Sort();
+
+    #define TEST( ... )                                                         \
+        const char * outputs[] = { __VA_ARGS__ };                               \
+        for ( size_t i = 0; i < (sizeof(outputs) / sizeof(const char *)); ++i ) \
+        {                                                                       \
+            TEST_ASSERTM( h[ i ] == outputs[ i ], "Mismatch @ index %u: %s != %s", (uint32_t)i, h[ i ].Get(), outputs[ i ] ); \
+        }                                                                       \
+    }
+
+    // Basic sanity check
+    SORT( "a.cpp", "b.cpp" )
+    TEST( "a.cpp", "b.cpp" )
+
+    SORT( "b.cpp", "a.cpp" )
+    TEST( "a.cpp", "b.cpp" )
+
+    // Case is ignored at the file level
+    SORT( "a.cpp", "B.cpp" )
+    TEST( "a.cpp", "B.cpp" )
+
+    SORT( "b.cpp", "A.cpp" )
+    TEST( "A.cpp", "b.cpp" )
+
+    // Files in same dir
+    SORT( "a/B.cpp", "a/a.cpp" )
+    TEST( "a/a.cpp", "a/B.cpp" )
+
+    SORT( "a/b.cpp", "a/A.cpp" )
+    TEST( "a/A.cpp", "a/b.cpp" )
+
+    // Files in different dirs of same length
+    SORT( "b/a.cpp", "a/a.cpp" )
+    TEST( "a/a.cpp", "b/a.cpp" )
+
+    SORT( "B/a.cpp", "a/a.cpp" )
+    TEST( "a/a.cpp", "B/a.cpp" )
+
+    // Subdirs come after dirs
+    SORT( "a/a.cpp",    "z.cpp" )
+    TEST( "z.cpp",      "a/a.cpp" )
+
+    SORT( "A/A.cpp",    "z.cpp" )
+    TEST( "z.cpp",      "A/A.cpp" )
+
+    SORT( "Z/A.cpp",    "a.cpp" )
+    TEST( "a.cpp",      "Z/A.cpp" )
+
+    SORT( "a.cpp", "bbb/a.cpp", "c.cpp" )
+    TEST( "a.cpp", "c.cpp",     "bbb/a.cpp" )
+
+    // subdirs that match filename come after all files
+    SORT( "a.cpp/a.cpp",    "a.cpp",    "b.cpp" )
+    TEST( "a.cpp",          "b.cpp",    "a.cpp/a.cpp" )
+
+    SORT( "aaa", "aba/a",   "aba" )
+    TEST( "aaa", "aba",     "aba/a" )
+
+    // subdirs that are partial matches
+    SORT( "aa/a",   "a/a" )
+    TEST( "a/a",    "aa/a" )
+
+    // differing depths
+    SORT( "Folder/SubDir/a.cpp",    "Folder/z.cpp" );
+    TEST( "Folder/z.cpp",           "Folder/SubDir/a.cpp" );
+
+    // same depth but different dirs
+    SORT( "Folder/BBB/a.cpp", "Folder/AAA/z.cpp" );
+    TEST( "Folder/AAA/z.cpp", "Folder/BBB/a.cpp" );
+
+    // A real example from FASTBuild source
+    SORT( "C:/p4/depot/Code/Tools/FBuild/FBuildCore/Cache/ICache.cpp",
+          "C:/p4/depot/Code/Tools/FBuild/FBuildCore/FBuild.cpp",
+          "C:/p4/depot/Code/Tools/FBuild/FBuildCore/Graph/CopyDirNode.cpp",
+          "C:/p4/depot/Code/Tools/FBuild/FBuildCore/FBuildOptions.cpp" );
+    TEST( "C:/p4/depot/Code/Tools/FBuild/FBuildCore/FBuild.cpp",
+          "C:/p4/depot/Code/Tools/FBuild/FBuildCore/FBuildOptions.cpp",
+          "C:/p4/depot/Code/Tools/FBuild/FBuildCore/Cache/ICache.cpp",
+          "C:/p4/depot/Code/Tools/FBuild/FBuildCore/Graph/CopyDirNode.cpp" );
+
+    #undef SORT
+    #undef CHECK
 }
 
 //------------------------------------------------------------------------------

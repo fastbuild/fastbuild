@@ -65,39 +65,77 @@ UnityIsolatedFile::UnityIsolatedFile( const AString & fileName, const DirectoryL
 {
 }
 
-// UnityFileAndOrigin
-//------------------------------------------------------------------------------
-class UnityFileAndOrigin
-{
-public:
-    UnityFileAndOrigin()
-        : m_Info( nullptr )
-        , m_DirListOrigin( nullptr )
-        , m_Isolated( false )
-    {}
-
-    UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
-        : m_Info( info )
-        , m_DirListOrigin( dirListOrigin )
-        , m_Isolated( false )
-    {}
-
-    inline const AString &              GetName() const             { return m_Info->m_Name; }
-    inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
-    inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
-
-    inline bool                         IsIsolated() const          { return m_Isolated; }
-    inline void                         SetIsolated( bool value )   { m_Isolated = value; }
-
-protected:
-    FileIO::FileInfo *      m_Info;
-    DirectoryListNode *     m_DirListOrigin;
-    bool                    m_Isolated;
-};
-
 // DESTRUCTOR (FileAndOrigin)
 //------------------------------------------------------------------------------
 UnityIsolatedFile::~UnityIsolatedFile() = default;
+
+// CONSTRUCTOR (UnityFileAndOrigin)
+//------------------------------------------------------------------------------
+UnityNode::UnityFileAndOrigin::UnityFileAndOrigin() = default;
+
+// CONSTRUCTOR (UnityFileAndOrigin)
+//------------------------------------------------------------------------------
+UnityNode::UnityFileAndOrigin::UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
+    : m_Info( info )
+    , m_DirListOrigin( dirListOrigin )
+{
+    // Store the last directory position for use during sorting
+    const char * lastSlash = info->m_Name.FindLast( NATIVE_SLASH );
+    if ( lastSlash )
+    {
+        m_LastSlashIndex = (uint32_t)(lastSlash - info->m_Name.Get());
+    }
+}
+
+// operator < (UnityFileAndOrigin)
+//------------------------------------------------------------------------------
+bool UnityNode::UnityFileAndOrigin::operator < ( const UnityFileAndOrigin & other ) const
+{
+    // Sort files before directories and compare case insensitively
+
+    // Are we in a sub-directory?
+    if ( m_LastSlashIndex > 0 )
+    {
+        // Yes - Is other in a directory?
+        if ( other.m_LastSlashIndex == 0 )
+        {
+            return false; // We are in dir, so other comes first
+        }
+
+        // Both in dirs - sort by subdir
+        size_t sortLen = Math::Min( m_LastSlashIndex, other.m_LastSlashIndex );
+        sortLen++; // Include trailing slash, so subdirs that are partial matches are handled correctly
+        const int32_t sortOrder = AString::StrNCmpI( GetName().Get(), other.GetName().Get(), sortLen );
+        if ( sortOrder != 0 )
+        {
+            return ( sortOrder < 0 );
+        }
+
+        // Is one path a sub path of the other?
+        if ( m_LastSlashIndex != other.m_LastSlashIndex )
+        {
+            return ( m_LastSlashIndex < other.m_LastSlashIndex ); // Shorter (parent) path goes first
+        }
+
+        // In the same directory - fall through to sort by filename inside dir
+    }
+    else
+    {
+        // No - Is other in a directory?
+        if ( other.m_LastSlashIndex > 0 )
+        {
+            return true; // Other in dir, so we come first
+        }
+
+        // Neither in directory - fall though to sort by filename
+    }
+
+    // Sort by name in directory
+    const size_t sortLen = Math::Min( GetName().GetLength() - m_LastSlashIndex, other.GetName().GetLength() - other.m_LastSlashIndex );
+    const char * a = GetName().Get() + m_LastSlashIndex;
+    const char * b = other.GetName().Get() + other.m_LastSlashIndex;
+    return ( AString::StrNCmpI( a, b, sortLen ) < 0 );
+}
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -588,6 +626,9 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
             ASSERT( false ); // Something is terribly wrong - bad node
         }
     }
+
+    // Sort files so order is consistent (not reliant on OS, file system or locale)
+    files.Sort();
 
     return ok;
 }
