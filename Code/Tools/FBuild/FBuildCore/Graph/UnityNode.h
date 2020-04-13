@@ -54,6 +54,7 @@ public:
 protected:
     virtual bool DetermineNeedToBuild( const Dependencies & deps ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual void Migrate( const Node & oldNode ) override;
 
     virtual bool IsAFile() const override { return false; }
 

@@ -550,6 +550,33 @@ void TestUnity::LinkMultiple() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    }
+
+    #if defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #endif
+
+    // Force a DB migration and modify state to ensure internal property
+    // migration works correctly
+    {
+        // Make file writeable so it is isolated
+        FileIO::SetReadOnly( fileA, false );
+
+        // Force DB migration to emulate bff edit
+        FBuildOptions optionsCopy( options );
+        optionsCopy.m_ForceDBMigration_Debug = true;
+
+        FBuild fBuild( optionsCopy );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
 
         // Check stats
         //               Seen,  Built,  Type
@@ -648,6 +675,33 @@ void TestUnity::LinkMultiple_InputFiles() const
         FileIO::SetReadOnly( fileA, true );
 
         FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
+        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    }
+
+    #if defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #endif
+
+    // Force a DB migration and modify state to ensure internal property
+    // migration works correctly
+    {
+        // Make file writeable so it is isolated
+        FileIO::SetReadOnly( fileA, false );
+
+        // Force DB migration to emulate bff edit
+        FBuildOptions optionsCopy( options );
+        optionsCopy.m_ForceDBMigration_Debug = true;
+
+        FBuild fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
 

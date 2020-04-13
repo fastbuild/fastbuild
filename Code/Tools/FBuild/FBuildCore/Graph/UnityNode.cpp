@@ -546,6 +546,19 @@ UnityNode::~UnityNode()
     return NODE_RESULT_OK;
 }
 
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void UnityNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate lazily evaluated properties
+    const UnityNode * oldUnityNode = oldNode.CastTo< UnityNode >();
+    m_IsolatedFiles = oldUnityNode->m_IsolatedFiles;
+    m_UnityFileNames = oldUnityNode->m_UnityFileNames;
+}
+
 // GetFiles
 //------------------------------------------------------------------------------
 bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
