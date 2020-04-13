@@ -517,9 +517,7 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     for ( uint32_t i=0; i<numUsedFiles; ++i )
     {
         const AString & fileName = m_UsedFiles[ i ].m_FileName;
-        uint32_t fileNameLen( fileName.GetLength() );
-        stream.Write( fileNameLen );
-        stream.Write( fileName.Get(), fileNameLen );
+        stream.Write( fileName );
         uint64_t timeStamp( m_UsedFiles[ i ].m_TimeStamp );
         stream.Write( timeStamp );
         uint64_t dataHash( m_UsedFiles[ i ].m_DataHash );
