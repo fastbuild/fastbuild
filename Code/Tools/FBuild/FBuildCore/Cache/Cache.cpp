@@ -326,7 +326,7 @@ void Cache::GetCacheFiles( bool showProgress,
         {
             // Get Files
             AStackString<> path;
-            path.Format( "%s%02x%c%02x%c", m_CachePath.Get(),
+            path.Format( "%s%02X%c%02X%c", m_CachePath.Get(),
                                                (uint32_t)i,
                                                NATIVE_SLASH,
                                                (uint32_t)j,
