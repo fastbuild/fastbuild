@@ -228,12 +228,13 @@
       <p><b>.XCodeBuildToolArgs</b> - String - (Optional)</p>
       <p>The command line args to pass to FASTBuild when compiling can be specified.</p>
       Example:
-      <div class='code'>.XCodeBuildToolArgs = '-ide -cache -summary $(FASTBUILD_TARGET)'</div>
+      <div class='code'>.XCodeBuildToolArgs = '-ide -cache -summary OSX64-All'</div>
 	  If not specified, the default will be used:
-      <div class='code'>.XCodeBuildToolArgs = '-ide $(FASTBUILD_TARGET)'</div>
+      <div class='code'>.XCodeBuildToolArgs = '-ide ^$(FASTBUILD_TARGET)'</div>
 	  <ul>
 	  <li>FASTBUILD_TARGET is a special per-configuration symbol that will be replaced (by XCode) with the .Target being compiled. FASTBuild automatically defines
 	  this symbol correctly for each build configuration.</li>
+	  <li>Note that the $ is escaped so that it's not interpretted by FASTBuild as the beginning of a variable substitution.</li>
 	  </ul>
       <hr>	  
   
