@@ -574,7 +574,8 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
 
     enum { IF_NONE = 0, IF_AND = 1, IF_OR = 2, IF_NEGATE = 4 };
     bool ranOnce = false;
-    bool complexResult, result;
+    bool complexResult = false;
+    bool result;
 
     while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator("&") || argsIter->IsOperator("|") ) ) )
     {
