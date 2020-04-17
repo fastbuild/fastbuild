@@ -38,7 +38,7 @@ namespace
     bool IsStringStart( const char c )      { return ( ( c == '\'' ) || ( c == '"') ); }
     bool IsVariableStart( const char c )    { return ( ( c == '.' ) || ( c == '^' ) ); }
     bool IsVariable( const char c )         { return IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsNumber( c ) || IsUnderscore( c );  }
-    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) ); }
+    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || (c == '&') || (c == '|')); }
     bool IsComma( const char c )            { return ( c == ',' ); }
     bool IsDirective( const char c )        { return ( c == '#' ); }
     void SkipWhitespace( const char * & pos )
@@ -572,51 +572,106 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     ASSERT( argsIter->IsKeyword( "if" ) );
     argsIter++;
 
-    // Check for negation operator
-    bool negate = false;
-    if ( argsIter->IsOperator( "!" ) )
+    enum { IF_NONE = 0, IF_AND = 1, IF_OR = 2, IF_NEGATE = 4 };
+    bool ranOnce = false;
+    bool complexResult, result;
+
+    while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator("&") || argsIter->IsOperator("|") ) ) )
     {
-        negate = true;
-        argsIter++; // consume negation operator
+        int ifOperator = IF_NONE;
+        if ( argsIter->IsOperator("&") || argsIter->IsOperator("|") )
+        {
+            // check if this has been run once, to avoid
+            // expressions like #if &a
+            if (!ranOnce)
+            {
+                return false;
+            }
+            if ( argsIter->IsOperator("&") )
+            {
+                argsIter++; // consume '&'
+                // Check for second '&'
+                if ( !argsIter->IsOperator("&") )
+                    return false;
+                argsIter++; // consume second '&'
+                ifOperator = IF_AND;
+            }
+            else
+            {
+                argsIter++; // consume '|'
+                // Check for second '|'
+                if ( !argsIter->IsOperator("|") )
+                    return false;
+                argsIter++; // consume second '|'
+                ifOperator = IF_OR;
+            }
+        }
+
+        // Check for negation operator
+        if ( argsIter->IsOperator("!") )
+        {
+            ifOperator |= IF_NEGATE; // the condition will be inverted
+            argsIter++; // consume negation operator
+        }
+
+        // Keyword or identifier?
+        if ( argsIter->IsKeyword(BFF_KEYWORD_EXISTS) )
+        {
+            argsIter++; // consume keyword
+            if ( HandleDirective_IfExists(argsIter, result) == false )
+            {
+                return false;
+            }
+        }
+        else if ( argsIter->IsKeyword(BFF_KEYWORD_FILE_EXISTS) )
+        {
+            argsIter++; // consume keyword
+            if ( HandleDirective_IfFileExists(argsIter, result) == false )
+            {
+                return false;
+            }
+        }
+        else if (argsIter->IsIdentifier())
+        {
+            if ( HandleDirective_IfDefined(argsIter, result) == false )
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // TODO:C A better error
+            Error::Error_1031_UnexpectedCharFollowingDirectiveName(argsIter.GetCurrent(), "if", '?');
+            return false;
+        }
+
+        // Negate result to handle "#if !"
+        if ( ifOperator & IF_NEGATE )
+        {
+            result = !(result);
+        }
+        if ( ranOnce )
+        {
+            // Combine boolean results
+            if ( ifOperator & IF_AND )
+            {
+                // #if &&
+                complexResult &= result;
+            }
+            else // at this stage it can only be OR, no need to check
+            {
+                // #if ||
+                complexResult |= result;
+            }
+        }
+        else
+        {
+            complexResult = result;
+            ranOnce = true;
+        }
     }
 
-    // Keyword or identifier?
-    bool result = false;
-    if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
-    {
-        argsIter++; // consume keyword
-        if ( HandleDirective_IfExists( argsIter, result ) == false )
-        {
-            return false;
-        }
-    }
-    else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
-    {
-        argsIter++; // consume keyword
-        if ( HandleDirective_IfFileExists( argsIter, result ) == false )
-        {
-            return false;
-        }
-    }
-    else if ( argsIter->IsIdentifier() )
-    {
-        if ( HandleDirective_IfDefined( argsIter, result ) == false )
-        {
-            return false;
-        }
-    }
-    else
-    {
-        // TODO:C A better error
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
-        return false;
-    }
-
-    // Negate result to handle "#if !"
-    if ( negate )
-    {
-        result = !( result );
-    }
+    result = complexResult;
 
     // take note of start of "true" block
     const char * ifBlockBegin = pos;
