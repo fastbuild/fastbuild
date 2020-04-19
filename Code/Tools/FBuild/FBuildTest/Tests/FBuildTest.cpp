@@ -155,8 +155,8 @@ bool FBuildTest::ParseFromString( bool expectedResult,
     if ( result != expectedResult )
     {
         // Emit message about mismatch
-        OUTPUT( "Test %s but %s was expected", expectedResult ? "failed" : "succeeded",
-                                               expectedResult ? "failure" : "success" );
+        OUTPUT( "Test %s but %s was expected", result ? "succeeded" : "failed",
+                                               expectedResult ? "success" : "failure" );
         return false; // break in calling code
     }
 
