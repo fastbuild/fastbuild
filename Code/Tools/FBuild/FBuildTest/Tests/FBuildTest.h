@@ -40,12 +40,13 @@ protected:
 
     // Helpers to invoke builds or parse bff files
     void Parse( const char * fileName, bool expectFailure = false ) const;
-    bool ParseFromString( const char * bffContents,
-                          const char * expectedError = nullptr ) const;
+    bool ParseFromString( bool expectResult,
+                          const char * bffContents,
+                          const char * expectedMessage = nullptr ) const;
 
     // Helper macros
-    #define TEST_PARSE_OK( bffContents )            TEST_ASSERT( ParseFromString( bffContents ) );
-    #define TEST_PARSE_FAIL( bffContents, error )   TEST_ASSERT( ParseFromString( bffContents, error ) );
+    #define TEST_PARSE_OK( ... )        TEST_ASSERT( ParseFromString( true, __VA_ARGS__ ) );
+    #define TEST_PARSE_FAIL( ... )      TEST_ASSERT( ParseFromString( false, __VA_ARGS__ ) );
 
     // Helpers to check build results
     void CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const;

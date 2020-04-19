@@ -137,11 +137,13 @@ void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
 
 // ParseFromString
 //------------------------------------------------------------------------------
-bool FBuildTest::ParseFromString( const char * bffContents,
-                                  const char * expectedError ) const
+bool FBuildTest::ParseFromString( bool expectedResult,
+                                  const char * bffContents,
+                                  const char * expectedMessage ) const
 {
-    // Note size of output so we can check if error was part of this invocation
+    // Note size of output so we can check if message was part of this invocation
     const size_t outputSizeBefore = GetRecordedOutput().GetLength();
+    const char * searchStart = GetRecordedOutput().Get() + outputSizeBefore;
 
     // Parse
     FBuild fBuild;
@@ -149,46 +151,28 @@ bool FBuildTest::ParseFromString( const char * bffContents,
     BFFParser p( ng );
     const bool result = p.ParseFromString( "test.bff", bffContents );
 
-    // Handle result
-    if ( result == true )
+    // Check result is as expected
+    if ( result != expectedResult )
     {
-        // Success
-
-        // Did we expect to fail?
-        if ( expectedError )
-        {
-            OUTPUT( "Expected failure but did not fail" );
-            return false; // break in calling code
-        }
-
-        // Expected success so everything is ok
-        return true;
-    }
-    else
-    {
-        // Failure
-
-        // Did we expected to fail?
-        if ( expectedError )
-        {
-            // Search for expected error
-            const char * searchStart = GetRecordedOutput().Get() + outputSizeBefore;
-            const bool foundExpectedError = ( GetRecordedOutput().Find( expectedError, searchStart ) != nullptr );
-
-            if ( foundExpectedError == false )
-            {
-                OUTPUT( "Failed in an unexpected way" );
-                return false; // break in calling code
-            }
-
-            // Failed in the expected way so everything is ok
-            return true;
-        }
-
-        // Failed but should not have
-        OUTPUT( "Unexpected failure" );
+        // Emit message about mismatch
+        OUTPUT( "Test %s but %s was expected", expectedResult ? "failed" : "succeeded",
+                                               expectedResult ? "failure" : "success" );
         return false; // break in calling code
     }
+
+    // Check message was present if needed
+    if ( expectedMessage )
+    {
+        // Search for expected message in output
+        const bool foundExpectedMessage = ( GetRecordedOutput().Find( expectedMessage, searchStart ) != nullptr );
+        if ( foundExpectedMessage == false )
+        {
+            OUTPUT( "Expected %s was not found: %s", expectedResult ? "message" : "error", expectedMessage );
+            return false;
+        }
+    }
+
+    return true;
 }
 
 // CheckStatsNode
