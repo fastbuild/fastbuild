@@ -576,7 +576,6 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
 
     enum { IF_NONE = 1, IF_AND = 2, IF_OR = 4, IF_NEGATE = 8 };
     bool ranOnce = false;
-    //bool complexResult = false;
     bool result;
     uint8_t operatorHistory[BFFParser::MAX_OPERATOR_HISTORY];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
     uint8_t* currentOperator = operatorHistory;
@@ -697,15 +696,13 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         currentOperator++;
     }
     // Apply any || operators
-    currentOperator = &operatorHistory[1];
+    currentOperator = operatorHistory;
     result = false;
-    for (i = 1; i < numOperators; i++)
+    for (i = 0; i < numOperators; i++)
     {
         result |= (*currentOperator & 1);
         currentOperator++;
     }
-
-    //result = complexResult;
 
     // take note of start of "true" block
     const char * ifBlockBegin = pos;
