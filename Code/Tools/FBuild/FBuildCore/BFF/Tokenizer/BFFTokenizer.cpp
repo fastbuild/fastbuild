@@ -572,14 +572,17 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     ASSERT( argsIter->IsKeyword( "if" ) );
     argsIter++;
 
-    enum { IF_NONE = 0, IF_AND = 1, IF_OR = 2, IF_NEGATE = 4 };
+    enum { IF_NONE = 1, IF_AND = 2, IF_OR = 4, IF_NEGATE = 8 };
     bool ranOnce = false;
-    bool complexResult = false;
+    //bool complexResult = false;
     bool result;
+    uint8_t operatorHistory[BFFParser::MAX_OPERATOR_HISTORY];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
+    uint8_t* currentOperator = operatorHistory;
+    int numOperators = 0;
 
     while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator("&") || argsIter->IsOperator("|") ) ) )
     {
-        int ifOperator = IF_NONE;
+        uint32_t ifOperator = IF_NONE;
         if ( argsIter->IsOperator("&") || argsIter->IsOperator("|") )
         {
             // check if this has been run once, to avoid
@@ -651,28 +654,64 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         {
             result = !(result);
         }
-        if ( ranOnce )
+        if ( !ranOnce )
+        {
+            //complexResult = result;
+            uint8_t r = 0;
+            if (result)
+                r = 1;
+            *currentOperator++ = r;
+            numOperators++;
+            ranOnce = true;
+        }
+        else
         {
             // Combine boolean results
             if ( ifOperator & IF_AND )
             {
                 // #if &&
-                complexResult &= result;
+                //complexResult &= result;
+                uint8_t r = IF_AND;
+                if (result)
+                    r |= 1;     // Result was true
+                *currentOperator++ = r;
+                numOperators++;
             }
             else // at this stage it can only be OR, no need to check
             {
                 // #if ||
-                complexResult |= result;
+                //complexResult |= result;
+                uint8_t r = IF_OR;
+                if (result)
+                    r |= 1;     // Result was true
+                *currentOperator++ = r;
+                numOperators++;
             }
         }
-        else
+    }
+    
+    // Apply any && operators
+    int i;
+    currentOperator = operatorHistory;
+    for (i = 0; i < numOperators-1; i++)
+    {
+        if (currentOperator[1] & IF_AND)
         {
-            complexResult = result;
-            ranOnce = true;
+            currentOperator[1] = (uint8_t)(currentOperator[0] & currentOperator[1] & 1);
+            currentOperator[0] = 0;
         }
+        currentOperator++;
+    }
+    // Apply any || operators
+    currentOperator = &operatorHistory[1];
+    result = false;
+    for (i = 1; i < numOperators; i++)
+    {
+        result |= (*currentOperator & 1);
+        currentOperator++;
     }
 
-    result = complexResult;
+    //result = complexResult;
 
     // take note of start of "true" block
     const char * ifBlockBegin = pos;
