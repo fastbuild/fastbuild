@@ -235,7 +235,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         }
 
         // Two character operator?
-        if ( ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) )
+        if ( ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' ) )
         {
             if ( ( pos + 1 ) < end )
             {
@@ -246,7 +246,9 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
                 if ( ( opString == "==" ) ||
                      ( opString == "!=" ) ||
                      ( opString == "<=" ) ||
-                     ( opString == ">=" ) )
+                     ( opString == ">=" ) ||
+                     ( opString == "&&" ) ||
+                     ( opString == "||" ) )
                 {
                     m_Tokens.EmplaceBack( file, pos, BFFTokenType::Operator, pos, pos + 2 );
                     pos += 2;
@@ -580,10 +582,10 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     uint8_t* currentOperator = operatorHistory;
     int numOperators = 0;
 
-    while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator("&") || argsIter->IsOperator("|") ) ) )
+    while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator("&&") || argsIter->IsOperator("||") ) ) )
     {
         uint32_t ifOperator = IF_NONE;
-        if ( argsIter->IsOperator("&") || argsIter->IsOperator("|") )
+        if ( argsIter->IsOperator("&&") || argsIter->IsOperator("||") )
         {
             // check if this has been run once, to avoid
             // expressions like #if &a
@@ -591,22 +593,14 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
             {
                 return false;
             }
-            if ( argsIter->IsOperator("&") )
+            if ( argsIter->IsOperator("&&") )
             {
-                argsIter++; // consume '&'
-                // Check for second '&'
-                if ( !argsIter->IsOperator("&") )
-                    return false;
-                argsIter++; // consume second '&'
+                argsIter++; // consume '&&'
                 ifOperator = IF_AND;
             }
             else
             {
-                argsIter++; // consume '|'
-                // Check for second '|'
-                if ( !argsIter->IsOperator("|") )
-                    return false;
-                argsIter++; // consume second '|'
+                argsIter++; // consume '||'
                 ifOperator = IF_OR;
             }
         }
