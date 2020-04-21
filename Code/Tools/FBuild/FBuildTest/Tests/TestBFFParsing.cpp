@@ -504,12 +504,12 @@ void TestBFFParsing::IfFileExistsDirective() const
 void TestBFFParsing::IfBooleanOperators() const
 {
     // Failure cases
-    TEST_PARSE_FAIL("#if ||", "<expected error>");
-    TEST_PARSE_FAIL("#if &&", "<expected error>");
+    TEST_PARSE_FAIL("#if ||");
+    TEST_PARSE_FAIL("#if &&");
     TEST_PARSE_FAIL("#if X && || Y\n"
-        "#endif", "<expected error>");
+        "#endif");
     TEST_PARSE_FAIL("#if X && Y Z\n"
-        "#endif", "<expected error>");
+        "#endif");
 
     // OR
     TEST_PARSE_OK("#define A\n"
