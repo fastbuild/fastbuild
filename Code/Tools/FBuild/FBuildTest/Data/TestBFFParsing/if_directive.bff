@@ -50,6 +50,53 @@ Print( "Platform = $Platform$" )
     #endif
 #endif
 
+// Boolean algebra 
+#define aaa
+#define bbb
+#define ccc
+#if aaa && bbb
+    Print("AND test #1 ok")
+#endif
+#if aaa && bbb && ccc
+    Print("AND test #2 ok")
+#endif
+
+#if ccc || ddd
+    Print("OR test #1 ok")
+#endif
+#if ddd || ccc
+    Print("OR test #2 ok")
+#endif
+#if ccc || ddd || aaa || bbb
+    Print("OR test #3 ok")
+#endif
+
+#if aaa && !ddd
+    Print("AND ! test #1 ok")
+#endif
+#if !ddd && aaa
+    Print("AND ! test #2 ok")
+#endif
+    
+#if !eee || !ddd
+    Print("OR ! test #1 ok")
+#endif
+#if aaa || !ddd
+    Print("OR ! test #2 ok")
+#endif
+#if !ddd || aaa
+    Print("OR ! test #3 ok")
+#endif
+
+;;Should produce syntax error
+;#if || ddd
+;    Print("| at the start - should not reach this!")
+;#endif
+;#if && ddd
+;    Print("& at the start - should not reach this!")
+;#endif
+;
+
 // #endif at very end of line
 #if __LINUX__
 #endif
