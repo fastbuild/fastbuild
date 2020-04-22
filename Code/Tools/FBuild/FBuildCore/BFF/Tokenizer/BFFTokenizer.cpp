@@ -590,6 +590,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
             // expressions like #if &a
             if (!ranOnce)
             {
+                Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( argsIter.GetCurrent() );
                 return false;
             }
             if ( argsIter->IsOperator( "&&" ) )
@@ -638,7 +639,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         else
         {
             // TODO:C A better error
-            Error::Error_1031_UnexpectedCharFollowingDirectiveName(argsIter.GetCurrent(), "if", '?');
+            Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
             return false;
         }
 
@@ -670,8 +671,10 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
                 *currentOperator++ = r;
                 numOperators++;
                 if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
-                    // Expression too complex
+                {
+                    Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
                     return false;
+                }
             }
             else // at this stage it can only be OR, no need to check
             {
@@ -682,8 +685,10 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
                 *currentOperator++ = r;
                 numOperators++;
                 if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
-                    // Expression too complex
+                {
+                    Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
                     return false;
+                }
             }
         }
     }

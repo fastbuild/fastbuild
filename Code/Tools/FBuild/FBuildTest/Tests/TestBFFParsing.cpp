@@ -504,8 +504,8 @@ void TestBFFParsing::IfFileExistsDirective() const
 void TestBFFParsing::IfBooleanOperators() const
 {
     // Failure cases
-    TEST_PARSE_FAIL( "#if ||" );
-    TEST_PARSE_FAIL( "#if &&" );
+    TEST_PARSE_FAIL( "#if ||", "If Expression Cannot Start With Boolean Operator (&&, ||, etc).");
+    TEST_PARSE_FAIL( "#if &&", "If Expression Cannot Start With Boolean Operator (&&, ||, etc).");
     TEST_PARSE_FAIL(" #if X && || Y\n"
         "#endif" );
     TEST_PARSE_FAIL( "#if X && Y Z\n"
