@@ -504,159 +504,159 @@ void TestBFFParsing::IfFileExistsDirective() const
 void TestBFFParsing::IfBooleanOperators() const
 {
     // Failure cases
-    TEST_PARSE_FAIL("#if ||");
-    TEST_PARSE_FAIL("#if &&");
-    TEST_PARSE_FAIL("#if X && || Y\n"
-        "#endif");
-    TEST_PARSE_FAIL("#if X && Y Z\n"
-        "#endif");
+    TEST_PARSE_FAIL( "#if ||" );
+    TEST_PARSE_FAIL( "#if &&" );
+    TEST_PARSE_FAIL(" #if X && || Y\n"
+        "#endif" );
+    TEST_PARSE_FAIL( "#if X && Y Z\n"
+        "#endif" );
 
     // OR
-    TEST_PARSE_OK("#define A\n"
+    TEST_PARSE_OK( "#define A\n"
         "#if A || B\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
-    TEST_PARSE_OK("#if A || B\n"
+        "#endif" );
+    TEST_PARSE_OK( "#if A || B\n"
         "    #error\n" // Should not be here
-        "#endif");
-    TEST_PARSE_OK("#define ccc\n"
+        "#endif" );
+    TEST_PARSE_OK( "#define ccc\n"
         "#if ddd || ccc\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
-    TEST_PARSE_OK("#define aaa\n"
+        "#endif" );
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if ccc || ddd || aaa || bbb\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
     // AND
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#if aaa && bbb\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
-    TEST_PARSE_OK("#define aaa\n"
+        "#endif" );
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if aaa && bbb && ccc\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
     // AND !
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK( "#define aaa\n"
         "#if aaa && !ddd\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
-    TEST_PARSE_OK("#define aaa\n"
+        "#endif" );
+    TEST_PARSE_OK( "#define aaa\n"
         "#if !ddd && aaa\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
     // OR !
-    TEST_PARSE_OK("#if !eee || !ddd\n"
+    TEST_PARSE_OK( "#if !eee || !ddd\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
-    TEST_PARSE_OK("#define aaa\n"
+        "#endif" );
+    TEST_PARSE_OK( "#define aaa\n"
         "#if aaa || !ddd\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
-    TEST_PARSE_OK("#define aaa\n"
+        "#endif" );
+    TEST_PARSE_OK( "#define aaa\n"
         "#if !ddd || aaa\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
     // Check precedence
-    TEST_PARSE_OK("#define A\n"
+    TEST_PARSE_OK( "#define A\n"
         "#define B\n"
         "#if A || B && C\n"
         "    // Should be here\n"
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if ddd || bbb && ccc\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if ddd || bbb && ccc || eee\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if ddd || bbb && ddd || eee && aaa\n"
         "    #error Should not be here\n"
         "#else\n"
         "\n" // Should be here
-        "#endif");
+        "#endif" );
 
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if ddd || bbb && aaa || eee && aaa\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if ddd || bbb && ddd || bbb && aaa\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK(" #define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if ddd || bbb && ddd || ddd && aaa || ccc\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 
-    TEST_PARSE_OK("#define aaa\n"
+    TEST_PARSE_OK( "#define aaa\n"
         "#define bbb\n"
         "#define ccc\n"
         "#if ddd || bbb && ccc && aaa || ddd && aaa\n"
         "\n" // Should be here
         "#else\n"
         "    #error Should not be here\n"
-        "#endif");
+        "#endif" );
 }
 // ElseDirective
 //------------------------------------------------------------------------------

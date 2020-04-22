@@ -577,14 +577,14 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     enum { IF_NONE = 1, IF_AND = 2, IF_OR = 4, IF_NEGATE = 8 };
     bool ranOnce = false;
     bool result;
-    uint8_t operatorHistory[BFFParser::MAX_OPERATOR_HISTORY];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
+    uint8_t operatorHistory[ BFFParser::MAX_OPERATOR_HISTORY ];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
     uint8_t* currentOperator = operatorHistory;
     int numOperators = 0;
 
     while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator("&&") || argsIter->IsOperator("||") ) ) )
     {
         uint32_t ifOperator = IF_NONE;
-        if ( argsIter->IsOperator("&&") || argsIter->IsOperator("||") )
+        if ( argsIter->IsOperator( "&&" ) || argsIter->IsOperator( "||" ) )
         {
             // check if this has been run once, to avoid
             // expressions like #if &a
@@ -592,7 +592,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
             {
                 return false;
             }
-            if ( argsIter->IsOperator("&&") )
+            if ( argsIter->IsOperator( "&&" ) )
             {
                 argsIter++; // consume '&&'
                 ifOperator = IF_AND;
@@ -605,17 +605,17 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         }
 
         // Check for negation operator
-        if ( argsIter->IsOperator("!") )
+        if ( argsIter->IsOperator( "!" ) )
         {
             ifOperator |= IF_NEGATE; // the condition will be inverted
             argsIter++; // consume negation operator
         }
 
         // Keyword or identifier?
-        if ( argsIter->IsKeyword(BFF_KEYWORD_EXISTS) )
+        if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
         {
             argsIter++; // consume keyword
-            if ( HandleDirective_IfExists(argsIter, result) == false )
+            if ( HandleDirective_IfExists( argsIter, result ) == false )
             {
                 return false;
             }
@@ -623,14 +623,14 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         else if ( argsIter->IsKeyword(BFF_KEYWORD_FILE_EXISTS) )
         {
             argsIter++; // consume keyword
-            if ( HandleDirective_IfFileExists(argsIter, result) == false )
+            if ( HandleDirective_IfFileExists( argsIter, result ) == false )
             {
                 return false;
             }
         }
         else if (argsIter->IsIdentifier())
         {
-            if ( HandleDirective_IfDefined(argsIter, result) == false )
+            if ( HandleDirective_IfDefined( argsIter, result ) == false )
             {
                 return false;
             }
@@ -645,13 +645,13 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         // Negate result to handle "#if !"
         if ( ifOperator & IF_NEGATE )
         {
-            result = !(result);
+            result = !( result );
         }
         if ( !ranOnce )
         {
             //complexResult = result;
             uint8_t r = 0;
-            if (result)
+            if ( result )
                 r = 1;
             *currentOperator++ = r;
             numOperators++;
@@ -659,38 +659,45 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         }
         else
         {
-            // Combine boolean results
+            // Record boolean results and operator
+            // Bit 0=result, others are used by the operators
             if ( ifOperator & IF_AND )
             {
                 // #if &&
-                //complexResult &= result;
                 uint8_t r = IF_AND;
-                if (result)
+                if ( result )
                     r |= 1;     // Result was true
                 *currentOperator++ = r;
                 numOperators++;
+                if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
+                    // Expression too complex
+                    return false;
             }
             else // at this stage it can only be OR, no need to check
             {
                 // #if ||
-                //complexResult |= result;
                 uint8_t r = IF_OR;
-                if (result)
+                if ( result )
                     r |= 1;     // Result was true
                 *currentOperator++ = r;
                 numOperators++;
+                if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
+                    // Expression too complex
+                    return false;
             }
         }
     }
     
-    // Apply any && operators
+    // Apply any && operators. Any valid expression isn't going to end with an operator, so we don't check that.
     int i;
     currentOperator = operatorHistory;
-    for (i = 0; i < numOperators-1; i++)
+    for ( i = 0; i < numOperators-1; i++ )
     {
-        if (currentOperator[1] & IF_AND)
+        if ( currentOperator[1] & IF_AND )
         {
-            currentOperator[1] = (uint8_t)(currentOperator[0] & currentOperator[1] & 1);
+            // Do the AND operation and store it in the right hand operator being tested
+            currentOperator[1] = ( uint8_t )( currentOperator[0] & currentOperator[1] & 1 );
+            // Clear the left hand operator, its job is now done
             currentOperator[0] = 0;
         }
         currentOperator++;
@@ -698,9 +705,9 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     // Apply any || operators
     currentOperator = operatorHistory;
     result = false;
-    for (i = 0; i < numOperators; i++)
+    for ( i = 0; i < numOperators; i++ )
     {
-        result |= (*currentOperator & 1);
+        result |= ( *currentOperator & 1 );
         currentOperator++;
     }
 
