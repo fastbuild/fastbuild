@@ -4,12 +4,11 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// FBuildCore
+#include <Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFToken.h>
 
+// Core
 #include <Core/Env/Assert.h>
-
-// Forward Declarations
-//------------------------------------------------------------------------------
-class BFFToken;
 
 // BFFTokenRange
 //------------------------------------------------------------------------------

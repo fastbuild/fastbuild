@@ -377,6 +377,7 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
          ( identifier == BFF_KEYWORD_ELSE ) ||
          ( identifier == BFF_KEYWORD_EXISTS ) ||
          ( identifier == BFF_KEYWORD_FILE_EXISTS ) ||
+         ( identifier == BFF_KEYWORD_FUNCTION ) ||
          ( identifier == BFF_KEYWORD_IF ) ||
          ( identifier == BFF_KEYWORD_IMPORT ) ||
          ( identifier == BFF_KEYWORD_INCLUDE ) ||
