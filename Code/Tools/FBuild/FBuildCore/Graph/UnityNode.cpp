@@ -49,8 +49,8 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
 REFLECT_END( UnityNode )
 
 REFLECT_STRUCT_BEGIN( UnityIsolatedFile, Struct, MetaNone() )
-    REFLECT( m_FileName,                "FileName",                             MetaNone() )
-    REFLECT( m_DirListOriginPath,       "DirListOriginPath",                    MetaNone() )
+    REFLECT( m_FileName,                "FileName",                             MetaHidden() )
+    REFLECT( m_DirListOriginPath,       "DirListOriginPath",                    MetaHidden() )
 REFLECT_END( UnityIsolatedFile )
 
 // CONSTRUCTOR (UnityIsolatedFile)

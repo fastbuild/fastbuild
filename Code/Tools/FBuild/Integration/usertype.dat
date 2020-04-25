@@ -4,6 +4,7 @@ endif
 exists
 false
 file_exists
+function
 if
 import
 in
@@ -91,8 +92,6 @@ Dest
 DisableDBMigration
 DistributableJobMemoryLimitMiB
 Environment
-ExcludePaths
-ExcludePatterns
 ExecAlways
 ExecAlwaysShowOutput
 ExecArguments
@@ -113,7 +112,6 @@ ExecutableRootPath
 ExternalProjectPath
 ExtraFiles
 FileType
-FilesToExclude
 ForcedIncludes
 ForcedUsingAssemblies
 Hidden
@@ -150,7 +148,6 @@ PCHOutputFile
 PackagePath
 Path
 Pattern
-Patterns
 Platform
 PlatformToolset
 PreBuildDependencies
@@ -178,7 +175,6 @@ ProjectReferences
 ProjectSccEntrySAK
 ProjectTypeGuid
 Projects
-Recursive
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
