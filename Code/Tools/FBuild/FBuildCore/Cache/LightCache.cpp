@@ -53,7 +53,7 @@ public:
     bool                            m_Exists;
     uint64_t                        m_ContentHash;
     Array< Include >                m_Includes;
-    Array< const IncludeDefine* >   m_IncludeDefines;
+    Array< const IncludeDefine * >  m_IncludeDefines;
 
     inline bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
     inline bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
@@ -214,7 +214,7 @@ public:
 //------------------------------------------------------------------------------
 IncludedFile::~IncludedFile()
 {
-    for ( const IncludeDefine* def : m_IncludeDefines )
+    for ( const IncludeDefine * def : m_IncludeDefines )
     {
         FDELETE def;
     }
@@ -254,6 +254,10 @@ LightCache::LightCache()
     , m_ProblemParsing( false )
 {
 }
+
+// DESTRUCTOR
+//------------------------------------------------------------------------------
+LightCache::~LightCache() = default;
 
 // Hash
 //------------------------------------------------------------------------------
@@ -598,14 +602,27 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
         if ( type == IncludeType::MACRO )
         {
 
-            // Find macro - expand each possible value
-            for ( size_t i = 0, count = m_IncludeDefines.GetSize(); i < count; ++i )
+            // Find macro - expand each possible value (we must
+            // expand all values because we can't definitively know
+            // which one is correct)
+            // NOTE: Array can be extended/can move while being iterated,
+            // so iterate by index only to original size
+            bool found = false;
+            const size_t originalSize = m_IncludeDefines.GetSize();
+            for ( size_t i = 0; i < originalSize; ++i )
             {
-                const IncludeDefine* def = m_IncludeDefines[i];
+                const IncludeDefine * def = m_IncludeDefines[ i ];
                 if ( def->m_Macro == include )
                 {
                     ProcessInclude( def->m_Include, def->m_Type );
+                    found = true;
                 }
+            }
+            // If the macro was not seen at all then we've encountered something
+            // we don't know how to handle
+            if ( found == false )
+            {
+                m_ProblemParsing = true;
             }
             return;
         }
@@ -792,11 +809,8 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         const IncludedFile * location = bucket.m_HashSet.Find( fileName, fileNameHash );
         if ( location )
         {
-            for ( const IncludeDefine* def : location->m_IncludeDefines )
-            {
-                m_IncludeDefines.Append( def );
-            }
-
+            m_IncludeDefines.Append( location->m_IncludeDefines );
+            
             return location; // File previously handled so we can re-use the result
         }
     }
@@ -831,10 +845,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         retval = bucket.m_HashSet.Insert( newFile );
     }
 
-    for ( const IncludeDefine* def : retval->m_IncludeDefines )
-    {
-        m_IncludeDefines.Append( def );
-    }
+    m_IncludeDefines.Append( retval->m_IncludeDefines );
 
     return retval;
 }

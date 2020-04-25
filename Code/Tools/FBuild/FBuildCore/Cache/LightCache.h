@@ -24,7 +24,7 @@ class LightCache
 {
 public:
     LightCache();
-    ~LightCache() = default; // Destruction heavy-lifting is currently done by IncludedFile::~IncludedFile()
+    ~LightCache();
 
     bool Hash( ObjectNode * node,                // Object to be compiled
                const AString & compilerArgs,     // Args to extract include paths from
