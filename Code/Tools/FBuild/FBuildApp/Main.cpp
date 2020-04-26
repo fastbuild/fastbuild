@@ -180,15 +180,13 @@ int Main( int argc, char * argv[] )
         return FBUILD_ERROR_LOADING_BFF;
     }
 
+    bool result = false;
     if ( options.m_DisplayTargetList )
     {
         fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
-        ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
-        return FBUILD_OK;
+        result = true; // DisplayTargetList cannot fail
     }
-
-    bool result = false;
-    if ( options.m_DisplayDependencyDB )
+    else if ( options.m_DisplayDependencyDB )
     {
         result = fBuild.DisplayDependencyDB( options.m_Targets );
     }
