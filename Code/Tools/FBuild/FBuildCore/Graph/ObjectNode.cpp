@@ -387,7 +387,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                FLOG_OUTPUT( " - Light cache cannot be used for '%s'\n", GetName().Get() );
+                FLOG_OUTPUT( "LightCache cannot be used for '%s'\n"
+                             "%s",
+                              GetName().Get(),
+                              lc.GetErrors().Get() );
             }
 
             // Fall through to generate preprocessed output for old style cache and distribution....

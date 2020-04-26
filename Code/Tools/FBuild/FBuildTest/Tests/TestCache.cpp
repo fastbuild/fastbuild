@@ -719,6 +719,9 @@ void TestCache::LightCache_ImportDirective() const
 
     // Ensure we detected that we could not use the LightCache
     TEST_ASSERT( objStats.m_NumLightCache == 0 );
+
+    // Check for expected error in output (from -cacheverbose)
+    TEST_ASSERT( GetRecordedOutput().Find( "#import is unsupported." ) );
 }
 
 // Analyze_MSVC_WarningsOnly_Write
