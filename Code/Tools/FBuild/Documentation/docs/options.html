@@ -263,7 +263,7 @@ of the cache and how quickly it is growing. (See the related <a href='#cachetrim
     <tr><td>1 to 12</td><td>LZ4 HC compression. Higher values compress more, but are slower.</td></tr>
 </table>
 <p>Timings will vary depending on hardware and objects being cached, but example timings compressing a
-~900KiB object files file is as follows:
+~900KiB object file is as follows:
     <div class="code">
 File : Tools/FBuild/FBuildTest/Data/TestCompressor/TestObjFile.o
 Size : 897329
@@ -476,10 +476,6 @@ suppressed.</p>
 <p>NOTE: This option will lengthen the total build time, depending on the complexity of the build.</p>
 </div>
 
-  <tr>
-    <td><a href="#showcmdoutput">-showcmdoutput</a></td>
-    <td>Show output of external processes.</td>
-  </tr>  
     <div class='newsitemheader' id="showcmdoutput">-showcmdoutput</div>
     <div class='newsitembody'>
 <p>Displays the full output of external processes regardless of outcome.</p>
