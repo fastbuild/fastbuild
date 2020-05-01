@@ -54,6 +54,7 @@ private:
 
     void            FindNeedyClients();
     void            FinalizeCompletedJobs();
+    void            TouchToolchains();
     void            CheckWaitingJobs( const ToolManifest * manifest );
 
     void            RequestMissingFiles( const ConnectionInfo * connection, ToolManifest * manifest ) const;
@@ -88,6 +89,10 @@ private:
 
     mutable Mutex           m_ToolManifestsMutex;
     Array< ToolManifest * > m_Tools;
+    
+    #if defined( __OSX__ ) || ( __LINUX__ )
+        Timer                   m_TouchToolchainTimer;
+    #endif
 };
 
 //------------------------------------------------------------------------------
