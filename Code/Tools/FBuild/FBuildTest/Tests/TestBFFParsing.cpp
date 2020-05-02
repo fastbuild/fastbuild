@@ -50,6 +50,7 @@ private:
     void IfDirective() const;
     void IfExistsDirective() const;
     void IfFileExistsDirective() const;
+    void IfFileExistsDirective_RelativePaths() const;
     void ElseDirective() const;
     void ElseDirective_Bad() const;
     void ElseDirective_Bad2() const;
@@ -110,6 +111,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IfDirective )
     REGISTER_TEST( IfExistsDirective )
     REGISTER_TEST( IfFileExistsDirective )
+    REGISTER_TEST( IfFileExistsDirective_RelativePaths )
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
     REGISTER_TEST( ElseDirective_Bad2 )
@@ -421,13 +423,20 @@ void TestBFFParsing::IfFileExistsDirective() const
 
     // Check changes are detected (or not) between builds
     {
+        const char * rootBFF    = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
         const char * fileName   = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
         const char * db         = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
-        FBuildTestOptions options;
-        options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff";
 
-        // Delete file fromprevious test run
+        // Copy root bff to temp dir
+        FileIO::SetReadOnly( rootBFF, false );
+        EnsureFileDoesNotExist( rootBFF );
+        FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff", rootBFF );
+
+        // Delete extra file from previous test run
         EnsureFileDoesNotExist( fileName );
+
+        FBuildTestOptions options;
+        options.m_ConfigFile = rootBFF;
 
         // Parse bff, which checks if file exists
         {
@@ -497,6 +506,27 @@ void TestBFFParsing::IfFileExistsDirective() const
             TEST_ASSERT( output.Find( "File does not exist" ) );
         }
     }
+}
+
+// IfFileExistsDirective_RelativePaths
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
+{
+    // file_exists treats paths the same way as #include
+    // (paths are relative to the bff)
+    
+    FBuildTestOptions options;
+    options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Check for expected output
+    const AString & output( GetRecordedOutput() );
+    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ));
+    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ));
+    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ));
+    TEST_ASSERT( output.Find( "OK-4" ) );
 }
 
 // ElseDirective

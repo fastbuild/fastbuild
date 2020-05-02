@@ -594,7 +594,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
     {
         argsIter++; // consume keyword
-        if ( HandleDirective_IfFileExists( argsIter, result ) == false )
+        if ( HandleDirective_IfFileExists( file, argsIter, result ) == false )
         {
             return false;
         }
@@ -712,7 +712,7 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
 
 // HandleDirective_IfFileExists
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_IfFileExists( BFFTokenRange & iter, bool & outResult )
+bool BFFTokenizer::HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool & outResult )
 {
     // Expect open bracket
     if ( iter->IsRoundBracket( '(' ) == false )
@@ -740,8 +740,11 @@ bool BFFTokenizer::HandleDirective_IfFileExists( BFFTokenRange & iter, bool & ou
     }
     iter++; // consume close )
 
+    AStackString<> includePath( fileName );
+    ExpandIncludePath( file, includePath );
+
     // check if file exists
-    outResult = FBuild::Get().AddFileExistsCheck( fileName );
+    outResult = FBuild::Get().AddFileExistsCheck( includePath );
     return true;
 }
 
@@ -899,20 +902,7 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
 
     // TODO:B Check for empty string
 
-    // NOTE: Substitutions are not supported on includes
-
-    // Includes are relative to current file, unless full paths
-    if ( PathUtils::IsFullPath( include ) == false )
-    {
-        // Determine path from current file
-        const AString & currentFile = file.GetFileName();
-        const char * lastSlash = currentFile.FindLast( NATIVE_SLASH );
-        lastSlash = lastSlash ? lastSlash : currentFile.FindLast( OTHER_SLASH );
-        lastSlash = lastSlash ? ( lastSlash + 1 ): currentFile.Get(); // file only, truncate to empty
-        AStackString<> tmp( currentFile.Get(), lastSlash );
-        tmp += include;
-        include = tmp;
-    }
+    ExpandIncludePath( file, include );
 
     // Recursively tokenize
     const bool result = TokenizeFromFile( include, argsIter.GetCurrent() );
@@ -1050,6 +1040,24 @@ bool BFFTokenizer::GetDirective( const BFFFile & file, const char * & pos, AStri
     }
 
     return true;
+}
+
+// ExpandIncludePath
+//------------------------------------------------------------------------------
+void BFFTokenizer::ExpandIncludePath( const BFFFile & file, AString & includePath ) const
+{
+    // Includes are relative to current file, unless full paths
+    if ( PathUtils::IsFullPath( includePath ) == false )
+    {
+        // Determine path from current file
+        const AString & currentFile = file.GetFileName();
+        const char * lastSlash = currentFile.FindLast( NATIVE_SLASH );
+        lastSlash = lastSlash ? lastSlash : currentFile.FindLast( OTHER_SLASH );
+        lastSlash = lastSlash ? ( lastSlash + 1 ): currentFile.Get(); // file only, truncate to empty
+        AStackString<> tmp( currentFile.Get(), lastSlash );
+        tmp += includePath;
+        includePath = tmp;
+    }
 }
 
 //------------------------------------------------------------------------------
