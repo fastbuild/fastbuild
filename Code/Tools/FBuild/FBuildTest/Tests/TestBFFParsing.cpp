@@ -430,6 +430,7 @@ void TestBFFParsing::IfFileExistsDirective() const
         // Copy root bff to temp dir
         FileIO::SetReadOnly( rootBFF, false );
         EnsureFileDoesNotExist( rootBFF );
+        EnsureDirExists("../tmp/Test/BFFParsing/FileExistsDirective/");
         FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff", rootBFF );
 
         // Delete extra file from previous test run
