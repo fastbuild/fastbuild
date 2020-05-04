@@ -62,7 +62,7 @@ private:
         while ( ( cond ) == false )                 \
         {                                           \
             Thread::Sleep( 1 );                     \
-            TEST_ASSERT( t.GetElapsed() < 5.0f );   \
+            TEST_ASSERT( t.GetElapsed() < 30.0f );  \
         }                                           \
     }
 
@@ -83,7 +83,7 @@ void TestTestTCPConnectionPool::TestOneServerMultipleClients() const
 {
     const uint16_t testPort( TEST_PORT );
 
-    for ( uint32_t i=0; i<NUM_TEST_PASSES; ++i )
+    for ( uint32_t i = 0; i < NUM_TEST_PASSES; ++i )
     {
         // listen like a server
         TCPConnectionPool server;
@@ -115,7 +115,7 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
 {
     const uint16_t testPort( TEST_PORT );
 
-    for ( uint32_t i=0; i<NUM_TEST_PASSES; ++i )
+    for ( uint32_t i = 0; i < NUM_TEST_PASSES; ++i )
     {
         // multiple servers
         TCPConnectionPool serverA;
@@ -155,7 +155,7 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
 {
     const uint16_t testPort( TEST_PORT );
 
-    for ( uint32_t i=0; i<NUM_TEST_PASSES; ++i )
+    for ( uint32_t i = 0; i < NUM_TEST_PASSES; ++i )
     {
         // multiple servers
         TCPConnectionPool serverA;
@@ -219,7 +219,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     // a big piece of data, initialized to some known pattern
     const size_t maxSendSize( 1024 * 1024 * 10 );
     AutoPtr< char > data( (char *)ALLOC( maxSendSize ) );
-    for ( size_t i=0; i< maxSendSize; ++i )
+    for ( size_t i = 0; i < maxSendSize; ++i )
     {
         data.Get()[ i ] = (char)i;
     }
@@ -288,9 +288,9 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 
     // start a thread to flood the slow server
     Thread::ThreadHandle h = Thread::CreateThread( TestConnectionStuckDuringSend_ThreadFunc,
-                                                    "Sender",
-                                                    ( 64 * KILOBYTE ),
-                                                    (void*)ci );
+                                                   "Sender",
+                                                   ( 64 * KILOBYTE ),
+                                                   (void *)ci );
 
     // let thread send enough data to become blocked in Send
     Thread::Sleep( 100 );
@@ -317,7 +317,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     // send lots of data to slow server
     AutoPtr< char > mem( (char *)ALLOC( 10 * MEGABYTE ) );
     memset( mem.Get(), 0, 10 * MEGABYTE );
-    for ( size_t i=0; i<1000; ++i )
+    for ( size_t i = 0; i < 1000; ++i )
     {
         if ( !client.Send( ci, mem.Get(), 10 * MEGABYTE ) )
         {

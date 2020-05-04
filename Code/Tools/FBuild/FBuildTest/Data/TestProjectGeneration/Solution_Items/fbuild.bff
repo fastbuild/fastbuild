@@ -1,0 +1,70 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Some FASTBuild-generated projects
+VCXProject( 'Proj1' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_Items\proj_native1.vcxproj'
+}
+VCXProject( 'Proj2' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_Items\proj_native2.vcxproj'
+}
+VCXProject( 'Proj3' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_Items\proj_native3.vcxproj'
+}
+VCXProject( 'Proj4' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_Items\proj_native4.vcxproj'
+}
+
+VSSolution( 'Solution_with_items' )
+{
+    .SolutionOutput             = "$Out$\Test\ProjectGeneration\Solution_Items\solution_with_items.sln"
+
+    // solution folder with projects and items
+    .Solution_Folder_A =
+    [
+        .Path                   = 'Solution folder A'
+        .Projects               = {
+                                    'Proj1'
+                                    'Proj2'
+                                  }
+        .Items                  = {
+                                    'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/fbuild.bff'
+                                    'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/dummy_item.ext'
+                                  }
+    ]
+
+    // solution folder with projects only
+    .Solution_Folder_B =
+    [
+        .Path                   = 'Solution folder B'
+        .Projects               = {
+                                    'Proj3'
+                                  }
+    ]
+
+    // solution folder with items only
+    .Solution_Folder_C =
+    [
+        .Path                   = 'Solution folder B\subdir B'
+        .Items                  = {
+                                    'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/subdir/dummy_item_1.txt'
+                                    'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/subdir/dummy_item_2.xml'
+                                  }
+    ]
+
+    // empty solution folder
+    .Solution_Folder_Empty =
+    [
+        .Path                   = 'Empty Solution folder'
+    ]
+
+    .SolutionFolders            = { .Solution_Folder_A, .Solution_Folder_B, .Solution_Folder_C, .Solution_Folder_Empty }
+
+    .SolutionProjects           = { 'Proj4' }
+}

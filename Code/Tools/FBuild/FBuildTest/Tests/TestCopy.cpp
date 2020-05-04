@@ -437,7 +437,6 @@ void TestCopy::CopyDir_NoRebuild() const
     CheckStatsTotal( 6,     3 );
 }
 
-
 // CopyDir_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
 void TestCopy::CopyDir_NoRebuild_BFFChange() const
@@ -526,9 +525,9 @@ void TestCopy::CopyDirDeleteSrc() const
         //               Seen,  Built,  Type
         CheckStatsNode(  1,     1,      Node::FILE_NODE );
         CheckStatsNode(  1,     0,      Node::COPY_FILE_NODE );
-        CheckStatsNode(  1,     0,      Node::COPY_DIR_NODE );
+        CheckStatsNode(  1,     1,      Node::COPY_DIR_NODE );
         CheckStatsNode(  1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsTotal( 4,     2 );
+        CheckStatsTotal( 4,     3 );
     }
 }
 

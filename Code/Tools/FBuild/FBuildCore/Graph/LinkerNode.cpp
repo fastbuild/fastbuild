@@ -34,7 +34,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_LinkerOptions,                   "LinkerOptions",                MetaNone() )
     REFLECT( m_LinkerType,                      "LinkerType",                   MetaOptional() )
     REFLECT_ARRAY( m_Libraries,                 "Libraries",                    MetaFile() + MetaAllowNonFile() )
-    REFLECT_ARRAY( m_LinkerAssemblyResources,   "LinkerAssemblyResources",      MetaOptional() + MetaFile() )
+    REFLECT_ARRAY( m_LinkerAssemblyResources,   "LinkerAssemblyResources",      MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
     REFLECT( m_LinkerLinkObjects,               "LinkerLinkObjects",            MetaOptional() )
     REFLECT( m_LinkerStampExe,                  "LinkerStampExe",               MetaOptional() + MetaFile() )
     REFLECT( m_LinkerStampExeArgs,              "LinkerStampExeArgs",           MetaOptional() )
@@ -59,7 +59,7 @@ LinkerNode::LinkerNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool LinkerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool LinkerNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -288,11 +288,19 @@ LinkerNode::~LinkerNode()
         }
         else
         {
-            // If "warnings as errors" is enabled (/WX) we don't need to check
-            // (since compilation will fail anyway, and the output will be shown)
-            if ( GetFlag( LINK_FLAG_MSVC ) && !GetFlag( LINK_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+            if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
             {
-                HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+                if ( memOut.Get() ) { Node::DumpOutput( job, memOut.Get(), memOutSize ); }
+                if ( memErr.Get() ) { Node::DumpOutput( job, memErr.Get(), memErrSize ); }
+            }
+            else
+            {
+                // If "warnings as errors" is enabled (/WX) we don't need to check
+                // (since compilation will fail anyway, and the output will be shown)
+                if ( GetFlag( LINK_FLAG_MSVC ) && !GetFlag( LINK_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+                {
+                    HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+                }
             }
             break; // success!
         }
@@ -335,11 +343,18 @@ LinkerNode::~LinkerNode()
             return NODE_RESULT_FAILED;
         }
 
+        // Show output if desired
+        const bool showCommandOutput = ( result != 0 ) || 
+                                       FBuild::Get().GetOptions().m_ShowCommandOutput;
+        if ( showCommandOutput )
+        {
+            if ( memOut.Get() ) { Node::DumpOutput( job, memOut.Get(), memOutSize ); }
+            if ( memErr.Get() ) { Node::DumpOutput( job, memErr.Get(), memErrSize ); }
+        }
+
         // did the executable fail?
         if ( result != 0 )
         {
-            if ( memOut.Get() ) { FLOG_ERROR_DIRECT( memOut.Get() ); }
-            if ( memErr.Get() ) { FLOG_ERROR_DIRECT( memErr.Get() ); }
             FLOG_ERROR( "Failed to stamp %s. Error: %s Target: '%s' StampExe: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get(), m_LinkerStampExe.Get() );
             return NODE_RESULT_FAILED;
         }
@@ -382,7 +397,7 @@ bool LinkerNode::DoPreLinkCleanup() const
     // thinks it can skip compilation (it outputs "Note: reusing persistent precompiled header %s")
     // If FASTBuild is building because we've not built before, then cleanup old files
     // to ensure VS2013/2015 /showincludes will work
-    if ( GetStamp() == 0 )
+    if ( GetStatFlag( STATS_FIRST_BUILD ) )
     {
         deleteFiles = true;
     }
@@ -640,7 +655,7 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
             flags |= LinkerNode::LINK_FLAG_GREENHILLS_ELXR;
         }
         else if ( ( linkerName.EndsWithI( "mwldeppc.exe" ) ) ||
-            ( linkerName.EndsWithI( "mwldeppc." ) ) )
+            ( linkerName.EndsWithI( "mwldeppc" ) ) )
         {
             flags |= LinkerNode::LINK_FLAG_CODEWARRIOR_LD;
         }
@@ -873,18 +888,21 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
 void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
     AStackString<> output;
-    output += GetDLLOrExe();
-    output += ": ";
-    output += GetName();
-    output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += GetDLLOrExe();
+        output += ": ";
+        output += GetName();
+        output += '\n';
+    }
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += m_Linker;
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // EmitStampMessage
@@ -892,20 +910,23 @@ void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
 void LinkerNode::EmitStampMessage() const
 {
     ASSERT( m_LinkerStampExe.IsEmpty() == false );
-    const Node * linkerStampExe = m_StaticDependencies.End()[ -1 ].GetNode();
 
     AStackString<> output;
-    output += "Stamp: ";
-    output += GetName();
-    output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
+        output += "Stamp: ";
+        output += GetName();
+        output += '\n';
+    }
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
+    {
+        const Node * linkerStampExe = m_StaticDependencies.End()[ -1 ].GetNode();
         output += linkerStampExe->GetName();
         output += ' ';
         output += m_LinkerStampExeArgs;
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // CanUseResponseFile
@@ -957,7 +978,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // GetOtherLibraries
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
-                                               const BFFIterator & iter,
+                                               const BFFToken * iter,
                                                const Function * function,
                                                const AString & args,
                                                Dependencies & otherLibraries,
@@ -1161,7 +1182,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // GetOtherLibrary
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
-                                             const BFFIterator & iter,
+                                             const BFFToken * iter,
                                              const Function * function,
                                              Dependencies & libs,
                                              const AString & path,
@@ -1191,7 +1212,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         }
 
         // found existing node
-        libs.Append( Dependency( node ) );
+        libs.EmplaceBack( node );
         found = true;
         return true; // no error
     }
@@ -1200,9 +1221,9 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( FileIO::FileExists( potentialNodeNameClean.Get() ) )
     {
         node = nodeGraph.CreateFileNode( potentialNodeNameClean );
-        libs.Append( Dependency( node ) );
+        libs.EmplaceBack( node );
         found = true;
-        FLOG_INFO( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );
+        FLOG_VERBOSE( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );
         return true; // no error
     }
 
@@ -1282,7 +1303,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // DependOnNode
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::DependOnNode( NodeGraph & nodeGraph,
-                                          const BFFIterator & iter,
+                                          const BFFToken * iter,
                                           const Function * function,
                                           const AString & nodeName,
                                           Dependencies & nodes )
@@ -1305,13 +1326,13 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // node not found - create a new FileNode, assuming we are
     // linking against an externally built library
     node = nodeGraph.CreateFileNode( nodeName );
-    nodes.Append( Dependency( node ) );
+    nodes.EmplaceBack( node );
     return true;
 }
 
 // DependOnNode
 //------------------------------------------------------------------------------
-/*static*/ bool LinkerNode::DependOnNode( const BFFIterator & iter,
+/*static*/ bool LinkerNode::DependOnNode( const BFFToken * iter,
                                           const Function * function,
                                           Node * node,
                                           Dependencies & nodes )
@@ -1322,7 +1343,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::LIBRARY_NODE )
     {
         // can link directly to it
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 
@@ -1330,7 +1351,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::OBJECT_LIST_NODE )
     {
         // can link directly to it
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 
@@ -1338,7 +1359,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::DLL_NODE )
     {
         // TODO:B Depend on import lib
-        nodes.Append( Dependency( node, true ) ); // NOTE: Weak dependency
+        nodes.EmplaceBack( node, (uint64_t)0, true ); // NOTE: Weak dependency
         return true;
     }
 
@@ -1346,7 +1367,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::FILE_NODE )
     {
         // can link directy against it
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 
@@ -1354,7 +1375,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::COPY_FILE_NODE )
     {
         // depend on copy - will use input at build time
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 
@@ -1362,7 +1383,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::EXEC_NODE )
     {
         // depend on ndoe - will use exe output at build time
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 

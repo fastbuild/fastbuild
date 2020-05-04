@@ -617,6 +617,10 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         {
             WriteString( 4, "SDKROOT", config.m_XCodeBaseSDK );
         }
+        if ( config.m_XCodeIphoneOSDeploymentTarget.IsEmpty() == false )
+        {
+            WriteString( 4, "IPHONEOS_DEPLOYMENT_TARGET", config.m_XCodeIphoneOSDeploymentTarget );
+        }
         Write( "\t\t\t};\n"
                "\t\t\tname = %s;\n"
                "\t\t};\n",
@@ -775,6 +779,7 @@ bool XCodeProjectGenerator::ShouldQuoteString( const AString & value ) const
              ( c == '"' ) ||
              ( c == '?' ) ||
              ( c == '-' ) ||
+             ( c == '+' ) ||
              ( c == '=' ) )
         {
             return true;

@@ -10,7 +10,7 @@
 
 // Activate
 //------------------------------------------------------------------------------
-#if__LINUX__
+#if __LINUX__
     #if CI_BUILD
         #include "Linux/GCC_CI.bff"
     #else

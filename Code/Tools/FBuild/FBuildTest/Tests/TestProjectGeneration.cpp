@@ -5,12 +5,12 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-// FBuild
-#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
-#include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
+#include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -49,6 +49,12 @@ private:
     void Solution_BuildAndDeploy_None() const;
     void Solution_BuildAndDeploy_Project() const;
     void Solution_BuildAndDeploy_PerSolutionConfig() const;
+    void Solution_Items() const;
+
+    // VSExternalProj
+    void VSExternalProj_ExternalProject() const;
+    void VSExternalProj_ExternalProjectWrongData() const;
+    void VSExternalProj_ExternalProject_MissingProjectGUID() const;
 
     // XCode
     void XCode() const;
@@ -80,6 +86,12 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( Solution_BuildAndDeploy_None )
     REGISTER_TEST( Solution_BuildAndDeploy_Project )
     REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
+    REGISTER_TEST( Solution_Items )
+    REGISTER_TEST( VSExternalProj_ExternalProject )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( VSExternalProj_ExternalProjectWrongData )
+    #endif
+    REGISTER_TEST( VSExternalProj_ExternalProject_MissingProjectGUID )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -400,14 +412,14 @@ void TestProjectGeneration::IntellisenseAndCodeSense() const
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.vcxproj" );
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.vcxproj" );
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.vcxproj" );
-    VCXProj_Intellisense_Check("../tmp/Test/ProjectGeneration/Intellisense/Copy.vcxproj");
+    VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Copy.vcxproj" );
 
     // Ensure XCode CodeSense info is present
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/ObjectList.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.xcodeproj/project.pbxproj" );
-    XCodeProj_CodeSense_Check("../tmp/Test/ProjectGeneration/Intellisense/Copy.xcodeproj/project.pbxproj");
+    XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Copy.xcodeproj/project.pbxproj" );
 }
 
 // VCXProj_Intellisense_Check
@@ -568,13 +580,13 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     }
 
     // Check we found them all
-    for ( size_t i=0; i<NUM_DEFINES; ++i )
+    for ( size_t i = 0; i < NUM_DEFINES; ++i )
     {
-        TEST_ASSERT( definesOk[ i ]  );
+        TEST_ASSERT( definesOk[ i ] );
     }
-    for ( size_t i=0; i<NUM_INCLUDES; ++i )
+    for ( size_t i = 0; i < NUM_INCLUDES; ++i )
     {
-        TEST_ASSERT( includesOk[ i ]  );
+        TEST_ASSERT( includesOk[ i ] );
     }
 }
 
@@ -1164,6 +1176,113 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     // Ensure no other unexpected Build/Deploy settings are written
     TEST_ASSERT( solutionData.Find( ".Build." ) == nullptr );
     TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
+}
+
+// Solution_Items
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_Items() const
+{
+    const AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_Items/solution_with_items.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( "Solution_with_items" ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode(  1,     1,      Node::SLN_NODE );
+    CheckStatsNode(  1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 6,     6 );
+}
+
+
+// VSExternalProj_ExternalProject
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VSExternalProj_ExternalProject() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/External.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( "ExternalProjectSolution" ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Check stats
+    //              Seen,   Built,  Type
+    CheckStatsNode( 1,      1,      Node::SLN_NODE );
+    CheckStatsNode( 1,      1,      Node::ALIAS_NODE );
+
+    // because of the external module, peek how many of them were actually processed, depending if using the module is
+    // enforced or not in the actual fbuild.bff 
+    const FBuildStats& stats = FBuild::Get().GetStats();
+    const FBuildStats::Stats& nodeStatsExternal = stats.GetStatsFor( Node::VSPROJEXTERNAL_NODE );
+    const size_t actualNumExtSeen = nodeStatsExternal.m_NumProcessed;
+    const size_t actualNumExtBuilt = nodeStatsExternal.m_NumBuilt;
+
+    CheckStatsTotal( 4 + actualNumExtSeen, 4 + actualNumExtBuilt );
+}
+
+// VSExternalProj_ExternalProjectWrongData
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VSExternalProj_ExternalProjectWrongData() const
+{
+    // this test really needs to use the external module on a wrong project, in order to validate a failure scenario
+    // therefore it should only be ever run on windows, with properly installed VS
+
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/ExternalWrongData.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild_WrongData.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // building will fail
+    TEST_ASSERT( fBuild.Build( "ExternalWrongDataProjectSolution" ) == false );
+
+    CheckStatsTotal( 5, 2 );
+}
+
+// VSExternalProj_ExternalProject_MissingProjectGUID
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VSExternalProj_ExternalProject_MissingProjectGUID() const
+{
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild_MissingProjectGUID.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // building will fail
+    TEST_ASSERT( fBuild.Build( "ExternalProject_MissingProjectGUID" ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failed to extract <ProjectGuid>" ) );
 }
 
 // XCode

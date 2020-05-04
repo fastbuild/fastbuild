@@ -20,9 +20,9 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 AString::AString()
-: m_Contents( const_cast<char *>( s_EmptyString ) ) // cast to allow pointing to protected string
-, m_Length( 0 )
-, m_ReservedAndFlags( 0 )
+    : m_Contents( const_cast<char *>( s_EmptyString ) ) // cast to allow pointing to protected string
+    , m_Length( 0 )
+    , m_ReservedAndFlags( 0 )
 {
 }
 
@@ -214,7 +214,7 @@ int32_t AString::CompareI( const char * other ) const
 AString & AString::Format( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     VFormat( fmtString, args );
     va_end( args );
 
@@ -356,7 +356,7 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
     tokens.SetSize( numTokens );
 
     // copy tokens
-    for ( size_t i=0; i<numTokens; ++i )
+    for ( size_t i = 0; i < numTokens; ++i )
     {
         tokens[ i ].Assign( tokenStarts[ i ], tokenEnds[ i ] );
     }
@@ -564,7 +564,7 @@ AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > buffer;
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
     va_end( args );
 
@@ -653,6 +653,34 @@ void AString::Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim )
 
     // Shuffle string up
     Assign( Get() + startCharsToTrim, GetEnd() - endCharsToTrim );
+}
+
+// TrimStart
+//------------------------------------------------------------------------------
+void AString::TrimStart( char charToTrimFromStart )
+{
+    uint32_t nbrCharsToRemoveFromStart = 0;
+    const char * pos = m_Contents;
+    const char * end = m_Contents + m_Length;
+    for ( ; pos < end && *pos == charToTrimFromStart; ++pos, ++nbrCharsToRemoveFromStart ) 
+    {
+    }
+
+    Trim( nbrCharsToRemoveFromStart, 0 );
+}
+
+// TrimEnd
+//------------------------------------------------------------------------------
+void AString::TrimEnd( char charToTrimFromEnd )
+{
+    uint32_t nbrCharsToRemoveFromEnd = 0;
+    const char * pos = m_Contents + m_Length - 1;
+    const char * end = m_Contents;
+    for ( ; pos >= end && *pos == charToTrimFromEnd; --pos, ++nbrCharsToRemoveFromEnd ) 
+    {
+    }
+
+    Trim( 0, nbrCharsToRemoveFromEnd );
 }
 
 // Replace ( char *, char * )
@@ -798,8 +826,8 @@ const char * AString::FindI( char c, const char * startPos, const char * endPos 
 {
     // if startPos is provided, validate it
     // (deliberately allow startPos to point one past end of string)
-    ASSERT( (startPos == nullptr ) || ( startPos >= m_Contents ) );
-    ASSERT( (startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
 
     const char * pos = startPos ? startPos : m_Contents;
     const char * end = endPos ? endPos : m_Contents + m_Length;
@@ -1184,27 +1212,27 @@ new_segment:
 
 test_match:
     int i;
-    for ( i = 0; pat[i] && (pat[i] != '*'); i++ )
+    for ( i = 0; pat[ i ] && ( pat[ i ] != '*' ); i++ )
     {
-        char a = str[i];
-        char b = pat[i];
+        char a = str[ i ];
+        char b = pat[ i ];
         if ( a != b )
         {
-            if ( !str[i] ) return false;
-            if ( ( pat[i] == '?' ) && ( str[i] != '.' ) ) continue;
+            if ( !str[ i ] ) return false;
+            if ( ( pat[ i ] == '?' ) && ( str[i] != '.' ) ) continue;
             if ( !star ) return false;
             str++;
             goto test_match;
         }
     }
-    if ( pat[i] == '*' )
+    if ( pat[ i ] == '*' )
     {
         str += i;
         pat += i;
         goto new_segment;
     }
-    if ( !str[i] ) return true;
-    if ( i && pat[i - 1] == '*' ) return true;
+    if ( !str[ i ] ) return true;
+    if ( i && pat[ i - 1 ] == '*' ) return true;
     if ( !star ) return false;
     str++;
     goto test_match;
@@ -1227,27 +1255,27 @@ new_segment:
 
 test_match:
     int i;
-    for ( i = 0; pat[i] && (pat[i] != '*'); i++ )
+    for ( i = 0; pat[ i ] && ( pat[ i ] != '*' ); i++ )
     {
-        char a = str[i]; a = ( ( a >= 'A' ) && ( a <= 'Z' ) ) ? 'a' + ( a - 'A' ) : a;
-        char b = pat[i]; b = ( ( b >= 'A' ) && ( b <= 'Z' ) ) ? 'a' + ( b - 'A' ) : b;
+        char a = str[ i ]; a = ( ( a >= 'A' ) && ( a <= 'Z' ) ) ? 'a' + ( a - 'A' ) : a;
+        char b = pat[ i ]; b = ( ( b >= 'A' ) && ( b <= 'Z' ) ) ? 'a' + ( b - 'A' ) : b;
         if ( a != b )
         {
-            if ( !str[i] ) return false;
-            if ( ( pat[i] == '?' ) && ( str[i] != '.' ) ) continue;
+            if ( !str[ i ] ) return false;
+            if ( ( pat[ i ] == '?' ) && ( str[i] != '.' ) ) continue;
             if ( !star ) return false;
             str++;
             goto test_match;
         }
     }
-    if ( pat[i] == '*' )
+    if ( pat[ i ] == '*' )
     {
         str += i;
         pat += i;
         goto new_segment;
     }
-    if ( !str[i] ) return true;
-    if ( i && pat[i - 1] == '*' ) return true;
+    if ( !str[ i ] ) return true;
+    if ( i && pat[ i - 1 ] == '*' ) return true;
     if ( !star ) return false;
     str++;
     goto test_match;
@@ -1257,7 +1285,7 @@ test_match:
 //------------------------------------------------------------------------------
 /*static*/ void AString::Copy( const char * src, char * dst )
 {
-    for (;;)
+    for ( ;; )
     {
         const char c = *src;
         *dst = c; // Includes the null terminator

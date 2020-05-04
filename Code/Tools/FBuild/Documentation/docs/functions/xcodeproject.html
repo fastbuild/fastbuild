@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - XCodeProject</title>
 </head>
@@ -54,7 +55,7 @@
   // Debugging Options
   .XCodeDocumentVersioning       // (optional) Enable "Document Versioning" (default: false)
   .XCodeCommandLineArguments     // (optional) Enabled command line options for debug target
-  .XCodeCommandLineArgumentsDiabled // (optional) Disabled command line options for debug target
+  .XCodeCommandLineArgumentsDisabled // (optional) Disabled command line options for debug target
 
   // Other Options
   .XCodeOrganizationName         // (optional) Organization name to set in project
@@ -70,6 +71,7 @@
   .Target                        // (optional) FASTBuild compilation target to associate with .Config
   .XCodeBaseSDK                  // (optional) SDK for compilation target (e.g. "iphoneos", "macosx" )
   .XCodeDebugWorkingDir          // (optional) Working dir for target when debugging
+  .XCodeIphoneOSDeploymentTarget // (optional) iOS deployment version
 ]
 </div>
     </div>
@@ -216,7 +218,7 @@
     <div class='newsitembody'>
       
       <p><b>.XCodeBuildToolPath</b> - String - (Optional)</p>
-      <p>To location of the FASTBuild executable to invoke can be specified.</p>
+      <p>The location of the FASTBuild executable to invoke can be specified.</p>
       Example:
       <div class='code'>.XCodeBuildToolPath = '../Build/FBuild'</div>
 	  If not specified, the default will be used:
@@ -224,23 +226,57 @@
       <hr>
 	  
       <p><b>.XCodeBuildToolArgs</b> - String - (Optional)</p>
-      <p>To commend line args to pass to FASTBuild when compiling can be specified.</p>
+      <p>The command line args to pass to FASTBuild when compiling can be specified.</p>
       Example:
-      <div class='code'>.XCodeBuildToolArgs = '-ide -cache -summary $(FASTBUILD_TARGET)'</div>
+      <div class='code'>.XCodeBuildToolArgs = '-ide -cache -summary OSX64-All'</div>
 	  If not specified, the default will be used:
-      <div class='code'>.XCodeBuildToolArgs = '-ide $(FASTBUILD_TARGET)'</div>
+      <div class='code'>.XCodeBuildToolArgs = '-ide ^$(FASTBUILD_TARGET)'</div>
 	  <ul>
 	  <li>FASTBUILD_TARGET is a special per-configuration symbol that will be replaced (by XCode) with the .Target being compiled. FASTBuild automatically defines
 	  this symbol correctly for each build configuration.</li>
+	  <li>Note that the $ is escaped so that it's not interpretted by FASTBuild as the beginning of a variable substitution.</li>
 	  </ul>
       <hr>	  
   
       <p><b>.XCodeBuildWorkingDir</b> - String - (Optional)</p>
-      <p>To location to set as a working directory for compilation.</p>
+      <p>The location to set as a working directory for compilation.</p>
       Example:
       <div class='code'>.XCodeBuildToolPath = 'Code/'</div>
 	  If not specified, the default will be used:
       <div class='code'>.XCodeBuildToolPath = './'</div>  
+    </div>
+
+	<!-- 
+		Debugging Options
+	-->
+    <div id='unity' class='newsitemheader'>
+      Debugging Options
+    </div>
+    <div class='newsitembody'>
+
+      <p><b>.XCodeDocumentVersioning</b> - Boolean - (Optional)</p>
+      <p>Controls whether the "Document Versionsing" checkbox is enabled.</p>
+	  <p>By default (non-FASTBuild) XCode projects have this option set, which causes
+	  XCode to pass additional args on the command line to the process when debugging. This
+	  is usually not desired, so FASTBuild suppresses this by default. The option can be re-enabled
+	  if needed.</p>
+      Example:
+      <div class='code'>.XCodeDocumentVersioning = true</div>
+      <hr>
+	  
+      <p><b>.XCodeCommandLineArguments</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Specify command line arguments passed to the process when debugging.</p>
+      Example:
+      <div class='code'>.XCodeCommandLineArguments = { '-Arg1', '-Arg2' }</div>
+	  <b>NOTE:</b> This option (and .XCodeCommandLineArgumentsDisabled) is stored in the .xcscheme file for the project, which also contains
+	  other user-edited settings. As such, while FASTBuild will generate this file if missing, it
+	  will not overwrite it when it changes (so as not to overwrite other user edited settings).
+	  The .xcscheme can be deleted to force regeneration.
+      <hr>
+	  
+      <p><b>.XCodeCommandLineArgumentsDisabled</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Specify command line arguments passed to the process when debugging (same as
+	  .XCodeCommandLineArguments), but disable them by default.</p>
     </div>
 
 	<!-- 
@@ -302,9 +338,14 @@
       Example:
       <div class='code'>.DebugConfig = [ .XCodeDebugWorkingDir = 'path/path' ...</div>
 
+      <hr>
+      <p><b>.XCodeIphoneOSDeploymentTarget</b> - String - (Optional)</p>
+      <p>The iOS version required for deployment can be overridden from the XCode default.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .XCodeIphoneOSDeploymentTarget = '12.0' ...</div>
 
     </div>
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

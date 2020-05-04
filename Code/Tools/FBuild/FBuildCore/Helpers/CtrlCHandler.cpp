@@ -77,7 +77,7 @@ void CtrlCHandler::DeregisterHandler()
 // CtrlHandler
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    BOOL WINAPI CtrlHandlerFunc( DWORD UNUSED( fdwCtrlType ) )
+    BOOL WINAPI CtrlHandlerFunc( DWORD /*fdwCtrlType*/ )
     {
         // tell FBuild we want to stop the build cleanly
         FBuild::AbortBuild();
@@ -103,7 +103,7 @@ void CtrlCHandler::DeregisterHandler()
         return TRUE; // tell Windows we've "handled" it
     }
 #elif defined( __LINUX__ ) || defined( __OSX__ )
-    void CtrlHandlerFunc( int UNUSED( dummy ) )
+    void CtrlHandlerFunc( int /*dummy*/ )
     {
         // tell FBuild we want to stop the build cleanly
         FBuild::AbortBuild();

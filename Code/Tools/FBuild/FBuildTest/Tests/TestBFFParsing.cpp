@@ -5,12 +5,14 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 
 // TestBFFParsing
@@ -25,14 +27,18 @@ private:
     void Comments() const;
     void Strings() const;
     void String_Unterminated() const;
-    void String_Unterminated2() const;
     void Arrays() const;
     void Array_Unterminated() const;
     void Array_TypeMismatch() const;
     void Integers() const;
     void UnnamedScope() const;
     void UnnamedScope_Unterminated() const;
+    void Directives() const;
+    void DefineDirective() const;
+    void ExistsDirective() const;
     void IncludeDirective() const;
+    void Include_ExcessiveDepth() const;
+    void ImportDirective() const;
     void OnceDirective() const;
     void Structs() const;
     void Struct_Concatenation() const;
@@ -43,8 +49,15 @@ private:
     void IncludeScope() const;
     void IfDirective() const;
     void IfExistsDirective() const;
+    void IfFileExistsDirective() const;
+    void IfFileExistsDirective_RelativePaths() const;
     void ElseDirective() const;
     void ElseDirective_Bad() const;
+    void ElseDirective_Bad2() const;
+    void ElseDirective_Bad3() const;
+    void ElseDirective_Bad4() const;
+    void ElseDirective_Bad5() const;
+    void ElseDirective_Bad6() const;
     void InvalidDirective() const;
     void DefineUndefineDirectives() const;
     void BadDefineDirective() const;
@@ -62,8 +75,9 @@ private:
     void CyclicDependency() const;
     void SelfAssignment() const;
     void SelfAssignment2() const;
-
-    void Parse( const char * fileName, bool expectFailure = false ) const;
+    void Variables() const;
+    void Functions() const;
+    void ErrorRowAndColumn() const;
 };
 
 // Register Tests
@@ -74,14 +88,18 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Comments )
     REGISTER_TEST( Strings )
     REGISTER_TEST( String_Unterminated )
-    REGISTER_TEST( String_Unterminated2 )
     REGISTER_TEST( Arrays )
     REGISTER_TEST( Array_Unterminated )
     REGISTER_TEST( Array_TypeMismatch )
     REGISTER_TEST( Integers )
     REGISTER_TEST( UnnamedScope )
     REGISTER_TEST( UnnamedScope_Unterminated )
+    REGISTER_TEST( Directives )
+    REGISTER_TEST( DefineDirective )
+    REGISTER_TEST( ExistsDirective )
     REGISTER_TEST( IncludeDirective )
+    REGISTER_TEST( Include_ExcessiveDepth )
+    REGISTER_TEST( ImportDirective )
     REGISTER_TEST( OnceDirective )
     REGISTER_TEST( Structs )
     REGISTER_TEST( Struct_Concatenation )
@@ -92,8 +110,15 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IncludeScope )
     REGISTER_TEST( IfDirective )
     REGISTER_TEST( IfExistsDirective )
+    REGISTER_TEST( IfFileExistsDirective )
+    REGISTER_TEST( IfFileExistsDirective_RelativePaths )
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
+    REGISTER_TEST( ElseDirective_Bad2 )
+    REGISTER_TEST( ElseDirective_Bad3 )
+    REGISTER_TEST( ElseDirective_Bad4 )
+    REGISTER_TEST( ElseDirective_Bad5 )
+    REGISTER_TEST( ElseDirective_Bad6 )
     REGISTER_TEST( InvalidDirective )
     REGISTER_TEST( DefineUndefineDirectives )
     REGISTER_TEST( BadDefineDirective )
@@ -111,28 +136,28 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( CyclicDependency )
     REGISTER_TEST( SelfAssignment )
     REGISTER_TEST( SelfAssignment2 )
+    REGISTER_TEST( Variables )
+    REGISTER_TEST( Functions )
+    REGISTER_TEST( ErrorRowAndColumn )
 REGISTER_TESTS_END
 
 // Empty
 //------------------------------------------------------------------------------
 void TestBFFParsing::Empty() const
 {
-    // an empty file should pass without problem
-    char buffer[ 1 ] = { '\000' }; // post data sentinel
-    NodeGraph ng;
-    BFFParser p( ng );
-    TEST_ASSERT( p.Parse( buffer, 0, "empty.bff", 0, 0 ) );
+    TEST_PARSE_OK( "" );
 }
 
 // AlmostEmpty
 //------------------------------------------------------------------------------
 void TestBFFParsing::AlmostEmpty() const
 {
-    // an empty file should pass without problem
-    const char * buffer = "\r\n\000"; // empty line + post data sentinel
-    NodeGraph ng;
-    BFFParser p( ng );
-    TEST_ASSERT( p.Parse( buffer, 2, "empty.bff", 0, 0 ) );
+    TEST_PARSE_OK( " " );
+    TEST_PARSE_OK( "\t" );
+    TEST_PARSE_OK( "\r" );
+    TEST_PARSE_OK( "\n" );
+    TEST_PARSE_OK( "\r\n" );
+    TEST_PARSE_OK( " \t\r\n     " );
 }
 
 // Comments
@@ -140,6 +165,13 @@ void TestBFFParsing::AlmostEmpty() const
 void TestBFFParsing::Comments() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/comments.bff" );
+
+    TEST_PARSE_OK( "//" );
+    TEST_PARSE_OK( ";" );
+    TEST_PARSE_OK( "// Comments" );
+    TEST_PARSE_OK( "; Comments" );
+    TEST_PARSE_OK( "// Comments\n" );
+    TEST_PARSE_OK( "; Comments\n" );
 }
 
 // Strings
@@ -153,14 +185,16 @@ void TestBFFParsing::Strings() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::String_Unterminated() const
 {
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated.bff", true ); // expect failure
-}
-
-// String_Unterminated2
-//------------------------------------------------------------------------------
-void TestBFFParsing::String_Unterminated2() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated2.bff", true ); // expect failure
+    TEST_PARSE_FAIL( ".A='",        "Error #1002" );
+    TEST_PARSE_FAIL( ".A='text",    "Error #1002" );
+    TEST_PARSE_FAIL( ".A=\"",       "Error #1002" );
+    TEST_PARSE_FAIL( ".A=\"text",   "Error #1002" );
+    TEST_PARSE_FAIL( ".A=\"''",     "Error #1002" );
+    TEST_PARSE_FAIL( ".A='\"\"",    "Error #1002" );
+    TEST_PARSE_FAIL( ".A\n=\n'",    "Error #1002" );
+    TEST_PARSE_FAIL( ".A\n=\n\"",   "Error #1002" );
+    TEST_PARSE_FAIL( ".A='^'",      "Error #1002" );
+    TEST_PARSE_FAIL( ".A=\"^\"",    "Error #1002" );
 }
 
 // Arrays
@@ -174,7 +208,10 @@ void TestBFFParsing::Arrays() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::Array_Unterminated() const
 {
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/array_unterminated.bff", true ); // expect failure
+    TEST_PARSE_FAIL( ".Array={",                        "Error #1002" );
+    TEST_PARSE_FAIL( ".Array={;}",                      "Error #1002" );
+    TEST_PARSE_FAIL( ".Array={//}",                     "Error #1002" );
+    TEST_PARSE_FAIL( ".Array={\n#if FALSE\n}\n#endif",  "Error #1002" );
 }
 
 // Array_TypeMismatch
@@ -203,22 +240,92 @@ void TestBFFParsing::UnnamedScope() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::UnnamedScope_Unterminated() const
 {
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/unnamedscope_unterminated.bff", true ); // expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1025 - Missing scope close token '}'." ) );
+    TEST_PARSE_FAIL( "{",       "Error #1002" );
+    TEST_PARSE_FAIL( "{\n",     "Error #1002" );
+}
 
+// Directives
+//------------------------------------------------------------------------------
+void TestBFFParsing::Directives() const
+{
+    TEST_PARSE_FAIL( "#define #",     "Error #1010 - Unknown construct" );
+    TEST_PARSE_FAIL( "#########",     "Error #1010 - Unknown construct" );
+}
+
+// DefineDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::DefineDirective() const
+{
+    TEST_PARSE_OK( "#define X");
+    TEST_PARSE_OK( "#define X123");
+    TEST_PARSE_OK( "#define X_");
+    TEST_PARSE_OK( "#define _X_");
+
+    TEST_PARSE_FAIL( "#define X Y",     "Error #1045 - Extraneous token(s)" );
+}
+
+// ExistsDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ExistsDirective() const
+{
+    TEST_PARSE_FAIL( "#if exists",      "Error #1031" );
+    TEST_PARSE_FAIL( "#if exists(",     "Error #1030" );
+    TEST_PARSE_FAIL( "#if exists(x",    "Error #1031" );
 }
 
 // IncludeDirective
 //------------------------------------------------------------------------------
 void TestBFFParsing::IncludeDirective() const
 {
+    // Invalid incldue directives
+    TEST_PARSE_FAIL( "#include",                        "Error #1031" );
+    TEST_PARSE_FAIL( "#include BLAH",                   "Error #1031" );
+    TEST_PARSE_FAIL( "#once\n#include \"test.bff\" X",  "Error #1045 - Extraneous token(s)" );
+
+    // Including a directory
+    TEST_PARSE_FAIL( "#include \"/\"",                  "Error #1032" );
+
+    // Missing include file
+    TEST_PARSE_FAIL( "#include \"missing.bff\"",        "Error #1032" );
+
+    // Missing root file
+    Parse( "missing.bff", true ); // Expect failure
+
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/includes.bff" );
+}
+
+// Include_ExcessiveDepth
+//------------------------------------------------------------------------------
+void TestBFFParsing::Include_ExcessiveDepth() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/include_excessivedepth.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1035 - Excessive depth complexity" ) );
+}
+
+// ImportDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ImportDirective() const
+{
+    TEST_PARSE_FAIL( "#import",             "Error #1031" );
+    TEST_PARSE_FAIL( "#import 'string'",    "Error #1031" );
+
+    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR", AString("VALUE"));
+    TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
 }
 
 // OnceDirective
 //------------------------------------------------------------------------------
 void TestBFFParsing::OnceDirective() const
 {
+    // Valid cases with varying whitespace
+    TEST_PARSE_OK( "#once" );
+    TEST_PARSE_OK( "\t#\t\tonce" );
+    TEST_PARSE_OK( "\r\n# once\n" );
+
+    // Invalid cases
+    TEST_PARSE_FAIL( "#once X",    "Error #1045 - Extraneous token(s)" );
+
+    // #once used to prevent infinitely recursive includes
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/include_once.bff" );
 }
 
@@ -263,6 +370,7 @@ void TestBFFParsing::Struct_ConcatenationOrder() const
 void TestBFFParsing::Struct_Unterminated() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/struct_unterminated.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002" ) );
 }
 
 // Struct_MemberShadowsSelf
@@ -270,31 +378,6 @@ void TestBFFParsing::Struct_Unterminated() const
 void TestBFFParsing::Struct_MemberShadowsSelf() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/struct_membershadowsself.bff" );
-}
-
-// Parse
-//------------------------------------------------------------------------------
-void TestBFFParsing::Parse( const char * fileName, bool expectFailure ) const
-{
-    FileStream f;
-    TEST_ASSERT( f.Open( fileName, FileStream::READ_ONLY ) );
-    uint32_t fileSize = (uint32_t)f.GetFileSize();
-    AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
-    mem.Get()[ fileSize ] = '\000'; // parser requires sentinel
-    TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
-
-    FBuild fBuild;
-    NodeGraph ng;
-    BFFParser p( ng );
-    bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
-    if ( expectFailure )
-    {
-        TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
-    }
-    else
-    {
-        TEST_ASSERT( parseResult == true );
-    }
 }
 
 // IncludeScope
@@ -309,6 +392,12 @@ void TestBFFParsing::IncludeScope() const
 void TestBFFParsing::IfDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_directive.bff" );
+
+    TEST_PARSE_FAIL( "#if",             "Error #1031 - Unknown char" );
+    TEST_PARSE_FAIL( "#if 'string'",    "Error #1031 - Unknown char" );
+    TEST_PARSE_FAIL( "#if X Y\n"
+                     "#endif",          "Error #1045 - Extraneous token(s)" );
+    TEST_PARSE_FAIL( "##if!X\n ",       "Error #1010 - Unknown construct" );
 }
 
 // IfExistsDirective
@@ -318,6 +407,127 @@ void TestBFFParsing::IfExistsDirective() const
     Env::SetEnvVariable("BFF_TEST_ENV_VAR1", AString("1"));
     Env::SetEnvVariable("BFF_TEST_ENV_VAR2", AString("2"));
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_exists_directive.bff" );
+}
+
+// IfFileExistsDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFileExistsDirective() const
+{
+    // Detect existence (or not) of files
+    TEST_PARSE_OK( "#if file_exists(\"doesnotexist.dat\")\n"
+                   "    #error\n"
+                   "#endif" );
+    TEST_PARSE_OK( "#if !file_exists(\"fbuild.bff\")\n"
+                   "    #error\n"
+                   "#endif" );
+
+    // Check changes are detected (or not) between builds
+    {
+        const char * rootBFF    = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
+        const char * fileName   = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
+        const char * db         = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
+
+        // Copy root bff to temp dir
+        FileIO::SetReadOnly( rootBFF, false );
+        EnsureFileDoesNotExist( rootBFF );
+        EnsureDirExists("../tmp/Test/BFFParsing/FileExistsDirective/");
+        FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff", rootBFF );
+
+        // Delete extra file from previous test run
+        EnsureFileDoesNotExist( fileName );
+
+        FBuildTestOptions options;
+        options.m_ConfigFile = rootBFF;
+
+        // Parse bff, which checks if file exists
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+            fBuild.SaveDependencyGraph( db );
+
+            const AString & output( GetRecordedOutput() );
+
+            // File should NOT exist
+            TEST_ASSERT( output.Find( "File does not exist" ) );
+        }
+
+        // Check existence re-parsing does not occur with not change to file existence
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            // Should not re-parse
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
+        }
+
+        // Create file
+        {
+            FileIO::EnsurePathExistsForFile( AStackString<>( fileName ) );
+            FileStream f;
+            TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
+        }
+
+        // Load db and ensure it is re-parsed
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was triggered
+            TEST_ASSERT( output.Find( "File used in file_exists was added" ) );
+
+            // File should exist
+            TEST_ASSERT( output.Find( "File exists" ) );
+        }
+
+        // Delete file
+        EnsureFileDoesNotExist( fileName );
+
+        // Load db and ensure it is re-parsed again
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was triggered
+            TEST_ASSERT( output.Find( "File used in file_exists was removed" ) );
+
+            // File should exist
+            TEST_ASSERT( output.Find( "File does not exist" ) );
+        }
+    }
+}
+
+// IfFileExistsDirective_RelativePaths
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
+{
+    // file_exists treats paths the same way as #include
+    // (paths are relative to the bff)
+    
+    FBuildTestOptions options;
+    options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Check for expected output
+    const AString & output( GetRecordedOutput() );
+    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ));
+    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ));
+    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ));
+    TEST_ASSERT( output.Find( "OK-4" ) );
 }
 
 // ElseDirective
@@ -332,18 +542,60 @@ void TestBFFParsing::ElseDirective() const
 void TestBFFParsing::ElseDirective_Bad() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad2
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad2() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad2.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad3
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad3() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad3.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad4
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad4() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad4.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad5
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad5() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad5.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad6
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad6() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad6.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
 }
 
 // InvalidDirective
 //------------------------------------------------------------------------------
 void TestBFFParsing::InvalidDirective() const
 {
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/invalid_directive.bff", true ); // Expect failure
+    TEST_PARSE_FAIL( "#",           "Error #1030" );
+    TEST_PARSE_FAIL( "#\n",         "Error #1030" );
+    TEST_PARSE_FAIL( "#invalid\n",  "Error #1030" );
+    TEST_PARSE_FAIL( "#define X\n"
+                     "#if X\n"
+                     "#invalid\n"
+                     "#endif\n",    "Error #1030" );
 }
 
 // DefineUndefineDirectives
@@ -358,6 +610,7 @@ void TestBFFParsing::DefineUndefineDirectives() const
 void TestBFFParsing::BadDefineDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/bad_define.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1038" ) );
 }
 
 // BadUndefDirective
@@ -365,6 +618,10 @@ void TestBFFParsing::BadDefineDirective() const
 void TestBFFParsing::BadUndefDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/bad_undef.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1039" ) );
+
+    TEST_PARSE_FAIL( "#define A\n"
+                     "#undef A X\n",    "Error #1045 - Extraneous token(s)" );
 }
 
 // BadUndefBuiltInDirective
@@ -372,6 +629,7 @@ void TestBFFParsing::BadUndefDirective() const
 void TestBFFParsing::BadUndefBuiltInDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/bad_undef_builtin.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1040" ) );
 }
 
 // ParentScope
@@ -393,7 +651,7 @@ void TestBFFParsing::ParentScopeBug() const
 void TestBFFParsing::ParentScopeBug2() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/parent_scope_bug2.bff", true );
-    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1026" ) ); // Variable '%s' not found for modification.
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1009 - Unknown variable" ) );
 }
 
 // ParentScopeUnknown
@@ -401,6 +659,7 @@ void TestBFFParsing::ParentScopeBug2() const
 void TestBFFParsing::ParentScopeUnknown() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/parent_scope_unknown.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1009" ) );
 }
 
 // FrozenVariable
@@ -408,6 +667,7 @@ void TestBFFParsing::ParentScopeUnknown() const
 void TestBFFParsing::FrozenVariable() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/frozen_foreach.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1060" ) );
 }
 
 // FrozenVariable_Nested
@@ -415,6 +675,7 @@ void TestBFFParsing::FrozenVariable() const
 void TestBFFParsing::FrozenVariable_Nested() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/frozen_foreach_nested.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1060" ) );
 }
 
 // DynamicVarNameConstruction
@@ -475,6 +736,90 @@ void TestBFFParsing::SelfAssignment2() const
 
     TEST_ASSERT( fBuild.Initialize() == true );
     TEST_ASSERT( GetRecordedOutput().Find( "FAILED" ) == nullptr );
+}
+
+// Variables
+//------------------------------------------------------------------------------
+void TestBFFParsing::Variables() const
+{
+    // Incomplete declarations
+    TEST_PARSE_FAIL( ".",       "Error #1017" );
+    TEST_PARSE_FAIL( ".A",      "Error #1044" );
+    TEST_PARSE_FAIL( ".A=",     "Error #1017" );
+    TEST_PARSE_FAIL( ".A=[",    "Error #1002" );
+    TEST_PARSE_FAIL( ".A={",    "Error #1002" );
+
+    // Invalid declarations
+    TEST_PARSE_FAIL( ".A=(",    "Error #1017" );
+    TEST_PARSE_FAIL( ".A=]",    "Error #1017" );
+    TEST_PARSE_FAIL( ".A=}",    "Error #1017" );
+
+    // Invalid operations
+    TEST_PARSE_FAIL( ".A<5",    "Error #1034" );
+    TEST_PARSE_FAIL( ".A>5",    "Error #1034" );
+    TEST_PARSE_FAIL( ".A<=5",   "Error #1034" );
+    TEST_PARSE_FAIL( ".A>=5",   "Error #1034" );
+    TEST_PARSE_FAIL( ".A!=5",   "Error #1034" );
+    TEST_PARSE_FAIL( ".A==5",   "Error #1034" );
+
+    // Dynamic variables (lhs)
+    TEST_PARSE_OK( ".A = 'B'\n"
+                   ".'$A$' = 'C'\n" );
+    TEST_PARSE_OK( ".A = 'B'\n"
+                   ".'Thing$A$' = 'C'\n" );
+
+    // Dynamic variables (rhs)
+    TEST_PARSE_OK( ".A = 'A'\n"
+                   ".X = .'$A$'" );
+    TEST_PARSE_OK( ".A = 'A'\n"
+                   ".X = { .'$A$' }" );
+
+    // Invalid dynamic variables (lhs)
+    TEST_PARSE_FAIL( ".'$A$' = 'String'",   "Error #1009 - Unknown variable" );
+
+    // Invalid dynamic variables (rhs)
+    TEST_PARSE_FAIL( ".A = .'$B$'",         "Error #1009 - Unknown variable" );
+    TEST_PARSE_FAIL( ".A = 'B'\n"
+                     ".X = .'$A$'",         "Error #1009 - Unknown variable"  );
+    TEST_PARSE_FAIL( ".A = 'B'\n"
+                     ".X = { .'$A$' }",     "Error #1009 - Unknown variable"  );
+}
+
+// Functions
+//------------------------------------------------------------------------------
+void TestBFFParsing::Functions() const
+{
+    TEST_PARSE_FAIL( "If",          "Error #1023" );
+    TEST_PARSE_FAIL( "If(",         "Error #1002" );
+    TEST_PARSE_FAIL( "If{",         "Error #1023" );
+    TEST_PARSE_FAIL( "Settings",    "Error #1024" );
+    TEST_PARSE_FAIL( "Settings(",   "Error #1021" );
+    TEST_PARSE_FAIL( "Settings{",   "Error #1002" );
+}
+
+// ErrorRowAndColumn
+//------------------------------------------------------------------------------
+void TestBFFParsing::ErrorRowAndColumn() const
+{
+    // Ensure error row/column indices are as expected
+    // (indices are 1-based)
+
+    // Normal with/without whitespace
+    TEST_PARSE_FAIL( "X",           "(1,1)" );
+    TEST_PARSE_FAIL( " X",          "(1,2)" );
+    TEST_PARSE_FAIL( "    X",       "(1,5)" );
+
+    // Tabs
+    TEST_PARSE_FAIL( "\tX",         "(1,2)" );
+    TEST_PARSE_FAIL( "\t\tX",       "(1,3)" );
+    TEST_PARSE_FAIL( " \tX",        "(1,3)" );
+
+    // Line endings
+    TEST_PARSE_FAIL( "\n\nX",       "(3,1)" ); // \n line endings
+    TEST_PARSE_FAIL( "\r\rX",       "(3,1)" ); // \r line endings
+    TEST_PARSE_FAIL( "\r\n\r\nX",   "(3,1)" ); // \r\n line endings
+    TEST_PARSE_FAIL( "\n\r\nX",     "(3,1)" ); // mixed line endings
+    TEST_PARSE_FAIL( "\r\n\nX",     "(3,1)" ); // mixed line endings
 }
 
 //------------------------------------------------------------------------------

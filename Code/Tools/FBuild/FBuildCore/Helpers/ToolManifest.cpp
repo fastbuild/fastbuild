@@ -175,7 +175,7 @@ void ToolManifest::Initialize( const AString & mainExecutableRoot, const Depende
     m_Files.SetCapacity( dependencies.GetSize() );
     for ( const Dependency & dep : dependencies )
     {
-        m_Files.Append( ToolManifestFile( dep.GetNode()->GetName(), 0, 0, 0 ) );
+        m_Files.EmplaceBack( dep.GetNode()->GetName(), (uint64_t)0, (uint32_t)0, (uint32_t)0 );
     }
 }
 
@@ -296,7 +296,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         ms.Read( timeStamp );
         ms.Read( hash );
         ms.Read( uncompressedContentSize );
-        m_Files.Append( ToolManifestFile( name, timeStamp, hash, uncompressedContentSize ) );
+        m_Files.EmplaceBack( name, timeStamp, hash, uncompressedContentSize );
     }
 
     ASSERT( m_CustomEnvironmentVariables.IsEmpty() );
@@ -318,6 +318,14 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         AStackString<> localFile;
         GetRemoteFilePath( (uint32_t)i, localFile );
 
+        // Set modification time to now
+        //  - On OSX (and possibly some Linux variants) this will prevent
+        //    periodic deletion of files.
+        //  - On Windows we lock files to prevent deletion, but setting the
+        //    writable time for some additional usage visibility is nice
+        // After this, we do it periodically in TouchFiles
+        FileIO::SetFileLastWriteTimeToNow( localFile );
+
         // is this file already present?
         AutoPtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
         FileStream & f = *( fileStream.Get() );
@@ -334,7 +342,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         {
             continue; // problem reading file
         }
-        if( xxHash::Calc32( mem.Get(), (size_t)f.GetFileSize() ) != m_Files[ i ].GetHash() )
+        if ( xxHash::Calc32( mem.Get(), (size_t)f.GetFileSize() ) != m_Files[ i ].GetHash() )
         {
             continue; // file contents unexpected
         }
@@ -620,6 +628,24 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
         otherFileRelativePath = ( lastSlash ? lastSlash + 1 : otherFile.Get() );
     }
 }
+
+// TouchFiles
+//------------------------------------------------------------------------------
+#if defined( __OSX__ ) || defined( __LINUX__ )
+    void ToolManifest::TouchFiles() const
+    {
+        const size_t numFiles = m_Files.GetSize();
+        for ( size_t fileId = 0; fileId < numFiles; ++fileId )
+        {
+            // Get path to file
+            AStackString<> fileName;
+            GetRemoteFilePath( fileId, fileName );
+        
+            // Make modification time now
+            FileIO::SetFileLastWriteTimeToNow( fileName );
+        }
+    }
+#endif
 
 // GetRemoteFilePath
 //------------------------------------------------------------------------------

@@ -34,6 +34,7 @@ REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
     REFLECT(        m_TestTimeOut,              "TestTimeOut",              MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
     REFLECT(        m_TestAlwaysShowOutput,     "TestAlwaysShowOutput",     MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
 
     // Internal State
     REFLECT(        m_NumTestInputFiles,        "NumTestInputFiles",        MetaHidden() )
@@ -50,13 +51,14 @@ TestNode::TestNode()
     , m_TestAlwaysShowOutput( false )
     , m_TestInputPathRecurse( true )
     , m_NumTestInputFiles( 0 )
+    , m_EnvironmentString( nullptr )
 {
     m_Type = Node::TEST_NODE;
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -90,6 +92,7 @@ TestNode::TestNode()
                                               m_TestInputExcludedFiles,
                                               m_TestInputExcludePattern,
                                               m_TestInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_TestInputPattern,
                                               "TestInputPath",
                                               testInputPaths ) )
@@ -109,11 +112,21 @@ TestNode::TestNode()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-TestNode::~TestNode() = default;
+TestNode::~TestNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
+
+// GetEnvironmentString
+//------------------------------------------------------------------------------
+const char * TestNode::GetEnvironmentString() const
+{
+    return Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
+}
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -145,7 +158,7 @@ TestNode::~TestNode() = default;
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
         continue;
     }
@@ -164,10 +177,12 @@ TestNode::~TestNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
+    const char * environmentString = GetEnvironmentString();
+
     bool spawnOK = p.Spawn( GetTestExecutable()->GetName().Get(),
                             m_TestArguments.Get(),
                             workingDir,
-                            FBuild::Get().GetEnvironmentString() );
+                            environmentString );
 
     if ( !spawnOK )
     {
@@ -244,10 +259,13 @@ TestNode::~TestNode() = default;
 void TestNode::EmitCompilationMessage( const char * workingDir ) const
 {
     AStackString<> output;
-    output += "Running Test: ";
-    output += GetName();
-    output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Running Test: ";
+        output += GetName();
+        output += '\n';
+    }
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += GetTestExecutable()->GetName();
         output += ' ';
@@ -260,7 +278,7 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
             output += '\n';
         }
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 //------------------------------------------------------------------------------

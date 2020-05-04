@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - Exec</title>
 </head>
@@ -47,8 +48,9 @@ The executable will be run if the outputfile is out of date (with respect to the
   .ExecArguments          ; (optional) Arguments to pass to executable
   .ExecWorkingDir         ; (optional) Working dir to set for executable
   .ExecReturnCode         ; (optional) Expected return code from executable (default 0)
-  .ExecUseStdOutAsOutput  ; (optional) Write the standard output from the executable to the output file
-  .ExecAlways             ; (optional) Run the executable even if inputs have not changed
+  .ExecUseStdOutAsOutput  ; (optional) Write the standard output from the executale to output file (default false)
+  .ExecAlways             ; (optional) Run the executable even if inputs have not changed (default false)
+  .ExecAlwaysShowOutput   ; (optional) Show the process output even if the step succeeds (default false)
 
   ; Additional options
   .PreBuildDependencies   ; (optional) Force targets to be built before this Exec (Rarely needed,
@@ -69,6 +71,6 @@ The executable will be run if the outputfile is out of date (with respect to the
 
 
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

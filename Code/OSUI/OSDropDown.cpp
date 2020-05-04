@@ -28,6 +28,7 @@
     void DropDownOSX_AddItem( OSDropDown * owner, const char * itemText );
     void DropDownOSX_SetSelectedItem( OSDropDown * owner, uint32_t index );
     uint32_t DropDownOSX_GetSelectedItem( const OSDropDown * owner );
+    void DropDownOSX_SetEnabled( const OSDropDown * owner, bool enabled );
 #endif
 
 // CONSTRUCTOR
@@ -55,7 +56,7 @@ void OSDropDown::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
 
         m_Handle = CreateWindowA( WC_COMBOBOX,
                                   "ComboBox",
-                                  CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
+                                  CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE | WS_VSCROLL,
                                   x, y,
                                   (int32_t)w, (int32_t)h,
                                   (HWND)m_Parent->GetHandle(),
@@ -108,12 +109,26 @@ void OSDropDown::SetSelectedItem( size_t index )
 size_t OSDropDown::GetSelectedItem() const
 {
     #if defined( __WINDOWS__ )
-        return (size_t)SendMessage((HWND)m_Handle, (UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0 );
+        return (size_t)SendMessage( (HWND)m_Handle, (UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0 );
     #elif defined( __OSX__ )
         return DropDownOSX_GetSelectedItem( this );
     #else
-        ASSERT(false);
+        ASSERT( false );
         return 0;
+    #endif
+}
+
+// SetEnabled
+//------------------------------------------------------------------------------
+void OSDropDown::SetEnabled( bool enabled )
+{
+    #if defined( __WINDOWS__ )
+        EnableWindow( (HWND)m_Handle, enabled );
+    #elif defined( __OSX__ )
+        DropDownOSX_SetEnabled( this, enabled );
+    #else
+        ASSERT( false );
+        (void)enabled; // TODO:LINUX EnableWindow equivalent
     #endif
 }
 

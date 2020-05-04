@@ -14,7 +14,7 @@ public:
     MemPoolBlock( size_t blockSize, size_t blockAlignment );
     virtual ~MemPoolBlock();
 
-    void *  Alloc( size_t size );
+    void *  Alloc();
     void    Free( void * ptr );
 
     enum { MEMPOOLBLOCK_PAGE_SIZE = 64 * 1024 };

@@ -42,19 +42,19 @@ REFLECT_END( CSNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CSNode::CSNode()
-: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
-, m_CompilerInputPathRecurse( true )
-, m_NumCompilerInputFiles( 0 )
-, m_NumCompilerReferences( 0 )
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    , m_CompilerInputPathRecurse( true )
+    , m_NumCompilerInputFiles( 0 )
+    , m_NumCompilerReferences( 0 )
 {
-    m_CompilerInputPattern.Append( AStackString<>( "*.cs" ) );
+    m_CompilerInputPattern.EmplaceBack( "*.cs" );
     m_Type = CS_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -79,6 +79,7 @@ CSNode::CSNode()
                                               m_CompilerInputExcludedFiles,
                                               m_CompilerInputExcludePattern,
                                               m_CompilerInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_CompilerInputPattern,
                                               "CompilerInputPath",
                                               compilerInputPath ) )
@@ -105,7 +106,7 @@ CSNode::CSNode()
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles + m_NumCompilerReferences );
-    m_StaticDependencies.Append( Dependency( compilerNode ) );
+    m_StaticDependencies.EmplaceBack( compilerNode );
     m_StaticDependencies.Append( compilerInputPath );
     m_StaticDependencies.Append( compilerInputFiles );
     m_StaticDependencies.Append( compilerReferences );
@@ -119,7 +120,7 @@ CSNode::~CSNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -151,7 +152,7 @@ CSNode::~CSNode() = default;
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
         continue;
     }
@@ -205,20 +206,20 @@ CSNode::~CSNode() = default;
         return NODE_RESULT_FAILED;
     }
 
-    bool ok = ( result == 0 );
+    const bool ok = ( result == 0 );
+
+    // Show output if desired
+    const bool showOutput = ( ok == false ) ||
+                            FBuild::Get().GetOptions().m_ShowCommandOutput;
+    if ( showOutput )
+    {
+        Node::DumpOutput( job, memOut.Get(), memOutSize );
+        Node::DumpOutput( job, memErr.Get(), memErrSize );
+    }
 
     if ( !ok )
     {
-        // something went wrong, print details
-        Node::DumpOutput( job, memOut.Get(), memOutSize );
-        Node::DumpOutput( job, memErr.Get(), memErrSize );
         FLOG_ERROR( "Failed to build Object. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-        return NODE_RESULT_FAILED;
-    }
-
-    if ( !FileIO::FileExists( m_Name.Get() ) )
-    {
-        FLOG_ERROR( "Object missing despite success for '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 
@@ -243,17 +244,20 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    output += "C#: ";
-    output += GetName();
-    output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "C#: ";
+        output += GetName();
+        output += '\n';
+    }
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += GetCompiler()->GetExecutable();
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // BuildArgs

@@ -32,9 +32,9 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-OSListView::OSListView( OSWindow * parentWindow ) :
-    OSWidget( parentWindow ),
-    m_Font( nullptr )
+OSListView::OSListView( OSWindow * parentWindow )
+    : OSWidget( parentWindow )
+    , m_Font( nullptr )
 {
 }
 
@@ -102,7 +102,7 @@ void OSListView::SetItemCount( uint32_t itemCount )
     #if defined( __WINDOWS__ )
         SendMessage( (HWND)m_Handle, LVM_SETITEMCOUNT, (WPARAM)itemCount, (LPARAM)0 );
     #else
-       (void)itemCount;
+        (void)itemCount;
     #endif
 }
 

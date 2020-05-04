@@ -32,6 +32,7 @@ REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecArguments,            "ExecArguments",            MetaOptional() )
     REFLECT(        m_ExecWorkingDir,           "ExecWorkingDir",           MetaOptional() + MetaPath() )
     REFLECT(        m_ExecReturnCode,           "ExecReturnCode",           MetaOptional() )
+    REFLECT(        m_ExecAlwaysShowOutput,     "ExecAlwaysShowOutput",     MetaOptional() )
     REFLECT(        m_ExecUseStdOutAsOutput,    "ExecUseStdOutAsOutput",    MetaOptional() )
     REFLECT(        m_ExecAlways,               "ExecAlways",               MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
@@ -45,6 +46,7 @@ REFLECT_END( ExecNode )
 ExecNode::ExecNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_ExecReturnCode( 0 )
+    , m_ExecAlwaysShowOutput( false )
     , m_ExecUseStdOutAsOutput( false )
     , m_ExecAlways( false )
     , m_ExecInputPathRecurse( true )
@@ -52,12 +54,12 @@ ExecNode::ExecNode()
 {
     m_Type = EXEC_NODE;
 
-    m_ExecInputPattern.Append( AStackString<>( "*.*" ) );
+    m_ExecInputPattern.EmplaceBack( "*.*" );
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -91,6 +93,7 @@ ExecNode::ExecNode()
                                               m_ExecInputExcludedFiles,
                                               m_ExecInputExcludePattern,
                                               m_ExecInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_ExecInputPattern,
                                               "ExecInputPath",
                                               execInputPaths ) )
@@ -114,7 +117,7 @@ ExecNode::~ExecNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -146,7 +149,7 @@ ExecNode::~ExecNode() = default;
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
     }
 
@@ -155,14 +158,14 @@ ExecNode::~ExecNode() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DetermineNeedToBuild( bool forceClean ) const
+/*virtual*/ bool ExecNode::DetermineNeedToBuild( const Dependencies & deps ) const
 {
     if ( m_ExecAlways )
     {
-        FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
+        FLOG_BUILD_REASON( "Need to build '%s' (ExecAlways = true)\n", GetName().Get() );
         return true;
     }
-    return Node::DetermineNeedToBuild( forceClean );
+    return Node::DetermineNeedToBuild( deps );
 }
 
 // DoBuild
@@ -209,14 +212,20 @@ ExecNode::~ExecNode() = default;
     {
         return NODE_RESULT_FAILED;
     }
-
-    // did the executable fail?
-    if ( result != m_ExecReturnCode )
+    const bool buildFailed = ( result != m_ExecReturnCode );
+    
+    // Print output if appropriate
+    if ( buildFailed ||
+        m_ExecAlwaysShowOutput ||
+        FBuild::Get().GetOptions().m_ShowCommandOutput )
     {
-        // something went wrong, print details
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
+    }
 
+    // did the executable fail?
+    if ( buildFailed )
+    {
         FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -245,12 +254,15 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 {
     // basic info
     AStackString< 2048 > output;
-    output += "Run: ";
-    output += GetName();
-    output += '\n';
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Run: ";
+        output += GetName();
+        output += '\n';
+    }
 
     // verbose mode
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         AStackString< 1024 > verboseOutput;
         verboseOutput.Format( "%s %s\nWorkingDir: %s\nExpectedReturnCode: %i\n",
@@ -262,7 +274,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     }
 
     // output all at once for contiguousness
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // GetFullArgs

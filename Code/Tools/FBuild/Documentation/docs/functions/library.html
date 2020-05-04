@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - Library</title>
 </head>
@@ -44,6 +45,9 @@ Builds a statically linked library.
   ; Options for librarian
   .Librarian                ; Librarian to collect intermediate objects
   .LibrarianOptions         ; Options for librarian
+  .LibrarianType            ; (optional) Specify the librarian type. Valid options include:
+                            ; auto, msvc, ar, ar-orbis, greenhills-ax
+                            ; Default is 'auto' (use the librarian executable name to detect)
   .LibrarianOutput          ; Output path for lib file
   .LibrarianAdditionalInputs; (optional) Additional inputs to merge into library
 
@@ -111,6 +115,6 @@ Builds a statically linked library.
     </div>
 
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

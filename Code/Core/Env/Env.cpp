@@ -7,8 +7,8 @@
 
 // Core
 #include "Core/Containers/Array.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Strings/AStackString.h"
 
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
@@ -31,8 +31,8 @@
     #include <mach-o/dyld.h>
     extern "C"
     {
-        int *_NSGetArgc(void);
-        char ***_NSGetArgv(void);
+        int * _NSGetArgc( void );
+        char *** _NSGetArgv( void );
     };
 #endif
 
@@ -380,6 +380,23 @@ static bool IsStdOutRedirectedInternal()
     *mem = 0;
 
     return environmentString;
+}
+
+// ShowMsgBox
+//------------------------------------------------------------------------------
+void Env::ShowMsgBox( const char * title, const char * msg )
+{
+    #if defined( __WINDOWS__ )
+        MessageBoxA( nullptr, msg, title, MB_OK );
+    #elif defined( __APPLE__ )
+        (void)title;
+        (void)msg; // TODO:MAC Implement ShowMsgBox
+    #elif defined( __LINUX__ )
+        (void)title;
+        (void)msg; // TODO:LINUX Implement ShowMsgBox
+    #else
+        #error Unknown Platform
+    #endif
 }
 
 //------------------------------------------------------------------------------

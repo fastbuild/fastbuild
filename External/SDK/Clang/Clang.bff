@@ -14,11 +14,12 @@
     #define USING_CLANG_7
     //#define USING_CLANG_8
     //#define USING_CLANG_9
+    //#define USING_CLANG_10
 #endif
 
 // Activate
 //------------------------------------------------------------------------------
-#if__LINUX__
+#if __LINUX__
     #if CI_BUILD
         #include "Linux/Clang_CI.bff"
     #else
@@ -48,6 +49,9 @@
     #endif
     #if USING_CLANG_9
         #include "Windows/Clang9.bff"
+    #endif
+    #if USING_CLANG_10
+        #include "Windows/Clang10.bff"
     #endif
 #endif
 

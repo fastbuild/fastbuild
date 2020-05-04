@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - VSSolution</title>
 </head>
@@ -68,7 +69,8 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
 //---------------------------------------------------
 [
   .Path                               // Folder path in Solution
-  .Projects                           // Project(s) to store in this folder
+  .Projects                           // (optional) Project(s) to include in this folder
+  .Items                              // (optional) Solution Item(s) (files) to include in this folder
 ]
 
 // SolutionDependencies - structs in the following format
@@ -164,12 +166,14 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
     <div class='newsitembody'>
       
       <p><b>.SolutionFolders</b> - Array of SolutionFolder Structure(s) - (Optional)</p>
-      <p>Projects within a Solution can be organized into folders.</p>
+      <p>Projects and solution items within a Solution can be organized into folders. Folders may
+	  contain projects and/or items, or can be empty.</p>
       Example:
       <div class='code'>.FolderA =
 [
   .Path      = 'Libraries'
   .Projects  = { 'LibraryA-proj', 'LibraryB-proj' }
+  .Items     = { 'rel_path_to/item_file_1.txt', 'rel_path_to/item_file_2.ext' }
 ]
 .FolderB = 
 [
@@ -222,7 +226,7 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
       <hr>
   
       <p><b>.SolutionMinimumVisualStudioVersion</b> - String - (Optional)</p>
-      <p>Specify the minimum VisualStudio version necessary toopen this Solution file.</p>
+      <p>Specify the minimum VisualStudio version necessary to open this Solution file.</p>
       Example:
       <div class='code'>.SolutionMinimumVisualStudioVersion = "10.0.40219.1"</div>
       <p>If not specified, "10.0.40219.1" will be used (VS2010 Express).</p>
@@ -249,6 +253,6 @@ Options defined at the SolutionConfig level will override those set at the Solut
 <div class='code'>.SolutionDeployProjects = 'Project' // A previously defined vcxproject</div>
 <hr>
     
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

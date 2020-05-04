@@ -51,12 +51,12 @@ SettingsNode::SettingsNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
     // using a cache plugin?
     if ( m_CachePluginDLL.IsEmpty() == false )
     {
-        FLOG_INFO( "CachePluginDLL: '%s'", m_CachePluginDLL.Get() );
+        FLOG_VERBOSE( "CachePluginDLL: '%s'", m_CachePluginDLL.Get() );
     }
 
     // "Environment"

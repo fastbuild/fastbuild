@@ -4,8 +4,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Env/Types.h"
 #include "Core/Containers/AutoPtr.h"
+#include "Core/Env/Types.h"
 
 // Process
 //------------------------------------------------------------------------------
@@ -33,20 +33,12 @@ public:
                       uint32_t timeOutMS = 0 );
 
     #if defined( __WINDOWS__ )
-        // Read all available data
-        // NOTE: Owner must free the returned memory!
-        char * ReadStdOut( uint32_t * bytesRead = nullptr );
-        char * ReadStdErr( uint32_t * bytesRead = nullptr );
-
-        // read available data into a limited user buffer
-        uint32_t ReadStdOut( char * outputBuffer, uint32_t outputBufferSize );
-        uint32_t ReadStdErr( char * outputBuffer, uint32_t outputBufferSize );
-
         // Prevent handles being redirected
         inline void DisableHandleRedirection() { m_RedirectHandles = false; }
     #endif
     bool HasAborted() const { return m_HasAborted; }
     static uint32_t GetCurrentId();
+
 private:
     #if defined( __WINDOWS__ )
         void KillProcessTreeInternal( const void * hProc, // HANDLE
@@ -54,8 +46,6 @@ private:
                                       const uint64_t processCreationTime );
         static uint64_t GetProcessCreationTime( const void * hProc ); // HANDLE
         void Read( void * handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
-        char * Read( void * handle, uint32_t * bytesRead );
-        uint32_t Read( void * handle, char * outputBuffer, uint32_t outputBufferSize );
     #else
         void Read( int handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
     #endif
@@ -70,10 +60,8 @@ private:
         }
     #endif
 
-    #if defined ( WIN64 )
+    #if defined( __WINDOWS__ )
         uint32_t m_ProcessInfo[ 2 + 2 + 1 + 1 ]; // PROCESS_INFORMATION
-    #elif defined ( WIN32 )
-        uint32_t m_ProcessInfo[ 1 + 1 + 1 + 1 ]; // PROCESS_INFORMATION
     #endif
 
     bool m_Started;

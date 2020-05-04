@@ -15,7 +15,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class VCXProjectNode;
+class VSProjectBaseNode;
 
 // SolutionConfigBase
 //------------------------------------------------------------------------------
@@ -59,6 +59,7 @@ class SolutionFolder : public Struct
 public:
     AString             m_Path;
     Array< AString >    m_Projects;
+    Array< AString >    m_Items;
 };
 
 // SolutionDependency
@@ -78,29 +79,28 @@ class SLNNode : public FileNode
     REFLECT_NODE_DECLARE( SLNNode )
 public:
     SLNNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~SLNNode() override;
 
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
 
 private:
-    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     bool Save( const AString & content, const AString & fileName ) const;
 
     bool                    GatherProject( NodeGraph & nodeGraph,
                                            const Function * function,
-                                           const BFFIterator & iter,
+                                           const BFFToken * iter,
                                            const char * propertyName,
                                            const AString & projectName,
-                                           Array< VCXProjectNode * > & inOutProjects ) const;
+                                           Array< VSProjectBaseNode * > & inOutProjects ) const;
     bool                    GatherProjects( NodeGraph & nodeGraph,
                                             const Function * function,
-                                            const BFFIterator & iter,
+                                            const BFFToken * iter,
                                             const char * propertyName,
                                             const Array< AString > & projectNames,
-                                            Array< VCXProjectNode * > & inOutProjects ) const;
+                                            Array< VSProjectBaseNode * > & inOutProjects ) const;
 
     // Reflected
     Array< AString >            m_SolutionProjects;

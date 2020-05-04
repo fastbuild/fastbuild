@@ -3,8 +3,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FBuildWorkerOptions.h"
-#include "Worker/Worker.h"
+
+// FBuildWorker
+#include "Tools/FBuild/FBuildWorker/FBuildWorkerOptions.h"
+#include "Tools/FBuild/FBuildWorker/Worker/Worker.h"
+
+// Core
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
@@ -33,20 +37,6 @@ int MainCommon( const AString & args );
 #endif
 
 //------------------------------------------------------------------------------
-void ShowMsgBox( const char * msg )
-{
-    #if defined( __WINDOWS__ )
-        MessageBoxA( nullptr, msg, "FBuildWorker", MB_OK );
-    #elif defined( __APPLE__ )
-        (void)msg; // TODO:MAC Implement ShowMsgBox
-    #elif defined( __LINUX__ )
-        (void)msg; // TODO:LINUX Implement ShowMsgBox
-    #else
-        #error Unknown Platform
-    #endif
-}
-
-//------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
     PRAGMA_DISABLE_PUSH_MSVC( 28251 ) // don't complain about missing annotations on WinMain
     int WINAPI WinMain( HINSTANCE /*hInstance*/,
@@ -59,10 +49,10 @@ void ShowMsgBox( const char * msg )
     }
     PRAGMA_DISABLE_POP_MSVC
 #else
-    int main( int argc, char** argv )
+    int main( int argc, char ** argv )
     {
         AStackString<> args;
-        for ( int i=1; i<argc; ++i ) // NOTE: Skip argv[0] exe name
+        for ( int i = 1; i < argc; ++i ) // NOTE: Skip argv[0] exe name
         {
             if ( i > 0 )
             {
@@ -81,8 +71,8 @@ void ShowMsgBox( const char * msg )
 int MainCommon( const AString & args )
 {
     // don't buffer output
-    VERIFY( setvbuf(stdout, nullptr, _IONBF, 0) == 0 );
-    VERIFY( setvbuf(stderr, nullptr, _IONBF, 0) == 0 );
+    VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
+    VERIFY( setvbuf( stderr, nullptr, _IONBF, 0 ) == 0 );
 
     // process cmd line args
     FBuildWorkerOptions options;
@@ -98,10 +88,10 @@ int MainCommon( const AString & args )
         // retry for upto 2 seconds, to allow some time for old worker to close
         if ( t.GetElapsed() > 5.0f )
         {
-            ShowMsgBox( "An FBuildWorker is already running!" );
+            Env::ShowMsgBox( "FBuildWorker", "An FBuildWorker is already running!" );
             return -1;
         }
-        Thread::Sleep(100);
+        Thread::Sleep( 100 );
     }
 
     #if defined( __WINDOWS__ )
@@ -138,6 +128,10 @@ int MainCommon( const AString & args )
         {
             WorkerSettings::Get().SetMode( options.m_WorkMode );
         }
+        if ( options.m_MinimumFreeMemoryMiB )
+        {
+            WorkerSettings::Get().SetMinimumFreeMemoryMiB( options.m_MinimumFreeMemoryMiB );
+        }
         ret = worker.Work();
     }
 
@@ -161,7 +155,7 @@ int MainCommon( const AString & args )
             {
                 AStackString<> msg;
                 msg.Format( "Failed to make sub-process copy. Error: %s\n\nSrc: %s\nDst: %s\n", LAST_ERROR_STR, exeName.Get(), exeNameCopy.Get() );
-                ShowMsgBox( msg.Get() );
+                Env::ShowMsgBox( "FBuildWorker", msg.Get() );
                 return -2;
             }
             Thread::Sleep( 100 );

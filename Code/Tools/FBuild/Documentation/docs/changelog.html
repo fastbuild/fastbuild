@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../favicon.ico">
 <title>FASTBuild - Change Log</title>
 </head>
@@ -25,6 +26,118 @@
 	        <div class='inner'>
 
 <h1>Changelog</h1>
+
+
+<div class='newsitemheader'>
+    v1.00&nbsp;<font color='#bbbbbb'>(3rd-May-2020)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+	<ul>
+		<li>BFF directives (#if/#include etc) are now prorcessed in a pre-processor pass, consistent with C/C++. This fix means it is
+		no longer possible to use variables inside include paths.</li>
+		<li>Unity order was potentially inconsistent between platforms, OSs, filesystems and locales. A fix for this may result in a change
+		of include order in Unity files.</li>
+        <li>DB Version Changed : clean build will occur</li>
+		<li>Cache version has changed</li>
+    </ul>
+    <b>New</b>
+    <ul>
+		<li>BFF syntax supports users defined functions</li>
+		<li>TextFile allows the generation of test files (Thanks to mkujawa)</li>
+		<li>file_exists directive can be used with #if to detect the presence of files</li>
+		<li>-why command line option details the trigger for each thing that builds</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>FBuildWorker CPU drop down scrolls when there are many CPUs</li>
+			<li>[Windows] Fix FBuildWorker menu item not hiding correctly (Thanks to deter2030)</li>
+			<li>[OSX][Linux] Periodically touch synchronized toolchains to prevent deletion from tmp dir</li>
+		</ul>
+		<li>Project Generation:</li>
+		<ul>
+			<li>XCodeProjectGenerator propertly quotes strings containing '+' (Thanks to Javier Blazquez)</li>
+			<li>Add missing documentation for several XCode project generation debugging settings</li>
+		</ul>
+		<li>Caching:</li>
+		<ul>
+			<li>-cacheinfo and -cachetrim work correcly on case-sensitive filesystems (Thanks to dummyunit)</li>
+			<li>Crash in LightCache when #includes via macros are encountered (Thanks to Francisco Facioni & Brian Burgin)</li>
+			<li>Fix LightCache missing dependency information when using macros (Thanks to Francisco Facioni)</li>
+			<li>If LightCache cannot handle a macro-based include, it will fall back to normal caching correctly</li>
+		</ul>
+		<li>Order of files in Unity is consistent between OSs, file systems and locales</li>
+		<li>Rebuilds correctly trigger if dependent files are deleted even if no other changes occur</li>
+		<li>Rebuilds correctly trigger when mod times change to the past</li>
+		<li>Rebuilds occur correctly if time is adjusted during or shortly after a build (daylight savings, clock drift, timezone change etc)</li>
+		<li>Rebuilds occur correctly if files are modified externally during a build</li>		
+		<li>CopyDir and RemoveDir report error when target name is not specified (Thanks to dummyunit)</li>		
+		<li>-fixuperrorpaths no longer mangles "function" level errors when using VBCC</li>
+		<li>MSVC PrecompiledHeader works correctly when .obj filename is different from .pch file (Thanks to Francisco Facioni)</li>
+		<li>[Linux][OSX] Fix directory being treated as a file in some situations</li>
+		<li>Executable/DLL .LinkerAssemblyResources accepts ObjectLists as input (Thanks to Lambert Clara)</li>
+		<li>Prevent malformed errors with -fixuperrorpaths and VBCC</li>
+		<li>-verbose info for directory lists is contiguous</li>
+		<li>Fix Green Hills linker detection when exe is specified without .exe extension (Thanks to Francisco Facioni)</li>
+		<li>-showtargets no longer returns error code -7 when -wrapper is used</li>
+    </ul>
+	<b>Improvements</b>
+	<ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>[Windows] FBuildWorker has a -debug option to match FBuild to assist debugging (Thanks to Lambert Clara)</li>
+			<li>[Windows] FBuildWorker checks available mem before taking jobs (control with -minfreememory) (Thanks to Lambert Clara)</li>			
+			<li>FBuildWorker brokerage file contains configuration info (Thanks to Lambert Clara)</li>
+			<li>FBuildWorker CPU idle detection level can be set in the UI (Thanks to Lambert Clara)</li>
+			<li>FASTBUILD_BROKERAGE_PATH can contain multiple ; delimited paths (Thanks to Lambert Clara)</li>
+			<li>Local race of distributed jobs can be disable with -nolocalrace debug option (Thanks to Lambert Clara)</li>
+			<li>Brokers periodically (~12hrs) delete stale tokens (>24hrs old) left by other workers (Thanks to Lambert Clara)</li>
+			<li>Improved -help/usage option for FBuild and FBuildWorker</li>
+			<li>Workers periodically update brokerage modification time to allow pruning (Thanks to Brian Burgin)</li>
+			<li>[Windows] Decompression speed on remote workers improved by ~10%</li>
+		</ul>
+		<li>Project Generation:</li>
+		<ul>
+			<li>iOS deployment target can be set with  XCodeIphoneOSDeploymentTarget option</li>
+			<li>VSProjectExternal allows existing project use in FASTBuild generated VS Solutions (Thanks to Lucian Muresan)</li>
+			<li>Clang static analysis is applied consistently to files in Unity</li>
+			<li>Visual Studio Solution() generation supports "Solution Items" (Thanks to Lucian Muresan)</li>
+		</ul>
+		<li>Caching:</li>
+		<ul>
+			<li>Stronger compression can be enabled for cache artefacts via the command line (Thanks to Lambert Clara)</li>
+			<li>-cachecompressionlevel controls level of compression for cache artefacts</li>
+			<li>LightCache emits reason for not being used when -cacheverbose is active</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>BFF parsing consistently handles comments and whitespace everywhere</li>
+			<li>BFF parsing speed improved significantly for many scenarios</li>
+			<li>BFF includes are handled during preprocessing (consistent with C/C++)</li>
+			<li>Parsing errors relating to invalid characters avoid printing garbage</li>
+			<li>BFF parsing speed improved slightly by reducing memory allocaitons and string copying</li>
+		</ul>
+		<li>ExecAlwaysShowOutput option allows Exec to alway print output (Thanks to Lambert Clara)
+		<li>Add .Environment option to TestNode (Thanks to Brian Burgin)
+		<li>--continueafterdbmove allows a clean build after warning of DB move (Thanks to Lambert Clara)
+		<li>Warning when retrieving corrupt data from the cache constains cache key
+		<li>Unknown variables in dynamic variable names emit error 1009 instead of 1026</li>
+		<li>Multiple ObjectLists building the same obj with different settings are now detected</li>
+		<li>"conflicting files found" error improved to include "owner" ObjectList info</li>
+		<li>Clang/GCC #line directives are ignored unless they result from the preprocessor including a file (Thanks to crondog)</li>
+		<li>Corrupt DB does not prevent builds. Corrupt db is renamed and a warning is emitted (Thanks to Lambert Clara)</li>
+		<li>Updated bash completion script (Thanks to dummyunit)</li>
+		<li>-showcmdoutput cmdline option shows the full output of all external processes</li>
+		<li>Librarian() exposed .LibrarianType to allow explicit control of type (Thanks to Francisco Facioni)</li>
+		<li>Unity can isolate files listed in an file specified by .UnityInputIsolateListFile (Thanks to  poppolopoppo)</li>
+		<li>PrecompiledHeaders can be re-used between multiple ObjectLists</li>
+		<li>Dependency graph traversal optimized by parallelizing file timestamp retrieval</li>
+		<li>Unity evaluation is avoided when no inputs have changed</li>
+		<li>[Windows] Directly listing cost reduced by ~30%</li>
+	</ul>
+</div>
 
 
 <div class='newsitemheader'>
@@ -1830,6 +1943,6 @@ Fixes
     </div>
 
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

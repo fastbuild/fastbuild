@@ -4,7 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FileNode.h"
+#include "VSProjectBaseNode.h"
 
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -75,7 +75,7 @@ public:
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
                                 Array< VSProjectConfig > & configs,
-                                const BFFIterator * iter = nullptr,
+                                const BFFToken * iter = nullptr,
                                 const Function * function = nullptr );
 };
 
@@ -101,25 +101,24 @@ public:
 
 // VCXProjectNode
 //------------------------------------------------------------------------------
-class VCXProjectNode : public FileNode
+class VCXProjectNode : public VSProjectBaseNode
 {
     REFLECT_NODE_DECLARE( VCXProjectNode )
 public:
     VCXProjectNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~VCXProjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::VCXPROJECT_NODE; }
 
-    const AString & GetProjectGuid() const { return m_ProjectGuid; }
-    const Array< VSProjectConfig > & GetConfigs() const { return m_ProjectConfigs; }
-
 private:
-    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void PostLoad( NodeGraph & nodeGraph ) override;
 
     bool Save( const AString & content, const AString & fileName ) const;
+
+    // VSProjectBaseNode interface
+    virtual const AString & GetProjectTypeGuid() const override;
 
     // Exposed
     Array< AString >    m_ProjectInputPaths;
@@ -134,7 +133,6 @@ private:
     Array< VSProjectFileType > m_ProjectFileTypes;
 
     AString             m_RootNamespace;
-    AString             m_ProjectGuid;
     AString             m_DefaultLanguage;
     AString             m_ApplicationEnvironment;
     bool                m_ProjectSccEntrySAK = false;

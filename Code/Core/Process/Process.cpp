@@ -7,14 +7,14 @@
 
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/FileIO.h"
-#include "Core/Math/Conversions.h"
 #include "Core/Math/Constants.h"
+#include "Core/Math/Conversions.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
-#include "Core/Time/Timer.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
+#include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
@@ -40,7 +40,7 @@
 //------------------------------------------------------------------------------
 Process::Process( const volatile bool * masterAbortFlag,
                   const volatile bool * abortFlag )
-: m_Started( false )
+    : m_Started( false )
 #if defined( __WINDOWS__ )
     , m_SharingHandles( false )
     , m_RedirectHandles( true )
@@ -795,99 +795,6 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
 
         // keep data null char terminated for caller convenience
         buffer.Get()[ sizeSoFar ] = '\000';
-    }
-#endif
-
-// ReadStdOut
-//------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    char * Process::ReadStdOut( uint32_t * bytesRead )
-    {
-        return Read( m_StdOutRead, bytesRead );
-    }
-#endif
-
-// ReadStdOut
-//------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    char * Process::ReadStdErr( uint32_t * bytesRead )
-    {
-        return Read( m_StdErrRead, bytesRead );
-    }
-#endif
-
-// ReadStdOut
-//------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    uint32_t Process::ReadStdOut( char * outputBuffer, uint32_t outputBufferSize )
-    {
-        return Read( m_StdOutRead, outputBuffer, outputBufferSize );
-    }
-#endif
-
-// ReadStdErr
-//------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    uint32_t Process::ReadStdErr( char * outputBuffer, uint32_t outputBufferSize )
-    {
-        return Read( m_StdErrRead, outputBuffer, outputBufferSize );
-    }
-#endif
-
-// Read
-//------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    char * Process::Read( HANDLE handle, uint32_t * bytesRead )
-    {
-        // see if there's anything in the pipe
-        DWORD bytesAvail;
-        VERIFY( PeekNamedPipe( handle, nullptr, 0, nullptr, (LPDWORD)&bytesAvail, nullptr ) );
-        if ( bytesAvail == 0 )
-        {
-            if ( bytesRead )
-            {
-                *bytesRead = 0;
-            }
-            return nullptr;
-        }
-
-        // allocate output buffer
-        char * mem = (char *)ALLOC( bytesAvail + 1 ); // null terminate for convenience
-        mem[ bytesAvail ] = 0;
-
-        // read the data
-        DWORD bytesReadNow = 0;
-        VERIFY( ReadFile( handle, mem, bytesAvail, (LPDWORD)&bytesReadNow, 0 ) );
-        ASSERT( bytesReadNow == bytesAvail );
-        if ( bytesRead )
-        {
-            *bytesRead = bytesReadNow;
-        }
-        return mem;
-    }
-#endif
-
-// Read
-//------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    uint32_t Process::Read( HANDLE handle, char * outputBuffer, uint32_t outputBufferSize )
-    {
-        // see if there's anything in the pipe
-        DWORD bytesAvail;
-        VERIFY( PeekNamedPipe( handle, nullptr, 0, 0, (LPDWORD)&bytesAvail, 0 ) );
-        if ( bytesAvail == 0 )
-        {
-            return 0;
-        }
-
-        // if there is more available than we have space for, just read as much as we can
-        uint32_t bytesToRead = Math::Min<uint32_t>( outputBufferSize, bytesAvail );
-
-        // read the data
-        DWORD bytesReadNow = 0;
-        VERIFY( ReadFile( handle, outputBuffer, bytesToRead, (LPDWORD)&bytesReadNow, 0 ) );
-        ASSERT( bytesReadNow == bytesToRead );
-        return bytesToRead;
     }
 #endif
 

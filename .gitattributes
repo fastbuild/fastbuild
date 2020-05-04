@@ -1,6 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
+# Bash scripts have to have LF line endings, otherwise they work only on Windows
+*.bash-completion eol=lf
+
 # Custom for Visual Studio
 *.cs     diff=csharp
 

@@ -29,6 +29,8 @@ private:
     void ConsistentCacheKeysWithDist() const;
 
     void LightCache_IncludeUsingMacro() const;
+    void LightCache_IncludeUsingMacro2() const;
+    void LightCache_IncludeUsingMacro3() const;
     void LightCache_IncludeHierarchy() const;
     void LightCache_CyclicInclude() const;
     void LightCache_ImportDirective() const;
@@ -57,6 +59,8 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( ConsistentCacheKeysWithDist )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( LightCache_IncludeUsingMacro )
+        REGISTER_TEST( LightCache_IncludeUsingMacro2 )
+        REGISTER_TEST( LightCache_IncludeUsingMacro3 )
         REGISTER_TEST( LightCache_IncludeHierarchy )
         REGISTER_TEST( LightCache_CyclicInclude )
         REGISTER_TEST( LightCache_ImportDirective )
@@ -314,21 +318,35 @@ void TestCache::ConsistentCacheKeysWithDist() const
 
 // LightCache_IncludeUsingMacro
 //------------------------------------------------------------------------------
-// Files can be included via a macro
-//------------------------------------------------------------------------------
 void TestCache::LightCache_IncludeUsingMacro() const
 {
+    // Files can be included via macros and those macros can result in different
+    // includes for a given header:
+    //  - file.1.cpp defines PATH_AS_MACRO as file.1.h
+    //  - file.2.cpp defines PATH_AS_MACRO as file.2.h
+    //  - bothe files include file.h which includes a file using PATH_AS_MACRO
+    //
+    //    file.1.cpp       file.2.cpp
+    //         |                |
+    //          |              |
+    //           |-- file.h --|
+    //          |              |
+    //         |                |
+    //     file.1.h         file.2.h
+
     FBuildTestOptions options;
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro/fbuild.bff";
 
     const char * expectedFiles[] = { "file.1.cpp", "file.1.h", "file.2.cpp", "file.2.h", "file.h" };
 
+    // Single thread
+    options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
+
     // Write (single thread)
     {
         options.m_UseCacheRead = false;
         options.m_UseCacheWrite = true;
-        options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
 
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -347,7 +365,6 @@ void TestCache::LightCache_IncludeUsingMacro() const
     {
         options.m_UseCacheRead = true;
         options.m_UseCacheWrite = false;
-        options.m_NumWorkerThreads = 1;
 
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -362,11 +379,13 @@ void TestCache::LightCache_IncludeUsingMacro() const
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
 
+    // Multiple threads
+    options.m_NumWorkerThreads = 2;
+
     // Write (multiple threads)
     {
         options.m_UseCacheRead = false;
         options.m_UseCacheWrite = true;
-        options.m_NumWorkerThreads = 2;
 
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -385,7 +404,6 @@ void TestCache::LightCache_IncludeUsingMacro() const
     {
         options.m_UseCacheRead = true;
         options.m_UseCacheWrite = false;
-        options.m_NumWorkerThreads = 2;
 
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -401,23 +419,159 @@ void TestCache::LightCache_IncludeUsingMacro() const
     }
 }
 
-// LightCache_IncludeHierarchy
+// LightCache_IncludeUsingMacro2
 //------------------------------------------------------------------------------
-// Two files can include "common.h" in such a way that common.h includes a
-// different file because of the rules about which directories are searched
-// for includes
-//
-//     Folder1/file.cpp  Folder2/file.cpp
-//            |                |
-//             |              |
-//              |- Common.h -|
-//             |              |
-//            |                |
-//     Folder1/file.h    Folder2/file.h
-//
+void TestCache::LightCache_IncludeUsingMacro2() const
+{
+    // Defines found while parsing must be stored for re-use along with discovered
+    // includes.
+    //
+    //    file.1.cpp       file.2.cpp
+    //         |                |
+    //         |                |
+    //    header1.h        header1.h       <<- macro defined here
+    //         |                |
+    //         |                |
+    //    header2.h        header2.h       <<- included via macro
+
+    FBuildTestOptions options;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro2/fbuild.bff";
+
+    const char * expectedFiles[] = { "file.1.cpp", "file.2.cpp", "header1.h", "header2.h" };
+
+    // Single thread
+    options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
+
+    // Write (single thread)
+    {
+        options.m_UseCacheRead = false;
+        options.m_UseCacheWrite = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Ensure we that we used the LightCache
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+
+        CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
+    }
+
+    // Read (single thread)
+    {
+        options.m_UseCacheRead = true;
+        options.m_UseCacheWrite = false;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Ensure we that we used the LightCache
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+
+        CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
+    }
+
+    // Multiple threads
+    options.m_NumWorkerThreads = 2;
+
+    // Write (multiple threads)
+    {
+        options.m_UseCacheRead = false;
+        options.m_UseCacheWrite = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Ensure we that we used the LightCache
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+
+        CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
+    }
+
+    // Read (multiple threads)
+    {
+        options.m_UseCacheRead = true;
+        options.m_UseCacheWrite = false;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Ensure we that we used the LightCache
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+
+        CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
+    }
+}
+
+// LightCache_IncludeUsingMacro3
+//------------------------------------------------------------------------------
+void TestCache::LightCache_IncludeUsingMacro3() const
+{
+    // Defines are accumulated during traversal, resulting in the master defines
+    // vector vector being resized while being iterated. This needs to be handled
+    // correctly.
+
+    FBuildTestOptions options;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro3/fbuild.bff";
+
+    const char * expectedFiles[] = { "file.cpp", "header1.h", "header2.h" };
+
+    // Single thread
+    options.m_NumWorkerThreads = 1;
+
+    // Write (single thread)
+    {
+        options.m_UseCacheRead = false;
+        options.m_UseCacheWrite = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Ensure we that we used the LightCache
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheStores == 1 );
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+
+        CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
+    }
+}
+
+// LightCache_IncludeHierarchy
 //------------------------------------------------------------------------------
 void TestCache::LightCache_IncludeHierarchy() const
 {
+    // Two files can include "common.h" in such a way that common.h includes a
+    // different file because of the rules about which directories are searched
+    // for includes
+    //
+    //     Folder1/file.cpp  Folder2/file.cpp
+    //            |                |
+    //             |              |
+    //              |- Common.h -|
+    //             |              |
+    //            |                |
+    //     Folder1/file.h    Folder2/file.h
+    //
+
     FBuildTestOptions options;
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeHierarchy/fbuild.bff";
@@ -565,6 +719,9 @@ void TestCache::LightCache_ImportDirective() const
 
     // Ensure we detected that we could not use the LightCache
     TEST_ASSERT( objStats.m_NumLightCache == 0 );
+
+    // Check for expected error in output (from -cacheverbose)
+    TEST_ASSERT( GetRecordedOutput().Find( "#import is unsupported." ) );
 }
 
 // Analyze_MSVC_WarningsOnly_Write
@@ -674,7 +831,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 );
 
     // Check for expected warnings
-    const AString& output = GetRecordedOutput();
+    const AString & output = GetRecordedOutput();
     // file1.cpp
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
@@ -743,10 +900,10 @@ void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char *
 {
     Array< const Node * > nodes;
     fBuild.GetNodesOfType( Node::FILE_NODE, nodes );
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         AStackString<> file( files[ i ] );
-        #if defined( __WINDOWS__)
+        #if defined( __WINDOWS__ )
             file.Replace( '/', '\\' ); // Allow calling code to not have to care about the platform
         #endif
         bool found = false;

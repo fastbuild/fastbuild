@@ -4,9 +4,9 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Reflection/MetaData/MetaData.h"
 #include "Core/Reflection/PropertyType.h"
 #include "Core/Reflection/ReflectionInfo.h"
-#include "Core/Reflection/MetaData/MetaData.h"
 
 #include <stddef.h>
 

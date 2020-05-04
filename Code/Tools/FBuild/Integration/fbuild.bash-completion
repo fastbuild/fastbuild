@@ -5,6 +5,7 @@ _fbuild() {
 	local prev="${COMP_WORDS[COMP_CWORD-1]}"
 	local opts="
 		-cache
+		-cachecompressionlevel
 		-cacheinfo
 		-cacheread
 		-cachetrim
@@ -13,6 +14,7 @@ _fbuild() {
 		-clean
 		-compdb
 		-config
+		-continueafterdbmove
 		-dist
 		-distverbose
 		-fastcancel
@@ -22,31 +24,40 @@ _fbuild() {
 		-ide
 		-j
 		-monitor
+		-nolocalrace
 		-noprogress
 		-nostoponerror
 		-nosummaryonerror
+		-nounity
+		-progress
 		-quiet
 		-report
+		-showalltargets
+		-showcmdoutput
 		-showcmds
+		-showdeps
 		-showtargets
 		-summary
 		-verbose
 		-version
 		-vs
 		-wait
+		-why
 		-wrapper
 	"
 
-	# Offer nothing after -cachetrim to indicate that this option requires an argument
 	case ${prev} in
-	-cachetrim)
+	-cachecompressionlevel)
+		# Offer supported compression levels after -cachecompressionlevel
+		COMPREPLY=( $(compgen -W "{-128..12}" -- "${cur}" ) )
 		return 0
 		;;
-	esac
-
-	# Offer files after -config
-	case ${prev} in
+	-cachetrim)
+		# Offer nothing after -cachetrim to indicate that this option requires an argument
+		return 0
+		;;
 	-config)
+		# Offer files after -config
 		COMPREPLY=( $(compgen -f -- "${cur}") )
 		[[ ${BASH_VERSINFO[0]} -ge 4 ]] && compopt -o filenames
 		return 0
@@ -58,7 +69,7 @@ _fbuild() {
 	-j*)
 		local ncpus=8
 		declare -f _ncpus >/dev/null && ncpus=$(_ncpus)
-		COMPREPLY=( $(compgen -W "-j{1..${ncpus}}" -- "$cur" ) )
+		COMPREPLY=( $(compgen -W "-j{1..${ncpus}}" -- "${cur}" ) )
 		return 0
 		;;
 	esac

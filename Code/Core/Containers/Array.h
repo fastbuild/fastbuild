@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Containers/Forward.h"
 #include "Core/Containers/Move.h"
 #include "Core/Containers/Sort.h"
 #include "Core/Env/Assert.h"
@@ -79,6 +80,8 @@ public:
     void PopFront(); // expensive - shuffles everything in the array!
     void Erase( T * const iter );
     inline void EraseIndex( size_t index ) { Erase( m_Begin + index ); }
+    template < class ... ARGS >
+    void EmplaceBack( ARGS && ... args );
 
     Array & operator = ( const Array< T > & other );
     Array & operator = ( Array< T > && other );
@@ -210,7 +213,14 @@ Array< T >::Array( size_t initialCapacity, bool resizeable )
 template < class T >
 Array< T >::~Array()
 {
-    Destruct();
+    T * iter = m_Begin;
+    T * endIter = m_Begin + m_Size;
+    while ( iter < endIter )
+    {
+        iter->~T();
+        iter++;
+    }
+    Deallocate( m_Begin );
 }
 
 // Destruct
@@ -532,6 +542,21 @@ void Array< T >::Erase( T * const iter )
     }
     dst->~T();
     --m_Size;
+}
+
+// EmplaceBack
+//------------------------------------------------------------------------------
+template < class T >
+template < class ... ARGS >
+void Array< T >::EmplaceBack( ARGS && ... args )
+{
+    if ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) )
+    {
+        Grow();
+    }
+    T * pos = m_Begin + m_Size;
+    INPLACE_NEW ( pos ) T( Forward( ARGS, args ) ... );
+    m_Size++;
 }
 
 // operator =

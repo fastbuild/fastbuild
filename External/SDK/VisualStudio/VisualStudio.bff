@@ -3,35 +3,31 @@
 
 // Select desired Visual Studio version
 //------------------------------------------------------------------------------
-//#define USING_VS2015
-#define USING_VS2017
-//#define USING_VS2019
+#if CI_BUILD
+    // Travis CI comes with 2017 installed
+    #define USING_VS2017
+#else
+    //#define USING_VS2015
+    //#define USING_VS2017
+    #define USING_VS2019
+#endif
 
 // Activate
 //------------------------------------------------------------------------------
+.VisualStudioSettings = []
 #if USING_VS2015
     #include "VS2015.bff"
-    .MSC_VER                            = .VS2015_MSC_VER
-    .ToolChain_VS_Windows_X64           = .ToolChain_VS2015_Windows_X64
-    .VS_PATH                            = .VS_2015_PATH
-    .VS_PlatformToolset                 = .VS_2015_PlatformToolset
-    .VS_SolutionVersion                 = '14'
+    .VisualStudioSettings = .VisualStudioSettings_VS2015
 #endif
 #if USING_VS2017
     #include "VS2017.bff"
-    .MSC_VER                            = .VS2017_MSC_VER
-    .ToolChain_VS_Windows_X64           = .ToolChain_VS2017_Windows_X64
-    .VS_PATH                            = .VS_2017_PATH
-    .VS_PlatformToolset                 = .VS_2017_PlatformToolset
-    .VS_SolutionVersion                 = '15'
+    .VisualStudioSettings = .VisualStudioSettings_VS2017
 #endif
 #if USING_VS2019
     #include "VS2019.bff"
-    .MSC_VER                            = .VS2019_MSC_VER
-    .ToolChain_VS_Windows_X64           = .ToolChain_VS2019_Windows_X64
-    .VS_PATH                            = .VS_2019_PATH
-    .VS_PlatformToolset                 = .VS_2019_PlatformToolset
-    .VS_SolutionVersion                 = '16'
+    .VisualStudioSettings = .VisualStudioSettings_VS2019
 #endif
+Using( .VisualStudioSettings )
+Print( 'Using VS$VS_Version_HumanReadable$ (v$VS_Version$) from $VS_ToolchainPath$' )
 
 //------------------------------------------------------------------------------

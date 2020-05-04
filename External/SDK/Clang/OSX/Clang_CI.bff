@@ -7,6 +7,11 @@ Compiler( 'Compiler-Clang' )
 {
     .Executable                     = 'CLANGXX_BINARY'
     .CompilerFamily                 = 'clang' // Specify compiler family explicitly because binary name may change at any moment
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif    
 }
 
 // ToolChain

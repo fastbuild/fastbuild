@@ -5,6 +5,7 @@
 #if CI_BUILD
     .VS2017_BasePath     = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools'
 #endif
+.VS2017_ToolchainPath    = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$'
 
 // X64 Compiler
 //------------------------------------------------------------------------------
@@ -48,6 +49,8 @@ Compiler( 'Compiler-VS2017-x64' )
                                     + ' /Zc:strictStrings'  // Require const only usage of string literals (VS2013+)
                                     + ' /fp:fast'
                                     + ' /diagnostics:caret' // Use improved warning/error messages
+                                    + ' /std:c++17'         // Enable c++17 features
+                                    + ' /permissive-'       // Require conformant code
 
                                     // Include Paths
                                     + ' /I"./"'
@@ -103,5 +106,19 @@ Compiler( 'Compiler-VS2017-x64' )
 // _MSC_VER
 //------------------------------------------------------------------------------
 .VS2017_MSC_VER                     = '1910'
+
+// VisualStudioSettings
+//------------------------------------------------------------------------------
+.VisualStudioSettings_VS2017 = 
+[
+    .VS_Version                     = .VS2017_Version
+    .VS_Version_HumanReadable       = '2017'
+    .VS_SolutionVersion             = '15'
+    .MSC_VER                        = .VS2017_MSC_VER
+    .VS_ToolchainPath               = .VS2017_ToolchainPath
+    .ToolChain_VS_Windows_X64       = .ToolChain_VS2017_Windows_X64
+    .VS_PATH                        = .VS_2017_PATH
+    .VS_PlatformToolset             = .VS_2017_PlatformToolset
+]
 
 //------------------------------------------------------------------------------

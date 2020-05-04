@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../favicon.ico">
 <title>FASTBuild - Error Reference</title>
 </head>
@@ -698,6 +699,36 @@ Exec('all')
 \--here</div>
 </div>
 
+<!--------------- 1044 --------------->
+    <div class='newsitemheader'>1044 - Operator expected.</div>
+    <div class='newsitembody'>
+An operator was expected at the current location.
+<h4>Example Config:</h4>
+<div class='code'>.Var "value"</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1,6): FASTBuild Error #1044 - Operator expected.
+.Var "value"
+     ^
+     \--here
+</div>
+</div>
+
+<!--------------- 1045 --------------->
+    <div class='newsitemheader'>1045 -  Extraneous token(s) following '%s' directive.</div>
+    <div class='newsitembody'>
+Extra tokens were found after what would otherwise be a valid directive.
+<h4>Example Config:</h4>
+<div class='code'>#if THING ExtraneousThing
+#endif</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,11): FASTBuild Error #1045 - Extraneous token(s) following 'if' directive.
+#if THING ExtraneousThing
+          ^
+          \--here
+</div>
+</div>
+
+
 
 <!--------------- 1050 --------------->
     <div class='newsitemheader'>1050 - Property '%s' must be of type &lt;%s&gt; (found &lt;%s&gt;).</div>
@@ -910,6 +941,97 @@ ObjectList( 'objlist' )
 \--here
 </div>
 </div>
+
+<!--------------- 1107 --------------->
+  <div class='newsitemheader'>1107 - Expected function name following 'function' keyword.</div>
+  <div class='newsitembody'>
+A function is declared using the function keyword, followed by the function name. An invalid function name was provided.
+<h4>Example Config:</h4>
+<div class='code'>function ()</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\test\fbuild.bff(1,10): FASTBuild Error #1107 - Expected function name following 'function' keyword.
+function ()
+         ^
+         \--here
+</div>
+</div>
+
+<!--------------- 1108 --------------->
+  <div class='newsitemheader'>1108 - Function '%s' already defined.</div>
+  <div class='newsitembody'>
+Function must be declared only once and function names must be unique.
+<h4>Example Config:</h4>
+<div class='code'>function Func(){}
+function Func(){}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\test\fbuild.bff(2,10): FASTBuild Error #1108 - Function 'Func' already defined.
+function Func(){}
+         ^
+         \--here
+</div>
+</div>
+
+<!--------------- 1109 --------------->
+  <div class='newsitemheader'>1109 - Function argument '%s' is already defined.</div>
+  <div class='newsitembody'>
+Function arguments must be uniquely named.
+<h4>Example Config:</h4>
+<div class='code'>function Func( .Arg .Arg ){}</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\test\fbuild.bff(1,21): FASTBuild Error #1109 - Function argument '.Arg' is already defined.
+function Func( .Arg .Arg ){}
+                    ^
+                    \--here
+</div>
+</div>
+
+<!--------------- 1110 --------------->
+  <div class='newsitemheader'>1110 - Expected argument block following function call.</div>
+  <div class='newsitembody'>
+A function is invoked using its previously defined name followed by a round brace enclosed argument list (or
+and empty pair of braces if there are no arguments).
+<h4>Example Config:</h4>
+<div class='code'>function Func(){}
+Func=</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\test\fbuild.bff(2,5): FASTBuild Error #1110 - Expected argument block following function call.
+Func=
+    ^
+    \--here
+</div>
+</div>
+
+<!--------------- 1111 --------------->
+  <div class='newsitemheader'>1111 - Function call does not take %u args (it expects %u args).</div>
+  <div class='newsitembody'>
+Invocation of a function requires a matching parameter list.
+<h4>Example Config:</h4>
+<div class='code'>function Func( .Arg1 .Arg2 ){}
+Func( 'OnlyOneArg' )</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\test\fbuild.bff(2,1): FASTBuild Error #1111 - Function call does not take 1 args (it expects 2 args).
+Func( 'OnlyOneArg' )
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1112 --------------->
+  <div class='newsitemheader'>1112 - Function call arguments should be literals or variables.</div>
+  <div class='newsitembody'>
+A function call can be invoked with literals or variables only. Other constructs cannot be passed.
+<h4>Example Config:</h4>
+<div class='code'>function Func( .Arg ){}
+Func( = )</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\test\fbuild.bff(2,7): FASTBuild Error #1112 - Function call arguments should be literals or variables.
+Func( = )
+      ^
+      \--here
+</div>
+</div>
+
 
 <h2 id='1200'>1200 - 1299 : ForEach Specific Errors</h2>
 <!--------------- 1200 --------------->
@@ -1192,6 +1314,6 @@ Error( 'custom message' )
 </div>
 
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

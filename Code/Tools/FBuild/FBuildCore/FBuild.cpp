@@ -6,7 +6,6 @@
 #include "FBuild.h"
 
 #include "FLog.h"
-#include "BFF/BFFMacros.h"
 #include "BFF/BFFParser.h"
 #include "BFF/Functions/Function.h"
 #include "Cache/ICache.h"
@@ -76,8 +75,6 @@ FBuild::FBuild( const FBuildOptions & options )
                         _CRTDBG_LEAK_CHECK_DF );
     #endif
 
-    m_Macros = FNEW( BFFMacros() );
-
     // store all user provided options
     m_Options = options;
 
@@ -85,8 +82,8 @@ FBuild::FBuild( const FBuildOptions & options )
     VERIFY( FileIO::GetCurrentDir( m_OldWorkingDir ) );
 
     // poke options where required
-    FLog::SetShowInfo( m_Options.m_ShowInfo );
-    FLog::SetShowBuildCommands( m_Options.m_ShowBuildCommands );
+    FLog::SetShowVerbose( m_Options.m_ShowVerbose );
+    FLog::SetShowBuildReason( m_Options.m_ShowBuildReason );
     FLog::SetShowErrors( m_Options.m_ShowErrors );
     FLog::SetShowProgress( m_Options.m_ShowProgress );
     FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
@@ -104,7 +101,6 @@ FBuild::~FBuild()
 
     Function::Destroy();
 
-    FDELETE m_Macros;
     FDELETE m_DependencyGraph;
     FDELETE m_Client;
     FREE( m_EnvironmentString );
@@ -256,7 +252,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
 
             return false;
         }
-        outDeps.Append( Dependency( node ) );
+        outDeps.EmplaceBack( node );
     }
 
     return true;
@@ -296,7 +292,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
     PROFILE_FUNCTION
 
-    FLOG_INFO( "Saving DepGraph '%s'", nodeGraphDBFile );
+    FLOG_VERBOSE( "Saving DepGraph '%s'", nodeGraphDBFile );
 
     Timer t;
 
@@ -345,7 +341,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
         return false;
     }
 
-    FLOG_INFO( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );
+    FLOG_VERBOSE( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );
     return true;
 }
 
@@ -393,7 +389,7 @@ bool FBuild::Build( Node * nodeToBuild )
         }
         else
         {
-            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRoot().Get() );
+            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
             m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
         }
     }
@@ -562,10 +558,16 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     }
 
     // import new variable name with its hash value
-    const EnvironmentVarAndHash var( name, hash );
-    m_ImportedEnvironmentVars.Append( var );
+    m_ImportedEnvironmentVars.EmplaceBack( name, hash );
 
     return true;
+}
+
+// AddFileExistsCheck
+//------------------------------------------------------------------------------
+bool FBuild::AddFileExistsCheck( const AString & fileName )
+{
+    return m_FileExistsInfo.CheckFile( fileName );
 }
 
 // GetLibEnvVar
@@ -717,12 +719,14 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::COMPILER_NODE:       break;
             case Node::DLL_NODE:            break;
             case Node::VCXPROJECT_NODE:     break;
+            case Node::VSPROJEXTERNAL_NODE: break;
             case Node::OBJECT_LIST_NODE:    displayName = true; hidden = node->IsHidden(); break;
             case Node::COPY_DIR_NODE:       break;
             case Node::SLN_NODE:            break;
             case Node::REMOVE_DIR_NODE:     break;
             case Node::XCODEPROJECT_NODE:   break;
             case Node::SETTINGS_NODE:       break;
+            case Node::TEXT_FILE_NODE:      displayName = true; hidden = node->IsHidden(); break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
         if ( displayName && ( !hidden || showHidden ) )

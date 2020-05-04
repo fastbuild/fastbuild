@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../favicon.ico">
 <title>FASTBuild - Syntax Guide</title>
 </head>
@@ -63,6 +64,7 @@ Details of the FASTBuild configuration file syntax can be grouped into 4 categor
   <li><a href='#properties'>Properties</a></li>
   <li><a href='#arguments'>Arguments</a></li>
   <li><a href='#buildtimesubs'>Build-Time Substitutions</a></li>
+  <li><a href='#userfunctions'>User Functions</a></li>
 </ul>
  </div>
 
@@ -161,10 +163,16 @@ Examples:
 <tr><td>__OSX__</td><td>Defined if running on OS X</td></tr>
 <tr><td>__WINDOWS__</td><td>Defined if running on Windows</td></tr>
 </table>
-<p>Additionally, the "exists" operator can be used to branch on the existence of an environment variable.</p>
+<p>Additionally "exists" can be used to branch on the existence of an environment variable.</p>
 Example:
 <div class='code'>#if exists(MY_ENV_VAR)
     #import MY_ENV_VAR
+#endif
+</div>
+<p>Additionally "file_exists" can be used to detect the existence of external files.</p>
+Example:
+<div class='code'>#if file_exists("file.dat")
+    //
 #endif
 </div>
 
@@ -487,6 +495,37 @@ properties they can be used on).  For details, see the <a href='functions.html'>
 </div>
 
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+
+    <div class='newsitemheader' id='userfunctions'>
+      User Functions
+    </div>
+    <div class='newsitembody'>
+<p>
+User Functions can be defined in order to de-duplicate commonly used configuration. Functions are defined using the 'function'
+keyword followed by a parameter block of zero or more arguments and a function body. User Functions can take zero or more arguments.
+Arguments can be optionally comma delimitted.</p>
+Example declarations:
+</p>
+<div class='code'>function FunctionA()
+{
+  Print( 'Hello' )
+}
+
+function FunctionB( .Arg .Arg2 )
+{
+  If( .Arg1 == .Arg2 )
+  {
+    Print( 'Equal' )
+  }
+}
+</div>
+Example invocations:
+<div class='code'>FunctionA()
+FunctionB( 'ALiteralString' .APreviouslyDeclaredString )
+</div></p>
+</div>
+
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

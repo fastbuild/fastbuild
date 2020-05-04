@@ -28,8 +28,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/TextFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/VSProjectBaseNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
@@ -79,6 +80,8 @@
     "RemoveDir",
     "XCodeProj",
     "Settings",
+    "VSExtProj",
+    "TextFile",
 };
 static Mutex g_NodeEnvStringMutex;
 
@@ -151,21 +154,21 @@ Node::~Node() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-bool Node::DetermineNeedToBuild( bool forceClean ) const
+bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 {
-    if ( forceClean )
+    // Some nodes (like File and Directory) always build as they represent external state
+    // that can be modified before the build is run
+    if ( m_ControlFlags & FLAG_ALWAYS_BUILD )
     {
+        // Don't output detailed FLOG_INFO for these nodes
         return true;
     }
 
     // if we don't have a stamp, we are building for the first time
+    // can also occur if explicitly dirtied in a previous build
     if ( m_Stamp == 0 )
     {
-        // don't output for file nodes, which are always built
-        if ( GetType() != Node::FILE_NODE )
-        {
-            FLOG_INFO( "Need to build '%s' (first time)", GetName().Get() );
-        }
+        FLOG_BUILD_REASON( "Need to build '%s' (first time or dirtied)\n", GetName().Get() );
         return true;
     }
 
@@ -176,7 +179,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         if ( lastWriteTime == 0 )
         {
             // file is missing on disk
-            FLOG_INFO( "Need to build '%s' (missing)", GetName().Get() );
+            FLOG_BUILD_REASON( "Need to build '%s' (missing)\n", GetName().Get() );
             return true;
         }
 
@@ -184,97 +187,47 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         {
             // on disk file doesn't match our file
             // (modified by some external process)
-            FLOG_INFO( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")", GetName().Get(), m_Stamp, lastWriteTime );
+            FLOG_BUILD_REASON( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")\n", GetName().Get(), m_Stamp, lastWriteTime );
             return true;
         }
     }
 
     // static deps
-    const Dependencies & staticDeps = GetStaticDependencies();
-    for ( Dependencies::ConstIter it = staticDeps.Begin();
-          it != staticDeps.End();
-          it++ )
+    for ( const Dependency & dep : deps )
     {
-        Node * n = it->GetNode();
-
-        // ignore directories - the derived node should extract what it needs in DoDynamicDependencies
-        if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
-        {
-            continue;
-        }
-
-        // ignore unity nodes - the derived node should extract what it needs in DoDynamicDependencies
-        if ( n->GetType() == Node::UNITY_NODE )
-        {
-            continue;
-        }
-
         // Weak dependencies don't cause rebuilds
-        if ( it->IsWeak() )
+        if ( dep.IsWeak() )
         {
             continue;
         }
 
-        // we're about to compare stamps, so we should be a file (or a file list)
-        ASSERT( n->IsAFile() || ( n->GetType() == Node::COMPILER_NODE ) || ( n->GetType() == Node::OBJECT_LIST_NODE ) );
+        Node * n = dep.GetNode();
 
-        if ( n->GetStamp() == 0 )
+        const uint64_t stamp = n->GetStamp();
+        if ( stamp == 0 )
         {
             // file missing - this may be ok, but node needs to build to find out
-            FLOG_INFO( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
+            FLOG_BUILD_REASON( "Need to build '%s' (dep missing: '%s')\n", GetName().Get(), n->GetName().Get() );
             return true;
         }
 
-        if ( n->GetStamp() > m_Stamp )
+        // Compare the "stamp" for this dependency recorded last time we built. If it has changed
+        // the dependency has changed and we must rebuild
+        const uint64_t oldStamp = dep.GetNodeStamp();
+        if ( stamp != oldStamp )
         {
-            // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
+            FLOG_BUILD_REASON( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")\n", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
             return true;
         }
     }
-
-    // dynamic deps
-    const Dependencies & dynamicDeps = GetDynamicDependencies();
-    for ( Dependencies::ConstIter it = dynamicDeps.Begin();
-          it != dynamicDeps.End();
-          it++ )
-    {
-        Node * n = it->GetNode();
-
-        // we're about to compare stamps, so we should be a file (or a file list)
-        ASSERT( n->IsAFile() || ( n->GetType() == Node::OBJECT_LIST_NODE ) );
-
-        // Weak dependencies don't cause rebuilds
-        if ( it->IsWeak() )
-        {
-            continue;
-        }
-
-        // should be a file
-        if ( n->GetStamp() == 0 )
-        {
-            // file missing - this may be ok, but node needs to build to find out
-            FLOG_INFO( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
-            return true;
-        }
-
-        if ( n->GetStamp() > m_Stamp )
-        {
-            // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
-            return true;
-        }
-    }
-
 
     // nothing needs building
-    FLOG_INFO( "Up-To-Date '%s'", GetName().Get() );
     return false;
 }
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult Node::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult Node::DoBuild( Job * /*job*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
     return Node::NODE_RESULT_FAILED;
@@ -282,7 +235,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
 // DoBuild2
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult Node::DoBuild2( Job * UNUSED( job ), bool UNUSED( racingRemoteJob ) )
+/*virtual*/ Node::BuildResult Node::DoBuild2( Job * /*job*/, bool /*racingRemoteJob*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
     return Node::NODE_RESULT_FAILED;
@@ -292,7 +245,21 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 //------------------------------------------------------------------------------
 /*virtual*/ bool Node::Finalize( NodeGraph & )
 {
-    // most nodes have nothing to do
+    // Stamp static and dynamic dependencies (prebuild deps don't need stamping
+    // as they are never trigger builds)
+    Dependencies * allDeps[2] = { &m_StaticDependencies, &m_DynamicDependencies };
+    for ( Dependencies * deps : allDeps )
+    {
+        for ( Dependency & dep : *deps )
+        {
+            // If not built, each node should have a non-zero node stamp
+            // If built, it's possible to have a zero stamp due to missing files
+            ASSERT( dep.GetNode()->GetStatFlag( Node::STATS_BUILT ) ||
+                    dep.GetNode()->GetStamp() );
+            dep.Stamp( dep.GetNode()->GetStamp() );
+        }
+    }
+
     return true;
 }
 
@@ -369,12 +336,14 @@ void Node::SetLastBuildTime( uint32_t ms )
         case Node::COMPILER_NODE:       return nodeGraph.CreateCompilerNode( name );
         case Node::DLL_NODE:            return nodeGraph.CreateDLLNode( name );
         case Node::VCXPROJECT_NODE:     return nodeGraph.CreateVCXProjectNode( name );
+        case Node::VSPROJEXTERNAL_NODE: return nodeGraph.CreateVSProjectExternalNode( name );
         case Node::OBJECT_LIST_NODE:    return nodeGraph.CreateObjectListNode( name );
         case Node::COPY_DIR_NODE:       return nodeGraph.CreateCopyDirNode( name );
         case Node::SLN_NODE:            return nodeGraph.CreateSLNNode( name );
         case Node::REMOVE_DIR_NODE:     return nodeGraph.CreateRemoveDirNode( name );
         case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
         case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
+        case Node::TEXT_FILE_NODE:      return nodeGraph.CreateTextFileNode( name );
         case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
     }
 
@@ -518,7 +487,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // SaveRemote
 //------------------------------------------------------------------------------
-/*virtual*/ void Node::SaveRemote( IOStream & UNUSED( stream ) ) const
+/*virtual*/ void Node::SaveRemote( IOStream & /*stream*/ ) const
 {
     // Should never get here.  Either:
     // a) Derived Node is missing SaveRemote implementation
@@ -647,7 +616,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
          ( m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
          ( m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
     {
-        return nullptr;
+        return false;
     }
 
     // Properties
@@ -1032,7 +1001,7 @@ void Node::ReplaceDummyName( const AString & newName )
     AStackString<> beforeTag( line.Get(), tag );
 
     const char * openBracket = beforeTag.Find( '(' );
-    if( openBracket == nullptr )
+    if ( openBracket == nullptr )
     {
         return; // failed to find bracket where expected
     }
@@ -1064,6 +1033,19 @@ void Node::ReplaceDummyName( const AString & newName )
     }
     ASSERT( ( tokens[ 0 ] == "warning" ) || ( tokens[ 0 ] == "error" ) );
 
+    // Only try to fixup "line" errors and not other errors like:
+    // - warning 65 in function "Blah": var <x> was never used
+    if ( tokens[ 3 ] != "line" )
+    {
+        return;
+    }
+    // Ignore warnings from the underlying assembler such as:
+    // - warning 2006 in line 307: bad extension - using default
+    if ( tokens[5] != "of" )
+    {
+        return;
+    }
+
     const char * problemType = tokens[ 0 ].Get(); // Warning or error
     const char * warningNum = tokens[ 1 ].Get();
     const char * warningLine = tokens[ 4 ].Get();
@@ -1090,7 +1072,7 @@ void Node::ReplaceDummyName( const AString & newName )
 
 // InitializePreBuildDependencies
 //------------------------------------------------------------------------------
-bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const Array< AString > & preBuildDependencyNames )
+bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const Array< AString > & preBuildDependencyNames )
 {
     if ( preBuildDependencyNames.IsEmpty() )
     {
@@ -1142,7 +1124,13 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
 void Node::RecordStampFromBuiltFile()
 {
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp != 0 );
+    
+    // An external tool might fail to write a file. Higher level code checks for
+    // that (see "missing despite success"), so we don't need to do anything here.
+    if ( m_Stamp == 0 )
+    {
+        return;
+    }
     
     // On OS X, the 'ar' tool (for making libraries) appears to clamp the
     // modification time of libraries to whole seconds. On HFS/HFS+ file systems,

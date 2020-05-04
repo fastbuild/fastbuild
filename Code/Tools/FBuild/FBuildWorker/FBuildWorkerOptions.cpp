@@ -4,6 +4,8 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FBuildWorkerOptions.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // Core
@@ -28,6 +30,7 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
+    m_MinimumFreeMemoryMiB( 0 ),
     m_ConsoleMode( false )
 {
     #ifdef __LINUX__
@@ -45,18 +48,20 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 
     // Check each token
     const AString * const end = tokens.End();
-    for ( const AString * it=tokens.Begin(); it != end; ++it )
+    for ( const AString * it = tokens.Begin(); it != end; ++it )
     {
         const AString & token = *it;
-        if ( token == "-console" )
-        {
-            m_ConsoleMode = true;
-            #if defined( __WINDOWS__ )
-                m_UseSubprocess = false;
-            #endif
-            continue;
-        }
-        else if ( token.BeginsWith( "-cpus=" ) )
+        #if defined( __WINDOWS__ ) || defined( __OSX__ )
+            if ( token == "-console" )
+            {
+                m_ConsoleMode = true;
+                #if defined( __WINDOWS__ )
+                    m_UseSubprocess = false;
+                #endif
+                continue;
+            }
+        #endif
+        if ( token.BeginsWith( "-cpus=" ) )
         {
             int32_t numCPUs = (int32_t)Env::GetNumProcessors();
             int32_t num( 0 );
@@ -112,6 +117,17 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             continue;
         }
         #if defined( __WINDOWS__ )
+            else if ( token.BeginsWith( "-minfreememory=" ) )
+            {
+                uint32_t num( 0 );
+                PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                if ( sscanf( token.Get() + 15, "%u", &num ) == 1 )
+                PRAGMA_DISABLE_POP_MSVC // 4996
+                {
+                    m_MinimumFreeMemoryMiB = num;
+                }
+                continue;
+            }
             else if ( token == "-nosubprocess" )
             {
                 m_UseSubprocess = false;
@@ -120,6 +136,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             else if ( token == "-subprocess" ) // Internal option only!
             {
                 m_IsSubprocess = true;
+                continue;
+            }
+            else if ( token == "-debug" )
+            {
+                Env::ShowMsgBox( "FBuildWorker", "Please attach debugger and press ok\n\n(-debug command line used)" );
                 continue;
             }
         #endif
@@ -136,26 +157,30 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 void FBuildWorkerOptions::ShowUsageError()
 {
     const char * msg = "FBuildWorker.exe - " FBUILD_VERSION_STRING "\n"
-                       "Copyright 2012-2019 Franta Fulin - http://www.fastbuild.org\n"
+                       "Copyright 2012-2020 Franta Fulin - https://www.fastbuild.org\n"
                        "\n"
                        "Command Line Options:\n"
-                       "------------------------------------------------------------\n"
-                       "-cpus=[n|-n|n%] : Set number of CPUs to use.\n"
-                       "                n : Explicit number.\n"
-                       "                -n : NUMBER_OF_PROCESSORS-n.\n"
-                       "                n% : % of NUMBER_OF_PROCESSORS.\n"
-                       "\n"
-                       "-mode=[disabled|idle|dedicated|proportional] : Set work mode.\n"
-                       "                disabled : Don't accept any work.\n"
-                       "                idle : Accept work when PC is idle.\n"
-                       "                dedicated : Accept work always.\n"
-                       "                proportional : Accept work proportional to free CPU.\n"
-                       "\n"
-                       #if defined( __WINDOWS__ )
-                       "-nosubprocess : Don't spawn a sub-process worker copy.\n";
-                       #else
+                       "---------------------------------------------------------------------------\n"
+                       " -console\n"
+                       "        (Windows/OSX) Operate from console instead of GUI.\n"
+                       " -cpus=<n|-n|n%>   Set number of CPUs to use:\n"
+                       "        -  n : Explicit number.\n"
+                       "        - -n : Num CPU Cores-n.\n"
+                       "        - n% : % of CPU Cores.\n"
+                       " -debug\n"
+                       "        (Windows) Break at startup, to attach debugger.\n"
+                       " -mode=<disabled|idle|dedicated|proportional>\n"
+                       "        Set work mode:\n"
+                       "        - disabled : Don't accept any work.\n"
+                       "        - idle : Accept work when PC is idle.\n"
+                       "        - dedicated : Accept work always.\n"
+                       "        - proportional : Accept work proportional to free CPUs.\n"
+                       " -minfreememory <MiB>\n"
+                       "        Set minimum free memory (MiB) required to accept work.\n"
+                       " -nosubprocess\n"
+                       "        (Windows) Don't spawn a sub-process worker copy.\n"
+                       "---------------------------------------------------------------------------\n"
                        ;
-                       #endif
 
     #if defined( __WINDOWS__ )
         ::MessageBox( nullptr, msg, "FBuildWorker - Bad Command Line", MB_ICONERROR | MB_OK );

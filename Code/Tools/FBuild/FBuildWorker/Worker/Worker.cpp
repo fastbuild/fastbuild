@@ -8,8 +8,10 @@
 #endif
 
 #include "Worker.h"
-#include "WorkerWindow.h"
-#include "WorkerSettings.h"
+
+// FBuildWorker
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerWindow.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -19,8 +21,10 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h"
 
+// Core
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
+#include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
@@ -29,6 +33,9 @@
 #include "Core/Tracing/Tracing.h"
 
 // system
+#if defined( __WINDOWS__ )
+    #include <psapi.h>
+#endif
 #include <stdio.h>
 
 // CONSTRUCTOR
@@ -43,6 +50,7 @@ Worker::Worker( const AString & args, bool consoleMode )
     , m_RestartNeeded( false )
     #if defined( __WINDOWS__ )
         , m_LastDiskSpaceResult( -1 )
+        , m_LastMemoryCheckResult( -1 )
     #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
@@ -105,7 +113,7 @@ int32_t Worker::Work()
         #if __WINDOWS__
             VERIFY( ::AllocConsole() );
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-            VERIFY( freopen("CONOUT$", "w", stdout) ); // TODO:C consider using freopen_s
+            VERIFY( freopen( "CONOUT$", "w", stdout ) ); // TODO:C consider using freopen_s
             PRAGMA_DISABLE_POP_MSVC // 4996
         #endif
 
@@ -116,15 +124,15 @@ int32_t Worker::Work()
         // Create UI
         m_MainWindow = FNEW( WorkerWindow() );
     }
-    
+
     // spawn work thread
     m_WorkThread = Thread::CreateThread( &WorkThreadWrapper,
-                                        "WorkerThread",
-                                        ( 256 * KILOBYTE ),
-                                        this );
+                                         "WorkerThread",
+                                         ( 256 * KILOBYTE ),
+                                         this );
     ASSERT( m_WorkThread != INVALID_THREAD_HANDLE );
-    
-	// Run the UI message loop if we're not in console mode
+
+    // Run the UI message loop if we're not in console mode
     if ( m_MainWindow )
     {
         m_MainWindow->Work(); // Blocks until exit
@@ -184,7 +192,7 @@ uint32_t Worker::WorkThread()
         }
     }
 
-    for(;;)
+    for ( ;; )
     {
         if ( InConsoleMode() )
         {
@@ -256,16 +264,58 @@ bool Worker::HasEnoughDiskSpace()
     #endif
 }
 
+// HasEnoughMemory
+//------------------------------------------------------------------------------
+bool Worker::HasEnoughMemory()
+{
+    #if defined( __WINDOWS__ )
+        // Only check free memory every few seconds
+        float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
+        if ( ( elapsedTime < 1000.0f ) && ( m_LastMemoryCheckResult != -1 ) )
+        {
+            return ( m_LastMemoryCheckResult != 0 );
+        }
+        m_TimerLastMemoryCheck.Start();
+    
+        PERFORMANCE_INFORMATION memInfo;
+        memInfo.cb = sizeof( memInfo );
+        if ( GetPerformanceInfo( &memInfo, sizeof( memInfo ) ) )
+        {
+            const uint64_t limitMemSize = memInfo.CommitLimit * memInfo.PageSize;
+            const uint64_t currentMemSize = memInfo.CommitTotal * memInfo.PageSize;
+    
+            // Calculate the free memory in MiB.
+            const uint64_t freeMemSize = ( limitMemSize - currentMemSize ) / MEGABYTE;
+    
+            // Check if the free memory is high enough
+            WorkerSettings & ws = WorkerSettings::Get();
+            if ( freeMemSize > ws.GetMinimumFreeMemoryMiB() )
+            {
+                m_LastMemoryCheckResult = 1;
+                return true;
+            }
+        }
+    
+        // The machine doesn't have enough memory or query failed. Exclude this machine from worker pool.
+        m_LastMemoryCheckResult = 0;
+        return false;
+    #else
+        return true; // TODO:LINUX TODO:OSX Implement
+    #endif
+}
+
 // UpdateAvailability
 //------------------------------------------------------------------------------
 void Worker::UpdateAvailability()
 {
     // Check disk space
-    bool hasEnoughDiskSpace = HasEnoughDiskSpace();
-
-    m_IdleDetection.Update();
+    const bool hasEnoughDiskSpace = HasEnoughDiskSpace();
+    const bool hasEnoughMemory = HasEnoughMemory();
 
     WorkerSettings & ws = WorkerSettings::Get();
+
+    m_IdleDetection.Update( ws.GetIdleThresholdPercent() );
+
     uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
     switch( ws.GetMode() )
     {
@@ -281,7 +331,7 @@ void Worker::UpdateAvailability()
         {
             if ( ( m_IdleDetection.IsIdleFloat() >= 0.0f ) && ( m_IdleDetection.IsIdleFloat() <= 1.0f ) )
             {
-                numCPUsToUse = uint32_t(numCPUsToUse * m_IdleDetection.IsIdleFloat());
+                numCPUsToUse = uint32_t( numCPUsToUse * m_IdleDetection.IsIdleFloat() );
             }
             else
             {
@@ -301,14 +351,14 @@ void Worker::UpdateAvailability()
     }
 
     // don't accept any new work while waiting for a restart
-    if ( m_RestartNeeded || ( hasEnoughDiskSpace == false ) )
+    if ( m_RestartNeeded || ( hasEnoughDiskSpace == false ) || ( hasEnoughMemory == false ) )
     {
         numCPUsToUse = 0;
     }
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
 
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0 );
 }
 
 // UpdateUI
@@ -345,13 +395,12 @@ void Worker::UpdateUI()
         m_MainWindow->SetStatus( status.Get() );
     }
 
-
     if ( InConsoleMode() == false )
     {
         // thread output
         JobQueueRemote & jqr = JobQueueRemote::Get();
         const size_t numWorkers = jqr.GetNumWorkers();
-        for ( size_t i=0; i<numWorkers; ++i )
+        for ( size_t i = 0; i < numWorkers; ++i )
         {
             // get status of worker
             AStackString<> workerStatus;
@@ -437,7 +486,7 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     AStackString<> buffer;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
     va_end( args );
 
@@ -463,7 +512,7 @@ void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     AStackString<> buffer;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
     va_end( args );
 
@@ -475,15 +524,7 @@ void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     }
 
     // Display interactive Message Box
-    #if defined( __WINDOWS__ )
-        ::MessageBox( nullptr, buffer.Get(), "FBuild Worker", MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ErrorMessage for non-console mode
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ErrorMessage for non-console mode
-    #else
-        #error Unknown Platform
-    #endif
+    Env::ShowMsgBox( "FBuildWorker", buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

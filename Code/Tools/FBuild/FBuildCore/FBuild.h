@@ -4,6 +4,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFUserFunctions.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Helpers/FBuildStats.h"
@@ -16,7 +18,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFMacros;
 class Client;
 class Dependencies;
 class FileStream;
@@ -83,6 +84,11 @@ public:
     bool ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash );
     const Array< EnvironmentVarAndHash > & GetImportedEnvironmentVars() const { return m_ImportedEnvironmentVars; }
 
+    bool AddFileExistsCheck( const AString & fileName );
+    BFFFileExists & GetFileExistsInfo() { return m_FileExistsInfo; }
+
+    BFFUserFunctions & GetUserFunctions() { return m_UserFunctions; }
+
     void GetLibEnvVar( AString & libEnvVar ) const;
 
     // stats - read access
@@ -111,8 +117,6 @@ protected:
     static bool s_StopBuild;
     static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild
 
-    BFFMacros * m_Macros;
-
     NodeGraph * m_DependencyGraph;
     JobQueue * m_JobQueue;
     Client * m_Client; // manage connections to worker servers
@@ -140,6 +144,8 @@ protected:
     AString     m_LibEnvVar; // LIB= value
 
     Array< EnvironmentVarAndHash > m_ImportedEnvironmentVars;
+    BFFFileExists m_FileExistsInfo;
+    BFFUserFunctions m_UserFunctions;
 };
 
 //------------------------------------------------------------------------------

@@ -5,9 +5,12 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+
+// Core
 #include "Core/Strings/AStackString.h"
 
 // TestObjectList
@@ -20,6 +23,8 @@ private:
     // Tests
     void TestExcludedFiles() const;
     void CompilerInputFilesRoot() const;
+    void ConflictingObjects1() const;
+    void ConflictingObjects2() const;
     void ExtraOutputFolders_PathExtraction() const;
     void ObjectListChaining() const;
     #if defined( __WINDOWS__ )
@@ -32,6 +37,8 @@ private:
 REGISTER_TESTS_BEGIN( TestObjectList )
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( CompilerInputFilesRoot )
+    REGISTER_TEST( ConflictingObjects1 )
+    REGISTER_TEST( ConflictingObjects2 )
     REGISTER_TEST( ExtraOutputFolders_PathExtraction )
     REGISTER_TEST( ObjectListChaining )
     #if defined( __WINDOWS__ )
@@ -87,6 +94,38 @@ void TestObjectList::CompilerInputFilesRoot() const
     TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 }
 
+// ConflictingObjects1
+//------------------------------------------------------------------------------
+void TestObjectList::ConflictingObjects1() const
+{
+    //
+    // An ObjectList that builds two different files to the same location
+    //
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ConflictingObjects/fbuild1.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "Conflicting objects found" ) );
+}
+
+// ConflictingObjects2
+//------------------------------------------------------------------------------
+void TestObjectList::ConflictingObjects2() const
+{
+    //
+    // Two ObjectLists that build the same file with different settings to the same location
+    //
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ConflictingObjects/fbuild2.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "ObjectLists" ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "Conflicting objects found" ) );
+}
+
 // ExtraOutputFolders_PathExtraction
 //------------------------------------------------------------------------------
 void TestObjectList::ExtraOutputFolders_PathExtraction() const
@@ -104,9 +143,9 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
 
     // Check that the entire span is correctly captured
     TEST_ASSERT( pdbPath.BeginsWith( "Tools" ) );
-    TEST_ASSERT( pdbPath.EndsWith( "pdb" ) && !pdbPath.EndsWith( ".pdb" ));
+    TEST_ASSERT( pdbPath.EndsWith( "pdb" ) && !pdbPath.EndsWith( ".pdb" ) );
     TEST_ASSERT( asmPath.BeginsWith( "Tools" ) );
-    TEST_ASSERT( asmPath.EndsWith( "asm" ) && !pdbPath.EndsWith( ".asm" ));
+    TEST_ASSERT( asmPath.EndsWith( "asm" ) && !pdbPath.EndsWith( ".asm" ) );
 }
 
 // ObjectListChaining
@@ -117,7 +156,7 @@ void TestObjectList::ObjectListChaining() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ObjectListChaining/fbuild.bff";
-    const char* dbFile = "../tmp/Test/TestObjectList/ObjectListChaining/fbuild.fdb";
+    const char * dbFile = "../tmp/Test/TestObjectList/ObjectListChaining/fbuild.fdb";
 
     AString depGraphText1( 8 * 1024 );
     AString depGraphText2( 8 * 1024 );

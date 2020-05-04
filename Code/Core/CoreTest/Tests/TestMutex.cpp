@@ -98,7 +98,7 @@ void TestMutex::TestExclusivity() const
     while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
 
     // increment
-    for ( size_t i=0; i<1000000; ++i )
+    for ( size_t i = 0; i < 1000000; ++i )
     {
         MutexHolder mh( data.m_Mutex );
         ++data.m_Count;
@@ -125,7 +125,7 @@ void TestMutex::TestExclusivity() const
     while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
 
     // increment
-    for ( size_t i=0; i<1000000; ++i )
+    for ( size_t i = 0; i < 1000000; ++i )
     {
         MutexHolder mh( data.m_Mutex );
         ++data.m_Count;
