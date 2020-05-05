@@ -197,10 +197,10 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
   	  <p><font color=red>For simple solutions, this option is typically not necessary.</font></p>
       <p>For more complex Solutions, specifying artificial SolutionDependencies may be useful (depending on the desired F5 behaviour).
       For example, in Solutions with multiple executables, only one of the executables should be listed
-      as a .SolutionBuildProject (to prevent mutliple concurrent invocations of FASTBuild).  However, (because of what is 
+      as a .SolutionBuildProject (to prevent multiple concurrent invocations of FASTBuild).  However, (because of what is 
       arguably a bug in Visual Studio) only when this project (the "primary" project) is the active project, will F5 trigger 
       an up-to-date build check on the target automatically before running. If you want this automatic check on other targets
-      (rather than having to manually build the Project or Solution), you have to artifically make any "non-primary" projects 
+      (rather than having to manually build the Project or Solution), you have to artificially make any "non-primary" projects 
       depend on the "primary" executable.</p>
       Example:
       <div class='code'>.Deps =
