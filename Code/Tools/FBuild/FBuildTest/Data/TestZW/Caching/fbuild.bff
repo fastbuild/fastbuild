@@ -18,6 +18,7 @@ ObjectList( 'Caching' )
 {
     .CompilerOptions            + ' /ZW'
                                 + ' /EHsc'
+                                + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
                                 #if USING_VS2015
                                     + ' /AI"$VS2015_BasePath$/VC/vcpackages"'
                                     + ' /AI"$WindowsDK_WinRTAssemblyPath$"'
@@ -29,6 +30,9 @@ ObjectList( 'Caching' )
                                 #if USING_VS2019
                                     + ' /AI"$VS2019_BasePath$/Common7/IDE/VC/vcpackages"'
                                     + ' /AI"$WindowsDK_WinRTAssemblyPath$"'
+
+                                    // Avoid compiletime problems as of 16.5.1 (14.25.28610)
+                                    + ' /wd5204' // vccorlib.h(705,2): warning C5204: 'Platform::Details::ControlBlock': class has virtual functions, but its trivial destructor is not virtual; instances of objects derived from this class may not be destructed correctly
                                 #endif
 
     .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestZW/Caching/'

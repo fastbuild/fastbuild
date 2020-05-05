@@ -30,7 +30,7 @@ RemoveDirNode::RemoveDirNode()
     : Node( AString::GetEmpty(), Node::REMOVE_DIR_NODE, Node::FLAG_ALWAYS_BUILD )
     , m_RemovePathsRecurse( true )
 {
-    m_RemovePatterns.Append( AStackString<>( "*" ) );
+    m_RemovePatterns.EmplaceBack( "*" );
 }
 
 // Initialize
@@ -53,6 +53,7 @@ RemoveDirNode::RemoveDirNode()
                                               Array< AString >(), // unused FilesToExclude
                                               Array< AString >(), // unused ExcludePatterns
                                               m_RemovePathsRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_RemovePatterns,
                                               "RemovePaths",
                                               fileListDeps ) )
@@ -79,7 +80,7 @@ RemoveDirNode::~RemoveDirNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult RemoveDirNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult RemoveDirNode::DoBuild( Job * /*job*/ )
 {
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
@@ -104,10 +105,13 @@ RemoveDirNode::~RemoveDirNode() = default;
             // we combine everything into one string to ensure it is contiguous in
             // the output
             AStackString<> output;
-            output += "Remove: ";
-            output += srcFile;
-            output += '\n';
-            FLOG_BUILD_DIRECT( output.Get() );
+            if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+            {
+                output += "Remove: ";
+                output += srcFile;
+                output += '\n';
+                FLOG_OUTPUT( output );
+            }
         }
     }
 

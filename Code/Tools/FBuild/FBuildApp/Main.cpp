@@ -39,7 +39,7 @@ enum ReturnCodes
 //------------------------------------------------------------------------------
 int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess );
 int WrapperIntermediateProcess( const FBuildOptions & options );
-int Main(int argc, char * argv[]);
+int Main( int argc, char * argv[] );
 
 // Misc
 //------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ SharedMemory g_SharedMemory;
 
 // main
 //------------------------------------------------------------------------------
-int main(int argc, char * argv[])
+int main( int argc, char * argv[] )
 {
     // This wrapper is purely for profiling scope
     int result = Main( argc, argv );
@@ -66,7 +66,7 @@ int main(int argc, char * argv[])
 
 // Main
 //------------------------------------------------------------------------------
-int Main(int argc, char * argv[])
+int Main( int argc, char * argv[] )
 {
     PROFILE_FUNCTION
 
@@ -99,8 +99,8 @@ int Main(int argc, char * argv[])
     #endif
 
     // don't buffer output
-    VERIFY( setvbuf(stdout, nullptr, _IONBF, 0) == 0 );
-    VERIFY( setvbuf(stderr, nullptr, _IONBF, 0) == 0 );
+    VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
+    VERIFY( setvbuf( stderr, nullptr, _IONBF, 0 ) == 0 );
 
     // ensure only one FASTBuild instance is running at a time
     SystemMutex mainProcess( options.GetMainProcessMutexName().Get() );
@@ -180,15 +180,13 @@ int Main(int argc, char * argv[])
         return FBUILD_ERROR_LOADING_BFF;
     }
 
+    bool result = false;
     if ( options.m_DisplayTargetList )
     {
         fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
-        ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
-        return FBUILD_OK;
+        result = true; // DisplayTargetList cannot fail
     }
-
-    bool result = false;
-    if ( options.m_DisplayDependencyDB )
+    else if ( options.m_DisplayDependencyDB )
     {
         result = fBuild.DisplayDependencyDB( options.m_Targets );
     }
@@ -215,17 +213,20 @@ int Main(int argc, char * argv[])
     }
 
     // final line of output - status of build
-    float totalBuildTime = t.GetElapsed();
-    uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
-    totalBuildTime -= ( minutes * 60.0f );
-    const float seconds = totalBuildTime;
-    if ( minutes > 0 )
+    if ( options.m_ShowTotalTimeTaken )
     {
-        FLOG_BUILD( "Time: %um %05.3fs\n", minutes, (double)seconds );
-    }
-    else
-    {
-        FLOG_BUILD( "Time: %05.3fs\n", (double)seconds );
+        float totalBuildTime = t.GetElapsed();
+        uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
+        totalBuildTime -= ( minutes * 60.0f );
+        const float seconds = totalBuildTime;
+        if ( minutes > 0 )
+        {
+            FLOG_OUTPUT( "Time: %um %05.3fs\n", minutes, (double)seconds );
+        }
+        else
+        {
+            FLOG_OUTPUT( "Time: %05.3fs\n", (double)seconds );
+        }
     }
 
     ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed

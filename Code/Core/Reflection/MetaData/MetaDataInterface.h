@@ -4,8 +4,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Reflection/ReflectionMacros.h"
 #include "Core/Reflection/Object.h"
+#include "Core/Reflection/ReflectionMacros.h"
 
 // IMetaData
 //------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ public:
     explicit IMetaData();
     virtual ~IMetaData() override;
 
-    const IMetaData* GetNext() const { return m_Next; }
+    const IMetaData * GetNext() const { return m_Next; }
 protected:
     friend IMetaData & operator + ( IMetaData & a, IMetaData & b );
 

@@ -239,20 +239,6 @@ void JobQueue::AddJobToBatch( Node * node )
     // mark as building
     node->SetState( Node::BUILDING );
 
-    // trivial build tasks are processed immediately and returned
-    if ( node->GetControlFlags() & Node::FLAG_TRIVIAL_BUILD )
-    {
-        Job localJob( node );
-        Node::BuildResult result = DoBuild( &localJob );
-        switch( result )
-        {
-            case Node::NODE_RESULT_FAILED:  node->SetState( Node::FAILED ); break;
-            case Node::NODE_RESULT_OK:      node->SetState( Node::UP_TO_DATE ); break;
-            default:                        ASSERT( false ); break;
-        }
-        return;
-    }
-
     m_LocalJobs_Staging.Append( node );
 }
 
@@ -729,7 +715,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         // does not represent how long it takes to create this resource)
         node->SetLastBuildTime( timeTakenMS );
         node->SetStatFlag( Node::STATS_BUILT );
-        FLOG_INFO( "-Build: %u ms\t%s", timeTakenMS, node->GetName().Get() );
+        FLOG_VERBOSE( "-Build: %u ms\t%s", timeTakenMS, node->GetName().Get() );
     }
 
     if ( result == Node::NODE_RESULT_FAILED )

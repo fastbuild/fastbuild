@@ -64,6 +64,7 @@ public:
     bool        m_CacheInfo                         = false;
     bool        m_CacheVerbose                      = false;
     uint32_t    m_CacheTrim                         = 0;
+    int32_t     m_CacheCompressionLevel             = -1; // See Compresssor.h
 
     // Distributed Compilation
     bool        m_AllowDistributed                  = false;
@@ -73,12 +74,16 @@ public:
     uint16_t    m_DistributionPort                  = Protocol::PROTOCOL_PORT;
 
     // General Output
-    bool        m_ShowInfo                          = false;
+    bool        m_ShowVerbose                       = false;
+    bool        m_ShowBuildReason                   = false;
+    bool        m_ShowCommandSummary                = true;
     bool        m_ShowCommandLines                  = false;
-    bool        m_ShowBuildCommands                 = true;
+    bool        m_ShowCommandOutput                 = false;
     bool        m_ShowErrors                        = true;
     bool        m_ShowProgress                      = false;
     bool        m_ShowSummary                       = false;
+    bool        m_ShowTotalTimeTaken                = true;
+    bool        m_ShowPrintStatements               = true;
     bool        m_NoSummaryOnError                  = false;
     bool        m_GenerateReport                    = false;
     bool        m_EnableMonitor                     = false;

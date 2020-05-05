@@ -29,11 +29,13 @@ public:
 
     inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
     inline bool GetUseLightCache() const { return m_UseLightCache; }
+    inline bool GetUseRelativePaths() const { return m_UseRelativePaths; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
     inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
+    inline bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }
 
     enum CompilerFamily : uint8_t
     {
@@ -67,11 +69,13 @@ private:
     bool                    m_AllowDistribution;
     bool                    m_VS2012EnumBugFix;
     bool                    m_ClangRewriteIncludes;
+    bool                    m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
     AString                 m_ExecutableRootPath;
     AString                 m_CompilerFamilyString;
     uint8_t                 m_CompilerFamilyEnum;
     bool                    m_SimpleDistributionMode;
     bool                    m_UseLightCache;
+    bool                    m_UseRelativePaths;
     ToolManifest            m_Manifest;
     Array< AString >        m_Environment;
 

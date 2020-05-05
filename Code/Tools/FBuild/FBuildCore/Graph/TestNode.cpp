@@ -92,6 +92,7 @@ TestNode::TestNode()
                                               m_TestInputExcludedFiles,
                                               m_TestInputExcludePattern,
                                               m_TestInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_TestInputPattern,
                                               "TestInputPath",
                                               testInputPaths ) )
@@ -125,7 +126,7 @@ const char * TestNode::GetEnvironmentString() const
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -157,7 +158,7 @@ const char * TestNode::GetEnvironmentString() const
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
         continue;
     }
@@ -258,10 +259,13 @@ const char * TestNode::GetEnvironmentString() const
 void TestNode::EmitCompilationMessage( const char * workingDir ) const
 {
     AStackString<> output;
-    output += "Running Test: ";
-    output += GetName();
-    output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Running Test: ";
+        output += GetName();
+        output += '\n';
+    }
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += GetTestExecutable()->GetName();
         output += ' ';
@@ -274,7 +278,7 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
             output += '\n';
         }
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 //------------------------------------------------------------------------------

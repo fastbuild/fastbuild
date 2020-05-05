@@ -4,8 +4,12 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
+
+// Core
 #include "Core/Strings/AStackString.h"
 
 // TestCachePlugin

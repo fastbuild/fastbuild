@@ -45,6 +45,8 @@ uint32_t g_ReportNodeColors[] = {
                                   0x77DDAA, // SLN_NODE
                                   0x77DDAA, // XCODEPROJECT_NODE
                                   0x000000, // SETTINGS_NODE (never seen)
+                                  0xFFFFFF, // VSPROJEXTERNAL_NODE
+                                  0xFFFFFF, // TEXT_FILE_NODE
                                 };
 
 // CONSTRUCTOR
@@ -372,9 +374,9 @@ void Report::DoCacheStats( const FBuildStats & stats )
         uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
         Array< PieItem > pieItems( 3, false );
-        pieItems.Append(PieItem("Uncacheable", (float)(totalOutOfDateItems - totalCacheable), 0xFF8888));
-        pieItems.Append(PieItem("Cache Miss", (float)totalCacheMisses, 0xFFCC88));
-        pieItems.Append(PieItem("Cache Hit", (float)totalCacheHits, 0x88FF88));
+        pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
+        pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, (uint32_t)0xFFCC88 );
+        pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, (uint32_t)0x88FF88 );
         DoPieChart(pieItems, "");
 
         DoTableStart();
@@ -470,8 +472,7 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
         const float value = (float)( (double)nodeStats.m_ProcessingTimeMS / (double)1000 );
         const uint32_t color = g_ReportNodeColors[ i ];
 
-        PieItem item( typeName, value, color, (void *)i );
-        items.Append( item );
+        items.EmplaceBack( typeName, value, color, (void *)i );
     }
 
     items.Sort();
@@ -1093,7 +1094,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
     uint32_t key = ( hash & 0xFFFF );
 
     // insert new item
-    IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc( sizeof( IncludeStats ) );
+    IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc();
     newStats->node = node;
     newStats->count = 0;
     newStats->inPCH = false;

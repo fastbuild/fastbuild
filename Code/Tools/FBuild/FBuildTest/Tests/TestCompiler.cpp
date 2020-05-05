@@ -5,8 +5,9 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ToolManifest.h"
@@ -278,7 +279,7 @@ void TestCompiler::MultipleImplicitCompilers() const
 
 // GetToolId
 //------------------------------------------------------------------------------
-uint64_t TestCompiler::GetToolId( const FBuildForTest& fBuild ) const
+uint64_t TestCompiler::GetToolId( const FBuildForTest & fBuild ) const
 {
     Array<const Node *> nodes;
     fBuild.GetNodesOfType( Node::COMPILER_NODE, nodes );

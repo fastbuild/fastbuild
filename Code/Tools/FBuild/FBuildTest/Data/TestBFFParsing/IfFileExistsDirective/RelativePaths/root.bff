@@ -1,0 +1,18 @@
+//
+// #if file_exists() directive
+//
+
+// Should see file in same directory
+#if file_exists( "root_sibling.bff" )
+    Print( 'OK-1A' )
+
+    #include "root_sibling.bff"
+#endif
+
+// Should see file in sub-directory
+#if file_exists( "SubDir/subdir.bff" )
+    Print( 'OK-2A' )
+
+    // Include the file for more tests
+    #include "SubDir/subdir.bff"
+#endif

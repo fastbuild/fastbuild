@@ -4,13 +4,15 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CSNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/CSNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ExecNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
@@ -20,6 +22,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 
+// Core
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -48,6 +51,7 @@ private:
     void TestDeepGraph() const;
     void TestNoStopOnFirstError() const;
     void DBLocationChanged() const;
+    void DBCorrupt() const;
     void BFFDirtied() const;
     void DBVersionChanged() const;
 };
@@ -66,6 +70,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( TestDeepGraph )
     REGISTER_TEST( TestNoStopOnFirstError )
     REGISTER_TEST( DBLocationChanged )
+    REGISTER_TEST( DBCorrupt )
     REGISTER_TEST( BFFDirtied )
     REGISTER_TEST( DBVersionChanged )
 REGISTER_TESTS_END
@@ -85,8 +90,8 @@ void TestGraph::TestNodeTypes() const
     NodeGraph ng;
 
     FileNode * fn = ng.CreateFileNode( AStackString<>( "file" ) );
-    TEST_ASSERT( fn->GetType() == Node::FILE_NODE);
-    TEST_ASSERT( FileNode::GetTypeS() == Node::FILE_NODE);
+    TEST_ASSERT( fn->GetType() == Node::FILE_NODE );
+    TEST_ASSERT( FileNode::GetTypeS() == Node::FILE_NODE );
 
     {
         #if defined( __WINDOWS__ )
@@ -178,7 +183,7 @@ void TestGraph::TestNodeTypes() const
     }
     {
         Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ) );
-        TEST_ASSERT( n->GetType() == Node::UNITY_NODE);
+        TEST_ASSERT( n->GetType() == Node::UNITY_NODE );
         TEST_ASSERT( UnityNode::GetTypeS() == Node::UNITY_NODE );
         TEST_ASSERT( AStackString<>( "Unity" ) == n->GetTypeName() );
     }
@@ -248,10 +253,11 @@ void TestGraph::TestDirectoryListNode() const
         const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
     #endif
     Array< AString > patterns;
-    patterns.Append( AStackString<>( "library.*" ) );
+    patterns.EmplaceBack( "library.*" );
     DirectoryListNode::FormatName( testFolder,
                                    &patterns,
                                    true, // recursive
+                                   false, // Don't include read-only status in hash
                                    Array< AString >(), // excludePaths,
                                    Array< AString >(), // excludeFiles,
                                    Array< AString >(), // excludePatterns,
@@ -535,7 +541,6 @@ void TestGraph::TestCleanPathPartial() const
     #undef CHECK
 }
 
-
 // TestDeepGraph
 //------------------------------------------------------------------------------
 void TestGraph::TestDeepGraph() const
@@ -659,13 +664,65 @@ void TestGraph::DBLocationChanged() const
     }
 }
 
+// DBCorrupt
+//------------------------------------------------------------------------------
+void TestGraph::DBCorrupt() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseCorrupt/fbuild.bff";
+
+    // We'll save a valid DB, corrupt it and ensure that's detected
+    const char* dbFile = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb";
+    const char* dbFileCorrupt = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb.corrupt";
+
+    // Clear all copies of the DB first
+    EnsureFileDoesNotExist( dbFile );
+    EnsureFileDoesNotExist( dbFileCorrupt );
+
+    // Create a DB
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+    }
+
+    // Corrupt the DB
+    {
+        FileStream f;
+
+        // Read DB into memory
+        TEST_ASSERT( f.Open( dbFile, FileStream::READ_ONLY ) );
+        AString buffer;
+        buffer.SetLength( (uint32_t)f.GetFileSize() );
+        TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+        f.Close(); // Explicit close so we can re-open
+
+        // Corrupt it
+        buffer[ 0 ] = 'X';
+
+        // Save corrupt DB
+        TEST_ASSERT( f.Open( dbFile, FileStream::WRITE_ONLY ) );
+        TEST_ASSERT( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) );
+    }
+
+    // Initialization should report a warning, but still work
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
+        TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
+
+        // Backup of corrupt DB should exit
+        EnsureFileExists( dbFileCorrupt );
+    }
+}
+
 // BFFDirtied
 //------------------------------------------------------------------------------
 void TestGraph::BFFDirtied() const
 {
-    const char* originalBFF             = "Tools/FBuild/FBuildTest/Data/TestGraph/BFFDirtied/fbuild.bff";
-    const char* copyOfBFF           = "../tmp/Test/Graph/BFFDirtied/fbuild.bff";
-    const char* dbFile              = "../tmp/Test/Graph/BFFDirtied/fbuild.fdb";
+    const char * originalBFF   = "Tools/FBuild/FBuildTest/Data/TestGraph/BFFDirtied/fbuild.bff";
+    const char * copyOfBFF     = "../tmp/Test/Graph/BFFDirtied/fbuild.bff";
+    const char * dbFile        = "../tmp/Test/Graph/BFFDirtied/fbuild.fdb";
 
     EnsureFileDoesNotExist( copyOfBFF );
     EnsureFileDoesNotExist( dbFile );
@@ -760,9 +817,9 @@ void TestGraph::DBVersionChanged() const
 
     // Since we're poking this, we want to know if the layout ever changes somehow
     TEST_ASSERT( ms.GetFileSize() == 4 );
-    TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[3] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
+    TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[ 3 ] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
 
-    ( (uint8_t *)ms.GetDataMutable() )[3] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
+    ( (uint8_t *)ms.GetDataMutable() )[ 3 ] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
 
     const char* oldDB       = "../tmp/Test/Graph/DBVersionChanged/fbuild.fdb";
     const char* emptyBFF    = "../tmp/Test/Graph/DBVersionChanged/fbuild.bff";

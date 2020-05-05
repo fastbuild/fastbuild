@@ -51,7 +51,7 @@
     class OSXHelper_utimensat
     {
     public:
-        typedef int (*FuncPtr)(int dirfd, const char *pathname, const struct timespec times[2], int flags);
+        typedef int (*FuncPtr)( int dirfd, const char * pathname, const struct timespec times[ 2 ], int flags );
         
         OSXHelper_utimensat()
         {
@@ -147,8 +147,9 @@
 
 // Copy
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::FileCopy( const char * srcFileName, const char * dstFileName,
-                              bool allowOverwrite )
+/*static*/ bool FileIO::FileCopy( const char * srcFileName,
+                                  const char * dstFileName,
+                                  bool allowOverwrite )
 {
 #if defined( __WINDOWS__ )
     DWORD flags = COPY_FILE_COPY_SYMLINK;
@@ -252,8 +253,8 @@
 
     ssize_t bytesCopied = sendfile( dest, source, 0, stat_source.st_size );
 
-    close(source);
-    close(dest);
+    close( source );
+    close( dest );
 
     return ( bytesCopied == stat_source.st_size );
 #else
@@ -302,9 +303,9 @@
 // GetFilesEx
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFilesEx( const AString & path,
-                                  const Array< AString > * patterns,
-                                  bool recurse,
-                                  Array< FileInfo > * results )
+                                    const Array< AString > * patterns,
+                                    bool recurse,
+                                    Array< FileInfo > * results )
 {
     ASSERT( results );
 
@@ -527,7 +528,7 @@
 /*static*/ bool FileIO::EnsurePathExists( const AString & path )
 {
     // if the entire path already exists, nothing is to be done
-    if( DirectoryExists( path ) )
+    if ( DirectoryExists( path ) )
     {
         return true;
     }
@@ -674,7 +675,7 @@
         // TOOD:B Check these args
         HANDLE hFile = CreateFile( fileName.Get(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr,
                                    OPEN_EXISTING, 0, nullptr);
-        if( hFile == INVALID_HANDLE_VALUE )
+        if ( hFile == INVALID_HANDLE_VALUE )
         {
             return false;
         }
@@ -698,23 +699,23 @@
         if ( gOSXHelper_utimensat.m_FuncPtr )
         {
             struct timespec t[ 2 ];
-            t[0].tv_sec = fileTime / 1000000000ULL;
-            t[0].tv_nsec = ( fileTime % 1000000000ULL );
-            t[1] = t[0];
+            t[ 0 ].tv_sec = fileTime / 1000000000ULL;
+            t[ 0 ].tv_nsec = ( fileTime % 1000000000ULL );
+            t[ 1 ] = t[ 0 ];
             return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), t, 0 ) == 0 );
         }
     
         // Fallback to regular low-resolution filetime setting
         struct timeval t[ 2 ];
-        t[0].tv_sec = fileTime / 1000000000ULL;
-        t[0].tv_usec = ( fileTime % 1000000000ULL ) / 1000;
-        t[1] = t[0];
+        t[ 0 ].tv_sec = fileTime / 1000000000ULL;
+        t[ 0 ].tv_usec = ( fileTime % 1000000000ULL ) / 1000;
+        t[ 1 ] = t[ 0 ];
         return ( utimes( fileName.Get(), t ) == 0 );
     #elif defined( __LINUX__ )
         struct timespec t[ 2 ];
-        t[0].tv_sec = fileTime / 1000000000ULL;
-        t[0].tv_nsec = ( fileTime % 1000000000ULL );
-        t[1] = t[0];
+        t[ 0 ].tv_sec = fileTime / 1000000000ULL;
+        t[ 0 ].tv_nsec = ( fileTime % 1000000000ULL );
+        t[ 1 ] = t[ 0 ];
         return ( utimensat( 0, fileName.Get(), t, 0 ) == 0 );
     #else
         #error Unknown platform
@@ -1091,12 +1092,11 @@
     #endif
 }
 
-
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurseEx( AString & pathCopy,
-                                         const Array< AString > * patterns,
-                                         Array< FileInfo > * results )
+                                           const Array< AString > * patterns,
+                                           Array< FileInfo > * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
 
@@ -1105,7 +1105,7 @@
 
         // recurse into directories
         WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchLimitToDirectories, nullptr, 0 );
+        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
         if ( hFind == INVALID_HANDLE_VALUE)
         {
             return;
@@ -1128,24 +1128,6 @@
                 pathCopy += findData.cFileName;
                 pathCopy += NATIVE_SLASH;
                 GetFilesRecurseEx( pathCopy, patterns, results );
-            }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
-        FindClose( hFind );
-
-        // do files in this directory
-        pathCopy.SetLength( baseLength );
-        pathCopy += '*';
-        hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
-        {
-            return;
-        }
-
-        do
-        {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-            {
                 continue;
             }
 
@@ -1265,7 +1247,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurseEx( const char * path,
                                              const Array< AString > * patterns,
-                                           Array< FileInfo > * results )
+                                             Array< FileInfo > * results )
 {
     AStackString< 256 > pathCopy( path );
     PathUtils::EnsureTrailingSlash( pathCopy );

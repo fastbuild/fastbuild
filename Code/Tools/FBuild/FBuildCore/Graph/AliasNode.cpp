@@ -22,7 +22,7 @@ REFLECT_END( AliasNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 AliasNode::AliasNode()
-: Node( AString::GetEmpty(), Node::ALIAS_NODE, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD )
+    : Node( AString::GetEmpty(), Node::ALIAS_NODE, Node::FLAG_ALWAYS_BUILD )
 {
     m_LastBuildTimeMs = 1; // almost no work is done for this node
 }
@@ -52,7 +52,7 @@ AliasNode::~AliasNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult AliasNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult AliasNode::DoBuild( Job * /*job*/ )
 {
     const Dependencies::Iter end = m_StaticDependencies.End();
     for ( Dependencies::Iter it = m_StaticDependencies.Begin();

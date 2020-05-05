@@ -5,12 +5,14 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 
 // TestBFFParsing
@@ -47,6 +49,8 @@ private:
     void IncludeScope() const;
     void IfDirective() const;
     void IfExistsDirective() const;
+    void IfFileExistsDirective() const;
+    void IfFileExistsDirective_RelativePaths() const;
     void ElseDirective() const;
     void ElseDirective_Bad() const;
     void ElseDirective_Bad2() const;
@@ -106,6 +110,8 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IncludeScope )
     REGISTER_TEST( IfDirective )
     REGISTER_TEST( IfExistsDirective )
+    REGISTER_TEST( IfFileExistsDirective )
+    REGISTER_TEST( IfFileExistsDirective_RelativePaths )
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
     REGISTER_TEST( ElseDirective_Bad2 )
@@ -401,6 +407,127 @@ void TestBFFParsing::IfExistsDirective() const
     Env::SetEnvVariable("BFF_TEST_ENV_VAR1", AString("1"));
     Env::SetEnvVariable("BFF_TEST_ENV_VAR2", AString("2"));
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_exists_directive.bff" );
+}
+
+// IfFileExistsDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFileExistsDirective() const
+{
+    // Detect existence (or not) of files
+    TEST_PARSE_OK( "#if file_exists(\"doesnotexist.dat\")\n"
+                   "    #error\n"
+                   "#endif" );
+    TEST_PARSE_OK( "#if !file_exists(\"fbuild.bff\")\n"
+                   "    #error\n"
+                   "#endif" );
+
+    // Check changes are detected (or not) between builds
+    {
+        const char * rootBFF    = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
+        const char * fileName   = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
+        const char * db         = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
+
+        // Copy root bff to temp dir
+        FileIO::SetReadOnly( rootBFF, false );
+        EnsureFileDoesNotExist( rootBFF );
+        EnsureDirExists("../tmp/Test/BFFParsing/FileExistsDirective/");
+        FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff", rootBFF );
+
+        // Delete extra file from previous test run
+        EnsureFileDoesNotExist( fileName );
+
+        FBuildTestOptions options;
+        options.m_ConfigFile = rootBFF;
+
+        // Parse bff, which checks if file exists
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+            fBuild.SaveDependencyGraph( db );
+
+            const AString & output( GetRecordedOutput() );
+
+            // File should NOT exist
+            TEST_ASSERT( output.Find( "File does not exist" ) );
+        }
+
+        // Check existence re-parsing does not occur with not change to file existence
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            // Should not re-parse
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
+        }
+
+        // Create file
+        {
+            FileIO::EnsurePathExistsForFile( AStackString<>( fileName ) );
+            FileStream f;
+            TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
+        }
+
+        // Load db and ensure it is re-parsed
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was triggered
+            TEST_ASSERT( output.Find( "File used in file_exists was added" ) );
+
+            // File should exist
+            TEST_ASSERT( output.Find( "File exists" ) );
+        }
+
+        // Delete file
+        EnsureFileDoesNotExist( fileName );
+
+        // Load db and ensure it is re-parsed again
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was triggered
+            TEST_ASSERT( output.Find( "File used in file_exists was removed" ) );
+
+            // File should exist
+            TEST_ASSERT( output.Find( "File does not exist" ) );
+        }
+    }
+}
+
+// IfFileExistsDirective_RelativePaths
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
+{
+    // file_exists treats paths the same way as #include
+    // (paths are relative to the bff)
+    
+    FBuildTestOptions options;
+    options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Check for expected output
+    const AString & output( GetRecordedOutput() );
+    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ));
+    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ));
+    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ));
+    TEST_ASSERT( output.Find( "OK-4" ) );
 }
 
 // ElseDirective

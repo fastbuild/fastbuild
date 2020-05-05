@@ -1,6 +1,6 @@
 // Clang 9.x.x
 //------------------------------------------------------------------------------
-.Clang9_BasePath     = '../External/SDK/Clang/Windows/9.0.0'
+.Clang9_BasePath     = '$_CURRENT_BFF_DIR_$/9.0.0'
 #if CI_BUILD
     .Clang9_BasePath = 'C:\Program Files\LLVM'
 #endif
@@ -15,6 +15,11 @@ Compiler( 'Compiler-Clang9' )
                                         '$Root$/bin/vcruntime140.dll'
                                       }
     .Executable                     = '$Root$\bin\clang++.exe'
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif
 }
 
 // ToolChain

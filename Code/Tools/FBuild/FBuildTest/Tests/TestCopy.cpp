@@ -437,7 +437,6 @@ void TestCopy::CopyDir_NoRebuild() const
     CheckStatsTotal( 6,     3 );
 }
 
-
 // CopyDir_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
 void TestCopy::CopyDir_NoRebuild_BFFChange() const

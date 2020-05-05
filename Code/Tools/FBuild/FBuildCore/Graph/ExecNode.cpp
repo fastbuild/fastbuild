@@ -54,7 +54,7 @@ ExecNode::ExecNode()
 {
     m_Type = EXEC_NODE;
 
-    m_ExecInputPattern.Append( AStackString<>( "*.*" ) );
+    m_ExecInputPattern.EmplaceBack( "*.*" );
 }
 
 // Initialize
@@ -93,6 +93,7 @@ ExecNode::ExecNode()
                                               m_ExecInputExcludedFiles,
                                               m_ExecInputExcludePattern,
                                               m_ExecInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_ExecInputPattern,
                                               "ExecInputPath",
                                               execInputPaths ) )
@@ -116,7 +117,7 @@ ExecNode::~ExecNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -148,7 +149,7 @@ ExecNode::~ExecNode() = default;
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
     }
 
@@ -161,7 +162,7 @@ ExecNode::~ExecNode() = default;
 {
     if ( m_ExecAlways )
     {
-        FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
+        FLOG_BUILD_REASON( "Need to build '%s' (ExecAlways = true)\n", GetName().Get() );
         return true;
     }
     return Node::DetermineNeedToBuild( deps );
@@ -214,7 +215,9 @@ ExecNode::~ExecNode() = default;
     const bool buildFailed = ( result != m_ExecReturnCode );
     
     // Print output if appropriate
-    if ( buildFailed || m_ExecAlwaysShowOutput )
+    if ( buildFailed ||
+        m_ExecAlwaysShowOutput ||
+        FBuild::Get().GetOptions().m_ShowCommandOutput )
     {
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
@@ -251,12 +254,15 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 {
     // basic info
     AStackString< 2048 > output;
-    output += "Run: ";
-    output += GetName();
-    output += '\n';
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Run: ";
+        output += GetName();
+        output += '\n';
+    }
 
     // verbose mode
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         AStackString< 1024 > verboseOutput;
         verboseOutput.Format( "%s %s\nWorkingDir: %s\nExpectedReturnCode: %i\n",
@@ -268,7 +274,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     }
 
     // output all at once for contiguousness
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // GetFullArgs

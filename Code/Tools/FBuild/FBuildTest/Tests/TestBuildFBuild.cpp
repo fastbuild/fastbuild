@@ -59,14 +59,14 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     // Build a subset of targets as a sort of smoke test
     Array< AString > targets;
     #if defined( __WINDOWS__ )
-        targets.Append( AStackString<>( "All-x64-Debug" ) );
-        targets.Append( AStackString<>( "All-x64Clang-Release" ) );
+        targets.EmplaceBack( "All-x64-Debug" );
+        targets.EmplaceBack( "All-x64Clang-Release" );
     #elif defined( __LINUX__ )
-        targets.Append( AStackString<>( "All-x64Linux-Debug" ) );
-        targets.Append( AStackString<>( "All-x64ClangLinux-Release" ) );
+        targets.EmplaceBack( "All-x64Linux-Debug" );
+        targets.EmplaceBack( "All-x64ClangLinux-Release" );
     #elif defined( __OSX__ )
-        targets.Append( AStackString<>( "All-x64OSX-Debug" ) );
-        targets.Append( AStackString<>( "All-x64OSX-Release" ) );
+        targets.EmplaceBack( "All-x64OSX-Debug" );
+        targets.EmplaceBack( "All-x64OSX-Release" );
     #else
         #error Unknown platform
     #endif
@@ -175,7 +175,7 @@ void TestBuildFBuild::DBSavePerformance() const
     MemoryStream ms( 64 * 1024 * 1024, 1024 * 1024 );
 
     Timer t;
-    for ( size_t i=0; i<100; ++i )
+    for ( size_t i = 0; i < 100; ++i )
     {
         ms.Reset();
         fBuild.SaveDependencyGraph( ms, "unused.fdb" );

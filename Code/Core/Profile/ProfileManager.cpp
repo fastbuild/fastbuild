@@ -42,7 +42,7 @@ void FormatU64( uint64_t value, char * outBuffer )
     char * pos = tmp;
     while ( value )
     {
-        *pos = ( '0' + (uint8_t)(value % 10) );
+        *pos = ( '0' + (uint8_t)( value % 10 ) );
         ++pos;
         value /= 10;
     }
@@ -272,9 +272,9 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
             }
 
             const size_t numEvents( info.m_NumEvents );
-            for ( size_t i=0; i<numEvents; ++i )
+            for ( size_t i = 0; i < numEvents; ++i )
             {
-                const ProfileEvent& e = info.m_Events[i];
+                const ProfileEvent & e = info.m_Events[ i ];
 
                 // {"name": "Asub", "ph": "B", "pid": 22630, "tid": 22630, "ts": 829},
                 if ( e.m_Id )
@@ -311,9 +311,9 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
         }
     }
 
-    for ( const ProfileEventInfo* it = infos.Begin(); it != end; ++it )
+    for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )
     {
-        const ProfileEventInfo& info = *it;
+        const ProfileEventInfo & info = *it;
         FDELETE[] info.m_Events;
     }
 }

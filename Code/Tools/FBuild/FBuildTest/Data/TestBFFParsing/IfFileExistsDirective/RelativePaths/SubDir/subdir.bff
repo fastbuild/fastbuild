@@ -1,0 +1,14 @@
+
+Print( 'OK-2B' )
+
+// Should see sibling file ins same dir
+#if file_exists( "subdir_sibling.bff" )
+    Print( 'OK-3A' )
+
+    #include "subdir_sibling.bff"
+#endif
+
+// Should not see file in root (one level up)
+#if !file_exists( "if_file_exists_directive.bff" )
+    Print( 'OK-4' )
+#endif

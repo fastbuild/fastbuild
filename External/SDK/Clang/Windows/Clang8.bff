@@ -1,6 +1,7 @@
 // Clang 8.x.x
 //------------------------------------------------------------------------------
-.Clang8_BasePath     = '../External/SDK/Clang/Windows/8.0.0'
+.Clang8_BasePath     = '$_CURRENT_BFF_DIR_$/8.0.0'
+
 #if CI_BUILD
     .Clang8_BasePath = 'C:\Program Files\LLVM'
 #endif
@@ -15,6 +16,11 @@ Compiler( 'Compiler-Clang8' )
                                         '$Root$/bin/vcruntime140.dll'
                                       }
     .Executable                     = '$Root$\bin\clang++.exe'
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif
 }
 
 // ToolChain

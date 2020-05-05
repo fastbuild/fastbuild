@@ -3,6 +3,8 @@ else
 endif
 exists
 false
+file_exists
+function
 if
 import
 in
@@ -29,9 +31,11 @@ Print
 RemoveDir
 Settings
 Test
+TextFile
 Unity
 Using
 VCXProject
+VSProjectExternal
 VSSolution
 XCodeProject
 
@@ -50,6 +54,7 @@ BuildLogFile
 CachePath
 CachePathMountPoint
 CachePluginDLL
+ClangFixupUnity_Disable
 ClangRewriteIncludes
 Compiler
 CompilerFamily
@@ -87,8 +92,6 @@ Dest
 DisableDBMigration
 DistributableJobMemoryLimitMiB
 Environment
-ExcludePaths
-ExcludePatterns
 ExecAlways
 ExecAlwaysShowOutput
 ExecArguments
@@ -106,14 +109,15 @@ ExecUseStdOutAsOutput
 ExecWorkingDir
 Executable
 ExecutableRootPath
+ExternalProjectPath
 ExtraFiles
 FileType
-FilesToExclude
 ForcedIncludes
 ForcedUsingAssemblies
 Hidden
 IncludeSearchPath
 IntermediateDirectory
+Items
 Keyword
 LayoutDir
 LayoutExtensionFilter
@@ -121,6 +125,7 @@ Librarian
 LibrarianAdditionalInputs
 LibrarianOptions
 LibrarianOutput
+LibrarianType
 Libraries
 Linker
 LinkerAssemblyResources
@@ -143,7 +148,6 @@ PCHOutputFile
 PackagePath
 Path
 Pattern
-Patterns
 Platform
 PlatformToolset
 PreBuildDependencies
@@ -169,8 +173,8 @@ ProjectProjectReferences
 ProjectRebuildCommand
 ProjectReferences
 ProjectSccEntrySAK
+ProjectTypeGuid
 Projects
-Recursive
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
@@ -208,10 +212,14 @@ TestInputPattern
 TestOutput
 TestTimeOut
 TestWorkingDir
+TextFileAlways
+TextFileInputStrings
+TextFileOutput
 UnityInputExcludePath
 UnityInputExcludePattern
 UnityInputExcludedFiles
 UnityInputFiles
+UnityInputIsolateListFile
 UnityInputIsolateWritableFiles
 UnityInputIsolateWritableFilesLimit
 UnityInputIsolatedFiles
@@ -224,6 +232,7 @@ UnityOutputPath
 UnityOutputPattern
 UnityPCH
 UseLightCache_Experimental
+UseRelativePaths_Experimental
 VS2012EnumBugFix
 WorkerConnectionLimit
 Workers
@@ -235,5 +244,6 @@ XCodeCommandLineArguments
 XCodeCommandLineArgumentsDisabled
 XCodeDebugWorkingDir
 XCodeDocumentVersioning
+XCodeIphoneOSDeploymentTarget
 XCodeOrganizationName
 Xbox360DebuggerCommand

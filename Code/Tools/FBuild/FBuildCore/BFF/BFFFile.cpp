@@ -36,7 +36,7 @@ BFFFile::~BFFFile() = default;
 //------------------------------------------------------------------------------
 bool BFFFile::Load( const AString & fileName, const BFFToken * token )
 {
-    FLOG_INFO( "Loading BFF '%s'", fileName.Get() );
+    FLOG_VERBOSE( "Loading BFF '%s'", fileName.Get() );
 
     // Open the file
     FileStream bffStream;

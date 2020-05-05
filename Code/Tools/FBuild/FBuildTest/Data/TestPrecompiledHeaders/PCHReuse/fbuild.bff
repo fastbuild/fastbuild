@@ -1,0 +1,59 @@
+
+#include "..\..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+// One ObjectList creates the PCH
+ObjectList( 'CreatePCH' )
+{
+    // PCH to create
+    #if __WINDOWS__
+        .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse/PrecompiledHeader.cpp'
+        .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/PCHReuse/PrecompiledHeader.pch'
+        .PCHOptions                 + ' /I"Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse"'
+    #endif
+    #if __LINUX__
+        .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse/PrecompiledHeader.h'
+        .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/PCHReuse/PrecompiledHeader.h.gch'
+    #endif
+    #if __OSX__
+        .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse/PrecompiledHeader.h'
+        .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/PCHReuse/PrecompiledHeader.pch'
+    #endif
+}
+
+// Another ObjectList uses the PCH created by the other ObjectList
+ObjectList( 'PCHReuse' )
+{
+    // PCH to use
+    #if __WINDOWS__
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PCHReuse/PrecompiledHeader.pch"
+    #endif
+    #if __LINUX__
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PCHReuse/PrecompiledHeader.h.gch"
+    #endif
+    #if __OSX__
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PCHReuse/PrecompiledHeader.pch"
+    #endif
+
+    // Files to compile
+    .CompilerInputFiles         = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse/FileA.cpp'
+    .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/PCHReuse/'
+
+    // Specify usage of PCH for compiled files
+    #if __WINDOWS__
+        .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                                    + ' /I"Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse"'
+    #endif
+    #if __LINUX__
+        .CompilerOptions            + ' -Winvalid-pch -H'
+                                    + ' "-I$Out$/Test/PrecompiledHeaders/PCHReuse"'
+                                    + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse"'
+    #endif
+    #if __OSX__
+        .CompilerOptions            + ' -include-pch "$PCHOutputFile$"'
+                                    + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse"'
+    #endif
+}

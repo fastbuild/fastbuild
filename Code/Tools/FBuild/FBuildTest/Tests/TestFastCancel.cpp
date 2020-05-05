@@ -41,7 +41,7 @@ static uint32_t CancelHelperThread( void * )
     SystemMutex mutex2( "FASTBuildFastCancelTest2" );
     SystemMutex mutex3( "FASTBuildFastCancelTest3" );
     SystemMutex mutex4( "FASTBuildFastCancelTest4" );
-    SystemMutex* mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
+    SystemMutex * mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
     for ( SystemMutex * mutex : mutexes )
     {
         // if we acquired the lock, the child process is not yet spawned
@@ -82,7 +82,7 @@ void TestFastCancel::Cancel() const
     SystemMutex mutex2( "FASTBuildFastCancelTest2" );
     SystemMutex mutex3( "FASTBuildFastCancelTest3" );
     SystemMutex mutex4( "FASTBuildFastCancelTest4" );
-    SystemMutex* mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
+    SystemMutex * mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
 
     // Create thread that will abort build once all processes are spawned
     Thread::ThreadHandle h = Thread::CreateThread( CancelHelperThread );

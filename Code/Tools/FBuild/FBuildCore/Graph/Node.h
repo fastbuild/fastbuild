@@ -40,6 +40,9 @@ class NodeGraph;
 #define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
     REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
 
+#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData ) \
+    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData )
+
 // FBuild
 //------------------------------------------------------------------------------
 class Node : public Struct
@@ -74,6 +77,8 @@ public:
         REMOVE_DIR_NODE     = 18,
         XCODEPROJECT_NODE   = 19,
         SETTINGS_NODE       = 20,
+        VSPROJEXTERNAL_NODE = 21,
+        TEXT_FILE_NODE      = 22,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
     };
@@ -81,8 +86,7 @@ public:
     enum ControlFlag
     {
         FLAG_NONE                   = 0x00,
-        FLAG_TRIVIAL_BUILD          = 0x01, // DoBuild is performed locally in main thread
-        FLAG_ALWAYS_BUILD           = 0x02, // DoBuild is always performed (for e.g. directory listings)
+        FLAG_ALWAYS_BUILD           = 0x01, // DoBuild is always performed (for e.g. directory listings)
     };
 
     enum StatsFlag
@@ -95,6 +99,7 @@ public:
         STATS_LIGHT_CACHE   = 0x20, // used the LightCache
         STATS_BUILT_REMOTE  = 0x40, // node was built remotely
         STATS_FAILED        = 0x80, // node needed building, but failed
+        STATS_FIRST_BUILD   = 0x100,// node has never been built before
         STATS_REPORT_PROCESSED  = 0x4000, // seen during report processing
         STATS_STATS_PROCESSED   = 0x8000 // mark during stats gathering (leave this last)
     };

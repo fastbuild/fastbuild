@@ -5,9 +5,12 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+
+// Core
 #include "Core/Strings/AStackString.h"
 
 // TestObjectList
@@ -140,9 +143,9 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
 
     // Check that the entire span is correctly captured
     TEST_ASSERT( pdbPath.BeginsWith( "Tools" ) );
-    TEST_ASSERT( pdbPath.EndsWith( "pdb" ) && !pdbPath.EndsWith( ".pdb" ));
+    TEST_ASSERT( pdbPath.EndsWith( "pdb" ) && !pdbPath.EndsWith( ".pdb" ) );
     TEST_ASSERT( asmPath.BeginsWith( "Tools" ) );
-    TEST_ASSERT( asmPath.EndsWith( "asm" ) && !pdbPath.EndsWith( ".asm" ));
+    TEST_ASSERT( asmPath.EndsWith( "asm" ) && !pdbPath.EndsWith( ".asm" ) );
 }
 
 // ObjectListChaining
@@ -153,7 +156,7 @@ void TestObjectList::ObjectListChaining() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ObjectListChaining/fbuild.bff";
-    const char* dbFile = "../tmp/Test/TestObjectList/ObjectListChaining/fbuild.fdb";
+    const char * dbFile = "../tmp/Test/TestObjectList/ObjectListChaining/fbuild.fdb";
 
     AString depGraphText1( 8 * 1024 );
     AString depGraphText2( 8 * 1024 );

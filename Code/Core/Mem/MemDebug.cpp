@@ -29,7 +29,7 @@ void MemDebug::FillMem( void * ptr, const size_t size, const uint64_t pattern )
     }
 
     // fill remaining bytes
-    const size_t remainder =  size - ( numU64 * sizeof( uint64_t ) );
+    const size_t remainder = size - ( numU64 * sizeof( uint64_t ) );
     if ( remainder )
     {
         // assuming little-endian format

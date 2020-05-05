@@ -28,9 +28,9 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-OSLabel::OSLabel( OSWindow * parentWindow ) :
-    OSWidget( parentWindow ),
-    m_Font( nullptr )
+OSLabel::OSLabel( OSWindow * parentWindow )
+    : OSWidget( parentWindow )
+    , m_Font( nullptr )
 {
 }
 

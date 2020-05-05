@@ -15,7 +15,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class VCXProjectNode;
+class VSProjectBaseNode;
 
 // SolutionConfigBase
 //------------------------------------------------------------------------------
@@ -59,6 +59,7 @@ class SolutionFolder : public Struct
 public:
     AString             m_Path;
     Array< AString >    m_Projects;
+    Array< AString >    m_Items;
 };
 
 // SolutionDependency
@@ -93,13 +94,13 @@ private:
                                            const BFFToken * iter,
                                            const char * propertyName,
                                            const AString & projectName,
-                                           Array< VCXProjectNode * > & inOutProjects ) const;
+                                           Array< VSProjectBaseNode * > & inOutProjects ) const;
     bool                    GatherProjects( NodeGraph & nodeGraph,
                                             const Function * function,
                                             const BFFToken * iter,
                                             const char * propertyName,
                                             const Array< AString > & projectNames,
-                                            Array< VCXProjectNode * > & inOutProjects ) const;
+                                            Array< VSProjectBaseNode * > & inOutProjects ) const;
 
     // Reflected
     Array< AString >            m_SolutionProjects;

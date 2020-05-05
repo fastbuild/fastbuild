@@ -1,6 +1,6 @@
 // LZ4
 //------------------------------------------------------------------------------
-.LZ4BasePath        = '../External/LZ4/lz4-1.9.1/lib'
+.LZ4BasePath        = '../External/LZ4/lz4-1.9.2/lib'
 .LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
 {
     .ProjectName        = 'LZ4'
@@ -9,7 +9,10 @@
     // Target/Compiler specific options
     .LZ4Options_x64     = [
                             .LZ4CompilerOptions = ' /wd6239'    // (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
+                                                + ' /wd6240'    // (<expression> && <non-zero constant>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
                                                 + ' /wd6262'    // Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
+                                                + ' /wd6326'    // Potential comparison of a constant with another constant.
+                                                + ' /wd6385'    // Reading invalid data from 'v':  the readable size is '_Old_5`2' bytes, but '4' bytes may be read.: Lines: 427, 430, 432, 436, 437, 438, 439
                                                 + ' /wd28251'   // warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
 
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
@@ -52,6 +55,7 @@
             // Input - Only build specific files we use
             .CompilerInputFiles         = {
                                             '$LZ4BasePath$\lz4.c'
+                                            '$LZ4BasePath$\lz4hc.c'
                                             '$LZ4BasePath$\xxhash.c'
                                           }
 
@@ -60,10 +64,15 @@
                                         + .LZ4IncludePaths
                                         + .LZ4CompilerOptions
 
-                                        // Remove flags that disable opimizations
                                         #if __WINDOWS__
+                                            // Remove flags that disable opimizations
                                             - ' /Od'
                                             - ' /RTC1'
+
+                                            // VS2015 gives false positives
+                                            #if USING_VS2015
+                                                - ' /analyze'
+                                            #endif
                                         #else
                                             - ' -O0'
                                         #endif

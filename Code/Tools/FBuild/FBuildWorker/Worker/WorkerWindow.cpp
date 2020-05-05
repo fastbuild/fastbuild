@@ -5,10 +5,11 @@
 //------------------------------------------------------------------------------
 #include "WorkerWindow.h"
 
+// FBuildWorker
 #include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
-#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 
 // OSUI
@@ -25,8 +26,8 @@
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
 #include "Core/Network/Network.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 
 // Defines
 //------------------------------------------------------------------------------
@@ -47,7 +48,7 @@ WorkerWindow::WorkerWindow()
     , m_Menu( nullptr )
 {
     // obtain host name
-    Network::GetHostName(m_HostName);
+    Network::GetHostName( m_HostName );
 
     // center the window on screen
     const uint32_t w = 700;
@@ -78,7 +79,7 @@ WorkerWindow::WorkerWindow()
     m_ThreadList->AddColumn( "Status", 2, 530 );
     size_t numWorkers = JobQueueRemote::Get().GetNumWorkers();
     m_ThreadList->SetItemCount( (uint32_t)numWorkers );
-    for ( size_t i=0; i<numWorkers; ++i )
+    for ( size_t i = 0; i < numWorkers; ++i )
     {
         AStackString<> string;
         string.Format( "%u", (uint32_t)( i + 1 ) );
@@ -94,7 +95,7 @@ WorkerWindow::WorkerWindow()
     // Mode drop down
     m_ModeDropDown = FNEW( OSDropDown( this ) );
     m_ModeDropDown->SetFont( m_Font );
-    m_ModeDropDown->Init( 100, 3, 230, 200 );
+    m_ModeDropDown->Init( 100, 3, 200, 200 );
     m_ModeDropDown->AddItem( "Disabled" );
     m_ModeDropDown->AddItem( "Work For Others When Idle" );
     m_ModeDropDown->AddItem( "Work For Others Always" );
@@ -106,15 +107,36 @@ WorkerWindow::WorkerWindow()
     m_ModeLabel->SetFont( m_Font );
     m_ModeLabel->Init( 5, 7, 95, 15, "Current Mode:" );
 
+    // Threshold drop down
+    m_ThresholdDropDown = FNEW( OSDropDown( this ) );
+    m_ThresholdDropDown->SetFont( m_Font );
+    m_ThresholdDropDown->Init( 376, 3, 67, 200 );
+    for ( uint32_t i = 1; i < 6; ++i )
+    {
+        AStackString<> buffer;
+        buffer.Format( "%u%%", i * 10 );
+        m_ThresholdDropDown->AddItem( buffer.Get() );
+    }
+    m_ThresholdDropDown->SetSelectedItem( ( WorkerSettings::Get().GetIdleThresholdPercent() / 10 ) - 1 );
+    if ( WorkerSettings::Get().GetMode() != WorkerSettings::WHEN_IDLE )
+    {
+        m_ThresholdDropDown->SetEnabled( false ); // Only active for Idle mode
+    }
+
+    // Threshold label
+    m_ThresholdLabel = FNEW( OSLabel( this ) );
+    m_ThresholdLabel->SetFont( m_Font );
+    m_ThresholdLabel->Init( 305, 7, 66, 15, "Threshold:" );
+
     // Resources drop down
     m_ResourcesDropDown = FNEW( OSDropDown( this ) );
     m_ResourcesDropDown->SetFont( m_Font );
-    m_ResourcesDropDown->Init( 380, 3, 150, 200 );
+    m_ResourcesDropDown->Init( 498, 3, 150, 200 );
     {
         // add items
         uint32_t numProcessors = Env::GetNumProcessors();
         AStackString<> buffer;
-        for ( uint32_t i=0; i<numProcessors; ++i )
+        for ( uint32_t i = 0; i < numProcessors; ++i )
         {
             float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
             buffer.Format( "%u CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
@@ -126,7 +148,7 @@ WorkerWindow::WorkerWindow()
     // Resources label
     m_ResourcesLabel = FNEW( OSLabel( this ) );
     m_ResourcesLabel->SetFont( m_Font );
-    m_ResourcesLabel->Init( 335, 7, 45, 15, "Using:" );
+    m_ResourcesLabel->Init( 448, 7, 45, 15, "Using:" );
 
     // splitter
     m_Splitter = FNEW( OSSplitter( this ) );
@@ -164,6 +186,8 @@ WorkerWindow::~WorkerWindow()
     FDELETE( m_Splitter );
     FDELETE( m_ResourcesLabel );
     FDELETE( m_ResourcesDropDown );
+    FDELETE( m_ThresholdLabel );
+    FDELETE( m_ThresholdDropDown );
     FDELETE( m_ModeLabel );
     FDELETE( m_ModeDropDown );
     FDELETE( m_ThreadList );
@@ -286,6 +310,14 @@ void WorkerWindow::Work()
     if ( dropDown == m_ModeDropDown )
     {
         WorkerSettings::Get().SetMode( (WorkerSettings::Mode)index );
+
+        // Threshold dropdown is enabled when we're in Idle move
+        const bool idleMode = ( WorkerSettings::Get().GetMode() == WorkerSettings::WHEN_IDLE );
+        m_ThresholdDropDown->SetEnabled( idleMode );
+    }
+    else if ( dropDown == m_ThresholdDropDown )
+    {
+        WorkerSettings::Get().SetIdleThresholdPercent( (uint32_t)( index + 1 ) * 10 );
     }
     else if ( dropDown == m_ResourcesDropDown )
     {

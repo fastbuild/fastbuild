@@ -40,7 +40,7 @@
 
 // ArePathsEqual
 //------------------------------------------------------------------------------
-/*static*/ bool PathUtils::ArePathsEqual(const AString & cleanPathA, const AString & cleanPathB)
+/*static*/ bool PathUtils::ArePathsEqual( const AString & cleanPathA, const AString & cleanPathB )
 {
     #if defined( __LINUX__ )
         // Case Sensitive
@@ -183,7 +183,7 @@
 /*static*/ void PathUtils::StripFileExtension( AString & filePath )
 {
     const char * lastDot = filePath.FindLast( '.' );
-    if (lastDot)
+    if ( lastDot )
     {
         filePath.SetLength( (uint32_t)( lastDot - filePath.Get() ) );
     }
