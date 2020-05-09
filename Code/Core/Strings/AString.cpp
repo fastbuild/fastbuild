@@ -1302,7 +1302,7 @@ test_match:
 //------------------------------------------------------------------------------
 /*static*/ void AString::Copy( const char * src, char * dst, size_t len )
 {
-    memcpy( dst, src, len );
+    memmove( dst, src, len );
     dst[len] = '\000';
 }
 
