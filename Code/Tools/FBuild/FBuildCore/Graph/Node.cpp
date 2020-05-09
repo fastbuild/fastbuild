@@ -796,11 +796,10 @@ void Node::ReplaceDummyName( const AString & newName )
 // DumpOutput
 //------------------------------------------------------------------------------
 /*static*/ void Node::DumpOutput( Job * job,
-                                  const char * data,
-                                  uint32_t dataSize,
+                                  const AString & output,
                                   const Array< AString > * exclusions )
 {
-    if ( ( data == nullptr ) || ( dataSize == 0 ) )
+    if ( output.IsEmpty() )
     {
         return;
     }
@@ -808,7 +807,8 @@ void Node::ReplaceDummyName( const AString & newName )
     // preallocate a large buffer
     AString buffer( MEGABYTE );
 
-    const char * end = data + dataSize;
+    const char * data = output.Get();
+    const char * end = output.GetEnd();
     while( data < end )
     {
         // find the limits of the current line

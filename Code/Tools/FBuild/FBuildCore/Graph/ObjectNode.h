@@ -171,19 +171,15 @@ private:
         inline int                      GetResult() const { return m_Result; }
 
         // access output/error
-        inline const AutoPtr< char > &  GetOut() const { return m_Out; }
-        inline uint32_t                 GetOutSize() const { return m_OutSize; }
-        inline const AutoPtr< char > &  GetErr() const { return m_Err; }
-        inline uint32_t                 GetErrSize() const { return m_ErrSize; }
+        inline const AString &          GetOut() const { return m_Out; }
+        inline const AString &          GetErr() const { return m_Err; }
         inline bool                     HasAborted() const { return m_Process.HasAborted(); }
 
     private:
         bool            m_HandleOutput;
         Process         m_Process;
-        AutoPtr< char > m_Out;
-        uint32_t        m_OutSize;
-        AutoPtr< char > m_Err;
-        uint32_t        m_ErrSize;
+        AString         m_Out;
+        AString         m_Err;
         int             m_Result;
     };
 

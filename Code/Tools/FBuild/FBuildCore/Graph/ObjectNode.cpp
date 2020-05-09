@@ -334,7 +334,7 @@ ObjectNode::~ObjectNode()
     // (since compilation will fail anyway, and the output will be shown)
     if ( ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
     {
-        HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+        HandleWarningsMSVC( job, GetName(), ch.GetOut() );
     }
 
     const char *output = nullptr;
@@ -344,13 +344,13 @@ ObjectNode::~ObjectNode()
     if ( GetFlag( FLAG_INCLUDES_IN_STDERR ) == true )
     {
         output = ch.GetErr().Get();
-        outputSize = ch.GetErrSize();
+        outputSize = ch.GetErr().GetLength();
     }
     else
     {
         // but most of the time it will be on stdout
         output = ch.GetOut().Get();
-        outputSize = ch.GetOutSize();
+        outputSize = ch.GetOut().GetLength();
     }
 
     // compiled ok, try to extract includes
@@ -654,9 +654,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         }
 
         // get output
-        const AutoPtr< char > & out = ch.GetOut();
-        const uint32_t outSize = ch.GetOutSize();
-        AStackString< 4096 > output( out.Get(), out.Get() + outSize );
+        AString output( ch.GetOut() );
         output.Replace( '\r', '\n' ); // Normalize all carriage line endings
 
         // split into lines
@@ -2073,11 +2071,11 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
             // Use the error text, but if it's empty, use the output
             if ( ch.GetErr().Get() )
             {
-                DumpOutput( job, ch.GetErr().Get(), ch.GetErrSize(), GetName() );
+                DumpOutput( job, ch.GetErr(), GetName() );
             }
             else
             {
-                DumpOutput( job, ch.GetOut().Get(), ch.GetOutSize(), GetName() );
+                DumpOutput( job, ch.GetOut(), GetName() );
             }
         }
 
@@ -2085,7 +2083,7 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
     }
 
     // take a copy of the output because ReadAllData uses huge buffers to avoid re-sizing
-    TransferPreprocessedData( ch.GetOut().Get(), ch.GetOutSize(), job );
+    TransferPreprocessedData( ch.GetOut().Get(), ch.GetOut().GetLength(), job );
 
     return true;
 }
@@ -2392,10 +2390,10 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
             // for remote jobs, we must serialize the errors to return with the job
             if ( job->IsLocal() == false )
             {
-                AutoPtr< char > mem( (char *)ALLOC( ch.GetOutSize() + ch.GetErrSize() ) );
-                memcpy( mem.Get(), ch.GetOut().Get(), ch.GetOutSize() );
-                memcpy( mem.Get() + ch.GetOutSize(), ch.GetErr().Get(), ch.GetErrSize() );
-                job->OwnData( mem.Release(), ( ch.GetOutSize() + ch.GetErrSize() ) );
+                AutoPtr< char > mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
+                memcpy( mem.Get(), ch.GetOut().Get(), ch.GetOut().GetLength() );
+                memcpy( mem.Get() + ch.GetOut().GetLength(), ch.GetErr().Get(), ch.GetErr().GetLength() );
+                job->OwnData( mem.Release(), ( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
             }
         }
 
@@ -2410,14 +2408,14 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
             {
                 if ( !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
                 {
-                    HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+                    HandleWarningsMSVC( job, GetName(), ch.GetOut() );
                 }
             }
             else if ( IsClang() || IsGCC() )
             {
                 if ( !GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
                 {
-                    HandleWarningsClangGCC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+                    HandleWarningsClangGCC( job, GetName(), ch.GetOut() );
                 }
             }
         }
@@ -2431,8 +2429,6 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool * abortPointer )
     : m_HandleOutput( handleOutput )
     , m_Process( FBuild::GetAbortBuildPointer(), abortPointer )
-    , m_OutSize( 0 )
-    , m_ErrSize( 0 )
     , m_Result( 0 )
 {
 }
@@ -2477,7 +2473,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     }
 
     // capture all of the stdout and stderr
-    m_Process.ReadAllData( m_Out, &m_OutSize, m_Err, &m_ErrSize );
+    m_Process.ReadAllData( m_Out, m_Err );
 
     // Get result
     m_Result = m_Process.WaitForExit();
@@ -2501,8 +2497,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 exclusions.EmplaceBack( "Note: including file:" );
             }
 
-            if ( m_Out.Get() ) { Node::DumpOutput( job, m_Out.Get(), m_OutSize, &exclusions ); }
-            if ( m_Err.Get() ) { Node::DumpOutput( job, m_Err.Get(), m_ErrSize, &exclusions ); }
+            Node::DumpOutput( job, m_Out, &exclusions );
+            Node::DumpOutput( job, m_Err, &exclusions );
         }
         else
         {
@@ -2510,7 +2506,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             if ( m_Err.Get() )
             {
                 const bool treatAsWarnings = true; // change msg formatting
-                DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+                DumpOutput( job, m_Err, name, treatAsWarnings );
             }
         }
     }
@@ -2521,7 +2517,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // output 'stdout' which may contain errors for some compilers
         if ( m_HandleOutput )
         {
-            DumpOutput( job, m_Out.Get(), m_OutSize, name );
+            DumpOutput( job, m_Out, name );
         }
 
         job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );

@@ -189,11 +189,9 @@ LibraryNode::~LibraryNode()
     }
 
     // capture all of the stdout and stderr
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+    AString memOut;
+    AString memErr;
+    p.ReadAllData( memOut, memErr );
 
     // Get result
     int result = p.WaitForExit();
@@ -224,7 +222,7 @@ LibraryNode::~LibraryNode()
         // (since compilation will fail anyway, and the output will be shown)
         if ( GetFlag( LIB_FLAG_LIB ) && !GetFlag( LIB_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
         {
-            FileNode::HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+            FileNode::HandleWarningsMSVC( job, GetName(), memOut );
         }
     }
 

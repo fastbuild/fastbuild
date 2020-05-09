@@ -196,11 +196,9 @@ const char * TestNode::GetEnvironmentString() const
     }
 
     // capture all of the stdout and stderr
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut * 1000 );
+    AString memOut;
+    AString memErr;
+    bool timedOut = !p.ReadAllData( memOut, memErr, m_TestTimeOut * 1000 );
 
     // Get result
     int result = p.WaitForExit();
@@ -212,8 +210,8 @@ const char * TestNode::GetEnvironmentString() const
     if ( ( timedOut == true ) || ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )
     {
         // something went wrong, print details
-        Node::DumpOutput( job, memOut.Get(), memOutSize );
-        Node::DumpOutput( job, memErr.Get(), memErrSize );
+        Node::DumpOutput( job, memOut );
+        Node::DumpOutput( job, memErr );
     }
 
     if ( timedOut == true )
@@ -232,8 +230,8 @@ const char * TestNode::GetEnvironmentString() const
         FLOG_ERROR( "Failed to open test output file '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
-    if ( ( memOut.Get() && ( fs.Write( memOut.Get(), memOutSize ) != memOutSize ) ) ||
-         ( memErr.Get() && ( fs.Write( memErr.Get(), memErrSize ) != memErrSize ) ) )
+    if ( ( ( memOut.IsEmpty() == false ) && ( fs.Write( memOut.Get(), memOut.GetLength() ) != memOut.GetLength() ) ) ||
+         ( ( memErr.IsEmpty() == false ) && ( fs.Write( memErr.Get(), memErr.GetLength() ) != memErr.GetLength() ) ) )
     {
         FLOG_ERROR( "Failed to write test output file '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;

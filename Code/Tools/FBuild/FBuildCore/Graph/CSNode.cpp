@@ -193,11 +193,9 @@ CSNode::~CSNode() = default;
     }
 
     // capture all of the stdout and stderr
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+    AString memOut;
+    AString memErr;
+    p.ReadAllData( memOut, memErr );
 
     // Get result
     int result = p.WaitForExit();
@@ -213,8 +211,8 @@ CSNode::~CSNode() = default;
                             FBuild::Get().GetOptions().m_ShowCommandOutput;
     if ( showOutput )
     {
-        Node::DumpOutput( job, memOut.Get(), memOutSize );
-        Node::DumpOutput( job, memErr.Get(), memErrSize );
+        Node::DumpOutput( job, memOut );
+        Node::DumpOutput( job, memErr );
     }
 
     if ( !ok )

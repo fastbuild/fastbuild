@@ -19,13 +19,13 @@ public:
 
     virtual bool IsAFile() const override { return true; }
 
-    static void HandleWarningsMSVC( Job * job, const AString & name, const char * data, uint32_t dataSize );
-    static void HandleWarningsClangGCC( Job * job, const AString & name, const char * data, uint32_t dataSize );
+    static void HandleWarningsMSVC( Job * job, const AString & name, const AString & data );
+    static void HandleWarningsClangGCC( Job * job, const AString & name, const AString & data );
 protected:
     friend class ObjectNode;
     virtual BuildResult DoBuild( Job * job ) override;
 
-    static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
+    static void DumpOutput( Job * job, const AString & buffer, const AString & name, bool treatAsWarnings = false );
 
     friend class Client;
 };
