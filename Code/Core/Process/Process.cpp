@@ -747,7 +747,8 @@ bool Process::ReadAllData( AString & outMem,
         }
 
         // read the new data
-        if ( read( handle, buffer.Get() + sizeSoFar, spaceInBuffer ) == -1 )
+        ssize_t result = read( handle, buffer.Get() + buffer.GetLength(), spaceInBuffer );
+        if ( result == -1 )
         {
             ASSERT( false ); // error!
             result = 0; // no bytes read
