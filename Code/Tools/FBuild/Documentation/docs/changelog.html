@@ -34,7 +34,7 @@
 <div class='newsitembody'>
     <b>Notes</b>
 	<ul>
-		<li>BFF directives (#if/#include etc) are now prorcessed in a pre-processor pass, consistent with C/C++. This fix means it is
+		<li>BFF directives (#if/#include etc) are now processed in a preprocessor pass, consistent with C/C++. This fix means it is
 		no longer possible to use variables inside include paths.</li>
 		<li>Unity order was potentially inconsistent between platforms, OSs, filesystems and locales. A fix for this may result in a change
 		of include order in Unity files.</li>
@@ -44,7 +44,7 @@
     <b>New</b>
     <ul>
 		<li>BFF syntax supports users defined functions</li>
-		<li>TextFile allows the generation of test files (Thanks to mkujawa)</li>
+		<li>TextFile allows the generation of text files (Thanks to mkujawa)</li>
 		<li>file_exists directive can be used with #if to detect the presence of files</li>
 		<li>-why command line option details the trigger for each thing that builds</li>
     </ul>
@@ -58,12 +58,12 @@
 		</ul>
 		<li>Project Generation:</li>
 		<ul>
-			<li>XCodeProjectGenerator propertly quotes strings containing '+' (Thanks to Javier Blazquez)</li>
+			<li>XCodeProjectGenerator properly quotes strings containing '+' (Thanks to Javier Blazquez)</li>
 			<li>Add missing documentation for several XCode project generation debugging settings</li>
 		</ul>
 		<li>Caching:</li>
 		<ul>
-			<li>-cacheinfo and -cachetrim work correcly on case-sensitive filesystems (Thanks to dummyunit)</li>
+			<li>-cacheinfo and -cachetrim work correctly on case-sensitive filesystems (Thanks to dummyunit)</li>
 			<li>Crash in LightCache when #includes via macros are encountered (Thanks to Francisco Facioni & Brian Burgin)</li>
 			<li>Fix LightCache missing dependency information when using macros (Thanks to Francisco Facioni)</li>
 			<li>If LightCache cannot handle a macro-based include, it will fall back to normal caching correctly</li>
@@ -107,8 +107,8 @@
 		</ul>
 		<li>Caching:</li>
 		<ul>
-			<li>Stronger compression can be enabled for cache artefacts via the command line (Thanks to Lambert Clara)</li>
-			<li>-cachecompressionlevel controls level of compression for cache artefacts</li>
+			<li>Stronger compression can be enabled for cache artifacts via the command line (Thanks to Lambert Clara)</li>
+			<li>-cachecompressionlevel controls level of compression for cache artifacts</li>
 			<li>LightCache emits reason for not being used when -cacheverbose is active</li>
 		</ul>
 		<li>BFF Parsing:</li>
@@ -117,7 +117,7 @@
 			<li>BFF parsing speed improved significantly for many scenarios</li>
 			<li>BFF includes are handled during preprocessing (consistent with C/C++)</li>
 			<li>Parsing errors relating to invalid characters avoid printing garbage</li>
-			<li>BFF parsing speed improved slightly by reducing memory allocaitons and string copying</li>
+			<li>BFF parsing speed improved slightly by reducing memory allocations and string copying</li>
 		</ul>
 		<li>ExecAlwaysShowOutput option allows Exec to alway print output (Thanks to Lambert Clara)
 		<li>Add .Environment option to TestNode (Thanks to Brian Burgin)

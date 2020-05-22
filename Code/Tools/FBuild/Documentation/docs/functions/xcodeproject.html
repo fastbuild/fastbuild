@@ -41,7 +41,7 @@
   // Input Options
   .ProjectInputPaths             // (optional) Path(s) containing files to include in project 
   .ProjectInputPathsExclude      // (optional) Path(s) to exclude from project
-  .ProjectPatternToExclude       // (optional) Pattern(s) for diles to exclude from project
+  .ProjectPatternToExclude       // (optional) Pattern(s) for files to exclude from project
   .ProjectFiles                  // (optional) File(s) to include in project
   .ProjectFilesToExclude         // (optional) File(s) to exclude from project
   .ProjectBasePath               // (optional) Base path(s) to use to build folder hierarchy in project
@@ -305,7 +305,7 @@
       
       <p><b>.ProjectConfigs</b> - Array of ProjectConfig Structure(s) - (Required)</p>
       <p>One or more build configuration must be specified. Each configuration can be selected
-      in the XCode UI and the various properties specify how to generare configuration info
+      in the XCode UI and the various properties specify how to generate configuration info
       for XCode.</p>
       Example:
       <div class='code'>.DebugConfig = [ ... ] // See below for options
@@ -334,7 +334,7 @@
       <hr>
       <p><b>.XCodeDebugWorkingDir</b> - String - (Optional)</p>
       <p>The working directory to be used when debugging this build configuration. If not specified,
-      the path to the exectuable created by .Target will be used.</p>
+      the path to the executable created by .Target will be used.</p>
       Example:
       <div class='code'>.DebugConfig = [ .XCodeDebugWorkingDir = 'path/path' ...</div>
 
