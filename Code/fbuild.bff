@@ -2,12 +2,16 @@
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// Windows Platform
+// Includes
 //------------------------------------------------------------------------------
+// Platforms
 #include "../External/SDK/GCC/GCC.bff"
 #include "../External/SDK/VisualStudio/VisualStudio.bff"
 #include "../External/SDK/Clang/Clang.bff"
 #include "../External/SDK/Windows/Windows.bff"
+
+// Helpers
+#include ".FASTBuild/HelperFunctions.bff"
 
 //------------------------------------------------------------------------------
 // Settings
@@ -16,7 +20,7 @@ Settings
 {
     #if __WINDOWS__
         #import TMP
-        .Environment    = { "PATH=$VS_PATH$",
+        .Environment    = { "PATH=$VS_PATH$;$WINDOWS_SDK_2019_PATH$",
                             "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
     #endif

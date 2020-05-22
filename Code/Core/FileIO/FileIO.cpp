@@ -1402,6 +1402,60 @@
     }
 #endif
 
+// IsWindowsLongPathSupportEnabled
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    /*static*/ bool FileIO::IsWindowsLongPathSupportEnabled()
+    {
+        // Return the cached value which is valid for the lifetime of the application
+        static bool cachedValue = IsWindowsLongPathSupportEnabledInternal();
+        return cachedValue;
+    }
+#endif
+
+// IsWindowsLongPathSupportEnabledInternal
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    /*static*/ bool FileIO::IsWindowsLongPathSupportEnabledInternal()
+    {
+        // Long Paths are available on Windows if:
+        //   a) A registry key is set
+        // AND
+        //   b) The application's manifest opts in to long paths
+        //
+        // When both requirements are met, existing Windows functions can seamlessly
+        // support longer paths.
+        //
+        // See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#enable-long-paths-in-windows-10-version-1607-and-later
+        //
+        // Out applications embed the manifest, so we can query the registry key
+        // to see if support is available.
+        //
+
+        // Open Registry Entry
+        HKEY key;
+        if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\FileSystem", 0, KEY_READ, &key ) != ERROR_SUCCESS )
+        {
+            return false; // Entry doesn't exit
+        }
+
+        // Read Value
+        DWORD value = 0;
+        DWORD valueSize = sizeof(DWORD);
+        const LONG result = ::RegQueryValueEx( key,
+                                                "LongPathsEnabled",
+                                                0,
+                                                nullptr,
+                                                reinterpret_cast<LPBYTE>( &value ),
+                                                &valueSize );
+
+        VERIFY( RegCloseKey( key ) == ERROR_SUCCESS );
+
+        // Was key found and set to 1 (enabled)?
+        return ( ( result == ERROR_SUCCESS ) && ( value == 1 ) );
+    }
+#endif
+
 // FileInfo::IsReadOnly
 //------------------------------------------------------------------------------
 bool FileIO::FileInfo::IsReadOnly() const
