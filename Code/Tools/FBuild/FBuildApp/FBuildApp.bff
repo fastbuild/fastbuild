@@ -93,7 +93,7 @@
 
     // Aliases
     //--------------------------------------------------------------------------
-    #include "../../../gen_default_aliases.bff"
+    CreateCommonAliases( .ProjectName )
 
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------
