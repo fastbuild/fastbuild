@@ -1,5 +1,6 @@
 // VisualStudio
 //------------------------------------------------------------------------------
+#if __WINDOWS__
 
 // Select desired Visual Studio version
 //------------------------------------------------------------------------------
@@ -31,3 +32,4 @@ Using( .VisualStudioSettings )
 Print( 'Using VS$VS_Version_HumanReadable$ (v$VS_Version$) from $VS_ToolchainPath$' )
 
 //------------------------------------------------------------------------------
+#endif

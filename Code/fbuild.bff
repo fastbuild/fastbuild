@@ -274,24 +274,26 @@ Settings
 //------------------------------------------------------------------------------
 // VisualStudio Project Generation
 //------------------------------------------------------------------------------
-.ProjectCommon =
-[
-    .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache ^$(ProjectName)-^$(Configuration)'
-    .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean ^$(ProjectName)-^$(Configuration)'
-    .OutputDirectory            = '^$(SolutionDir)\Temp'
-    .IntermediateDirectory      = '^$(SolutionDir)\Temp'
-    .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'
-    .Platform                   = 'x64'
-    .PlatformToolset            = '$VS_PlatformToolset$'
-]
+#if __WINDOWS__
+    .ProjectCommon =
+    [
+        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache ^$(ProjectName)-^$(Configuration)'
+        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean ^$(ProjectName)-^$(Configuration)'
+        .OutputDirectory            = '^$(SolutionDir)\Temp'
+        .IntermediateDirectory      = '^$(SolutionDir)\Temp'
+        .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'
+        .Platform                   = 'x64'
+        .PlatformToolset            = '$VS_PlatformToolset$'
+    ]
 
-.Project_x64_Debug        = [ Using( .ProjectCommon ) .Config = 'x64-Debug' ]
-.Project_x64_Analyze      = [ Using( .ProjectCommon ) .Config = 'x64-Analyze' ]
-.Project_x64_Profile      = [ Using( .ProjectCommon ) .Config = 'x64-Profile' ]
-.Project_x64_Release      = [ Using( .ProjectCommon ) .Config = 'x64-Release' ]
-.Project_x64Clang_Debug   = [ Using( .ProjectCommon ) .Config = 'x64Clang-Debug' ]
-.Project_x64Clang_Profile = [ Using( .ProjectCommon ) .Config = 'x64Clang-Profile' ]
-.Project_x64Clang_Release = [ Using( .ProjectCommon ) .Config = 'x64Clang-Release' ]
+    .Project_x64_Debug        = [ Using( .ProjectCommon ) .Config = 'x64-Debug' ]
+    .Project_x64_Analyze      = [ Using( .ProjectCommon ) .Config = 'x64-Analyze' ]
+    .Project_x64_Profile      = [ Using( .ProjectCommon ) .Config = 'x64-Profile' ]
+    .Project_x64_Release      = [ Using( .ProjectCommon ) .Config = 'x64-Release' ]
+    .Project_x64Clang_Debug   = [ Using( .ProjectCommon ) .Config = 'x64Clang-Debug' ]
+    .Project_x64Clang_Profile = [ Using( .ProjectCommon ) .Config = 'x64Clang-Profile' ]
+    .Project_x64Clang_Release = [ Using( .ProjectCommon ) .Config = 'x64Clang-Release' ]
+#endif
 
 // Configurations
 //------------------------------------------------------------------------------

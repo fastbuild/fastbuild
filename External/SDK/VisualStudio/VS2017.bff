@@ -1,17 +1,62 @@
 // Visual Studio 2017
 //------------------------------------------------------------------------------
-.VS2017_BasePath         = '$_CURRENT_BFF_DIR_$/2017/Community'
-.VS2017_Version          = '14.16.27023'
-#if CI_BUILD
-    .VS2017_BasePath     = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools'
+//
+// Detect VS2017
+//
+// We search in the following locations, in order of preference:
+//  1) Vendorized in External (side by side with this bff)
+//  2) Specified via environment variables (VS Command Prompt)
+//  3) Part of a Visual Studio installation (Program Files)
+//  4) Part of a BuildTools installation
+//
+#if file_exists( "2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe" )
+    //
+    // Use vendorized toolchain
+    //
+    .VS2017_BasePath        = '$_CURRENT_BFF_DIR_$/2017/Community/VC'
+    .VS2017_Version         = '14.16.27023'
+#else
+    //
+    // Use environment variable if available (VS Command Prompt)
+    //
+    #if exists( VS150COMNTOOLS )
+        #import VCINSTALLDIR
+        #import VCToolsVersion
+        .VS2017_BasePath        = .VCINSTALLDIR
+        .VS2017_Version         = .VCToolsVersion
+    #else
+        //
+        // Use Visual Studio installation
+        //
+        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe" )
+            .VS2017_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC'
+            .VS2017_Version         = '14.16.27023'
+        #else
+            //
+            // Use BuildTools installation
+            //
+            #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe" )
+                .VS2017_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC'
+                .VS2017_Version         = '14.16.27023'
+            #else
+                //
+                // Failed
+                //
+                Error( 'Unable to auto-detect VS2017 - please specify installation manually ' )
+                .VS2017_BasePath        = .Set_Path_Here    // <-- Set path here
+                .VS2017_Version         = .Set_Version_Here // <-- Set version here
+            #endif
+        #endif
+    #endif
 #endif
-.VS2017_ToolchainPath    = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$'
+
+.VS2017_ToolchainPath   = '$VS2017_BasePath$/Tools/MSVC/$VS2017_Version$'
 
 // X64 Compiler
 //------------------------------------------------------------------------------
 Compiler( 'Compiler-VS2017-x64' )
 {
-    .Root       = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64'
+    .Root       = '$VS2017_ToolchainPath$/bin/Hostx64/x64'
     .Executable = '$Root$/cl.exe'
     .ExtraFiles = { '$Root$/c1.dll'
                     '$Root$/c1xx.dll',
@@ -39,8 +84,9 @@ Compiler( 'Compiler-VS2017-x64' )
     .Platform                       = 'x64'
 
     // Paths
-    .VSIncludePaths                 = ' -I"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/include/"'
-    .VSLibPaths                     = ' /LIBPATH:"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/lib/x64"'
+    .VSIncludePaths                 = ' -I"$VS2017_ToolchainPath$/include/"'
+    .VSLibPaths                     = ' /LIBPATH:"$VS2017_ToolchainPath$/lib/x64"'
+    .VCPackagesPath                 = '$VS2017_BasePath$/../Common7/IDE/VC/vcpackages'
 
     // Compiler
     .Compiler                       = 'Compiler-VS2017-X64'
@@ -75,11 +121,11 @@ Compiler( 'Compiler-VS2017-x64' )
     .PCHOptions                     = ' $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
 
     // Librarian
-    .Librarian                      = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64/lib.exe'
+    .Librarian                      = '$VS2017_ToolchainPath$/bin/Hostx64/x64/lib.exe'
     .LibrarianOptions               = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
 
     // Linker
-    .Linker                         = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64/link.exe'
+    .Linker                         = '$VS2017_ToolchainPath$/bin/Hostx64/x64/link.exe'
     .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
     //CRT
@@ -97,7 +143,7 @@ Compiler( 'Compiler-VS2017-x64' )
 
 // PATH environment variable
 //------------------------------------------------------------------------------
-.VS_2017_PATH                       = '$VS2017_BasePath$/Common7/IDE/;$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64'
+.VS_2017_PATH                       = '$VS2017_BasePath$/Common7/IDE/;$VS2017_ToolchainPath$/bin/Hostx64/x64'
 
 // Platform Toolset for Project Generation
 //------------------------------------------------------------------------------
