@@ -96,6 +96,13 @@ ObjectListNode::ObjectListNode()
         return false; // GetCompilerNode will have emitted an error
     }
 
+    // Check for CSharp (this must use CSAssembly not ObjectList)
+    if ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CSHARP )
+    {
+        Error::Error_1503_CSharpCompilerShouldUseCSAssembly( iter, function );
+        return false;
+    }
+
     // .CompilerForceUsing
     // (ObjectListNode doesn't need to depend on this, but we want to check it so that
     //  we can raise errors during parsing instead of during the build when ObjectNode might be created)

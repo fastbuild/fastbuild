@@ -694,6 +694,22 @@
     FormatError( iter, 1502u, function, "LightCache only compatible with MSVC Compiler." );
 }
 
+// Error_1503_CSharpCompilerShouldUseCSAssembly
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1503_CSharpCompilerShouldUseCSAssembly( const BFFToken * iter,
+                                                                     const Function * function )
+{
+    FormatError( iter, 1503u, function, "C# compiler should use CSAssembly." );
+}
+
+// Error_1504_CSAssemblyRequiresACSharpCompiler
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1504_CSAssemblyRequiresACSharpCompiler( const BFFToken * iter,
+                                                                     const Function * function )
+{
+    FormatError( iter, 1504u, function, "CSAssembly requires a C# Compiler." );
+}
+
 // Error_1999_UserError
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1999_UserError( const BFFToken * iter,

@@ -862,6 +862,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         case CompilerNode::CompilerFamily::QT_RCC:          flags |= FLAG_QT_RCC;           break;
         case CompilerNode::CompilerFamily::VBCC:            flags |= FLAG_VBCC;             break;
         case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC:flags |= FLAG_ORBIS_WAVE_PSSLC; break;
+        case CompilerNode::CompilerFamily::CSHARP:          ASSERT( false );                break; // Guarded in ObjectListNode::Initialize
     }
 
     // Check MS compiler options

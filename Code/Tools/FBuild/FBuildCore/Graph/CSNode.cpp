@@ -69,6 +69,13 @@ CSNode::CSNode()
         return false; // GetCompilerNode will have emitted an error
     }
 
+    // Compiler must be C# compiler
+    if ( compilerNode->GetCompilerFamily() != CompilerNode::CompilerFamily::CSHARP )
+    {
+        Error::Error_1504_CSAssemblyRequiresACSharpCompiler( iter, function );
+        return false;
+    }
+
     // .CompilerInputPath
     Dependencies compilerInputPath;
     if ( !Function::GetDirectoryListNodeList( nodeGraph,

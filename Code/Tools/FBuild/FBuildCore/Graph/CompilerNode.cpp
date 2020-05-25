@@ -257,6 +257,14 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
             return true;
         }
 
+        // C# compiler
+        if ( compiler.EndsWithI( "csc.exe" ) ||
+             compiler.EndsWithI( "csc" ) )
+        {
+            m_CompilerFamilyEnum = CSHARP;
+            return true;
+        }
+
         // Auto-detect failed
         Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
         return false;
@@ -316,6 +324,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     if ( m_CompilerFamilyString.EqualsI( "orbis-wave-psslc" ) )
     {
         m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "csharp" ) )
+    {
+        m_CompilerFamilyEnum = CSHARP;
         return true;
     }
 

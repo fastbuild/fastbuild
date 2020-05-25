@@ -215,6 +215,10 @@ public:
                                                        const AString & badCompilerFamily );
     static void Error_1502_LightCacheIncompatibleWithCompiler( const BFFToken * iter,
                                                                const Function * function );
+    static void Error_1503_CSharpCompilerShouldUseCSAssembly( const BFFToken * iter,
+                                                              const Function * function );
+    static void Error_1504_CSAssemblyRequiresACSharpCompiler( const BFFToken * iter,
+                                                              const Function * function );
 
     // 1900-1999 : User-generate errors
     //------------------------------------------------------------------------------

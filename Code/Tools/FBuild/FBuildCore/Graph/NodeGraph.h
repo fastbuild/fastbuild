@@ -58,7 +58,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 148 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 149 };
 
     bool IsValid() const
     {
