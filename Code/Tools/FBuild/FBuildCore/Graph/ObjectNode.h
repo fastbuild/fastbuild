@@ -142,7 +142,7 @@ private:
     inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
-    static void HandleSystemFailures( Job * job, int result, const char * stdOut, const char * stdErr );
+    static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;

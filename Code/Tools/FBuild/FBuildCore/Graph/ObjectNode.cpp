@@ -2484,7 +2484,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     }
 
     // Handle special types of failures
-    HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
+    HandleSystemFailures( job, m_Result, m_Out, m_Err );
 
     if ( m_HandleOutput )
     {
@@ -2531,7 +2531,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
 // HandleSystemFailures
 //------------------------------------------------------------------------------
-/*static*/ void ObjectNode::HandleSystemFailures( Job * job, int result, const char * stdOut, const char * stdErr )
+/*static*/ void ObjectNode::HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr )
 {
     // Only remote compilation has special cases. We don't touch local failures.
     if ( job->IsLocal() )
@@ -2545,6 +2545,9 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         return;
     }
 
+    const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+
+    // General process failures
     #if defined( __WINDOWS__ )
         // If remote PC is shutdown by user, compiler can be terminated
         if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
@@ -2554,13 +2557,27 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             return;
         }
 
-        // If process is manually terminated by a user, consider that a system failure
-        // Only do so if there is no error output, as some compilers (like Clang) also
-        // use return code 1 for normal compilation failure
-        if ( ( result == 0x1 ) && ( stdErr == nullptr ) )
+        // When a process is terminated by a user on Windows, the return code can
+        // be 1. There seems to be no definitive way to differentiate this from
+        // a process exiting with return code 1, so we default to considering it a
+        // system failure, unless we can detect some specific situations.
+        if ( result == 0x1 )
         {
-            job->OnSystemError(); // task will be retried on another worker
-            return;
+            bool treatAsSystemError = true;
+
+            // Some compilers (like Clang) return 1 when there are compile errors
+            // and write those errors to stderr
+            // don't consider this a system failure if there are compile errors
+            if ( stdErr.IsEmpty() == false )
+            {
+                treatAsSystemError = false;
+            }
+
+            if ( treatAsSystemError )
+            {
+                job->OnSystemError(); // task will be retried on another worker
+                return;
+            }
         }
 
         // If DLLs are not correctly sync'd, add an extra message to help the user
@@ -2574,31 +2591,30 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             job->Error( "Remote failure: STATUS_DLL_NOT_FOUND (0xC0000135) - Check Compiler() settings!\n" );
             return;
         }
+    #endif
 
-        const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+    // Compiler specific failures
 
+    #if defined( __WINDOWS__ )
         // MSVC errors
         if ( objectNode->IsMSVC() )
         {
             // But we need to determine if it's actually an out of space
             // (rather than some compile error with missing file(s))
             // These error codes have been observed in the wild
-            if ( stdOut )
+            if ( stdOut.Find( "C1082" ) ||
+                 stdOut.Find( "C1085" ) ||
+                 stdOut.Find( "C1088" ) )
             {
-                if ( strstr( stdOut, "C1082" ) ||
-                     strstr( stdOut, "C1085" ) ||
-                     strstr( stdOut, "C1088" ) )
-                {
-                    job->OnSystemError();
-                    return;
-                }
+                job->OnSystemError();
+                return;
             }
 
             // Windows temp directories can have problems failing to open temp files
             // resulting in 'C1083: Cannot open compiler intermediate file:'
             // It uses the same C1083 error as a mising include C1083, but since we flatten
             // includes on the host this should never occur remotely other than in this context.
-            if ( stdOut && strstr( stdOut, "C1083" ) )
+            if ( stdOut.Find( "C1083" ) )
             {
                 job->OnSystemError();
                 return;
@@ -2608,7 +2624,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // using the 64bit toolchain. This failure can be intermittent and not
             // repeatable with the same code on a different machine, so we don't want it
             // to fail the build.
-            if ( stdOut && strstr( stdOut, "C1060" ) )
+            if ( stdOut.Find( "C1060" ) )
             {
                 // If either of these are present
                 //  - C1076 : compiler limit : internal heap limit reached; use /Zm to specify a higher limit
@@ -2616,8 +2632,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 // then the issue is related to compiler settings.
                 // If they are not present, it's a system error, possibly caused by system resource
                 // exhaustion on the remote machine
-                if ( ( strstr( stdOut, "C1076" ) == nullptr ) &&
-                     ( strstr( stdOut, "C3859" ) == nullptr ) )
+                if ( ( stdOut.Find( "C1076" ) == nullptr ) &&
+                     ( stdOut.Find( "C3859" ) == nullptr ) )
                 {
                     job->OnSystemError();
                     return;
@@ -2627,7 +2643,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // If the compiler crashed (Internal Compiler Error), treat this
             // as a system error so it will be retried, since it can alse be
             // the result of faulty hardware.
-            if ( stdOut && strstr( stdOut, "C1001" ) )
+            if ( stdOut.Find( "C1001" ) )
             {
                 job->OnSystemError();
                 return;
@@ -2637,41 +2653,37 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // (We check for this message additionally to handle other error codes
             //  that may not have been observed yet)
             // TODO:C Should we check for localized msg?
-            if ( stdOut && strstr( stdOut, "No space left on device" ) )
+            if ( stdOut.Find( "No space left on device" ) )
             {
                 job->OnSystemError();
                 return;
             }
         }
-
-        // Clang
-        if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) )
-        {
-            // When clang fails due to low disk space
-            // TODO:C Should we check for localized msg?
-            if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
-            {
-                job->OnSystemError();
-                return;
-            }
-        }
-
-        // GCC
-        if ( objectNode->GetFlag( ObjectNode::FLAG_GCC ) )
-        {
-            // When gcc fails due to low disk space
-            // TODO:C Should we check for localized msg?
-            if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
-            {
-                job->OnSystemError();
-                return;
-            }
-        }
-    #else
-        // TODO:LINUX TODO:MAC Implement remote system failure checks
-        (void)stdOut;
-        (void)stdErr;
     #endif
+
+    // Clang
+    if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) )
+    {
+        // When clang fails due to low disk space
+        // TODO:C Should we check for localized msg?
+        if ( stdErr.Find( "IO failure on output stream" ) )
+        {
+            job->OnSystemError();
+            return;
+        }
+    }
+
+    // GCC
+    if ( objectNode->GetFlag( ObjectNode::FLAG_GCC ) )
+    {
+        // When gcc fails due to low disk space
+        // TODO:C Should we check for localized msg?
+        if ( stdErr.Find( "No space left on device" ) )
+        {
+            job->OnSystemError();
+            return;
+        }
+    }
 }
 
 // ShouldUseDeoptimization
