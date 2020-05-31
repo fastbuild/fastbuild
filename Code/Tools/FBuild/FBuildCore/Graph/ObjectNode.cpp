@@ -2684,6 +2684,10 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             return;
         }
     }
+
+    #if !defined( __WINDOWS__) 
+        (void)stdOut; // No checks use stdOut outside of Windows right now
+    #endif
 }
 
 // ShouldUseDeoptimization
