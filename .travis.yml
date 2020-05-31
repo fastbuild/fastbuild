@@ -130,7 +130,7 @@ install:
     osx)     FN=FASTBuild-OSX-x64-v${DL_VER}.zip     FBUILD=FBuild ;;
     windows) FN=FASTBuild-Windows-x64-v${DL_VER}.zip FBUILD=FBuild.exe ;;
     esac
-  - wget http://fastbuild.org/downloads/v${DL_VER}/${FN}
+  - wget https://fastbuild.org/downloads/v${DL_VER}/${FN}
   - unzip ${FN}
   - chmod +x ./${FBUILD}
   # Set up some variables for convenience.
