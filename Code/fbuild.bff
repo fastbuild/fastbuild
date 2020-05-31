@@ -24,7 +24,6 @@ Settings
                             "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
     #endif
-    .AllowDBMigration_Experimental = true
 }
 
 //------------------------------------------------------------------------------
@@ -472,7 +471,7 @@ Alias( 'All+Tests' )
         //.ProjectConfigs             = .AllProjectConfigs_x64
 
         .ProjectConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = 'All-$Platform$-$BuildConfigName$' ]
@@ -489,7 +488,7 @@ Alias( 'All+Tests' )
         .ProjectBasePath            = .ProjectInputPaths
 
         .ProjectConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
@@ -511,7 +510,7 @@ Alias( 'All+Tests' )
         ]
 
         .ProjectConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) Using( .GenerateProjectsCommands ) ]
@@ -527,7 +526,7 @@ Alias( 'All+Tests' )
                               }
         .SolutionBuildProject = 'All-proj'
         .SolutionConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .SolutionConfig         = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
@@ -588,7 +587,7 @@ Alias( 'All+Tests' )
                                         'OSUI-xcodeproj'
                                         'TestFramework-xcodeproj' }
         .ProjectConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .ProjectConfig          = [ .Config = '$BuildConfigName$' .Target = 'All-x64OSX-$BuildConfigName$' ]
