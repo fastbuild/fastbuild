@@ -2841,6 +2841,7 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     ASSERT( IsClang() ); // Only necessary for Clang
     ASSERT( GetFlag( FLAG_UNITY ) ); // Only makes sense to for Unity
     ASSERT( job->IsDataCompressed() == false ); // Can't fixup compressed data
+    ASSERT( job->IsLocal() ); // Assuming we're doing this on the local machine (using FBuild singleton lower)
 
     // We'll walk the output and fix it up in-place
 
@@ -2859,6 +2860,26 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     // Find the first instance of the primary filename (this ensured we ignore any
     // injected "-include" stuff before that)
     char * pos = strstr( (char *)job->GetData(), srcFileName.Get() );
+    if ( pos == nullptr )
+    {
+        // If not found, try relative path
+        AStackString<> basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
+        PathUtils::EnsureTrailingSlash( basePath );
+
+        AStackString<> relativeFileName;
+        PathUtils::GetRelativePath( basePath, GetSourceFile()->GetName(), relativeFileName );
+        #if defined( __WINDOWS__ )
+            // Clang escapes backslashes, so we must do the same
+            relativeFileName.Replace( "\\", "\\\\" );
+        #endif
+        pos = strstr( (char *)job->GetData(), relativeFileName.Get() );
+
+        // Update pop directive string
+        popDirectiveString = " \"";
+        popDirectiveString += relativeFileName;
+        popDirectiveString += "\" 2"; // 2 is "pop" flag
+    }
+
     ASSERT( pos ); // TODO:A This fails because the path is now relative
 
     // Find top-level push/pop pairs. We don't want mess with nested directives

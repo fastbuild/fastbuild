@@ -47,6 +47,7 @@ private:
     void LinkMultiple() const;
     void LinkMultiple_InputFiles() const;
     void SortFiles() const;
+    void CacheUsingRelativePaths() const;
 };
 
 // Register Tests
@@ -69,6 +70,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( LinkMultiple )
     REGISTER_TEST( LinkMultiple_InputFiles )
     REGISTER_TEST( SortFiles )
+    REGISTER_TEST( CacheUsingRelativePaths )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -856,6 +858,104 @@ void TestUnity::SortFiles() const
 
     #undef SORT
     #undef CHECK
+}
+
+// CacheUsingRelativePaths
+//------------------------------------------------------------------------------
+void TestUnity::CacheUsingRelativePaths() const
+{
+    // Source files
+    const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestUnity/CacheUsingRelativePaths/";
+    const char * fileA = "File.cpp";
+    const char * fileB = "Subdir/Header.h";
+    const char * fileC = "fbuild.bff";
+    const char * files[] = { fileA, fileB, fileC };
+
+    // Dest paths
+    const char * dstPathA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/Code";
+    const char * dstPathB = "../tmp/Test/Unity/CacheUsingRelativePaths/B/Code";
+    const char * dstPaths[] = { dstPathA, dstPathB };
+
+    #if defined( __WINDOWS__ )
+        const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.obj";
+    #else
+        const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.o";
+    #endif
+
+    // Copy file structure to both destinations
+    for ( const char * dstPath : dstPaths )
+    {
+        for ( const char * file : files )
+        {
+            AStackString<> src, dst;
+            src.Format( "%s/%s", srcPath, file );
+            dst.Format( "%s/%s", dstPath, file );
+            TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
+            TEST_ASSERT( FileIO::FileCopy( src.Get(), dst.Get() ) );
+        }
+    }
+
+    // Build in path A, writing to the cache
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "fbuild.bff";
+        options.m_UseCacheWrite = true;
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Unity/CacheUsingRelativePaths/A/Code/";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
+    }
+
+    // Check some problematic cases in the object file
+    {
+        // Read obj file into memory
+        AString buffer;
+        {
+            FileStream f;
+            TEST_ASSERT( f.Open( objFileA ) );
+            buffer.SetLength( (uint32_t)f.GetFileSize() );
+            TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+            buffer.Replace( (char)0, ' ' ); // Make string seaches simpler
+        }
+
+        // Check __FILE__ paths are relative
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) );
+        #if defined( __WINDOWS__ )
+            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(.\\File.cpp)FILE_MACRO_END_2" ) );
+        #else
+            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(./File.cpp)FILE_MACRO_END_2" ) );
+        #endif
+    }
+
+    // Build in path B, reading from the cache
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "fbuild.bff";
+        options.m_UseCacheRead = true;
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Unity/CacheUsingRelativePaths/B/Code/";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
+    }
+
 }
 
 //------------------------------------------------------------------------------
