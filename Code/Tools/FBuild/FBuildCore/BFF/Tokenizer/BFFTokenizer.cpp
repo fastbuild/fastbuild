@@ -867,6 +867,9 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
     }
     argsIter++;
 
+    // We must escape ^ so they won't be swallowed when parsing
+    varValue.Replace( "^", "^^" );
+
     // Inject variable declaration
     AStackString<> varName( "." );
     varName += envVarToImport;

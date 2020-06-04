@@ -309,8 +309,18 @@ void TestBFFParsing::ImportDirective() const
     TEST_PARSE_FAIL( "#import",             "Error #1031" );
     TEST_PARSE_FAIL( "#import 'string'",    "Error #1031" );
 
+    // Invalid syntax
     Env::SetEnvVariable("BFF_TEST_IMPORT_VAR", AString("VALUE"));
     TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
+
+    // Ensure caret is not lost
+    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR2", AString("Value^With^Caret"));
+    TEST_PARSE_OK( "#import BFF_TEST_IMPORT_VAR2\n"
+                   ".Expected = 'Value^^With^^Caret'\n"
+                   "If( .BFF_TEST_IMPORT_VAR2 == .Expected )\n"
+                   "{\n"
+                   "    Print( 'Caret OK' )\n"
+                   "}",                     "Caret OK" );
 }
 
 // OnceDirective
