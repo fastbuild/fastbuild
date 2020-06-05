@@ -20,13 +20,13 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( DirectoryListNode, Node, MetaNone() )
-    REFLECT( m_Path,                    "Path",             MetaNone() )
-    REFLECT_ARRAY( m_Patterns,          "Patterns",         MetaNone() )
-    REFLECT_ARRAY( m_ExcludePaths,      "ExcludePaths",     MetaNone() )
-    REFLECT_ARRAY( m_FilesToExclude,    "FilesToExclude",   MetaNone() )
-    REFLECT_ARRAY( m_ExcludePatterns,   "ExcludePatterns",  MetaNone() )
-    REFLECT( m_Recursive,               "Recursive",        MetaNone() )
-    REFLECT( m_IncludeReadOnlyStatusInHash, "IncludeReadOnlyStatusInHash", MetaNone() )
+    REFLECT( m_Path,                    "Path",             MetaHidden() )
+    REFLECT_ARRAY( m_Patterns,          "Patterns",         MetaHidden() )
+    REFLECT_ARRAY( m_ExcludePaths,      "ExcludePaths",     MetaHidden() )
+    REFLECT_ARRAY( m_FilesToExclude,    "FilesToExclude",   MetaHidden() )
+    REFLECT_ARRAY( m_ExcludePatterns,   "ExcludePatterns",  MetaHidden() )
+    REFLECT( m_Recursive,               "Recursive",        MetaHidden() )
+    REFLECT( m_IncludeReadOnlyStatusInHash, "IncludeReadOnlyStatusInHash", MetaHidden() )
 REFLECT_END( DirectoryListNode )
 
 // CONSTRUCTOR

@@ -168,8 +168,7 @@ public:
     inline uint32_t GetIndex() const { return m_Index; }
 
     static void DumpOutput( Job * job,
-                            const char * data,
-                            uint32_t dataSize,
+                            const AString & output,
                             const Array< AString > * exclusions = nullptr );
 
     inline void     SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }

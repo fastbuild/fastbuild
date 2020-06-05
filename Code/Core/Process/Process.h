@@ -4,8 +4,11 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Types.h"
+
+// Forward Declarations
+//------------------------------------------------------------------------------
+class AString;
 
 // Process
 //------------------------------------------------------------------------------
@@ -28,8 +31,8 @@ public:
 
     // Read all data from the process until it exits
     // NOTE: Owner must free the returned memory!
-    bool ReadAllData( AutoPtr< char > & memOut, uint32_t * memOutSize,
-                      AutoPtr< char > & errOut, uint32_t * errOutSize,
+    bool ReadAllData( AString & memOut,
+                      AString & errOut,
                       uint32_t timeOutMS = 0 );
 
     #if defined( __WINDOWS__ )
@@ -45,9 +48,9 @@ private:
                                       const uint32_t processID,
                                       const uint64_t processCreationTime );
         static uint64_t GetProcessCreationTime( const void * hProc ); // HANDLE
-        void Read( void * handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
+        void Read( void * handle, AString & buffer );
     #else
-        void Read( int handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
+        void Read( int handle, AString & buffer );
     #endif
 
     void Terminate();

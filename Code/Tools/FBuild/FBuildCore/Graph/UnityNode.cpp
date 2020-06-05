@@ -42,6 +42,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT( m_PrecompiledHeader,       "UnityPCH",                             MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_Hidden,                  "Hidden",                               MetaOptional() )
+    REFLECT( m_UseRelativePaths_Experimental, "UseRelativePaths_Experimental",  MetaOptional() )
 
     // Internal state
     REFLECT_ARRAY( m_UnityFileNames,    "UnityFileNames",                       MetaHidden() + MetaIgnoreForComparison() )
@@ -49,8 +50,8 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
 REFLECT_END( UnityNode )
 
 REFLECT_STRUCT_BEGIN( UnityIsolatedFile, Struct, MetaNone() )
-    REFLECT( m_FileName,                "FileName",                             MetaNone() )
-    REFLECT( m_DirListOriginPath,       "DirListOriginPath",                    MetaNone() )
+    REFLECT( m_FileName,                "FileName",                             MetaHidden() )
+    REFLECT( m_DirListOriginPath,       "DirListOriginPath",                    MetaHidden() )
 REFLECT_END( UnityIsolatedFile )
 
 // CONSTRUCTOR (UnityIsolatedFile)
@@ -153,6 +154,7 @@ UnityNode::UnityNode()
     , m_IsolateWritableFiles( false )
     , m_MaxIsolatedFiles( 0 )
     , m_ExcludePatterns( 0, true )
+    , m_UseRelativePaths_Experimental( false )
     , m_IsolatedFiles( 0, true )
     , m_UnityFileNames( 0, true )
 {
@@ -287,7 +289,7 @@ UnityNode::~UnityNode()
     // Ensure dest path exists
     // NOTE: Normally a node doesn't need to worry about this, but because
     // UnityNode outputs files that do not match the node-name (and doesn't
-    // inherit from FileNoe), we have to handle it ourselves
+    // inherit from FileNode), we have to handle it ourselves
     // TODO:C Would be good to refactor things to avoid this special case
     if ( EnsurePathExistsForFile( m_OutputPath ) == false )
     {
@@ -305,8 +307,6 @@ UnityNode::~UnityNode()
     }
 
     FilterForceIsolated( files, m_IsolatedFiles );
-
-    // TODO:A Sort files for consistent ordering across file systems/platforms
 
     // get isolated files from list
     StackArray< AString > isolatedFilesFromList;
@@ -331,6 +331,14 @@ UnityNode::~UnityNode()
 
     Array< uint64_t > stamps( m_NumUnityFilesToCreate, false );
 
+    // Includes will be relative to root
+    AStackString<> includeBasePath;
+    if ( m_UseRelativePaths_Experimental )
+    {
+        includeBasePath = FBuild::Get().GetOptions().GetWorkingDir();
+        PathUtils::EnsureTrailingSlash( includeBasePath );
+    }
+
     // create each unity file
     for ( size_t i=0; i<m_NumUnityFilesToCreate; ++i )
     {
@@ -344,7 +352,16 @@ UnityNode::~UnityNode()
         if ( !m_PrecompiledHeader.IsEmpty() )
         {
             output += "#include \"";
-            output += m_PrecompiledHeader;
+            if ( m_UseRelativePaths_Experimental )
+            {
+                AStackString<> relativePath;
+                PathUtils::GetRelativePath( includeBasePath, m_PrecompiledHeader, relativePath );
+                output += relativePath;
+            }
+            else
+            {
+                output += m_PrecompiledHeader;
+            }
             output += "\"\r\n\r\n";
         }
 
@@ -420,8 +437,15 @@ UnityNode::~UnityNode()
                 numFilesActuallyIsolatedInThisUnity++;
             }
 
+            // Get relative file path
+            AStackString<> relativePath;
+            if ( m_UseRelativePaths_Experimental )
+            {
+                PathUtils::GetRelativePath( includeBasePath, file->GetName(), relativePath );
+            }
+
             // write pragma showing cpp file being compiled to assist resolving compilation errors
-            AStackString<> buffer( file->GetName().Get() );
+            AStackString<> buffer( m_UseRelativePaths_Experimental ? relativePath : file->GetName() );
             buffer.Replace( BACK_SLASH, FORWARD_SLASH ); // avoid problems with slashes in generated code
             #if defined( __LINUX__ )
                 output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
@@ -444,7 +468,14 @@ UnityNode::~UnityNode()
                                 //  to triggering the rebuild when switching -nounity on/off)
             }
             output += "#include \"";
-            output += file->GetName();
+            if ( m_UseRelativePaths_Experimental )
+            {
+                output += relativePath;
+            }
+            else
+            {
+                output += file->GetName();
+            }
             output += "\"\r\n\r\n";
         }
         output += "\r\n";

@@ -16,6 +16,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class BFFTokenRange;
+class BFFUserFunction;
 class FileStream;
 class Function;
 class NodeGraph;
@@ -64,6 +65,8 @@ private:
     bool ParseVariableDeclaration( BFFTokenRange & iter, const AString & varName, BFFStackFrame * frame );
     bool ParseFunction( BFFTokenRange & iter );
     bool ParseUnnamedScope( BFFTokenRange & iter );
+    bool ParseUserFunctionDeclaration( BFFTokenRange & iter );
+    bool ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFunction & function );
 
     bool FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBracedRange, const Function * function = nullptr ) const;
     bool FindBracedRangeRecurse( BFFTokenRange & iter ) const;
@@ -77,6 +80,7 @@ private:
 
     void CreateBuiltInVariables();
     void SetBuiltInVariable_CurrentBFFDir( const char * fileName );
+    BFFUserFunction * GetUserFunction( const AString & name );
 
     NodeGraph & m_NodeGraph;
 

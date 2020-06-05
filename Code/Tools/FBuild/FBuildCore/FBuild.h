@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFUserFunctions.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Helpers/FBuildStats.h"
@@ -86,6 +87,8 @@ public:
     bool AddFileExistsCheck( const AString & fileName );
     BFFFileExists & GetFileExistsInfo() { return m_FileExistsInfo; }
 
+    BFFUserFunctions & GetUserFunctions() { return m_UserFunctions; }
+
     void GetLibEnvVar( AString & libEnvVar ) const;
 
     // stats - read access
@@ -142,6 +145,7 @@ protected:
 
     Array< EnvironmentVarAndHash > m_ImportedEnvironmentVars;
     BFFFileExists m_FileExistsInfo;
+    BFFUserFunctions m_UserFunctions;
 };
 
 //------------------------------------------------------------------------------

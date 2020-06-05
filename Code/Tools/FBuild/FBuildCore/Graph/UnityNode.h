@@ -102,6 +102,7 @@ protected:
     AString m_IsolateListFile;
     Array< AString > m_ExcludePatterns;
     Array< AString > m_PreBuildDependencyNames;
+    bool m_UseRelativePaths_Experimental;
 
     // Temporary data
     Array< FileIO::FileInfo* > m_FilesInfo;

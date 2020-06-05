@@ -50,6 +50,7 @@ public:
         QT_RCC          = 8,
         VBCC            = 9,
         ORBIS_WAVE_PSSLC= 10,
+        CSHARP          = 11,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 

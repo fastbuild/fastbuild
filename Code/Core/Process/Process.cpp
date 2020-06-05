@@ -570,16 +570,10 @@ void Process::Detach()
 
 // ReadAllData
 //------------------------------------------------------------------------------
-bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
-                           AutoPtr< char > & errMem, uint32_t * errMemSize,
+bool Process::ReadAllData( AString & outMem,
+                           AString & errMem,
                            uint32_t timeOutMS )
 {
-    // we'll capture into these growing buffers
-    uint32_t outSize = 0;
-    uint32_t errSize = 0;
-    uint32_t outBufferSize = 0;
-    uint32_t errBufferSize = 0;
-
     Timer t;
 
     #if defined( __LINUX__ )
@@ -603,13 +597,13 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
             break;
         }
 
-        uint32_t prevOutSize = outSize;
-        uint32_t prevErrSize = errSize;
-        Read( m_StdOutRead, outMem, outSize, outBufferSize );
-        Read( m_StdErrRead, errMem, errSize, errBufferSize );
+        const uint32_t prevOutSize = outMem.GetLength();
+        const uint32_t prevErrSize = errMem.GetLength();
+        Read( m_StdOutRead, outMem );
+        Read( m_StdErrRead, errMem );
 
         // did we get some data?
-        if ( ( prevOutSize != outSize ) || ( prevErrSize != errSize ) )
+        if ( ( prevOutSize != outMem.GetLength() ) || ( prevErrSize != errMem.GetLength() ) )
         {
             #if defined( __LINUX__ )
                 // Reset sleep interval            
@@ -678,16 +672,13 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
         break; // all done
     }
 
-    // if owner asks for pointers, they now own the mem
-    if ( outMemSize ) { *outMemSize = outSize; }
-    if ( errMemSize ) { *errMemSize = errSize; }
     return true;
 }
 
 // Read
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void Process::Read( HANDLE handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize )
+    void Process::Read( HANDLE handle, AString & buffer )
     {
         // anything available?
         DWORD bytesAvail( 0 );
@@ -700,39 +691,25 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
             return;
         }
 
-        // will it fit in the buffer we have?
-        if ( ( sizeSoFar + bytesAvail ) > bufferSize )
+        // Will data fit in existing buffer?
+        const uint32_t sizeSoFar = buffer.GetLength();
+        const uint32_t newSize = ( sizeSoFar + bytesAvail );
+        if ( newSize > buffer.GetReserved() )
         {
-            // no - allocate a bigger buffer (also handles the first time with no buffer)
-
-            // TODO:B look at a new container type (like a linked list of 1mb buffers) to avoid the wasteage here
-            // The caller has to take a copy to avoid the overhead if they want to hang onto the data
-            // grow buffer in at least 16MB chunks, to prevent future reallocations
-            uint32_t newBufferSize = Math::Max< uint32_t >( sizeSoFar + bytesAvail, bufferSize + ( 16 * MEGABYTE ) );
-            char * newBuffer = (char *)ALLOC( newBufferSize + 1 ); // +1 so we can always add a null char
-            if ( buffer.Get() )
-            {
-                // transfer and free old buffer
-                memcpy( newBuffer, buffer.Get(), sizeSoFar );
-            }
-            buffer = newBuffer; // will take care of deletion of old buffer
-            bufferSize = newBufferSize;
-            buffer.Get()[ sizeSoFar ] = '\000';
+            // Expand buffer for new data in large chunks
+            const uint32_t newBufferSize = Math::Max< uint32_t >( newSize, buffer.GetReserved() + ( 16 * MEGABYTE ) );
+            buffer.SetReserved( newBufferSize );
         }
-
-        ASSERT( sizeSoFar + bytesAvail <= bufferSize ); // sanity check
 
         // read the new data
         DWORD bytesReadNow = 0;
         if ( !::ReadFile( handle, buffer.Get() + sizeSoFar, bytesAvail, (LPDWORD)&bytesReadNow, 0 ) )
         {
-            return;
+            ASSERT( false ); // error!
         }
-        ASSERT( bytesReadNow == bytesAvail );
-        sizeSoFar += bytesReadNow;
-
-        // keep data null char terminated for caller convenience
-        buffer.Get()[ sizeSoFar ] = '\000';
+        
+        // Update length
+        buffer.SetLength( sizeSoFar + bytesReadNow );
     }
 #endif
 
@@ -740,7 +717,7 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
 // Read
 //------------------------------------------------------------------------------
 #if defined( __LINUX__ ) || defined( __APPLE__ )
-    void Process::Read( int handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize )
+    void Process::Read( int handle, AString & buffer )
     {
         // any data available?
         timeval timeout;
@@ -761,40 +738,24 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
         }
 
         // how much space do we have left for reading into?
-        uint32_t spaceInBuffer = ( bufferSize - sizeSoFar );
+        const uint32_t spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
         if ( spaceInBuffer == 0 )
         {
-            // allocate a bigger buffer (also handles the first time with no buffer)
-
-            // TODO:B look at a new container type (like a linked list of 1mb buffers) to avoid the wasteage here
-            // The caller has to take a copy to avoid the overhead if they want to hang onto the data
-            // grow buffer in at least 16MB chunks, to prevent future reallocations
-            uint32_t newBufferSize = ( sizeSoFar + ( 16 * MEGABYTE ) );
-            char * newBuffer = (char *)ALLOC( newBufferSize + 1 ); // +1 so we can always add a null char
-            if ( buffer.Get() )
-            {
-                // transfer and free old buffer
-                memcpy( newBuffer, buffer.Get(), sizeSoFar );
-            }
-            buffer = newBuffer; // will take care of deletion of old buffer
-            bufferSize = newBufferSize;
-            spaceInBuffer = ( bufferSize - sizeSoFar );
-            buffer.Get()[ sizeSoFar ] = '\000';
+            // Expand buffer for new data in large chunks
+            const uint32_t newBufferSize = ( buffer.GetReserved() + ( 16 * MEGABYTE ) );
+            buffer.SetReserved( newBufferSize );
         }
 
         // read the new data
-        ssize_t result = read( handle, buffer.Get() + sizeSoFar, spaceInBuffer );
+        ssize_t result = read( handle, buffer.Get() + buffer.GetLength(), spaceInBuffer );
         if ( result == -1 )
         {
             ASSERT( false ); // error!
-            return;
+            result = 0; // no bytes read
         }
-
-        // account for newly read bytes
-        sizeSoFar += (uint32_t)result;
-
-        // keep data null char terminated for caller convenience
-        buffer.Get()[ sizeSoFar ] = '\000';
+        
+        // Update length
+        buffer.SetLength( buffer.GetLength() + (uint32_t)result );
     }
 #endif
 

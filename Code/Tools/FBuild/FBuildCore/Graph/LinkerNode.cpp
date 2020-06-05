@@ -224,11 +224,9 @@ LinkerNode::~LinkerNode()
         }
 
         // capture all of the stdout and stderr
-        AutoPtr< char > memOut;
-        AutoPtr< char > memErr;
-        uint32_t memOutSize = 0;
-        uint32_t memErrSize = 0;
-        p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+        AString memOut;
+        AString memErr;
+        p.ReadAllData( memOut, memErr );
 
         ASSERT( !p.IsRunning() );
         // Get result
@@ -290,8 +288,8 @@ LinkerNode::~LinkerNode()
         {
             if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
             {
-                if ( memOut.Get() ) { Node::DumpOutput( job, memOut.Get(), memOutSize ); }
-                if ( memErr.Get() ) { Node::DumpOutput( job, memErr.Get(), memErrSize ); }
+                Node::DumpOutput( job, memOut );
+                Node::DumpOutput( job, memErr );
             }
             else
             {
@@ -299,7 +297,7 @@ LinkerNode::~LinkerNode()
                 // (since compilation will fail anyway, and the output will be shown)
                 if ( GetFlag( LINK_FLAG_MSVC ) && !GetFlag( LINK_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
                 {
-                    HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+                    HandleWarningsMSVC( job, GetName(), memOut );
                 }
             }
             break; // success!
@@ -329,11 +327,9 @@ LinkerNode::~LinkerNode()
         }
 
         // capture all of the stdout and stderr
-        AutoPtr< char > memOut;
-        AutoPtr< char > memErr;
-        uint32_t memOutSize = 0;
-        uint32_t memErrSize = 0;
-        stampProcess.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+        AString memOut;
+        AString memErr;
+        stampProcess.ReadAllData( memOut, memErr );
         ASSERT( !stampProcess.IsRunning() );
 
         // Get result
@@ -348,8 +344,8 @@ LinkerNode::~LinkerNode()
                                        FBuild::Get().GetOptions().m_ShowCommandOutput;
         if ( showCommandOutput )
         {
-            if ( memOut.Get() ) { Node::DumpOutput( job, memOut.Get(), memOutSize ); }
-            if ( memErr.Get() ) { Node::DumpOutput( job, memErr.Get(), memErrSize ); }
+            Node::DumpOutput( job, memOut );
+            Node::DumpOutput( job, memErr );
         }
 
         // did the executable fail?

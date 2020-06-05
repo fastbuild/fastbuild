@@ -36,6 +36,14 @@
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
         }
 
+        // Windows Manifest
+        //--------------------------------------------------------------------------
+        #if __WINDOWS__
+            .ManifestFile = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$.manifest.tmp'
+            CreateManifest( '$ProjectName$-Manifest-$Platform$-$BuildConfigName$'
+                            .ManifestFile )
+        #endif
+
         // Executable
         //--------------------------------------------------------------------------
         Executable( '$ProjectName$-Exe-$Platform$-$BuildConfigName$' )
@@ -55,6 +63,11 @@
                                             + ' Ws2_32.lib'
                                             + ' User32.lib'
                                             + .CRTLibs_Static
+
+                // Manifest
+                .LinkerAssemblyResources    = .ManifestFile
+                .LinkerOptions              + ' /MANIFEST:EMBED'
+                                            + ' /MANIFESTINPUT:%3'
             #endif
             #if __LINUX__
                 .LinkerOptions              + ' -pthread -ldl -lrt'
@@ -90,7 +103,7 @@
 
     // Aliases
     //--------------------------------------------------------------------------
-    #include "../../../gen_default_aliases.bff"
+    CreateCommonAliases( .ProjectName )
 
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------

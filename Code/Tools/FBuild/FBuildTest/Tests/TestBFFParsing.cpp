@@ -50,6 +50,7 @@ private:
     void IfDirective() const;
     void IfExistsDirective() const;
     void IfFileExistsDirective() const;
+    void IfFileExistsDirective_RelativePaths() const;
     void IfBooleanOperators() const;
     void ElseDirective() const;
     void ElseDirective_Bad() const;
@@ -111,6 +112,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IfDirective )
     REGISTER_TEST( IfExistsDirective )
     REGISTER_TEST( IfFileExistsDirective )
+    REGISTER_TEST( IfFileExistsDirective_RelativePaths )
     REGISTER_TEST( IfBooleanOperators )
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
@@ -309,8 +311,18 @@ void TestBFFParsing::ImportDirective() const
     TEST_PARSE_FAIL( "#import",             "Error #1031" );
     TEST_PARSE_FAIL( "#import 'string'",    "Error #1031" );
 
+    // Invalid syntax
     Env::SetEnvVariable("BFF_TEST_IMPORT_VAR", AString("VALUE"));
     TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
+
+    // Ensure special characters are not lost
+    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR2", AString("Special^And$Special"));
+    TEST_PARSE_OK( "#import BFF_TEST_IMPORT_VAR2\n"
+                   ".Expected = 'Special^^And^$Special'\n"
+                   "If( .BFF_TEST_IMPORT_VAR2 == .Expected )\n"
+                   "{\n"
+                   "    Print( 'Special Characters OK' )\n"
+                   "}",                     "Special Characters OK" );
 }
 
 // OnceDirective
@@ -423,13 +435,21 @@ void TestBFFParsing::IfFileExistsDirective() const
 
     // Check changes are detected (or not) between builds
     {
+        const char * rootBFF    = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
         const char * fileName   = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
         const char * db         = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
-        FBuildTestOptions options;
-        options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff";
 
-        // Delete file fromprevious test run
+        // Copy root bff to temp dir
+        FileIO::SetReadOnly( rootBFF, false );
+        EnsureFileDoesNotExist( rootBFF );
+        EnsureDirExists("../tmp/Test/BFFParsing/FileExistsDirective/");
+        FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff", rootBFF );
+
+        // Delete extra file from previous test run
         EnsureFileDoesNotExist( fileName );
+
+        FBuildTestOptions options;
+        options.m_ConfigFile = rootBFF;
 
         // Parse bff, which checks if file exists
         {
@@ -501,6 +521,29 @@ void TestBFFParsing::IfFileExistsDirective() const
     }
 }
 
+// IfFileExistsDirective_RelativePaths
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
+{
+    // file_exists treats paths the same way as #include
+    // (paths are relative to the bff)
+    
+    FBuildTestOptions options;
+    options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Check for expected output
+    const AString & output( GetRecordedOutput() );
+    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ));
+    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ));
+    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ));
+    TEST_ASSERT( output.Find( "OK-4" ) );
+}
+
+// IfBooleanOperators
+//------------------------------------------------------------------------------
 void TestBFFParsing::IfBooleanOperators() const
 {
     // Failure cases
@@ -658,6 +701,7 @@ void TestBFFParsing::IfBooleanOperators() const
         "    #error Should not be here\n"
         "#endif" );
 }
+
 // ElseDirective
 //------------------------------------------------------------------------------
 void TestBFFParsing::ElseDirective() const

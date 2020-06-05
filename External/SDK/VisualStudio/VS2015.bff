@@ -38,6 +38,7 @@ Compiler( 'Compiler-VS2015-x64' )
     // Paths
     .VSIncludePaths                 = ' -I"$VS2015_BasePath$/VC/include/"'
     .VSLibPaths                     = ' /LIBPATH:"$VS2015_BasePath$/VC/lib/amd64"'
+    .VCPackagesPath                 = '$VS2015_BasePath$/VC/vcpackages'
 
     // Compiler
     .Compiler                       = 'Compiler-VS2015-X64'

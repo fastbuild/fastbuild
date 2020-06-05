@@ -40,6 +40,7 @@ int main( int, char *[] )
     REGISTER_TESTGROUP( TestTest )
     REGISTER_TESTGROUP( TestTextFile )
     REGISTER_TESTGROUP( TestUnity )
+    REGISTER_TESTGROUP( TestUserFunctions )
     REGISTER_TESTGROUP( TestVariableStack )
     REGISTER_TESTGROUP( TestWarnings )
 

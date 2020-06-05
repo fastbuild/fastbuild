@@ -379,6 +379,7 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
          ( identifier == BFF_KEYWORD_ELSE ) ||
          ( identifier == BFF_KEYWORD_EXISTS ) ||
          ( identifier == BFF_KEYWORD_FILE_EXISTS ) ||
+         ( identifier == BFF_KEYWORD_FUNCTION ) ||
          ( identifier == BFF_KEYWORD_IF ) ||
          ( identifier == BFF_KEYWORD_IMPORT ) ||
          ( identifier == BFF_KEYWORD_INCLUDE ) ||
@@ -621,7 +622,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
                 return false;
             }
         }
-        else if ( argsIter->IsKeyword(BFF_KEYWORD_FILE_EXISTS) )
+        else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
         {
             argsIter++; // consume keyword
             if ( HandleDirective_IfFileExists( argsIter, result ) == false )
@@ -629,7 +630,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
                 return false;
             }
         }
-        else if (argsIter->IsIdentifier())
+        else if ( argsIter->IsIdentifier() )
         {
             if ( HandleDirective_IfDefined( argsIter, result ) == false )
             {
@@ -809,7 +810,7 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
 
 // HandleDirective_IfFileExists
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_IfFileExists( BFFTokenRange & iter, bool & outResult )
+bool BFFTokenizer::HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool & outResult )
 {
     // Expect open bracket
     if ( iter->IsRoundBracket( '(' ) == false )
@@ -837,8 +838,11 @@ bool BFFTokenizer::HandleDirective_IfFileExists( BFFTokenRange & iter, bool & ou
     }
     iter++; // consume close )
 
+    AStackString<> includePath( fileName );
+    ExpandIncludePath( file, includePath );
+
     // check if file exists
-    outResult = FBuild::Get().AddFileExistsCheck( fileName );
+    outResult = FBuild::Get().AddFileExistsCheck( includePath );
     return true;
 }
 
@@ -961,6 +965,10 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
     }
     argsIter++;
 
+    // We must escape ^ and $ so they won't be interpretted as special chars
+    varValue.Replace( "^", "^^" );
+    varValue.Replace( "$", "^$" );
+
     // Inject variable declaration
     AStackString<> varName( "." );
     varName += envVarToImport;
@@ -996,20 +1004,7 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
 
     // TODO:B Check for empty string
 
-    // NOTE: Substitutions are not supported on includes
-
-    // Includes are relative to current file, unless full paths
-    if ( PathUtils::IsFullPath( include ) == false )
-    {
-        // Determine path from current file
-        const AString & currentFile = file.GetFileName();
-        const char * lastSlash = currentFile.FindLast( NATIVE_SLASH );
-        lastSlash = lastSlash ? lastSlash : currentFile.FindLast( OTHER_SLASH );
-        lastSlash = lastSlash ? ( lastSlash + 1 ): currentFile.Get(); // file only, truncate to empty
-        AStackString<> tmp( currentFile.Get(), lastSlash );
-        tmp += include;
-        include = tmp;
-    }
+    ExpandIncludePath( file, include );
 
     // Recursively tokenize
     const bool result = TokenizeFromFile( include, argsIter.GetCurrent() );
@@ -1147,6 +1142,24 @@ bool BFFTokenizer::GetDirective( const BFFFile & file, const char * & pos, AStri
     }
 
     return true;
+}
+
+// ExpandIncludePath
+//------------------------------------------------------------------------------
+void BFFTokenizer::ExpandIncludePath( const BFFFile & file, AString & includePath ) const
+{
+    // Includes are relative to current file, unless full paths
+    if ( PathUtils::IsFullPath( includePath ) == false )
+    {
+        // Determine path from current file
+        const AString & currentFile = file.GetFileName();
+        const char * lastSlash = currentFile.FindLast( NATIVE_SLASH );
+        lastSlash = lastSlash ? lastSlash : currentFile.FindLast( OTHER_SLASH );
+        lastSlash = lastSlash ? ( lastSlash + 1 ): currentFile.Get(); // file only, truncate to empty
+        AStackString<> tmp( currentFile.Get(), lastSlash );
+        tmp += includePath;
+        includePath = tmp;
+    }
 }
 
 //------------------------------------------------------------------------------

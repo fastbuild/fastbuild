@@ -123,14 +123,17 @@ stages:
 
 install:
   # Download and unpack archive for a release version.
-  - DL_VER=0.99
+  - DL_VER=1.00
   - |
     case "${TRAVIS_OS_NAME}" in
     linux)   FN=FASTBuild-Linux-x64-v${DL_VER}.zip   FBUILD=fbuild ;;
     osx)     FN=FASTBuild-OSX-x64-v${DL_VER}.zip     FBUILD=FBuild ;;
     windows) FN=FASTBuild-Windows-x64-v${DL_VER}.zip FBUILD=FBuild.exe ;;
     esac
-  - wget http://fastbuild.org/downloads/v${DL_VER}/${FN}
+  # TODO: Remove --no-check-certificate when Travis CI fixes their Linux nodes
+  # (they currently incorrectly complain about an expired certificate for fastbuild.org)
+  # (works fine outside of Travis, and even on OSX and Windows nodes in Travis)
+  - wget --no-check-certificate https://fastbuild.org/downloads/v${DL_VER}/${FN}
   - unzip ${FN}
   - chmod +x ./${FBUILD}
   # Set up some variables for convenience.

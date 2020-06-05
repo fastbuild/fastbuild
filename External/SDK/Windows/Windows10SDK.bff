@@ -46,4 +46,8 @@ Compiler( 'ResourceCompiler-Windows10' )
     .CompilerFamily             = 'custom'
 }
 
+// PATH environment variable
+//------------------------------------------------------------------------------
+.WINDOWS_SDK_2019_PATH          = '$Windows10_SDKBasePath$/bin/$Windows10_SDKVersion$/x64'
+
 //------------------------------------------------------------------------------
