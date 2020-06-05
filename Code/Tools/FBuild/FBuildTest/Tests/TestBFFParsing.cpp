@@ -313,14 +313,14 @@ void TestBFFParsing::ImportDirective() const
     Env::SetEnvVariable("BFF_TEST_IMPORT_VAR", AString("VALUE"));
     TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
 
-    // Ensure caret is not lost
-    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR2", AString("Value^With^Caret"));
+    // Ensure special characters are not lost
+    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR2", AString("Special^And$Special"));
     TEST_PARSE_OK( "#import BFF_TEST_IMPORT_VAR2\n"
-                   ".Expected = 'Value^^With^^Caret'\n"
+                   ".Expected = 'Special^^And^$Special'\n"
                    "If( .BFF_TEST_IMPORT_VAR2 == .Expected )\n"
                    "{\n"
-                   "    Print( 'Caret OK' )\n"
-                   "}",                     "Caret OK" );
+                   "    Print( 'Special Characters OK' )\n"
+                   "}",                     "Special Characters OK" );
 }
 
 // OnceDirective
