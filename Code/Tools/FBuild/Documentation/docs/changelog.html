@@ -28,6 +28,45 @@
 
 
 <div class='newsitemheader'>
+    v1.01&nbsp;<font color='#bbbbbb'>(6th-Jun-2020)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+	<ul>
+		<li>DB Version Changed : clean build will occur</li>
+		<li>Network protocol version has changed. Please update FBuildWorkers</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>[Windows] Terminated remote jobs are once again system failues (Regression in v1.0)</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>Environment variables imported with #import no longer have carets (^) swallowed</li>
+			<li>Environment variables containing $ imported with #import no longer cause parsing errors</li>
+		</ul>
+		<li>[Windows] Correctly handle long paths on Windows (if enabled at OS level)</li>
+		<li>Many documentation typos fixed (Thanks to Fedya Zentsev)</li>
+    </ul>
+	<b>Improvements</b>
+	<ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>[OSX][Linux] Remote Clang and GCC disk space erorrs are System Failures and are re-scheduled</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>BFF parsing speed improved significantly (as much as 2x)</li>
+		</ul>
+		<li>Unity node supports relative paths with UseRelativePaths_Experimental</li>
+		<li>Minor improvements to error documentation</li>
+		<li>CSharp compiler is auto detected, removing need to set "custom" .CompilerFamily</li>
+	</ul>
+</div>
+
+<div class='newsitemheader'>
     v1.00&nbsp;<font color='#bbbbbb'>(3rd-May-2020)</font>
 </div>
 <div class='newsitembody'>
