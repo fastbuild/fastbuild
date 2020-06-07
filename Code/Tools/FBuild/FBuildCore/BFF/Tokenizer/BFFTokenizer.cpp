@@ -38,7 +38,7 @@ namespace
     bool IsStringStart( const char c )      { return ( ( c == '\'' ) || ( c == '"') ); }
     bool IsVariableStart( const char c )    { return ( ( c == '.' ) || ( c == '^' ) ); }
     bool IsVariable( const char c )         { return IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsNumber( c ) || IsUnderscore( c );  }
-    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || (c == '&') || (c == '|')); }
+    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' )); }
     bool IsComma( const char c )            { return ( c == ',' ); }
     bool IsDirective( const char c )        { return ( c == '#' ); }
     void SkipWhitespace( const char * & pos )
@@ -577,41 +577,34 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
 
     enum { IF_NONE = 1, IF_AND = 2, IF_OR = 4, IF_NEGATE = 8 };
     bool ranOnce = false;
-    bool result;
     uint8_t operatorHistory[ BFFParser::MAX_OPERATOR_HISTORY ];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
-    uint8_t* currentOperator = operatorHistory;
-    int numOperators = 0;
+    uint32_t numOperators = 0;
 
-    while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator("&&") || argsIter->IsOperator("||") ) ) )
+    while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator( "&&" ) || argsIter->IsOperator( "||" ) ) ) )
     {
         uint32_t ifOperator = IF_NONE;
         if ( argsIter->IsOperator( "&&" ) || argsIter->IsOperator( "||" ) )
         {
             // check if this has been run once, to avoid
-            // expressions like #if &a
-            if (!ranOnce)
+            // expressions like #if &&a
+            if ( !ranOnce )
             {
                 Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( argsIter.GetCurrent() );
                 return false;
             }
-            if ( argsIter->IsOperator( "&&" ) )
-            {
-                argsIter++; // consume '&&'
-                ifOperator = IF_AND;
-            }
-            else
-            {
-                argsIter++; // consume '||'
-                ifOperator = IF_OR;
-            }
+
+            ifOperator = ( argsIter->IsOperator( "&&" ) ? IF_AND : IF_OR );
+            argsIter++; // consume operator
         }
 
         // Check for negation operator
-        if ( argsIter->IsOperator( "!" ) )
+        if ( argsIter->IsOperator( '!' ) )
         {
             ifOperator |= IF_NEGATE; // the condition will be inverted
             argsIter++; // consume negation operator
         }
+
+        bool result;
 
         // Keyword or identifier?
         if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
@@ -649,72 +642,50 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         {
             result = !( result );
         }
+
+        // First expression in sequence?
         if ( !ranOnce )
         {
-            //complexResult = result;
-            uint8_t r = 0;
-            if ( result )
-                r = 1;
-            *currentOperator++ = r;
-            numOperators++;
+            const uint8_t r = ( result ? 1u : 0u );
+            operatorHistory[ numOperators++ ] = r;
             ranOnce = true;
         }
         else
         {
-            // Record boolean results and operator
-            // Bit 0=result, others are used by the operators
-            if ( ifOperator & IF_AND )
+            // Record boolean operator
+            uint8_t r = (uint8_t)( ( ifOperator & IF_AND ) ? IF_AND : IF_OR );
+
+            // Merge in result
+            r |= ( result ? 1u : 0u );
+
+            // Store to history
+            operatorHistory[ numOperators++ ] = r;
+            
+            // Check for excessive complexity
+            if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
             {
-                // #if &&
-                uint8_t r = IF_AND;
-                if ( result )
-                    r |= 1;     // Result was true
-                *currentOperator++ = r;
-                numOperators++;
-                if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
-                {
-                    Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
-                    return false;
-                }
-            }
-            else // at this stage it can only be OR, no need to check
-            {
-                // #if ||
-                uint8_t r = IF_OR;
-                if ( result )
-                    r |= 1;     // Result was true
-                *currentOperator++ = r;
-                numOperators++;
-                if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
-                {
-                    Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
-                    return false;
-                }
-            }
+                Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
+                return false;
+            }            
         }
     }
     
     // Apply any && operators. Any valid expression isn't going to end with an operator, so we don't check that.
-    int i;
-    currentOperator = operatorHistory;
-    for ( i = 0; i < numOperators-1; i++ )
+    for ( uint32_t i = 0; i < ( numOperators - 1 ); i++ )
     {
-        if ( currentOperator[1] & IF_AND )
+        if ( operatorHistory[ i + 1 ] & IF_AND )
         {
             // Do the AND operation and store it in the right hand operator being tested
-            currentOperator[1] = ( uint8_t )( currentOperator[0] & currentOperator[1] & 1 );
+            operatorHistory[ i + 1 ] = ( uint8_t )( operatorHistory[ i ] & operatorHistory[ i + 1 ] );
             // Clear the left hand operator, its job is now done
-            currentOperator[0] = 0;
+            operatorHistory[ i ] = 0;
         }
-        currentOperator++;
     }
     // Apply any || operators
-    currentOperator = operatorHistory;
-    result = false;
-    for ( i = 0; i < numOperators; i++ )
+    bool result = false;
+    for ( uint32_t i = 0; i < numOperators; i++ )
     {
-        result |= ( *currentOperator & 1 );
-        currentOperator++;
+        result |= ( operatorHistory[ i ] & 1 );
     }
 
     // take note of start of "true" block

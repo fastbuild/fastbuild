@@ -400,16 +400,16 @@
 
 // Error_1046_IfExpressionCannotStartWithBooleanOperator
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1046_IfExpressionCannotStartWithBooleanOperator(const BFFToken* iter)
+/*static*/ void Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter )
 {
-    FormatError(iter, 1046u, nullptr, "If Expression Cannot Start With Boolean Operator (&&, ||, etc).");
+    FormatError( iter, 1046u, nullptr, "#if expression cannot start with boolean operator." );
 }
 
 // Error_1047_IfExpressionTooComplex
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1047_IfExpressionTooComplex(const BFFToken* iter)
+/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken* iter )
 {
-    FormatError(iter, 1047u, nullptr, "If Expression too complex. Up to %i boolean operators supported.", BFFParser::MAX_OPERATOR_HISTORY);
+    FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %i boolean operators supported.", BFFParser::MAX_OPERATOR_HISTORY );
 }
 
 // Error_1050_PropertyMustBeString

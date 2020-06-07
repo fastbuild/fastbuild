@@ -140,8 +140,8 @@ Examples:
 <p>
 #if / #else / #endif directives allow parts of a bff configuration file to be applied conditionally,
 depending on previous #define declarations. Limited support for the boolean operators && and || for
-logical AND and OR respectively is available. Conditions are parsed in a left-to-right order.
-Currently there is no support for parentheses within expressions.
+logical AND and OR respectively is available. Conditions are parsed in C precedence order (&& takes
+precedence over ||). Currently there is no support for parentheses within expressions.
 </p>
 Examples:
 <div class='code'>#if USE_MSVC
@@ -158,19 +158,19 @@ Examples:
 #endif
 </div>
 <p>Boolean operators examples:</p>
-<div class='code'>#define first_condition
-#define second_condition
+<div class='code'>#define FIRST_CONDITION
+#define SECOND_CONDITION
 
-#if first_confition && second_confition
-    Print('Both conditions are true')
+#if FIRST_CONDITION && SECOND_CONDITION
+    Print( 'Both conditions are true' )
 #endif
 
-#if first_condition || third_condition
-    Print('At least one of the two conditions is true')
+#if FIRST_CONDITION || SECOND_CONDITION
+    Print( 'At least one of the two conditions is true' )
 #endif
 
-#if first_condition && !third_condition
-    Print('Inversion also works with booleans')
+#if FIRST_CONDITION && !SECOND_CONDITION
+    Print( 'Inversion also works with booleans' )
 #endif
 </div>
 <p>The following pre-defined (and reserved) symbols are available for use:</p>
