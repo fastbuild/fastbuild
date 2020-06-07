@@ -625,7 +625,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
         else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
         {
             argsIter++; // consume keyword
-            if ( HandleDirective_IfFileExists( argsIter, result ) == false )
+            if ( HandleDirective_IfFileExists( file, argsIter, result ) == false )
             {
                 return false;
             }
