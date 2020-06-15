@@ -10,20 +10,6 @@
     #error Unknown Platform
 #endif
 
-// DLL Export
-//------------------------------------------------------------------------------
-// Add this inside your function to create an appropriate export for Windows
-//
-//    ADD_WINDOWS_DLL_EXPORT_FOR_THIS_FUNCTION
-//
-#if defined(__WINDOWS__)
-    #define STRINGIFY(x) #x
-    #define ADD_WINDOWS_DLL_EXPORT_FOR_THIS_FUNCTION \
-        _Pragma(STRINGIFY(comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)))
-#else
-    #define ADD_WINDOWS_DLL_EXPORT_FOR_THIS_FUNCTION
-#endif
-
 extern "C" {
 
 // CacheInit (Optional)
