@@ -2,19 +2,19 @@
 // Use the previously built cache plugin
 //
 //------------------------------------------------------------------------------
-#include "..\testcommon.bff"
+#include "../../testcommon.bff"
 Using( .StandardEnvironment )
 
 #if __WINDOWS__
-.CachePluginDLL = '$Out$/Test/CachePlugin/X64/CachePlugin.dll'
+.CachePluginDLL = '$Out$/Test/CachePlugin/Interface/CachePlugin.dll'
 #endif
 
 #if __LINUX__
-.CachePluginDLL = '$Out$/Test/CachePlugin/CachePlugin.so'
+.CachePluginDLL = '$Out$/Test/CachePlugin/Interface/CachePlugin.so'
 #endif
 
 #if __OSX__
-.CachePluginDLL = '$Out$/Test/CachePlugin/CachePlugin.so'
+.CachePluginDLL = '$Out$/Test/CachePlugin/Interface/CachePlugin.so'
 #endif
 
 .CachePath      = 'X:\' // passed to cache plugin
@@ -24,6 +24,6 @@ Settings {} // Activate standard settings
 //------------------------------------------------------------------------------
 ObjectList( 'TestFiles-Lib' )
 {
-    .CompilerInputFiles = { '$TestRoot$/Data/TestCachePlugin/TestA.cpp' }
-    .CompilerOutputPath = '$Out$/Test/CachePlugin/'
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCachePlugin/Interface/TestA.cpp' }
+    .CompilerOutputPath = '$Out$/Test/CachePlugin/Interface/'
 }

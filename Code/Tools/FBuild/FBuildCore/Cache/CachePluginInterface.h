@@ -12,32 +12,58 @@
 
 // DLL Export
 //------------------------------------------------------------------------------
-// Externally compiled DLL should define this appropriately
-// e.g.
-//#define CACHEPLUGIN_DLL_EXPORT __declspec(dllexport)
-
-#if !defined(__WINDOWS__) //TODO:Windows : Use unmangled name on windows.
-extern "C" {
+// Add this inside your function to create an appropriate export for Windows
+//
+//    ADD_WINDOWS_DLL_EXPORT_FOR_THIS_FUNCTION
+//
+#if defined(__WINDOWS__)
+    #define STRINGIFY(x) #x
+    #define ADD_WINDOWS_DLL_EXPORT_FOR_THIS_FUNCTION \
+        _Pragma(STRINGIFY(comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)))
+#else
+    #define ADD_WINDOWS_DLL_EXPORT_FOR_THIS_FUNCTION
 #endif
 
-// CacheInit (Required)
+extern "C" {
+
+// CacheInit (Optional)
 //------------------------------------------------------------------------------
 // Setup access to cache at start of build.
 //
 // In:  cachePath- cache path provided from bff config
 // Out: bool     - (return) success.  If false is returned, cache will be disabled
-typedef bool (STDCALL * CacheInitFunc)( const char * cachePath );
-#ifdef CACHEPLUGIN_DLL_EXPORT
-    CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheInit( const char * cachePath );
-#endif
+//typedef bool (STDCALL * CacheInitFunc)( const char * cachePath );
+using CacheInitFunc = bool (STDCALL *)( const char * cachePath );
+
+// CacheOutputFunc
+//------------------------------------------------------------------------------
+// A function the cache plugin can call to output the the stdout. Ensures that
+// output it correctly interleaved with other FASTBuild output. The plugin should
+// not implement this function, but rather should call it if/when needed. The
+// function pointer is provided via CacheInitEx below.
+using CacheOutputFunc = void (STDCALL*)( const char * message );
+
+// CacheInitEx (Optional)
+//------------------------------------------------------------------------------
+// Setup access to cache at start of build.
+//
+// In:  cachePath   - cache path provided from bff config
+//      cacheRead   - is -cacheread enabled for this build
+//      cacheWrite  - is -cachewrite enabled for this build
+//      cacheVerbose- is -cacheverbose enabled for this build
+//      userConfig  - user provided confuguration string (from .CachePluginDLLConfig)
+// Out: bool        - (return) success.  If false is returned, cache will be disabled
+using CacheInitExFunc = bool (STDCALL *)( const char * cachePath,
+                                          bool cacheRead,
+                                          bool cacheWrite,
+                                          bool cacheVerbose,
+                                          const char * userConfig,
+                                          CacheOutputFunc outputFunc );
 
 // CacheShutdown (Required)
 //------------------------------------------------------------------------------
 // Perform any required cleanup
-typedef void (STDCALL *CacheShutdownFunc)();
-#ifdef CACHEPLUGIN_DLL_EXPORT
-    CACHEPLUGIN_DLL_EXPORT void STDCALL CacheShutdown();
-#endif
+using CacheShutdownFunc = void (STDCALL *)();
 
 // CachePublish (Required)
 //------------------------------------------------------------------------------
@@ -47,10 +73,7 @@ typedef void (STDCALL *CacheShutdownFunc)();
 //      data     - data to store to cache
 //      dataSize - size in bytes of data to store
 // Out: bool     - (return) Indicates if item was stored to cache.
-typedef bool (STDCALL *CachePublishFunc)( const char * cacheId, const void * data, unsigned long long dataSize );
-#ifdef CACHEPLUGIN_DLL_EXPORT
-    CACHEPLUGIN_DLL_EXPORT bool STDCALL CachePublish( const char * cacheId, const void * data, unsigned long long dataSize );
-#endif
+using CachePublishFunc = bool (STDCALL *)( const char * cacheId, const void * data, unsigned long long dataSize );
 
 // CacheRetrieve (Required)
 //------------------------------------------------------------------------------
@@ -59,10 +82,7 @@ typedef bool (STDCALL *CachePublishFunc)( const char * cacheId, const void * dat
 // In:  cacheId  - string name of cache entry.
 // Out: data     - on success, retreived data
 //      dataSize - on success, size in bytes of retrieved data
-typedef bool (STDCALL *CacheRetrieveFunc)( const char * cacheId, void * & data, unsigned long long & dataSize );
-#ifdef CACHEPLUGIN_DLL_EXPORT
-    CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize );
-#endif
+using CacheRetrieveFunc = bool (STDCALL *)( const char * cacheId, void * & data, unsigned long long & dataSize );
 
 // CacheFreeMemory (Required)
 //------------------------------------------------------------------------------
@@ -70,20 +90,14 @@ typedef bool (STDCALL *CacheRetrieveFunc)( const char * cacheId, void * & data, 
 //
 // In: data     - memory previously allocated by CacheRetrieve
 //     dataSize - size in bytes of said memory
-typedef void (STDCALL *CacheFreeMemoryFunc)( void * data, unsigned long long dataSize );
-#ifdef CACHEPLUGIN_DLL_EXPORT
-    CACHEPLUGIN_DLL_EXPORT void STDCALL CacheFreeMemory( void * data, unsigned long long dataSize );
-#endif
+using CacheFreeMemoryFunc = void (STDCALL *)( void * data, unsigned long long dataSize );
 
 // CacheOutputInfo (Optional)
 //------------------------------------------------------------------------------
 // Print information about the contents of the cache
 //
 // In: showProgress - emit progress messages for long operations
-typedef bool (STDCALL *CacheOutputInfoFunc)( bool showProgress );
-#ifdef CACHEPLUGIN_DLL_EXPORT
-    CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheOutputInfo( bool showProgress );
-#endif
+using CacheOutputInfoFunc = bool (STDCALL *)( bool showProgress );
 
 // CacheTrim (Optional)
 //------------------------------------------------------------------------------
@@ -91,13 +105,8 @@ typedef bool (STDCALL *CacheOutputInfoFunc)( bool showProgress );
 //
 // In: showProgress - emit progress messages for long operations
 //     sizeMiB      - desired size in MiB
-typedef bool (STDCALL *CacheTrimFunc)( bool showProgress, unsigned int sizeMiB );
-#ifdef CACHEPLUGIN_DLL_EXPORT
-    CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheTrim( bool showProgress, unsigned int sizeMiB );
-#endif
+using CacheTrimFunc = bool (STDCALL *)( bool showProgress, unsigned int sizeMiB );
 
-#if !defined(__WINDOWS__)//TODO:Windows : Use unmangled name on windows.
 } //extern "C"
-#endif
 
 //------------------------------------------------------------------------------

@@ -54,6 +54,7 @@ BuildLogFile
 CachePath
 CachePathMountPoint
 CachePluginDLL
+CachePluginDLLConfig
 ClangFixupUnity_Disable
 ClangRewriteIncludes
 Compiler
