@@ -9,6 +9,7 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -31,7 +32,8 @@ class ToolManifest;
 class Client : public TCPConnectionPool
 {
 public:
-    Client( const Array< AString > & workerList,
+    Client( WorkerBrokerage & workerBrokerage,
+            const Array< WorkerBrokerage::WorkerInfo > & workerList,
             uint16_t port,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
@@ -59,7 +61,8 @@ private:
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
 
-    Array< AString >    m_WorkerList;   // workers to connect to
+    WorkerBrokerage &   m_WorkerBrokerage;
+    Array< WorkerBrokerage::WorkerInfo > m_WorkerList;   // workers to connect to
     volatile bool       m_ShouldExit;   // signal from main thread
     bool                m_DetailedLogging;
     Thread::ThreadHandle m_Thread;      // the thread to find and manage workers
@@ -72,7 +75,7 @@ private:
         explicit ServerState();
 
         const ConnectionInfo *  m_Connection;
-        AString                 m_RemoteName;
+        WorkerBrokerage::WorkerInfo m_RemoteWorker;
 
         Mutex                   m_Mutex;
         const Protocol::IMessage * m_CurrentMessage;
@@ -80,7 +83,7 @@ private:
         uint32_t                m_NumJobsAvailable;     // num jobs we've told this server we have available
         Array< Job * >          m_Jobs;                 // jobs we've sent to this server
 
-        bool                    m_Blacklisted;
+        bool                    m_Denylisted;
     };
     Mutex                   m_ServerListMutex;
     Array< ServerState >    m_ServerList;

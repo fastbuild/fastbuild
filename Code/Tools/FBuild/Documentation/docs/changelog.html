@@ -383,7 +383,7 @@
             <li>[OSX] Sockets don't trigger spurious SIG_PIPE errors</li>
             <li>[OSX] Port reuse updated for OS X behavior change (SO_REUSEADDR vs SO_REUSEPORT)</li>
             <li>Nagle's algorithm is disabled for return connection from server->client</li>
-            <li>Fix -distverbose stack overflow when remote worker is blacklisted (and possibly in other situations)</li>
+            <li>Fix -distverbose stack overflow when remote worker is deny listed (and possibly in other situations)</li>
             <li>Fix file handle leak on IO error transferring compiler files (Thanks to dummyunit)</li>
             <li>Remote system failure info is shown when -distverbose is used</li>
         </ul>
@@ -1412,7 +1412,7 @@ Fixes
 <ul>
   <li>Differentiate remote "system" failures from compilation failures
   <ul>
-    <li>a remote failure will cause the worker to be blacklisted and the task retried on another worker</li>
+    <li>a remote failure will cause the worker to be deny listed and the task retried on another worker</li>
     <li>remote failure on 3 different workers will fail as before (indicates a configuration problem)</li>
   </ul>
   <li>Error path fixup now handles "remark:" and "fatal error:" style messages</li>

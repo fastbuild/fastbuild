@@ -183,7 +183,8 @@ void FBuildWorkerOptions::ShowUsageError()
                        ;
 
     #if defined( __WINDOWS__ )
-        ::MessageBox( nullptr, msg, "FBuildWorker - Bad Command Line", MB_ICONERROR | MB_OK );
+        ::MessageBox( nullptr, msg, "FBuildWorker - Bad Command Line",
+            MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST | MB_OK );
     #else
         printf( "%s", msg );
         (void)msg; // TODO:MAC Fix missing MessageBox

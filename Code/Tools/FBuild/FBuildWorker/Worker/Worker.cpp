@@ -192,6 +192,8 @@ uint32_t Worker::WorkThread()
         }
     }
 
+    int err = 0;
+
     for ( ;; )
     {
         if ( InConsoleMode() )
@@ -206,7 +208,11 @@ uint32_t Worker::WorkThread()
             }
         }
 
-        UpdateAvailability();
+        err = UpdateAvailability();
+        if ( err != 0 )
+        {
+            break;
+        }
 
         UpdateUI();
 
@@ -224,7 +230,18 @@ uint32_t Worker::WorkThread()
 
     m_WorkerBrokerage.SetAvailability( false );
 
-    return 0;
+    if ( err == 0 )  // if not already error'd
+    {
+        const WorkerBrokerage::Status & brokerageStatus =
+            m_WorkerBrokerage.GetStatus();
+        if ( brokerageStatus.statusValue != WorkerBrokerage::BrokerageSuccess )
+        {
+            // skip display of error dialog here, since UI already shutdown
+            return (uint32_t)-2;
+        }
+    }
+
+    return err;
 }
 
 // HasEnoughDiskSpace
@@ -306,7 +323,7 @@ bool Worker::HasEnoughMemory()
 
 // UpdateAvailability
 //------------------------------------------------------------------------------
-void Worker::UpdateAvailability()
+int Worker::UpdateAvailability()
 {
     // Check disk space
     const bool hasEnoughDiskSpace = HasEnoughDiskSpace();
@@ -358,7 +375,18 @@ void Worker::UpdateAvailability()
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
 
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0 );
+    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    const WorkerBrokerage::Status & brokerageStatus =
+        m_WorkerBrokerage.GetStatus();
+    if ( brokerageStatus.statusValue != WorkerBrokerage::BrokerageSuccess )
+    {
+        AStackString<> msg;
+        m_WorkerBrokerage.GetStatusMsg( brokerageStatus, msg );
+        ErrorMessageString( msg.Get() );
+        return -2;
+    }
+
+    return 0;
 }
 
 // UpdateUI
@@ -505,6 +533,20 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     OUTPUT( "%s", buffer.Get() );
 }
 
+// ErrorMessageString
+//------------------------------------------------------------------------------
+void Worker::ErrorMessageString( MSVC_SAL_PRINTF const char * buffer ) const
+{
+    if ( InConsoleMode() )
+    {
+        // Forward to console
+        StatusMessage( "%s", buffer );
+        return;
+    }
+
+    Env::ShowMsgBox( "FBuildWorker", buffer );
+}
+
 // ErrorMessage
 //------------------------------------------------------------------------------
 void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
@@ -516,15 +558,7 @@ void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     buffer.VFormat( fmtString, args );
     va_end( args );
 
-    if ( InConsoleMode() )
-    {
-        // Forward to console
-        StatusMessage( "%s", buffer.Get() );
-        return;
-    }
-
-    // Display interactive Message Box
-    Env::ShowMsgBox( "FBuildWorker", buffer.Get() );
+    ErrorMessageString( buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

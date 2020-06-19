@@ -7,6 +7,7 @@
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 #include "Core/Strings/AString.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -58,9 +59,19 @@ public:
     void                ErrorPreformatted( const char * message );
     void                SetMessages( const Array< AString >& messages );
 
+    struct DenylistRecord
+    {
+        WorkerBrokerage::WorkerInfo workerInfo;
+        AString denylistReason;
+    };
+
     // Flag "system failures" - i.e. not a compilation failure, but some other problem (typically a remote worker misbehaving)
-    void OnSystemError() { ++m_SystemErrorCount; }
-    inline uint8_t GetSystemErrorCount() const { return m_SystemErrorCount; }
+    void OnSystemError(const int32_t errorCode) { m_SystemErrors.Append( errorCode ); }
+    inline size_t GetSystemErrorCount() const { return m_SystemErrors.GetSize(); }
+    inline const Array< int32_t > & GetSystemErrors() const { return m_SystemErrors; }
+    inline const Array< DenylistRecord > & GetDenylistRecords() const { return m_DenylistRecords; }
+    inline void AppendDenylistRecord( const DenylistRecord & denylistRecord ) {
+        m_DenylistRecords.Append( denylistRecord ); }
 
     // serialization for remote distribution
     void Serialize( IOStream & stream );
@@ -100,7 +111,9 @@ private:
     volatile bool       m_Abort             = false;
     bool                m_DataIsCompressed  = false;
     bool                m_IsLocal           = true;
-    uint8_t             m_SystemErrorCount  = 0; // On client, the total error count, on the worker a flag for the current attempt
+    Array< int32_t >    m_SystemErrors; // On client, the total errors; on worker, errors for the current attempt
+    Array< DenylistRecord > m_DenylistRecords;
+
     DistributionState   m_DistributionState = DIST_NONE;
     AString             m_RemoteName;
     AString             m_RemoteSourceRoot;

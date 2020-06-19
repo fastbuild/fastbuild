@@ -387,7 +387,8 @@ static bool IsStdOutRedirectedInternal()
 void Env::ShowMsgBox( const char * title, const char * msg )
 {
     #if defined( __WINDOWS__ )
-        MessageBoxA( nullptr, msg, title, MB_OK );
+        MessageBoxA( nullptr, msg, title,
+            MB_SETFOREGROUND | MB_TOPMOST | MB_OK );
     #elif defined( __APPLE__ )
         (void)title;
         (void)msg; // TODO:MAC Implement ShowMsgBox

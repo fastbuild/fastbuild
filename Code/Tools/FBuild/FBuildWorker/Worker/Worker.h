@@ -36,7 +36,7 @@ private:
     static uint32_t WorkThreadWrapper( void * userData );
     uint32_t WorkThread();
 
-    void UpdateAvailability();
+    int UpdateAvailability();
     void UpdateUI();
     void CheckForExeUpdate();
     bool HasEnoughDiskSpace();
@@ -45,6 +45,7 @@ private:
     inline bool InConsoleMode() const { return m_ConsoleMode; }
 
     void StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
+    void ErrorMessageString( MSVC_SAL_PRINTF const char * message ) const;
     void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
     bool                m_ConsoleMode;
