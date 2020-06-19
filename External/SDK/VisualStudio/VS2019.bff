@@ -1,13 +1,55 @@
 // Visual Studio 2019
 //------------------------------------------------------------------------------
-.VS2019_BasePath         = '$_CURRENT_BFF_DIR_$/2019/Community'
-.VS2019_Version          = '14.22.27905'
+//
+// Detect VS2019
+//
+// We search in the following locations, in order of preference:
+//  1) Vendorized in External (side by side with this bff)
+//  2) Specified via environment variables (VS Command Prompt)
+//  3) Part of a Visual Studio installation (Program Files)
+//
+#if file_exists( "2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe" )
+    //
+    // Use vendorized toolchain
+    //
+    .VS2019_BasePath        = '$_CURRENT_BFF_DIR_$/2019/Community/VC'
+    .VS2019_Version         = '14.25.28610'
+#else
+    //
+    // Use environment variable if available (VS Command Prompt)
+    //
+    #if exists( VS160COMNTOOLS )
+        #import VCINSTALLDIR
+        #import VCToolsVersion
+        .VS2019_BasePath        = .VCINSTALLDIR
+        .VS2019_Version         = .VCToolsVersion
+    #else
+        //
+        // Use Visual Studio installation
+        //
+        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe" )
+            .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC'
+            .VS2019_Version         = '14.25.28610'
+        #else
+            //
+            // Failed
+            //
+            Print( '-----------------------------------------------------------------------' )
+            Print( '- Unable to auto-detect VS2019 - please specify installation manually -' )
+            Print( '-----------------------------------------------------------------------' )
+            .VS2019_BasePath        = .Set_Path_Here    // <-- Set path here
+            .VS2019_Version         = .Set_Version_Here // <-- Set version here
+        #endif
+    #endif
+#endif
+
+.VS2019_ToolchainPath   = '$VS2019_BasePath$/Tools/MSVC/$VS2019_Version$'
 
 // X64 Compiler
 //------------------------------------------------------------------------------
 Compiler( 'Compiler-VS2019-x64' )
 {
-    .Root       = '$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$/bin/Hostx64/x64'
+    .Root       = '$VS2019_ToolchainPath$/bin/Hostx64/x64'
     .Executable = '$Root$/cl.exe'
     .ExtraFiles = { '$Root$/c1.dll'
                     '$Root$/c1xx.dll',
@@ -20,6 +62,7 @@ Compiler( 'Compiler-VS2019-x64' )
                     '$Root$/msvcp140.dll'
                     '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
+                    '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
                     '$Root$/1033/clui.dll'
                     '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
                   }
@@ -36,8 +79,9 @@ Compiler( 'Compiler-VS2019-x64' )
     .Platform                       = 'x64'
 
     // Paths
-    .VSIncludePaths                 = ' -I"$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$/include/"'
-    .VSLibPaths                     = ' /LIBPATH:"$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$/lib/x64"'
+    .VSIncludePaths                 = ' -I"$VS2019_ToolchainPath$/include/"'
+    .VSLibPaths                     = ' /LIBPATH:"$VS2019_ToolchainPath$/lib/x64"'
+    .VCPackagesPath                 = '$VS2019_BasePath$/../Common7/IDE/VC/vcpackages'
 
     // Compiler
     .Compiler                       = 'Compiler-VS2019-X64'
@@ -78,11 +122,11 @@ Compiler( 'Compiler-VS2019-x64' )
     .PCHOptions                     = ' $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
 
     // Librarian
-    .Librarian                      = '$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$/bin/Hostx64/x64/lib.exe'
+    .Librarian                      = '$VS2019_ToolchainPath$/bin/Hostx64/x64/lib.exe'
     .LibrarianOptions               = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
 
     // Linker
-    .Linker                         = '$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$/bin/Hostx64/x64/link.exe'
+    .Linker                         = '$VS2019_ToolchainPath$/bin/Hostx64/x64/link.exe'
     .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
     //CRT
@@ -100,7 +144,7 @@ Compiler( 'Compiler-VS2019-x64' )
 
 // PATH environment variable
 //------------------------------------------------------------------------------
-.VS_2019_PATH                       = '$VS2019_BasePath$/Common7/IDE/;$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$/bin/Hostx64/x64'
+.VS_2019_PATH                       = '$VS2019_ToolchainPath$/Hostx64/x64'
 
 // Platform Toolset for Project Generation
 //------------------------------------------------------------------------------
@@ -109,5 +153,19 @@ Compiler( 'Compiler-VS2019-x64' )
 // _MSC_VER
 //------------------------------------------------------------------------------
 .VS2019_MSC_VER                     = '1920'
+
+// VisualStudioSettings
+//------------------------------------------------------------------------------
+.VisualStudioSettings_VS2019 = 
+[
+    .VS_Version                     = .VS2019_Version
+    .VS_Version_HumanReadable       = '2019'
+    .VS_SolutionVersion             = '16'
+    .MSC_VER                        = .VS2019_MSC_VER
+    .VS_ToolchainPath               = .VS2019_ToolchainPath
+    .ToolChain_VS_Windows_X64       = .ToolChain_VS2019_Windows_X64
+    .VS_PATH                        = .VS_2019_PATH
+    .VS_PlatformToolset             = .VS_2019_PlatformToolset
+]
 
 //------------------------------------------------------------------------------

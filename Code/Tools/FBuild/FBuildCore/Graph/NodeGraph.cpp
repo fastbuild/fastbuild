@@ -398,6 +398,20 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         }
     }
 
+    // Files use in file_exists checks
+    BFFFileExists fileExistsInfo;
+    if ( fileExistsInfo.Load( stream ) == false )
+    {
+        return LoadResult::LOAD_ERROR;
+    }
+    bool added;
+    const AString * changedFile = fileExistsInfo.CheckForChanges( added );
+    if ( changedFile )
+    {
+        FLOG_WARN( "File used in file_exists was %s '%s' - BFF will be re-parsed\n", added ? "added" : "removed", changedFile->Get() );
+        bffNeedsReparsing = true;
+    }
+
     ASSERT( m_AllNodes.GetSize() == 0 );
 
     // Read nodes
@@ -434,6 +448,9 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
 
     // Everything OK - propagate global settings
     //------------------------------------------------
+
+    // file_exists files
+    FBuild::Get().GetFileExistsInfo() = fileExistsInfo;
 
     // Environment
     if ( envStringSize > 0 )
@@ -500,9 +517,7 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     for ( uint32_t i=0; i<numUsedFiles; ++i )
     {
         const AString & fileName = m_UsedFiles[ i ].m_FileName;
-        uint32_t fileNameLen( fileName.GetLength() );
-        stream.Write( fileNameLen );
-        stream.Write( fileName.Get(), fileNameLen );
+        stream.Write( fileName );
         uint64_t timeStamp( m_UsedFiles[ i ].m_TimeStamp );
         stream.Write( timeStamp );
         uint64_t dataHash( m_UsedFiles[ i ].m_DataHash );
@@ -540,6 +555,9 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
         const uint32_t libEnvVarHash = GetLibEnvVarHash();
         stream.Write( libEnvVarHash );
     }
+
+    // Write file_exists tracking info
+    FBuild::Get().GetFileExistsInfo().Save( stream );
 
     // Write nodes
     size_t numNodes = m_AllNodes.GetSize();
@@ -784,11 +802,11 @@ FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
     {
         AStackString< 512 > fullPath;
         CleanPath( fileName, fullPath );
-        node = FNEW( FileNode( fullPath, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD ) );
+        node = FNEW( FileNode( fullPath, Node::FLAG_ALWAYS_BUILD ) );
     }
     else
     {
-        node = FNEW( FileNode( fileName, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD) );
+        node = FNEW( FileNode( fileName, Node::FLAG_ALWAYS_BUILD ) );
     }
 
     AddNode( node );
@@ -1061,32 +1079,19 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
         for ( const Dependency * it = nodeToBuild->GetStaticDependencies().Begin(); it != end; ++it )
         {
             Node * n = it->GetNode();
-            if ( n->GetState() == Node::FAILED )
-            {
-                failedCount++;
-                continue;
-            }
-            else if ( n->GetState() == Node::UP_TO_DATE )
-            {
-                upToDateCount++;
-                continue;
-            }
-            if ( n->GetState() != Node::BUILDING )
+            if ( n->GetState() < Node::BUILDING )
             {
                 BuildRecurse( n, 0 );
+            }
 
-                // check for nodes that become up-to-date immediately (trivial build)
-                if ( n->GetState() == Node::UP_TO_DATE )
-                {
-                    upToDateCount++;
-                }
-
-                // Check for failure again propagatating overall state more quickly. This aallows failed
-                // builds to terminate moe quickly
-                if ( n->GetState() == Node::FAILED )
-                {
-                    failedCount++;
-                }
+            // check result of recursion (which may or may not be complete)
+            if ( n->GetState() == Node::UP_TO_DATE )
+            {
+                upToDateCount++;
+            }
+            else if ( n->GetState() == Node::FAILED )
+            {
+                failedCount++;
             }
         }
 
@@ -1214,7 +1219,10 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     }
     else
     {
-        FLOG_VERBOSE( "Up-To-Date '%s'", nodeToBuild->GetName().Get() );
+        if ( FLog::ShowVerbose() )
+        {
+            FLOG_BUILD_REASON( "Up-To-Date '%s'\n", nodeToBuild->GetName().Get() );
+        }
         nodeToBuild->SetState( Node::UP_TO_DATE );
     }
 }
@@ -1433,7 +1441,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                                 }
                             }
                         }
-                        else if( !isFullPath )
+                        else if ( !isFullPath )
                         {
                             *dst++ = '.';
                             *dst++ = '.';

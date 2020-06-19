@@ -19,7 +19,6 @@
 	        <div class='navbar'>
 	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
@@ -45,6 +44,9 @@ Builds a statically linked library.
   ; Options for librarian
   .Librarian                ; Librarian to collect intermediate objects
   .LibrarianOptions         ; Options for librarian
+  .LibrarianType            ; (optional) Specify the librarian type. Valid options include:
+                            ; auto, msvc, ar, ar-orbis, greenhills-ax
+                            ; Default is 'auto' (use the librarian executable name to detect)
   .LibrarianOutput          ; Output path for lib file
   .LibrarianAdditionalInputs; (optional) Additional inputs to merge into library
 

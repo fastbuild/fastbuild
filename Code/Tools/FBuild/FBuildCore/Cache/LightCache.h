@@ -6,6 +6,8 @@
 //------------------------------------------------------------------------------
 // Core
 #include <Core/Containers/Array.h>
+#include <Core/Env/MSVCStaticAnalysis.h>
+#include <Core/Env/Types.h>
 #include <Core/Process/Mutex.h>
 #include <Core/Strings/AString.h>
 
@@ -31,6 +33,9 @@ public:
                uint64_t & outSourceHash,         // Resulting hash of source code
                Array< AString > & outIncludes ); // Discovered dependencies
 
+    // Get text description of problem(s) if Hash() fails
+    const AString & GetErrors() const { return m_Errors; }
+
     static void ClearCachedFiles();
 
 protected:
@@ -48,17 +53,24 @@ protected:
     const IncludedFile *    ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic );
     const IncludedFile *    FileExists( const AString & fileName );
 
-    void SkipWhitespace( const char * & pos ) const;
-    bool IsAtEndOfLine( const char * pos ) const;
-    void SkipLineEnd( const char * & pos ) const;
-    void SkipToEndOfLine( const char * & pos ) const;
-    bool SkipToEndOfQuotedString( const char * & pos ) const;
+    void                    AddError( IncludedFile * file,
+                                      const char * pos,
+                                      MSVC_SAL_PRINTF const char * formatString,
+                                      ... ) FORMAT_STRING( 4, 5 );
+
+    static void SkipWhitespace( const char * & pos );
+    static bool IsAtEndOfLine( const char * pos );
+    static void SkipLineEnd( const char * & pos );
+    static void SkipToEndOfLine( const char * & pos );
+    static bool SkipToEndOfQuotedString( const char * & pos );
+
+    static void ExtractLine( const char * pos, AString & outLine );
 
     Array< AString >                m_IncludePaths;             // Paths to search for includes (from -I etc)
     Array< const IncludedFile * >   m_AllIncludedFiles;         // List of files seen during parsing
     Array< const IncludedFile * >   m_IncludeStack;             // Stack of includes, for file relative checks
     Array< const IncludeDefine * >  m_IncludeDefines;           // Macros describing files to include
-    bool                            m_ProblemParsing;           // Did we encounter some code we couldn't parse?
+    AString                         m_Errors;                   // Did we encounter some code we couldn't parse?
 };
 
 //------------------------------------------------------------------------------

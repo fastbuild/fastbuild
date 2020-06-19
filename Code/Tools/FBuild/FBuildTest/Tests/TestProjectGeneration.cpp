@@ -5,12 +5,12 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-// FBuild
-#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
-#include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
+#include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -49,6 +49,7 @@ private:
     void Solution_BuildAndDeploy_None() const;
     void Solution_BuildAndDeploy_Project() const;
     void Solution_BuildAndDeploy_PerSolutionConfig() const;
+    void Solution_Items() const;
 
     // VSExternalProj
     void VSExternalProj_ExternalProject() const;
@@ -85,6 +86,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( Solution_BuildAndDeploy_None )
     REGISTER_TEST( Solution_BuildAndDeploy_Project )
     REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
+    REGISTER_TEST( Solution_Items )
     REGISTER_TEST( VSExternalProj_ExternalProject )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( VSExternalProj_ExternalProjectWrongData )
@@ -410,14 +412,14 @@ void TestProjectGeneration::IntellisenseAndCodeSense() const
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.vcxproj" );
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.vcxproj" );
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.vcxproj" );
-    VCXProj_Intellisense_Check("../tmp/Test/ProjectGeneration/Intellisense/Copy.vcxproj");
+    VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Copy.vcxproj" );
 
     // Ensure XCode CodeSense info is present
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/ObjectList.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.xcodeproj/project.pbxproj" );
-    XCodeProj_CodeSense_Check("../tmp/Test/ProjectGeneration/Intellisense/Copy.xcodeproj/project.pbxproj");
+    XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Copy.xcodeproj/project.pbxproj" );
 }
 
 // VCXProj_Intellisense_Check
@@ -578,13 +580,13 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     }
 
     // Check we found them all
-    for ( size_t i=0; i<NUM_DEFINES; ++i )
+    for ( size_t i = 0; i < NUM_DEFINES; ++i )
     {
-        TEST_ASSERT( definesOk[ i ]  );
+        TEST_ASSERT( definesOk[ i ] );
     }
-    for ( size_t i=0; i<NUM_INCLUDES; ++i )
+    for ( size_t i = 0; i < NUM_INCLUDES; ++i )
     {
-        TEST_ASSERT( includesOk[ i ]  );
+        TEST_ASSERT( includesOk[ i ] );
     }
 }
 
@@ -1175,6 +1177,35 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     TEST_ASSERT( solutionData.Find( ".Build." ) == nullptr );
     TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
 }
+
+// Solution_Items
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_Items() const
+{
+    const AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_Items/solution_with_items.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( "Solution_with_items" ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode(  1,     1,      Node::SLN_NODE );
+    CheckStatsNode(  1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 6,     6 );
+}
+
 
 // VSExternalProj_ExternalProject
 //------------------------------------------------------------------------------

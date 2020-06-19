@@ -93,6 +93,7 @@ ExecNode::ExecNode()
                                               m_ExecInputExcludedFiles,
                                               m_ExecInputExcludePattern,
                                               m_ExecInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_ExecInputPattern,
                                               "ExecInputPath",
                                               execInputPaths ) )
@@ -161,7 +162,7 @@ ExecNode::~ExecNode() = default;
 {
     if ( m_ExecAlways )
     {
-        FLOG_VERBOSE( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
+        FLOG_BUILD_REASON( "Need to build '%s' (ExecAlways = true)\n", GetName().Get() );
         return true;
     }
     return Node::DetermineNeedToBuild( deps );
@@ -199,11 +200,9 @@ ExecNode::~ExecNode() = default;
     }
 
     // capture all of the stdout and stderr
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+    AString memOut;
+    AString memErr;
+    p.ReadAllData( memOut, memErr );
 
     // Get result
     int result = p.WaitForExit();
@@ -218,8 +217,8 @@ ExecNode::~ExecNode() = default;
         m_ExecAlwaysShowOutput ||
         FBuild::Get().GetOptions().m_ShowCommandOutput )
     {
-        Node::DumpOutput( job, memOut.Get(), memOutSize );
-        Node::DumpOutput( job, memErr.Get(), memErrSize );
+        Node::DumpOutput( job, memOut );
+        Node::DumpOutput( job, memErr );
     }
 
     // did the executable fail?
@@ -233,9 +232,9 @@ ExecNode::~ExecNode() = default;
     {
         FileStream f;
         f.Open( m_Name.Get(), FileStream::WRITE_ONLY );
-        if (memOut.Get())
+        if ( memOut.IsEmpty() == false )
         {
-            f.WriteBuffer(memOut.Get(), memOutSize);
+            f.WriteBuffer( memOut.Get(), memOut.GetLength() );
         }
 
         f.Close();

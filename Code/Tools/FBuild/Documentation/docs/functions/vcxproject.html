@@ -19,7 +19,6 @@
 	        <div class='navbar'>
 	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
@@ -45,7 +44,7 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
   .ProjectFiles                   // (optional) List of files to include in project
   .ProjectFilesToExclude          // (optional) List of files to exclude from project
   .ProjectBasePath                // (optional) Base path(s) for root folder(s) in project
-  .ProjectFileTypes               // (optional) List of filters to overide base file types (see below)
+  .ProjectFileTypes               // (optional) List of filters to override base file types (see below)
 
   // Build Config Options
   .ProjectConfigs                 // (optional) List of project configurations, see below for details.
@@ -287,7 +286,7 @@ Example:
 <div class='newsitembody'>
 
       <p><b>.ProjectReferences</b> - String or ArrayOfStrings - (Optional)</p>
-      <p>References to assemblies can be specified.  This may be necessary if mixing C#, Mangaged C++ and C++ projects.</p>
+      <p>References to assemblies can be specified.  This may be necessary if mixing C#, Managed C++ and C++ projects.</p>
       Example:
 <div class='code'>.ProjectReferences = 'System.Core'</div>
       Example:

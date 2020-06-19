@@ -12,8 +12,8 @@
 #include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
 #include "Core/Reflection/ReflectedProperty.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 #include "Core/Tracing/Tracing.h"
 
 // System

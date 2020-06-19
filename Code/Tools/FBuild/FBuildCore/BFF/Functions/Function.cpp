@@ -472,6 +472,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                                     const Array< AString > & filesToExclude,
                                                     const Array< AString > & excludePatterns,
                                                     bool recurse,
+                                                    bool includeReadOnlyStatusInHash,
                                                     const Array< AString > * patterns,
                                                     const char * inputVarName,
                                                     Dependencies & nodes )
@@ -500,7 +501,14 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
 
         // get node for the dir we depend on
         AStackString<> name;
-        DirectoryListNode::FormatName( path, patterns, recurse, excludePaths, filesToExcludeCleaned, excludePatterns, name );
+        DirectoryListNode::FormatName( path,
+                                       patterns,
+                                       recurse,
+                                       includeReadOnlyStatusInHash,
+                                       excludePaths,
+                                       filesToExcludeCleaned,
+                                       excludePatterns,
+                                       name );
         Node * node = nodeGraph.FindNode( name );
         if ( node == nullptr )
         {
@@ -515,6 +523,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
             dln->m_ExcludePaths = excludePaths;
             dln->m_FilesToExclude = filesToExcludeCleaned;
             dln->m_ExcludePatterns = excludePatterns;
+            dln->m_IncludeReadOnlyStatusInHash = includeReadOnlyStatusInHash;
             if ( !dln->Initialize( nodeGraph, iter, function ) )
             {
                 return false; // Initialize will have emitted an error

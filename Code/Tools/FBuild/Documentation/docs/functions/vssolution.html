@@ -19,7 +19,6 @@
 	        <div class='navbar'>
 	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
@@ -69,7 +68,8 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
 //---------------------------------------------------
 [
   .Path                               // Folder path in Solution
-  .Projects                           // Project(s) to store in this folder
+  .Projects                           // (optional) Project(s) to include in this folder
+  .Items                              // (optional) Solution Item(s) (files) to include in this folder
 ]
 
 // SolutionDependencies - structs in the following format
@@ -165,12 +165,14 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
     <div class='newsitembody'>
       
       <p><b>.SolutionFolders</b> - Array of SolutionFolder Structure(s) - (Optional)</p>
-      <p>Projects within a Solution can be organized into folders.</p>
+      <p>Projects and solution items within a Solution can be organized into folders. Folders may
+	  contain projects and/or items, or can be empty.</p>
       Example:
       <div class='code'>.FolderA =
 [
   .Path      = 'Libraries'
   .Projects  = { 'LibraryA-proj', 'LibraryB-proj' }
+  .Items     = { 'rel_path_to/item_file_1.txt', 'rel_path_to/item_file_2.ext' }
 ]
 .FolderB = 
 [
@@ -194,10 +196,10 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
   	  <p><font color=red>For simple solutions, this option is typically not necessary.</font></p>
       <p>For more complex Solutions, specifying artificial SolutionDependencies may be useful (depending on the desired F5 behaviour).
       For example, in Solutions with multiple executables, only one of the executables should be listed
-      as a .SolutionBuildProject (to prevent mutliple concurrent invocations of FASTBuild).  However, (because of what is 
+      as a .SolutionBuildProject (to prevent multiple concurrent invocations of FASTBuild).  However, (because of what is 
       arguably a bug in Visual Studio) only when this project (the "primary" project) is the active project, will F5 trigger 
       an up-to-date build check on the target automatically before running. If you want this automatic check on other targets
-      (rather than having to manually build the Project or Solution), you have to artifically make any "non-primary" projects 
+      (rather than having to manually build the Project or Solution), you have to artificially make any "non-primary" projects 
       depend on the "primary" executable.</p>
       Example:
       <div class='code'>.Deps =

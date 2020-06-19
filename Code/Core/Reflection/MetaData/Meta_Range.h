@@ -18,6 +18,7 @@ public:
 
     inline int32_t GetMin() const { return m_Min; }
     inline int32_t GetMax() const { return m_Max; }
+
 protected:
     int32_t m_Min;
     int32_t m_Max;

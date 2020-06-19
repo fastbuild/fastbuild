@@ -1,6 +1,6 @@
 // Clang 7.x.x
 //------------------------------------------------------------------------------
-.Clang7_BasePath     = '../External/SDK/Clang/Windows/7.0.1'
+.Clang7_BasePath     = '$_CURRENT_BFF_DIR_$/7.0.1'
 #if CI_BUILD
     .Clang7_BasePath = 'C:\Program Files\LLVM'
 #endif
@@ -11,6 +11,11 @@ Compiler( 'Compiler-Clang7' )
 {
     .Root                           = '$Clang7_BasePath$'
     .Executable                     = '$Root$\bin\clang++.exe'
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif
 }
 
 // ToolChain

@@ -398,6 +398,20 @@
     FormatError( iter, 1045u, nullptr, "Extraneous token(s) following '%s' directive.", directiveName );
 }
 
+// Error_1046_IfExpressionCannotStartWithBooleanOperator
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter )
+{
+    FormatError( iter, 1046u, nullptr, "#if expression cannot start with boolean operator." );
+}
+
+// Error_1047_IfExpressionTooComplex
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken* iter )
+{
+    FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %i boolean operators supported.", BFFParser::MAX_OPERATOR_HISTORY );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFToken * iter,
@@ -531,6 +545,54 @@
                                         token );
 }
 
+// Error_1107_ExpectedFunctionNameFollowingFunctionKeyword
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1107_ExpectedFunctionNameFollowingFunctionKeyword( const BFFToken * iter )
+{
+    FormatError( iter, 1107u, nullptr, "Expected function name following 'function' keyword." );
+}
+
+// Error_1108_FunctionAlreadyDefined
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1108_FunctionAlreadyDefined( const BFFToken * iter )
+{
+    FormatError( iter, 1108u, nullptr, "Function '%s' already defined.",
+                                       iter->GetValueString().Get() );
+}
+
+// Error_1109_FunctionArgumentAlreadyDefined
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1109_FunctionArgumentAlreadyDefined( const BFFToken * iter )
+{
+    FormatError( iter, 1109u, nullptr, "Function argument '%s' is already defined.",
+                                       iter->GetValueString().Get() );
+}
+
+// Error_1110_ExpectedArgumentBlockForFunctionCall
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1110_ExpectedArgumentBlockForFunctionCall( const BFFToken * iter )
+{
+    FormatError( iter, 1110u, nullptr, "Expected argument block following function call." );
+}
+
+// Error_1111_FunctionCallArgumentMismatch
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1111_FunctionCallArgumentMismatch( const BFFToken * iter,
+                                                                uint32_t numArgsProvided,
+                                                                uint32_t numArgsExpected )
+{
+    FormatError( iter, 1111u, nullptr, "Function call does not take %u args (it expects %u args).",
+                                       numArgsProvided,
+                                       numArgsExpected );
+}
+
+// Error_1112_FunctionCallExpectedArgument
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1112_FunctionCallExpectedArgument( const BFFToken * iter )
+{
+    FormatError( iter, 1112u, nullptr, "Function call arguments should be literals or variables." );
+}
+
 // Error_1200_ExpectedVar // TODO:C Remove (Deprecated by 1007)
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1200_ExpectedVar( const BFFToken * iter, const Function * function )
@@ -644,6 +706,22 @@
                                                                        const Function * function )
 {
     FormatError( iter, 1502u, function, "LightCache only compatible with MSVC Compiler." );
+}
+
+// Error_1503_CSharpCompilerShouldUseCSAssembly
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1503_CSharpCompilerShouldUseCSAssembly( const BFFToken * iter,
+                                                                     const Function * function )
+{
+    FormatError( iter, 1503u, function, "C# compiler should use CSAssembly." );
+}
+
+// Error_1504_CSAssemblyRequiresACSharpCompiler
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1504_CSAssemblyRequiresACSharpCompiler( const BFFToken * iter,
+                                                                     const Function * function )
+{
+    FormatError( iter, 1504u, function, "CSAssembly requires a C# Compiler." );
 }
 
 // Error_1999_UserError

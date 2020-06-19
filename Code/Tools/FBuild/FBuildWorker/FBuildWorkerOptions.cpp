@@ -4,6 +4,8 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FBuildWorkerOptions.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // Core
@@ -46,7 +48,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 
     // Check each token
     const AString * const end = tokens.End();
-    for ( const AString * it=tokens.Begin(); it != end; ++it )
+    for ( const AString * it = tokens.Begin(); it != end; ++it )
     {
         const AString & token = *it;
         #if defined( __WINDOWS__ ) || defined( __OSX__ )

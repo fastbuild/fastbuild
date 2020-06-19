@@ -8,6 +8,11 @@ Compiler( 'Compiler-Clang6' )
 {
     .Root                           = '$Clang6_BasePath$'
     .Executable                     = '$Root$/clang'
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif
 }
 
 // ToolChain

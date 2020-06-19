@@ -142,8 +142,12 @@ private:
     inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
+<<<<<<< HEAD
     static void HandleSystemFailures( Job * job, int result, const char * stdOut, const char * stdErr );
     static bool IsBlacklistSystemError( int result );
+=======
+    static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
+>>>>>>> upstream/dev
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;
@@ -172,19 +176,15 @@ private:
         inline int                      GetResult() const { return m_Result; }
 
         // access output/error
-        inline const AutoPtr< char > &  GetOut() const { return m_Out; }
-        inline uint32_t                 GetOutSize() const { return m_OutSize; }
-        inline const AutoPtr< char > &  GetErr() const { return m_Err; }
-        inline uint32_t                 GetErrSize() const { return m_ErrSize; }
+        inline const AString &          GetOut() const { return m_Out; }
+        inline const AString &          GetErr() const { return m_Err; }
         inline bool                     HasAborted() const { return m_Process.HasAborted(); }
 
     private:
         bool            m_HandleOutput;
         Process         m_Process;
-        AutoPtr< char > m_Out;
-        uint32_t        m_OutSize;
-        AutoPtr< char > m_Err;
-        uint32_t        m_ErrSize;
+        AString         m_Out;
+        AString         m_Err;
         int             m_Result;
     };
 

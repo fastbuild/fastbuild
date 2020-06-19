@@ -5,8 +5,9 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
@@ -29,6 +30,8 @@ private:
     void TestMultipleAssemblies_NoRebuild() const;
     void TestMultipleAssemblies_NoRebuild_BFFChange() const;
     void TestMixedAssemblyWithCPP() const;
+    void CSharpWithObjectListFails() const;
+    void UsingNonCSharpCompilerFails() const;
 };
 
 // Register Tests
@@ -44,6 +47,8 @@ REGISTER_TESTS_BEGIN( TestCSharp )
     REGISTER_TEST( TestMultipleAssemblies_NoRebuild )
     REGISTER_TEST( TestMultipleAssemblies_NoRebuild_BFFChange )
 //  REGISTER_TEST( TestMixedAssemblyWithCPP ) // TODO:A Enable
+    REGISTER_TEST( CSharpWithObjectListFails )
+    REGISTER_TEST( UsingNonCSharpCompilerFails )
 REGISTER_TESTS_END
 
 // TestSingleFile
@@ -98,7 +103,6 @@ void TestCSharp::TestSingleFile_NoRebuild() const
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsTotal( 4,     2 );
 }
-
 
 // TestSingleFile_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
@@ -237,7 +241,6 @@ void TestCSharp::TestMultipleAssemblies() const
     CheckStatsTotal( 8,     8 );
 }
 
-
 // TestMultipleAssemblies_NoRebuild
 //------------------------------------------------------------------------------
 void TestCSharp::TestMultipleAssemblies_NoRebuild() const
@@ -289,6 +292,42 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild_BFFChange() const
 void TestCSharp::TestMixedAssemblyWithCPP() const
 {
     // TODO:A Implement functionality and tests
+}
+
+// CSharpWithObjectListFails
+//------------------------------------------------------------------------------
+void TestCSharp::CSharpWithObjectListFails() const
+{
+    //
+    // The C# compiler should only be used with CSAssembly
+    //
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/ObjectListFails/fbuild.bff";
+
+    // Expect failure
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() == false );
+
+    // Check for the expected failure
+    TEST_ASSERT( GetRecordedOutput().Find( "#1503 - ObjectList() - C# compiler should use CSAssembly." ) );
+}
+
+// UsingNonCSharpCompilerFails
+//------------------------------------------------------------------------------
+void TestCSharp::UsingNonCSharpCompilerFails() const
+{
+    //
+    // CSAssembly should only use the C# Compiler
+    //
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/UsingNonCSharpCompilerFails/fbuild.bff";
+
+    // Expect failure
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() == false );
+
+    // Check for the expected failure
+    TEST_ASSERT( GetRecordedOutput().Find( "#1504 - CSAssembly() - CSAssembly requires a C# Compiler." ) );
 }
 
 //------------------------------------------------------------------------------

@@ -61,6 +61,14 @@
             #endif
         }
 
+        // Windows Manifest
+        //--------------------------------------------------------------------------
+        #if __WINDOWS__
+            .ManifestFile = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$.manifest.tmp'
+            CreateManifest( '$ProjectName$-Manifest-$Platform$-$BuildConfigName$'
+                            .ManifestFile )
+        #endif
+
         // Executable
         //--------------------------------------------------------------------------
         Executable( '$ProjectName$-Exe-$Platform$-$BuildConfigName$' )
@@ -94,6 +102,11 @@
                                             + ' Gdi32.lib'
                                             + ' psapi.lib'
                                             + .CRTLibs_Static
+
+                // Manifest
+                .LinkerAssemblyResources    = .ManifestFile
+                .LinkerOptions              + ' /MANIFEST:EMBED'
+                                            + ' /MANIFESTINPUT:%3'
             #endif
             #if __OSX__
                 .LinkerOptions              + ' -framework Cocoa'
@@ -123,7 +136,7 @@
 
     // Aliases
     //--------------------------------------------------------------------------
-    #include "../../../gen_default_aliases.bff"
+    CreateCommonAliases( .ProjectName )
 
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------

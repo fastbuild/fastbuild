@@ -5,10 +5,11 @@
 //------------------------------------------------------------------------------
 #include "WorkerWindow.h"
 
+// FBuildWorker
 #include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
-#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 
 // OSUI
@@ -25,8 +26,8 @@
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
 #include "Core/Network/Network.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 
 // Defines
 //------------------------------------------------------------------------------
@@ -47,7 +48,7 @@ WorkerWindow::WorkerWindow()
     , m_Menu( nullptr )
 {
     // obtain host name
-    Network::GetHostName(m_HostName);
+    Network::GetHostName( m_HostName );
 
     // center the window on screen
     const uint32_t w = 700;
@@ -78,7 +79,7 @@ WorkerWindow::WorkerWindow()
     m_ThreadList->AddColumn( "Status", 2, 530 );
     size_t numWorkers = JobQueueRemote::Get().GetNumWorkers();
     m_ThreadList->SetItemCount( (uint32_t)numWorkers );
-    for ( size_t i=0; i<numWorkers; ++i )
+    for ( size_t i = 0; i < numWorkers; ++i )
     {
         AStackString<> string;
         string.Format( "%u", (uint32_t)( i + 1 ) );
@@ -135,7 +136,7 @@ WorkerWindow::WorkerWindow()
         // add items
         uint32_t numProcessors = Env::GetNumProcessors();
         AStackString<> buffer;
-        for ( uint32_t i=0; i<numProcessors; ++i )
+        for ( uint32_t i = 0; i < numProcessors; ++i )
         {
             float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
             buffer.Format( "%u CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
@@ -309,7 +310,7 @@ void WorkerWindow::Work()
     if ( dropDown == m_ModeDropDown )
     {
         WorkerSettings::Get().SetMode( (WorkerSettings::Mode)index );
-        
+
         // Threshold dropdown is enabled when we're in Idle move
         const bool idleMode = ( WorkerSettings::Get().GetMode() == WorkerSettings::WHEN_IDLE );
         m_ThresholdDropDown->SetEnabled( idleMode );

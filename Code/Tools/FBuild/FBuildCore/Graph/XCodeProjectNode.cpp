@@ -106,7 +106,18 @@ XCodeProjectNode::XCodeProjectNode()
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
     Dependencies dirNodes( m_ProjectInputPaths.GetSize() );
-    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, m_PatternToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              function,
+                                              m_ProjectInputPaths,
+                                              m_ProjectInputPathsExclude,
+                                              m_ProjectFilesToExclude,
+                                              m_PatternToExclude,
+                                              true, // Resursive
+                                              false, // Don't include read-only status in hash
+                                              &m_ProjectAllowedFileExtensions,
+                                              "ProjectInputPaths",
+                                              dirNodes ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }
@@ -254,7 +265,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         // Create the plist
         const AString & output = g.GenerateUserSchemeMangementPList();
 
-        // Write to disk if different
+        // Write to disk if missing (not written if different as this could stomp user settings)
         AStackString<> plist;
         #if defined( __WINDOWS__ )
             plist.Format( "%s\\xcuserdata\\%s.xcuserdatad\\xcschemes\\xcschememanagement.plist", folder.Get(), userName.Get() );
@@ -272,7 +283,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         // Create the plist
         const AString & output = g.GenerateXCScheme();
 
-        // Write to disk if different
+        // Write to disk if missing (not written if different as this could stomp user settings)
         AStackString<> xcscheme;
         #if defined( __WINDOWS__ )
             xcscheme.Format( "%s\\xcshareddata\\xcschemes\\%s.xcscheme", folder.Get(), g.GetProjectName().Get() );

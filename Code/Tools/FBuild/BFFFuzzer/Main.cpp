@@ -22,7 +22,7 @@ class FuzzerEnvironment
 {
 public:
     FuzzerEnvironment()
-        : m_fbuild(GetOptions())
+        : m_fbuild( GetOptions() )
     {
         Tracing::AddCallbackOutput( AlwaysFalse );
     }
@@ -48,7 +48,7 @@ extern "C" int LLVMFuzzerTestOneInput( const uint8_t * data, size_t size )
     static FuzzerEnvironment env;
 
     // Because BFFParser expects null-terminated input, we have to make a copy of the data and append null.
-    AutoPtr< char > str( (char*)ALLOC( size + 1) );
+    AutoPtr< char > str( (char *)ALLOC( size + 1 ) );
     memcpy( str.Get(), data, size );
     str.Get()[ size ] = 0;
 
@@ -56,5 +56,5 @@ extern "C" int LLVMFuzzerTestOneInput( const uint8_t * data, size_t size )
     BFFParser p( ng );
     p.ParseFromString( "fuzz.bff", str.Get() );
 
-    return 0;  // Non-zero return values are reserved for future use.
+    return 0; // Non-zero return values are reserved for future use.
 }

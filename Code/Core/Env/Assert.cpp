@@ -6,8 +6,8 @@
 #include "Assert.h"
 #ifdef ASSERTS_ENABLED
     #include "Core/Env/Types.h"
-    #include "Core/Strings/AString.h"
     #include "Core/Strings/AStackString.h"
+    #include "Core/Strings/AString.h"
     #include <stdarg.h>
     #include <stdio.h>
 #endif
@@ -15,9 +15,9 @@
     #include "Core/Env/WindowsHeader.h"
 #endif
 #if defined( __OSX__ )
+    #include <sys/sysctl.h>
     #include <sys/types.h>
     #include <unistd.h>
-    #include <sys/sysctl.h>
 #endif
 
 // Static
@@ -55,11 +55,11 @@ bool IsDebuggerAttached()
         
         // Initialize mib, which tells sysctl the info we want, in this case
         // we're looking for information about a specific process ID.
-        int mib[4];
-        mib[0] = CTL_KERN;
-        mib[1] = KERN_PROC;
-        mib[2] = KERN_PROC_PID;
-        mib[3] = getpid();
+        int mib[ 4 ];
+        mib[ 0 ] = CTL_KERN;
+        mib[ 1 ] = KERN_PROC;
+        mib[ 2 ] = KERN_PROC_PID;
+        mib[ 3 ] = getpid();
         
         // Call sysctl
         size_t size = sizeof(info);
@@ -134,7 +134,7 @@ bool IsDebuggerAttached()
 
         AStackString< 4096 > buffer2;
         va_list args;
-        va_start(args, fmtString);
+        va_start( args, fmtString );
         buffer2.VFormat( fmtString, args );
         va_end( args );
 

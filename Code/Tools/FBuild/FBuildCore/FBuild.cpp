@@ -83,6 +83,7 @@ FBuild::FBuild( const FBuildOptions & options )
 
     // poke options where required
     FLog::SetShowVerbose( m_Options.m_ShowVerbose );
+    FLog::SetShowBuildReason( m_Options.m_ShowBuildReason );
     FLog::SetShowErrors( m_Options.m_ShowErrors );
     FLog::SetShowProgress( m_Options.m_ShowProgress );
     FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
@@ -181,7 +182,12 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_Cache = FNEW( Cache() );
         }
 
-        if ( m_Cache->Init( settings->GetCachePath(), settings->GetCachePathMountPoint() ) == false )
+        if ( m_Cache->Init( settings->GetCachePath(),
+                            settings->GetCachePathMountPoint(),
+                            m_Options.m_UseCacheRead,
+                            m_Options.m_UseCacheWrite,
+                            m_Options.m_CacheVerbose,
+                            settings->GetCachePluginDLLConfig() ) == false )
         {
             m_Options.m_UseCacheRead = false;
             m_Options.m_UseCacheWrite = false;
@@ -568,6 +574,13 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     m_ImportedEnvironmentVars.EmplaceBack( name, hash );
 
     return true;
+}
+
+// AddFileExistsCheck
+//------------------------------------------------------------------------------
+bool FBuild::AddFileExistsCheck( const AString & fileName )
+{
+    return m_FileExistsInfo.CheckFile( fileName );
 }
 
 // GetLibEnvVar

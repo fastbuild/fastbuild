@@ -29,6 +29,7 @@ public:
 
     inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
     inline bool GetUseLightCache() const { return m_UseLightCache; }
+    inline bool GetUseRelativePaths() const { return m_UseRelativePaths; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
@@ -49,6 +50,7 @@ public:
         QT_RCC          = 8,
         VBCC            = 9,
         ORBIS_WAVE_PSSLC= 10,
+        CSHARP          = 11,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 
@@ -74,6 +76,7 @@ private:
     uint8_t                 m_CompilerFamilyEnum;
     bool                    m_SimpleDistributionMode;
     bool                    m_UseLightCache;
+    bool                    m_UseRelativePaths;
     ToolManifest            m_Manifest;
     Array< AString >        m_Environment;
 

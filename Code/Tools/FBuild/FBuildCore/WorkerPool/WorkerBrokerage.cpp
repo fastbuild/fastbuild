@@ -466,6 +466,7 @@ void WorkerBrokerage::SetAvailability(bool available)
 
                 if ( createBrokerageFile == false )
                 {
+<<<<<<< HEAD
                     // Update the modified time
                     // (Allows an external process to delete orphaned files (from crashes/terminated workers)
                     if ( FileIO::SetFileLastWriteTimeToNow( m_BrokerageFilePath ) == false )
@@ -504,12 +505,28 @@ void WorkerBrokerage::SetAvailability(bool available)
                     FileIO::EnsurePathExists( workerInfo.basePath );
                     FileStream fs;
                     fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
+=======
+                    case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
+                    case WorkerSettings::WHEN_IDLE:     buffer.AppendFormat( "Mode: idle @ %u%%\n", workerSettings.GetIdleThresholdPercent() ); break;
+                    case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
+                    case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
+                }
+
+                // Create/write file which signifies availability
+                FileIO::EnsurePathExists( m_BrokerageRoots[0] );
+                FileStream fs;
+                if (fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ))
+                {
+>>>>>>> upstream/dev
                     fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
 
                     // Take note of time we wrote the settings
                     m_SettingsWriteTime = settingsWriteTime;
                 }
+<<<<<<< HEAD
                 m_Availability = available;
+=======
+>>>>>>> upstream/dev
             }
             // Restart the timer
             m_TimerLastUpdate.Start();

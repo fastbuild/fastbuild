@@ -5,12 +5,14 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 
 // TestBFFParsing
@@ -47,6 +49,9 @@ private:
     void IncludeScope() const;
     void IfDirective() const;
     void IfExistsDirective() const;
+    void IfFileExistsDirective() const;
+    void IfFileExistsDirective_RelativePaths() const;
+    void IfBooleanOperators() const;
     void ElseDirective() const;
     void ElseDirective_Bad() const;
     void ElseDirective_Bad2() const;
@@ -106,6 +111,9 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IncludeScope )
     REGISTER_TEST( IfDirective )
     REGISTER_TEST( IfExistsDirective )
+    REGISTER_TEST( IfFileExistsDirective )
+    REGISTER_TEST( IfFileExistsDirective_RelativePaths )
+    REGISTER_TEST( IfBooleanOperators )    
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
     REGISTER_TEST( ElseDirective_Bad2 )
@@ -303,8 +311,18 @@ void TestBFFParsing::ImportDirective() const
     TEST_PARSE_FAIL( "#import",             "Error #1031" );
     TEST_PARSE_FAIL( "#import 'string'",    "Error #1031" );
 
+    // Invalid syntax
     Env::SetEnvVariable("BFF_TEST_IMPORT_VAR", AString("VALUE"));
     TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
+
+    // Ensure special characters are not lost
+    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR2", AString("Special^And$Special"));
+    TEST_PARSE_OK( "#import BFF_TEST_IMPORT_VAR2\n"
+                   ".Expected = 'Special^^And^$Special'\n"
+                   "If( .BFF_TEST_IMPORT_VAR2 == .Expected )\n"
+                   "{\n"
+                   "    Print( 'Special Characters OK' )\n"
+                   "}",                     "Special Characters OK" );
 }
 
 // OnceDirective
@@ -401,6 +419,265 @@ void TestBFFParsing::IfExistsDirective() const
     Env::SetEnvVariable("BFF_TEST_ENV_VAR1", AString("1"));
     Env::SetEnvVariable("BFF_TEST_ENV_VAR2", AString("2"));
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_exists_directive.bff" );
+}
+
+// IfFileExistsDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFileExistsDirective() const
+{
+    // Detect existence (or not) of files
+    TEST_PARSE_OK( "#if file_exists(\"doesnotexist.dat\")\n"
+                   "    #error\n"
+                   "#endif" );
+    TEST_PARSE_OK( "#if !file_exists(\"fbuild.bff\")\n"
+                   "    #error\n"
+                   "#endif" );
+
+    // Check changes are detected (or not) between builds
+    {
+        const char * rootBFF    = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
+        const char * fileName   = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
+        const char * db         = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
+
+        // Copy root bff to temp dir
+        FileIO::SetReadOnly( rootBFF, false );
+        EnsureFileDoesNotExist( rootBFF );
+        EnsureDirExists("../tmp/Test/BFFParsing/FileExistsDirective/");
+        FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff", rootBFF );
+
+        // Delete extra file from previous test run
+        EnsureFileDoesNotExist( fileName );
+
+        FBuildTestOptions options;
+        options.m_ConfigFile = rootBFF;
+
+        // Parse bff, which checks if file exists
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+            fBuild.SaveDependencyGraph( db );
+
+            const AString & output( GetRecordedOutput() );
+
+            // File should NOT exist
+            TEST_ASSERT( output.Find( "File does not exist" ) );
+        }
+
+        // Check existence re-parsing does not occur with not change to file existence
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            // Should not re-parse
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
+        }
+
+        // Create file
+        {
+            FileIO::EnsurePathExistsForFile( AStackString<>( fileName ) );
+            FileStream f;
+            TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
+        }
+
+        // Load db and ensure it is re-parsed
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was triggered
+            TEST_ASSERT( output.Find( "File used in file_exists was added" ) );
+
+            // File should exist
+            TEST_ASSERT( output.Find( "File exists" ) );
+        }
+
+        // Delete file
+        EnsureFileDoesNotExist( fileName );
+
+        // Load db and ensure it is re-parsed again
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+
+            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was triggered
+            TEST_ASSERT( output.Find( "File used in file_exists was removed" ) );
+
+            // File should exist
+            TEST_ASSERT( output.Find( "File does not exist" ) );
+        }
+    }
+}
+
+// IfFileExistsDirective_RelativePaths
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
+{
+    // file_exists treats paths the same way as #include
+    // (paths are relative to the bff)
+    
+    FBuildTestOptions options;
+    options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Check for expected output
+    const AString & output( GetRecordedOutput() );
+    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ));
+    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ));
+    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ));
+    TEST_ASSERT( output.Find( "OK-4" ) );
+}
+
+// IfBooleanOperators
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfBooleanOperators() const
+{
+    // Failure cases
+    TEST_PARSE_FAIL( "#if ||",              "#1046 - #if expression cannot start with boolean operator");
+    TEST_PARSE_FAIL( "#if &&",              "#1046 - #if expression cannot start with boolean operator");
+    TEST_PARSE_FAIL( " #if X && || Y\n"
+                     "#endif",              "#1031 - Unknown char '|' following 'if' directive." );
+    TEST_PARSE_FAIL( "#if X &&\n"
+                     "#endif",              "#1031 - Unknown char '#' following 'if' directive. (Expected '?')." );
+    TEST_PARSE_FAIL( "#if X && Y Z\n"
+                     "#endif",              "#1045 - Extraneous token(s) following 'if' directive." );
+
+    // Expression too complex
+    AStackString<> complex( "#if " );
+    for ( size_t i = 0; i < 256; ++i )
+    {
+        complex.AppendFormat( "A%u &&", (uint32_t)i );
+    }
+    complex += "B";
+    TEST_PARSE_FAIL( complex.Get(),         "#1047 - If expression too complex. Up to 256 boolean operators supported." );
+
+    // OR
+    TEST_PARSE_OK( "#define A\n"
+                   "#if A || B\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#if A || B\n"
+                   "#else"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define CCC\n"
+                   "#if DDD || CCC\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if CCC || DDD || AAA || BBB\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    // AND
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#if AAA && BBB\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if AAA && BBB && CCC\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    // AND !
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#if AAA && !DDD\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#if !DDD && AAA\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    // OR !
+    TEST_PARSE_OK( "#if !EEE || !DDD\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#if AAA || !DDD\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define aaa\n"
+                   "#if !ddd || aaa\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    // Check precedence
+    TEST_PARSE_OK( "#define A\n"
+                   "#define B\n"
+                   "#if A || B && C\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if DDD || BBB && CCC\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if DDD || BBB && CCC || EEE\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if DDD || BBB && DDD || EEE && AAA\n"
+                   "    #error Should not be here\n"
+                   "#else\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if DDD || BBB && AAA || EEE && AAA\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if DDD || BBB && DDD || BBB && AAA\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if DDD || BBB && DDD || DDD && AAA || CCC\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if DDD || BBB && CCC && AAA || DDD && AAA\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
 }
 
 // ElseDirective

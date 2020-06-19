@@ -9,8 +9,8 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 #if defined( __WINDOWS__ )
     #ifdef DEBUG
         #include "Core/Env/WindowsHeader.h" // for OutputDebugStringA
@@ -33,7 +33,7 @@
         PROFILE_FUNCTION
 
         const bool messageConsumed = s_Callbacks.DispatchCallbacksDebugSpam( message );
-        if( messageConsumed )
+        if ( messageConsumed )
         {
             return; // Callback swallowed output
         }
@@ -54,7 +54,7 @@
         AStackString< 8192 > buffer;
 
         va_list args;
-        va_start(args, fmtString);
+        va_start( args, fmtString );
         buffer.VFormat( fmtString, args );
         va_end( args );
 
@@ -85,7 +85,7 @@
         AStackString<> buffer;
 
         va_list args;
-        va_start(args, fmtString);
+        va_start( args, fmtString );
         buffer.VFormat( fmtString, args );
         va_end( args );
 
@@ -98,7 +98,7 @@
 /*static*/ void Tracing::Output( const char * message )
 {
     const bool messageConsumed = s_Callbacks.DispatchCallbacksOutput( message );
-    if( messageConsumed )
+    if ( messageConsumed )
     {
         return; // Callback swallowed output
     }
@@ -121,7 +121,7 @@
     AStackString< 8192 > buffer;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
     va_end( args );
 
@@ -153,7 +153,7 @@
     AStackString< 8192 > buffer;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
     va_end( args );
 
@@ -181,7 +181,7 @@ Tracing::Callbacks::~Callbacks()
 }
 
 //------------------------------------------------------------------------------
-void Tracing::Callbacks::AddCallbackDebugSpam( Callback* callback )
+void Tracing::Callbacks::AddCallbackDebugSpam( Callback * callback )
 {
     // It is not valid to modify callbacks during static init/destruction
     ASSERT( s_Valid );
@@ -192,7 +192,7 @@ void Tracing::Callbacks::AddCallbackDebugSpam( Callback* callback )
 }
 
 //------------------------------------------------------------------------------
-void Tracing::Callbacks::AddCallbackOutput( Callback* callback )
+void Tracing::Callbacks::AddCallbackOutput( Callback * callback )
 {
     // It is not valid to modify callbacks during static init/destruction
     ASSERT( s_Valid );
@@ -203,7 +203,7 @@ void Tracing::Callbacks::AddCallbackOutput( Callback* callback )
 }
 
 //------------------------------------------------------------------------------
-void Tracing::Callbacks::RemoveCallbackDebugSpam( Callback* callback )
+void Tracing::Callbacks::RemoveCallbackDebugSpam( Callback * callback )
 {
     // It is not valid to modify callbacks during static init/destruction
     ASSERT( s_Valid );
@@ -213,7 +213,7 @@ void Tracing::Callbacks::RemoveCallbackDebugSpam( Callback* callback )
 }
 
 //------------------------------------------------------------------------------
-void Tracing::Callbacks::RemoveCallbackOutput( Callback* callback )
+void Tracing::Callbacks::RemoveCallbackOutput( Callback * callback )
 {
     // It is not valid to modify callbacks during static init/destruction
     ASSERT( s_Valid );
@@ -254,7 +254,7 @@ bool Tracing::Callbacks::DispatchCallbacksDebugSpam( const char * message )
 
 // Callbacks::DispatchCallbacksOutput
 //------------------------------------------------------------------------------
-bool Tracing::Callbacks::DispatchCallbacksOutput( const char* message )
+bool Tracing::Callbacks::DispatchCallbacksOutput( const char * message )
 {
     // Callbacks are unavailable?
     if ( s_Valid == false )
@@ -273,7 +273,7 @@ bool Tracing::Callbacks::DispatchCallbacksOutput( const char* message )
 
     for ( auto cb : m_CallbacksOutput )
     {
-        if ( (*cb)(message) == false )
+        if ( (*cb)( message ) == false )
         {
             m_InCallbackDispatch = false;
             return true; // callback wants msg supressed

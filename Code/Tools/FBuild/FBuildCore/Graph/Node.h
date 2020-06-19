@@ -86,8 +86,7 @@ public:
     enum ControlFlag
     {
         FLAG_NONE                   = 0x00,
-        FLAG_TRIVIAL_BUILD          = 0x01, // DoBuild is performed locally in main thread
-        FLAG_ALWAYS_BUILD           = 0x02, // DoBuild is always performed (for e.g. directory listings)
+        FLAG_ALWAYS_BUILD           = 0x01, // DoBuild is always performed (for e.g. directory listings)
     };
 
     enum StatsFlag
@@ -169,8 +168,7 @@ public:
     inline uint32_t GetIndex() const { return m_Index; }
 
     static void DumpOutput( Job * job,
-                            const char * data,
-                            uint32_t dataSize,
+                            const AString & output,
                             const Array< AString > * exclusions = nullptr );
 
     inline void     SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }

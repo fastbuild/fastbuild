@@ -43,7 +43,7 @@ void WorkerThread::Init()
     // Start thread
     Thread::ThreadHandle h = Thread::CreateThread( ThreadWrapperFunc,
                                                    "WorkerThread",
-                                                   64 * KILOBYTE,
+                                                   MEGABYTE,
                                                    this );
     ASSERT( h != nullptr );
     Thread::DetachThread( h );

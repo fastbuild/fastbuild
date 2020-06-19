@@ -3,6 +3,8 @@ else
 endif
 exists
 false
+file_exists
+function
 if
 import
 in
@@ -29,6 +31,7 @@ Print
 RemoveDir
 Settings
 Test
+TextFile
 Unity
 Using
 VCXProject
@@ -51,6 +54,7 @@ BuildLogFile
 CachePath
 CachePathMountPoint
 CachePluginDLL
+CachePluginDLLConfig
 ClangFixupUnity_Disable
 ClangRewriteIncludes
 Compiler
@@ -89,8 +93,6 @@ Dest
 DisableDBMigration
 DistributableJobMemoryLimitMiB
 Environment
-ExcludePaths
-ExcludePatterns
 ExecAlways
 ExecAlwaysShowOutput
 ExecArguments
@@ -111,12 +113,12 @@ ExecutableRootPath
 ExternalProjectPath
 ExtraFiles
 FileType
-FilesToExclude
 ForcedIncludes
 ForcedUsingAssemblies
 Hidden
 IncludeSearchPath
 IntermediateDirectory
+Items
 Keyword
 LayoutDir
 LayoutExtensionFilter
@@ -124,6 +126,7 @@ Librarian
 LibrarianAdditionalInputs
 LibrarianOptions
 LibrarianOutput
+LibrarianType
 Libraries
 Linker
 LinkerAssemblyResources
@@ -146,7 +149,6 @@ PCHOutputFile
 PackagePath
 Path
 Pattern
-Patterns
 Platform
 PlatformToolset
 PreBuildDependencies
@@ -174,7 +176,6 @@ ProjectReferences
 ProjectSccEntrySAK
 ProjectTypeGuid
 Projects
-Recursive
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
@@ -212,10 +213,14 @@ TestInputPattern
 TestOutput
 TestTimeOut
 TestWorkingDir
+TextFileAlways
+TextFileInputStrings
+TextFileOutput
 UnityInputExcludePath
 UnityInputExcludePattern
 UnityInputExcludedFiles
 UnityInputFiles
+UnityInputIsolateListFile
 UnityInputIsolateWritableFiles
 UnityInputIsolateWritableFilesLimit
 UnityInputIsolatedFiles
@@ -228,6 +233,7 @@ UnityOutputPath
 UnityOutputPattern
 UnityPCH
 UseLightCache_Experimental
+UseRelativePaths_Experimental
 VS2012EnumBugFix
 WorkerConnectionLimit
 Workers

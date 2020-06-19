@@ -7,8 +7,8 @@
 
 // Core
 #include "Core/Containers/Array.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Strings/AStackString.h"
 
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
@@ -31,8 +31,8 @@
     #include <mach-o/dyld.h>
     extern "C"
     {
-        int *_NSGetArgc(void);
-        char ***_NSGetArgv(void);
+        int * _NSGetArgc( void );
+        char *** _NSGetArgv( void );
     };
 #endif
 

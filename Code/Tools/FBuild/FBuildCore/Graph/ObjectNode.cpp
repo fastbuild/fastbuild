@@ -334,7 +334,7 @@ ObjectNode::~ObjectNode()
     // (since compilation will fail anyway, and the output will be shown)
     if ( ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
     {
-        HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+        HandleWarningsMSVC( job, GetName(), ch.GetOut() );
     }
 
     const char *output = nullptr;
@@ -344,13 +344,13 @@ ObjectNode::~ObjectNode()
     if ( GetFlag( FLAG_INCLUDES_IN_STDERR ) == true )
     {
         output = ch.GetErr().Get();
-        outputSize = ch.GetErrSize();
+        outputSize = ch.GetErr().GetLength();
     }
     else
     {
         // but most of the time it will be on stdout
         output = ch.GetOut().Get();
-        outputSize = ch.GetOutSize();
+        outputSize = ch.GetOut().GetLength();
     }
 
     // compiled ok, try to extract includes
@@ -387,7 +387,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                FLOG_OUTPUT( " - Light cache cannot be used for '%s'\n", GetName().Get() );
+                FLOG_OUTPUT( "LightCache cannot be used for '%s'\n"
+                             "%s",
+                              GetName().Get(),
+                              lc.GetErrors().Get() );
             }
 
             // Fall through to generate preprocessed output for old style cache and distribution....
@@ -651,9 +654,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         }
 
         // get output
-        const AutoPtr< char > & out = ch.GetOut();
-        const uint32_t outSize = ch.GetOutSize();
-        AStackString< 4096 > output( out.Get(), out.Get() + outSize );
+        AString output( ch.GetOut() );
         output.Replace( '\r', '\n' ); // Normalize all carriage line endings
 
         // split into lines
@@ -861,6 +862,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         case CompilerNode::CompilerFamily::QT_RCC:          flags |= FLAG_QT_RCC;           break;
         case CompilerNode::CompilerFamily::VBCC:            flags |= FLAG_VBCC;             break;
         case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC:flags |= FLAG_ORBIS_WAVE_PSSLC; break;
+        case CompilerNode::CompilerFamily::CSHARP:          ASSERT( false );                break; // Guarded in ObjectListNode::Initialize
     }
 
     // Check MS compiler options
@@ -1487,6 +1489,10 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         {
             output += "**Deoptimized** ";
         }
+		if ( GetFlag( FLAG_ISOLATED_FROM_UNITY ) )
+	    {
+        	output += "**Isolated** ";
+    	}
         output += GetName();
         if ( racingRemoteJob )
         {
@@ -1589,6 +1595,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         m_CompilerOptions.Tokenize( tokens );
     }
     fullArgs.Clear();
+
+    // Get base path if needed
+    AStackString<> basePath;
+    const bool useRelativePaths = job->IsLocal() && // TODO:C We'd want to support this remotely as well
+                                  job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetUseRelativePaths();
+    if ( useRelativePaths )
+    {
+        basePath = FBuild::Get().GetOptions().GetWorkingDir(); // NOTE: FBuild only valid locally
+        PathUtils::EnsureTrailingSlash( basePath );
+    }
 
     const bool isMSVC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_MSVC ) : GetFlag( FLAG_MSVC );
     const bool isClang          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG ) : GetFlag( FLAG_CLANG );
@@ -1832,7 +1848,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             fullArgs += AStackString<>( token.Get(), found );
             if ( overrideSrcFile.IsEmpty() )
             {
-                fullArgs += GetSourceFile()->GetName();
+                if ( useRelativePaths )
+                {
+                    AStackString<> relativeFileName;
+                    PathUtils::GetRelativePath( basePath, GetSourceFile()->GetName(), relativeFileName );
+                    fullArgs += relativeFileName;
+                }
+                else
+                {
+                    fullArgs += GetSourceFile()->GetName();
+                }
             }
             else
             {
@@ -1848,7 +1873,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( found )
         {
             fullArgs += AStackString<>( token.Get(), found );
-            fullArgs += m_Name;
+            if ( useRelativePaths )
+            {
+                AStackString<> relativeFileName;
+                PathUtils::GetRelativePath( basePath, m_Name, relativeFileName );
+                fullArgs += relativeFileName;
+            }
+            else
+            {
+                fullArgs += m_Name;
+            }
             fullArgs += AStackString<>( found + 2, token.GetEnd() );
             fullArgs.AddDelimiter();
             continue;
@@ -2038,11 +2072,11 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
             // Use the error text, but if it's empty, use the output
             if ( ch.GetErr().Get() )
             {
-                DumpOutput( job, ch.GetErr().Get(), ch.GetErrSize(), GetName() );
+                DumpOutput( job, ch.GetErr(), GetName() );
             }
             else
             {
-                DumpOutput( job, ch.GetOut().Get(), ch.GetOutSize(), GetName() );
+                DumpOutput( job, ch.GetOut(), GetName() );
             }
         }
 
@@ -2050,7 +2084,7 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
     }
 
     // take a copy of the output because ReadAllData uses huge buffers to avoid re-sizing
-    TransferPreprocessedData( ch.GetOut().Get(), ch.GetOutSize(), job );
+    TransferPreprocessedData( ch.GetOut().Get(), ch.GetOut().GetLength(), job );
 
     return true;
 }
@@ -2357,10 +2391,10 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
             // for remote jobs, we must serialize the errors to return with the job
             if ( job->IsLocal() == false )
             {
-                AutoPtr< char > mem( (char *)ALLOC( ch.GetOutSize() + ch.GetErrSize() ) );
-                memcpy( mem.Get(), ch.GetOut().Get(), ch.GetOutSize() );
-                memcpy( mem.Get() + ch.GetOutSize(), ch.GetErr().Get(), ch.GetErrSize() );
-                job->OwnData( mem.Release(), ( ch.GetOutSize() + ch.GetErrSize() ) );
+                AutoPtr< char > mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
+                memcpy( mem.Get(), ch.GetOut().Get(), ch.GetOut().GetLength() );
+                memcpy( mem.Get() + ch.GetOut().GetLength(), ch.GetErr().Get(), ch.GetErr().GetLength() );
+                job->OwnData( mem.Release(), ( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
             }
         }
 
@@ -2375,14 +2409,14 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
             {
                 if ( !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
                 {
-                    HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+                    HandleWarningsMSVC( job, GetName(), ch.GetOut() );
                 }
             }
             else if ( IsClang() || IsGCC() )
             {
                 if ( !GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
                 {
-                    HandleWarningsClangGCC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+                    HandleWarningsClangGCC( job, GetName(), ch.GetOut() );
                 }
             }
         }
@@ -2396,8 +2430,6 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool * abortPointer )
     : m_HandleOutput( handleOutput )
     , m_Process( FBuild::GetAbortBuildPointer(), abortPointer )
-    , m_OutSize( 0 )
-    , m_ErrSize( 0 )
     , m_Result( 0 )
 {
 }
@@ -2442,7 +2474,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     }
 
     // capture all of the stdout and stderr
-    m_Process.ReadAllData( m_Out, &m_OutSize, m_Err, &m_ErrSize );
+    m_Process.ReadAllData( m_Out, m_Err );
 
     // Get result
     m_Result = m_Process.WaitForExit();
@@ -2452,11 +2484,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     }
 
     // Handle special types of failures
-    HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
+    HandleSystemFailures( job, m_Result, m_Out, m_Err );
 
     if ( m_HandleOutput )
     {
-        if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
+        if ( job->IsLocal() && FBuild::Get().GetOptions().m_ShowCommandOutput )
         {
             // Suppress /showIncludes - TODO:C leave in if user specified it
             StackArray< AString > exclusions;
@@ -2466,8 +2498,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 exclusions.EmplaceBack( "Note: including file:" );
             }
 
-            if ( m_Out.Get() ) { Node::DumpOutput( job, m_Out.Get(), m_OutSize, &exclusions ); }
-            if ( m_Err.Get() ) { Node::DumpOutput( job, m_Err.Get(), m_ErrSize, &exclusions ); }
+            Node::DumpOutput( job, m_Out, &exclusions );
+            Node::DumpOutput( job, m_Err, &exclusions );
         }
         else
         {
@@ -2475,7 +2507,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             if ( m_Err.Get() )
             {
                 const bool treatAsWarnings = true; // change msg formatting
-                DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+                DumpOutput( job, m_Err, name, treatAsWarnings );
             }
         }
     }
@@ -2486,7 +2518,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // output 'stdout' which may contain errors for some compilers
         if ( m_HandleOutput )
         {
-            DumpOutput( job, m_Out.Get(), m_OutSize, name );
+            DumpOutput( job, m_Out, name );
         }
 
         job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );
@@ -2499,7 +2531,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
 // HandleSystemFailures
 //------------------------------------------------------------------------------
-/*static*/ void ObjectNode::HandleSystemFailures( Job * job, int result, const char * stdOut, const char * stdErr )
+/*static*/ void ObjectNode::HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr )
 {
     // Only remote compilation has special cases. We don't touch local failures.
     if ( job->IsLocal() )
@@ -2513,6 +2545,9 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         return;
     }
 
+    const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+
+    // General process failures
     #if defined( __WINDOWS__ )
         // If remote PC is shutdown by user, compiler can be terminated
         if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
@@ -2522,13 +2557,32 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             return;
         }
 
-        // If process is manually terminated by a user, consider that a system failure
-        // Only do so if there is no error output, as some compilers (like Clang) also
-        // use return code 1 for normal compilation failure
-        if ( ( result == 0x1 ) && ( stdErr == nullptr ) )
+        // When a process is terminated by a user on Windows, the return code can
+        // be 1. There seems to be no definitive way to differentiate this from
+        // a process exiting with return code 1, so we default to considering it a
+        // system failure, unless we can detect some specific situations.
+        if ( result == 0x1 )
         {
+<<<<<<< HEAD
             job->OnSystemError( result ); // task will be retried on another worker
             return;
+=======
+            bool treatAsSystemError = true;
+
+            // Some compilers (like Clang) return 1 when there are compile errors
+            // and write those errors to stderr
+            // don't consider this a system failure if there are compile errors
+            if ( stdErr.IsEmpty() == false )
+            {
+                treatAsSystemError = false;
+            }
+
+            if ( treatAsSystemError )
+            {
+                job->OnSystemError(); // task will be retried on another worker
+                return;
+            }
+>>>>>>> upstream/dev
         }
 
         // If DLLs are not correctly sync'd, add an extra message to help the user
@@ -2537,17 +2591,27 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             job->Error( "Remote failure: STATUS_INVALID_IMAGE_FORMAT (0xC000007B) - Check Compiler() settings!\n" );
             return;
         }
+        if ( (uint32_t)result == 0xC0000135 ) // STATUS_DLL_NOT_FOUND
+        {
+            job->Error( "Remote failure: STATUS_DLL_NOT_FOUND (0xC0000135) - Check Compiler() settings!\n" );
+            return;
+        }
+    #endif
 
-        const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+    // Compiler specific failures
 
+    #if defined( __WINDOWS__ )
         // MSVC errors
         if ( objectNode->IsMSVC() )
         {
             // But we need to determine if it's actually an out of space
             // (rather than some compile error with missing file(s))
             // These error codes have been observed in the wild
-            if ( stdOut )
+            if ( stdOut.Find( "C1082" ) ||
+                 stdOut.Find( "C1085" ) ||
+                 stdOut.Find( "C1088" ) )
             {
+<<<<<<< HEAD
                 if ( strstr( stdOut, "C1082" ) ||
                      strstr( stdOut, "C1085" ) ||
                      strstr( stdOut, "C1088" ) )
@@ -2555,13 +2619,17 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     job->OnSystemError( 0x2 );  // ERROR_FILE_NOT_FOUND
                     return;
                 }
+=======
+                job->OnSystemError();
+                return;
+>>>>>>> upstream/dev
             }
 
             // Windows temp directories can have problems failing to open temp files
             // resulting in 'C1083: Cannot open compiler intermediate file:'
             // It uses the same C1083 error as a mising include C1083, but since we flatten
             // includes on the host this should never occur remotely other than in this context.
-            if ( stdOut && strstr( stdOut, "C1083" ) )
+            if ( stdOut.Find( "C1083" ) )
             {
                 job->OnSystemError( 0x2 );  // ERROR_FILE_NOT_FOUND
                 return;
@@ -2571,7 +2639,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // using the 64bit toolchain. This failure can be intermittent and not
             // repeatable with the same code on a different machine, so we don't want it
             // to fail the build.
-            if ( stdOut && strstr( stdOut, "C1060" ) )
+            if ( stdOut.Find( "C1060" ) )
             {
                 // If either of these are present
                 //  - C1076 : compiler limit : internal heap limit reached; use /Zm to specify a higher limit
@@ -2579,8 +2647,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 // then the issue is related to compiler settings.
                 // If they are not present, it's a system error, possibly caused by system resource
                 // exhaustion on the remote machine
-                if ( ( strstr( stdOut, "C1076" ) == nullptr ) &&
-                     ( strstr( stdOut, "C3859" ) == nullptr ) )
+                if ( ( stdOut.Find( "C1076" ) == nullptr ) &&
+                     ( stdOut.Find( "C3859" ) == nullptr ) )
                 {
                     job->OnSystemError( 0x8 );  // ERROR_NOT_ENOUGH_MEMORY
                     return;
@@ -2590,7 +2658,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // If the compiler crashed (Internal Compiler Error), treat this
             // as a system error so it will be retried, since it can alse be
             // the result of faulty hardware.
-            if ( stdOut && strstr( stdOut, "C1001" ) )
+            if ( stdOut.Find( "C1001" ) )
             {
                 job->OnSystemError( 0x54F );  // ERROR_INTERNAL_ERROR
                 return;
@@ -2600,16 +2668,22 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // (We check for this message additionally to handle other error codes
             //  that may not have been observed yet)
             // TODO:C Should we check for localized msg?
-            if ( stdOut && strstr( stdOut, "No space left on device" ) )
+            if ( stdOut.Find( "No space left on device" ) )
             {
                 job->OnSystemError( 0x70 );  // ERROR_DISK_FULL
                 return;
             }
         }
+    #endif
 
-        // Clang
-        if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) )
+    // Clang
+    if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) )
+    {
+        // When clang fails due to low disk space
+        // TODO:C Should we check for localized msg?
+        if ( stdErr.Find( "IO failure on output stream" ) )
         {
+<<<<<<< HEAD
             // When clang fails due to low disk space
             // TODO:C Should we check for localized msg?
             if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
@@ -2617,11 +2691,21 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 job->OnSystemError( 0x1 );
                 return;
             }
+=======
+            job->OnSystemError();
+            return;
+>>>>>>> upstream/dev
         }
+    }
 
-        // GCC
-        if ( objectNode->GetFlag( ObjectNode::FLAG_GCC ) )
+    // GCC
+    if ( objectNode->GetFlag( ObjectNode::FLAG_GCC ) )
+    {
+        // When gcc fails due to low disk space
+        // TODO:C Should we check for localized msg?
+        if ( stdErr.Find( "No space left on device" ) )
         {
+<<<<<<< HEAD
             // When gcc fails due to low disk space
             // TODO:C Should we check for localized msg?
             if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
@@ -2629,11 +2713,15 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 job->OnSystemError( 0x2 );
                 return;
             }
+=======
+            job->OnSystemError();
+            return;
+>>>>>>> upstream/dev
         }
-    #else
-        // TODO:LINUX TODO:MAC Implement remote system failure checks
-        (void)stdOut;
-        (void)stdErr;
+    }
+
+    #if !defined( __WINDOWS__) 
+        (void)stdOut; // No checks use stdOut outside of Windows right now
     #endif
 }
 
@@ -2809,6 +2897,7 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     ASSERT( IsClang() ); // Only necessary for Clang
     ASSERT( GetFlag( FLAG_UNITY ) ); // Only makes sense to for Unity
     ASSERT( job->IsDataCompressed() == false ); // Can't fixup compressed data
+    ASSERT( job->IsLocal() ); // Assuming we're doing this on the local machine (using FBuild singleton lower)
 
     // We'll walk the output and fix it up in-place
 
@@ -2827,7 +2916,27 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     // Find the first instance of the primary filename (this ensured we ignore any
     // injected "-include" stuff before that)
     char * pos = strstr( (char *)job->GetData(), srcFileName.Get() );
-    ASSERT( pos );
+    if ( pos == nullptr )
+    {
+        // If not found, try relative path
+        AStackString<> basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
+        PathUtils::EnsureTrailingSlash( basePath );
+
+        AStackString<> relativeFileName;
+        PathUtils::GetRelativePath( basePath, GetSourceFile()->GetName(), relativeFileName );
+        #if defined( __WINDOWS__ )
+            // Clang escapes backslashes, so we must do the same
+            relativeFileName.Replace( "\\", "\\\\" );
+        #endif
+        pos = strstr( (char *)job->GetData(), relativeFileName.Get() );
+
+        // Update pop directive string
+        popDirectiveString = " \"";
+        popDirectiveString += relativeFileName;
+        popDirectiveString += "\" 2"; // 2 is "pop" flag
+    }
+
+    ASSERT( pos ); // TODO:A This fails because the path is now relative
 
     // Find top-level push/pop pairs. We don't want mess with nested directives
     // as these can be meaningful in other ways.

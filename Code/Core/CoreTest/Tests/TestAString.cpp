@@ -6,8 +6,8 @@
 #include "TestFramework/UnitTest.h"
 
 #include "Core/Containers/AutoPtr.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 
 #include <memory.h>
 
@@ -449,9 +449,9 @@ void TestAString::Find() const
     // BUG: Returning contents past end of string
     {
         AString tmp( "12345678--X---" );
-        tmp.SetLength(8);
-        TEST_ASSERT(tmp.Find('X') == nullptr ); // This was OK
-        TEST_ASSERT(tmp.Find('X', tmp.Get() + 8) == nullptr); // This was returning junk data past end of string
+        tmp.SetLength( 8 );
+        TEST_ASSERT( tmp.Find( 'X' ) == nullptr );                // This was OK
+        TEST_ASSERT( tmp.Find( 'X', tmp.Get() + 8 ) == nullptr ); // This was returning junk data past end of string
     }
 }
 
@@ -497,9 +497,9 @@ void TestAString::FindLast() const
     // BUG: Returning contents past end of string
     {
         AString tmp( "12345678--X---" );
-        tmp.SetLength(8);
-        TEST_ASSERT(tmp.Find('X') == nullptr ); // This was OK
-        TEST_ASSERT(tmp.Find('X', tmp.Get() + 8) == nullptr); // This was returning junk data past end of string
+        tmp.SetLength( 8 );
+        TEST_ASSERT( tmp.Find( 'X' ) == nullptr );                // This was OK
+        TEST_ASSERT( tmp.Find( 'X', tmp.Get() + 8 ) == nullptr ); // This was returning junk data past end of string
     }
 }
 
@@ -529,7 +529,7 @@ void TestAString::Format() const
     // Create a really long input string
     AStackString<> longInput;
     const size_t longStringLen( 1024 * 1024 );
-    for ( size_t i=0; i<longStringLen; ++i )
+    for ( size_t i = 0; i < longStringLen; ++i )
     {
         longInput += 'A';
     }
@@ -708,13 +708,12 @@ void TestAString::PatternMatchI() const
     #undef CHECK_MATCH
 }
 
-
 //------------------------------------------------------------------------------
 void TestAString::Replace() const
 {
     // Replace empty - make sure this is correctly handled
-    AStackString<> test("Test");
-    test.Replace("", "");
+    AStackString<> test( "Test" );
+    test.Replace( "", "" );
 }
 
 // Trim
@@ -732,7 +731,7 @@ void TestAString::Trim() const
         AStackString<> test( "zzHello" );
         test.Trim( 2, 0 );
         TEST_ASSERT( test.GetLength() == 5 );
-        TEST_ASSERT( test  == "Hello" );
+        TEST_ASSERT( test == "Hello" );
     }
 
     {
@@ -740,7 +739,7 @@ void TestAString::Trim() const
         AStackString<> test( "Hellozz" );
         test.Trim( 0, 2 );
         TEST_ASSERT( test.GetLength() == 5 );
-        TEST_ASSERT( test  == "Hello" );
+        TEST_ASSERT( test == "Hello" );
     }
 
     {
@@ -748,7 +747,7 @@ void TestAString::Trim() const
         AStackString<> test( "zzHellozz" );
         test.Trim( 2, 2 );
         TEST_ASSERT( test.GetLength() == 5 );
-        TEST_ASSERT( test  == "Hello" );
+        TEST_ASSERT( test == "Hello" );
     }
 }
 
@@ -845,7 +844,7 @@ void TestAString::MoveConstructorHelper() const
 
     // Move construct destination. SRC_CAST allows us to check AString/AStackString<>
     // behave the same
-    DST stringB( Move( (SRC_CAST&)( stringA ) ) );
+    DST stringB( Move( (SRC_CAST &)( stringA ) ) );
 
     // Check expected amount of allocs occurred
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
@@ -890,7 +889,7 @@ void TestAString::MoveAssignmentHelper() const
         TEST_MEMORY_SNAPSHOT( s1 );
 
         // Move assign. SRC_CAST allows us to check AString/AStackString<> behave the same
-        stringB = Move( (SRC_CAST&)( stringA ) );
+        stringB = Move( (SRC_CAST &)( stringA ) );
 
         // Check expected amount of allocs occurred
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
@@ -913,7 +912,7 @@ void TestAString::MoveAssignmentHelper() const
             stringB.SetLength( 512 ); // Allocate some memory, even for AStackString<>
 
             // Move assign. SRC_CAST allows us to check AString/AStackString<> behave the same
-            stringB = Move( (SRC_CAST&)( stringA ) );
+            stringB = Move( (SRC_CAST &)( stringA ) );
 
             // Source string should be empty
             TEST_ASSERT( stringA.IsEmpty() );

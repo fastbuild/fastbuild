@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Error Reference</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>1301 - Precompiled Header target '%s' has already been defined.</h1>
+    <div class='newsitemheader'>Description</div>
+    <div class='newsitembody'>
+A Precompiled Header definition was encountered, but the Precompiled Header output conflicts with an existing target.<br>
+<br>
+PrecompiledHeaders can be shared between multiple ObjectList or Library declarations, but must only be declared once.
+    </div>
+<div class='newsitemheader'>Example</div>
+    <div class='newsitembody'>
+Config:
+<div class='code'>.Configs = { 'debug', 'release' }
+ForEach( .Config in .Configs )
+{
+    ObjectList( 'lib-$Config$' )
+    {
+      .Compiler             = 'cl.exe'
+      .CompilerInputPath    = 'Code/'
+      .CompilerOutputPath   = 'tmp/'
+      .CompilerOptions      = '%1 %2'
+      .PCHInputFile         = 'PrecompiledHeader.cpp'
+      .PCHOutputFile        = 'PrecompiledHeader.pch' // Not unique
+      .PCHOptions           = '%1 %2'
+    }
+}</div>
+Output:
+<div class='output'>c:\Test\fbuild.bff(4):(5) FASTBuild Error #1301 - Library() - Precompiled Header target 'PrecompiledHeader.pch'
+has already been defined.
+    Library( 'lib-$Config$' )
+    ^
+    \--here
+</div>
+Fix:
+<div class='code'>.Configs = { 'debug', 'release' }
+ForEach( .Config in .Configs )
+{
+    ObjectList( 'lib-$Config$' )
+    {
+        .Compiler           = 'cl.exe'
+        .CompilerInputPath  = 'Code/'
+        .CompilerOutputPath = 'tmp/'
+        .CompilerOptions    = '%1 %2'
+        .PCHInputFile       = 'PrecompiledHeader.cpp'
+        .PCHOutputFile      = '$Config$/PrecompiledHeader.pch' // Unique
+        .PCHOptions         = '%1 %2'
+    }
+}</div>
+    </div>
+
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+</body>
+</html>

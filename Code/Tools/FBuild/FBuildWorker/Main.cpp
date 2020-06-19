@@ -3,8 +3,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FBuildWorkerOptions.h"
-#include "Worker/Worker.h"
+
+// FBuildWorker
+#include "Tools/FBuild/FBuildWorker/FBuildWorkerOptions.h"
+#include "Tools/FBuild/FBuildWorker/Worker/Worker.h"
+
+// Core
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
@@ -45,10 +49,10 @@ int MainCommon( const AString & args );
     }
     PRAGMA_DISABLE_POP_MSVC
 #else
-    int main( int argc, char** argv )
+    int main( int argc, char ** argv )
     {
         AStackString<> args;
-        for ( int i=1; i<argc; ++i ) // NOTE: Skip argv[0] exe name
+        for ( int i = 1; i < argc; ++i ) // NOTE: Skip argv[0] exe name
         {
             if ( i > 0 )
             {
@@ -67,8 +71,8 @@ int MainCommon( const AString & args );
 int MainCommon( const AString & args )
 {
     // don't buffer output
-    VERIFY( setvbuf(stdout, nullptr, _IONBF, 0) == 0 );
-    VERIFY( setvbuf(stderr, nullptr, _IONBF, 0) == 0 );
+    VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
+    VERIFY( setvbuf( stderr, nullptr, _IONBF, 0 ) == 0 );
 
     // process cmd line args
     FBuildWorkerOptions options;
@@ -87,7 +91,7 @@ int MainCommon( const AString & args )
             Env::ShowMsgBox( "FBuildWorker", "An FBuildWorker is already running!" );
             return -1;
         }
-        Thread::Sleep(100);
+        Thread::Sleep( 100 );
     }
 
     #if defined( __WINDOWS__ )

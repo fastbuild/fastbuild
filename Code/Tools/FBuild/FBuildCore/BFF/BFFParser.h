@@ -16,6 +16,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class BFFTokenRange;
+class BFFUserFunction;
 class FileStream;
 class Function;
 class NodeGraph;
@@ -53,6 +54,7 @@ public:
     enum { BFF_PREPROCESSOR_START = '#' };
 
     enum { MAX_VARIABLE_NAME_LENGTH = 256 };
+    enum { MAX_OPERATOR_HISTORY = 256 };
 
     static bool PerformVariableSubstitutions( const BFFToken * inputToken, AString & value );
     static bool ParseVariableName( const BFFToken * iter, AString & name, bool & parentScope );
@@ -63,6 +65,8 @@ private:
     bool ParseVariableDeclaration( BFFTokenRange & iter, const AString & varName, BFFStackFrame * frame );
     bool ParseFunction( BFFTokenRange & iter );
     bool ParseUnnamedScope( BFFTokenRange & iter );
+    bool ParseUserFunctionDeclaration( BFFTokenRange & iter );
+    bool ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFunction & function );
 
     bool FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBracedRange, const Function * function = nullptr ) const;
     bool FindBracedRangeRecurse( BFFTokenRange & iter ) const;
@@ -76,6 +80,7 @@ private:
 
     void CreateBuiltInVariables();
     void SetBuiltInVariable_CurrentBFFDir( const char * fileName );
+    BFFUserFunction * GetUserFunction( const AString & name );
 
     NodeGraph & m_NodeGraph;
 

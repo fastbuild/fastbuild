@@ -596,14 +596,14 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         {
             if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
             {
-                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer );
             }
         }
         else if ( objectNode->IsClang() || objectNode->IsGCC() )
         {
             if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
             {
-                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer );
             }
         }
     }
@@ -685,7 +685,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             failureOutput += tmp;
         }
 
-        Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
+        Node::DumpOutput( nullptr, failureOutput, nullptr );
     }
 
     if ( FLog::IsMonitorEnabled() )

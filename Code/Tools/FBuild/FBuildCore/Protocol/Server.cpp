@@ -19,6 +19,13 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
+// Defines
+//------------------------------------------------------------------------------
+#if defined( __OSX__ ) || defined( __LINUX__ )
+    // Touch files every 4 hours
+    #define SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS (60.0f * 60.0f * 4.0f)
+#endif
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Server::Server( uint32_t numThreadsInJobQueue )
@@ -517,6 +524,8 @@ void Server::ThreadFunc()
         FinalizeCompletedJobs();
 
         FindNeedyClients();
+        
+        TouchToolchains();
 
         JobQueueRemote::Get().MainThreadWait( 100 );
     }
@@ -647,6 +656,27 @@ void Server::FinalizeCompletedJobs()
 
         FDELETE job;
     }
+}
+
+// TouchToolchains
+//------------------------------------------------------------------------------
+void Server::TouchToolchains()
+{
+    #if defined( __OSX__ ) || defined( __LINUX__)
+        if ( m_TouchToolchainTimer.GetElapsed() < SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS )
+        {
+            return;
+        }
+        m_TouchToolchainTimer.Start();
+
+        MutexHolder manifestMH( m_ToolManifestsMutex );
+        for ( const ToolManifest * toolManifest : m_Tools )
+        {
+            toolManifest->TouchFiles();
+        }
+    #else
+        // TODO:C we could update Windows timestamps too
+    #endif
 }
 
 // RequestMissingFiles
