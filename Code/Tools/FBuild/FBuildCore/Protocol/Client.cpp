@@ -193,9 +193,9 @@ void Client::LookForWorkers()
             continue;
         }
 
-        // ignore blacklisted workers
-        if ( ss.m_Blacklisted || 
-             m_WorkerBrokerage.GetBlacklistedWorkers().Find( ss.m_RemoteWorker ) )
+        // ignore deny listed workers
+        if ( ss.m_Denylisted || 
+             m_WorkerBrokerage.GetDenylistedWorkers().Find( ss.m_RemoteWorker ) )
         {
             continue;
         }
@@ -401,8 +401,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
 
-    // no jobs for blacklisted workers
-    if ( ss->m_Blacklisted )
+    // no jobs for deny listed workers
+    if ( ss->m_Denylisted )
     {
         MutexHolder mh( ss->m_Mutex );
         Protocol::MsgNoJobAvailable msg;
@@ -511,22 +511,22 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
     if ( result == true )
     {
-        // job succeeded, so write blacklist file
-        // for any blacklisted workers from previous attempts of the job
-        const Array< Job::BlacklistRecord > & blacklistRecords =
-            job->GetBlacklistRecords();
-        const size_t numRecords = blacklistRecords.GetSize();
+        // job succeeded, so write deny list file
+        // for any deny listed workers from previous attempts of the job
+        const Array< Job::DenylistRecord > & denylistRecords =
+            job->GetDenylistRecords();
+        const size_t numRecords = denylistRecords.GetSize();
         for ( size_t i = 0; i < numRecords; ++i )
         {
-            const Job::BlacklistRecord & blacklistRecord = blacklistRecords[ i ];
+            const Job::DenylistRecord & denylistRecord = denylistRecords[ i ];
             AStackString<> errorMsg;
-            m_WorkerBrokerage.BlacklistWorker(
-                blacklistRecord.workerInfo,
-                blacklistRecord.blacklistReason,
+            m_WorkerBrokerage.DenylistWorker(
+                denylistRecord.workerInfo,
+                denylistRecord.denylistReason,
                 errorMsg );
             if ( !errorMsg.IsEmpty() )
             {
-                Node::DumpOutput( nullptr, errorMsg.Get(), errorMsg.GetLength(), nullptr );
+                Node::DumpOutput( nullptr, errorMsg, nullptr );
             }
         }
 
@@ -626,10 +626,10 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             const size_t numErrors = systemErrors.GetSize();
             for ( size_t i=0; i<numErrors; ++i )
             {
-                if ( ((ObjectNode *)job->GetNode())->IsBlacklistSystemError( systemErrors[ i ] ) )
+                if ( ((ObjectNode *)job->GetNode())->IsDenylistSystemError( systemErrors[ i ] ) )
                 {
-                    // blacklist misbehaving worker
-                    ss->m_Blacklisted = true;
+                    // deny list misbehaving worker
+                    ss->m_Denylisted = true;
                 }
                 // take note of failure of job
                 job->OnSystemError( systemErrors[ i ] );
@@ -639,18 +639,18 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             const WorkerBrokerage::WorkerInfo & workerInfo =
                 m_WorkerList[ workerIndex ];
 
-            if ( ss->m_Blacklisted )
+            if ( ss->m_Denylisted )
             {
-                // don't write to blacklist file here, since
+                // don't write to deny list file here, since
                 // we do that above if job eventually succeeded
-                Job::BlacklistRecord blacklistRecord;
-                blacklistRecord.workerInfo = workerInfo;
-                blacklistRecord.blacklistReason = "Node: ";
-                blacklistRecord.blacklistReason += nodeName;
-                blacklistRecord.blacklistReason += "\n";
-                blacklistRecord.blacklistReason += "Details: ";
-                blacklistRecord.blacklistReason += failureOutput;
-                job->AppendBlacklistRecord( blacklistRecord );
+                Job::DenylistRecord denylistRecord;
+                denylistRecord.workerInfo = workerInfo;
+                denylistRecord.denylistReason = "Node: ";
+                denylistRecord.denylistReason += nodeName;
+                denylistRecord.denylistReason += "\n";
+                denylistRecord.denylistReason += "Details: ";
+                denylistRecord.denylistReason += failureOutput;
+                job->AppendDenylistRecord( denylistRecord );
             }
 
             // debugging message
@@ -810,7 +810,7 @@ Client::ServerState::ServerState()
     , m_CurrentMessage( nullptr )
     , m_NumJobsAvailable( 0 )
     , m_Jobs( 16, true )
-    , m_Blacklisted( false )
+    , m_Denylisted( false )
 {
     m_DelayTimer.Start( 999.0f );
 }

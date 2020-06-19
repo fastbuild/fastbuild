@@ -2563,10 +2563,6 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // system failure, unless we can detect some specific situations.
         if ( result == 0x1 )
         {
-<<<<<<< HEAD
-            job->OnSystemError( result ); // task will be retried on another worker
-            return;
-=======
             bool treatAsSystemError = true;
 
             // Some compilers (like Clang) return 1 when there are compile errors
@@ -2579,10 +2575,9 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
             if ( treatAsSystemError )
             {
-                job->OnSystemError(); // task will be retried on another worker
+                job->OnSystemError( result ); // task will be retried on another worker
                 return;
             }
->>>>>>> upstream/dev
         }
 
         // If DLLs are not correctly sync'd, add an extra message to help the user
@@ -2611,18 +2606,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                  stdOut.Find( "C1085" ) ||
                  stdOut.Find( "C1088" ) )
             {
-<<<<<<< HEAD
-                if ( strstr( stdOut, "C1082" ) ||
-                     strstr( stdOut, "C1085" ) ||
-                     strstr( stdOut, "C1088" ) )
-                {
-                    job->OnSystemError( 0x2 );  // ERROR_FILE_NOT_FOUND
-                    return;
-                }
-=======
-                job->OnSystemError();
+                job->OnSystemError( 0x2 );  // ERROR_FILE_NOT_FOUND
                 return;
->>>>>>> upstream/dev
             }
 
             // Windows temp directories can have problems failing to open temp files
@@ -2683,18 +2668,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // TODO:C Should we check for localized msg?
         if ( stdErr.Find( "IO failure on output stream" ) )
         {
-<<<<<<< HEAD
-            // When clang fails due to low disk space
-            // TODO:C Should we check for localized msg?
-            if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
-            {
-                job->OnSystemError( 0x1 );
-                return;
-            }
-=======
-            job->OnSystemError();
+            job->OnSystemError( 0x1 );
             return;
->>>>>>> upstream/dev
         }
     }
 
@@ -2705,18 +2680,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // TODO:C Should we check for localized msg?
         if ( stdErr.Find( "No space left on device" ) )
         {
-<<<<<<< HEAD
-            // When gcc fails due to low disk space
-            // TODO:C Should we check for localized msg?
-            if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
-            {
-                job->OnSystemError( 0x2 );
-                return;
-            }
-=======
-            job->OnSystemError();
+            job->OnSystemError( 0x2 );
             return;
->>>>>>> upstream/dev
         }
     }
 
@@ -2725,21 +2690,21 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     #endif
 }
 
-// IsBlacklistSystemError
+// IsDenylistSystemError
 //------------------------------------------------------------------------------
-/*static*/ bool ObjectNode::IsBlacklistSystemError( int result )
+/*static*/ bool ObjectNode::IsDenylistSystemError( int result )
 {
     #if defined( __WINDOWS__ )
         // If remote PC is shutdown by user, remote process may be terminated
         if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
              ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
         {
-            // don't blacklist machine if it is only rebooting or shutting down
+            // don't deny list machine if it is only rebooting or shutting down
             return false;
         }
 
     #else
-        // TODO:LINUX TODO:MAC Implement blacklist checks
+        // TODO:LINUX TODO:MAC Implement deny list checks
         (void)result;
     #endif
 

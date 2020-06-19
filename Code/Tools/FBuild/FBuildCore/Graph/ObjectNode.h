@@ -142,12 +142,8 @@ private:
     inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
-<<<<<<< HEAD
-    static void HandleSystemFailures( Job * job, int result, const char * stdOut, const char * stdErr );
-    static bool IsBlacklistSystemError( int result );
-=======
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
->>>>>>> upstream/dev
+    bool IsDenylistSystemError( int result );
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;

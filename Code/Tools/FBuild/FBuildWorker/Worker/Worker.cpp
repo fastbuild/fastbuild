@@ -192,13 +192,9 @@ uint32_t Worker::WorkThread()
         }
     }
 
-<<<<<<< HEAD
     int err = 0;
 
-    for(;;)
-=======
     for ( ;; )
->>>>>>> upstream/dev
     {
         if ( InConsoleMode() )
         {
@@ -379,7 +375,6 @@ int Worker::UpdateAvailability()
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
 
-<<<<<<< HEAD
     m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
     const WorkerBrokerage::Status & brokerageStatus =
         m_WorkerBrokerage.GetStatus();
@@ -392,9 +387,6 @@ int Worker::UpdateAvailability()
     }
 
     return 0;
-=======
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0 );
->>>>>>> upstream/dev
 }
 
 // UpdateUI

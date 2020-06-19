@@ -121,13 +121,13 @@ void WorkerBrokerage::Init()
 
         m_BrokerageFilePath.Format( "%s%s", workerInfo.basePath.Get(), m_HostName.Get() );
 
-        AStackString<> blacklistFile;
-        if ( GetBlacklistFile( workerInfo, blacklistFile ) &&
-             FileIO::FileExists( blacklistFile.Get() ) )
+        AStackString<> denylistFile;
+        if ( GetDenylistFile( workerInfo, denylistFile ) &&
+             FileIO::FileExists( denylistFile.Get() ) )
         {
             StatusFailure statusFailure;
             statusFailure.workerInfo = workerInfo;
-            statusFailure.failureValue = FailureBlacklistedWorker;
+            statusFailure.failureValue = FailureDenylistedWorker;
             m_Status.failures.Append( statusFailure );
         }
         else
@@ -223,17 +223,17 @@ void WorkerBrokerage::GetStatusMsg(
                     statusMsg.Format( "No access to brokerage root %s",
                         statusFailure.workerInfo.basePath.Get() );
                     break;
-                case FailureBlacklistedWorker:
+                case FailureDenylistedWorker:
                     {
-                        statusMsg = "Your worker has been blacklisted.";
+                        statusMsg = "Your worker has been deny listed.";
                         statusMsg += " Please use a different brokerage path and debug your machine issue.";
-                        AStackString<> blacklistFile;
-                        if ( GetBlacklistFile(
+                        AStackString<> denylistFile;
+                        if ( GetDenylistFile(
                                 statusFailure.workerInfo,
-                                blacklistFile ) )
+                                denylistFile ) )
                         {
                             statusMsg += " For issue details, see contents of ";
-                            statusMsg += blacklistFile;
+                            statusMsg += denylistFile;
                         }
                     }
                     break;
@@ -279,44 +279,44 @@ void WorkerBrokerage::FindWorkers( Array< WorkerInfo > & workerList )
         workerList.SetCapacity( workerList.GetSize() + results.GetSize() );
     }
 
-    RefreshBlacklistedWorkers();
+    RefreshDenylistedWorkers();
 
     const WorkerInfo * const end = results.End();
     for ( WorkerInfo * it = results.Begin(); it != end; ++it )
     {
         const WorkerInfo & worker = *it;
         if ( worker.name.CompareI( m_HostName ) != 0 &&
-             !m_BlacklistedWorkers.Find( worker ) )
+             !m_DenylistedWorkers.Find( worker ) )
         {
             workerList.Append( worker );
         }
     }
 }
 
-// RefreshBlacklistedWorkers
+// RefreshDenylistedWorkers
 //------------------------------------------------------------------------------
-void WorkerBrokerage::RefreshBlacklistedWorkers()
+void WorkerBrokerage::RefreshDenylistedWorkers()
 {
-    Array< AString > blacklistDirs( 256, true );
+    Array< AString > denylistDirs( 256, true );
     for( AString& root : m_BrokerageRoots )
     {
-        AStackString<> blacklistDir( root );
-        blacklistDir += "blacklist";
-        blacklistDirs.Append( blacklistDir );
+        AStackString<> denylistDir( root );
+        denylistDir += "denylist";
+        denylistDirs.Append( denylistDir );
     }
 
-    m_BlacklistedWorkers.Clear();
+    m_DenylistedWorkers.Clear();
     ListDirContents(
         m_BrokerageRoots,  // roots
-        blacklistDirs,     // paths
-        m_BlacklistedWorkers );
+        denylistDirs,      // paths
+        m_DenylistedWorkers );
 }
 
-// BlacklistWorker
+// DenylistWorker
 //------------------------------------------------------------------------------
-void WorkerBrokerage::BlacklistWorker(
+void WorkerBrokerage::DenylistWorker(
     const WorkerInfo & workerInfo,
-    const AString & blacklistReason,
+    const AString & denylistReason,
     AString & errorMsg )
 {
     if ( m_Status.statusValue != WorkerBrokerage::BrokerageSuccess )
@@ -324,16 +324,16 @@ void WorkerBrokerage::BlacklistWorker(
         return;
     }
 
-    if ( !m_BlacklistedWorkers.Find( workerInfo ) )
+    if ( !m_DenylistedWorkers.Find( workerInfo ) )
     {
-        m_BlacklistedWorkers.Append( workerInfo );
+        m_DenylistedWorkers.Append( workerInfo );
     }
 
     // only write to the one brokerage root we have the info for
     if ( !workerInfo.basePath.IsEmpty() )
     {
-        AStackString<> blacklistDir( workerInfo.basePath );
-        blacklistDir += "blacklist";
+        AStackString<> denylistDir( workerInfo.basePath );
+        denylistDir += "denylist";
 
         AStackString<> fileContents( "Client Machine: " );
         fileContents += m_HostName;
@@ -344,23 +344,23 @@ void WorkerBrokerage::BlacklistWorker(
         }
         fileContents += m_UserName;
         fileContents += "\n";
-        fileContents += blacklistReason;
+        fileContents += denylistReason;
 
-        AStackString<> blacklistFile;
-        if ( GetBlacklistFile( workerInfo, blacklistFile ) && 
-             !FileIO::FileExists( blacklistFile.Get() ) )
+        AStackString<> denylistFile;
+        if ( GetDenylistFile( workerInfo, denylistFile ) && 
+             !FileIO::FileExists( denylistFile.Get() ) )
         {
             FileStream fs;
             // create the dir path down to the file
-            FileIO::EnsurePathExists( blacklistDir );
-            if ( fs.Open( blacklistFile.Get(), FileStream::WRITE_ONLY ) == false )
+            FileIO::EnsurePathExists( denylistDir );
+            if ( fs.Open( denylistFile.Get(), FileStream::WRITE_ONLY ) == false )
             {
-                errorMsg.Format( "Failed to open blacklist file %s for writing", blacklistFile.Get() );
+                errorMsg.Format( "Failed to open deny list file %s for writing", denylistFile.Get() );
                 return;
             }
             if ( fs.Write( fileContents.Get(), fileContents.GetLength() ) != fileContents.GetLength() )
             {
-                errorMsg.Format( "Failed to write to blacklist file %s", blacklistFile.Get() );
+                errorMsg.Format( "Failed to write to deny list file %s", denylistFile.Get() );
                 return;
             }
             fs.Close();
@@ -368,9 +368,9 @@ void WorkerBrokerage::BlacklistWorker(
     }
 }
 
-// GetBlacklistFile
+// GetDenylistFile
 //------------------------------------------------------------------------------
-bool WorkerBrokerage::GetBlacklistFile(
+bool WorkerBrokerage::GetDenylistFile(
     const WorkerInfo & workerInfo,
     AString & filePath ) const
 {
@@ -380,7 +380,7 @@ bool WorkerBrokerage::GetBlacklistFile(
     }
     
     filePath.Assign( workerInfo.basePath );
-    filePath += "blacklist";
+    filePath += "denylist";
     filePath += NATIVE_SLASH;
     filePath += workerInfo.name;
     return true;
@@ -392,7 +392,7 @@ bool WorkerBrokerage::ShouldUpdateAvailability() const
 {
     bool shouldUpdateAvailability = false;
 
-    // update availability if BrokerageSuccess or BlacklistedWorker
+    // update availability if BrokerageSuccess or DenylistedWorker
     if ( m_Status.statusValue == WorkerBrokerage::BrokerageSuccess )
     {
         shouldUpdateAvailability = true;
@@ -402,7 +402,7 @@ bool WorkerBrokerage::ShouldUpdateAvailability() const
         if ( !m_Status.failures.IsEmpty() )
         {
             if ( m_Status.failures[0].failureValue ==
-                 WorkerBrokerage::FailureBlacklistedWorker )
+                 WorkerBrokerage::FailureDenylistedWorker )
             {
                 shouldUpdateAvailability = true;
             }
@@ -439,15 +439,15 @@ void WorkerBrokerage::SetAvailability(bool available)
             workerInfo.basePath = m_BrokerageRoots[0];
             workerInfo.name = m_HostName;
 
-            AStackString<> blacklistFile;
-            if ( GetBlacklistFile( workerInfo, blacklistFile ) &&
-                 FileIO::FileExists( blacklistFile.Get() ) )
+            AStackString<> denylistFile;
+            if ( GetDenylistFile( workerInfo, denylistFile ) &&
+                 FileIO::FileExists( denylistFile.Get() ) )
             {
                 if ( m_Status.failures.IsEmpty() )
                 {
                     StatusFailure statusFailure;
                     statusFailure.workerInfo = workerInfo;
-                    statusFailure.failureValue = FailureBlacklistedWorker;
+                    statusFailure.failureValue = FailureDenylistedWorker;
                     m_Status.failures.Append( statusFailure );
                 }
                 else
@@ -466,7 +466,6 @@ void WorkerBrokerage::SetAvailability(bool available)
 
                 if ( createBrokerageFile == false )
                 {
-<<<<<<< HEAD
                     // Update the modified time
                     // (Allows an external process to delete orphaned files (from crashes/terminated workers)
                     if ( FileIO::SetFileLastWriteTimeToNow( m_BrokerageFilePath ) == false )
@@ -495,38 +494,23 @@ void WorkerBrokerage::SetAvailability(bool available)
                     switch ( workerSettings.GetMode() )
                     {
                         case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
-                        case WorkerSettings::WHEN_IDLE:     buffer.AppendFormat( "Mode: idle @ %u%%\n",
-                            workerSettings.GetIdleThresholdPercent() ); break;
+                        case WorkerSettings::WHEN_IDLE:     buffer.AppendFormat( "Mode: idle @ %u%%\n", workerSettings.GetIdleThresholdPercent() ); break;
                         case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
                         case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
                     }
 
                     // Create/write file which signifies availability
-                    FileIO::EnsurePathExists( workerInfo.basePath );
+                    FileIO::EnsurePathExists( m_BrokerageRoots[0] );
                     FileStream fs;
-                    fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
-=======
-                    case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
-                    case WorkerSettings::WHEN_IDLE:     buffer.AppendFormat( "Mode: idle @ %u%%\n", workerSettings.GetIdleThresholdPercent() ); break;
-                    case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
-                    case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
-                }
+                    if (fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ))
+                    {
+                        fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
 
-                // Create/write file which signifies availability
-                FileIO::EnsurePathExists( m_BrokerageRoots[0] );
-                FileStream fs;
-                if (fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ))
-                {
->>>>>>> upstream/dev
-                    fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
-
-                    // Take note of time we wrote the settings
-                    m_SettingsWriteTime = settingsWriteTime;
+                        // Take note of time we wrote the settings
+                        m_SettingsWriteTime = settingsWriteTime;
+                    }
                 }
-<<<<<<< HEAD
                 m_Availability = available;
-=======
->>>>>>> upstream/dev
             }
             // Restart the timer
             m_TimerLastUpdate.Start();

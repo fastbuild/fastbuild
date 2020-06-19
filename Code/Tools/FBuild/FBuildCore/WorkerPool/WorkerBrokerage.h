@@ -39,7 +39,7 @@ public:
        NoFailure                 = 0,
        FailureNoBrokeragePath    = 1,
        FailureNoBrokerageAccess  = 2, 
-       FailureBlacklistedWorker  = 3
+       FailureDenylistedWorker  = 3
     };
 
     enum StatusValue
@@ -71,10 +71,10 @@ public:
 
     // client interface
     void FindWorkers( Array< WorkerInfo > & workerList );
-    inline const Array< WorkerInfo > & GetBlacklistedWorkers() const { return m_BlacklistedWorkers; }
-    void BlacklistWorker(
+    inline const Array< WorkerInfo > & GetDenylistedWorkers() const { return m_DenylistedWorkers; }
+    void DenylistWorker(
         const WorkerInfo & workerInfo,
-        const AString & blacklistReason,
+        const AString & denylistReason,
         AString & errorMsg );
 
     // server interface
@@ -86,8 +86,8 @@ private:
         const Array< AString > & roots,
         const Array< AString > & paths,
         Array< WorkerInfo > & contents ) const;
-    void RefreshBlacklistedWorkers();
-    bool GetBlacklistFile(
+    void RefreshDenylistedWorkers();
+    bool GetDenylistFile(
         const WorkerInfo & workerInfo,
         AString & filePath ) const;
 
@@ -99,7 +99,7 @@ private:
     AString             m_UserName;
     AString             m_BrokerageFilePath;
     Timer               m_TimerLastUpdate;      // Throttle network access
-    mutable Array< WorkerInfo >  m_BlacklistedWorkers;
+    mutable Array< WorkerInfo >  m_DenylistedWorkers;
     uint64_t            m_SettingsWriteTime;    // FileTime of settings time when last changed
     Timer               m_TimerLastCleanBroker;
 };

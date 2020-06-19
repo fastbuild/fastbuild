@@ -59,19 +59,19 @@ public:
     void                ErrorPreformatted( const char * message );
     void                SetMessages( const Array< AString >& messages );
 
-    struct BlacklistRecord
+    struct DenylistRecord
     {
         WorkerBrokerage::WorkerInfo workerInfo;
-        AString blacklistReason;
+        AString denylistReason;
     };
 
     // Flag "system failures" - i.e. not a compilation failure, but some other problem (typically a remote worker misbehaving)
     void OnSystemError(const int32_t errorCode) { m_SystemErrors.Append( errorCode ); }
     inline size_t GetSystemErrorCount() const { return m_SystemErrors.GetSize(); }
     inline const Array< int32_t > & GetSystemErrors() const { return m_SystemErrors; }
-    inline const Array< BlacklistRecord > & GetBlacklistRecords() const { return m_BlacklistRecords; }
-    inline void AppendBlacklistRecord( const BlacklistRecord & blacklistRecord ) {
-        m_BlacklistRecords.Append( blacklistRecord ); }
+    inline const Array< DenylistRecord > & GetDenylistRecords() const { return m_DenylistRecords; }
+    inline void AppendDenylistRecord( const DenylistRecord & denylistRecord ) {
+        m_DenylistRecords.Append( denylistRecord ); }
 
     // serialization for remote distribution
     void Serialize( IOStream & stream );
@@ -112,7 +112,7 @@ private:
     bool                m_DataIsCompressed  = false;
     bool                m_IsLocal           = true;
     Array< int32_t >    m_SystemErrors; // On client, the total errors; on worker, errors for the current attempt
-    Array< BlacklistRecord > m_BlacklistRecords;
+    Array< DenylistRecord > m_DenylistRecords;
 
     DistributionState   m_DistributionState = DIST_NONE;
     AString             m_RemoteName;
