@@ -90,7 +90,7 @@ FBuild::FBuild( const FBuildOptions & options )
 
     Function::Create();
 
-    NetworkStartupHelper::SetMasterShutdownFlag( &s_AbortBuild );
+    NetworkStartupHelper::SetMainShutdownFlag( &s_AbortBuild );
 }
 
 // DESTRUCTOR
@@ -450,7 +450,7 @@ bool FBuild::Build( Node * nodeToBuild )
                 stopping = true;
                 if ( m_Options.m_FastCancel )
                 {
-                    // Notify the system that the master process has been killed and that it can kill its process.
+                    // Notify the system that the main process has been killed and that it can kill its process.
                     AtomicStoreRelaxed( &s_AbortBuild, true );
                 }
             }
@@ -599,7 +599,7 @@ void FBuild::AbortBuild()
     AtomicStoreRelaxed( &s_StopBuild, true );
     if ( FBuild::IsValid() && FBuild::Get().m_Options.m_FastCancel )
     {
-        // Notify the system that the master process has been killed and that it can kill its process.
+        // Notify the system that the main process has been killed and that it can kill its process.
         AtomicStoreRelaxed( &s_AbortBuild, true );
     }
 }

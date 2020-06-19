@@ -2,7 +2,7 @@
 //------------------------------------------------------------------------------
 #pragma once
 
-// Master Define
+// Main Define
 //------------------------------------------------------------------------------
 #ifdef PROFILING_ENABLED // defined globally through build system
 

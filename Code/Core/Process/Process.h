@@ -15,7 +15,7 @@ class AString;
 class Process
 {
 public:
-    explicit Process( const volatile bool * masterAbortFlag = nullptr,
+    explicit Process( const volatile bool * mainAbortFlag = nullptr,
                       const volatile bool * abortFlag = nullptr );
     ~Process();
 
@@ -87,7 +87,7 @@ private:
         int m_StdErrRead;
     #endif
     bool m_HasAborted;
-    const volatile bool * m_MasterAbortFlag; // This member is set when we must cancel processes asap when the master process dies.
+    const volatile bool * m_MainAbortFlag; // This member is set when we must cancel processes asap when the main process dies.
     const volatile bool * m_AbortFlag;
 };
 
