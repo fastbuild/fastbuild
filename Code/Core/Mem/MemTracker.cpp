@@ -80,7 +80,7 @@
         {
             MutexHolder mh( GetMutex() );
 
-            Allocation * a = (Allocation *)s_Allocations->Alloc( sizeof( Allocation ) );
+            Allocation * a = (Allocation *)s_Allocations->Alloc();
             ++s_AllocationCount;
 
             a->m_Id = ++s_Id;

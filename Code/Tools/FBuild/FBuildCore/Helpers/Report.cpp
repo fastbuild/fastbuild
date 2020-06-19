@@ -1094,7 +1094,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
     uint32_t key = ( hash & 0xFFFF );
 
     // insert new item
-    IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc( sizeof( IncludeStats ) );
+    IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc();
     newStats->node = node;
     newStats->count = 0;
     newStats->inPCH = false;

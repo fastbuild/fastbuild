@@ -494,7 +494,8 @@ void WorkerBrokerage::SetAvailability(bool available)
                     switch ( workerSettings.GetMode() )
                     {
                         case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
-                        case WorkerSettings::WHEN_IDLE:     buffer += "Mode: idle\n";         break;
+                        case WorkerSettings::WHEN_IDLE:     buffer.AppendFormat( "Mode: idle @ %u%%\n",
+                            workerSettings.GetIdleThresholdPercent() ); break;
                         case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
                         case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
                     }
