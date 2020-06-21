@@ -618,7 +618,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 {
     if ( otherFile.BeginsWithI( root ) )
     {
-        // file is in sub dir on master machine, so store with same relative location
+        // file is in sub dir on fbuild client machine, so store with same relative location
         otherFileRelativePath = ( otherFile.Get() + root.GetLength() );
     }
     else

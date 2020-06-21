@@ -848,7 +848,7 @@ void Node::ReplaceDummyName( const AString & newName )
                 copy += '\n';
 
                 // Clang format fixup for Visual Studio
-                // (FBuild is null in remote context - fixup occurs on master)
+                // (FBuild is null in remote context - fixup occurs on fbuild client machine)
                 if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_FixupErrorPaths )
                 {
                     FixupPathForVSIntegration( copy );
