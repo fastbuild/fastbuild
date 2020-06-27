@@ -418,14 +418,14 @@ FileNode * LibraryNode::GetLibrarian() const
 //------------------------------------------------------------------------------
 bool LibraryNode::CanUseResponseFile() const
 {
-    bool canUseResponseFile = m_LibrarianAllowResponseFile;
+    const bool canUseResponseFile = m_LibrarianAllowResponseFile;
 
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
-        canUseResponseFile = ( canUseResponseFile || GetFlag( LIB_FLAG_LIB ) || GetFlag( LIB_FLAG_AR ) || GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_GREENHILLS_AX ) );
+        return ( canUseResponseFile || GetFlag( LIB_FLAG_LIB ) || GetFlag( LIB_FLAG_AR ) || GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_GREENHILLS_AX ) );
+    #else
+        return canUseResponseFile;
     #endif
-
-    return canUseResponseFile;
 }
 
 //------------------------------------------------------------------------------

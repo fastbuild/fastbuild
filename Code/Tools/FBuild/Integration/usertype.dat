@@ -43,6 +43,7 @@ AdditionalOptions
 AdditionalSymbolSearchPaths
 AllowCaching
 AllowDistribution
+AllowResponseFile
 ApplicationEnvironment
 ApplicationType
 ApplicationTypeRevision
@@ -124,11 +125,13 @@ LayoutDir
 LayoutExtensionFilter
 Librarian
 LibrarianAdditionalInputs
+LibrarianAllowResponseFile
 LibrarianOptions
 LibrarianOutput
 LibrarianType
 Libraries
 Linker
+LinkerAllowResponseFile
 LinkerAssemblyResources
 LinkerLinkObjects
 LinkerOptions

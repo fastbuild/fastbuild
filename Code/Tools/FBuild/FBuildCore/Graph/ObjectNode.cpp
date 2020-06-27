@@ -2768,14 +2768,14 @@ bool ObjectNode::ShouldUseCache() const
 //------------------------------------------------------------------------------
 bool ObjectNode::CanUseResponseFile() const
 {
-    bool canUseResponseFile = GetCompiler() ? GetCompiler()->CanUseResponseFile() : false;
+    const bool canUseResponseFile = GetCompiler() ? GetCompiler()->CanUseResponseFile() : false;
 
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
         return ( canUseResponseFile || GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+    #else
+        return canUseResponseFile;
     #endif
-
-    return canUseResponseFile;
 }
 
 // GetVBCCPreprocessedOutput

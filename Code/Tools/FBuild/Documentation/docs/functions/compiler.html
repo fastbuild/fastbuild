@@ -47,6 +47,7 @@ distribution, caching and more.
   .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
   .Environment                  // (optional) Environment variables to use for local build
+  .AllowResponseFile            // (optional) Allow response files to be used if not auto-detected (default: false)
   
   // Temporary Options
   .UseLightCache_Experimental   // (optional) Enabled experimental "light" caching mode (default: false)
@@ -172,6 +173,13 @@ Compiler( 'Test' )
     
 	<p><b>.CustomEnvironmentVariables</b> - String or ArrayOfStrings - (Optional)</p>
 	<p>When compiling on a remote host, a clean environment is used. If needed, environment variables can be set.<p>
+
+  	<p><hr></p>
+
+    <p><b>.AllowResponseFile</b> - Boolean - (Optional)</p>	
+    <p>Allow the use of Response Files for passing arguments to the compiler when they exceed operating system limits.</p>
+    <p>FASTBuild automatically detects that some compilers can use Response Files and uses them accordingly. For situations
+    that FASTBuild doesn't auto-detect (such as custom compilers), AllowResponseFile can be set manually.</p>
 
   	<p><hr></p>
 

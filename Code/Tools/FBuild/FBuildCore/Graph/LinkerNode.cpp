@@ -931,13 +931,13 @@ void LinkerNode::EmitStampMessage() const
 //------------------------------------------------------------------------------
 bool LinkerNode::CanUseResponseFile() const
 {
-    bool canUseResponseFile = m_LinkerAllowResponseFile;
+    const bool canUseResponseFile = m_LinkerAllowResponseFile;
     
     #if defined( __WINDOWS__ )
-        canUseResponseFile = ( canUseResponseFile || GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD ) );
+        return ( canUseResponseFile || GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD ) );
+    #else
+        return canUseResponseFile;
     #endif
-
-    return canUseResponseFile;
 }
 
 // GetImportLibName
