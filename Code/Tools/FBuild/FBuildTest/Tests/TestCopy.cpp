@@ -37,6 +37,8 @@ private:
     void CopyDirDeleteSrc() const;
     void CopyEmpty() const;
     void MissingTrailingSlash() const;
+    void ObjectListChaining() const;
+    void ObjectListChaining2() const;
 };
 
 // Register Tests
@@ -61,6 +63,8 @@ REGISTER_TESTS_BEGIN( TestCopy )
     REGISTER_TEST( CopyDirDeleteSrc )
     REGISTER_TEST( CopyEmpty )
     REGISTER_TEST( MissingTrailingSlash )
+    REGISTER_TEST( ObjectListChaining )
+    REGISTER_TEST( ObjectListChaining2 )
 REGISTER_TESTS_END
 
 // TestCopyFunction_FileToFile
@@ -78,7 +82,7 @@ void TestCopy::TestCopyFunction_FileToFile() const
     EnsureFileDoesNotExist( dst );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToFile" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/filetofile.fdb" ) );
 
     // make sure all output is where it is expected
@@ -102,7 +106,7 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetofile.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToFile" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -124,7 +128,7 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetofile.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToFile" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -149,7 +153,7 @@ void TestCopy::TestCopyFunction_FileToDir() const
     EnsureFileDoesNotExist( dst );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToDir" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/filetodir.fdb" ) );
 
     EnsureFileExists( dst );
@@ -172,7 +176,7 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetodir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -194,7 +198,7 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetodir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -221,7 +225,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
     EnsureFileDoesNotExist( dst2 );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestMultiCopyToDir" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/multifiletodir.fdb" ) );
 
     EnsureFileExists( dst1 );
@@ -245,7 +249,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/multifiletodir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestMultiCopyToDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -267,7 +271,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/multifiletodir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestMultiCopyToDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -294,7 +298,7 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
     EnsureFileDoesNotExist( dst2 );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestSourceBasePath" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestSourceBasePath" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
 
     EnsureFileExists( dst1 );
@@ -319,7 +323,7 @@ void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestSourceBasePath" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestSourceBasePath" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -344,7 +348,7 @@ void TestCopy::ChainedCopy() const
     EnsureFileDoesNotExist( dst );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ChainedCopy3" ) ) );
+    TEST_ASSERT( fBuild.Build( "ChainedCopy3" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/ChainedCopy/chainedcopy.fdb" ) );
 
     // make sure all output is where it is expected
@@ -368,7 +372,7 @@ void TestCopy::ChainedCopy_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/ChainedCopy/chainedcopy.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ChainedCopy3" ) ) );
+    TEST_ASSERT( fBuild.Build( "ChainedCopy3" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -395,7 +399,7 @@ void TestCopy::CopyDir() const
     EnsureFileDoesNotExist( dstB );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "CopyDir" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
 
     // make sure all output is where it is expected
@@ -422,7 +426,7 @@ void TestCopy::CopyDir_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -432,7 +436,6 @@ void TestCopy::CopyDir_NoRebuild() const
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsTotal( 6,     3 );
 }
-
 
 // CopyDir_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
@@ -446,7 +449,7 @@ void TestCopy::CopyDir_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -486,7 +489,7 @@ void TestCopy::CopyDirDeleteSrc() const
         EnsureFileDoesNotExist( dstB );
 
         // build (via alias)
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDirDeleteSrc" ) ) );
+        TEST_ASSERT( fBuild.Build( "CopyDirDeleteSrc" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/CopyDir/copydirdeletesrc.fdb" ) );
 
         // make sure all output is where it is expected
@@ -513,7 +516,7 @@ void TestCopy::CopyDirDeleteSrc() const
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydirdeletesrc.fdb" ) );
 
         // build (via alias)
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDirDeleteSrc" ) ) );
+        TEST_ASSERT( fBuild.Build( "CopyDirDeleteSrc" ) );
 
         // make sure all output is where it is expected
         EnsureFileExists( dstA );
@@ -522,9 +525,9 @@ void TestCopy::CopyDirDeleteSrc() const
         //               Seen,  Built,  Type
         CheckStatsNode(  1,     1,      Node::FILE_NODE );
         CheckStatsNode(  1,     0,      Node::COPY_FILE_NODE );
-        CheckStatsNode(  1,     0,      Node::COPY_DIR_NODE );
+        CheckStatsNode(  1,     1,      Node::COPY_DIR_NODE );
         CheckStatsNode(  1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsTotal( 4,     2 );
+        CheckStatsTotal( 4,     3 );
     }
 }
 
@@ -538,7 +541,7 @@ void TestCopy::CopyEmpty() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyEmpty" ) ) );
+    TEST_ASSERT( fBuild.Build( "CopyEmpty" ) );
 }
 
 // MissingTrailingSlash
@@ -557,6 +560,162 @@ void TestCopy::MissingTrailingSlash() const
     // Ensure the explcit error for this case is reported (not a generic one about
     // the target already being defined)
     TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1400" ) );
+}
+
+// ObjectListChaining
+//  - Ensure that a CopyDir consuming the output of an ObjectList
+//    is managed correctly
+//------------------------------------------------------------------------------
+void TestCopy::ObjectListChaining() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/ObjectListChaining/fbuild.bff";
+    const char * dbFile = "../tmp/Test/Copy/ObjectListChaining/fbuild.fdb";
+
+    AString depGraphText1( 8 * 1024 );
+    AString depGraphText2( 8 * 1024 );
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "CopyDir" ) );
+
+        // Save DB for reloading below
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::COPY_DIR_NODE );
+        CheckStatsNode( 2, 2, Node::COPY_FILE_NODE );
+
+        fBuild.SerializeDepGraphToText( "CopyDir", depGraphText1 );
+    }
+
+    // Check no-rebuild
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "CopyDir" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 0, Node::COPY_DIR_NODE );
+        CheckStatsNode( 2, 0, Node::COPY_FILE_NODE );
+    }
+
+    // Check no-rebuild DB migration
+    {
+        FBuildOptions options2( options );
+        options2.m_ForceDBMigration_Debug = true;
+
+        FBuildForTest fBuild( options2 );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "CopyDir" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 0, Node::COPY_DIR_NODE );
+        CheckStatsNode( 2, 0, Node::COPY_FILE_NODE );
+
+        fBuild.SerializeDepGraphToText( "CopyDir", depGraphText2 );
+    }
+
+    // Check node graph is the same after migration
+    TEST_ASSERT( depGraphText1 == depGraphText2 );
+}
+
+// ObjectListChaining2
+//  - Ensure that a CopyDir consuming the output of an ObjectList
+//    is managed correctly
+//
+//  - This test explicitly checks that CopyFile node from a previous build
+//    are not migrated if the ObjectList it depends on is not migrated.
+//    When it was migrated in this situation, it causes a bug because the CopyFile
+//    node created a FileNode for the source, but that source was supposed to be an
+//    ObjectNode. This caused the build to fail and the DB to be unrecoverably corrupt.
+//------------------------------------------------------------------------------
+void TestCopy::ObjectListChaining2() const
+{
+    const char * configFileOriginal = "Tools/FBuild/FBuildTest/Data/TestCopy/ObjectListChaining2/fbuild.bff";
+    const char * configFileCopy = "../tmp/Test/Copy/ObjectListChaining2/fbuild.bff";
+
+    FileIO::EnsurePathExistsForFile( AStackString<>( configFileCopy ) );
+    VERIFY( FileIO::FileCopy( configFileOriginal, configFileCopy ) );
+    VERIFY( FileIO::SetReadOnly( configFileCopy, false ) );
+
+    FBuildTestOptions options;
+    options.m_ConfigFile = configFileCopy;
+    const char* dbFile = "../tmp/Test/Copy/ObjectListChaining2/fbuild.fdb";
+
+    AString depGraphText1( 8 * 1024 );
+    AString depGraphText2( 8 * 1024 );
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "CopyDir" ) );
+
+        // Save DB for reloading below
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::COPY_DIR_NODE );
+        CheckStatsNode( 1, 1, Node::COPY_FILE_NODE );
+
+        fBuild.SerializeDepGraphToText( "CopyDir", depGraphText1 );
+    }
+
+    // Modify the config file in a way that dirties the ObjectList only
+    AString buffer;
+    {
+        FileStream f;
+        VERIFY( f.Open( configFileCopy ) );
+        buffer.SetLength( (uint32_t)f.GetFileSize() );
+        VERIFY( f.ReadBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() );
+    }
+    VERIFY( buffer.Replace( "-DEXTRA_A", "-DEXTRA_B" ) == 1 );
+    {
+        FileStream f;
+        VERIFY( f.Open( configFileCopy, FileStream::WRITE_ONLY ) );
+        VERIFY( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() );
+    }
+
+    // Check rebuild
+    {
+        options.m_ForceDBMigration_Debug = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "CopyDir" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::COPY_DIR_NODE );
+        CheckStatsNode( 1, 1, Node::COPY_FILE_NODE );
+
+        fBuild.SerializeDepGraphToText( "CopyDir", depGraphText2 );
+    }
+
+    // Check node graph is the same after migration
+    TEST_ASSERT( depGraphText1 == depGraphText2 );
 }
 
 //------------------------------------------------------------------------------

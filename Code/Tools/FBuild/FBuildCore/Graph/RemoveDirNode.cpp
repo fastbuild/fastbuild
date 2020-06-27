@@ -27,15 +27,15 @@ REFLECT_END( RemoveDirNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 RemoveDirNode::RemoveDirNode()
-    : Node( AString::GetEmpty(), Node::REMOVE_DIR_NODE, Node::FLAG_NONE )
+    : Node( AString::GetEmpty(), Node::REMOVE_DIR_NODE, Node::FLAG_ALWAYS_BUILD )
     , m_RemovePathsRecurse( true )
 {
-    m_RemovePatterns.Append( AStackString<>( "*" ) );
+    m_RemovePatterns.EmplaceBack( "*" );
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -53,6 +53,7 @@ RemoveDirNode::RemoveDirNode()
                                               Array< AString >(), // unused FilesToExclude
                                               Array< AString >(), // unused ExcludePatterns
                                               m_RemovePathsRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_RemovePatterns,
                                               "RemovePaths",
                                               fileListDeps ) )
@@ -79,28 +80,20 @@ RemoveDirNode::~RemoveDirNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult RemoveDirNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult RemoveDirNode::DoBuild( Job * /*job*/ )
 {
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
-    m_Stamp = 0; // Trigger DoBuild() every time
-
     // Iterate all the DirectoryListNodes
-    const Dependency * const depEnd = m_StaticDependencies.End();
-    for ( const Dependency * dep = m_StaticDependencies.Begin();
-          dep != depEnd;
-          ++dep )
+    for ( const Dependency & dep : m_StaticDependencies )
     {
         // Grab the files
-        DirectoryListNode * dln = dep->GetNode()->CastTo< DirectoryListNode >();
+        DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
         const Array< FileIO::FileInfo > & files = dln->GetFiles();
-        const FileIO::FileInfo * const fEnd = files.End();
-        for ( const FileIO::FileInfo * fIt = files.Begin();
-              fIt != fEnd;
-              ++fIt )
+        for ( const FileIO::FileInfo & fileInfo : files )
         {
             // source file (full path)
-            const AString & srcFile = fIt->m_Name;
+            const AString & srcFile = fileInfo.m_Name;
 
             // remove the file
             if ( FileIO::FileDelete( srcFile.Get() ) == false )
@@ -112,10 +105,13 @@ RemoveDirNode::~RemoveDirNode() = default;
             // we combine everything into one string to ensure it is contiguous in
             // the output
             AStackString<> output;
-            output += "Remove: ";
-            output += srcFile;
-            output += '\n';
-            FLOG_BUILD_DIRECT( output.Get() );
+            if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+            {
+                output += "Remove: ";
+                output += srcFile;
+                output += '\n';
+                FLOG_OUTPUT( output );
+            }
         }
     }
 

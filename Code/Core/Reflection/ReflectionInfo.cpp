@@ -12,16 +12,12 @@
 #include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
 #include "Core/Reflection/ReflectedProperty.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 #include "Core/Tracing/Tracing.h"
 
 // System
 #include <memory.h>
-
-// Static Data
-//------------------------------------------------------------------------------
-/*static*/ ReflectionInfo * ReflectionInfo::s_FirstReflectionInfo( nullptr );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -147,15 +143,6 @@ GETSET_PROPERTY_ARRAY( AString )
 #undef GETSET_PROPERTY
 #undef GETSET_PROPERTY_ARRAY
 
-// BindReflection
-//------------------------------------------------------------------------------
-/*static*/ void ReflectionInfo::BindReflection( ReflectionInfo & reflectionInfo )
-{
-    ASSERT( reflectionInfo.m_Next == nullptr );
-    reflectionInfo.m_Next = s_FirstReflectionInfo;
-    s_FirstReflectionInfo = &reflectionInfo;
-}
-
 // SetTypeName
 //------------------------------------------------------------------------------
 void ReflectionInfo::SetTypeName( const char * typeName )
@@ -267,58 +254,6 @@ const ReflectedProperty * ReflectionInfo::FindPropertyRecurse( uint32_t nameCRC 
     return nullptr;
 }
 
-// CreateObject
-//------------------------------------------------------------------------------
-/*static*/ Object * ReflectionInfo::CreateObject( const AString & objectType )
-{
-    const uint32_t objectTypeCRC = xxHash::Calc32( objectType );
-    const ReflectionInfo * ri = s_FirstReflectionInfo;
-    while ( ri )
-    {
-        if ( objectTypeCRC == ri->m_TypeNameCRC )
-        {
-            return ri->CreateObject();
-        }
-        ri = ri->m_Next;
-    }
-    return nullptr;
-}
-
-// CreateStruct
-//------------------------------------------------------------------------------
-/*static*/ Struct * ReflectionInfo::CreateStruct( const AString & structType )
-{
-    const uint32_t objectTypeCRC = xxHash::Calc32( structType );
-    const ReflectionInfo * ri = s_FirstReflectionInfo;
-    while ( ri )
-    {
-        if ( objectTypeCRC == ri->m_TypeNameCRC )
-        {
-            return ri->CreateStruct();
-        }
-        ri = ri->m_Next;
-    }
-    return nullptr;
-}
-
-// CreateObject
-//------------------------------------------------------------------------------
-Object * ReflectionInfo::CreateObject() const
-{
-    ASSERT( IsObject() );
-    ASSERT( !IsAbstract() );
-    return (Object *)Create();
-}
-
-// CreateStruct
-//------------------------------------------------------------------------------
-Struct * ReflectionInfo::CreateStruct() const
-{
-    ASSERT( IsStruct() );
-    ASSERT( !IsAbstract() );
-    return (Struct *)Create();
-}
-
 // SetArraySize
 //------------------------------------------------------------------------------
 void ReflectionInfo::SetArraySize( void * array, size_t size ) const
@@ -328,17 +263,9 @@ void ReflectionInfo::SetArraySize( void * array, size_t size ) const
     SetArraySizeV( array, size );
 }
 
-// Create
-//------------------------------------------------------------------------------
-/*virtual*/ void * ReflectionInfo::Create() const
-{
-    ASSERT( false ); // Should be implemented by derived class!
-    return nullptr;
-}
-
 // SetArraySizeV
 //------------------------------------------------------------------------------
-/*virtual*/ void ReflectionInfo::SetArraySizeV( void * UNUSED( array ), size_t UNUSED( size ) ) const
+/*virtual*/ void ReflectionInfo::SetArraySizeV( void * /*array*/, size_t /*size*/ ) const
 {
     ASSERT( false ); // Should be implemented by derived class!
 }

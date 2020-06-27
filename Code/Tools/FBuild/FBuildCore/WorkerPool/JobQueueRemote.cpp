@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
 
 // Core
 #include "Core/Env/ErrorFormat.h"
@@ -67,8 +68,8 @@ void JobQueueRemote::SignalStopWorkers()
     for ( size_t i=0; i<numWorkerThreads; ++i )
     {
         m_Workers[ i ]->Stop();
+        WakeWorkers();
     }
-    WakeWorkers();
 }
 
 // HaveWorkersStopped
@@ -330,8 +331,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
     uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
-    if ( result == Node::NODE_RESULT_OK )
+    if ( result == Node::NODE_RESULT_FAILED )
     {
+        node->SetStatFlag( Node::STATS_FAILED );
+    }
+    else
+    {
+        // build completed ok
+        ASSERT( result == Node::NODE_RESULT_OK );
+
         // record new build time only if built (i.e. if failed, the time
         // does not represent how long it takes to create this resource)
         node->SetLastBuildTime( timeTakenMS );
@@ -340,31 +348,11 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         #ifdef DEBUG
             if ( job->IsLocal() )
             {
-                // record new file time for remote job we built locally
+                // we should have recorded the new file time for remote job we built locally
                 ASSERT( node->m_Stamp == FileIO::GetFileLastWriteTime(node->GetName()) );
             }
         #endif
-    }
 
-    if ( result == Node::NODE_RESULT_FAILED )
-    {
-        node->SetStatFlag( Node::STATS_FAILED );
-
-        // build of file failed - if there is a file....
-        if ( FileIO::FileExists( node->GetName().Get() ) )
-        {
-            // ... it is invalid, so try to delete it
-            if ( FileIO::FileDelete( node->GetName().Get() ) == false )
-            {
-                // failed to delete it - this might cause future build problems!
-                FLOG_ERROR( "Post failure deletion failed for '%s'", node->GetName().Get() );
-            }
-        }
-    }
-    else
-    {
-        // build completed ok, or retrieved from cache...
-        ASSERT( result == Node::NODE_RESULT_OK );
 
         // TODO:A Also read into job if cache is being used
         if ( job->IsLocal() == false )
@@ -414,73 +402,46 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 /*static*/ bool JobQueueRemote::ReadResults( Job * job )
 {
     const ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
-    const bool includePDB = (  node->IsUsingPDB() && ( job->IsLocal() == false ) );
+    const bool includePDB = node->IsUsingPDB();
+    const bool usingStaticAnalysis = node->IsUsingStaticAnalysisMSVC();
 
-    // main object
-    FileStream fs;
-    if ( fs.Open( node->GetName().Get() ) == false )
-    {
-        job->Error( "File missing despite success: '%s'", node->GetName().Get() );
-        FLOG_ERROR( "File missing despite success: '%s'", node->GetName().Get() );
-        return false;
-    }
-    uint32_t size = (uint32_t)fs.GetFileSize();
-    uint32_t size2 = 0;
+    // Detemine list of files to send
 
-    // pdb file if present
-    FileStream fs2;
-    AStackString<> pdbName;
+    // 1. Object file
+    //---------------
+    Array< AString > fileNames( 3, false );
+    fileNames.Append( node->GetName() );
+
+    // 2. PDB file (optional)
+    //-----------------------
     if ( includePDB )
     {
-        node->GetPDBName( pdbName );
-        if ( fs2.Open( pdbName.Get() ) == false )
-        {
-            job->Error( "File missing despite success: '%s'", pdbName.Get() );
-            FLOG_ERROR( "File missing despite success: '%s'", pdbName.Get() );
-            return false;
-        }
-        size2 = (uint32_t)fs2.GetFileSize();
+        AStackString<> pdbFileName;
+        node->GetPDBName( pdbFileName );
+        fileNames.Append( pdbFileName );
     }
 
-    // calc memory required
-    size_t memSize = sizeof( uint32_t ); // write size of first file
-    memSize += size;
-    if ( includePDB )
+    // 3. .nativecodeanalysis.xml file (optional)
+    //--------------------------------------------
+    if ( usingStaticAnalysis )
     {
-        memSize += sizeof( uint32_t ); // write size of second file
-        memSize += size2;
+        AStackString<> xmlFileName;
+        node->GetNativeAnalysisXMLPath( xmlFileName );
+        fileNames.Append( xmlFileName );
     }
 
-    // allocate entire buffer
-    AutoPtr< char > mem( (char *)ALLOC( memSize ) );
-
-    // write first file size
-    *( (uint32_t *)mem.Get() ) = size;
-
-    // read first file
-    if ( fs.Read( mem.Get() + sizeof( uint32_t ), size ) != size )
+    MultiBuffer mb;
+    size_t problemFileIndex = 0;
+    if ( !mb.CreateFromFiles( fileNames, &problemFileIndex ) )
     {
-        job->Error( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, node->GetName().Get() );
-        FLOG_ERROR( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, node->GetName().Get() );
-        return false;
-    }
-
-    if ( includePDB )
-    {
-        // write second file size
-        *( (uint32_t *)( mem.Get() + sizeof( uint32_t ) + size ) ) = size2;
-
-        // read second file
-        if ( fs2.Read( mem.Get() + sizeof( uint32_t ) + size + sizeof( uint32_t ), size2 ) != size2 )
-        {
-            job->Error( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, pdbName.Get() );
-            FLOG_ERROR( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, pdbName.Get() );
-            return false;
-        }
+        job->Error( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
+        FLOG_ERROR( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
     }
 
     // transfer data to job
-    job->OwnData( mem.Release(), memSize );
+    size_t memSize;
+    void * mem = mb.Release( memSize );
+    job->OwnData( mem, memSize );
 
     return true;
 }

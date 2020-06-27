@@ -52,9 +52,9 @@ template < class T >
 T & Singleton< T >::Get()
 {
     ASSERT( s_Instance );
-PRAGMA_DISABLE_PUSH_MSVC( 6011 ) // static analysis generates a C6011: Dereferencing NULL pointer 's_Instance'
+    PRAGMA_DISABLE_PUSH_MSVC( 6011 ) // static analysis generates a C6011: Dereferencing NULL pointer 's_Instance'
     return *s_Instance;
-PRAGMA_DISABLE_POP_MSVC
+    PRAGMA_DISABLE_POP_MSVC
 }
 
 //------------------------------------------------------------------------------

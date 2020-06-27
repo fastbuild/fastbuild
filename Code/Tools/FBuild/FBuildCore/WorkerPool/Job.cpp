@@ -58,7 +58,7 @@ void Job::Cancel()
 {
     ASSERT( m_IsLocal ); // Cancellation should only occur locally
     ASSERT( m_Abort == false ); // Job must be not already be cancelled
-    m_Abort = true;
+    AtomicStoreRelaxed( &m_Abort, true );
 }
 
 // OwnData
@@ -95,7 +95,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
 
 // Error
 //------------------------------------------------------------------------------
-void Job::Error( const char * format, ... )
+void Job::Error( MSVC_SAL_PRINTF const char * format, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -129,12 +129,12 @@ void Job::ErrorPreformatted( const char * message )
 
         if ( FLog::IsMonitorEnabled() )
         {
-            m_Messages.Append( AStackString<>( message ) );
+            m_Messages.EmplaceBack( message );
         }
     }
     else
     {
-        m_Messages.Append( AStackString<>( message ) );
+        m_Messages.EmplaceBack( message );
     }
 }
 
@@ -191,9 +191,9 @@ void Job::Deserialize( IOStream & stream )
     OwnData( data, dataSize, compressed );
 }
 
-// GetMessagesForMonitorLog
+// GetMessagesForLog
 //------------------------------------------------------------------------------
-void Job::GetMessagesForMonitorLog( AString & buffer ) const
+void Job::GetMessagesForLog( AString & buffer ) const
 {
     // The common case is that there are no messages
     if ( m_Messages.IsEmpty() )
@@ -215,12 +215,33 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
     {
         buffer += msg;
     }
+}
+
+// GetMessagesForMonitorLog
+//------------------------------------------------------------------------------
+void Job::GetMessagesForMonitorLog( AString & buffer ) const
+{
+    // The common case is that there are no messages
+    if ( m_Messages.IsEmpty() )
+    {
+        return;
+    }
+
+    // concat all messages
+    GetMessagesForLog( buffer );
 
     // Escape some characters to simplify parsing in the log
     // (The monitor will knows how to restore them)
     buffer.Replace( '\n', (char)12 );
     buffer.Replace( '\r', (char)12 );
     buffer.Replace( '\"', '\'' ); // TODO:B The monitor can't differentiate ' and "
+}
+
+// GetTotalLocalDataMemoryUsage
+//------------------------------------------------------------------------------
+/*static*/ uint64_t Job::GetTotalLocalDataMemoryUsage()
+{
+    return (uint64_t)AtomicLoadRelaxed( &s_TotalLocalDataMemoryUsage );
 }
 
 //------------------------------------------------------------------------------

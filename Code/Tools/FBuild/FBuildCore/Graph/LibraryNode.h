@@ -10,7 +10,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
-class BFFIterator;
 class CompilerNode;
 class Function;
 class NodeGraph;
@@ -23,7 +22,7 @@ class LibraryNode : public ObjectListNode
     REFLECT_NODE_DECLARE( LibraryNode )
 public:
     LibraryNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~LibraryNode() override;
 
     static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
@@ -38,7 +37,7 @@ public:
         LIB_FLAG_GREENHILLS_AX=0x08, // Greenhills (WiiU) ax.exe
         LIB_FLAG_WARNINGS_AS_ERRORS_MSVC = 0x10,
     };
-    static uint32_t DetermineFlags( const AString & librarianName, const AString & args );
+    static uint32_t DetermineFlags( const AString & librarianType, const AString & librarianName, const AString & args );
 private:
     friend class FunctionLibrary;
 
@@ -57,6 +56,7 @@ private:
     // Exposed Properties
     AString             m_Librarian;
     AString             m_LibrarianOptions;
+    AString             m_LibrarianType;
     AString             m_LibrarianOutput;
     Array< AString >    m_LibrarianAdditionalInputs;
     Array< AString >    m_Environment;

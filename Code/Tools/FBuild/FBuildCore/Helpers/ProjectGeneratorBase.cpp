@@ -8,6 +8,9 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
@@ -128,6 +131,9 @@ void  ProjectGeneratorBase::SortFilesAndFolders()
     {
         m_Folders[ index ]->m_SortedIndex = index;
 
+        // Sort files in folders
+        m_Folders[ index ]->m_Files.SortDeref();
+
         // Sort child folders as well
         m_Folders[ index ]->m_Folders.SortDeref();
     }
@@ -138,15 +144,20 @@ void  ProjectGeneratorBase::SortFilesAndFolders()
 void ProjectGeneratorBase::AddFile( const AString & fileName )
 {
     // Handle BasePath
-    AStackString<> shortFileName;
-    GetProjectRelativePath_Deprecated( fileName, shortFileName );
+    AStackString<> relativePath;
+    GetProjectRelativePath_Deprecated( fileName, relativePath );
 
     // Find existing folder
-    Folder * folder = GetFolderFor( shortFileName );
+    Folder * folder = GetFolderFor( relativePath );
+
+    // Get file name with no path
+    const char * fileNameOnly = relativePath.FindLast( '/' );
+    fileNameOnly = fileNameOnly ? fileNameOnly : relativePath.FindLast( '\\' );
+    fileNameOnly = fileNameOnly ? ( fileNameOnly + 1 ) : relativePath.Get();
 
     // Add file
     File * newFile = FNEW( File );
-    newFile->m_Name = shortFileName;
+    newFile->m_FileName = fileNameOnly;
     newFile->m_FullPath = fileName;
     newFile->m_Folder = folder;
     m_Files.Append( newFile );
@@ -157,7 +168,7 @@ void ProjectGeneratorBase::AddFile( const AString & fileName )
 
 // Write
 //------------------------------------------------------------------------------
-void ProjectGeneratorBase::Write( const char * fmtString, ... )
+void ProjectGeneratorBase::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 
@@ -177,12 +188,9 @@ void ProjectGeneratorBase::Write( const char * fmtString, ... )
 
 // AddConfig
 //------------------------------------------------------------------------------
-void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetNode )
+void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config )
 {
-    Config c;
-    c.m_Name = name;
-    c.m_TargetNode = targetNode;
-    m_Configs.Append( c );
+    m_Configs.Append( &config );
 }
 
 // WriteIfDifferent
@@ -255,7 +263,10 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
 //------------------------------------------------------------------------------
 /*static*/ bool ProjectGeneratorBase::WriteToDisk( const char * generatorId, const AString & content, const AString & fileName )
 {
-    FLOG_BUILD( "%s: %s\n", generatorId, fileName.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "%s: %s\n", generatorId, fileName.Get() );
+    }
 
     // ensure path exists (normally handled by framework, but Projects
     // are not necessarily a single file)
@@ -295,7 +306,7 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
     extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
     for ( auto & ext : defaultExtensions )
     {
-        extensions.Append( AStackString<>( ext ) );
+        extensions.EmplaceBack( ext );
     }
 }
 
@@ -320,7 +331,6 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         ext = tmp;
     }
 }
-
 
 // FindTargetForIntellisenseInfo
 //------------------------------------------------------------------------------
@@ -371,6 +381,10 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
                 }
                 break; // Nothing aliased - ignore
             }
+            case Node::COPY_FILE_NODE:
+            {
+                return FindTargetForIntellisenseInfo( node->CastTo< CopyFileNode >()->GetSourceNode() );
+            }
             default: break; // Unsupported type - ignore
         }
     }
@@ -392,21 +406,66 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
     return nullptr;
 }
 
+// ExtractIncludePaths
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::ExtractIncludePaths( const AString & compilerArgs,
+                                                           Array< AString > & outIncludes,
+                                                           bool escapeQuotes )
+{
+    StackArray< AString, 5 > prefixes;
+    prefixes.EmplaceBack( "/I" );
+    prefixes.EmplaceBack( "-I" );
+    prefixes.EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
+    prefixes.EmplaceBack( "-isystem" );
+    prefixes.EmplaceBack( "-iquote" );
+
+    // Extract various kinds of includes
+    const bool keepFullOption = false;
+    ExtractIntellisenseOptions( compilerArgs, prefixes, outIncludes, escapeQuotes, keepFullOption );
+}
+
+// ExtractDefines
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::ExtractDefines( const AString & compilerArgs,
+                                                      Array< AString > & outDefines,
+                                                      bool escapeQuotes )
+{
+    StackArray< AString, 2 > prefixes;
+    prefixes.EmplaceBack( "/D" );
+    prefixes.EmplaceBack( "-D" );
+
+    // Extract various kinds of includes
+    const bool keepFullOption = false;
+    ExtractIntellisenseOptions( compilerArgs, prefixes, outDefines, escapeQuotes, keepFullOption );
+}
+
+// ExtractAdditionalOptions
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::ExtractAdditionalOptions( const AString & compilerArgs,
+                                                                Array< AString > & outOptions )
+{
+    StackArray< AString, 2 > prefixes;
+    prefixes.EmplaceBack( "-std" );
+    prefixes.EmplaceBack( "/std" );
+
+    // Extract the options
+    const bool escapeQuotes = false;
+    const bool keepFullOption = true;
+    ExtractIntellisenseOptions( compilerArgs, prefixes, outOptions, escapeQuotes, keepFullOption );
+}
+
 // ExtractIntellisenseOptions
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractIntellisenseOptions( const AString & compilerArgs,
-                                                                  const char * option,
-                                                                  const char * alternateOption,
+                                                                  const Array< AString > & prefixes,
                                                                   Array< AString > & outOptions,
                                                                   bool escapeQuotes,
                                                                   bool keepFullOption )
 {
-    ASSERT( option );
+    ASSERT( prefixes.IsEmpty() == false );
+
     Array< AString > tokens;
     compilerArgs.Tokenize( tokens );
-
-    const size_t optionLen = AString::StrLen( option );
-    const size_t alternateOptionLen = alternateOption ? AString::StrLen( alternateOption ) : 0;
 
     for ( size_t i=0; i<tokens.GetSize(); ++i )
     {
@@ -421,39 +480,38 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         AStackString<> optionBody;
 
         // Handle space between option and payload
-        if ( ( token == option ) || ( token == alternateOption ) )
+        for ( const AString & prefix : prefixes )
         {
-            // Handle an incomplete token at the end of list
-            if ( i == ( tokens.GetSize() - 1 ) )
+            if ( token == prefix )
             {
+                // Handle an incomplete token at the end of list
+                if ( i == (tokens.GetSize() - 1) )
+                {
+                    return;
+                }
+
+                // Use next token
+                optionBody = tokens[ i + 1 ];
                 break;
             }
+        }
 
-            // Use next token
-            optionBody = tokens[ i + 1 ];
-        }
-        else if ( token.BeginsWith( option ) )
+        if ( optionBody.IsEmpty() )
         {
-            if ( keepFullOption )
+            for ( const AString & prefix : prefixes )
             {
-                optionBody = token;
-            }
-            else
-            {
-                // use everything after token
-                optionBody.Assign( token.Get() + optionLen );
-            }
-        }
-        else if ( alternateOption && token.BeginsWith( alternateOption ) )
-        {
-            if ( keepFullOption )
-            {
-                optionBody = token;
-            }
-            else
-            {
-                // use everything after token
-                optionBody.Assign( token.Get() + alternateOptionLen );
+                if ( token.BeginsWith( prefix ) )
+                {
+                    if ( keepFullOption )
+                    {
+                        optionBody = token;
+                    }
+                    else
+                    {
+                        // use everything after token
+                        optionBody.Assign( token.Get() + prefix.GetLength() );
+                    }
+                }
             }
         }
 
@@ -494,6 +552,59 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
             outTokenString += postToken;
         }
     }
+}
+
+// FindExecutableDebugTarget
+// - Return the node that would be used for debugging
+//------------------------------------------------------------------------------
+/*static*/ const FileNode * ProjectGeneratorBase::FindExecutableDebugTarget( const Node * node )
+{
+    if ( node )
+    {
+        switch ( node->GetType() )
+        {
+            case Node::EXE_NODE: return node->CastTo< ExeNode >();
+            case Node::DLL_NODE: return node->CastTo< DLLNode >();
+            case Node::COPY_FILE_NODE:
+            {
+                // When copying, we want to debug the copy as that usually means a staging dir
+                // is being created (collating dependencies, isolated from intermediate files)
+                return (const FileNode *)node;
+            }
+            case Node::TEST_NODE:
+            {
+                // Get executable backing test
+                return (FileNode *)node->CastTo< TestNode >()->GetTestExecutable();
+            }
+            case Node::ALIAS_NODE:
+            {
+                const FileNode * n = FindExecutableDebugTarget( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                if ( n )
+                {
+                    return n;
+                }
+                break; // Nothing aliased - ignore
+            }
+            default: break; // Unsupported type - ignore
+        }
+    }
+    
+    return nullptr;
+}
+
+// FindExecutableDebugTarget
+//------------------------------------------------------------------------------
+/*static*/ const FileNode * ProjectGeneratorBase::FindExecutableDebugTarget( const Dependencies & deps )
+{
+    for ( const Dependency & dep : deps )
+    {
+        const FileNode * n = FindExecutableDebugTarget( dep.GetNode() );
+        if ( n )
+        {
+            return n;
+        }
+    }
+    return nullptr;
 }
 
 // GetRelativePath

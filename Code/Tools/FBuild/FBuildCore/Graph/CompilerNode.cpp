@@ -24,15 +24,17 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT( m_AllowResponseFile,   "AllowResponseFile",    MetaOptional() )
     REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
     REFLECT( m_ClangRewriteIncludes, "ClangRewriteIncludes", MetaOptional() )
+    REFLECT( m_ClangFixupUnity_Disable, "ClangFixupUnity_Disable", MetaOptional() )
     REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
     REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
     REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
     REFLECT_ARRAY( m_Environment,   "Environment",          MetaOptional() )
     REFLECT( m_UseLightCache,       "UseLightCache_Experimental", MetaOptional() )
+    REFLECT( m_UseRelativePaths,    "UseRelativePaths_Experimental", MetaOptional() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
-    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() )
+    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
@@ -43,17 +45,19 @@ CompilerNode::CompilerNode()
     , m_AllowResponseFile( false )
     , m_VS2012EnumBugFix( false )
     , m_ClangRewriteIncludes( true )
+    , m_ClangFixupUnity_Disable( false )
     , m_CompilerFamilyString( "auto" )
     , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
     , m_SimpleDistributionMode( false )
     , m_UseLightCache( false )
+    , m_UseRelativePaths( false )
     , m_EnvironmentString( nullptr )
 {
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .Executable
     Dependencies compilerExeFile( 1, false );
@@ -131,6 +135,8 @@ CompilerNode::CompilerNode()
         return false;
     }
 
+    m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables );
+
     return true;
 }
 
@@ -143,7 +149,7 @@ CompilerNode::CompilerNode()
 
 // InitializeCompilerFamily
 //------------------------------------------------------------------------------
-bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Function * function )
+bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Function * function )
 {
     // Handle auto-detect
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
@@ -253,6 +259,14 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
             return true;
         }
 
+        // C# compiler
+        if ( compiler.EndsWithI( "csc.exe" ) ||
+             compiler.EndsWithI( "csc" ) )
+        {
+            m_CompilerFamilyEnum = CSHARP;
+            return true;
+        }
+
         // Auto-detect failed
         Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
         return false;
@@ -314,6 +328,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
         return true;
     }
+    if ( m_CompilerFamilyString.EqualsI( "csharp" ) )
+    {
+        m_CompilerFamilyEnum = CSHARP;
+        return true;
+    }
 
     // Invalid option
     Error::Error_1501_CompilerFamilyUnrecognized( iter, function, m_CompilerFamilyString );
@@ -331,7 +350,7 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    if ( !m_Manifest.Generate( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
+    if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }
@@ -345,6 +364,17 @@ CompilerNode::~CompilerNode()
 const char * CompilerNode::GetEnvironmentString() const
 {
     return Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
+}
+
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void CompilerNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate the timestamp/hash info stored for the files in the ToolManifest
+    m_Manifest.Migrate( oldNode.CastTo<CompilerNode>()->GetManifest() );
 }
 
 //------------------------------------------------------------------------------

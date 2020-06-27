@@ -12,42 +12,46 @@
 // Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( DirectoryListNode, Node, MetaNone() )
-    REFLECT( m_Path,                    "Path",             MetaNone() )
-    REFLECT_ARRAY( m_Patterns,          "Patterns",         MetaNone() )
-    REFLECT_ARRAY( m_ExcludePaths,      "ExcludePaths",     MetaNone() )
-    REFLECT_ARRAY( m_FilesToExclude,    "FilesToExclude",   MetaNone() )
-    REFLECT_ARRAY( m_ExcludePatterns,   "ExcludePatterns",  MetaNone() )
-    REFLECT( m_Recursive,               "Recursive",        MetaNone() )
+    REFLECT( m_Path,                    "Path",             MetaHidden() )
+    REFLECT_ARRAY( m_Patterns,          "Patterns",         MetaHidden() )
+    REFLECT_ARRAY( m_ExcludePaths,      "ExcludePaths",     MetaHidden() )
+    REFLECT_ARRAY( m_FilesToExclude,    "FilesToExclude",   MetaHidden() )
+    REFLECT_ARRAY( m_ExcludePatterns,   "ExcludePatterns",  MetaHidden() )
+    REFLECT( m_Recursive,               "Recursive",        MetaHidden() )
+    REFLECT( m_IncludeReadOnlyStatusInHash, "IncludeReadOnlyStatusInHash", MetaHidden() )
 REFLECT_END( DirectoryListNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 DirectoryListNode::DirectoryListNode()
-    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_NONE )
+    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_ALWAYS_BUILD )
     , m_Recursive( true )
+    , m_IncludeReadOnlyStatusInHash( false )
 {
     m_LastBuildTimeMs = 100;
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
-    ASSERT( ( m_Recursive == true ) || ( m_Recursive == false ) );
-
     // ensure name is correctly formatted
-    //   path|[patterns]|recursive|[excludePath]
+    //   path|[patterns]|recursive|readonlyflag|[excludePath]
     ASSERT( m_Name.BeginsWith( m_Path ) );
     ASSERT( m_Name[ m_Path.GetLength() ] == '|' );
     ASSERT( m_Patterns.IsEmpty() || ( m_Name.Find( m_Patterns[ 0 ].Get() ) == m_Name.Get() + m_Path.GetLength() + 1 ) );
     ASSERT( ( m_Recursive && m_Name.Find( "|true|" ) ) ||
             ( !m_Recursive && m_Name.Find( "|false|" ) ) );
+    ASSERT( ( m_IncludeReadOnlyStatusInHash && m_Name.Find( "|rw|" ) ) ||
+            ( !m_IncludeReadOnlyStatusInHash && m_Name.Find( "||" ) ) );
 
     // paths must have trailing slash
     ASSERT( m_Path.EndsWith( NATIVE_SLASH ) );
@@ -72,6 +76,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 /*static*/ void DirectoryListNode::FormatName( const AString & path,
                                                const Array< AString > * patterns,
                                                bool recursive,
+                                               bool includeReadOnlyFlagInHash,
                                                const Array< AString > & excludePaths,
                                                const Array< AString > & excludeFiles,
                                                const Array< AString > & excludePatterns,
@@ -91,9 +96,10 @@ DirectoryListNode::~DirectoryListNode() = default;
             patternString += (*patterns)[ i ];
         }
     }
-    result.Format( "%s|%s|%s|", path.Get(),
+    result.Format( "%s|%s|%s|%s|", path.Get(),
                                   patternString.Get(),
-                                  recursive ? "true" : "false" );
+                                  recursive ? "true" : "false",
+                                  includeReadOnlyFlagInHash ? "rw" : "");
 
     const AString * const end = excludePaths.End();
     for ( const AString * it = excludePaths.Begin(); it!=end; ++it )
@@ -131,7 +137,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult DirectoryListNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult DirectoryListNode::DoBuild( Job * /*job*/ )
 {
     // NOTE: The DirectoryListNode makes no assumptions about whether no files
     // is an error or not.  That's up to the dependent nodes to decide.
@@ -194,19 +200,61 @@ DirectoryListNode::~DirectoryListNode() = default;
         }
     }
 
-    if ( FLog::ShowInfo() )
+    MakePrettyName( files.GetSize() );
+
+    if ( FLog::ShowVerbose() )
     {
+        AStackString<> buffer;
         const size_t numFiles = m_Files.GetSize();
-        FLOG_INFO( "Dir: '%s' (found %u files)\n",
-                            m_Name.Get(),
-                            (uint32_t)numFiles);
+        buffer.AppendFormat( "Dir: '%s' (found %u files)\n",
+                             m_Name.Get(),
+                             (uint32_t)numFiles );
         for ( size_t i=0; i<numFiles; ++i )
         {
-            FLOG_INFO( " - %s\n", m_Files[ i ].m_Name.Get() );
+            buffer.AppendFormat( " - %s\n", m_Files[ i ].m_Name.Get() );
         }
+        FLOG_VERBOSE( "%s", buffer.Get() );
+    }
+
+    // Hash the directory listing to represent the discovered files
+    if ( m_Files.IsEmpty() )
+    {
+        m_Stamp = 1; // Non-zero
+    }
+    else
+    {
+        MemoryStream ms;
+        for ( const FileIO::FileInfo & file : m_Files )
+        {
+            // Include filenames, so additions and removals will change the hash
+            ms.WriteBuffer( file.m_Name.Get(), file.m_Name.GetLength() );
+
+            // Include read-only status if desired
+            if ( m_IncludeReadOnlyStatusInHash )
+            {
+                ms.Write( file.IsReadOnly() );
+            }
+        }
+        m_Stamp = xxHash::Calc64( ms.GetData(), ms.GetSize() );
     }
 
     return NODE_RESULT_OK;
+}
+
+// MakePrettyName
+//------------------------------------------------------------------------------
+void DirectoryListNode::MakePrettyName( const size_t totalFiles )
+{
+    AStackString<> prettyName( m_Path );
+    if (m_Recursive)
+    {
+        prettyName += " (recursive)";
+    }
+
+    const size_t numFiles = m_Files.GetSize();
+    prettyName.AppendFormat( ", files kept: %zu / %zu", numFiles, totalFiles );
+
+    m_PrettyName = prettyName;
 }
 
 //------------------------------------------------------------------------------

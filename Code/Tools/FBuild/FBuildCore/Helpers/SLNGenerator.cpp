@@ -6,7 +6,7 @@
 #include "SLNGenerator.h"
 
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/VSProjectBaseNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -26,13 +26,13 @@ SLNGenerator::SLNGenerator() = default;
 //------------------------------------------------------------------------------
 SLNGenerator::~SLNGenerator() = default;
 
-// GenerateVCXProj
+// GenerateSLN
 //------------------------------------------------------------------------------
 const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
                                            const AString & solutionVisualStudioVersion,
                                            const AString & solutionMinimumVisualStudioVersion,
                                            const Array< SolutionConfig > & solutionConfigs,
-                                           const Array< VCXProjectNode * > & projects,
+                                           const Array< VSProjectBaseNode * > & projects,
                                            const Array< SolutionDependency > & solutionDependencies,
                                            const Array< SolutionFolder > & solutionFolders )
 {
@@ -50,7 +50,7 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
     WriteProjectListings( solutionBasePath, projects, solutionFolders, solutionDependencies, solutionProjectsToFolder );
-    WriteSolutionFolderListings( solutionFolders, solutionFolderPaths );
+    WriteSolutionFolderListings( solutionBasePath, solutionFolders, solutionFolderPaths );
     Write( "Global\r\n" );
     WriteSolutionConfigurationPlatforms( solutionConfigs );
     WriteProjectConfigurationPlatforms( solutionConfigs, projects );
@@ -92,15 +92,15 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 // WriteProjectListings
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
-                                         const Array< VCXProjectNode * > & projects,
+                                         const Array< VSProjectBaseNode * > & projects,
                                          const Array< SolutionFolder > & solutionFolders,
                                          const Array< SolutionDependency > & solutionDependencies,
                                          Array< AString > & solutionProjectsToFolder )
 {
     // Project Listings
 
-    VCXProjectNode ** const projectsEnd = projects.End();
-    for( VCXProjectNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
+    VSProjectBaseNode ** const projectsEnd = projects.End();
+    for( VSProjectBaseNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
     {
         AStackString<> projectPath( (*it)->GetName() );
 
@@ -120,11 +120,17 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         // retrieve projectGuid
         AStackString<> projectGuid( (*it)->GetProjectGuid() );
 
-        // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
+        // Visual Studio expects the GUID to be uppercase
         projectGuid.ToUpper();
 
-        Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
-               projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
+        // retrieve projectTypeGuid
+        AStackString<> projectTypeGuid( (*it)->GetProjectTypeGuid() );
+
+        // Visual Studio expects the GUID to be uppercase
+        projectTypeGuid.ToUpper();
+
+        Write( "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n",
+               projectTypeGuid.Get(), projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
 
         // Manage dependencies
         Array< AString > dependencyGUIDs( 64, true );
@@ -140,7 +146,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
             // get all the projects this project depends on
             for ( const AString & dependency : deps.m_Dependencies )
             {
-                for ( const VCXProjectNode* dependencyProject : projects )
+                for ( const VSProjectBaseNode * dependencyProject : projects )
                 {
                     if ( dependencyProject->GetName() == dependency )
                     {
@@ -185,7 +191,8 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 
 // WriteSolutionFolderListings
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteSolutionFolderListings( const Array< SolutionFolder > & solutionFolders,
+void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath,
+                                                const Array< SolutionFolder > & solutionFolders,
                                                 Array< AString > & solutionFolderPaths )
 {
     // Create every intermediate path
@@ -229,6 +236,33 @@ void SLNGenerator::WriteSolutionFolderListings( const Array< SolutionFolder > & 
         Write( "Project(\"{2150E333-8FDC-42A3-9474-1A3956D46DE8}\") = \"%s\", \"%s\", \"%s\"\r\n",
                solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
 
+        // lookup solution folder to find out if it contains items
+        for ( const SolutionFolder& solutionFolder : solutionFolders )
+        {
+            if ( solutionFolderPath.EqualsI( solutionFolder.m_Path ) )
+            {
+                if ( solutionFolder.m_Items.IsEmpty() == false )
+                {
+                    // make a local copy (to sort before writing to SLN, as Visual Studio will keep doing that after opening it):
+                    Array< AString > items;
+                    items.Append( solutionFolder.m_Items );
+                    items.Sort();
+                    Write( "\tProjectSection(SolutionItems) = preProject\r\n" );
+                    for ( const AString & item : items )
+                    {
+                        // make item path relative
+                        AStackString<> itemRelativePath;
+                        ProjectGeneratorBase::GetRelativePath( solutionBasePath, item, itemRelativePath );
+                        #if !defined( __WINDOWS__ )
+                            itemRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
+                        #endif
+                        Write( "\t\t%s = %s\r\n", itemRelativePath.Get(), itemRelativePath.Get() );
+                    }
+                    Write( "\tEndProjectSection\r\n" );
+                }
+            }
+        }
+
         Write( "EndProject\r\n" );
     }
 }
@@ -254,12 +288,12 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
 // WriteProjectConfigurationPlatforms
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs,
-                                                       const Array< VCXProjectNode * > & projects )
+                                                       const Array< VSProjectBaseNode * > & projects )
 {
     Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
 
     // Solution Configuration Mappings to Projects
-    for( const VCXProjectNode * project : projects )
+    for( const VSProjectBaseNode * project : projects )
     {
         AStackString<> projectGuid( project->GetProjectGuid() );
         projectGuid.ToUpper();
@@ -377,7 +411,7 @@ void SLNGenerator::WriteFooter()
 
 // Write
 //------------------------------------------------------------------------------
-void SLNGenerator::Write( const char * fmtString, ... )
+void SLNGenerator::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 

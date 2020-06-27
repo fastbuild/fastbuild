@@ -16,6 +16,7 @@
 // system
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
+    #include "Core/Time/Time.h"
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <dirent.h>
@@ -32,7 +33,42 @@
 #endif
 #if defined( __APPLE__ )
     #include <copyfile.h>
+    #include <dlfcn.h>
     #include <sys/time.h>
+#endif
+
+// OSXHelper_utimensat
+//------------------------------------------------------------------------------
+#if defined( __APPLE__ )
+    // OS X 10.13 (High Sierra) adds support for utimensat
+    // OS X 10.13 (High Sierra) adds the Apple File System (APFS) which supports nsec time resolution
+    // OS X 10.14 (Mojave) uses APFS for all drives/devices
+    //
+    // We want to set higher resolution timestamps where possible, but we want to
+    // retain compatibility with older versions of OS X. To do this, we get the
+    // utimensat symbol dynamically from the C runtime.
+    //
+    class OSXHelper_utimensat
+    {
+    public:
+        typedef int (*FuncPtr)( int dirfd, const char * pathname, const struct timespec times[ 2 ], int flags );
+        
+        OSXHelper_utimensat()
+        {
+            // Open the c runtime library
+            m_LibCHandle = dlopen( "libc.dylib", RTLD_LAZY );
+            ASSERT( m_LibCHandle ); // This should never fail
+        
+            // See if utimensat exists
+            m_FuncPtr = (FuncPtr)dlsym( m_LibCHandle, "utimensat" );
+        }
+        ~OSXHelper_utimensat()
+        {
+            VERIFY( dlclose( m_LibCHandle ) == 0 );
+        }
+        void *          m_LibCHandle    = nullptr;
+        FuncPtr         m_FuncPtr       = nullptr;
+    } gOSXHelper_utimensat;
 #endif
 
 // Exists
@@ -111,8 +147,9 @@
 
 // Copy
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::FileCopy( const char * srcFileName, const char * dstFileName,
-                              bool allowOverwrite )
+/*static*/ bool FileIO::FileCopy( const char * srcFileName,
+                                  const char * dstFileName,
+                                  bool allowOverwrite )
 {
 #if defined( __WINDOWS__ )
     DWORD flags = COPY_FILE_COPY_SYMLINK;
@@ -216,8 +253,8 @@
 
     ssize_t bytesCopied = sendfile( dest, source, 0, stat_source.st_size );
 
-    close(source);
-    close(dest);
+    close( source );
+    close( dest );
 
     return ( bytesCopied == stat_source.st_size );
 #else
@@ -266,9 +303,9 @@
 // GetFilesEx
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFilesEx( const AString & path,
-                                  const Array< AString > * patterns,
-                                  bool recurse,
-                                  Array< FileInfo > * results )
+                                    const Array< AString > * patterns,
+                                    bool recurse,
+                                    Array< FileInfo > * results )
 {
     ASSERT( results );
 
@@ -491,7 +528,7 @@
 /*static*/ bool FileIO::EnsurePathExists( const AString & path )
 {
     // if the entire path already exists, nothing is to be done
-    if( DirectoryExists( path ) )
+    if ( DirectoryExists( path ) )
     {
         return true;
     }
@@ -615,11 +652,6 @@
         struct stat st;
         if ( lstat( fileName.Get(), &st ) == 0 )
         {
-            // OSX only supports setting filetimes at usec granularity
-            // so if we ever receive times with sub-usec granularity
-            // we will lose accuracy.
-            ASSERT( ( st.st_mtimespec.tv_nsec % 1000 ) == 0 );
-
             return ( ( (uint64_t)st.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)st.st_mtimespec.tv_nsec );
         }
     #elif defined( __LINUX__ )
@@ -643,7 +675,7 @@
         // TOOD:B Check these args
         HANDLE hFile = CreateFile( fileName.Get(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr,
                                    OPEN_EXISTING, 0, nullptr);
-        if( hFile == INVALID_HANDLE_VALUE )
+        if ( hFile == INVALID_HANDLE_VALUE )
         {
             return false;
         }
@@ -663,18 +695,51 @@
 
         return true;
     #elif defined( __APPLE__ )
+        // Use higher precision function if available
+        if ( gOSXHelper_utimensat.m_FuncPtr )
+        {
+            struct timespec t[ 2 ];
+            t[ 0 ].tv_sec = fileTime / 1000000000ULL;
+            t[ 0 ].tv_nsec = ( fileTime % 1000000000ULL );
+            t[ 1 ] = t[ 0 ];
+            return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), t, 0 ) == 0 );
+        }
+    
+        // Fallback to regular low-resolution filetime setting
         struct timeval t[ 2 ];
-        t[0].tv_sec = fileTime / 1000000000ULL;
-        ASSERT( ( ( fileTime % 1000000000ULL ) % 1000 ) == 0 ); // ensure no loss of accuracy
-        t[0].tv_usec = ( fileTime % 1000000000ULL ) / 1000;
-        t[1] = t[0];
+        t[ 0 ].tv_sec = fileTime / 1000000000ULL;
+        t[ 0 ].tv_usec = ( fileTime % 1000000000ULL ) / 1000;
+        t[ 1 ] = t[ 0 ];
         return ( utimes( fileName.Get(), t ) == 0 );
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+    #elif defined( __LINUX__ )
         struct timespec t[ 2 ];
-        t[0].tv_sec = fileTime / 1000000000ULL;
-        t[0].tv_nsec = ( fileTime % 1000000000ULL );
-        t[1] = t[0];
+        t[ 0 ].tv_sec = fileTime / 1000000000ULL;
+        t[ 0 ].tv_nsec = ( fileTime % 1000000000ULL );
+        t[ 1 ] = t[ 0 ];
         return ( utimensat( 0, fileName.Get(), t, 0 ) == 0 );
+    #else
+        #error Unknown platform
+    #endif
+}
+
+// SetFileLastWriteTimeToNow
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::SetFileLastWriteTimeToNow( const AString & fileName )
+{
+    #if defined( __WINDOWS__ )
+        const uint64_t fileTimeNow = Time::GetCurrentFileTime();
+        return SetFileLastWriteTime( fileName, fileTimeNow );
+    #elif defined( __APPLE__ )
+        // Use higher precision function if available
+        if ( gOSXHelper_utimensat.m_FuncPtr )
+        {
+            return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), nullptr, 0 ) == 0 );
+        }
+    
+        // Fallback to regular low-resolution filetime setting
+        return ( utimes( fileName.Get(), nullptr ) == 0 );
+    #elif defined( __LINUX__ )
+        return ( utimensat( 0, fileName.Get(), nullptr, 0 ) == 0 );
     #else
         #error Unknown platform
     #endif
@@ -1027,12 +1092,11 @@
     #endif
 }
 
-
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurseEx( AString & pathCopy,
-                                         const Array< AString > * patterns,
-                                         Array< FileInfo > * results )
+                                           const Array< AString > * patterns,
+                                           Array< FileInfo > * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
 
@@ -1041,7 +1105,7 @@
 
         // recurse into directories
         WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchLimitToDirectories, nullptr, 0 );
+        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
         if ( hFind == INVALID_HANDLE_VALUE)
         {
             return;
@@ -1064,24 +1128,6 @@
                 pathCopy += findData.cFileName;
                 pathCopy += NATIVE_SLASH;
                 GetFilesRecurseEx( pathCopy, patterns, results );
-            }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
-        FindClose( hFind );
-
-        // do files in this directory
-        pathCopy.SetLength( baseLength );
-        pathCopy += '*';
-        hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
-        {
-            return;
-        }
-
-        do
-        {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-            {
                 continue;
             }
 
@@ -1201,7 +1247,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurseEx( const char * path,
                                              const Array< AString > * patterns,
-                                           Array< FileInfo > * results )
+                                             Array< FileInfo > * results )
 {
     AStackString< 256 > pathCopy( path );
     PathUtils::EnsureTrailingSlash( pathCopy );
@@ -1353,7 +1399,60 @@
                 return;
             }
         }
-        f.Close();
+    }
+#endif
+
+// IsWindowsLongPathSupportEnabled
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    /*static*/ bool FileIO::IsWindowsLongPathSupportEnabled()
+    {
+        // Return the cached value which is valid for the lifetime of the application
+        static bool cachedValue = IsWindowsLongPathSupportEnabledInternal();
+        return cachedValue;
+    }
+#endif
+
+// IsWindowsLongPathSupportEnabledInternal
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    /*static*/ bool FileIO::IsWindowsLongPathSupportEnabledInternal()
+    {
+        // Long Paths are available on Windows if:
+        //   a) A registry key is set
+        // AND
+        //   b) The application's manifest opts in to long paths
+        //
+        // When both requirements are met, existing Windows functions can seamlessly
+        // support longer paths.
+        //
+        // See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#enable-long-paths-in-windows-10-version-1607-and-later
+        //
+        // Out applications embed the manifest, so we can query the registry key
+        // to see if support is available.
+        //
+
+        // Open Registry Entry
+        HKEY key;
+        if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\FileSystem", 0, KEY_READ, &key ) != ERROR_SUCCESS )
+        {
+            return false; // Entry doesn't exit
+        }
+
+        // Read Value
+        DWORD value = 0;
+        DWORD valueSize = sizeof(DWORD);
+        const LONG result = ::RegQueryValueEx( key,
+                                                "LongPathsEnabled",
+                                                0,
+                                                nullptr,
+                                                reinterpret_cast<LPBYTE>( &value ),
+                                                &valueSize );
+
+        VERIFY( RegCloseKey( key ) == ERROR_SUCCESS );
+
+        // Was key found and set to 1 (enabled)?
+        return ( ( result == ERROR_SUCCESS ) && ( value == 1 ) );
     }
 #endif
 

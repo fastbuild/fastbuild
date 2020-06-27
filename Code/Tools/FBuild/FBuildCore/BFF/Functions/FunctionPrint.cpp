@@ -4,11 +4,12 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionPrint.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -40,83 +41,74 @@ FunctionPrint::FunctionPrint()
 
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionPrint::ParseFunction( NodeGraph & /*nodeGraph*/,
-                                               const BFFIterator & functionNameStart,
-                                               const BFFIterator * functionBodyStartToken,
-                                               const BFFIterator * functionBodyStopToken,
-                                               const BFFIterator * functionHeaderStartToken,
-                                               const BFFIterator * functionHeaderStopToken ) const
+                                               BFFParser & /*parser*/,
+                                               const BFFToken * /*functionNameStart*/,
+                                               const BFFTokenRange & headerRange,
+                                               const BFFTokenRange & /*bodyRange*/ ) const
 {
-    (void)functionNameStart;
-    (void)functionBodyStartToken;
-    (void)functionBodyStopToken;
+    ASSERT( headerRange.IsEmpty() == false );
 
-    if ( functionHeaderStartToken && functionHeaderStopToken &&
-         ( functionHeaderStartToken->GetDistTo( *functionHeaderStopToken ) >= 1 ) )
+    // Grab token
+    BFFTokenRange headerIter = headerRange;
+    const BFFToken * varToken = headerIter.GetCurrent();
+    headerIter++;
+
+    if ( varToken->IsString() )
     {
-        BFFIterator start( *functionHeaderStartToken );
-        ASSERT( *start == BFFParser::BFF_FUNCTION_ARGS_OPEN );
-        start++;
-        start.SkipWhiteSpace();
-
-        // a quoted string?
-        const char c = *start;
-        if ( start.IsAtString() )
+        // perform variable substitutions
+        AStackString< 1024 > tmp;
+        if ( BFFParser::PerformVariableSubstitutions( varToken, tmp ) == false )
         {
-            // find end of string
-            BFFIterator stop( start );
-            stop.SkipString();
-            ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-
-            // perform variable substitutions
-            AStackString< 1024 > tmp;
-
-            start++; // skip past opening quote
-            if ( BFFParser::PerformVariableSubstitutions( start, stop, tmp ) == false )
-            {
-                return false; // substitution will have emitted an error
-            }
-            tmp += '\n';
-
-            FLOG_BUILD_DIRECT( tmp.Get() );
+            return false; // substitution will have emitted an error
         }
-        else if ( c == BFFParser::BFF_DECLARE_VAR_INTERNAL ||
-                  c == BFFParser::BFF_DECLARE_VAR_PARENT )
+        tmp += '\n';
+
+        if ( FBuild::Get().GetOptions().m_ShowPrintStatements )
         {
-            // find end of var name
-            BFFIterator stop( start );
-            AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
-            bool parentScope = false;
-            if ( BFFParser::ParseVariableName( stop, varName, parentScope ) == false )
-            {
-                return false;
-            }
-
-            ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-
-            const BFFVariable * var = nullptr;
-            BFFStackFrame * const varFrame = ( parentScope )
-                ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
-                : nullptr;
-
-            if ( false == parentScope )
-            {
-                var = BFFStackFrame::GetVar( varName, nullptr );
-            }
-
-            if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == var ) )
-            {
-                Error::Error_1009_UnknownVariable( start, this, varName );
-                return false;
-            }
-
-            // dump the contents
-            PrintVarRecurse( *var, 0 );
+            FLOG_OUTPUT( tmp );
         }
-        else
+    }
+    else if ( varToken->IsVariable() )
+    {
+        // find variable name
+        AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
+        bool parentScope = false;
+        if ( BFFParser::ParseVariableName( varToken, varName, parentScope ) == false )
         {
-            Error::Error_1001_MissingStringStartToken( start, this );
+            return false; // ParseVariableName will have emitted an error
+        }
+
+        const BFFVariable * var = nullptr;
+        BFFStackFrame * const varFrame = ( parentScope )
+            ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
+            : nullptr;
+
+        if ( false == parentScope )
+        {
+            var = BFFStackFrame::GetVar( varName, nullptr );
+        }
+
+        if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == var ) )
+        {
+            Error::Error_1009_UnknownVariable( varToken, this, varName );
             return false;
         }
+
+        // dump the contents
+        if ( FBuild::Get().GetOptions().m_ShowPrintStatements )
+        {
+            PrintVarRecurse( *var, 0 );
+        }
+    }
+    else
+    {
+        Error::Error_1001_MissingStringStartToken( varToken, this ); // TODO:C Better error message
+        return false;
+    }
+
+    if ( headerIter.IsAtEnd() == false )
+    {
+        // TODO:B Error for unexpected junk in header
     }
 
     return true;
@@ -132,7 +124,7 @@ FunctionPrint::FunctionPrint()
         indentStr += "    ";
     }
     ++indent;
-    FLOG_BUILD( "%s", indentStr.Get() );
+    FLOG_OUTPUT( "%s", indentStr.Get() );
 
     switch ( var.GetType() )
     {
@@ -141,51 +133,51 @@ FunctionPrint::FunctionPrint()
         {
             AStackString<> value( var.GetString() );
             value.Replace( "'", "^'" ); // escape single quotes
-            FLOG_BUILD( "%s = '%s'\n", var.GetName().Get(), value.Get() );
+            FLOG_OUTPUT( "%s = '%s'\n", var.GetName().Get(), value.Get() );
             break;
         }
         case BFFVariable::VAR_BOOL:
         {
-            FLOG_BUILD( "%s = %s\n", var.GetName().Get(), var.GetBool() ? BFF_KEYWORD_TRUE : BFF_KEYWORD_FALSE );
+            FLOG_OUTPUT( "%s = %s\n", var.GetName().Get(), var.GetBool() ? BFF_KEYWORD_TRUE : BFF_KEYWORD_FALSE );
             break;
         }
         case BFFVariable::VAR_ARRAY_OF_STRINGS:
         {
             const auto & strings = var.GetArrayOfStrings();
-            FLOG_BUILD( "%s = // ArrayOfStrings, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)strings.GetSize(), indentStr.Get() );
+            FLOG_OUTPUT( "%s = // ArrayOfStrings, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)strings.GetSize(), indentStr.Get() );
             for ( const AString & string : strings )
             {
                 AStackString<> value( string );
                 value.Replace( "'", "^'" ); // escape single quotes
-                FLOG_BUILD( "%s    '%s'\n", indentStr.Get(), value.Get() );
+                FLOG_OUTPUT( "%s    '%s'\n", indentStr.Get(), value.Get() );
             }
-            FLOG_BUILD( "%s}\n", indentStr.Get() );
+            FLOG_OUTPUT( "%s}\n", indentStr.Get() );
             break;
         }
         case BFFVariable::VAR_INT:
         {
-            FLOG_BUILD( "%s = %i\n", var.GetName().Get(), var.GetInt() );
+            FLOG_OUTPUT( "%s = %i\n", var.GetName().Get(), var.GetInt() );
             break;
         }
         case BFFVariable::VAR_STRUCT:
         {
-            FLOG_BUILD( "%s = // Struct\n%s[\n", var.GetName().Get(), indentStr.Get() );
+            FLOG_OUTPUT( "%s = // Struct\n%s[\n", var.GetName().Get(), indentStr.Get() );
             for ( const BFFVariable * subVar : var.GetStructMembers() )
             {
                 PrintVarRecurse( *subVar, indent );
             }
-            FLOG_BUILD( "%s]\n", indentStr.Get() );
+            FLOG_OUTPUT( "%s]\n", indentStr.Get() );
             break;
         }
         case BFFVariable::VAR_ARRAY_OF_STRUCTS:
         {
             const auto & structs = var.GetArrayOfStructs();
-            FLOG_BUILD( "%s = // ArrayOfStructs, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)structs.GetSize(), indentStr.Get() );
+            FLOG_OUTPUT( "%s = // ArrayOfStructs, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)structs.GetSize(), indentStr.Get() );
             for ( const BFFVariable * subVar : structs )
             {
                 PrintVarRecurse( *subVar, indent );
             }
-            FLOG_BUILD( "%s}\n", indentStr.Get() );
+            FLOG_OUTPUT( "%s}\n", indentStr.Get() );
             break;
         }
         case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break; // Something is terribly wrong

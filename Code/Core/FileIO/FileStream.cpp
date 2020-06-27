@@ -7,16 +7,17 @@
 
 // Core
 #include "Core/Env/Assert.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 
 // system
 #include <stdio.h>
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
 #else
-   #include <fcntl.h>
-   #include <unistd.h>
+    #include <fcntl.h>
+    #include <sys/stat.h>
+    #include <unistd.h>
 #endif
 
 // Defines
@@ -53,106 +54,118 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
 {
     ASSERT( !IsOpen() );
 
-#if defined( __WINDOWS__ )
-    DWORD desiredAccess( 0 );
-    DWORD shareMode( 0 );
-    DWORD creationDisposition( 0 );
-    DWORD flags( FILE_ATTRIBUTE_NORMAL );
+    #if defined( __WINDOWS__ )
+        DWORD desiredAccess( 0 );
+        DWORD shareMode( 0 );
+        DWORD creationDisposition( 0 );
+        DWORD flags( FILE_ATTRIBUTE_NORMAL );
 
-    // access mode
-    if ( ( fileMode & READ_ONLY ) != 0 )
-    {
-        ASSERT( fileMode == READ_ONLY ); // no extra flags allowed
-        desiredAccess       |= GENERIC_READ;
-        shareMode           |= FILE_SHARE_READ; // allow other readers
-        creationDisposition |= OPEN_EXISTING;
-    }
-    else if ( ( fileMode & WRITE_ONLY ) != 0 )
-    {
-        desiredAccess       |= GENERIC_WRITE;
-        shareMode           |= FILE_SHARE_READ; // allow other readers
-        creationDisposition |= CREATE_ALWAYS; // overwrite existing
-    }
-    else
-    {
-        ASSERT( false ); // must specify an access mode
-    }
-
-    // extra flags
-    if ( ( fileMode & TEMP ) != 0 )
-    {
-        flags |= FILE_ATTRIBUTE_TEMPORARY; // don't flush to disk if possible
-    }
-
-    // for sharing violations, we'll retry a few times as per http://support.microsoft.com/kb/316609
-    size_t retryCount = 0;
-    while ( retryCount < 5 )
-    {
-        HANDLE h = CreateFile( fileName,            // _In_     LPCTSTR lpFileName,
-                               desiredAccess,       // _In_     DWORD dwDesiredAccess,
-                               shareMode,           // _In_     DWORD dwShareMode,
-                               nullptr,             // _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-                               creationDisposition, // _In_     DWORD dwCreationDisposition,
-                               flags,               // _In_     DWORD dwFlagsAndAttributes,
-                               nullptr );           // _In_opt_ HANDLE hTemplateFile
-
-        if ( h != INVALID_HANDLE_VALUE )
+        // access mode
+        if ( ( fileMode & READ_ONLY ) != 0 )
         {
-            // file opened ok
-            m_Handle = (void *)h;
-            return true;
+            ASSERT( fileMode == READ_ONLY ); // no extra flags allowed
+            desiredAccess       |= GENERIC_READ;
+            shareMode           |= FILE_SHARE_READ; // allow other readers
+            creationDisposition |= OPEN_EXISTING;
+        }
+        else if ( ( fileMode & WRITE_ONLY ) != 0 )
+        {
+            desiredAccess       |= GENERIC_WRITE;
+            shareMode           |= FILE_SHARE_READ; // allow other readers
+            creationDisposition |= CREATE_ALWAYS; // overwrite existing
+        }
+        else
+        {
+            ASSERT( false ); // must specify an access mode
         }
 
-        // problem opening file...
-
-        // was it a sharing violation?
-        if ( GetLastError() == ERROR_SHARING_VIOLATION )
+        // extra flags
+        if ( ( fileMode & TEMP ) != 0 )
         {
-            if ( ( fileMode & NO_RETRY_ON_SHARING_VIOLATION ) != 0 )
+            flags |= FILE_ATTRIBUTE_TEMPORARY; // don't flush to disk if possible
+        }
+
+        // for sharing violations, we'll retry a few times as per http://support.microsoft.com/kb/316609
+        size_t retryCount = 0;
+        while ( retryCount < 5 )
+        {
+            HANDLE h = CreateFile( fileName,            // _In_     LPCTSTR lpFileName,
+                                   desiredAccess,       // _In_     DWORD dwDesiredAccess,
+                                   shareMode,           // _In_     DWORD dwShareMode,
+                                   nullptr,             // _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+                                   creationDisposition, // _In_     DWORD dwCreationDisposition,
+                                   flags,               // _In_     DWORD dwFlagsAndAttributes,
+                                   nullptr );           // _In_opt_ HANDLE hTemplateFile
+
+            if ( h != INVALID_HANDLE_VALUE )
             {
-                break; // just fail
+                // file opened ok
+                m_Handle = (void *)h;
+                return true;
             }
 
-            ++retryCount;
-            Sleep( 100 ); // sleep and
-            continue;     // try again as per http://support.microsoft.com/kb/316609
+            // problem opening file...
+
+            // was it a sharing violation?
+            if ( GetLastError() == ERROR_SHARING_VIOLATION )
+            {
+                if ( ( fileMode & NO_RETRY_ON_SHARING_VIOLATION ) != 0 )
+                {
+                    break; // just fail
+                }
+
+                ++retryCount;
+                Sleep( 100 ); // sleep and
+                continue;     // try again as per http://support.microsoft.com/kb/316609
+            }
+
+            // some other kind of error...
+            break;
+        }
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        // Flags
+        int32_t flags = O_CLOEXEC; // Ensure handles are not inherited by child processes
+        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions
+        if ( ( fileMode & READ_ONLY ) != 0 )
+        {
+            flags |= O_RDONLY;
+        }
+        else if ( ( fileMode & WRITE_ONLY ) != 0 )
+        {
+            flags |= ( O_WRONLY | O_CREAT | O_TRUNC );
+        }
+        else
+        {
+            ASSERT( false ); // must specify an access mode
         }
 
-        // some other kind of error...
-        break;
-    }
-#elif defined ( __APPLE__ ) || defined( __LINUX__ )
-    // Flags
-    int32_t flags = O_CLOEXEC; // Ensure handles are not inherited by child processes
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions
-    if ( ( fileMode & READ_ONLY ) != 0 )
-    {
-        flags |= O_RDONLY;
-    }
-    else if ( ( fileMode & WRITE_ONLY ) != 0 )
-    {
-        flags |= ( O_WRONLY | O_CREAT | O_TRUNC );
-    }
-    else
-    {
-        ASSERT( false ); // must specify an access mode
-    }
+        // extra flags
+        if ( ( fileMode & TEMP ) != 0 )
+        {
+            // hint flag - unsupported (we don't want the behaviour of O_TMPFILE)
+        }
 
-    // extra flags
-    if ( ( fileMode & TEMP ) != 0 )
-    {
-        // hint flag - unsupported (we don't want the behaviour of O_TMPFILE)
-    }
+        m_Handle = open( fileName, flags, mode );
+        if ( m_Handle != INVALID_HANDLE_VALUE )
+        {
+            // Ensure this is not a directory
+            struct stat s;
+            if ( ( fstat( m_Handle, &s ) != 0 ) || S_ISDIR( s.st_mode ) )
+            {
+                // not a file (e.g. a directory)
+                close( m_Handle );
 
-    m_Handle = open( fileName, flags, mode );
-    if ( m_Handle != INVALID_HANDLE_VALUE )
-    {
-        // file opened ok
-        return true;
-    }
-#else
-    #error Unknown platform
-#endif
+                // fall through to setting INVALID_HANDLE_VALUE
+            }
+            else
+            {
+                // file opened ok
+                return true;
+            }
+        }
+    #else
+        #error Unknown platform
+    #endif
 
     m_Handle = INVALID_HANDLE_VALUE;
     return false;

@@ -5,8 +5,9 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
@@ -58,7 +59,7 @@ FBuildStats TestCLR::Build( FBuildTestOptions options, bool useDB, const char * 
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestDBFileName() : nullptr ) );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( target ) ) );
+    TEST_ASSERT( fBuild.Build( target ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetTestDBFileName() ) );
 
     return fBuild.GetStats();

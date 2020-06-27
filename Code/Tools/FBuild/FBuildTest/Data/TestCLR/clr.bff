@@ -8,6 +8,7 @@ Settings {} // Activate standard settings
 Library( "CLR-Target" )
 {
     .CompilerOptions    + ' /clr'
+                        + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
     .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCLR/a.cpp"
     .CompilerOutputPath = "$Out$/Test/CLR/"
     .LibrarianOutput    = "$Out$/Test/CLR/clr.lib"
@@ -16,6 +17,7 @@ Library( "CLR-Target" )
 Library( "CLR-Parallel-Target" )
 {
     .CompilerOptions    + ' /clr'
+                        + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
     .CompilerInputPath  = "Tools/FBuild/FBuildTest/Data/TestCLR/"
     .CompilerOutputPath = "$Out$/Test/CLR/"
     .LibrarianOutput    = "$Out$/Test/CLR/clrmulti.lib"
@@ -27,6 +29,7 @@ Library( "CLR-Parallel-Target" )
 Library( 'BrigeTest-CLR' )
 {
     .CompilerOptions    + ' /clr'
+                        + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
     .CompilerInputFiles = { 'Tools/FBuild/FBuildTest/Data/TestCLR/a.cpp',
                             'Tools/FBuild/FBuildTest/Data/TestCLR/b.cpp' }
     .CompilerOutputPath = '$Out$/Test/CLR/Bridge/'
@@ -44,17 +47,11 @@ Executable( 'BridgeTest-Exe' )
     .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
                         + ' /ENTRY:ExeMain'
                         + ' kernel32.lib'
-                        #if USING_VS2013
-                            + ' MSCOREE.lib'
-                            + ' msvcmrt.lib'
-                            + ' msvcrt.LIB'
-                        #else
-                            + ' libvcruntime.lib'
-                            + ' libucrt.lib'
-                            + ' libcmt.lib'
-                            + ' msvcmrt.lib'
-                            + ' WindowsApp.lib'
-                        #endif
+                        + ' libvcruntime.lib'
+                        + ' libucrt.lib'
+                        + ' libcmt.lib'
+                        + ' msvcmrt.lib'
+                        + ' WindowsApp.lib'
 
     .LinkerOutput       = '$Out$/Test/CLR/Bridge/Bridge.exe'
     .Libraries          = { 'BridgeTest-CPP',

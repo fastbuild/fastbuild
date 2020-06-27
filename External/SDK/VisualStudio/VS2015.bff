@@ -1,6 +1,7 @@
 // Visual Studio 2015
 //------------------------------------------------------------------------------
 .VS2015_BasePath        = '$_CURRENT_BFF_DIR_$/2015'
+.VS2015_ToolchainPath    = '$VS2015_BasePath$'
 
 // X64 Compiler
 //------------------------------------------------------------------------------
@@ -17,10 +18,15 @@ Compiler( 'Compiler-VS2015-x64' )
                     '$Root$/mspdbsrv.exe'
                     '$Root$/mspft140.dll'
                     '$Root$/1033/clui.dll'
+                    '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/msvcp140.dll'
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/vccorlib140.dll'
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/vcruntime140.dll'
                   }
+
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
+    #endif
 }
 
 // X64 ToolChain for Windows
@@ -32,6 +38,7 @@ Compiler( 'Compiler-VS2015-x64' )
     // Paths
     .VSIncludePaths                 = ' -I"$VS2015_BasePath$/VC/include/"'
     .VSLibPaths                     = ' /LIBPATH:"$VS2015_BasePath$/VC/lib/amd64"'
+    .VCPackagesPath                 = '$VS2015_BasePath$/VC/vcpackages'
 
     // Compiler
     .Compiler                       = 'Compiler-VS2015-X64'
@@ -94,5 +101,19 @@ Compiler( 'Compiler-VS2015-x64' )
 // _MSC_VER
 //------------------------------------------------------------------------------
 .VS2015_MSC_VER                     = '1900'
+
+// VisualStudioSettings
+//------------------------------------------------------------------------------
+.VisualStudioSettings_VS2015 = 
+[
+    .VS_Version                     = '14.??.?????'
+    .VS_Version_HumanReadable       = '2015'
+    .VS_SolutionVersion             = '14'
+    .MSC_VER                        = .VS2015_MSC_VER
+    .VS_ToolchainPath               = .VS2015_ToolchainPath
+    .ToolChain_VS_Windows_X64       = .ToolChain_VS2015_Windows_X64
+    .VS_PATH                        = .VS_2015_PATH
+    .VS_PlatformToolset             = .VS_2015_PlatformToolset
+]
 
 //------------------------------------------------------------------------------

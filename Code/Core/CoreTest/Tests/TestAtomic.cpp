@@ -11,21 +11,28 @@
 // Macros
 //------------------------------------------------------------------------------
 #define IMPLEMENT_TEST( type, function, initialValue, expectedResult )                          \
+    struct Test##function##UserData                                                             \
+    {                                                                                           \
+        volatile type m_Count;                                                                  \
+        volatile uint32_t m_BarrierCounter;                                                     \
+    };                                                                                          \
     void Test##function() const                                                                 \
     {                                                                                           \
-        type data = initialValue;                                                               \
+        Test##function##UserData data;                                                          \
+        data.m_Count = initialValue;                                                            \
+        data.m_BarrierCounter = 0;                                                              \
                                                                                                 \
         Thread::ThreadHandle h = Thread::CreateThread( Test##function##ThreadEntryFunction,     \
                                                        #function,                               \
                                                        ( 64 * KILOBYTE ),                       \
                                                        static_cast< void * >( &data ) );        \
                                                                                                 \
-        volatile type & sharedVar = static_cast< volatile type & >( data );                     \
-        ++sharedVar;                                                                            \
+        AtomicIncU32( &data.m_BarrierCounter );                                                 \
+        while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}                           \
                                                                                                 \
-        for ( size_t i=0; i<1000000; ++i )                                                      \
+        for ( size_t i = 0; i < 1000000; ++i )                                                  \
         {                                                                                       \
-            function( &sharedVar );                                                             \
+            function( &data.m_Count );                                                          \
         }                                                                                       \
                                                                                                 \
         bool timedOut = false;                                                                  \
@@ -33,19 +40,19 @@
         TEST_ASSERT( timedOut == false );                                                       \
         Thread::CloseHandle( h );                                                               \
                                                                                                 \
-        type res = sharedVar;                                                                   \
+        type res = AtomicLoadRelaxed( &data.m_Count );                                          \
         TEST_ASSERT( res == expectedResult );                                                   \
     }                                                                                           \
     static uint32_t Test##function##ThreadEntryFunction( void * userData )                      \
     {                                                                                           \
-        type & data = *( static_cast< type * >( userData ) );                                   \
-        volatile type & sharedVar = data;                                                       \
+        Test##function##UserData & data = *( static_cast< Test##function##UserData * >( userData ) ); \
                                                                                                 \
-        while ( sharedVar == initialValue ) {}                                                  \
+        AtomicIncU32( &data.m_BarrierCounter );                                                 \
+        while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}                           \
                                                                                                 \
-        for ( size_t i=0; i<1000000; ++i )                                                      \
+        for ( size_t i = 0; i < 1000000; ++i )                                                  \
         {                                                                                       \
-            function( &sharedVar );                                                             \
+            function( &data.m_Count );                                                          \
         }                                                                                       \
                                                                                                 \
         return 0;                                                                               \
@@ -59,24 +66,28 @@ private:
     DECLARE_TESTS
 
     // Increment
-    IMPLEMENT_TEST( uint32_t, AtomicIncU32, 0, 2000001 )
-    IMPLEMENT_TEST( uint64_t, AtomicIncU64, 0, 2000001 )
-    IMPLEMENT_TEST( int32_t, AtomicInc32, 0, 2000001 )
-    IMPLEMENT_TEST( int64_t, AtomicInc64, 0, 2000001 )
+    IMPLEMENT_TEST( uint32_t, AtomicIncU32, 0, 2000000 )
+    IMPLEMENT_TEST( uint64_t, AtomicIncU64, 0, 2000000 )
+    IMPLEMENT_TEST( int32_t, AtomicInc32, 0, 2000000 )
+    IMPLEMENT_TEST( int64_t, AtomicInc64, 0, 2000000 )
 
     // Decrement
-    IMPLEMENT_TEST( uint32_t, AtomicDecU32, 2000000, 1 )
-    IMPLEMENT_TEST( uint64_t, AtomicDecU64, 2000000, 1 )
-    IMPLEMENT_TEST( int32_t, AtomicDec32, 0, -1999999 )
-    IMPLEMENT_TEST( int64_t, AtomicDec64, 0, -1999999 )
+    IMPLEMENT_TEST( uint32_t, AtomicDecU32, 2000000, 0 )
+    IMPLEMENT_TEST( uint64_t, AtomicDecU64, 2000000, 0 )
+    IMPLEMENT_TEST( int32_t, AtomicDec32, 0, -2000000 )
+    IMPLEMENT_TEST( int64_t, AtomicDec64, 0, -2000000 )
 
     // Add
     void Add32() const;
+    void AddU32() const;
     void Add64() const;
+    void AddU64() const;
 
     // Sub
     void Sub32() const;
+    void SubU32() const;
     void Sub64() const;
+    void SubU64() const;
 };
 
 // Register Tests
@@ -109,7 +120,16 @@ void TestAtomic::Add32() const
 {
     // Ensure return result is post-add
     int32_t i32 = 0;
-    TEST_ASSERT( AtomicAdd32( &i32, 999 ) == 999 );
+    TEST_ASSERT( AtomicAdd32( &i32, -999 ) == -999 );
+}
+
+// AddU32
+//------------------------------------------------------------------------------
+void TestAtomic::AddU32() const
+{
+    // Ensure return result is post-add
+    uint32_t u32 = 0;
+    TEST_ASSERT( AtomicAddU32( &u32, 999 ) == 999 );
 }
 
 // Add64
@@ -118,7 +138,16 @@ void TestAtomic::Add64() const
 {
     // Ensure return result is post-add
     int64_t i64 = 0;
-    TEST_ASSERT( AtomicAdd64( &i64, 999 ) == 999 );
+    TEST_ASSERT( AtomicAdd64( &i64, -9876543210 ) == -9876543210 );
+}
+
+// AddU64
+//------------------------------------------------------------------------------
+void TestAtomic::AddU64() const
+{
+    // Ensure return result is post-add
+    uint64_t u64 = 0;
+    TEST_ASSERT( AtomicAddU64( &u64, 9876543210 ) == 9876543210 );
 }
 
 // Sub32
@@ -126,8 +155,17 @@ void TestAtomic::Add64() const
 void TestAtomic::Sub32() const
 {
     // Ensure return result is post-sub
-    int32_t i32 = 999;
-    TEST_ASSERT( AtomicSub32( &i32, 999 ) == 0 );
+    int32_t i32 = 0;
+    TEST_ASSERT( AtomicSub32( &i32, 999 ) == -999 );
+}
+
+// SubU32
+//------------------------------------------------------------------------------
+void TestAtomic::SubU32() const
+{
+    // Ensure return result is post-sub
+    uint32_t u32 = 999;
+    TEST_ASSERT( AtomicSubU32( &u32, 999 ) == 0 );
 }
 
 // Sub64
@@ -135,8 +173,17 @@ void TestAtomic::Sub32() const
 void TestAtomic::Sub64() const
 {
     // Ensure return result is post-sub
-    int64_t i64 = 999;
-    TEST_ASSERT( AtomicSub64( &i64, 999 ) == 0 );
+    int64_t i64 = 0;
+    TEST_ASSERT( AtomicSub64( &i64, 9876543210 ) == -9876543210 );
+}
+
+// SubU64
+//------------------------------------------------------------------------------
+void TestAtomic::SubU64() const
+{
+    // Ensure return result is post-sub
+    uint64_t u64 = 9876543210;
+    TEST_ASSERT( AtomicSubU64( &u64, 9876543210 ) == 0 );
 }
 
 //------------------------------------------------------------------------------

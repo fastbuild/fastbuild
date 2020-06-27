@@ -1,0 +1,46 @@
+//
+// Test Unity interaction with Clang Static Analysis
+//
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+
+Settings {}
+
+// Using Clang
+#if __WINDOWS__
+    Using( .ToolChain_Clang_Windows )
+#endif
+#if __OSX__
+    Using( .OSXClangToolChain )
+#endif
+#if __LINUX__
+    Using ( .ToolChain_Clang_Linux )
+#endif
+
+// Common settings
+.OutputPath                         = '$StandardOutputBase$/Test/TestWarnings/ClangStaticAnalysis/'
+
+Unity( 'Unity' )
+{
+    .UnityInputPath                 = 'Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/'
+    .UnityOutputPath                = .OutputPath
+}
+
+.CompilerOptions                    + ' --analyze'
+
+.CompilerInputUnity                 = 'Unity'
+.CompilerOutputPath                 = .OutputPath
+
+
+// Compile a normal unity object
+ObjectList( 'Compile' )
+{
+}
+
+// Compile with a header injected with -include
+ObjectList( 'Compile-InjectHeader' )
+{
+    .CompilerOptions                = ' -include Core/Env/glibc_compat.h $CompilerOptions$'
+}

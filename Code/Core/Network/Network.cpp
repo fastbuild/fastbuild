@@ -6,10 +6,10 @@
 #include "Network.h"
 
 // Core
-#include "Core/Strings/AString.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Strings/AString.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -37,8 +37,8 @@
     }
     else
     {
-        ASSERT( false && "This should never fail" );
         hostName = "Unknown";
+        ASSERT( false && "This should never fail" );
     }
 }
 
@@ -47,6 +47,13 @@
 /*static*/ uint32_t Network::GetHostIPFromName( const AString & hostName, uint32_t timeoutMS )
 {
     PROFILE_FUNCTION
+
+    // Fast path for "localhost". Although we have a fast path for detecting ip4
+    // format adresses, it can still take several ms to call
+    if ( hostName == "127.0.0.1" )
+    {
+        return 0x0100007f;
+    }
 
     // see if string it already in ip4 format
     PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // Deprecated...
@@ -75,7 +82,7 @@
     int returnCode( 0 );
     uint32_t remainingTimeMS( timeoutMS );
     const uint32_t sleepInterval( 100 ); // Check exit condition periodically - TODO:C would be better to use an event
-    for (;;)
+    for ( ;; )
     {
         returnCode = Thread::WaitForThread( handle, sleepInterval, timedOut );
 

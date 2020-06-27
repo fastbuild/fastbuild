@@ -19,6 +19,8 @@ public:
     explicit BFFStackFrame();
     ~BFFStackFrame();
 
+    void DisconnectStackChain();
+
     // set the value of a variable
     static void SetVarString( const AString & name,
                               const AString & value,
@@ -35,19 +37,23 @@ public:
     static void SetVarStruct( const AString & name,
                               const Array< const BFFVariable * > & members,
                               BFFStackFrame * frame );
+    static void SetVarStruct( const AString & name,
+                              Array<BFFVariable *> && members,
+                              BFFStackFrame * frame );
     static void SetVarArrayOfStructs( const AString & name,
                                       const Array< const BFFVariable * > & structs,
                                       BFFStackFrame * frame );
 
     // set from an existing variable
     static void SetVar( const BFFVariable * var, BFFStackFrame * frame );
+    static void SetVar( const BFFVariable * srcVar, const AString & dstName, BFFStackFrame * frame );
 
     // set from two existing variable
     static BFFVariable * ConcatVars( const AString & name,
                                      const BFFVariable * lhs,
                                      const BFFVariable * rhs,
                                      BFFStackFrame * frame,
-                                     const BFFIterator & operatorIter );
+                                     const BFFToken * operatorIter );
 
     // get a variable (caller passes complete name indicating type (user vs system))
     static const BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
@@ -58,11 +64,13 @@ public:
 
     // get all variables at this stack level only
     const Array< const BFFVariable * > & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ); }
+    Array<BFFVariable *> & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only
     const BFFVariable * GetLocalVar( const AString & name ) const;
 
     static BFFStackFrame * GetCurrent() { return s_StackHead; }
+    static uint32_t        GetDepth() { return s_StackHead ? s_StackHead->m_Depth : 1; }
 
     static BFFStackFrame * GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable );
     static BFFStackFrame * GetParentDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable );
@@ -70,6 +78,14 @@ public:
     BFFStackFrame * GetParent() const { return m_Next; }
 
     const BFFVariable * GetVariableRecurse( const AString & name ) const;
+
+    const AString & GetLastVariableSeen() const { return m_LastVariableSeen; }
+    BFFStackFrame * GetLastVariableSeenFrame() const { return m_LastVariableSeenFrame; }
+    void            SetLastVariableSeen( const AString & varName, BFFStackFrame * frame )
+    { 
+        m_LastVariableSeen = varName;
+        m_LastVariableSeenFrame = frame;
+    }
 
 private:
     const BFFVariable * GetVariableRecurse( const AString & nameOnly,
@@ -85,6 +101,12 @@ private:
 
     // pointer to parent scope
     BFFStackFrame * m_Next;
+    BFFStackFrame * m_OldHeadToRestore;
+    uint32_t        m_Depth;
+
+    // Track last variable to allow omission of left hand side in operations on the same var
+    AString m_LastVariableSeen;
+    BFFStackFrame * m_LastVariableSeenFrame = nullptr;
 
     // the head of the linked list, from deepest to shallowest
     static BFFStackFrame * s_StackHead;

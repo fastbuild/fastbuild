@@ -16,10 +16,10 @@
                                     AString & outCacheId )
 {
     // cache version - bump if cache format is changed
-    static const uint32_t cacheVersion( 9 );
+    static const char cacheVersion( 'B' );
 
     // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
-    outCacheId.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%u",
+    outCacheId.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%c",
                        preprocessedSourceKey,
                        commandLineKey,
                        toolChainKey,

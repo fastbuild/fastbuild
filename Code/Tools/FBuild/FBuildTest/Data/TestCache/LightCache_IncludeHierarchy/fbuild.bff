@@ -1,0 +1,22 @@
+//
+// LightCache should understand that the same include can result in a different
+// file depending on the other files in the current include hierarchy
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerInputFiles = { 
+                            '$TestRoot$/Data/TestCache/LightCache_IncludeHierarchy/Folder1/file.cpp'
+                            '$TestRoot$/Data/TestCache/LightCache_IncludeHierarchy/Folder2/file.cpp'
+                          }
+    .CompilerInputFilesRoot = '$TestRoot$/Data/TestCache/LightCache_IncludeHierarchy/'
+    .CompilerOutputPath = '$Out$/Test/Cache/LightCache_IncludeHierarchy/'
+
+    .CompilerOptions    + ' -I$TestRoot$/Data/'
+}

@@ -82,6 +82,7 @@ padding-top:0px;
     color:#06a;
     margin:10px;
     padding:10px;
+	overflow-x: auto;
 }
 
 .output

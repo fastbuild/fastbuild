@@ -7,7 +7,6 @@
 
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
-#include "Core/Reflection/BindReflection.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
 #include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
@@ -23,19 +22,13 @@
 //------------------------------------------------------------------------------
 class TestReflection : public UnitTest
 {
-public:
-    TestReflection()
-    {
-        BIND_REFLECTION( TestObject )
-        BIND_REFLECTION( TestStruct )
-    }
-
 private:
     DECLARE_TESTS
 
     void TestGetSet() const;
     void TestInheritence() const;
     void MetaData() const;
+    void ArraySize() const;
 };
 
 // Register Tests
@@ -44,6 +37,7 @@ REGISTER_TESTS_BEGIN( TestReflection )
     REGISTER_TEST( TestGetSet )
     REGISTER_TEST( TestInheritence )
     REGISTER_TEST( MetaData )
+    REGISTER_TEST( ArraySize )
 REGISTER_TESTS_END
 
 // TestStruct
@@ -77,7 +71,7 @@ public:
         , m_Int16( 0 )
         , m_Int32( 0 )
         , m_Int64( 0 )
-        , m_Bool( false)
+        , m_Bool( false )
         , m_AString( "" )
     {
     }
@@ -104,7 +98,6 @@ public:
     }
 
 private: // ensure reflection can set private members
-
     friend class TestReflection;
 
     float       m_Float;
@@ -249,6 +242,22 @@ void TestReflection::MetaData() const
     TEST_ASSERT( rp->HasMetaData< Meta_File >() );
     TEST_ASSERT( rp->HasMetaData< Meta_Optional >() );
     TEST_ASSERT( rp->HasMetaData< Meta_Path >() );
+}
+
+// ArraySize
+//------------------------------------------------------------------------------
+void TestReflection::ArraySize() const
+{
+    // The reflection system makes assumptions about Array's implementation
+    // (how it records the array size) which need to be updated if changed.
+    // This test should fail if our assumptions are invalidated
+    TestObject o;
+    const ReflectionInfo * ri = TestObject::GetReflectionInfoS();
+    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString<>( "StructArray" ) );
+    const ReflectedPropertyStruct * rps = (const ReflectedPropertyStruct *)rp;
+    TEST_ASSERT( rps->GetArraySize( &o ) == 0 );
+    o.m_StructArray.SetSize( 4 );
+    TEST_ASSERT( rps->GetArraySize( &o ) == 4 );
 }
 
 //------------------------------------------------------------------------------

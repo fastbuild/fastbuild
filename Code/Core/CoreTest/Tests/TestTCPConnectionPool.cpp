@@ -7,7 +7,10 @@
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Network/TCPConnectionPool.h"
+#include "Core/Process/Atomic.h"
+#include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
@@ -46,6 +49,8 @@ private:
 
     void TestConnectionStuckDuringSend() const;
     static uint32_t TestConnectionStuckDuringSend_ThreadFunc( void * userData );
+
+    void TestConnectionFailure() const;
 };
 
 // Helper Macros
@@ -57,7 +62,7 @@ private:
         while ( ( cond ) == false )                 \
         {                                           \
             Thread::Sleep( 1 );                     \
-            TEST_ASSERT( t.GetElapsed() < 5.0f );   \
+            TEST_ASSERT( t.GetElapsed() < 30.0f );  \
         }                                           \
     }
 
@@ -69,6 +74,7 @@ REGISTER_TESTS_BEGIN( TestTestTCPConnectionPool )
     REGISTER_TEST( TestConnectionCount )
     REGISTER_TEST( TestDataTransfer )
     REGISTER_TEST( TestConnectionStuckDuringSend )
+    REGISTER_TEST( TestConnectionFailure )
 REGISTER_TESTS_END
 
 // TestOneServerMultipleClients
@@ -77,27 +83,29 @@ void TestTestTCPConnectionPool::TestOneServerMultipleClients() const
 {
     const uint16_t testPort( TEST_PORT );
 
-    for ( uint32_t i=0; i<NUM_TEST_PASSES; ++i )
+    for ( uint32_t i = 0; i < NUM_TEST_PASSES; ++i )
     {
         // listen like a server
         TCPConnectionPool server;
         TEST_ASSERT( server.Listen( testPort ) );
 
-        // connect like a client
-        TCPConnectionPool clientA;
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
+        // connect several clients
+        const size_t numClients = 4;
+        TCPConnectionPool clients[ numClients ];
+        for ( size_t j = 0; j < numClients; ++j )
+        {
+            // All each client to retry in case of local resource exhaustion
+            Timer t;
+            while ( clients[ j ].Connect( AStackString<>( "127.0.0.1" ), testPort ) == nullptr )
+            {
+                TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
+                Thread::Sleep( 50 );
+            }
 
-        // connect like a client
-        TCPConnectionPool clientB;
-        TEST_ASSERT( clientB.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
+            clients[ j ].ShutdownAllConnections();
+        }
 
-        // connect like a client
-        TCPConnectionPool clientC;
-        TEST_ASSERT( clientC.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
-
-        // connect like a client
-        TCPConnectionPool clientD;
-        TEST_ASSERT( clientD.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
+        server.ShutdownAllConnections();
     }
 }
 
@@ -107,7 +115,7 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
 {
     const uint16_t testPort( TEST_PORT );
 
-    for ( uint32_t i=0; i<NUM_TEST_PASSES; ++i )
+    for ( uint32_t i = 0; i < NUM_TEST_PASSES; ++i )
     {
         // multiple servers
         TCPConnectionPool serverA;
@@ -121,10 +129,23 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
 
         // connect client to multiple servers
         TCPConnectionPool clientA;
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + 1 ) );
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + 2 ) );
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + 3 ) );
+        for ( size_t j = 0; j < 4; ++j )
+        {
+            // All each connection to be retried in case of local resource exhaustion
+            Timer t;
+            const uint16_t port = (uint16_t)( testPort + j );
+            while ( clientA.Connect( AStackString<>( "127.0.0.1" ), port ) == nullptr )
+            {
+                TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
+                Thread::Sleep( 50 );
+            }
+        }
+
+        clientA.ShutdownAllConnections();
+        serverA.ShutdownAllConnections();
+        serverB.ShutdownAllConnections();
+        serverC.ShutdownAllConnections();
+        serverD.ShutdownAllConnections();
     }
 }
 
@@ -134,7 +155,7 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
 {
     const uint16_t testPort( TEST_PORT );
 
-    for ( uint32_t i=0; i<NUM_TEST_PASSES; ++i )
+    for ( uint32_t i = 0; i < NUM_TEST_PASSES; ++i )
     {
         // multiple servers
         TCPConnectionPool serverA;
@@ -147,15 +168,27 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
         // connect client to multiple servers
         {
             TCPConnectionPool clientA;
-            TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
-            TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + 1 ) );
+            for ( size_t j = 0; j < 2; ++j )
+            {
+                // All each connection to be retried in case of local resource exhaustion
+                Timer t;
+                const uint16_t port = (uint16_t)( testPort + j );
+                while ( clientA.Connect( AStackString<>( "127.0.0.1" ), port ) == nullptr )
+                {
+                    TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
+                    Thread::Sleep( 50 );
+                }
+            }
 
             WAIT_UNTIL_WITH_TIMEOUT( serverA.GetNumConnections() == 1 );
             WAIT_UNTIL_WITH_TIMEOUT( serverB.GetNumConnections() == 1 );
             WAIT_UNTIL_WITH_TIMEOUT( clientA.GetNumConnections() == 2 );
+            clientA.ShutdownAllConnections();
         }
         WAIT_UNTIL_WITH_TIMEOUT( serverA.GetNumConnections() == 0 );
         WAIT_UNTIL_WITH_TIMEOUT( serverB.GetNumConnections() == 0 );
+        serverA.ShutdownAllConnections();
+        serverB.ShutdownAllConnections();
     }
 }
 
@@ -167,23 +200,18 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     class TestServer : public TCPConnectionPool
     {
     public:
-        ~TestServer()
-        {
-            ShutdownAllConnections();
-        }
+        ~TestServer() { ShutdownAllConnections(); }
         virtual void OnReceive( const ConnectionInfo *, void * data, uint32_t size, bool & )
         {
             TEST_ASSERT( size == m_DataSize );
-            bool ok = true;
-            for ( size_t i=0; i< size; ++i )
-            {
-                ok &= (((char *)data)[ i ] == (char)i );
-            }
-            TEST_ASSERT( ok );
-            m_ReceivedBytes += size;
+            TEST_ASSERT( memcmp( data, m_ExpectedData, size ) == 0 );
+            AtomicAddU64( &m_ReceivedBytes, size );
+            m_DataReceviedSemaphore.Signal();
         }
-        volatile size_t m_ReceivedBytes = 0;
+        volatile uint64_t m_ReceivedBytes = 0;
         size_t m_DataSize = 0;
+        const char * m_ExpectedData;
+        Semaphore m_DataReceviedSemaphore;
     };
 
     const uint16_t testPort( TEST_PORT );
@@ -191,12 +219,13 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     // a big piece of data, initialized to some known pattern
     const size_t maxSendSize( 1024 * 1024 * 10 );
     AutoPtr< char > data( (char *)ALLOC( maxSendSize ) );
-    for ( size_t i=0; i< maxSendSize; ++i )
+    for ( size_t i = 0; i < maxSendSize; ++i )
     {
         data.Get()[ i ] = (char)i;
     }
 
     TestServer server;
+    server.m_ExpectedData = data.Get(); // Allow OnReceive to compare data to expected
     TEST_ASSERT( server.Listen( testPort ) );
 
     // client
@@ -207,22 +236,22 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     size_t sendSize = 31;
     while ( sendSize <= maxSendSize )
     {
-        server.m_ReceivedBytes = 0;
+        AtomicStoreRelaxed( &server.m_ReceivedBytes, 0 );
         server.m_DataSize = sendSize;
 
         Timer timer;
 
         size_t totalSent = 0;
-        while ( timer.GetElapsed() < 0.1f )
+        while ( ( totalSent < maxSendSize ) && ( timer.GetElapsed() < 0.1f ) )
         {
             // client sends some know data to the server
             TEST_ASSERT( client.Send( ci, data.Get(), sendSize ) );
             totalSent += sendSize;
         }
 
-        while( server.m_ReceivedBytes < totalSent )
+        while ( static_cast< size_t >( AtomicLoadRelaxed( &server.m_ReceivedBytes ) ) < totalSent )
         {
-            Thread::Sleep( 1 );
+            server.m_DataReceviedSemaphore.Wait();
         }
 
         const float speedMBs = ( float( totalSent ) / timer.GetElapsed() ) / float( 1024 * 1024 );
@@ -230,6 +259,8 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
 
         sendSize = ( sendSize * 2 ) + 33; // +33 to avoid powers of 2
     }
+
+    client.ShutdownAllConnections();
 }
 
 // TestConnectionStuckDuringSend
@@ -240,13 +271,10 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     class SlowServer : public TCPConnectionPool
     {
     public:
-        ~SlowServer()
-        {
-            ShutdownAllConnections();
-        }
+        ~SlowServer() { ShutdownAllConnections(); }
         virtual void OnReceive( const ConnectionInfo *, void *, uint32_t, bool & )
         {
-            Thread::Sleep( 1000 );
+            Thread::Sleep( 200 );
         }
     };
     SlowServer slowServer;
@@ -260,12 +288,12 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 
     // start a thread to flood the slow server
     Thread::ThreadHandle h = Thread::CreateThread( TestConnectionStuckDuringSend_ThreadFunc,
-                                                    "Sender",
-                                                    ( 64 * KILOBYTE ),
-                                                    (void*)ci );
+                                                   "Sender",
+                                                   ( 64 * KILOBYTE ),
+                                                   (void *)ci );
 
     // let thread send enough data to become blocked in Send
-    Thread::Sleep( 1000 );
+    Thread::Sleep( 100 );
 
     // flag for shutdown
     client.SetShuttingDown();
@@ -277,15 +305,19 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 
     // if timeout was hit, things were stuck
     TEST_ASSERT( timedOut == false );
+
+    client.ShutdownAllConnections();
 }
 /*static*/ uint32_t TestTestTCPConnectionPool::TestConnectionStuckDuringSend_ThreadFunc( void * userData )
 {
+    PROFILE_SET_THREAD_NAME( "ConnectionStuckSend" )
+
     const ConnectionInfo * ci = (const ConnectionInfo *)userData;
     TCPConnectionPool & client = ci->GetTCPConnectionPool();
     // send lots of data to slow server
     AutoPtr< char > mem( (char *)ALLOC( 10 * MEGABYTE ) );
     memset( mem.Get(), 0, 10 * MEGABYTE );
-    for ( size_t i=0; i<1000; ++i )
+    for ( size_t i = 0; i < 1000; ++i )
     {
         if ( !client.Send( ci, mem.Get(), 10 * MEGABYTE ) )
         {
@@ -293,6 +325,23 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
         }
     }
     return 0;
+}
+
+// TestConnectionFailure
+//------------------------------------------------------------------------------
+void TestTestTCPConnectionPool::TestConnectionFailure() const
+{
+    const uint16_t testPort( TEST_PORT );
+    const uint32_t timeoutMS( 100 );
+
+    TCPConnectionPool client;
+
+    // Check that TCPConnectionPool doesn't create ConnectionInfo when
+    // connection fails after wait for it via select().
+    // To do that we try to connect to our chosen test port without listening on it.
+    TEST_ASSERT( client.Connect( AStackString<>( "127.0.0.1" ), testPort, timeoutMS ) == nullptr );
+
+    client.ShutdownAllConnections();
 }
 
 //------------------------------------------------------------------------------

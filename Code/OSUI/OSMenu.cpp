@@ -15,7 +15,15 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM  3000
+#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM 3000
+
+// OSX Functions
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    void * MenuOSX_Create( OSWindow * associatedWindow );
+    void MenuOSX_Destroy( OSMenu * owner );
+    void MenuOSX_AddItem( OSMenu * owner, const char * text );
+#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -33,6 +41,8 @@ OSMenu::~OSMenu()
 {
     #if defined( __WINDOWS__ )
         DestroyMenu( (HMENU)m_Menu );
+    #elif defined( __OSX__ )
+        MenuOSX_Destroy( this );
     #endif
 }
 
@@ -42,6 +52,8 @@ void OSMenu::Init()
 {
     #if defined( __WINDOWS__ )
         m_Menu = CreatePopupMenu();
+    #elif defined( __OSX__ )
+        m_Handle = MenuOSX_Create( m_Parent );
     #endif
 
     OSWidget::Init();
@@ -53,6 +65,8 @@ void OSMenu::AddItem( const char * text )
 {
     #if defined( __WINDOWS__ )
         AppendMenu( (HMENU)m_Menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT( text ) );
+    #elif defined( __OSX__ )
+        MenuOSX_AddItem( this, text );
     #else
         (void)text;
     #endif
@@ -66,7 +80,7 @@ bool OSMenu::ShowAndWaitForSelection( uint32_t & outIndex )
         // display popup menu at mouse position
         POINT curPoint;
         GetCursorPos( &curPoint );
-        SetForegroundWindow( (HWND)m_Menu );
+        SetForegroundWindow( (HWND)m_Parent->GetHandle() );
 
         // Show menu and block until hidden
         // NOTE: TPM_RETURNCMD makes this BOOL return actually a UINT

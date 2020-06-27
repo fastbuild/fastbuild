@@ -5,9 +5,12 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ToolManifest.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileStream.h"
@@ -20,11 +23,7 @@ private:
     DECLARE_TESTS
 
     void BuildCompiler_Explicit() const;
-    void BuildCompiler_Explicit_NoRebuild() const;
-    void BuildCompiler_Explicit_BFFChange() const;
     void BuildCompiler_Implicit() const;
-    void BuildCompiler_Implicit_NoRebuild() const;
-    void BuildCompiler_Implicit_BFFChange() const;
     void ConflictingFiles1() const;
     void ConflictingFiles2() const;
     void ConflictingFiles3() const;
@@ -33,18 +32,14 @@ private:
     void CompilerExecutableAsDependency_NoRebuild() const;
     void MultipleImplicitCompilers() const;
 
-    void Parse( const char * fileName, bool expectFailure = false ) const;
+    uint64_t GetToolId( const FBuildForTest & fBuild ) const;
 };
 
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestCompiler )
     REGISTER_TEST( BuildCompiler_Explicit )
-    REGISTER_TEST( BuildCompiler_Explicit_NoRebuild )
-    REGISTER_TEST( BuildCompiler_Explicit_BFFChange )
     REGISTER_TEST( BuildCompiler_Implicit )
-    REGISTER_TEST( BuildCompiler_Implicit_NoRebuild )
-    REGISTER_TEST( BuildCompiler_Implicit_BFFChange )
     REGISTER_TEST( ConflictingFiles1 )
     REGISTER_TEST( ConflictingFiles2 )
     REGISTER_TEST( ConflictingFiles3 )
@@ -58,118 +53,151 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestCompiler::BuildCompiler_Explicit() const
 {
-    FBuildTestOptions options;
-    options.m_ForceCleanBuild = true;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/explicit.bff";
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize() );
+    uint64_t toolIdA;
+    uint64_t toolIdB;
+    uint64_t toolIdC;
 
-    // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Compiler" ) ) );
+    // Build
+    {
+        FBuildTestOptions options;
+        options.m_ForceCleanBuild = true;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/explicit.bff";
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
-    // Save DB for use by NoRebuild test
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
+        // Build a file genereated by a Compiler that we compiled
+        TEST_ASSERT( fBuild.Build( "Compiler" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-}
+        // Save DB for use by NoRebuild test
+        TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
 
-// BuildCompiler_Explicit_NoRebuild
-//------------------------------------------------------------------------------
-void TestCompiler::BuildCompiler_Explicit_NoRebuild() const
-{
-    FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/explicit.bff";
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
 
-    // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Compiler" ) ) );
+        // Get the ToolId
+        toolIdA = GetToolId( fBuild );
+    }
 
-    // Check stats
-    //              Seen,   Built,  Type
-    CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
-}
+    // Check no rebuild
+    {
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/explicit.bff";
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
 
-// BuildCompiler_Explicit_BFFChange
-//------------------------------------------------------------------------------
-void TestCompiler::BuildCompiler_Explicit_BFFChange() const
-{
-    FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/explicit.bff";
-    options.m_ForceDBMigration_Debug = true;
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
+        // Build a file genereated by a Compiler that we compiled
+        TEST_ASSERT( fBuild.Build( "Compiler" ) );
 
-    // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Compiler" ) ) );
+        // Check stats
+        //              Seen,   Built,  Type
+        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
 
-    // Check stats
-    //              Seen,   Built,  Type
-    CheckStatsNode( 1,      1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+        // Get the ToolId
+        toolIdB = GetToolId( fBuild );
+    }
+
+    // Check no rebuild after Migration
+    {
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/explicit.bff";
+        options.m_ForceDBMigration_Debug = true;
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
+
+        // Build a file genereated by a Compiler that we compiled
+        TEST_ASSERT( fBuild.Build( "Compiler" ) );
+
+        // Check stats
+        //              Seen,   Built,  Type
+        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
+
+        // Get the ToolId
+        toolIdC = GetToolId( fBuild );
+    }
+
+    // ToolId should be identical for each case
+    TEST_ASSERT( toolIdA == toolIdB );
+    TEST_ASSERT( toolIdA == toolIdC );
 }
 
 // BuildCompiler_Implicit
 //------------------------------------------------------------------------------
 void TestCompiler::BuildCompiler_Implicit() const
 {
-    FBuildTestOptions options;
-    options.m_ForceCleanBuild = true;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize() );
+    uint64_t toolIdA;
+    uint64_t toolIdB;
+    uint64_t toolIdC;
 
-    // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    // Build
+    {
+        FBuildTestOptions options;
+        options.m_ForceCleanBuild = true;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
+        options.m_ShowSummary = true; // TODO: REMOVE
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
-    // Save DB for use by NoRebuild test
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+        // Build a file genereated by a Compiler that we compiled
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-}
+        // Save DB for use by NoRebuild test
+        TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
-// BuildCompiler_Implicit_NoRebuild
-//------------------------------------------------------------------------------
-void TestCompiler::BuildCompiler_Implicit_NoRebuild() const
-{
-    FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
 
-    // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        // Get the ToolId
+        toolIdA = GetToolId( fBuild );
+    }
 
-    // Save DB for use by NoRebuild test
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+    // Check No Rebuild
+    {
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-}
+        // Build a file genereated by a Compiler that we compiled
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
-// BuildCompiler_Implicit_BFFChange
-//------------------------------------------------------------------------------
-void TestCompiler::BuildCompiler_Implicit_BFFChange() const
-{
-    FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
-    options.m_ForceDBMigration_Debug = true;
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+        // Save DB for use by NoRebuild test
+        TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
-    // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
 
-    // Save DB for use by NoRebuild test
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+        // Get the ToolId
+        toolIdB = GetToolId( fBuild );
+    }
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    // Check no rebuild after Migration
+    {
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
+        options.m_ForceDBMigration_Debug = true;
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+
+        // Build a file genereated by a Compiler that we compiled
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Save DB for use by NoRebuild test
+        TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
+
+        // Get the ToolId
+        toolIdC = GetToolId( fBuild );
+    }
+
+    // ToolId should be identical for each case
+    TEST_ASSERT( toolIdA == toolIdB );
+    TEST_ASSERT( toolIdA == toolIdC );
 }
 
 // ConflictingFiles1
@@ -177,6 +205,7 @@ void TestCompiler::BuildCompiler_Implicit_BFFChange() const
 void TestCompiler::ConflictingFiles1() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict1.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1100" ) );
 }
 
 // ConflictingFiles2
@@ -184,6 +213,7 @@ void TestCompiler::ConflictingFiles1() const
 void TestCompiler::ConflictingFiles2() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict2.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1100" ) );
 }
 
 // ConflictingFiles3
@@ -191,6 +221,7 @@ void TestCompiler::ConflictingFiles2() const
 void TestCompiler::ConflictingFiles3() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict3.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1100" ) );
 }
 
 // ConflictingFiles4
@@ -198,6 +229,7 @@ void TestCompiler::ConflictingFiles3() const
 void TestCompiler::ConflictingFiles4() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict4.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1100" ) );
 }
 
 // CompilerExecutableAsDependency
@@ -211,7 +243,7 @@ void TestCompiler::CompilerExecutableAsDependency() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Save DB for use by NoRebuild test
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/executableasdependency.fdb" ) );
@@ -231,7 +263,7 @@ void TestCompiler::CompilerExecutableAsDependency_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/executableasdependency.fdb" ) );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -245,29 +277,16 @@ void TestCompiler::MultipleImplicitCompilers() const
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/multipleimplicitcompilers.bff" );
 }
 
-// Parse
+// GetToolId
 //------------------------------------------------------------------------------
-void TestCompiler::Parse( const char * fileName, bool expectFailure ) const
+uint64_t TestCompiler::GetToolId( const FBuildForTest & fBuild ) const
 {
-    FileStream f;
-    TEST_ASSERT( f.Open( fileName, FileStream::READ_ONLY ) );
-    uint32_t fileSize = (uint32_t)f.GetFileSize();
-    AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
-    mem.Get()[ fileSize ] = '\000'; // parser requires sentinel
-    TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
-
-    FBuild fBuild;
-    NodeGraph ng;
-    BFFParser p( ng );
-    bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
-    if ( expectFailure )
-    {
-        TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
-    }
-    else
-    {
-        TEST_ASSERT( parseResult == true );
-    }
+    Array<const Node *> nodes;
+    fBuild.GetNodesOfType( Node::COMPILER_NODE, nodes );
+    TEST_ASSERT( nodes.GetSize() == 1 );
+    const uint64_t toolId = nodes[ 0 ]->CastTo<CompilerNode>()->GetManifest().GetToolId();
+    TEST_ASSERT( toolId );
+    return toolId;
 }
 
 //------------------------------------------------------------------------------

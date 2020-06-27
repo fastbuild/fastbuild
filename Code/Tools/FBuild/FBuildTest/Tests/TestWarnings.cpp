@@ -5,9 +5,9 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Core/Strings/AStackString.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 // TestWarnings
 //------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ void TestWarnings::WarningsAreShown() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Warnings" ) ) );
+    TEST_ASSERT( fBuild.Build( "Warnings" ) );
 }
 
 // PragmaMessageWarningsAreShown
@@ -57,7 +57,7 @@ void TestWarnings::PragmaMessageWarningsAreShown() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "PragmaMessage" ) ) );
+    TEST_ASSERT( fBuild.Build( "PragmaMessage" ) );
 }
 
 // ClangMacroExpansion
@@ -70,7 +70,7 @@ void TestWarnings::ClangMacroExpansion() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ClangMacroExpansion" ) ) );
+    TEST_ASSERT( fBuild.Build( "ClangMacroExpansion" ) );
 }
 
 //------------------------------------------------------------------------------

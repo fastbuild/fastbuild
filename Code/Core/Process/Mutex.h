@@ -47,8 +47,10 @@ public:
     {
         m_Mutex.Unlock();
     }
+
 private:
-    void operator = ( MutexHolder & ) {} // avoid C4512 - 'class' : assignment operator could not be generated
+    MutexHolder( const MutexHolder & other ) = delete;
+    void operator = ( MutexHolder & ) = delete;
 
     Mutex & m_Mutex;
 };

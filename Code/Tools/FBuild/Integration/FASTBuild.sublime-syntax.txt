@@ -51,7 +51,7 @@ contexts:
     - include: single-quoted-strings
   main:
     - include: global
-    - match: \b(Alias|CSAssembly|Compiler|Copy|CopyDir|DLL|Error|Exec|Executable|ForEach|If|Library|ObjectList|Print|RemoveDir|Settings|Test|Unity|Using|VCXProject|VSSolution|XCodeProject)\b
+    - match: \b(Alias|CSAssembly|Compiler|Copy|CopyDir|DLL|Error|Exec|Executable|ForEach|If|Library|ObjectList|Print|RemoveDir|Settings|Test|TextFile|Unity|Using|VCXProject|VSProjectExternal|VSSolution|XCodeProject)\b
       scope: support.function
     - match: \+|=-
       scope: keyword.operator

@@ -5,8 +5,9 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/Containers/AutoPtr.h"
@@ -33,8 +34,7 @@ private:
     void IfFunctionStringCompare() const;
     void UsageError_ExtraTokensAfterExpression() const;
     void UsageError_UnsupportedTypeForIn() const;
-
-    void Parse( const char * fileName, bool expectFailure = false ) const;
+    void UsageError_UnsupportedOperation() const;
 };
 
 // Register Tests
@@ -53,6 +53,7 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( UsageError_ExtraTokensAfterExpression )
     REGISTER_TEST( UsageError_UnsupportedTypeForIn )
+    REGISTER_TEST( UsageError_UnsupportedOperation )
 REGISTER_TESTS_END
 
 // IfFunctionTrue
@@ -162,29 +163,12 @@ void TestIf::UsageError_UnsupportedTypeForIn() const
     TEST_ASSERT( GetRecordedOutput().Find( "Property '.Int' must be of type <ArrayOfStrings> or <String> (found <Int>" ) );
 }
 
-// Parse
+// UsageError_UnsupportedOperation
 //------------------------------------------------------------------------------
-void TestIf::Parse( const char * fileName, bool expectFailure ) const
+void TestIf::UsageError_UnsupportedOperation() const
 {
-    FileStream f;
-    TEST_ASSERT( f.Open( fileName, FileStream::READ_ONLY ) );
-    uint32_t fileSize = (uint32_t)f.GetFileSize();
-    AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
-    mem.Get()[ fileSize ] = '\000'; // parser requires sentinel
-    TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
-
-    FBuild fBuild;
-    NodeGraph ng;
-    BFFParser p( ng );
-    bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
-    if ( expectFailure )
-    {
-        TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
-    }
-    else
-    {
-        TEST_ASSERT( parseResult == true );
-    }
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedoperation.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Operation not supported: 'Bool' >= 'Bool'" ) );
 }
 
 //------------------------------------------------------------------------------

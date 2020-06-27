@@ -1,0 +1,22 @@
+//
+// ConflictingObjects1
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// ObjectList
+//------------------------------------------------------------------------------
+ObjectList( 'ObjectList' )
+{
+    // Two files that have conflicting output
+    .CompilerInputFiles         = {
+                                    'Tools/FBuild/FBuildTest/Data/TestObjectList/ConflictingObjects/A/file.cpp'
+                                    'Tools/FBuild/FBuildTest/Data/TestObjectList/ConflictingObjects/B/file.cpp'
+                                  }
+    .CompilerOutputPath         = '$Out$/Test/ObjectList/ConflictingObjects/'
+}

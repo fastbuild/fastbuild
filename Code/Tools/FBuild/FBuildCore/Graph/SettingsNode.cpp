@@ -30,10 +30,11 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT(        m_CachePath,                "CachePath",                MetaOptional() )
     REFLECT(        m_CachePathMountPoint,      "CachePathMountPoint",      MetaOptional() )
     REFLECT(        m_CachePluginDLL,           "CachePluginDLL",           MetaOptional() )
+    REFLECT(        m_CachePluginDLLConfig,     "CachePluginDLLConfig",     MetaOptional() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
-    REFLECT(        m_AllowDBMigration_Experimental, "AllowDBMigration_Experimental", MetaOptional() )
+    REFLECT(        m_DisableDBMigration,       "DisableDBMigration",       MetaOptional() )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR
@@ -42,7 +43,7 @@ SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
 , m_WorkerConnectionLimit( 15 )
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
-, m_AllowDBMigration_Experimental( false )
+, m_DisableDBMigration( false )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
@@ -51,12 +52,12 @@ SettingsNode::SettingsNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
     // using a cache plugin?
     if ( m_CachePluginDLL.IsEmpty() == false )
     {
-        FLOG_INFO( "CachePluginDLL: '%s'", m_CachePluginDLL.Get() );
+        FLOG_VERBOSE( "CachePluginDLL: '%s'", m_CachePluginDLL.Get() );
     }
 
     // "Environment"
@@ -108,6 +109,13 @@ const AString & SettingsNode::GetCachePathMountPoint() const
 const AString & SettingsNode::GetCachePluginDLL() const
 {
     return m_CachePluginDLL;
+}
+
+// GetCachePluginDLLConfig
+//------------------------------------------------------------------------------
+const AString & SettingsNode::GetCachePluginDLLConfig() const
+{
+    return m_CachePluginDLLConfig;
 }
 
 // ProcessEnvironment

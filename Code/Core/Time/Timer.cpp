@@ -55,7 +55,6 @@ GlobalTimerFrequencyInitializer g_GlobalTimerFrequencyInitializer;
 int64_t Timer::GetNow()
 {
     #if defined( __WINDOWS__ )
-        ASSERT( s_Frequency );
         LARGE_INTEGER now;
         VERIFY( QueryPerformanceCounter( &now ) );
         return now.QuadPart;

@@ -5,11 +5,11 @@
 //------------------------------------------------------------------------------
 #include "FunctionForEach.h"
 
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Strings/AStackString.h"
@@ -36,127 +36,132 @@ FunctionForEach::FunctionForEach()
 }
 
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionForEach::ParseFunction(
-                    NodeGraph & nodeGraph,
-                    const BFFIterator & /*functionNameStart*/,
-                    const BFFIterator * functionBodyStartToken,
-                    const BFFIterator * functionBodyStopToken,
-                    const BFFIterator * functionHeaderStartToken,
-                    const BFFIterator * functionHeaderStopToken ) const
+/*virtual*/ bool FunctionForEach::ParseFunction( NodeGraph & /*nodeGraph*/,
+                                                 BFFParser & parser,
+                                                 const BFFToken * /*functionNameStart*/,
+                                                 const BFFTokenRange & headerRange,
+                                                 const BFFTokenRange & bodyRange ) const
 {
     // build array for each pair to loop through
-    Array< AString >                localNames( 4, true );
-    Array< const BFFVariable * >    arrayVars( 4, true );
+    StackArray<AString> localNames;
+    StackArray<const BFFVariable *> arrayVars;
 
     int loopLen = -1;
 
     // parse it all out
-    BFFIterator pos( *functionHeaderStartToken );
-    pos++; // skip opening token
-    while ( pos < *functionHeaderStopToken )
+    BFFTokenRange headerIter = headerRange;
+    while ( headerIter.IsAtEnd() == false )
     {
-        pos.SkipWhiteSpace();
-        if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL )
+        // Expect a dest variable which will be locally created
         {
-            Error::Error_1200_ExpectedVar( pos, this );
-            return false;
+            const BFFToken * localVarToken = headerIter.GetCurrent();
+            headerIter++;
+            if ( localVarToken->IsVariable() == false )
+            {
+                Error::Error_1200_ExpectedVar( localVarToken, this );
+                return false;
+            }
+            // TODO: Check for . and not ^
+
+            // Resolve the name of the local variable
+            AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > localName;
+            bool localParentScope = false; // always false thanks to the previous test
+            if ( BFFParser::ParseVariableName( localVarToken, localName, localParentScope ) == false )
+            {
+                return false;
+            }
+            ASSERT( false == localParentScope );
+
+            localNames.Append( localName );
         }
-
-        const BFFIterator arrayVarNameBegin = pos;
-        AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > localName;
-        bool localParentScope = false; // always false thanks to the previous test
-        if ( BFFParser::ParseVariableName( pos, localName, localParentScope ) == false )
-        {
-            return false;
-        }
-        ASSERT( false == localParentScope );
-
-        localNames.Append( localName );
-
-        pos.SkipWhiteSpace();
 
         // check for required "in" token
-        if ( pos.ParseExactString( BFF_KEYWORD_IN ) == false )
         {
-            Error::Error_1201_MissingIn( pos, this );
-            return false;
-        }
-        pos.SkipWhiteSpace();
-
-        if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL &&
-             *pos != BFFParser::BFF_DECLARE_VAR_PARENT /* tolerant with parent vars */ )
-        {
-            Error::Error_1202_ExpectedVarFollowingIn( pos, this );
-            return false;
-        }
-
-        const BFFIterator arrayNameStart( pos );
-        AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > arrayVarName;
-        bool arrayParentScope = false;
-        if ( BFFParser::ParseVariableName( pos, arrayVarName, arrayParentScope ) == false )
-        {
-            return false;
-        }
-
-        const BFFVariable * var = nullptr;
-        BFFStackFrame * const arrayFrame = ( arrayParentScope )
-            ? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent(), var )
-            : nullptr;
-
-        if ( false == arrayParentScope )
-        {
-            var = BFFStackFrame::GetVar( arrayVarName, nullptr );
-        }
-
-        if ( ( arrayParentScope && ( nullptr == arrayFrame ) ) || ( var == nullptr ) )
-        {
-            Error::Error_1009_UnknownVariable( arrayNameStart, this, arrayVarName );
-            return false;
-        }
-
-        // it can be of any supported type
-        if ( ( var->IsArrayOfStrings() == false ) && ( var->IsArrayOfStructs() == false ) )
-        {
-            Error::Error_1050_PropertyMustBeOfType( arrayVarNameBegin, this, arrayVarName.Get(), var->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_ARRAY_OF_STRUCTS );
-            return false;
-        }
-
-        // is this the first variable?
-        int thisArrayLen( -1 );
-        if ( var->GetType() == BFFVariable::VAR_ARRAY_OF_STRINGS )
-        {
-            thisArrayLen = (int)var->GetArrayOfStrings().GetSize();
-        }
-        else if ( var->GetType() == BFFVariable::VAR_ARRAY_OF_STRUCTS )
-        {
-            thisArrayLen = (int)var->GetArrayOfStructs().GetSize();
-        }
-        else
-        {
-            ASSERT( false );
-        }
-
-        if ( loopLen == -1 )
-        {
-            // it will set the length of looping
-            loopLen = thisArrayLen;
-        }
-        else
-        {
-            // variables after the first must match length of the first
-            if ( loopLen != thisArrayLen )
+            const BFFToken * inToken = headerIter.GetCurrent();
+            headerIter++;
+            if ( ( inToken->IsKeyword() == false ) || ( inToken->GetValueString() != "in" ) )
             {
-                Error::Error_1204_LoopVariableLengthsDiffer( arrayVarNameBegin, this, arrayVarName.Get(), (uint32_t)thisArrayLen, (uint32_t)loopLen );
+                Error::Error_1201_MissingIn( inToken, this );
                 return false;
             }
         }
-        arrayVars.Append( var );
+
+        // Expect a source variable
+        {
+            const BFFToken * srcVarToken = headerIter.GetCurrent();
+            headerIter++;
+            if ( srcVarToken->IsVariable() == false )
+            {
+                Error::Error_1202_ExpectedVarFollowingIn( srcVarToken, this );
+                return false;
+            }
+
+            AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > arrayVarName;
+            bool arrayParentScope = false;
+            if ( BFFParser::ParseVariableName( srcVarToken, arrayVarName, arrayParentScope ) == false )
+            {
+                return false;
+            }
+
+            const BFFVariable * var = nullptr;
+            BFFStackFrame * const arrayFrame = ( arrayParentScope )
+                ? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent(), var )
+                : nullptr;
+
+            if ( false == arrayParentScope )
+            {
+                var = BFFStackFrame::GetVar( arrayVarName, nullptr );
+            }
+
+            if ( ( arrayParentScope && ( nullptr == arrayFrame ) ) || ( var == nullptr ) )
+            {
+                Error::Error_1009_UnknownVariable( srcVarToken, this, arrayVarName );
+                return false;
+            }
+
+            // it can be of any supported type
+            if ( ( var->IsArrayOfStrings() == false ) && ( var->IsArrayOfStructs() == false ) )
+            {
+                Error::Error_1050_PropertyMustBeOfType( srcVarToken, this, arrayVarName.Get(), var->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_ARRAY_OF_STRUCTS );
+                return false;
+            }
+
+            // is this the first variable?
+            int thisArrayLen( -1 );
+            if ( var->GetType() == BFFVariable::VAR_ARRAY_OF_STRINGS )
+            {
+                thisArrayLen = (int)var->GetArrayOfStrings().GetSize();
+            }
+            else if ( var->GetType() == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+            {
+                thisArrayLen = (int)var->GetArrayOfStructs().GetSize();
+            }
+            else
+            {
+                ASSERT( false );
+            }
+
+            if ( loopLen == -1 )
+            {
+                // it will set the length of looping
+                loopLen = thisArrayLen;
+            }
+            else
+            {
+                // variables after the first must match length of the first
+                if ( loopLen != thisArrayLen )
+                {
+                    Error::Error_1204_LoopVariableLengthsDiffer( srcVarToken, this, arrayVarName.Get(), (uint32_t)thisArrayLen, (uint32_t)loopLen );
+                    return false;
+                }
+            }
+            arrayVars.Append( var );
+        }
 
         // skip optional separator
-        pos.SkipWhiteSpace();
-        if ( *pos == ',' )
+        if ( headerIter->IsOperator( "," ) )
         {
-            pos++;
+            headerIter++;
         }
     }
 
@@ -197,11 +202,8 @@ FunctionForEach::FunctionForEach()
         }
 
         // parse the function body
-        BFFParser subParser( nodeGraph );
-        BFFIterator subIter( *functionBodyStartToken );
-        subIter++; // skip opening token
-        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
-        if ( subParser.Parse( subIter ) == false )
+        BFFTokenRange range( bodyRange );
+        if ( parser.Parse( range ) == false )
         {
             succeed = false;
             break;

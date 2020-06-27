@@ -33,6 +33,7 @@
 REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) + MetaFile() )
     REFLECT( m_Librarian,                       "Librarian",                    MetaFile() )
     REFLECT( m_LibrarianOptions,                "LibrarianOptions",             MetaNone() )
+    REFLECT( m_LibrarianType,                   "LibrarianType",                MetaOptional() )
     REFLECT( m_LibrarianOutput,                 "LibrarianOutput",              MetaFile() )
     REFLECT_ARRAY( m_LibrarianAdditionalInputs, "LibrarianAdditionalInputs",    MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
     REFLECT( m_LibrarianAllowResponseFile,      "LibrarianAllowResponseFile",   MetaOptional() )
@@ -46,6 +47,7 @@ REFLECT_END( LibraryNode )
 //------------------------------------------------------------------------------
 LibraryNode::LibraryNode()
 : ObjectListNode()
+, m_LibrarianType( "auto" )
 , m_LibrarianAllowResponseFile( false )
 {
     m_Type = LIBRARY_NODE;
@@ -54,7 +56,7 @@ LibraryNode::LibraryNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .Librarian
     Dependencies librarian;
@@ -99,7 +101,7 @@ LibraryNode::LibraryNode()
     m_StaticDependencies.Append( librarianAdditionalInputs );
     // m_ObjectListInputEndIndex // NOTE: Deliberately not added to m_ObjectListInputEndIndex, since we don't want to try and compile these things
 
-    m_LibrarianFlags = DetermineFlags( m_Librarian, m_LibrarianOptions );
+    m_LibrarianFlags = DetermineFlags( m_LibrarianType, m_Librarian, m_LibrarianOptions );
 
     return true;
 }
@@ -134,7 +136,7 @@ LibraryNode::~LibraryNode()
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i=startIndex; i<endIndex; ++i )
     {
-        m_DynamicDependencies.Append( Dependency( m_StaticDependencies[ i ].GetNode() ) );
+        m_DynamicDependencies.EmplaceBack( m_StaticDependencies[ i ].GetNode() );
     }
     return true;
 }
@@ -189,11 +191,9 @@ LibraryNode::~LibraryNode()
     }
 
     // capture all of the stdout and stderr
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+    AString memOut;
+    AString memErr;
+    p.ReadAllData( memOut, memErr );
 
     // Get result
     int result = p.WaitForExit();
@@ -224,13 +224,12 @@ LibraryNode::~LibraryNode()
         // (since compilation will fail anyway, and the output will be shown)
         if ( GetFlag( LIB_FLAG_LIB ) && !GetFlag( LIB_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
         {
-            FileNode::HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+            FileNode::HandleWarningsMSVC( job, GetName(), memOut );
         }
     }
 
-    // record time stamp for next time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp );
+    // record new file time
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -313,24 +312,68 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 
 // DetermineFlags
 //------------------------------------------------------------------------------
-/*static*/ uint32_t LibraryNode::DetermineFlags( const AString & librarianName, const AString & args )
+/*static*/ uint32_t LibraryNode::DetermineFlags( const AString & librarianType, const AString & librarianName, const AString & args )
 {
     uint32_t flags = 0;
-    if ( librarianName.EndsWithI("lib.exe") ||
-        librarianName.EndsWithI("lib") ||
-        librarianName.EndsWithI("link.exe") ||
-        librarianName.EndsWithI("link"))
-    {
-        flags |= LIB_FLAG_LIB;
 
+    if ( librarianType.IsEmpty() || ( librarianType == "auto" ) )
+    {
+        // Detect based upon librarian executable name
+        if ( librarianName.EndsWithI( "lib.exe" ) ||
+             librarianName.EndsWithI( "lib" ) ||
+             librarianName.EndsWithI( "link.exe" ) ||
+             librarianName.EndsWithI( "link" ) )
+        {
+            flags |= LIB_FLAG_LIB;
+        }
+        else if ( librarianName.EndsWithI( "ar.exe" ) ||
+                  librarianName.EndsWithI( "ar" ) )
+        {
+            if ( librarianName.FindI( "orbis-ar" ) )
+            {
+                flags |= LIB_FLAG_ORBIS_AR;
+            }
+            else
+            {
+                flags |= LIB_FLAG_AR;
+            }
+        }
+        else if ( librarianName.EndsWithI( "\\ax.exe" ) ||
+                  librarianName.EndsWithI( "\\ax" ) )
+        {
+            flags |= LIB_FLAG_GREENHILLS_AX;
+        }
+    }
+    else
+    {
+        if ( librarianType == "msvc" )
+        {
+            flags |= LIB_FLAG_LIB;
+        }
+        else if ( librarianType == "ar" )
+        {
+            flags |= LIB_FLAG_AR;
+        }
+        else if ( librarianType == "ar-orbis" )
+        {
+            flags |= LIB_FLAG_ORBIS_AR;
+        }
+        else if ( librarianType == "greenhills-ax" )
+        {
+            flags |= LIB_FLAG_GREENHILLS_AX;
+        }
+    }
+
+    if ( flags & LIB_FLAG_LIB )
+    {
         // Parse args for some other flags
         Array< AString > tokens;
         args.Tokenize( tokens );
 
-        const AString * const end = tokens.End();
+        const AString* const end = tokens.End();
         for ( const AString * it = tokens.Begin(); it != end; ++it )
         {
-            const AString & token = *it;
+            const AString& token = *it;
             if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
             {
                 flags |= LIB_FLAG_WARNINGS_AS_ERRORS_MSVC;
@@ -338,23 +381,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             }
         }
     }
-    else if ( librarianName.EndsWithI("ar.exe") ||
-         librarianName.EndsWithI("ar") )
-    {
-        if ( librarianName.FindI( "orbis-ar" ) )
-        {
-            flags |= LIB_FLAG_ORBIS_AR;
-        }
-        else
-        {
-            flags |= LIB_FLAG_AR;
-        }
-    }
-    else if ( librarianName.EndsWithI( "\\ax.exe" ) ||
-              librarianName.EndsWithI( "\\ax" ) )
-    {
-        flags |= LIB_FLAG_GREENHILLS_AX;
-    }
+
     return flags;
 }
 
@@ -363,17 +390,20 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
     AStackString<> output;
-    output += "Lib: ";
-    output += GetName();
-    output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Lib: ";
+        output += GetName();
+        output += '\n';
+    }
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += m_Librarian;
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // GetLibrarian

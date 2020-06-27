@@ -26,14 +26,14 @@ REFLECT_END( CopyFileNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CopyFileNode::CopyFileNode()
-: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
 {
     m_Type = Node::COPY_FILE_NODE;
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool CopyFileNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CopyFileNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -56,7 +56,7 @@ CopyFileNode::~CopyFileNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult CopyFileNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult CopyFileNode::DoBuild( Job * /*job*/ )
 {
     EmitCopyMessage();
 
@@ -99,12 +99,15 @@ void CopyFileNode::EmitCopyMessage() const
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    output += "Copy: ";
-    output += m_StaticDependencies[ 0 ].GetNode()->GetName();
-    output += " -> ";
-    output += GetName();
-    output += '\n';
-    FLOG_BUILD_DIRECT( output.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Copy: ";
+        output += m_StaticDependencies[ 0 ].GetNode()->GetName();
+        output += " -> ";
+        output += GetName();
+        output += '\n';
+    }
+    FLOG_OUTPUT( output );
 }
 
 //------------------------------------------------------------------------------

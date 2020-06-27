@@ -14,6 +14,7 @@
 //------------------------------------------------------------------------------
 class Job;
 class MemoryStream;
+class MultiBuffer;
 namespace Protocol
 {
     class IMessage;
@@ -46,7 +47,7 @@ private:
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestFile * msg );
 
     const ToolManifest * FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const;
-    bool WriteFileToDisk( const AString & fileName, const char * data, const uint32_t dataSize ) const;
+    bool WriteFileToDisk( const AString& fileName, const MultiBuffer & multiBuffer, size_t index ) const;
 
     static uint32_t ThreadFuncStatic( void * param );
     void            ThreadFunc();
@@ -79,7 +80,7 @@ private:
         uint32_t                m_NumJobsAvailable;     // num jobs we've told this server we have available
         Array< Job * >          m_Jobs;                 // jobs we've sent to this server
 
-        bool                    m_Blacklisted;
+        bool                    m_Denylisted;
     };
     Mutex                   m_ServerListMutex;
     Array< ServerState >    m_ServerList;

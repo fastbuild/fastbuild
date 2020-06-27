@@ -50,7 +50,12 @@ public:
 
 // Init
 //------------------------------------------------------------------------------
-/*virtual*/ bool Cache::Init( const AString & cachePath, const AString & cachePathMountPoint )
+/*virtual*/ bool Cache::Init( const AString & cachePath,
+                              const AString & cachePathMountPoint,
+                              bool /*cacheRead*/,
+                              bool /*cacheWrite*/,
+                              bool /*cacheVerbose*/,
+                              const AString & /*pluginDLLConfig*/ )
 {
     PROFILE_FUNCTION
 
@@ -102,9 +107,9 @@ public:
 
     // open output cache (tmp) file
     AStackString<> fullPathTmp( fullPath );
-    fullPathTmp+= ".tmp";
+    fullPathTmp += ".tmp";
     FileStream cacheTmpFile;
-    if( !cacheTmpFile.Open( fullPathTmp.Get(), FileStream::WRITE_ONLY ) )
+    if ( !cacheTmpFile.Open( fullPathTmp.Get(), FileStream::WRITE_ONLY ) )
     {
         return false;
     }
@@ -166,7 +171,7 @@ public:
 
 // FreeMemory
 //------------------------------------------------------------------------------
-/*virtual*/ void Cache::FreeMemory( void * data, size_t UNUSED( dataSize ) )
+/*virtual*/ void Cache::FreeMemory( void * data, size_t /*dataSize*/ )
 {
     FREE( data );
 }
@@ -326,7 +331,7 @@ void Cache::GetCacheFiles( bool showProgress,
         {
             // Get Files
             AStackString<> path;
-            path.Format( "%s%02x%c%02x%c", m_CachePath.Get(),
+            path.Format( "%s%02X%c%02X%c", m_CachePath.Get(),
                                                (uint32_t)i,
                                                NATIVE_SLASH,
                                                (uint32_t)j,

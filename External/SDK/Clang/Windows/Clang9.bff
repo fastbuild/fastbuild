@@ -1,0 +1,93 @@
+// Clang 9.x.x
+//------------------------------------------------------------------------------
+.Clang9_BasePath     = '$_CURRENT_BFF_DIR_$/9.0.0'
+#if CI_BUILD
+    .Clang9_BasePath = 'C:\Program Files\LLVM'
+#endif
+
+// Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-Clang9' )
+{
+    .Root                           = '$Clang9_BasePath$'
+    .ExtraFiles                     = {
+                                        '$Root$/bin/msvcp140.dll'
+                                        '$Root$/bin/vcruntime140.dll'
+                                      }
+    .Executable                     = '$Root$\bin\clang++.exe'
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif
+}
+
+// ToolChain
+//------------------------------------------------------------------------------
+.ToolChain_Clang_Windows =
+[
+    // Clang for Windows relies on the VS being present:
+    //  - crt headers
+    //  - crt libs/dlls
+    //  - linker
+    Using( .ToolChain_VS_Windows_X64 )
+
+    .Platform                       = 'x64Clang'
+
+    // Compiler Options
+    .Compiler                       = 'Compiler-Clang9'
+    .CommonCompilerOptions          = ' -c -g'
+
+                                    // Include paths
+                                    + ' -I"./"'
+                                    + .VSIncludePaths
+
+                                    // x64
+                                    + ' -m64'
+
+                                    // Enable warnings
+                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                                    + ' -Wextra'
+                                    + ' -Wshadow'
+
+                                    // No RTTI
+                                    + ' -fno-rtti'
+
+                                    // MS compatibility
+                                    + ' -fms-compatibility'
+                                    + ' -fms-extensions'
+                                    + ' -fmsc-version=$MSC_VER$'
+                                    + ' -Xclang -flto-visibility-public-std' // LTO visibility matches MSVC behaviour
+
+                                    // as of v9.0.0, these warnings fire inside system headers
+                                    + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
+                                    + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
+                                    + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
+                                    + ' -Wno-expansion-to-defined'      // macro expansion producing 'defined' has undefined behavior [-Wexpansion-to-defined]
+                                    + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
+                                    + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
+                                    + ' -Wno-int-to-void-pointer-cast'  // cast to 'void *' from smaller integer type 'unsigned long' [-Wint-to-void-pointer-cast]
+                                    + ' -Wno-deprecated-declarations'   // '_vsnprintf_l' is deprecated : This function or variable may be unsafe.
+
+    .CompilerOptions                = ' -o"%2" "%1" $CommonCompilerOptions$'
+    .CompilerOptionsC               = ' -x c -o"%2" "%1" $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header "%1" -o"%2" $CommonCompilerOptions$'
+
+    // Librarian
+    .Librarian                      = '$Clang9_BasePath$\bin\llvm-ar.exe'
+    .LibrarianOptions               = '/c echo %1 > %2' // 'rc "%2" "%1"' // NOTE: output must come first
+
+    // Linker
+    .Linker                         = '$Clang9_BasePath$\bin\lld-link.exe'
+    .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+                                    + .VSLibPaths
+
+    // File Extensions
+    .LibExtension                   = '.a'
+    .ExeExtension                   = '.exe'
+
+    // Exception Control
+    .UseExceptions                  = ' -fexceptions'
+]
+
+//------------------------------------------------------------------------------

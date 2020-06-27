@@ -35,5 +35,5 @@ Test( "Test" )
 {
     .TestExecutable     = 'Exe'
     .TestOutput         = '$Out$/Test/Test/testoutput.txt'
-    .TestTimeOut        = 1 // kill after 1ms
+    .TestTimeOut        = 1 // kill after 1 second
 }

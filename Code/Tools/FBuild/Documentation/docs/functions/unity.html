@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - Unity</title>
 </head>
@@ -18,7 +19,6 @@
 	        <div class='navbar'>
 	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
@@ -41,10 +41,12 @@ Builds one or more Unity/Blob files containing includes of other source code fil
   .UnityInputPattern       ; (optional) Pattern(s) of files to find (default *.cpp)
   .UnityInputPathRecurse   ; (optional) Recurse when searching for files (default true)
   .UnityInputFiles         ; (optional) Explicit list of files to include
-  .UnityInputExcludedFiles ; (optional) Explicit list of excluded files (partial, root-relative of full path)
+  .UnityInputExcludedFiles ; (optional) Explicit list of excluded files (partial, root-relative or full path)
+  .UnityInputIsolatedFiles ; (optional) List of files to exclude from unity, but still compile (partial end or root-relative)
   .UnityInputObjectLists   ; (optional) ObjectList(s) to use as input
   .UnityInputIsolateWritableFiles ; (optional) Build writable files individually (default false)
   .UnityInputIsolateWritableFilesLimit ; (optional) Disable isolation when many files are writable (default 0)
+  .UnityInputIsolateListFile ; (optional) Text file containing list of files to isolate
   .UnityOutputPath         ; Path to output generated Unity files
   .UnityOutputPattern      ; (optional) Pattern of output Unity file names (default Unity*.cpp)
   .UnityNumFiles           ; (optional) Number of Unity files to generate (default 1)
@@ -52,10 +54,11 @@ Builds one or more Unity/Blob files containing includes of other source code fil
   .PreBuildDependencies    ; (optional) Force targets to be built before this Unity (Rarely needed,
                            ; but useful when a Unity should contain generated code)
   .Hidden                  ; (optional) Hide a target from -showtargets (default false)
+  .UseRelativePaths_Experimental ; (optional) Use relative paths for generated Unity files
 }
 </div>
     </div>
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

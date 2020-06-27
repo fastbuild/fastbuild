@@ -35,8 +35,8 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ bool FLog::s_ShowInfo = false;
-/*static*/ bool FLog::s_ShowBuildCommands = true;
+/*static*/ bool FLog::s_ShowVerbose = false;
+/*static*/ bool FLog::s_ShowBuildReason = false;
 /*static*/ bool FLog::s_ShowErrors = true;
 /*static*/ bool FLog::s_ShowProgress = false;
 /*static*/ bool FLog::s_MonitorEnabled = false;
@@ -52,7 +52,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Info
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Info( const char * formatString, ... )
+/*static*/ void FLog::Verbose( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -61,12 +61,12 @@ static FileStream * g_MonitorFileStream = nullptr;
     buffer.VFormat( formatString, args );
     va_end( args );
 
-    Output( "Info:", buffer.Get() );
+    OutputInternal( "Info:", buffer.Get() );
 }
 
-// Build
+// Output
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Build( const char * formatString, ... )
+/*static*/ void FLog::Output( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -74,13 +74,18 @@ static FileStream * g_MonitorFileStream = nullptr;
     va_start(args, formatString);
     buffer.VFormat( formatString, args );
     va_end( args );
+
+    if ( buffer.IsEmpty() ) // Ignore empty messages for caller convenience
+    {
+        return;
+    }
 
     Tracing::Output( buffer.Get() );
 }
 
 // Monitor
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Monitor( const char * formatString, ... )
+/*static*/ void FLog::Monitor( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     // Is monitoring enabled?
     if ( g_MonitorFileStream == nullptr )
@@ -103,16 +108,21 @@ static FileStream * g_MonitorFileStream = nullptr;
     g_MonitorFileStream->WriteBuffer( finalBuffer.Get(), finalBuffer.GetLength() );
 }
 
-// BuildDirect
+// Output
 //------------------------------------------------------------------------------
-/*static*/ void FLog::BuildDirect( const char * message )
+/*static*/ void FLog::Output( const AString & message )
 {
-    Tracing::Output( message );
+    if ( message.IsEmpty() ) // Ignore empty messages for caller convenience
+    {
+        return;
+    }
+
+    Tracing::Output( message.Get() );
 }
 
 // Warning
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Warning( const char * formatString, ... )
+/*static*/ void FLog::Warning( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -121,12 +131,12 @@ static FileStream * g_MonitorFileStream = nullptr;
     buffer.VFormat( formatString, args );
     va_end( args );
 
-    Output( "Warning:", buffer.Get() );
+    OutputInternal( "Warning:", buffer.Get() );
 }
 
 // Error
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Error( const char * formatString, ... )
+/*static*/ void FLog::Error( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     // we prevent output here, rather than where the macros is inserted
     // as an error being output is not the normal code path, and a check
@@ -143,7 +153,7 @@ static FileStream * g_MonitorFileStream = nullptr;
     buffer.VFormat( formatString, args );
     va_end( args );
 
-    Output( "Error:", buffer.Get() );
+    OutputInternal( "Error:", buffer.Get() );
 }
 
 // ErrorDirect
@@ -160,9 +170,9 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Output - write to stdout and debugger
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Output( const char * type, const char * message )
+/*static*/ void FLog::OutputInternal( const char * type, const char * message )
 {
-    if( type == nullptr )
+    if ( type == nullptr )
     {
         OUTPUT( "%s", message );
         return;

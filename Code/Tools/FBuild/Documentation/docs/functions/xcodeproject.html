@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - XCodeProject</title>
 </head>
@@ -18,18 +19,12 @@
 	        <div class='navbar'>
 	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
 	        <div class='inner'>
 
 <h1>XCodeProject</h1>
-
-    <div class='newsitembody'>
-  	  <p><font color='red'>NOTE:</font> XCodeProject generation is in Beta. Syntax may be changed in future versions as the capabilities are extended.</p>
-    </div>
-
 
     <div id='unity' class='newsitemheader'>
       Summary
@@ -45,7 +40,7 @@
   // Input Options
   .ProjectInputPaths             // (optional) Path(s) containing files to include in project 
   .ProjectInputPathsExclude      // (optional) Path(s) to exclude from project
-  .ProjectPatternToExclude       // (optional) Pattern(s) for diles to exclude from project
+  .ProjectPatternToExclude       // (optional) Pattern(s) for files to exclude from project
   .ProjectFiles                  // (optional) File(s) to include in project
   .ProjectFilesToExclude         // (optional) File(s) to exclude from project
   .ProjectBasePath               // (optional) Base path(s) to use to build folder hierarchy in project
@@ -56,18 +51,26 @@
   .XCodeBuildToolArgs            // (optional) Args to pass to FASTBuild
   .XCodeBuildWorkingDir          // (optional) Working dir to set when invoking FASTBuild
 
-  // Project Configurations
-  .ProjectConfigs                // Project configurations (see below)
+  // Debugging Options
+  .XCodeDocumentVersioning       // (optional) Enable "Document Versioning" (default: false)
+  .XCodeCommandLineArguments     // (optional) Enabled command line options for debug target
+  .XCodeCommandLineArgumentsDisabled // (optional) Disabled command line options for debug target
 
   // Other Options
   .XCodeOrganizationName         // (optional) Organization name to set in project
+
+  // Project Configurations
+  .ProjectConfigs                // Project configurations (see below)
 }
 
 // ProjectConfigs - structs in the following format
 //--------------------------------------------------
 [
   .Config                        // Config to add to project (e.g. "Debug", "Release" etc)
-  .Target                        // FASTBuild compilation target to associate with .Config
+  .Target                        // (optional) FASTBuild compilation target to associate with .Config
+  .XCodeBaseSDK                  // (optional) SDK for compilation target (e.g. "iphoneos", "macosx" )
+  .XCodeDebugWorkingDir          // (optional) Working dir for target when debugging
+  .XCodeIphoneOSDeploymentTarget // (optional) iOS deployment version
 ]
 </div>
     </div>
@@ -214,7 +217,7 @@
     <div class='newsitembody'>
       
       <p><b>.XCodeBuildToolPath</b> - String - (Optional)</p>
-      <p>To location of the FASTBuild executable to invoke can be specified.</p>
+      <p>The location of the FASTBuild executable to invoke can be specified.</p>
       Example:
       <div class='code'>.XCodeBuildToolPath = '../Build/FBuild'</div>
 	  If not specified, the default will be used:
@@ -222,19 +225,20 @@
       <hr>
 	  
       <p><b>.XCodeBuildToolArgs</b> - String - (Optional)</p>
-      <p>To commend line args to pass to FASTBuild when compiling can be specified.</p>
+      <p>The command line args to pass to FASTBuild when compiling can be specified.</p>
       Example:
-      <div class='code'>.XCodeBuildToolArgs = '-ide -cache -summary $(FASTBUILD_TARGET)'</div>
+      <div class='code'>.XCodeBuildToolArgs = '-ide -cache -summary OSX64-All'</div>
 	  If not specified, the default will be used:
-      <div class='code'>.XCodeBuildToolArgs = '-ide $(FASTBUILD_TARGET)'</div>
+      <div class='code'>.XCodeBuildToolArgs = '-ide ^$(FASTBUILD_TARGET)'</div>
 	  <ul>
 	  <li>FASTBUILD_TARGET is a special per-configuration symbol that will be replaced (by XCode) with the .Target being compiled. FASTBuild automatically defines
 	  this symbol correctly for each build configuration.</li>
+	  <li>Note that the $ is escaped so that it's not interpretted by FASTBuild as the beginning of a variable substitution.</li>
 	  </ul>
       <hr>	  
   
       <p><b>.XCodeBuildWorkingDir</b> - String - (Optional)</p>
-      <p>To location to set as a working directory for compilation.</p>
+      <p>The location to set as a working directory for compilation.</p>
       Example:
       <div class='code'>.XCodeBuildToolPath = 'Code/'</div>
 	  If not specified, the default will be used:
@@ -242,20 +246,36 @@
     </div>
 
 	<!-- 
-		Project Configurations
+		Debugging Options
 	-->
     <div id='unity' class='newsitemheader'>
-      Project Configurations
+      Debugging Options
     </div>
     <div class='newsitembody'>
-      
-      <p><b>.ProjectConfigs</b> - Array of ProjectConfig Structure(s) - (Required)</p>
-      <p>One or more build configuration must be specified. The .Target specifies which target 
-	  FASTBuild will compile for a given .Config.</p>
+
+      <p><b>.XCodeDocumentVersioning</b> - Boolean - (Optional)</p>
+      <p>Controls whether the "Document Versionsing" checkbox is enabled.</p>
+	  <p>By default (non-FASTBuild) XCode projects have this option set, which causes
+	  XCode to pass additional args on the command line to the process when debugging. This
+	  is usually not desired, so FASTBuild suppresses this by default. The option can be re-enabled
+	  if needed.</p>
       Example:
-      <div class='code'>.DebugConfig   = [ .Config = 'Debug'   .Target = 'Lib-OSX-Debug' ]
-.ReleaseConfig = [ .Config = 'Release' .Target = 'Lib-OSX-Release' ]
-.ProjectConfigs = { .DebugConfig, .ReleaseConfig }</div>
+      <div class='code'>.XCodeDocumentVersioning = true</div>
+      <hr>
+	  
+      <p><b>.XCodeCommandLineArguments</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Specify command line arguments passed to the process when debugging.</p>
+      Example:
+      <div class='code'>.XCodeCommandLineArguments = { '-Arg1', '-Arg2' }</div>
+	  <b>NOTE:</b> This option (and .XCodeCommandLineArgumentsDisabled) is stored in the .xcscheme file for the project, which also contains
+	  other user-edited settings. As such, while FASTBuild will generate this file if missing, it
+	  will not overwrite it when it changes (so as not to overwrite other user edited settings).
+	  The .xcscheme can be deleted to force regeneration.
+      <hr>
+	  
+      <p><b>.XCodeCommandLineArgumentsDisabled</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Specify command line arguments passed to the process when debugging (same as
+	  .XCodeCommandLineArguments), but disable them by default.</p>
     </div>
 
 	<!-- 
@@ -273,7 +293,58 @@
 	  If not specified, the default will be used:
       <div class='code'>.XCodeOrganizationName = 'Organization'</div>
     </div>
-    
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+
+	<!-- 
+		Project Configurations
+	-->
+    <div id='unity' class='newsitemheader'>
+      Project Configurations
+    </div>
+    <div class='newsitembody'>
+      
+      <p><b>.ProjectConfigs</b> - Array of ProjectConfig Structure(s) - (Required)</p>
+      <p>One or more build configuration must be specified. Each configuration can be selected
+      in the XCode UI and the various properties specify how to generate configuration info
+      for XCode.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ ... ] // See below for options
+.ReleaseConfig = [ ... ] // See below for options
+.ProjectConfigs = [ .DebugConfig, .ReleaseConfig ]</div>
+
+      <hr>
+      <p><b>.Config</b> - String - (Required)</p>
+      <p>The name of the build configuration. This will be displayed in various places in the XCodeUI.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .Config = 'Debug' ...</div>
+
+      <hr>
+      <p><b>.Target</b> - String - (Required)</p>
+      <p>The target defined in the .bff which should be compiled for this configuration.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .Target = 'MyApp-OSX-Debug' ...</div>
+
+      <hr>
+      <p><b>.XCodeBaseSDK</b> - String - (Optional)</p>
+      <p>The SDK associate with the target. This controls the options available for launching an
+      executable for debugging and must be specified if the target is not 'macosx'.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .XCodeBaseSDK = 'iphoneos' ...</div>
+
+      <hr>
+      <p><b>.XCodeDebugWorkingDir</b> - String - (Optional)</p>
+      <p>The working directory to be used when debugging this build configuration. If not specified,
+      the path to the executable created by .Target will be used.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .XCodeDebugWorkingDir = 'path/path' ...</div>
+
+      <hr>
+      <p><b>.XCodeIphoneOSDeploymentTarget</b> - String - (Optional)</p>
+      <p>The iOS version required for deployment can be overridden from the XCode default.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .XCodeIphoneOSDeploymentTarget = '12.0' ...</div>
+
+    </div>
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

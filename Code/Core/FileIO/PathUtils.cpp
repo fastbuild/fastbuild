@@ -40,7 +40,7 @@
 
 // ArePathsEqual
 //------------------------------------------------------------------------------
-/*static*/ bool PathUtils::ArePathsEqual(const AString & cleanPathA, const AString & cleanPathB)
+/*static*/ bool PathUtils::ArePathsEqual( const AString & cleanPathA, const AString & cleanPathB )
 {
     #if defined( __LINUX__ )
         // Case Sensitive
@@ -183,7 +183,7 @@
 /*static*/ void PathUtils::StripFileExtension( AString & filePath )
 {
     const char * lastDot = filePath.FindLast( '.' );
-    if (lastDot)
+    if ( lastDot )
     {
         filePath.SetLength( (uint32_t)( lastDot - filePath.Get() ) );
     }
@@ -215,17 +215,47 @@
     const char * pathB = fileName.Get();
     const char * itA = pathA;
     const char * itB = pathB;
-    while ( ( *itA == *itB ) && ( *itA != '\0' ) )
+    char compA = *itA;
+    char compB = *itB;
+
+    #if defined( __WINDOWS__ ) || defined( __OSX__ )
+        // Windows & OSX: Case insensitive
+        if ( ( compA >= 'A' ) && ( compA <= 'Z' ) )
+        {
+            compA = 'a' + ( compA - 'A' );
+        }
+        if ( ( compB >= 'A' ) && ( compB <= 'Z' ) )
+        {
+            compB = 'a' + ( compB - 'A' );
+        }
+    #endif
+
+    while ( ( compA == compB ) && ( compA != '\0' ) )
     {
         const bool dirToken = ( ( *itA == '/' ) || ( *itA == '\\' ) );
         itA++;
+        compA = *itA;
         itB++;
+        compB = *itB;
         if ( dirToken )
         {
             pathA = itA;
             pathB = itB;
         }
+
+        #if defined( __WINDOWS__ ) || defined( __OSX__ )
+            // Windows & OSX: Case insensitive
+            if ( ( compA >= 'A' ) && ( compA <= 'Z' ) )
+            {
+                compA = 'a' + ( compA - 'A' );
+            }
+            if ( ( compB >= 'A' ) && ( compB <= 'Z' ) )
+            {
+                compB = 'a' + ( compB - 'A' );
+            }
+        #endif
     }
+
     const bool hasCommonSubPath = ( pathA != basePath.Get() );
     if ( hasCommonSubPath == false )
     {
@@ -247,7 +277,11 @@
         }
         if ( ( c == '/' ) || ( c == '\\' ) )
         {
-            outRelativeFileName += "..\\";
+            #if defined( __WINDOWS__ )
+                outRelativeFileName += "..\\";
+            #else
+                outRelativeFileName += "../";
+            #endif
         }
         ++pathA;
     }

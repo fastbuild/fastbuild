@@ -14,10 +14,12 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFStackFrame::BFFStackFrame()
-: m_Variables( 32, true )
+    : m_Variables( 32, true )
 {
     // hook into top of stack chain
     m_Next = s_StackHead;
+    m_OldHeadToRestore = nullptr;
+    m_Depth = GetDepth() + 1;
     s_StackHead = this;
 }
 
@@ -27,15 +29,34 @@ BFFStackFrame::~BFFStackFrame()
 {
     // unhook from top of stack chain
     ASSERT( s_StackHead == this );
-    s_StackHead = m_Next;
+
+    if ( m_OldHeadToRestore )
+    {
+        // If disconnected for chain, restore previous chain
+        ASSERT( m_Next == nullptr );
+        s_StackHead = m_OldHeadToRestore;
+    }
+    else
+    {
+        // If part of chain, resore parent to head
+        ASSERT( m_OldHeadToRestore == nullptr );
+        s_StackHead = m_Next;
+    }
 
     // free all variables we own
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( BFFVariable * var : m_Variables )
     {
-        FDELETE *i;
+        FDELETE var;
     }
+}
+
+// DisconnectStackChain
+//------------------------------------------------------------------------------
+void BFFStackFrame::DisconnectStackChain()
+{
+    // Record parent to restore to head when we fall out of scope
+    m_OldHeadToRestore = m_Next;
+    m_Next = nullptr;
 }
 
 // SetVarString
@@ -139,6 +160,28 @@ BFFStackFrame::~BFFStackFrame()
     frame->m_Variables.Append( v );
 }
 
+// SetVarStruct
+//------------------------------------------------------------------------------
+/*static*/ void BFFStackFrame::SetVarStruct( const AString& name,
+                                             Array<BFFVariable *> && members,
+                                             BFFStackFrame * frame )
+{
+    frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
+
+    BFFVariable* var = frame->GetVarMutableNoRecurse( name );
+    if ( var )
+    {
+        var->SetValueStruct( Move( members ) );
+        return;
+    }
+
+    // variable not found at this level, so create it
+    BFFVariable* v = FNEW( BFFVariable( name, Move( members ) ) );
+    frame->m_Variables.Append( v );
+}
+
+
 // SetVarArrayOfStructs
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarArrayOfStructs( const AString & name,
@@ -165,20 +208,27 @@ BFFStackFrame::~BFFStackFrame()
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVar( const BFFVariable * var, BFFStackFrame * frame )
 {
+    return SetVar( var, var->GetName(), frame );
+}
+
+// SetVar
+//------------------------------------------------------------------------------
+/*static*/ void BFFStackFrame::SetVar( const BFFVariable * srcVar, const AString & dstName, BFFStackFrame * frame )
+{
     frame = frame ? frame : s_StackHead;
     ASSERT( frame );
 
-    ASSERT( var );
+    ASSERT( srcVar );
 
-    switch ( var->GetType() )
+    switch ( srcVar->GetType() )
     {
         case BFFVariable::VAR_ANY:              ASSERT( false ); break;
-        case BFFVariable::VAR_STRING:           SetVarString( var->GetName(), var->GetString(), frame ); break;
-        case BFFVariable::VAR_BOOL:             SetVarBool( var->GetName(), var->GetBool(), frame ); break;
-        case BFFVariable::VAR_ARRAY_OF_STRINGS: SetVarArrayOfStrings( var->GetName(), var->GetArrayOfStrings(), frame ); break;
-        case BFFVariable::VAR_INT:              SetVarInt( var->GetName(), var->GetInt(), frame ); break;
-        case BFFVariable::VAR_STRUCT:           SetVarStruct( var->GetName(), var->GetStructMembers(), frame ); break;
-        case BFFVariable::VAR_ARRAY_OF_STRUCTS: SetVarArrayOfStructs( var->GetName(), var->GetArrayOfStructs(), frame ); break;
+        case BFFVariable::VAR_STRING:           SetVarString( dstName, srcVar->GetString(), frame ); break;
+        case BFFVariable::VAR_BOOL:             SetVarBool( dstName, srcVar->GetBool(), frame ); break;
+        case BFFVariable::VAR_ARRAY_OF_STRINGS: SetVarArrayOfStrings( dstName, srcVar->GetArrayOfStrings(), frame ); break;
+        case BFFVariable::VAR_INT:              SetVarInt( dstName, srcVar->GetInt(), frame ); break;
+        case BFFVariable::VAR_STRUCT:           SetVarStruct( dstName, srcVar->GetStructMembers(), frame ); break;
+        case BFFVariable::VAR_ARRAY_OF_STRUCTS: SetVarArrayOfStructs( dstName, srcVar->GetArrayOfStructs(), frame ); break;
         case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break;
     }
 }
@@ -189,7 +239,7 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
                                          const BFFVariable * lhs,
                                          const BFFVariable * rhs,
                                          BFFStackFrame * frame,
-                                         const BFFIterator & operatorIter )
+                                         const BFFToken * operatorIter )
 {
     frame = frame ? frame : s_StackHead;
 
@@ -239,13 +289,11 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
 const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & name ) const
 {
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( const BFFVariable * var : m_Variables )
     {
-        if ( ( *i )->GetName() == name )
+        if ( var->GetName() == name )
         {
-            return *i;
+            return var;
         }
     }
 
@@ -320,21 +368,19 @@ const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
     ASSERT( nameOnly.BeginsWith( '.' ) == false ); // Should not include . : TODO:C Resolve the inconsistency
 
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( const BFFVariable * var : m_Variables )
     {
-        // if name only (minus type prefix ) length matches
-        if ( ( *i )->GetName().GetLength() == ( nameOnly.GetLength() + 1 ) )
+        // if name only (minus type prefix) length matches
+        if ( var->GetName().GetLength() == ( nameOnly.GetLength() + 1 ) )
         {
             //types match?
             if ( ( type == BFFVariable::VAR_ANY ) ||
-                 ( type == ( *i )->GetType() ) )
+                 ( type == var->GetType() ) )
             {
                 // compare names
-                if ( nameOnly == ( ( *i )->GetName().Get() + 1 ) )
+                if ( nameOnly == ( var->GetName().Get() + 1 ) )
                 {
-                    return *i;
+                    return var;
                 }
             }
         }
@@ -357,13 +403,11 @@ const BFFVariable * BFFStackFrame::GetVarNoRecurse( const AString & name ) const
     ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
 
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( const BFFVariable * var : m_Variables )
     {
-        if ( ( *i )->GetName() == name )
+        if ( var->GetName() == name )
         {
-            return *i;
+            return var;
         }
     }
 
@@ -377,13 +421,11 @@ BFFVariable * BFFStackFrame::GetVarMutableNoRecurse( const AString & name )
     ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
 
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( BFFVariable * var : m_Variables )
     {
-        if ( ( *i )->GetName() == name )
+        if ( var->GetName() == name )
         {
-            return *i;
+            return var;
         }
     }
 
@@ -392,7 +434,7 @@ BFFVariable * BFFStackFrame::GetVarMutableNoRecurse( const AString & name )
 
 // CreateOrReplaceVarMutableNoRecurse
 //------------------------------------------------------------------------------
-void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable *var )
+void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable * var )
 {
     ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
     ASSERT( var );

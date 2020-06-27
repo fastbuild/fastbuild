@@ -34,6 +34,27 @@ struct ProfileEvent
     int64_t         m_TimeStamp;
 };
 
+// FormatU64
+//------------------------------------------------------------------------------
+void FormatU64( uint64_t value, char * outBuffer )
+{
+    char tmp[ 24 ]; // 20 bytes needed for max U64 value: 18,446,744,073,709,551,615
+    char * pos = tmp;
+    while ( value )
+    {
+        *pos = ( '0' + (uint8_t)( value % 10 ) );
+        ++pos;
+        value /= 10;
+    }
+    while ( pos > tmp )
+    {
+        --pos;
+        *outBuffer = *pos;
+        ++outBuffer;
+    }
+    *outBuffer = 0;
+}
+
 // Per-Thread structure
 //------------------------------------------------------------------------------
 struct ProfileEventBuffer
@@ -55,7 +76,7 @@ struct ProfileEventBuffer
     char                m_ThreadName[ MAX_THREAD_NAME_LEN + 1 ];
 
     // when allocating memory to track events, do it in blocks
-    enum{ NUM_EVENTS_PER_BLOCK = 512 };
+    enum{ NUM_EVENTS_PER_BLOCK = 8192 }; // 64KiB pages with 8 bytes events
 };
 THREAD_LOCAL ProfileEventBuffer tls_ProfileEventBuffer = { 0, nullptr, nullptr, nullptr, "" };
 
@@ -212,13 +233,15 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 
     // write all the events we have
     const ProfileEventInfo * const end = infos.End();
-    AStackString<> buffer;
-    for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )
+    AStackString< 8192 > buffer;
+    const double freqMul = ( Timer::GetFrequencyInvFloatMS() * 1000.0 );
+    if ( g_ProfileEventLog.IsOpen() )
     {
-        const ProfileEventInfo & info = *it;
-        if ( g_ProfileEventLog.IsOpen() )
+        for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )
         {
+            const ProfileEventInfo & info = *it;
             uint64_t threadId = (uint64_t)info.m_ThreadId;
+            char threadIsAsString[ 32 ];
 
             // Thread Name
             if ( ( info.m_ThreadName.IsEmpty() == false ) || ( info.m_ThreadId == Thread::GetMainThreadId() ) )
@@ -227,31 +250,71 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                 {
                     threadId = xxHash::Calc32( info.m_ThreadName );
                 }
+                FormatU64( threadId, threadIsAsString );
 
                 // SetThreadName event
                 // {"name": "thread_name", "ph": "M", "pid": 0, "tid": 164, "args": { "name" : "ThreadName" }},
-                buffer.Format( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":%" PRIu64 ",\"args\":{\"name\":\"%s\"}},\n",
-                        threadId,
-                        info.m_ThreadName.IsEmpty() ? "_MainThread" : info.m_ThreadName.Get() );
-                g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                buffer += "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":";
+                buffer += threadIsAsString;
+                buffer += ", \"args\":{\"name\":\"";
+                buffer += info.m_ThreadName.IsEmpty() ? "_MainThread" : info.m_ThreadName.Get();
+                buffer += "\"}},\n";
+
+                if ( buffer.GetLength() > ( 8192 - 256 ) )
+                {
+                    g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                    buffer.Clear();
+                }
+            }
+            else
+            {
+                FormatU64( threadId, threadIsAsString );
             }
 
             const size_t numEvents( info.m_NumEvents );
-            for ( size_t i=0; i<numEvents; ++i )
+            for ( size_t i = 0; i < numEvents; ++i )
             {
-                const ProfileEvent& e = info.m_Events[i];
+                const ProfileEvent & e = info.m_Events[ i ];
 
                 // {"name": "Asub", "ph": "B", "pid": 22630, "tid": 22630, "ts": 829},
-                buffer.Format( "{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":0,\"tid\":%" PRIu64 ",\"ts\":%" PRIu64 "},\n",
-                               e.m_Id ? e.m_Id : "",
-                               e.m_Id ? 'B' : 'E',
-                               threadId,
-                               (uint64_t)( (double)e.m_TimeStamp * (double)Timer::GetFrequencyInvFloatMS() * 1000.0 ) );
+                if ( e.m_Id )
+                {
+                    buffer += "{\"name\":\"";
+                    buffer += e.m_Id;
+                    buffer += "\",\"ph\":\"B\",\"pid\":0,\"tid\":";
+                }
+                else
+                {
+                    buffer += "{\"name\":\"\",\"ph\":\"E\",\"pid\":0,\"tid\":";
+                }
+                buffer += threadIsAsString;
+                buffer += ",\"ts\":";
+                const uint64_t eventTime = (uint64_t)( (double)e.m_TimeStamp * freqMul );
+                char eventTimeBuffer[ 32 ];
+                FormatU64( eventTime, eventTimeBuffer );
+                buffer += eventTimeBuffer;
+                buffer += "},\n";
 
-                g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                if ( buffer.GetLength() > ( 8192 - 256 ) )
+                {
+                    g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                    buffer.Clear();
+                }
             }
         }
-        FDELETE [] info.m_Events;
+
+        // Flush remaining
+        if ( buffer.GetLength() > 0 )
+        {
+            g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+            buffer.Clear();
+        }
+    }
+
+    for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )
+    {
+        const ProfileEventInfo & info = *it;
+        FDELETE[] info.m_Events;
     }
 }
 

@@ -4,7 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FileNode.h"
+#include "VSProjectBaseNode.h"
 
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -48,6 +48,11 @@ public:
     AString             m_LocalDebuggerWorkingDirectory;
     AString             m_LocalDebuggerCommand;
     AString             m_LocalDebuggerEnvironment;
+    AString             m_Keyword;
+    AString             m_ApplicationType;
+    AString             m_ApplicationTypeRevision;
+    AString             m_PackagePath;
+    AString             m_AdditionalSymbolSearchPaths;
 };
 
 // VSProjectConfig
@@ -70,7 +75,7 @@ public:
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
                                 Array< VSProjectConfig > & configs,
-                                const BFFIterator * iter = nullptr,
+                                const BFFToken * iter = nullptr,
                                 const Function * function = nullptr );
 };
 
@@ -84,26 +89,36 @@ public:
     AString             m_Pattern;  // e.g. "Code\Forms\*.h" (can be full filename also)
 };
 
+// VSProjectImport
+//------------------------------------------------------------------------------
+class VSProjectImport : public Struct
+{
+    REFLECT_STRUCT_DECLARE( VSProjectImport )
+public:
+    AString             m_Condition;    // e.g. "'$(ConfigurationType)' == 'Makefile'"
+    AString             m_Project;      // e.g. "$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets"
+};
+
 // VCXProjectNode
 //------------------------------------------------------------------------------
-class VCXProjectNode : public FileNode
+class VCXProjectNode : public VSProjectBaseNode
 {
     REFLECT_NODE_DECLARE( VCXProjectNode )
 public:
     VCXProjectNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~VCXProjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::VCXPROJECT_NODE; }
-
-    const AString & GetProjectGuid() const { return m_ProjectGuid; }
-    const Array< VSProjectConfig > & GetConfigs() const { return m_ProjectConfigs; }
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void PostLoad( NodeGraph & nodeGraph ) override;
 
     bool Save( const AString & content, const AString & fileName ) const;
+
+    // VSProjectBaseNode interface
+    virtual const AString & GetProjectTypeGuid() const override;
 
     // Exposed
     Array< AString >    m_ProjectInputPaths;
@@ -118,13 +133,14 @@ private:
     Array< VSProjectFileType > m_ProjectFileTypes;
 
     AString             m_RootNamespace;
-    AString             m_ProjectGuid;
     AString             m_DefaultLanguage;
     AString             m_ApplicationEnvironment;
     bool                m_ProjectSccEntrySAK = false;
 
     Array< AString >    m_ProjectReferences;
     Array< AString >    m_ProjectProjectReferences;
+
+    Array< VSProjectImport > m_ProjectProjectImports;
 };
 
 //------------------------------------------------------------------------------

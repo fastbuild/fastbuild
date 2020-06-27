@@ -6,8 +6,8 @@
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
 #include "Core/Env/Types.h"
-#include "Core/Reflection/ReflectionIter.h"
 #include "Core/Reflection/PropertyType.h"
+#include "Core/Reflection/ReflectionIter.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -41,10 +41,6 @@ public:
     const ReflectedProperty & GetReflectedProperty( uint32_t index ) const;
     const ReflectedProperty * GetReflectedProperty( const AString & propertyName ) const;
 
-    static Object * CreateObject( const AString & objectType );
-    static Struct * CreateStruct( const AString & structType );
-    Object * CreateObject() const;
-    Struct * CreateStruct() const;
     void SetArraySize( void * array, size_t size ) const;
 
     #define GETSET_PROPERTY( getValueType, setValueType ) \
@@ -72,13 +68,11 @@ public:
     #undef GETSET_PROPERTY
     #undef GETSET_PROPERTY_ARRAY
 
-    static void BindReflection( ReflectionInfo & reflectionInfo );
-
     template < class T >
     const T * HasMetaData() const
     {
         const ReflectionInfo * ri = T::GetReflectionInfoS();
-        return ( const T* )HasMetaDataInternal( ri );
+        return (const T *)HasMetaDataInternal( ri );
     }
 
 protected:
@@ -106,7 +100,6 @@ protected:
     const ReflectedProperty * FindProperty( const char * name ) const;
     const ReflectedProperty * FindPropertyRecurse( uint32_t nameCRC ) const;
 
-    virtual void * Create() const;
     virtual void SetArraySizeV( void * array, size_t size ) const;
 
     uint32_t m_TypeNameCRC;
@@ -117,8 +110,6 @@ protected:
     bool m_IsAbstract;
     uint32_t m_StructSize;
     IMetaData * m_MetaDataChain;
-
-    static ReflectionInfo * s_FirstReflectionInfo;
 };
 
 //------------------------------------------------------------------------------

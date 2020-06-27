@@ -56,20 +56,17 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetDBFile() : nullptr ) );
 
+    // Build a subset of targets as a sort of smoke test
     Array< AString > targets;
     #if defined( __WINDOWS__ )
-        targets.Append( AStackString<>( "All-x64-Debug" ) );
-        targets.Append( AStackString<>( "All-x64-Release" ) );
-        targets.Append( AStackString<>( "All-x64Clang-Debug" ) );
-        targets.Append( AStackString<>( "All-x64Clang-Release" ) );
+        targets.EmplaceBack( "All-x64-Debug" );
+        targets.EmplaceBack( "All-x64Clang-Release" );
     #elif defined( __LINUX__ )
-        targets.Append( AStackString<>( "All-x64Linux-Debug" ) );
-        targets.Append( AStackString<>( "All-x64Linux-Release" ) );
-        targets.Append( AStackString<>( "All-x64ClangLinux-Debug" ) );
-        targets.Append( AStackString<>( "All-x64ClangLinux-Release" ) );
+        targets.EmplaceBack( "All-x64Linux-Debug" );
+        targets.EmplaceBack( "All-x64ClangLinux-Release" );
     #elif defined( __OSX__ )
-        targets.Append( AStackString<>( "All-x64OSX-Debug" ) );
-        targets.Append( AStackString<>( "All-x64OSX-Release" ) );
+        targets.EmplaceBack( "All-x64OSX-Debug" );
+        targets.EmplaceBack( "All-x64OSX-Release" );
     #else
         #error Unknown platform
     #endif
@@ -108,8 +105,12 @@ void TestBuildFBuild::BuildClean() const
     TEST_ASSERT( objStats.m_NumProcessed > 10 ); // not exact so we don't have to update it
     TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed ); // everything rebuilt
 
-    // TODO:B Re-enable when we can disable isolation from unity (which disables the cache for some objects)
-    //TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumBuilt ); // everything stored to the cache
+    #if defined( __WINDOWS__ )
+        // One windows, 2 .res files are built which can't be stored, and everything else can
+        TEST_ASSERT( objStats.m_NumCacheStores == ( objStats.m_NumBuilt - 2 ) );
+    #else
+        TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumBuilt ); // everything stored to the cache
+    #endif
 }
 
 // Build_NoRebuild
@@ -151,10 +152,14 @@ void TestBuildFBuild::BuildCleanWithCache() const
     // test everything was retrieved from the cache
     const FBuildStats::Stats & objStats = stats.GetStatsFor( Node::OBJECT_NODE );
     TEST_ASSERT( objStats.m_NumProcessed > 10 ); // not exact so we don't have to update it
-
-    // TODO:B Re-enable when we can disable isolation from unity (which disables the cache for some objects)
-    //TEST_ASSERT( objStats.m_NumBuilt == 0 ); // nothing built
-    //TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed ); // everything read from cache
+    #if defined( __WINDOWS__ )
+        // One windows, 2 .res files are built, and everything else comes from the cache
+        TEST_ASSERT( objStats.m_NumBuilt == 2 );
+        TEST_ASSERT( objStats.m_NumCacheHits == ( objStats.m_NumProcessed - 2 ) );
+    #else
+        TEST_ASSERT( objStats.m_NumBuilt == 0 ); // nothing built
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed ); // everything read from cache
+    #endif
 }
 
 // DBSavePerformance
@@ -170,7 +175,7 @@ void TestBuildFBuild::DBSavePerformance() const
     MemoryStream ms( 64 * 1024 * 1024, 1024 * 1024 );
 
     Timer t;
-    for ( size_t i=0; i<100; ++i )
+    for ( size_t i = 0; i < 100; ++i )
     {
         ms.Reset();
         fBuild.SaveDependencyGraph( ms, "unused.fdb" );

@@ -6,6 +6,7 @@
 #include "TestFramework/UnitTest.h"
 
 #include "Core/Mem/Mem.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Thread.h"
 
@@ -24,7 +25,8 @@ private:
     struct TestExclusivityUserData
     {
         Mutex m_Mutex;
-        volatile uint32_t m_Count;
+        uint32_t m_Count;
+        volatile uint32_t m_BarrierCounter;
     };
     static uint32_t TestExclusivityThreadEntryFunction( void * userData );
 
@@ -84,21 +86,22 @@ void TestMutex::TestExclusivity() const
 {
     TestExclusivityUserData data;
     data.m_Count = 0;
+    data.m_BarrierCounter = 0;
 
     Thread::ThreadHandle h = Thread::CreateThread( TestExclusivityThreadEntryFunction,
                                                    "TestExclusivity",
                                                    ( 64 * KILOBYTE ),
                                                    static_cast< void * >( &data ) );
 
-    // signal thread
-    volatile uint32_t & sharedVar = data.m_Count;
-    ++sharedVar;
+    // arrive at barrier and wait
+    AtomicIncU32( &data.m_BarrierCounter );
+    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
 
     // increment
-    for ( size_t i=0; i<1000000; ++i )
+    for ( size_t i = 0; i < 1000000; ++i )
     {
         MutexHolder mh( data.m_Mutex );
-        ++sharedVar;
+        ++data.m_Count;
     }
 
     // wait for other thread to complete
@@ -108,7 +111,7 @@ void TestMutex::TestExclusivity() const
     Thread::CloseHandle( h );
 
     // ensure total is correct
-    TEST_ASSERT( sharedVar == 2000001 );
+    TEST_ASSERT( data.m_Count == 2000000 );
 }
 
 // TestExclusivityThreadEntryFunction
@@ -116,16 +119,16 @@ void TestMutex::TestExclusivity() const
 /*static*/ uint32_t TestMutex::TestExclusivityThreadEntryFunction( void * userData )
 {
     TestExclusivityUserData & data = *( static_cast< TestExclusivityUserData * >( userData ) );
-    volatile uint32_t & sharedVar = data.m_Count;
 
-    // wait for start notification
-    while ( sharedVar == 0 ) {}
+    // arrive at barrier and wait
+    AtomicIncU32( &data.m_BarrierCounter );
+    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
 
     // increment
-    for ( size_t i=0; i<1000000; ++i )
+    for ( size_t i = 0; i < 1000000; ++i )
     {
         MutexHolder mh( data.m_Mutex );
-        ++sharedVar;
+        ++data.m_Count;
     }
 
     return 0;
@@ -140,11 +143,11 @@ void TestMutex::TestExclusivity() const
         PaddingStruct ps1;
         PaddingStruct * ps2 = FNEW( PaddingStruct );
 
-        ASSERT( ( (size_t)&ps1.m_Mutex1 % sizeof( void * ) ) == 0 );
-        ASSERT( ( (size_t)&ps1.m_Mutex2 % sizeof( void * ) ) == 0 );
+        TEST_ASSERT( ( (size_t)&ps1.m_Mutex1 % sizeof( void * ) ) == 0 );
+        TEST_ASSERT( ( (size_t)&ps1.m_Mutex2 % sizeof( void * ) ) == 0 );
 
-        ASSERT( ( (size_t)&ps2->m_Mutex1 % sizeof( void * ) ) == 0 );
-        ASSERT( ( (size_t)&ps2->m_Mutex2 % sizeof( void * ) ) == 0 );
+        TEST_ASSERT( ( (size_t)&ps2->m_Mutex1 % sizeof( void * ) ) == 0 );
+        TEST_ASSERT( ( (size_t)&ps2->m_Mutex2 % sizeof( void * ) ) == 0 );
 
         delete ps2;
     }

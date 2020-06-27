@@ -15,8 +15,16 @@
 #include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+
+// Defines
+//------------------------------------------------------------------------------
+#if defined( __OSX__ ) || defined( __LINUX__ )
+    // Touch files every 4 hours
+    #define SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS (60.0f * 60.0f * 4.0f)
+#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -37,7 +45,7 @@ Server::Server( uint32_t numThreadsInJobQueue )
 //------------------------------------------------------------------------------
 Server::~Server()
 {
-    m_ShouldExit = true;
+    AtomicStoreRelaxed( &m_ShouldExit, true );
     JobQueueRemote::Get().WakeMainThread();
     Thread::WaitForThread( m_Thread );
 
@@ -302,6 +310,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
 
     // take note of initial status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
+    MutexHolder mh( cs->m_Mutex );
     cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
     cs->m_HostName = msg->GetHostName();
 }
@@ -312,6 +321,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgStat
 {
     // take note of latest status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
+    MutexHolder mh( cs->m_Mutex );
     cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
 
     // Wake main thread to request jobs
@@ -509,11 +519,13 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
 //------------------------------------------------------------------------------
 void Server::ThreadFunc()
 {
-    while ( m_ShouldExit == false )
+    while ( AtomicLoadRelaxed( &m_ShouldExit ) == false )
     {
         FinalizeCompletedJobs();
 
         FindNeedyClients();
+        
+        TouchToolchains();
 
         JobQueueRemote::Get().MainThreadWait( 100 );
     }
@@ -523,7 +535,7 @@ void Server::ThreadFunc()
 //------------------------------------------------------------------------------
 void Server::FindNeedyClients()
 {
-    if ( m_ShouldExit )
+    if ( AtomicLoadRelaxed( &m_ShouldExit ) )
     {
         return;
     }
@@ -646,6 +658,27 @@ void Server::FinalizeCompletedJobs()
     }
 }
 
+// TouchToolchains
+//------------------------------------------------------------------------------
+void Server::TouchToolchains()
+{
+    #if defined( __OSX__ ) || defined( __LINUX__)
+        if ( m_TouchToolchainTimer.GetElapsed() < SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS )
+        {
+            return;
+        }
+        m_TouchToolchainTimer.Start();
+
+        MutexHolder manifestMH( m_ToolManifestsMutex );
+        for ( const ToolManifest * toolManifest : m_Tools )
+        {
+            toolManifest->TouchFiles();
+        }
+    #else
+        // TODO:C we could update Windows timestamps too
+    #endif
+}
+
 // RequestMissingFiles
 //------------------------------------------------------------------------------
 void Server::RequestMissingFiles( const ConnectionInfo * connection, ToolManifest * manifest ) const
@@ -657,7 +690,7 @@ void Server::RequestMissingFiles( const ConnectionInfo * connection, ToolManifes
     for ( size_t i=0; i<numFiles; ++i )
     {
         const ToolManifestFile & f = files[ i ];
-        if ( f.m_SyncState == ToolManifestFile::NOT_SYNCHRONIZED )
+        if ( f.GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED )
         {
             // request this file
             Protocol::MsgRequestFile reqFileMsg( manifest->GetToolId(), (uint32_t)i );

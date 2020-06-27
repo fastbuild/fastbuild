@@ -69629,7 +69629,7 @@ private:
 
   Timer m_StatusTimer;
 
-  bool m_Blacklisted;
+  bool m_Denylisted;
  };
  Mutex m_ServerListMutex;
  Array< ServerState > m_ServerList;
@@ -70047,7 +70047,7 @@ void Client::LookForWorkers()
   }
 
 
-  if ( ss.m_Blacklisted )
+  if ( ss.m_Denylisted )
   {
    continue;
   }
@@ -70316,7 +70316,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 ;
 
 
- if ( ss->m_Blacklisted )
+ if ( ss->m_Denylisted )
  {
   MutexHolder mh( ss->m_Mutex );
   Protocol::MsgNoJobAvailable msg;
@@ -70593,7 +70593,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
   if ( systemError )
   {
 
-   ss->m_Blacklisted = true;
+   ss->m_Denylisted = true;
 
 
    job->OnSystemError();
@@ -70601,7 +70601,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
    const size_t workerIndex = ( ss - m_ServerList.Begin() );
    const AString & workerName = m_WorkerList[ workerIndex ];
-   do { if ( FLog::ShowInfo() ) { FLog::Info( "Remote System Failure!\n" " - Blacklisted Worker: %s\n" " - Node		         : %s\n" " - Job Error Count   : %u / %u\n", workerName.Get(), job->GetNode()->GetName().Get(), job->GetSystemErrorCount(), ( 3 ) ); }
+   do { if ( FLog::ShowInfo() ) { FLog::Info( "Remote System Failure!\n" " - Deny listed Worker: %s\n" " - Node		         : %s\n" " - Job Error Count   : %u / %u\n", workerName.Get(), job->GetNode()->GetName().Get(), job->GetSystemErrorCount(), ( 3 ) ); }
 #line 579 "C:\\Users\\Franta\\p4\\Code\\Tools\\FBuild\\FBuildCore\\Protocol\\Client.cpp"
 #pragma warning(push)
 #line 579 "C:\\Users\\Franta\\p4\\Code\\Tools\\FBuild\\FBuildCore\\Protocol\\Client.cpp"
@@ -70817,7 +70817,7 @@ Client::ServerState::ServerState()
  : m_Connection( (0) )
  , m_CurrentMessage( (0) )
  , m_Jobs( 16, true )
- , m_Blacklisted( false )
+ , m_Denylisted( false )
 {
  m_DelayTimer.Start( 999.0f );
 }

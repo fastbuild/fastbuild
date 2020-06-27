@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include <Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h>
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
@@ -21,6 +22,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Random.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 
 // Defines
@@ -28,7 +30,7 @@
 #define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 0.1f )
 #define CONNECTION_REATTEMPT_DELAY_TIME ( 10.0f )
 #define SYSTEM_ERROR_ATTEMPT_COUNT ( 3 )
-#define DIST_INFO( ... ) if ( m_DetailedLogging ) { FLOG_BUILD( __VA_ARGS__ ); }
+#define DIST_INFO( ... ) if ( m_DetailedLogging ) { FLOG_OUTPUT( __VA_ARGS__ ); }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -58,7 +60,7 @@ Client::~Client()
 {
     SetShuttingDown();
 
-    m_ShouldExit = true;
+    AtomicStoreRelaxed( &m_ShouldExit, true );
     Thread::WaitForThread( m_Thread );
 
     ShutdownAllConnections();
@@ -93,7 +95,7 @@ Client::~Client()
     FREE( (void *)( ss->m_CurrentMessage ) );
 
     ss->m_RemoteName.Clear();
-    ss->m_Connection = nullptr;
+    AtomicStoreRelaxed( &ss->m_Connection, static_cast< const ConnectionInfo * >( nullptr ) );
     ss->m_CurrentMessage = nullptr;
 }
 
@@ -120,19 +122,19 @@ void Client::ThreadFunc()
     for ( ;; )
     {
         LookForWorkers();
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
 
         CommunicateJobAvailability();
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
 
         Thread::Sleep( 1 );
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
@@ -153,7 +155,7 @@ void Client::LookForWorkers()
     size_t numConnections = 0;
     for ( size_t i=0; i<numWorkers; i++ )
     {
-        if ( m_ServerList[ i ].m_Connection )
+        if ( AtomicLoadRelaxed( &m_ServerList[ i ].m_Connection ) )
         {
             numConnections++;
         }
@@ -183,13 +185,13 @@ void Client::LookForWorkers()
         const size_t i( ( j + startIndex ) % numWorkers );
 
         ServerState & ss = m_ServerList[ i ];
-        if ( ss.m_Connection )
+        if ( AtomicLoadRelaxed( &ss.m_Connection ) )
         {
             continue;
         }
 
-        // ignore blacklisted workers
-        if ( ss.m_Blacklisted )
+        // ignore deny listed workers
+        if ( ss.m_Denylisted )
         {
             continue;
         }
@@ -217,7 +219,7 @@ void Client::LookForWorkers()
             const uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
 
             ss.m_RemoteName = m_WorkerList[ i ];
-            ss.m_Connection = ci; // success!
+            AtomicStoreRelaxed( &ss.m_Connection, ci ); // success!
             ss.m_NumJobsAvailable = numJobsAvailable;
 
             // send connection msg
@@ -259,15 +261,15 @@ void Client::CommunicateJobAvailability()
     const ServerState * const end = m_ServerList.End();
     while ( it != end )
     {
-        if ( it->m_Connection )
+        if ( AtomicLoadRelaxed( &it->m_Connection ) )
         {
             MutexHolder ssMH( it->m_Mutex );
-            if ( it->m_Connection )
+            if ( const ConnectionInfo * connection = AtomicLoadRelaxed( &it->m_Connection ) )
             {
                 if ( it->m_NumJobsAvailable != numJobsAvailable )
                 {
                     PROFILE_SECTION( "UpdateJobAvailability" )
-                    SendMessageInternal( it->m_Connection, msg );
+                    SendMessageInternal( connection, msg );
                     it->m_NumJobsAvailable = numJobsAvailable;
                 }
             }
@@ -395,8 +397,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
 
-    // no jobs for blacklisted workers
-    if ( ss->m_Blacklisted )
+    // no jobs for deny listed workers
+    if ( ss->m_Denylisted )
     {
         MutexHolder mh( ss->m_Mutex );
         Protocol::MsgNoJobAvailable msg;
@@ -431,7 +433,10 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ASSERT( toolId );
 
     // output to signify remote start
-    FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
+    }
     FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
     {
@@ -499,6 +504,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     if ( result == true )
     {
         // built ok - serialize to disc
+        MultiBuffer mb( data, ms.GetSize() - ms.Tell() );
 
         ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
         const AString & nodeName = objectNode->GetName();
@@ -509,31 +515,38 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         }
         else
         {
-            const ObjectNode * on = job->GetNode()->CastTo< ObjectNode >();
-            const uint32_t firstFileSize = *(uint32_t *)data;
-            const uint32_t secondFileSize = on->IsUsingPDB() ? *(uint32_t *)( (const char *)data + sizeof( uint32_t ) + firstFileSize ) : 0;
+            size_t fileIndex = 0;
 
-            result = WriteFileToDisk( nodeName, (const char *)data + sizeof( uint32_t ), firstFileSize );
+            const ObjectNode * on = job->GetNode()->CastTo< ObjectNode >();
+
+            // 1. Object file
+            result = WriteFileToDisk( nodeName, mb, fileIndex++ );
+
+            // 2. PDB file (optional)
             if ( result && on->IsUsingPDB() )
             {
-                data = (const void *)( (const char *)data + sizeof( uint32_t ) + firstFileSize );
-                ASSERT( ( firstFileSize + secondFileSize + ( sizeof( uint32_t ) * 2 ) ) == size );
-
                 AStackString<> pdbName;
                 on->GetPDBName( pdbName );
-                result = WriteFileToDisk( pdbName, (const char *)data + sizeof( uint32_t ), secondFileSize );
+                result = WriteFileToDisk( pdbName, mb, fileIndex++ );
             }
 
-            if ( result == true )
+            // 3. .nativecodeanalysis.xml (optional)
+            if ( result && on->IsUsingStaticAnalysisMSVC() )
             {
-                // record build time
-                FileNode * f = (FileNode *)job->GetNode();
-                f->m_Stamp = FileIO::GetFileLastWriteTime( nodeName );
+                AStackString<> xmlFileName;
+                on->GetNativeAnalysisXMLPath( xmlFileName );
+                result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
+            }
+
+            if ( result )
+            {
+                // record new file time
+                objectNode->RecordStampFromBuiltFile();
 
                 // record time taken to build
-                f->SetLastBuildTime( buildTime );
-                f->SetStatFlag(Node::STATS_BUILT);
-                f->SetStatFlag(Node::STATS_BUILT_REMOTE);
+                objectNode->SetLastBuildTime( buildTime );
+                objectNode->SetStatFlag(Node::STATS_BUILT);
+                objectNode->SetStatFlag(Node::STATS_BUILT_REMOTE);
 
                 // commit to cache?
                 if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
@@ -544,7 +557,26 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             }
             else
             {
-                ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
+                objectNode->GetStatFlag( Node::STATS_FAILED );
+            }
+        }
+
+        // get list of messages during remote work
+        AStackString<> msgBuffer;
+        job->GetMessagesForLog( msgBuffer );
+
+        if ( objectNode->IsMSVC())
+        {
+            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+            {
+                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer );
+            }
+        }
+        else if ( objectNode->IsClang() || objectNode->IsGCC() )
+        {
+            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+            {
+                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer );
             }
         }
     }
@@ -564,8 +596,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         // was it a system error?
         if ( systemError )
         {
-            // blacklist misbehaving worker
-            ss->m_Blacklisted = true;
+            // deny list misbehaving worker
+            ss->m_Denylisted = true;
 
             // take note of failure of job
             job->OnSystemError();
@@ -574,7 +606,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
             const AString & workerName = m_WorkerList[ workerIndex ];
             DIST_INFO( "Remote System Failure!\n"
-                       " - Blacklisted Worker: %s\n"
+                       " - Deny listed Worker: %s\n"
                        " - Node              : %s\n"
                        " - Job Error Count   : %u / %u\n"
                        " - Details           :\n"
@@ -604,7 +636,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             failureOutput += tmp;
         }
 
-        Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
+        Node::DumpOutput( nullptr, failureOutput, nullptr );
     }
 
     if ( FLog::IsMonitorEnabled() )
@@ -712,32 +744,13 @@ const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, ui
 
 // WriteFileToDisk
 //------------------------------------------------------------------------------
-bool Client::WriteFileToDisk( const AString & fileName, const char * data, const uint32_t dataSize ) const
+bool Client::WriteFileToDisk( const AString & fileName, const MultiBuffer & multiBuffer, size_t index ) const
 {
-    // Open the file
-    FileStream fs;
-    if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
+    if ( multiBuffer.ExtractFile( index, fileName ) == false )
     {
-        // On Windows, we can occasionally fail to open the file with error 1224 (ERROR_USER_MAPPED_FILE), due to
-        // things like anti-virus etc. Simply retry if that happens
-        // Also, when a <LOCAL RACE> occurs, the local compilation process might not have exited at this point
-        // (we call ::TerminateProcess, which is async),which can cause failure below, because the file is still locked.
-        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName, FileStream::WRITE_ONLY, 15 ); // 15 secs max wait
-
-        if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
-        {
-            FLOG_ERROR( "Failed to create file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
-            return false;
-        }
-    }
-
-    // Write the contents
-    if ( fs.WriteBuffer( data, dataSize ) != dataSize )
-    {
-        FLOG_ERROR( "Failed to write file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
+        FLOG_ERROR( "Failed to create file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
         return false;
     }
-
     return true;
 }
 
@@ -748,7 +761,7 @@ Client::ServerState::ServerState()
     , m_CurrentMessage( nullptr )
     , m_NumJobsAvailable( 0 )
     , m_Jobs( 16, true )
-    , m_Blacklisted( false )
+    , m_Denylisted( false )
 {
     m_DelayTimer.Start( 999.0f );
 }

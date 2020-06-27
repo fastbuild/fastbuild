@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Strings/AStackString.h"
 
 #if defined( __WINDOWS__ )
@@ -27,10 +28,11 @@
 #endif
 
 #if defined( __APPLE__ )
+    #include <mach-o/dyld.h>
     extern "C"
     {
-        int *_NSGetArgc(void);
-        char ***_NSGetArgv(void);
+        int * _NSGetArgc( void );
+        char *** _NSGetArgv( void );
     };
 #endif
 
@@ -217,8 +219,14 @@ void Env::GetExePath( AString & output )
         GetModuleFileNameA( hModule, path, MAX_PATH );
         output = path;
     #elif defined( __APPLE__ )
-        const char ** argv = const_cast< const char ** >( *_NSGetArgv() );
-        output = argv[0];
+        // Get the required buffer size
+        uint32_t bufferSize = 0;
+        VERIFY( _NSGetExecutablePath( nullptr, &bufferSize ) == -1 );
+        ASSERT( bufferSize > 0 ); // Updated by _NSGetExecutablePath
+    
+        // Reserve enough space (-1 since bufferSize includes the null)
+        output.SetLength( bufferSize - 1 );
+        VERIFY( _NSGetExecutablePath( output.Get(), &bufferSize ) == 0 );
     #else
         char path[ PATH_MAX ];
         const ssize_t length = readlink( "/proc/self/exe", path, PATH_MAX );
@@ -253,7 +261,7 @@ static bool IsStdOutRedirectedInternal()
             return true; // Redirected to something that is not a pipe
         }
 
-        char buffer[ sizeof( FILE_NAME_INFO ) + MAX_PATH * sizeof( wchar_t ) ];
+        alignas( __alignof( FILE_NAME_INFO ) ) char buffer[ sizeof( FILE_NAME_INFO ) + MAX_PATH * sizeof( wchar_t ) ];
         if ( ! GetFileInformationByHandleEx( h, FileNameInfo, buffer, sizeof( buffer ) ) )
         {
             return true; // Redirected to something that doesn't have a name
@@ -315,17 +323,17 @@ static bool IsStdOutRedirectedInternal()
 /*static*/ bool Env::IsStdOutRedirected( const bool recheck )
 {
     static volatile int32_t sCachedResult = 0; // 0 - not checked, 1 - true, 2 - false
-    const int32_t result = sCachedResult;
+    const int32_t result = AtomicLoadRelaxed( &sCachedResult );
     if ( recheck || ( result == 0 ) )
     {
         if ( IsStdOutRedirectedInternal() )
         {
-            sCachedResult = 1;
+            AtomicStoreRelaxed( &sCachedResult, 1 );
             return true;
         }
         else
         {
-            sCachedResult = 2;
+            AtomicStoreRelaxed( &sCachedResult, 2 );
             return false;
         }
     }
@@ -372,6 +380,23 @@ static bool IsStdOutRedirectedInternal()
     *mem = 0;
 
     return environmentString;
+}
+
+// ShowMsgBox
+//------------------------------------------------------------------------------
+void Env::ShowMsgBox( const char * title, const char * msg )
+{
+    #if defined( __WINDOWS__ )
+        MessageBoxA( nullptr, msg, title, MB_OK );
+    #elif defined( __APPLE__ )
+        (void)title;
+        (void)msg; // TODO:MAC Implement ShowMsgBox
+    #elif defined( __LINUX__ )
+        (void)title;
+        (void)msg; // TODO:LINUX Implement ShowMsgBox
+    #else
+        #error Unknown Platform
+    #endif
 }
 
 //------------------------------------------------------------------------------

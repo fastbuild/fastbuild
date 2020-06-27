@@ -45,7 +45,7 @@ void TestResources::BuildResource() const
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( "binRes" );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "exe" ) ) );
+    TEST_ASSERT( fBuild.Build( "exe" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Resources/resource.fdb" ) );
 
     // make sure all output files are as expected
@@ -67,7 +67,6 @@ void TestResources::BuildResource() const
     CheckStatsNode ( 1,     1,      Node::EXE_NODE );
 }
 
-
 // BuildResource_NoRebuild
 //------------------------------------------------------------------------------
 void TestResources::BuildResource_NoRebuild() const
@@ -78,7 +77,7 @@ void TestResources::BuildResource_NoRebuild() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Resources/resource.fdb" ) );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "exe" ) ) );
+    TEST_ASSERT( fBuild.Build( "exe" ) );
 
     // Check stats
     //               Seen,  Built,  Type

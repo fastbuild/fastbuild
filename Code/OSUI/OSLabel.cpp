@@ -20,11 +20,17 @@
 // Defines
 //------------------------------------------------------------------------------
 
+// OSX Functions
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    void * LabelOSX_Create( OSLabel * owner, int32_t x, int32_t y, uint32_t w, uint32_t h, const char * labelText );
+#endif
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-OSLabel::OSLabel( OSWindow * parentWindow ) :
-    OSWidget( parentWindow ),
-    m_Font( nullptr )
+OSLabel::OSLabel( OSWindow * parentWindow )
+    : OSWidget( parentWindow )
+    , m_Font( nullptr )
 {
 }
 
@@ -58,6 +64,8 @@ void OSLabel::Init( int32_t x, int32_t y, uint32_t w, uint32_t h, const char * l
 
         // Set text
         SendMessage( (HWND)m_Handle, WM_SETTEXT, NULL, (LPARAM)labelText );
+    #elif defined( __OSX__ )
+        m_Handle = LabelOSX_Create( this, x, y, w, h, labelText );
     #else
         (void)x;
         (void)y;

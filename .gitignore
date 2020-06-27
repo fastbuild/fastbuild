@@ -7,8 +7,6 @@
 *.sdf
 *.suo
 *.user
-*.vcxproj
-*.vcxproj.filters
 tmp/
 ftmp/
 bin/
@@ -34,6 +32,9 @@ External/SDK/Clang/Windows/3.7.1/
 External/SDK/Clang/Windows/5.0.1/
 External/SDK/Clang/Windows/6.0.0/
 External/SDK/Clang/Windows/7.0.1/
+External/SDK/Clang/Windows/8.0.0/
+External/SDK/Clang/Windows/9.0.0/
+External/SDK/Clang/Windows/10.0.0.RC3/
 External/SDK/CUDA_6.5.14/
 External/SDK/other/
 External/SDK/VisualStudio/2013/

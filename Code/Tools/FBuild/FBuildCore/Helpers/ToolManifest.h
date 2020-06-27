@@ -28,7 +28,6 @@ public:
     ToolManifestFile();
     explicit ToolManifestFile( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size );
     ~ToolManifestFile();
-    void StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
 
     enum SyncState
     {
@@ -36,6 +35,26 @@ public:
         SYNCHRONIZING,
         SYNCHRONIZED,
     };
+
+    bool                DoBuild();
+    void                StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
+    void                Migrate( const ToolManifestFile & oldFile );
+
+    const void *        GetFileData( size_t & outDataSize ) const;
+
+    // Access state
+    const AString &     GetName() const                     { return m_Name; }
+    uint64_t            GetTimeStamp() const                { return m_TimeStamp; }
+    uint32_t            GetHash() const                     { return m_Hash; }
+    uint32_t            GetUncompressedContentSize() const  { return m_UncompressedContentSize; }
+    SyncState           GetSyncState() const                { return m_SyncState; }
+
+    // Modify state
+    void                SetSyncState( SyncState state )         { m_SyncState = state; }
+    void                SetFileLock( FileStream * fileLock )    { m_FileLock = fileLock; }
+
+protected:
+    bool                LoadFile( void * & uncompressedContent, uint32_t & uncompressedContentSize ) const;
 
     // common members
     AString          m_Name;
@@ -62,7 +81,9 @@ public:
     explicit ToolManifest( uint64_t toolId );
     ~ToolManifest();
 
-    bool Generate( const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString>& customEnvironmentVariables );
+    void Initialize( const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables );
+    bool DoBuild( const Dependencies & dependencies );
+    void Migrate( const ToolManifest & oldManifest );
 
     inline uint64_t GetToolId() const { return m_ToolId; }
     inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
@@ -83,7 +104,7 @@ public:
     inline void *   GetUserData() const         { return m_UserData; }
     const Array< ToolManifestFile > & GetFiles() const { return m_Files; }
 
-    void MarkFileAsSynchronizing( size_t fileId ) { ASSERT( m_Files[ fileId ].m_SyncState == ToolManifestFile::NOT_SYNCHRONIZED ); m_Files[ fileId ].m_SyncState = ToolManifestFile::SYNCHRONIZING; }
+    void MarkFileAsSynchronizing( size_t fileId ) { ASSERT( m_Files[ fileId ].GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED ); m_Files[ fileId ].SetSyncState( ToolManifestFile::SYNCHRONIZING ); }
     void CancelSynchronizingFiles();
 
     const void *    GetFileData( uint32_t fileId, size_t & dataSize ) const;
@@ -94,10 +115,12 @@ public:
     const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
 
     static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
-private:
-    bool            AddFile( const AString & fileName, const uint64_t timeStamp );
-    bool            LoadFile( const AString & fileName, void * & uncompressedContent, uint32_t & uncompressedContentSize ) const;
+    
+    #if defined( __OSX__ ) || defined( __LINUX__ )
+        void            TouchFiles() const;
+    #endif
 
+private:
     mutable Mutex   m_Mutex;
 
     // Reflected

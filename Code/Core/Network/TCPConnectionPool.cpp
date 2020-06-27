@@ -10,25 +10,26 @@
 #include "Core/Env/ErrorFormat.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Network/Network.h"
-#include "Core/Strings/AString.h"
-#include "Core/Strings/AStackString.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
 
 // System
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    #include <string.h>
-    #include <errno.h>
-    #include <netdb.h>
     #include <arpa/inet.h>
+    #include <errno.h>
+    #include <fcntl.h>
+    #include <netdb.h>
+    #include <netinet/in.h>
+    #include <netinet/tcp.h>
+    #include <string.h>
     #include <sys/ioctl.h>
     #include <sys/socket.h>
     #include <sys/uio.h>
-    #include <netinet/in.h>
-    #include <netinet/tcp.h>
-    #include <fcntl.h>
     #include <unistd.h>
     #define INVALID_SOCKET ( -1 )
     #define SOCKET_ERROR -1
@@ -48,18 +49,96 @@
 #endif
 #define LAST_NETWORK_ERROR_STR ERROR_STR( GetLastNetworkError() )
 
+// TCPConnectionPoolProfileHelper
+//------------------------------------------------------------------------------
+#if defined( PROFILING_ENABLED )
+    class TCPConnectionPoolProfileHelper
+    {
+    public:
+        enum ThreadType
+        {
+            THREAD_LISTEN,
+            THREAD_CONNECTION
+        };
+
+        TCPConnectionPoolProfileHelper( ThreadType threadType )
+        {
+            // Chose which bitmap to use
+            uint64_t & bitmap = ( threadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+
+            // Find free bit
+            uint32_t bit = 0;
+            {
+                MutexHolder mh( s_Mutex );
+                for ( ; bit < 64; ++bit )
+                {
+                    // Is this bit clear?
+                    if ( ( ( (uint64_t)1 << bit ) & bitmap ) == 0 )
+                    {
+                        // Set bit as we will use this Id
+                        bitmap |= ( (uint64_t)1 << bit );
+                        break;
+                    }
+                }
+            }
+            m_Bit = bit; // Store the bit for this thread
+            m_ThreadType = threadType;
+
+            // No free bits? (Last bit is never set)
+            if ( bit == 63 )
+            {
+                return; // Can't set thread name
+            }
+
+            // Format and set
+            AStackString<> threadName;
+            threadName.Format( ( threadType == THREAD_LISTEN ) ? "Listen_%u" : "Connection_%u", bit );
+            PROFILE_SET_THREAD_NAME( threadName.Get() )
+        }
+        ~TCPConnectionPoolProfileHelper()
+        {
+            // Clear bit if we reserved one
+            if ( m_Bit < 63 )
+            {
+                // Chose which bitmap to use
+                uint64_t& bitmap = ( m_ThreadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+
+                // Clear bit
+                MutexHolder mh( s_Mutex );
+                bitmap &= ~( (uint64_t)1 << m_Bit );
+            }
+        }
+
+    protected:
+        ThreadType          m_ThreadType;
+        uint32_t            m_Bit;
+
+        static Mutex        s_Mutex;
+        static uint64_t     s_IdBitmapListen;
+        static uint64_t     s_IdBitmapConnection;
+    };
+    /*static*/ Mutex    TCPConnectionPoolProfileHelper::s_Mutex;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapListen        = 0;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection    = 0;
+
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )   \
+        TCPConnectionPoolProfileHelper threadNameHelper( threadType );
+#else
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )
+#endif
+
 // CONSTRUCTOR - ConnectionInfo
 //------------------------------------------------------------------------------
 ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
-: m_Socket( INVALID_SOCKET )
-, m_RemoteAddress( 0 )
-, m_RemotePort( 0 )
-, m_ThreadQuitNotification( false )
-, m_TCPConnectionPool( ownerPool )
-, m_UserData( nullptr )
-#ifdef DEBUG
-, m_InUse( false )
-#endif
+    : m_Socket( INVALID_SOCKET )
+    , m_RemoteAddress( 0 )
+    , m_RemotePort( 0 )
+    , m_ThreadQuitNotification( false )
+    , m_TCPConnectionPool( ownerPool )
+    , m_UserData( nullptr )
+    #ifdef DEBUG
+        , m_InUse( false )
+    #endif
 {
     ASSERT( ownerPool );
 }
@@ -77,8 +156,11 @@ TCPConnectionPool::TCPConnectionPool()
 //------------------------------------------------------------------------------
 TCPConnectionPool::~TCPConnectionPool()
 {
-    m_ShuttingDown = true;
-    ShutdownAllConnections();
+    // ShutdownAllConnections() must be called explicitly prior to destruction
+    // as virtual callbacks in derived classes make it unsafe to do so here.
+    // By enforcing explicit shutdown, even when not strictly needed, we can
+    // ensure no unsafe cases exist (and can assert below)
+    ASSERT( AtomicLoadRelaxed( &m_ShuttingDown ) && "ShutdownAllConnections not called" );
 }
 
 // ShutdownAllConnections
@@ -86,6 +168,8 @@ TCPConnectionPool::~TCPConnectionPool()
 void TCPConnectionPool::ShutdownAllConnections()
 {
     PROFILE_FUNCTION
+
+    AtomicStoreRelaxed( &m_ShuttingDown, true );
 
     m_ConnectionsMutex.Lock();
 
@@ -102,14 +186,14 @@ void TCPConnectionPool::ShutdownAllConnections()
             !m_Connections.IsEmpty() )
     {
         // incoming connections
-        for ( size_t i=0; i<m_Connections.GetSize(); ++i )
+        for ( size_t i = 0; i < m_Connections.GetSize(); ++i )
         {
             ConnectionInfo * ci = m_Connections[ i ];
             Disconnect( ci );
         }
 
         m_ConnectionsMutex.Unlock();
-        Thread::Sleep( 1 );
+        m_ShutdownSemaphore.Wait( 1 );
         m_ConnectionsMutex.Lock();
     }
     m_ConnectionsMutex.Unlock();
@@ -184,9 +268,9 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_
 
     // get IP
     uint32_t hostIP = Network::GetHostIPFromName( host, timeout );
-    if( hostIP == 0 )
+    if ( hostIP == 0 )
     {
-        TCPDEBUG( "Failed to get address for '%s'\n" , host.Get() );
+        TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );
         return nullptr;
     }
     return Connect( hostIP, port, timeout, userData );
@@ -219,7 +303,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
     destAddr.sin_addr.s_addr = hostIP;
 
     // initiate connection
-    if ( connect(sockfd, (struct sockaddr *)&destAddr, sizeof( destAddr ) ) != 0 )
+    if ( connect( sockfd, (struct sockaddr *)&destAddr, sizeof( destAddr ) ) != 0 )
     {
         // we expect WSAEWOULDBLOCK
         if ( !WouldBlock() )
@@ -258,7 +342,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         pollingTimeout.tv_usec = 10 * 1000;
 
         // check if the socket is ready
-        int selRet = Select( sockfd+1, nullptr, &write, &err, &pollingTimeout );
+        int selRet = Select( sockfd + 1, nullptr, &write, &err, &pollingTimeout );
         if ( selRet == SOCKET_ERROR )
         {
             // connection failed
@@ -275,7 +359,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         if ( selRet == 0 )
         {
             // are we shutting down?
-            if ( m_ShuttingDown )
+            if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
             {
                 #ifdef TCPCONNECTION_DEBUG
                     AStackString<> host;
@@ -302,7 +386,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             continue;
         }
 
-        if( FD_ISSET( sockfd, &err ) )
+        if ( FD_ISSET( sockfd, &err ) )
         {
             // connection failed
             #ifdef TCPCONNECTION_DEBUG
@@ -325,8 +409,35 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             return nullptr;
         }
 
-        if( FD_ISSET( sockfd, &write ) )
+        if ( FD_ISSET( sockfd, &write ) )
         {
+            #if defined( __APPLE__ ) || defined( __LINUX__ )
+                // On Linux a write flag set by select() doesn't mean that
+                // connect() succeeded, it only means that it is completed.
+                // To get the result we need to query SO_ERROR value via getsockopt().
+                int32_t error = 0;
+                socklen_t size = sizeof(error);
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) == SOCKET_ERROR )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        AStackString<> host;
+                        GetAddressAsString( hostIP, host );
+                        TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+                    #endif
+                    CloseSocket( sockfd );
+                    return nullptr;
+                }
+                if ( error != 0 )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        AStackString<> host;
+                        GetAddressAsString( hostIP, host );
+                        TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
+                    #endif
+                    CloseSocket( sockfd );
+                    return nullptr;
+                }
+            #endif
             break; // connection success!
         }
 
@@ -353,20 +464,27 @@ void TCPConnectionPool::Disconnect( const ConnectionInfo * ci )
 
     if ( ci == m_ListenConnection )
     {
-        ci->m_ThreadQuitNotification = true;
+        AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
         return;
     }
 
     ConnectionInfo ** iter = m_Connections.Find( ci );
     if ( iter != nullptr )
     {
-        ci->m_ThreadQuitNotification = true;
+        AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
         return;
     }
 
     // connection is no longer valid.... we handle this gracefully
     // as the connection might be lost while trying to disconnect
     // on another thread
+}
+
+// SetShuttingDown
+//------------------------------------------------------------------------------
+void TCPConnectionPool::SetShuttingDown()
+{
+    AtomicStoreRelaxed( &m_ShuttingDown, true );
 }
 
 // GetNumConnections
@@ -430,7 +548,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     ASSERT( connection );
 
     // closing connection, possibly from a previous failure
-    if ( connection->m_ThreadQuitNotification || m_ShuttingDown )
+    if ( AtomicLoadAcquire( &connection->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
     {
         return false;
     }
@@ -444,9 +562,9 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
 
     // Calculate total to send
     uint32_t totalBytes( 0 );
-    for ( uint32_t i = 0; i<numBuffers; ++i )
+    for ( uint32_t i = 0; i < numBuffers; ++i )
     {
-        totalBytes += buffers[i].size;
+        totalBytes += buffers[ i ].size;
     }
 
     Timer timer;
@@ -469,7 +587,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         // Fill buffers for any unsent data
         uint32_t numSendBuffers( 0 );
         uint32_t offset( 0 );
-        for ( uint32_t i = 0; i<numBuffers; ++i )
+        for ( uint32_t i = 0; i < numBuffers; ++i )
         {
             const uint32_t overlap = bytesSent > offset ? ( bytesSent - offset ) : 0;
             if ( overlap < buffers[ i ].size )
@@ -502,7 +620,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         {
             if ( WouldBlock() )
             {
-                if ( connection->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &connection->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     sendOK = false;
                     break;
@@ -581,7 +699,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
         {
             if ( WouldBlock() )
             {
-                if ( ci->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     return false;
                 }
@@ -611,7 +729,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
         {
             if ( WouldBlock() )
             {
-                if ( ci->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     FreeBuffer( buffer );
                     return false;
@@ -688,10 +806,10 @@ int TCPConnectionPool::Select( TCPSocket socket,
 {
     PROFILE_SECTION( "Select" )
     return select( (int)socket, // NOTE: ignored by Windows
-                    (fd_set *)a_ReadSocketSet,
-                    (fd_set *)a_WriteSocketSet,
-                    (fd_set *)a_ExceptionSocketSet,
-                    a_TimeOut );
+                   (fd_set *)a_ReadSocketSet,
+                   (fd_set *)a_WriteSocketSet,
+                   (fd_set *)a_ExceptionSocketSet,
+                   a_TimeOut );
 }
 
 // Accept
@@ -701,8 +819,14 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
                                      int * addressSize ) const
 {
     #if defined( __WINDOWS__ )
-        // On Windows, handles are not inherited (SOCK_CLOEXEC is not needed/supported)
+        // On Windows, the newSocket inherits WSA_FLAG_NO_HANDLE_INHERIT from socket
         TCPSocket newSocket = accept( socket, address, addressSize );
+
+        // TODO: Re-enable
+        //DWORD flags;
+        //ASSERT( GetHandleInformation( (HANDLE)newSocket, &flags ) );
+        //ASSERT( ( flags & HANDLE_FLAG_INHERIT ) == 0 );
+        //(void)flags;
     #elif defined( __LINUX__ )
         // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
         TCPSocket newSocket = accept4( socket, address, (unsigned int *)addressSize, SOCK_CLOEXEC );
@@ -730,10 +854,15 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
 TCPSocket TCPConnectionPool::CreateSocket() const
 {
     #if defined( __LINUX__ )
-        // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
+        // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
+    #elif defined( __WINDOWS__ )
+        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+
+        // TODO: Re-enable
+        // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
+        //TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
     #else
-        // On Windows, handles are not inherited (SOCK_CLOEXEC is not needed/supported)
         // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
     #endif
@@ -751,7 +880,7 @@ TCPSocket TCPConnectionPool::CreateSocket() const
         // The best we can do is reduce the likelyhood of problems by immediately
         // setting the flag after creation.
         // In practice, the listen socket is the most problematic one to be
-        // inherited (as it can prevents re-use), but thankfully starting listening
+        // inherited (as it prevents re-use), but thankfully starting listening
         // while spawning a process is not something we generally do.
         VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
     #endif
@@ -759,7 +888,7 @@ TCPSocket TCPConnectionPool::CreateSocket() const
     return newSocket;
 }
 
-// CreateThread
+// CreateListenThread
 //------------------------------------------------------------------------------
 void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port )
 {
@@ -770,7 +899,6 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
     m_ListenConnection->m_RemoteAddress = host;
     m_ListenConnection->m_RemotePort = port;
     m_ListenConnection->m_ThreadQuitNotification = false;
-
 
     // Spawn thread to handle socket
     Thread::ThreadHandle h = Thread::CreateThread( &ListenThreadWrapperFunction,
@@ -786,6 +914,9 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ListenThreadWrapperFunction( void * data )
 {
+    TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_LISTEN );
+    PROFILE_FUNCTION
+
     ConnectionInfo * ci = (ConnectionInfo *)data;
     ci->m_TCPConnectionPool->ListenThreadFunction( ci );
     return 0;
@@ -800,7 +931,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
     struct sockaddr_in remoteAddrInfo;
     int remoteAddrInfoSize = sizeof( remoteAddrInfo );
 
-    while ( ci->m_ThreadQuitNotification == false )
+    while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
     {
         // timout for select() operations
         // (modified by select, so we must recreate it)
@@ -821,7 +952,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         PRAGMA_DISABLE_POP_MSVC // 4548
 
         // peek
-        int num = Select( ci->m_Socket+1, &set, NULL, NULL, &timeout );
+        int num = Select( ci->m_Socket + 1, &set, NULL, NULL, &timeout );
         if ( num == 0 )
         {
             // timeout expired - loop again (checking quit notification)
@@ -871,9 +1002,9 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         MutexHolder mh( m_ConnectionsMutex );
         ASSERT( m_ListenConnection == ci );
         m_ListenConnection = nullptr;
+        FDELETE ci;
+        m_ShutdownSemaphore.Signal(); // Wake main thread which may be waiting on shutdown
     }
-
-    FDELETE ci;
 
     // thread exit
     TCPDEBUG( "Listen thread exited\n" );
@@ -900,9 +1031,9 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 
     // Spawn thread to handle socket
     Thread::ThreadHandle h = Thread::CreateThread( &ConnectionThreadWrapperFunction,
-                                            "TCPConnection",
-                                            ( 64 * KILOBYTE ),
-                                            ci ); // user data argument
+                                                   "TCPConnection",
+                                                   ( 64 * KILOBYTE ),
+                                                   ci ); // user data argument
     ASSERT( h != INVALID_THREAD_HANDLE );
     Thread::DetachThread( h );
     Thread::CloseHandle( h ); // we don't need this anymore
@@ -916,6 +1047,9 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ConnectionThreadWrapperFunction( void * data )
 {
+    TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_CONNECTION );
+    PROFILE_FUNCTION
+
     ConnectionInfo * ci = (ConnectionInfo *)data;
     ci->m_TCPConnectionPool->ConnectionThreadFunction( ci );
     return 0;
@@ -931,7 +1065,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
     OnConnected( ci ); // Do callback
 
     // process socket events
-    while ( ci->m_ThreadQuitNotification == false )
+    while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
     {
         // timout for select() operations
         // (modified by select, so we must recreate it)
@@ -951,14 +1085,14 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         PRAGMA_DISABLE_POP_MSVC // C6319
         PRAGMA_DISABLE_POP_MSVC // 4548
 
-        int num = Select( ci->m_Socket+1, &readSet, NULL, NULL, &timeout );
+        int num = Select( ci->m_Socket + 1, &readSet, NULL, NULL, &timeout );
         if ( num == 0 )
         {
             // timeout expired - loop again (checking quit notification)
             continue;
         }
 
-        if ( ci->m_ThreadQuitNotification == true )
+        if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) )
         {
             break; // don't bother reading any pending data if shutting down
         }
@@ -994,9 +1128,12 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         ConnectionInfo ** iter = m_Connections.Find( ci );
         ASSERT( iter );
         m_Connections.Erase( iter );
+        FDELETE ci;
+        if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
+        {
+            m_ShutdownSemaphore.Signal(); // Wake main thread which will be waiting on shutdown
+        }
     }
-
-    FDELETE ci;
 
     // thread exit
     TCPDEBUG( "connection thread exited\n" );

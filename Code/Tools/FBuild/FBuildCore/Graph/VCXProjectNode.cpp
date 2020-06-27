@@ -25,6 +25,10 @@
 // system
 #include <string.h> // for memcmp
 
+// Globals
+//------------------------------------------------------------------------------
+static const AString g_DefaultProjectTypeGuid( "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
+
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN_BASE( VSProjectConfigBase )
@@ -53,6 +57,11 @@ REFLECT_STRUCT_BEGIN_BASE( VSProjectConfigBase )
     REFLECT(        m_LocalDebuggerWorkingDirectory,"LocalDebuggerWorkingDirectory",MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_LocalDebuggerCommand,         "LocalDebuggerCommand",         MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_LocalDebuggerEnvironment,     "LocalDebuggerEnvironment",     MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_Keyword,                      "Keyword",                      MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_ApplicationType,              "ApplicationType",              MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_ApplicationTypeRevision,      "ApplicationTypeRevision",      MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_PackagePath,                  "PackagePath",                  MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AdditionalSymbolSearchPaths,  "AdditionalSymbolSearchPaths",  MetaInheritFromOwner() + MetaOptional() )
 REFLECT_END( VSProjectConfigBase )
 
 REFLECT_STRUCT_BEGIN( VSProjectConfig, VSProjectConfigBase, MetaNone() )
@@ -66,7 +75,12 @@ REFLECT_STRUCT_BEGIN_BASE( VSProjectFileType )
     REFLECT(        m_Pattern,                      "Pattern",                      MetaNone() )
 REFLECT_END( VSProjectFileType )
 
-REFLECT_NODE_BEGIN( VCXProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
+REFLECT_STRUCT_BEGIN_BASE( VSProjectImport )
+    REFLECT(        m_Condition,                    "Condition",                    MetaNone() )
+    REFLECT(        m_Project,                      "Project",                      MetaNone() )
+REFLECT_END( VSProjectImport )
+
+REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_ProjectInputPaths,            "ProjectInputPaths",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_ProjectInputPathsExclude,     "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_ProjectFiles,                 "ProjectFiles",                 MetaOptional() + MetaFile() )
@@ -78,13 +92,14 @@ REFLECT_NODE_BEGIN( VCXProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile
     REFLECT_ARRAY_OF_STRUCT(    m_ProjectFileTypes, "ProjectFileTypes",             VSProjectFileType,  MetaOptional() )
 
     REFLECT(        m_RootNamespace,                "RootNamespace",                MetaOptional() )
-    REFLECT(        m_ProjectGuid,                  "ProjectGuid",                  MetaOptional() )
     REFLECT(        m_DefaultLanguage,              "DefaultLanguage",              MetaOptional() )
     REFLECT(        m_ApplicationEnvironment,       "ApplicationEnvironment",       MetaOptional() )
     REFLECT(        m_ProjectSccEntrySAK,           "ProjectSccEntrySAK",           MetaOptional() )
 
     REFLECT_ARRAY(  m_ProjectReferences,            "ProjectReferences",            MetaOptional() )
     REFLECT_ARRAY(  m_ProjectProjectReferences,     "ProjectProjectReferences",     MetaOptional() )
+
+    REFLECT_ARRAY_OF_STRUCT(  m_ProjectProjectImports,  "ProjectProjectImports",    VSProjectImport,    MetaOptional() )
 
     // Base Project Config settings
     REFLECT_STRUCT( m_BaseProjectConfig,            "BaseProjectConfig",            VSProjectConfigBase,    MetaEmbedMembers() );
@@ -94,7 +109,7 @@ REFLECT_END( VCXProjectNode )
 //------------------------------------------------------------------------------
 /*static*/ bool VSProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
                                                  Array< VSProjectConfig > & configs,
-                                                 const BFFIterator * iter,
+                                                 const BFFToken * iter,
                                                  const Function * function )
 {
     // Must provide iter and function, or neither
@@ -117,7 +132,7 @@ REFLECT_END( VCXProjectNode )
         {
             if ( iter && function )
             {
-                Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+                Error::Error_1104_TargetNotDefined( iter, function, ".Target", config.m_Target );
                 return false;
             }
             ASSERT( false ); // Should not be possible to fail when restoring from serialized DB
@@ -132,23 +147,42 @@ REFLECT_END( VCXProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 VCXProjectNode::VCXProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : VSProjectBaseNode()
     , m_ProjectSccEntrySAK( false )
 {
     m_Type = Node::VCXPROJECT_NODE;
-    m_LastBuildTimeMs = 100; // higher default than a file node
 
     ProjectGeneratorBase::GetDefaultAllowedFileExtensions( m_ProjectAllowedFileExtensions );
+
+    // Additional default imports to allow debugging on some target platforms
+    m_ProjectProjectImports.SetSize( 2 );
+    // PS4
+    m_ProjectProjectImports[ 0 ].m_Condition = "'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets')";
+    m_ProjectProjectImports[ 0 ].m_Project = "$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets";
+    // Android
+    m_ProjectProjectImports[ 1 ].m_Condition = "'$(ConfigurationType)' == 'Makefile' and '$(AndroidAPILevel)' != '' and Exists('$(VCTargetsPath)\\Application Type\\$(ApplicationType)\\$(ApplicationTypeRevision)\\Android.Common.targets')";
+    m_ProjectProjectImports[ 1 ].m_Project = "$(VCTargetsPath)\\Application Type\\$(ApplicationType)\\$(ApplicationTypeRevision)\\Android.Common.targets";
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
     Dependencies dirNodes( m_ProjectInputPaths.GetSize() );
-    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, m_ProjectPatternToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              function,
+                                              m_ProjectInputPaths,
+                                              m_ProjectInputPathsExclude,
+                                              m_ProjectFilesToExclude,
+                                              m_ProjectPatternToExclude,
+                                              true, // Recursive
+                                              false, // Don't include read-only status in hash
+                                              &m_ProjectAllowedFileExtensions,
+                                              "ProjectInputPaths",
+                                              dirNodes ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }
@@ -190,9 +224,22 @@ VCXProjectNode::VCXProjectNode()
     }
 
     // Resolve Target names to Node pointers for later use
-    if ( VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    if ( VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, iter, function ) == false )
     {
         return false; // Initialize will have emitted an error
+    }
+
+    // copy to base class platform config tuples array
+    if ( m_ProjectPlatformConfigTuples.IsEmpty() )
+    {
+        VSProjectPlatformConfigTuple platCfgTuple;
+        m_ProjectPlatformConfigTuples.SetCapacity( m_ProjectConfigs.GetSize() );
+        for ( const VSProjectConfig& config : m_ProjectConfigs )
+        {
+            platCfgTuple.m_Config = config.m_Config;
+            platCfgTuple.m_Platform = config.m_Platform;
+            m_ProjectPlatformConfigTuples.Append( platCfgTuple );
+        }
     }
 
     // Store all dependencies
@@ -208,7 +255,7 @@ VCXProjectNode::~VCXProjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult VCXProjectNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult VCXProjectNode::DoBuild( Job * /*job*/ )
 {
     VSProjectGenerator pg;
     pg.SetBasePaths( m_ProjectBasePaths );
@@ -241,7 +288,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     }
 
     // .vcxproj
-    const AString & project = pg.GenerateVCXProj( m_Name, m_ProjectConfigs, m_ProjectFileTypes );
+    const AString & project = pg.GenerateVCXProj( m_Name, m_ProjectConfigs, m_ProjectFileTypes, m_ProjectProjectImports );
     if ( Save( project, m_Name ) == false )
     {
         return NODE_RESULT_FAILED; // Save will have emitted an error
@@ -303,20 +350,15 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
         old.Close();
     }
 
-    // only save if missing or ner
+    // only save if missing or new
     if ( needToWrite == false )
     {
         return true; // nothing to do.
     }
 
-    FLOG_BUILD( "VCXProj: %s\n", fileName.Get() );
-
-    // ensure path exists (normally handled by framework, but VCXPorject
-    // is not a "file" node)
-    if ( EnsurePathExistsForFile( fileName ) == false )
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        FLOG_ERROR( "VCXProject - Invalid path. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
+        FLOG_OUTPUT( "VCXProj: %s\n", fileName.Get() );
     }
 
     // actually write
@@ -341,6 +383,13 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 /*virtual*/ void VCXProjectNode::PostLoad( NodeGraph & nodeGraph )
 {
     VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs );
+}
+
+// GetProjectTypeGuid
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & VCXProjectNode::GetProjectTypeGuid() const
+{
+    return g_DefaultProjectTypeGuid;
 }
 
 //------------------------------------------------------------------------------
