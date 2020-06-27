@@ -36,6 +36,7 @@ REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) +
     REFLECT( m_LibrarianType,                   "LibrarianType",                MetaOptional() )
     REFLECT( m_LibrarianOutput,                 "LibrarianOutput",              MetaFile() )
     REFLECT_ARRAY( m_LibrarianAdditionalInputs, "LibrarianAdditionalInputs",    MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
+    REFLECT( m_LibrarianAllowResponseFile,      "LibrarianAllowResponseFile",   MetaOptional() )
 
     REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
     REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )
@@ -47,6 +48,7 @@ REFLECT_END( LibraryNode )
 LibraryNode::LibraryNode()
 : ObjectListNode()
 , m_LibrarianType( "auto" )
+, m_LibrarianAllowResponseFile( false )
 {
     m_Type = LIBRARY_NODE;
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
@@ -416,12 +418,14 @@ FileNode * LibraryNode::GetLibrarian() const
 //------------------------------------------------------------------------------
 bool LibraryNode::CanUseResponseFile() const
 {
+    bool canUseResponseFile = m_LibrarianAllowResponseFile;
+
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
-        return ( GetFlag( LIB_FLAG_LIB ) || GetFlag( LIB_FLAG_AR ) || GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_GREENHILLS_AX ) );
-    #else
-        return false;
+        canUseResponseFile = ( canUseResponseFile || GetFlag( LIB_FLAG_LIB ) || GetFlag( LIB_FLAG_AR ) || GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_GREENHILLS_AX ) );
     #endif
+
+    return canUseResponseFile;
 }
 
 //------------------------------------------------------------------------------
