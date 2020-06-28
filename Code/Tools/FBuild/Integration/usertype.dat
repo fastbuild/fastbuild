@@ -68,6 +68,7 @@ CompilerInputExcludedFiles
 CompilerInputFile
 CompilerInputFiles
 CompilerInputFilesRoot
+CompilerInputObjectLists
 CompilerInputPath
 CompilerInputPathRecurse
 CompilerInputPattern
