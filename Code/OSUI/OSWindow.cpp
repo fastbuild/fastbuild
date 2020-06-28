@@ -31,6 +31,7 @@
     void WindowOSX_MessageLoop();
     void WindowOSX_SetTitle( OSWindow * owner, const char * title );
     void WindowOSX_SetMinimized( bool minimized );
+    void WindowOSX_StopMessageLoop();
 #endif
 
 // WindowWndProc
@@ -117,6 +118,7 @@ OSWindow::OSWindow( void * hInstance )
     : m_Handle( nullptr )
     #if defined( __WINDOWS__ )
         , m_HInstance( hInstance )
+        , m_RunMessagePump( true )
     #endif
     , m_ChildWidgets( 0, true )
 {
@@ -252,14 +254,44 @@ void OSWindow::SetMinimized( bool minimized )
     #endif
 }
 
-// PumpMessages
+// StartMessagePump
 //------------------------------------------------------------------------------
-void OSWindow::PumpMessages()
+void OSWindow::StartMessagePump()
 {
     #if defined( __WINDOWS__ )
-        // TODO:B Move Windows message loop here
+        MSG msg;
+        while ( m_RunMessagePump )
+        {
+            // any messages pending?
+            if ( PeekMessage( &msg, nullptr, 0, 0, PM_NOREMOVE ) )
+            {
+                // message available, process it
+                VERIFY( GetMessage( &msg, NULL, 0, 0 ) != 0 );
+                TranslateMessage( &msg );
+                DispatchMessage( &msg );
+                continue; // immediately handle any new messages
+            }
+            else
+            {
+                // no message right now - prevent CPU thrashing by having a sleep
+                Sleep( 100 );
+            }
+        }
     #elif defined( __OSX__ )
+        // This call blocks until messaged by StopMessagePump
         WindowOSX_MessageLoop();
+    #endif
+}
+
+// StopMessagePump
+//------------------------------------------------------------------------------
+void OSWindow::StopMessagePump()
+{
+    // Signal to StartMessagePump that is should exit
+    #if defined( __WINDOWS__ )
+        m_RunMessagePump = false;
+    #elif defined( __OSX__ )
+        WindowOSX_StopMessageLoop();
     #endif
 }
 
