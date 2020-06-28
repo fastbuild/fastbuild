@@ -334,7 +334,7 @@ Job * JobQueue::GetDistributableJobToRace()
 Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
 {
     MutexHolder m( m_DistributedJobsMutex );
-    auto jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
+    Job * * jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
     if ( jobIt )
     {
         Job * job = *jobIt;

@@ -628,7 +628,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
     }
 
     configId = 100;
-    for ( const auto * config : m_Configs )
+    for ( const ProjectGeneratorBaseConfig * config : m_Configs )
     {
         AStackString<> xcBuildConfigurationGUID;
         GetGUID_XCBuildConfiguration( configId, xcBuildConfigurationGUID );
@@ -650,7 +650,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
     }
 
     configId = 200;
-    for ( const auto * config : m_Configs )
+    for ( const ProjectGeneratorBaseConfig * config : m_Configs )
     {
         AStackString<> xcBuildConfigurationGUID;
         GetGUID_XCBuildConfiguration( configId, xcBuildConfigurationGUID );
@@ -735,7 +735,7 @@ void XCodeProjectGenerator::WriteConfigurationList()
         Write( "\t\t\tisa = XCConfigurationList;\n" );
         Write( "\t\t\tbuildConfigurations = (\n" );
         uint32_t configId( configStartIds[ i ] );
-        for ( const auto * config : m_Configs )
+        for ( const ProjectGeneratorBaseConfig * config : m_Configs )
         {
             AStackString<> xcBuildConfigurationGUID;
             GetGUID_XCBuildConfiguration( configId, xcBuildConfigurationGUID );

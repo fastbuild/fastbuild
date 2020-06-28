@@ -643,7 +643,7 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
             // iterate all the files in the object list
             Array< AString > objListFiles;
             objListNode->GetInputFiles( objListFiles );
-            for ( const auto& file : objListFiles )
+            for ( const AString & file : objListFiles )
             {
                 FileIO::FileInfo * fi = FNEW( FileIO::FileInfo() );
                 m_FilesInfo.Append( fi ); // keep ptr to delete later

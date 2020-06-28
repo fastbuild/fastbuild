@@ -1123,7 +1123,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
             if ( node->GetType() == Node::ALIAS_NODE )
             {
                 AliasNode * aliasNode = node->CastTo< AliasNode >();
-                for ( const auto& aliasedNode : aliasNode->GetAliasedNodes() )
+                for ( const Dependency & aliasedNode : aliasNode->GetAliasedNodes() )
                 {
                     if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowNonFileMD, variable, aliasedNode.GetNode()->GetName(), outStrings ) )
                     {
@@ -1382,12 +1382,12 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
     if ( variable->IsArrayOfStructs() )
     {
         // pre-size the destination
-        const auto & srcStructs = variable->GetArrayOfStructs();
+        const Array<const BFFVariable *> & srcStructs = variable->GetArrayOfStructs();
         dstStructs.ResizeArrayOfStruct( base, srcStructs.GetSize() );
 
         // Set the properties of each struct
         size_t index( 0 );
-        for ( const auto * s : srcStructs )
+        for ( const BFFVariable * s : srcStructs )
         {
             // Calculate the base for this struct in the array
             void * structBase = dstStructs.GetStructInArray( base, index );
@@ -1433,7 +1433,7 @@ bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
     do
     {
         // Try to populate all the properties for this struct
-        for ( auto it = structRI->Begin(); it != structRI->End(); ++it )
+        for ( ReflectionIter it = structRI->Begin(); it != structRI->End(); ++it )
         {
             const ReflectedProperty & property = *it;
 

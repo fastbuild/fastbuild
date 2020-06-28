@@ -57,7 +57,7 @@ REFLECT_END( XCodeProjectNode )
     ASSERT( ( ( iter == nullptr ) && ( function == nullptr ) ) ||
             ( iter && function ) );
 
-    for ( auto & config : configs )
+    for ( XCodeProjectConfig & config : configs )
     {
         // Target is allowed to be empty (perhaps this project represents
         // something that cannot be built, like header browsing information
@@ -187,8 +187,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
         {
             const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-            const auto & files = dln->GetFiles();
-            for ( const auto & file : files )
+            for ( const FileIO::FileInfo & file : dln->GetFiles() )
             {
                 //filter the file by pattern
                 const AString * pit = m_PatternToExclude.Begin();

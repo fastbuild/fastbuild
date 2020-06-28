@@ -312,7 +312,7 @@ bool Process::Spawn( const char * executable,
             argCopy.Tokenize( splitArgs );
 
             // Build Vector
-            for ( auto & arg : splitArgs )
+            for ( AString & arg : splitArgs )
             {
                 if ( arg.BeginsWith( '"' ) && arg.EndsWith( '"' ) )
                 {
