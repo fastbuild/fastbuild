@@ -22,8 +22,6 @@
 // Globals
 //------------------------------------------------------------------------------
 CacheOutputFunc gOutputFunction = nullptr;
-void * gMemory = nullptr;
-unsigned long long gMemorySize = 0;
 
 // CacheInit
 //------------------------------------------------------------------------------
@@ -62,7 +60,7 @@ void STDCALL CacheShutdown()
 
 // CachePublish
 //------------------------------------------------------------------------------
-bool STDCALL CachePublish( const char * /*cacheId*/, const void * data, unsigned long long dataSize )
+bool STDCALL CachePublish( const char * /*cacheId*/, const void * /*data*/, unsigned long long /*dataSize*/ )
 {
     // DLL Export for Windows
     #if defined( __WINDOWS__ )
@@ -70,11 +68,6 @@ bool STDCALL CachePublish( const char * /*cacheId*/, const void * data, unsigned
     #endif
 
     (*gOutputFunction)( "CachePublish Called" );
-
-    // Take a copy of the cache data
-    gMemory = malloc( dataSize );
-    memcpy( gMemory, data, dataSize );
-    gMemorySize = dataSize;
 
     return true;
 }
