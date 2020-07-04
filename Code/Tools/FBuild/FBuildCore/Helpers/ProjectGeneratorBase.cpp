@@ -303,7 +303,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         "*.cp",  "*.hp",  "*.cs",  "*.inl", "*.bff", "*.rc", "*.resx", "*.m",  "*.mm",
         "*.cu",
         "*.asm", "*.s",
-        "*.natvis"
+        "*.natvis", "*.editorconfig"
     };
     extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
     for ( const char * const ext : defaultExtensions )
