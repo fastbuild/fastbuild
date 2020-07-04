@@ -1748,10 +1748,13 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // we expand relative includes as they would be on the host (so the remote machine's
                 // working dir is not used, which might be longer, causing this overflow an internal
                 // limit of cl.exe)
-                if ( ( job->IsLocal() == false ) && IsStartOfCompilerArg_MSVC( token, "I" ) )
+                if ( ( job->IsLocal() == false ) && (
+                        IsStartOfCompilerArg_MSVC( token, "I" ) ||
+                        IsStartOfCompilerArg_MSVC( token, "imsvc" ) ||
+                        IsStartOfCompilerArg_MSVC( token, "external:I" ) ) )
                 {
                     // Get include path part
-                    const char * start = token.Get() + 2; // Skip /I or -I
+                    const char * start = token.Get() + 2; // Skip /I or -I or /imsvc or -imsvc or /external:I or -external:I
                     const char * end = token.GetEnd();
 
                     // strip quotes if present
@@ -1771,6 +1774,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     {
                         // Remove relative include
                         StripTokenWithArg_MSVC( "I", token, i );
+                        StripTokenWithArg_MSVC( "imsvc", token, i );
+                        StripTokenWithArg_MSVC( "external:I", token, i );
 
                         // Add full path include
                         fullArgs.Append( token.Get(), (size_t)( start - token.Get() ) );
