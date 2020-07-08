@@ -638,8 +638,8 @@ bool TCPConnectionPool::Broadcast( const void * data, size_t size )
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::WaitForConnection( TCPSocket sockfd, const AString & host, const uint16_t port, const uint32_t timeout )
 {
-    (AString)host;
-    (uint16_t)port;
+    (void)host;
+    (void)port;
 
     Timer connectionTimer;
 
