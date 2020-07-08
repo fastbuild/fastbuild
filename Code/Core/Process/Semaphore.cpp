@@ -77,7 +77,7 @@ void Semaphore::Signal( uint32_t num )
 
 // Wait
 //------------------------------------------------------------------------------
-void Semaphore::Wait( uint32_t timeoutMS )
+bool Semaphore::Wait( uint32_t timeoutMS )
 {
     if ( timeoutMS == 0 )
     {
@@ -89,6 +89,7 @@ void Semaphore::Wait( uint32_t timeoutMS )
         #elif defined( __LINUX__ )
             VERIFY( sem_wait( &m_Semaphore ) == 0 );
         #endif
+        return true;
     }
     else
     {
@@ -96,9 +97,10 @@ void Semaphore::Wait( uint32_t timeoutMS )
         #if defined( __WINDOWS__ )
             DWORD result = WaitForSingleObject( m_Semaphore, timeoutMS );
             ASSERT( ( result == WAIT_OBJECT_0 ) || ( result == WAIT_TIMEOUT ) );
-            (void)result;
+            return result == WAIT_OBJECT_0;
         #elif defined( __APPLE__ )
-            dispatch_semaphore_wait( m_Semaphore, dispatch_time( DISPATCH_TIME_NOW, timeoutMS * 1000000 ) );
+            intptr_t result = dispatch_semaphore_wait( m_Semaphore, dispatch_time( DISPATCH_TIME_NOW, timeoutMS * 1000000 ) );
+            return result == 0;
         #elif defined( __LINUX__ )
             struct timespec ts;
             VERIFY( clock_gettime( CLOCK_REALTIME, &ts ) == 0 );
@@ -111,6 +113,7 @@ void Semaphore::Wait( uint32_t timeoutMS )
             {
                 ASSERT( ( errno == ETIMEDOUT ) || ( errno == EINTR ) ); // anything else is a usage error?
             }
+            return errno == EINTR;
         #endif
     }
 }
