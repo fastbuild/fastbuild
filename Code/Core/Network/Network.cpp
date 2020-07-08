@@ -24,7 +24,7 @@
 #endif
 
 const Network::IpAddress Network::Loopback = 0x0100007f;
-const Network::IpAddress6 Network::Loopback6 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
+const Network::IpAddress6 Network::Loopback6 = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}};
 
 struct NameResolutionData
 {
@@ -91,7 +91,7 @@ struct NameResolutionData
     PROFILE_FUNCTION
 
     ipAddress = 0;
-    ipAddress6 = { 0 };
+    ipAddress6 = {{{ 0 }}};
 
     // Fast path for "localhost". Although we have a fast path for detecting ip4 or ip6
     // format addresses, it can still take several ms to call
@@ -130,7 +130,7 @@ struct NameResolutionData
     NameResolutionData * data = FNEW( NameResolutionData() );
     data->success = false;
     data->address = 0;
-    data->address6 = { 0 };
+    data->address6 = {{{ 0 }}};
     data->hostName = hostName;
 
     // Create thread to perform resolution
