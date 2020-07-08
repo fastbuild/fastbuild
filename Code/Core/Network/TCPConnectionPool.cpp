@@ -249,10 +249,10 @@ bool TCPConnectionPool::Listen( uint16_t port )
     }
 
     // listen
-    TCPDEBUG( "Listen on port %i (%x)\n", port, (uint32_t)sockfd );
+    TCPDEBUG( "Listen on port %u (%x)\n", port, (uint32_t)sockfd );
     if ( listen( sockfd, 0 ) == SOCKET_ERROR ) // no backlog
     {
-        TCPDEBUG( "Listen FAILED %i (%x)\n", port, (uint32_t)sockfd );
+        TCPDEBUG( "Listen FAILED %u (%x)\n", port, (uint32_t)sockfd );
         CloseSocket( sockfd );
         return false;
     }
@@ -527,7 +527,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
 
     ASSERT( connection->m_Socket != INVALID_SOCKET );
 
-    TCPDEBUG( "Send: %i (%x)\n", totalBytes, (uint32_t)( connection->m_Socket ) );
+    TCPDEBUG( "Send: %u (%x)\n", totalBytes, (uint32_t)( connection->m_Socket ) );
 
     bool sendOK = true;
 
@@ -638,12 +638,10 @@ bool TCPConnectionPool::Broadcast( const void * data, size_t size )
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::WaitForConnection( TCPSocket sockfd, const AString & host, const uint16_t port, const uint32_t timeout )
 {
-    Timer connectionTimer;
-
-#ifndef TCPCONNECTION_DEBUG
     (AString)host;
     (uint16_t)port;
-#endif // !TCPCONNECTION_DEBUG
+
+    Timer connectionTimer;
 
     // wait for connection
     for ( ;; )
@@ -781,7 +779,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
         bytesToRead -= numBytes;
     }
 
-    TCPDEBUG( "Handle read: %i (%x)\n", size, (uint32_t)( ci->m_Socket ) );
+    TCPDEBUG( "Handle read: %u (%x)\n", size, (uint32_t)( ci->m_Socket ) );
 
     // get output location
     void * buffer = AllocBuffer( size );
@@ -1042,7 +1040,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         #ifdef TCPCONNECTION_DEBUG
             AStackString<32> addr;
             Network::GetAddressAsString( remoteAddrInfo.sin6_addr, addr );
-            TCPDEBUG( "Connection accepted from %s : %i (%x)\n", addr.Get(), ntohs( remoteAddrInfo.sin6_port ), (uint32_t)newSocket );
+            TCPDEBUG( "Connection accepted from %s : %u (%x)\n", addr.Get(), ntohs( remoteAddrInfo.sin6_port ), (uint32_t)newSocket );
         #endif
 
         // Configure socket
@@ -1095,7 +1093,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, Ne
     #ifdef TCPCONNECTION_DEBUG
         AStackString<32> addr;
         Network::GetAddressAsString( ci->m_RemoteAddress, addr );
-        TCPDEBUG( "Connected to %s : %i (%x)\n", addr.Get(), port, (uint32_t)socket );
+        TCPDEBUG( "Connected to %s : %u (%x)\n", addr.Get(), port, (uint32_t)socket );
     #endif
 
     // Spawn thread to handle socket
@@ -1127,7 +1125,7 @@ ConnectionInfo* TCPConnectionPool::CreateConnectionThread( TCPSocket socket, con
     #ifdef TCPCONNECTION_DEBUG
         AStackString<32> addr;
         Network::GetAddressAsString( ci->m_RemoteAddress, addr );
-        TCPDEBUG( "Connected to %s : %i (%x)\n", addr.Get(), port, (uint32_t)socket );
+        TCPDEBUG( "Connected to %s : %u (%x)\n", addr.Get(), port, (uint32_t)socket );
     #endif
 
     // Spawn thread to handle socket
