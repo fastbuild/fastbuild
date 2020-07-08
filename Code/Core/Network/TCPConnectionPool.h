@@ -7,8 +7,8 @@
 #include "NetworkStartupHelper.h"
 
 #include "Core/Containers/Array.h"
+#include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Types.h"
-#include "Core/Network/Network.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
@@ -42,16 +42,16 @@ public:
 private:
     friend class TCPConnectionPool;
 
-    TCPSocket                      m_Socket;
-    Network::IpAddress             m_RemoteAddress;
-    AutoPtr< Network::IpAddress6 > m_RemoteAddress6;
-    uint16_t                       m_RemotePort;
-    volatile mutable bool          m_ThreadQuitNotification;
-    TCPConnectionPool *            m_TCPConnectionPool; // back pointer to parent pool
-    mutable void *                 m_UserData;
+    TCPSocket                   m_Socket;
+    uint32_t                    m_RemoteAddress;
+    AutoPtr< struct in6_addr >  m_RemoteAddress6;
+    uint16_t                    m_RemotePort;
+    volatile mutable bool       m_ThreadQuitNotification;
+    TCPConnectionPool *         m_TCPConnectionPool; // back pointer to parent pool
+    mutable void *              m_UserData;
 
 #ifdef DEBUG
-    mutable bool                   m_InUse; // sanity check we aren't sending from multiple threads unsafely
+    mutable bool                m_InUse; // sanity check we aren't sending from multiple threads unsafely
 #endif
 };
 
@@ -70,8 +70,8 @@ public:
     bool Listen( uint16_t port );
     void StopListening();
     const ConnectionInfo * Connect( const AString & host, const uint16_t port, const uint32_t timeout = 2000, void * userData = nullptr );
-    const ConnectionInfo * Connect( const Network::IpAddress hostIP, const uint16_t port, const uint32_t timeout = 2000, void * userData = nullptr );
-    const ConnectionInfo * Connect( const Network::IpAddress6 & hostIP, const uint16_t port, const uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( const uint32_t hostIP, const uint16_t port, const uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( const struct in6_addr & hostIP, const uint16_t port, const uint32_t timeout = 2000, void * userData = nullptr );
     void Disconnect( const ConnectionInfo * ci );
     void SetShuttingDown();
 
@@ -123,8 +123,8 @@ private:
     void                CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );
     static uint32_t     ListenThreadWrapperFunction( void * data );
     void                ListenThreadFunction( ConnectionInfo * ci );
-    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, Network::IpAddress host, uint16_t port, void * userData = nullptr );
-    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, const Network::IpAddress6 & host, uint16_t port, void * userData = nullptr );
+    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, const uint32_t host, const uint16_t port, void * userData = nullptr );
+    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, const struct in6_addr & host, const uint16_t port, void * userData = nullptr );
     static uint32_t     ConnectionThreadWrapperFunction( void * data );
     void                ConnectionThreadFunction( ConnectionInfo * ci );
 

@@ -271,8 +271,8 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, const u
     ASSERT( !host.IsEmpty() );
 
     // get IP
-    Network::IpAddress hostIP;
-    Network::IpAddress6 hostIP6;
+    uint32_t hostIP;
+    in6_addr hostIP6;
     bool result = Network::GetHostIPFromName( host, hostIP, hostIP6, timeout);
     if ( !result )
     {
@@ -291,7 +291,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, const u
 
 // Connect
 //------------------------------------------------------------------------------
-const ConnectionInfo * TCPConnectionPool::Connect( const Network::IpAddress hostIP, const uint16_t port, const uint32_t timeout, void * userData )
+const ConnectionInfo * TCPConnectionPool::Connect( const uint32_t hostIP, const uint16_t port, const uint32_t timeout, void * userData )
 {
     PROFILE_FUNCTION
 
@@ -345,7 +345,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( const Network::IpAddress host
 
 // Connect
 //------------------------------------------------------------------------------
-const ConnectionInfo * TCPConnectionPool::Connect( const Network::IpAddress6 & hostIP, const uint16_t port, const uint32_t timeout, void * userData )
+const ConnectionInfo * TCPConnectionPool::Connect( const in6_addr & hostIP, const uint16_t port, const uint32_t timeout, void * userData )
 {
     PROFILE_FUNCTION
 
@@ -1079,7 +1079,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
 
 // CreateConnectionThread
 //------------------------------------------------------------------------------
-ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, Network::IpAddress host, uint16_t port, void * userData )
+ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData )
 {
     MutexHolder mh( m_ConnectionsMutex );
 
@@ -1110,13 +1110,13 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, Ne
     return ci;
 }
 
-ConnectionInfo* TCPConnectionPool::CreateConnectionThread( TCPSocket socket, const Network::IpAddress6 & host, uint16_t port, void * userData )
+ConnectionInfo* TCPConnectionPool::CreateConnectionThread( TCPSocket socket, const in6_addr & host, uint16_t port, void * userData )
 {
     MutexHolder mh( m_ConnectionsMutex );
 
     ConnectionInfo * ci = FNEW( ConnectionInfo( this ) );
     ci->m_Socket = socket;
-    ci->m_RemoteAddress6 = ( Network::IpAddress6 * )ALLOC( sizeof( Network::IpAddress6 ) );
+    ci->m_RemoteAddress6 = ( in6_addr * )ALLOC( sizeof( in6_addr ) );
     *ci->m_RemoteAddress6.Get() = host;
     ci->m_RemotePort = port;
     ci->m_ThreadQuitNotification = false;

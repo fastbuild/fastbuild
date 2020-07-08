@@ -64,8 +64,8 @@ void TestNetwork::TestNameResolution() const
     NetworkStartupHelper nsh; // ensure network is up if not already
 
     const AStackString<> hostName( "localhost" );
-    const Network::IpAddress expected = Network::Loopback;
-    Network::IpAddress addr;
+    const uint32_t & expected = Network::Loopback;
+    uint32_t addr;
     bool ret = Network::NameResolution( hostName, addr );
     TEST_ASSERT( ret );
     TEST_ASSERTM( addr == expected, "Expected: 0x%08x\nGot     : 0x%08x", expected, addr );
@@ -77,8 +77,8 @@ void TestNetwork::TestGetAddressFromString() const
 {
     {
         const AStackString<> address( "127.0.0.1" );
-        const Network::IpAddress expected = Network::Loopback;
-        Network::IpAddress addr;
+        const uint32_t & expected = Network::Loopback;
+        uint32_t addr;
         bool ret = Network::GetAddressFromString( address, addr );
         TEST_ASSERT( ret );
         TEST_ASSERTM( addr == expected, "Expected: 0x%08x\nGot     : 0x%08x", expected, addr );
@@ -86,8 +86,8 @@ void TestNetwork::TestGetAddressFromString() const
 
     {
         const AStackString<> address( "255.0.255.0" );
-        const Network::IpAddress expected = 0x00ff00ff;
-        Network::IpAddress addr;
+        const uint32_t & expected = 0x00ff00ff;
+        uint32_t addr;
         bool ret = Network::GetAddressFromString( address, addr );
         TEST_ASSERT( ret );
         TEST_ASSERTM( addr == expected, "Expected: 0x%08x\nGot     : 0x%08x", expected, addr );
@@ -95,7 +95,7 @@ void TestNetwork::TestGetAddressFromString() const
 
     {
         const AStackString<> address;
-        Network::IpAddress addr;
+        uint32_t addr;
         bool ret = Network::GetAddressFromString( address, addr );
         TEST_ASSERT( !ret );
     }
@@ -106,7 +106,7 @@ void TestNetwork::TestGetAddressFromString() const
 void TestNetwork::TestGetAddressAsString() const
 {
     {
-        const Network::IpAddress addr = Network::Loopback;
+        const uint32_t & addr = Network::Loopback;
         const AStackString<> expected( "127.0.0.1" );
         AStackString<> address;
         bool ret = Network::GetAddressAsString( addr, address );
@@ -115,7 +115,7 @@ void TestNetwork::TestGetAddressAsString() const
     }
 
     {
-        const Network::IpAddress addr = 0x00ff00ff;
+        const uint32_t & addr = 0x00ff00ff;
         const AStackString<> expected( "255.0.255.0");
         AStackString<> address;
         bool ret = Network::GetAddressAsString( addr, address );
@@ -131,8 +131,8 @@ void TestNetwork::TestNameResolution_ipv6() const
     NetworkStartupHelper nsh; // ensure network is up if not already
 
     const AStackString<> address( "localhost" );
-    const Network::IpAddress6 & expected = Network::Loopback6;
-    Network::IpAddress6 addr;
+    const in6_addr & expected = Network::Loopback6;
+    in6_addr addr;
     bool ret = Network::NameResolution( address, addr );
     TEST_ASSERT( ret );
     TEST_ASSERT( memcmp( &addr, &expected, sizeof( addr ) ) == 0 );
@@ -144,8 +144,8 @@ void TestNetwork::TestGetAddressFromString_ipv6() const
 {
     {
         const AStackString<> address( "::1" );
-        const Network::IpAddress6 & expected = Network::Loopback6;
-        Network::IpAddress6 addr;
+        const in6_addr & expected = Network::Loopback6;
+        in6_addr addr;
         bool ret = Network::GetAddressFromString( address, addr );
         TEST_ASSERT( ret );
         TEST_ASSERT( memcmp( &addr, &expected, sizeof( addr ) ) == 0 );
@@ -153,8 +153,8 @@ void TestNetwork::TestGetAddressFromString_ipv6() const
 
     {
         const AStackString<> address( "ff00:ff00:ff00:ff00:ff00:ff00:ff00:ff00" );
-        const Network::IpAddress6 & expected = {{{ 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00 }}} ;
-        Network::IpAddress6 addr;
+        const in6_addr & expected = {{{ 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00 }}};
+        in6_addr addr;
         bool ret = Network::GetAddressFromString( address, addr );
         TEST_ASSERT( ret );
         TEST_ASSERT( memcmp( &addr, &expected, sizeof( addr ) ) == 0 );
@@ -162,7 +162,7 @@ void TestNetwork::TestGetAddressFromString_ipv6() const
 
     {
         const AStackString<> address;
-        Network::IpAddress6 addr;
+        in6_addr addr;
         bool ret = Network::GetAddressFromString( address, addr );
         TEST_ASSERT( !ret );
     }
@@ -173,7 +173,7 @@ void TestNetwork::TestGetAddressFromString_ipv6() const
 void TestNetwork::TestGetAddressAsString_ipv6() const
 {
     {
-        const Network::IpAddress6 & addr = Network::Loopback6;
+        const in6_addr & addr = Network::Loopback6;
         const AStackString<> expected( "::1" );
         AStackString<> address;
         bool ret = Network::GetAddressAsString( addr, address );
@@ -182,7 +182,7 @@ void TestNetwork::TestGetAddressAsString_ipv6() const
     }
 
     {
-        const Network::IpAddress6 & addr = {{{ 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00 }}};
+        const in6_addr & addr = {{{ 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00 }}};
         const AStackString<> expected( "ff00:ff00:ff00:ff00:ff00:ff00:ff00:ff00" );
         AStackString<> address;
         bool ret = Network::GetAddressAsString( addr, address );
