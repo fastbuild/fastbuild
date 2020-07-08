@@ -10,6 +10,7 @@
 #include <Core/Process/Semaphore.h>
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
 // system
