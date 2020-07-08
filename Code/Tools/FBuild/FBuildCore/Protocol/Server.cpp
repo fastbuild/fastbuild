@@ -292,7 +292,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     if ( msg->GetProtocolVersion() != Protocol::PROTOCOL_VERSION )
     {
         AStackString<> remoteAddr;
-        TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
+        connection->GetRemoteAddressString( remoteAddr );
         FLOG_WARN( "Disconnecting '%s' due to bad protocol version\n", remoteAddr.Get() );
         Disconnect( connection );
         return;
@@ -302,7 +302,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     if (msg->GetPlatform() != Env::GetPlatform())
     {
         AStackString<> remoteAddr;
-        TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
+        connection->GetRemoteAddressString( remoteAddr );
         FLOG_WARN( "Disconnecting '%s' (%s) due to mismatched platform\n", remoteAddr.Get(), msg->GetHostName() );
         Disconnect( connection );
         return;
