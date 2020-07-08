@@ -296,7 +296,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( const Network::IpAddress host
     PROFILE_FUNCTION
 
     // create a socket
-    TCPSocket sockfd = CreateSocket();
+    TCPSocket sockfd = CreateSocket( AF_INET );
     if ( sockfd == INVALID_SOCKET )
     {
         return nullptr; // outright failure?

@@ -110,7 +110,7 @@ private:
     TCPSocket   Accept( TCPSocket socket,
                         struct sockaddr * address,
                         int * addressSize ) const;
-    TCPSocket   CreateSocket( const int af = AF_INET ) const;
+    TCPSocket   CreateSocket( const int af ) const;
 
     struct SendBuffer
     {
