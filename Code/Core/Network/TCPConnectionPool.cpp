@@ -917,7 +917,7 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
 
 // CreateSocket
 //------------------------------------------------------------------------------
-TCPSocket TCPConnectionPool::CreateSocket( int af ) const
+TCPSocket TCPConnectionPool::CreateSocket( const int af ) const
 {
     #if defined( __LINUX__ )
         // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
