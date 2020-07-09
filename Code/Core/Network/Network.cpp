@@ -174,7 +174,7 @@ struct NameResolutionData
 
     bool success = !timedOut && data->success;
     // Save results if not timed out
-    if (success)
+    if ( success )
     {
         ipAddress = data->address;
         ipAddress6 = data->address6;
