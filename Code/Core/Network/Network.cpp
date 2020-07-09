@@ -172,8 +172,9 @@ struct NameResolutionData
     Thread::DetachThread( handle ); // Always detach
     Thread::CloseHandle( handle );
 
+    bool success = !timedOut && data->success;
     // Save results if not timed out
-    if ( !timedOut && data->success )
+    if (success)
     {
         ipAddress = data->address;
         ipAddress6 = data->address6;
@@ -183,8 +184,8 @@ struct NameResolutionData
     data->safeToFree.Signal();
     data = nullptr;
 
-    // return result of resolution (could also have failed)
-    return !timedOut;
+    // return if the name was resolved successfully or not
+    return success;
 }
 
 // GetAddressAsInt
