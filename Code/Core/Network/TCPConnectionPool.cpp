@@ -704,6 +704,7 @@ bool TCPConnectionPool::WaitForConnection( TCPSocket sockfd, const AString & hos
             // connection failed
             #ifdef TCPCONNECTION_DEBUG
                 const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
+                (void)lastNetworkError;
 
                 int32_t error = 0;
                 socklen_t size = sizeof(error);
@@ -1048,7 +1049,6 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         DisableNagle( newSocket );          // Disable Nagle's algorithm
         SetLargeBufferSizes( newSocket );   // Set send/recv buffer sizes
         SetNonBlocking( newSocket );        // Set non-blocking
-        DisableV6Only( newSocket );         // Allow ipv4 connections over ipv6
 
         // keep the new connected socket
         CreateConnectionThread( newSocket,
