@@ -1092,7 +1092,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 
     #ifdef TCPCONNECTION_DEBUG
         AStackString<32> addr;
-        Network::GetAddressAsString( ci->m_RemoteAddress, addr );
+        ci->GetRemoteAddressString( addr );
         TCPDEBUG( "Connected to %s : %u (%x)\n", addr.Get(), port, (uint32_t)socket );
     #endif
 
@@ -1124,7 +1124,7 @@ ConnectionInfo* TCPConnectionPool::CreateConnectionThread( TCPSocket socket, con
 
     #ifdef TCPCONNECTION_DEBUG
         AStackString<32> addr;
-        Network::GetAddressAsString( ci->m_RemoteAddress, addr );
+        ci->GetRemoteAddressString( addr );
         TCPDEBUG( "Connected to %s : %u (%x)\n", addr.Get(), port, (uint32_t)socket );
     #endif
 
