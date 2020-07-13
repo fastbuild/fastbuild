@@ -6,7 +6,9 @@
 #include "TestFramework/UnitTest.h"
 
 // Core
+#include "Core/Containers/AutoPtr.h"
 #include "Core/Containers/UniquePtr.h"
+#include "Core/Env/Env.h"
 #include "Core/Network/TCPConnectionPool.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Semaphore.h"
@@ -99,12 +101,18 @@ REGISTER_TESTS_BEGIN( TestTestTCPConnectionPool )
     REGISTER_TEST( TestConnectionStuckDuringSend )
     REGISTER_TEST( TestConnectionFailure )
 
-    REGISTER_TEST( TestOneServerMultipleClients_ipv6 )
-    REGISTER_TEST( TestMultipleServersOneClient_ipv6 )
-    REGISTER_TEST( TestConnectionCount_ipv6 )
-    REGISTER_TEST( TestDataTransfer_ipv6 )
-    REGISTER_TEST( TestConnectionStuckDuringSend_ipv6 )
-    REGISTER_TEST( TestConnectionFailure_ipv6 )
+    // Travis CI does not support ipv6
+    // https://docs.travis-ci.com/user/reference/overview/#virtualisation-environment-vs-operating-system
+    AStackString<> travisEnv;
+    if ( !Env::GetEnvVariable( "TRAVIS", travisEnv ) || travisEnv != "true" )
+    {
+        REGISTER_TEST( TestOneServerMultipleClients_ipv6 )
+        REGISTER_TEST( TestMultipleServersOneClient_ipv6 )
+        REGISTER_TEST( TestConnectionCount_ipv6 )
+        REGISTER_TEST( TestDataTransfer_ipv6 )
+        REGISTER_TEST( TestConnectionStuckDuringSend_ipv6 )
+        REGISTER_TEST( TestConnectionFailure_ipv6 )
+    }
 REGISTER_TESTS_END
 
 // TestOneServerMultipleClients

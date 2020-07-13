@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 #include "TestFramework/UnitTest.h"
 
+#include "Core/Env/Env.h"
 #include "Core/Network/Network.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Strings/AStackString.h"
@@ -43,9 +44,17 @@ REGISTER_TESTS_BEGIN( TestNetwork )
     REGISTER_TEST( TestNameResolution )
     REGISTER_TEST( TestGetAddressFromString )
     REGISTER_TEST( TestGetAddressAsString )
-    REGISTER_TEST( TestNameResolution_ipv6 )
-    REGISTER_TEST( TestGetAddressFromString_ipv6 )
-    REGISTER_TEST( TestGetAddressAsString_ipv6 )
+
+    // Travis CI does not support ipv6
+    // https://docs.travis-ci.com/user/reference/overview/#virtualisation-environment-vs-operating-system
+    AStackString<> travisEnv;
+    if ( !Env::GetEnvVariable( "TRAVIS", travisEnv ) || travisEnv != "true" )
+    {
+        REGISTER_TEST( TestNameResolution_ipv6 )
+        REGISTER_TEST( TestGetAddressFromString_ipv6 )
+        REGISTER_TEST( TestGetAddressAsString_ipv6 )
+    }
+
 REGISTER_TESTS_END
 
 // TestGetHostName
