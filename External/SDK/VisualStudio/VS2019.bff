@@ -8,12 +8,12 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //
-#if file_exists( "2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe" )
+#if file_exists( "2019/Community/VC/Tools/MSVC/14.26.28801/bin/Hostx64/x64/cl.exe" )
     //
     // Use vendorized toolchain
     //
     .VS2019_BasePath        = '$_CURRENT_BFF_DIR_$/2019/Community/VC'
-    .VS2019_Version         = '14.25.28610'
+    .VS2019_Version         = '14.26.28801'
 #else
     //
     // Use environment variable if available (VS Command Prompt)
@@ -27,9 +27,9 @@
         //
         // Use Visual Studio installation
         //
-        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe" )
+        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.26.28801/bin/Hostx64/x64/cl.exe" )
             .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC'
-            .VS2019_Version         = '14.25.28610'
+            .VS2019_Version         = '14.26.28801'
         #else
             //
             // Failed
