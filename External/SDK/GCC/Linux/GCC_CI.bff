@@ -12,6 +12,11 @@ Compiler( 'Compiler-GCC' )
                                         'CC1PLUS_BINARY'
                                       }
     .CompilerFamily                 = 'gcc' // Specify compiler family explicitly because binary name may change at any moment
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_SOURCE_MAPPING
+        .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
 }
 
 // ToolChain
