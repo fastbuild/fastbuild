@@ -669,6 +669,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
          ( node->GetType() == Node::LIBRARY_NODE ) ||
          ( node->GetType() == Node::DLL_NODE ) ||
          ( node->GetType() == Node::CS_NODE ) ||
+         ( node->GetType() == Node::EXEC_NODE ) ||
          ( node->GetType() == Node::TEST_NODE ) )
     {
         nodeRelevantToMonitorLog = true;
