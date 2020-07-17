@@ -34,6 +34,23 @@
     if ( ::gethostname( buffer, 64 ) == 0 )
     {
         hostName = buffer;
+#if defined( __WINDOWS__ )
+        TCHAR domainBuffer[ 256 ];
+        DWORD domainBufferSize = sizeof( domainBuffer );
+        if ( GetComputerNameEx( ComputerNameDnsDomain, domainBuffer, &domainBufferSize ) )
+        {
+            hostName += ".";
+            hostName += domainBuffer;
+        }
+#endif
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+        char domainBuffer[ 256 ];
+        if ( ::getdomainname( domainBuffer, 256 ) )
+        {
+            hostName += ".";
+            hostName += domainBuffer;
+        }
+#endif
     }
     else
     {
