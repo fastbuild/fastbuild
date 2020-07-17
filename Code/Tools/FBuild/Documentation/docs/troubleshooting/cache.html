@@ -19,168 +19,127 @@
 	        <div class='navbar'>
 	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
 	        <div class='inner'>
 
 <h1>Cache Troubleshooting</h1>
-    <div id='alias' class='newsitemheader'>
-      Overview
-    </div>
+
+<div id='alias' class='newsitemheader'>Overview</div>
     <div class='newsitembody'>
       <p>If you've followed the <a href="../features/caching.html">setup instructions</a> and still can't
          seem to make it work, this guide is for you.</p>
-      <p>Try each each section in order.</p>
       <table width="90%">
-        <tr><th>Section</th><th>Check that...</th></tr>
-        <tr><td><a href="#debugging">Debugging</a></a></td><td>... cache misses.</td></tr>
-        <tr><td><a href="#distributed">Distributed</a></a></td><td>... cache miss debugging across multiple computers.</td></tr>
-        <tr><td><a href="#CommandLineKey">CommandLineKey</a></a></td><td>... diffing inputs to <b>commandLineKey</b> cache misses.</td></tr>
-        <tr><td><a href="#PreprocessedSourceKey">PreprocessedSourceKey</a></a></td><td>... diffing inputs to <b>preprocessedSourceKey</b> cache misses.</td></tr>
-        <tr><td><a href="#ToolchainKey">ToolchainKey</a></a></td><td>... diffing inputs to <b>toolchainKey</b> cache misses.</td></tr>
-        <tr><td><a href="#PCHKey">PCHKey</a></a></td><td>... diffing inputs to <b>pchKey</b> cache misses.</td></tr>
-        <tr><td><a href="#LightCache">LightCache</a></td><td>... known issues with the <b>LightCache</b>.</tr>
-        <tr><td><a href="#GitHub">GitHub</a></td><td>... discussions about shared cache debugging.</tr>
+        <tr><th>Section</th><th>Details</th></tr>
+        <tr><td><a href="#debugging">General Debugging</a></a></td><td>Get more information about cache operations</td></tr>
+        <tr><td><a href="#cachekeys">Cache Keys</a></a></td><td>Cache Keys overview</td></tr>
+        <tr><td><a href="#sourcehash">Source Hash</a></a></td><td>The Source component of Cache Keys</td></tr>
+        <tr><td><a href="#cmdlinehash">Command Line Hash</a></a></td><td>The Command Line component of Cache Keys</td></tr>
+        <tr><td><a href="#toolchainhash">Toolchain Hash</a></a></td><td>The Toolchain component of Cache Keys</td></tr>
+        <tr><td><a href="#precompiledheaderhash">Precompiled Header Hash</a></a></td><td>The Precompiled Header component of Cache Keys</td></tr>
+        <tr><td><a href="#cacheversion">Cache Version</a></a></td><td>The FASTbuild cache version component of Cache Keys</td></tr>
+        <tr><td><a href="#LightCache">LightCache Considerations</a></td><td>Additional information regarding behaviour when using the LightCache</tr>
       </table>
-</div>
+    </div>
 
-<div id='debugging' class='newsitemheader'>Debugging Cache Misses</div>
+<div id='debugging' class='newsitemheader'>General Debugging</div>
 <div class='newsitembody'>
-  <h4>1. Enable <b>-cacheverbose</b></h4>
-     <p>You can use <b>-cacheverbose</b> to see what cache keys are being generated for each <b>object file</b> being compiled.</p>
-     <p>This is particularly useful when debugging <a href="#distributed">shared/distributed cache issues</a> across two (or more) different machines.</p>
-     <p>When combined with <b>-cache</b>, <b>-cacheread</b>, or <b>-cachewrite</b>, this will output additional information in the following format:</p>
-     <div class='output'>
-12>Obj: C:\p4\depot\tmp\x64-Debug\Tools\FBuild\FBuildCore\FBuildCore_Unity3.obj
+  <h4>Enable <b>-cacheverbose</b></h4>
+     <p>You can use the <b>-cacheverbose</b> command line option to emit additional information about cache operations, and in particular, the Cache Key generated for each Object File being compiled.</p>
+     <p>Combining <b>-cacheverbose</b> with <b>-cache</b>, <b>-cacheread</b>, or <b>-cachewrite</b> will output additional information in the following format:</p>
+     <div class='output'>12>Obj: C:\p4\depot\tmp\x64-Debug\Tools\FBuild\FBuildCore\FBuildCore_Unity3.obj
  - Cache Miss: 35 ms 'E90519265A1719FA_3AC8C650_6C30067E14AB4880-0000000000000000.A'
 
 12>Obj: C:\p4\depot\tmp\x64-Release\TestFramework\TestFramework_Unity1.obj
  - Cache Store: 157 ms (Store: 150 ms - Compress: 1 ms) (Compressed: 25684 - Uncompressed: 51916) 'BA4252DC6B561582_97907E3A_6C30067E14AB4880-0000000000000000.A'
 
 10>Obj: C:\p4\depot\tmp\x64-Profile\Core\Core_Unity1.obj <CACHE>
-    - Cache Hit: 81 ms (Retrieve: 73 ms - Decompress: 1 ms) (Compressed: 452262 - Uncompressed: 1044600) 'FD9B691EF509B98D_3409CAAE_6C30067E14AB4880-0000000000000000.A'
-     </div>
-     <p>Each line contains the cache keys, which are comprised of hashes of the various cache inputs, formatted by the following function:</p>
-    <div class='output'>
-// GetCacheId
-//------------------------------------------------------------------------------
-/*static*/ void ICache::GetCacheId( const uint64_t preprocessedSourceKey,
-                                    const uint32_t commandLineKey,
-                                    const uint64_t toolChainKey,
-                                    const uint64_t pchKey,
-                                    AString & outCacheId )
-{
-    // cache version - bump if cache format is changed
-    static const char cacheVersion( 'A' );
-
-    // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
-    outCacheId.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%c",
-                        preprocessedSourceKey,
-                        commandLineKey,
-                        toolChainKey,
-                        pchKey,
-                        cacheVersion );
-}
-    </div>
-    <p>TODO: Describe what each key "means".</p>
-    <ul>
-        <li><a href="#PreprocessedSourceKey">preprocessedSourceKey</a></li>
-        <li><a href="#CommandLineKey">commandLineKey</a></li>
-        <li><a href="#ToolchainKey">toolchainKey</a></li>
-        <li><a href="#PCHKey">pchKey</a>
-    </ul>
+ - Cache Hit: 81 ms (Retrieve: 73 ms - Decompress: 1 ms) (Compressed: 452262 - Uncompressed: 1044600) 'FD9B691EF509B98D_3409CAAE_6C30067E14AB4880-0000000000000000.A'</div>
+</div>
+ 
+<div id='cachekeys' class='newsitemheader'>Cache Keys</div>
+<div class='newsitembody'> 
+     <p>The Cache Key is a unique identifier representing an entry in the cache. Cache Keys are generated by combining hashes of various inputs that feed into compilation of an Object File. Cache Keys are in comprised as follows:</p>
+    <div class='output'>                      /- Command line hash
+                     /                             /- Precompiled header hash
+                    /                             /
+E90519265A1719FA_3AC8C650_6C30067E14AB4880-0000000000000000.A
+       \                          \                         \- Cache version
+        \                          \- Toolchain hash
+         \- Source hash
+</div>
+    <table>
+        <tr><th width=200>Key Part</th><th>Description</th></tr>
+        <tr><td>Source hash</td><td>Hash of source code involved in the compilation of the Object File</td></tr>
+        <tr><td>Command line hash</td><td>Hash of command line passed to compiler</td></tr>
+        <tr><td>Toolchain hash</td><td>Hash of compiler binaries as specified by Compiler()</td></tr>
+        <tr><td>Precompiled header hash</td><td>Hash of precompiled header (if used)</td></tr>
+        <tr><td>Cache version</td><td>FASTBuild's cache version</td></tr>
+    </table>
+<p>For an object to be retrieved from the cache, the Cache Key used during storage and retrieval must match exactly. Differences in components of the Cache Key imply compiled output results will differ, inhibiting caching.</p>
+<p>If cache hits are expected but not realized, checking for differences between Cache Keys will highlight the component resulting in said cache misses. For each component, you can troubleshoot further using the information below.</p>
 </div>
 
-<div id='distributed' class='newsitemheader'>Debugging Shared/Distributed Cache Misses</div>
+<div id='sourcehash' class='newsitemheader'>Source Hash</div>
+<div class='newsitembody'> 
+<p>The source code used for compilation must precisely match for caching to be possible. i.e. Two machines must be compiling the same source code, resulting in the same preprocessed output.</p>
+<p>You can view the preprocessed source yourself by directly invoking the compiler with an appropriate command line. You can first invoke FASTBuild with <b>-showcmds</b> to see what command line is being using:</p>
+    <div class='output'>fbuild.exe [target] -cachewrite -showcmds -clean</div>
+<p>You can then invoke the preprocessor command line yourself, piping the output to a file as per the following example:</p>
+    <div class='output'>cl.exe someCpp.cpp someObj.obj /E > preprocessed.ii</div>
+<p>If you do this on two different machines, you can compare the results to look for discrepancies.</p>
+        <ul><li><b>NOTE:</b> If you are using LightCache, you will need to manually append the preprocessor option (usually <b>/E</b> or <b>-E</b>)</li></ul>
+<p>Common causes of Source Hash discrepancies are detailed below:</p>
+<h4>Source Files</h4>
+<p>Machines must be compiling the same code to benefit from caching and the source files must match. A single byte in a single file can result in different compiler output, and thus can prevent caching. Depending on the compiler, line endings may also matter.</p>
+<h4>Command Line Defines</h4>
+<p>The defines provided to the compiler on the command line will alter the generated code. Machines must be using the same compiler defines to benefit from caching. (See Command Line Hash below.)</p>
+<h4>__DATE__ and __TIME__ Macros</h4>
+<p>Particular care should be taken to avoid __TIME__ and __DATE__ macros which cause cache mismatches due to their continually changing nature (every second and every day respectively).</p>
+<p>These macros are usually best avoided anyway, as they can be misleading since they reflect the time an Object File is generated, rather than when an executable or dll was generated. A post-link "stamping" process should usually be preferred for injection of date/time strings into final build artifacts.</p>
+<p>If complete removal of these macros is not possible, limitting their use to only certain Object Files will still allow other Object Files to generate consistent Cache Keys.</p>
+</div>
+
+<div id='cmdlinehash' class='newsitemheader'>Command Line Hash</div>
+<div class='newsitembody'> 
+<p>The command line used to invoke the compiler is hashed. This includes the full path to the files being compiled. As such, the source code and working directory must match between multiple machines.</p>
+<p>You can use the <b>-showcmds</b> option to view the command line being used to check for differences as follows:</p>
+    <h4>On one machine, perform a write-only operation:</h4>
+    <div class='output'>fbuild.exe [target] -cachewrite -cacheverbose -showcmds -clean</div>
+    <h4>On another machine, perform a read-only operation:</h4>
+    <div class='output'>fbuild.exe [target] -cacheread -cacheverbose -showcmds -clean</div>
+    <p>If you do this on two different machines, you can compare the results to look for discrepancies.</p>
+    <ul><li><b>NOTE:</b> If you are using LightCache, the command line will not be emitted. You make like to disable the LightCache while troubleshooting.</li></ul>
+    <ul><li><b>NOTE:</b> The .UseRelativePaths_Experimental feature of  Compiler() may adequately relax this limitation on full paths in the future.</li></ul>
+</div>
+
+<div id='toolchainhash' class='newsitemheader'>Toolchain Hash</div>
 <div class='newsitembody'>
-    <p>By comparing the cache keys generated by <a href="#debugging">-cacheverbose</a> from two machines you expect to match, you can see which components differ.</p>
-    <p><b>If <i>any</i> of these components differ between computers, then they will not be able to resolve each-other(s) shared cache entries!</b></p>
-
-    <p>For each differing component, you'll want to investigate the source of the difference using the techniques described below:</p>
-    <ul>
-        <li><a href="#CommandLineKey">commandLineKey</a></li>
-        <li><a href="#PreprocessedSourceKey">preprocessedSourceKey</a></li>
-        <li><a href="#ToolchainKey">toolchainKey</a></li>
-        <li><a href="#PCHKey">pchKey</a>
-    </ul>
-
-    <p>Note that there are two distinct scenarios that can occur when keys to the shared cache are generated differently between computers:</p>
-    <ul>
-        <p><b>1. If all computers are allowed to write to the shared cache:</b></p>
-        <ul>
-            <p>In this situation, each computer will independently write its own cache entries, and will "hit" on its own entries.</p>
-            <p>However, other machines will not be able to hit on those cache entries, eliminating most of the benefit of using a shared network cache!</p>
-            <p>That is, <b>PC A</b> will see no benefit to <b>PC B</b> storing an entry into the cache, and vice-versa.</p>
-            <p>But, this situation can be difficult to recognize, because after storing new cache entries, a given machine will be able to "hit" on those entries again in the future.</p>
-            <p>So, this scenario won't result in any machines <i>never</i> having cache hits, which makes it more difficult to detect.</p>
-        </ul>
-        <p><b>2. When only a subset of computers are allowed to write to the shared cache:</b></p>
-        <ul>
-            <p>If only a subset of computers are allowed to write to the shared cache, then the computers with <b>read-only</b> access will fail to get cache hits.</p>
-        </ul>
-    </ul>
+<p>The Toolchain Hash represents the compiler binaries and additional files as specified by the Compiler() in your FASTBuild config. As different compilers and compiler versions can emit different results, the toolchain must match for caching to be successful. Ensure that your machines are using the same bff files, specifying the same binaries and that they are identical.</p>
+<ul><li><b>NOTE:</b> Versioning of compiler binaries along with source files in source control is recommended.</li></ul>
 </div>
 
-<div id='CommandLineKey' class='newsitemheader'>Diffing Inputs To <b>commandLineKey</b> Cache Misses</div>
+<div id='precompiledheaderhash' class='newsitemheader'>Precompiled Header Hash</div>
 <div class='newsitembody'>
-    <h4><b>A.</b> Using <b>-showcmds</b> together with <b>-cacheverbose</b> to diff <b>commandLineKey</b> inputs:</h4>
-    <p><b>-showcmds</b> will output the build command lines which are used to build the cached object files (and which are hashed into <b>commandLineKey</b>(s)).</p>
-
-    <p><b>NOTE: LightCache</b> won't emit the command-line for preprocessing. You may want to disable <b>LightCache</b> before attempting this diagnostic.</p>
-
-    <h4>1. On machine A, perform a write-only operation:</h4>
-    <div class='output'>fbuild.exe [target] -cachewrite -cacheverbose -showcmds -clean > CACHE_WRITE_INFO.TXT</div>
-    <h4>2. On machine(s) B., C., ..., perform a read-only operation:</h4>
-    <div class='output'>fbuild.exe [target] -cacheread -cacheverbose -showcmds -clean > CACHE_READ_INFO.TXT</div>
-    <p><b>3.</b> After gathering the .TXT files for each machine, find and compare the two <b>Obj:</b> invocations for a given <b>object file</b> with a diff tool.</p>
-
-    <p>
-        If the <b>commandLineKey</b>(s) match, then diffing the command lines output by <b>-showcmds</b> for a given <b>object file</b> should not result in any differences.
-        However, if any <b>commandLineKey</b>(s) do differ between computers, then diffing the command lines should reveal where the discrepancies are coming from, and give you a lead on fixing the issue(s) preventing cache hits.
-    </p>
+<p>If using Precompiled Headers when compiling an Object File, the hash of the precompiled header associated with an Object File is calculated. When not using Precompiled Headers, this component is always 00000000.</p>
+<p>For Precompiled Headers (which can also be cached), all Cache Key components are treated normally and the Precompiled Header component is 00000000.</p>
+<p>To troubleshoot discrepancies in the Cache Key for a Precompiled Header itself, use the same steps as for a normal Object File.</p>
 </div>
 
-<div id='PreprocessedSourceKey' class='newsitemheader'>Diffing Inputs To <b>preprocessedSourceKey</b> Cache Misses</div>
+<div id='cacheversion' class='newsitemheader'>Cache Version</div>
 <div class='newsitembody'>
-    <p>If you have verified that the <b>commandLineKey</b> matches for a given <b>object file</b>, but the <b>preprocessedSourceKey</b> differs, then this section can help you.</p>
-    <p><b>1.</b> Following the same procedure used to diff <b><a href="#CommandLineKey">commandLineKey</a></b> inputs:</p>
-    <p><b>2.</b> Copy a given command line found via <b>-showcmds</b>, and execute it on each computer you wish to compare.</p>
-    <ul>
-        <p>For example:</p>
-        <div class='output'>cl.exe someCpp.cpp someObj.obj /E > CACHE_OBJ_PP_SOURCE.TXT</div>
-        <li>NOTE: If you are using <b>LightCache</b>, you will need to manually append <b>/E</b></li>
-    </ul>
-    <p><b>3.</b> After gathering the .TXT files from each machine, compare the preprocessed source with a diff tool.</p>
-    <p>This should reveal any discrepancies causing cache-key mismatch between the two machines.</p>
+<p>The Cache Version is used by FASTBuild to allow for invalidation of existing caches when breaking changes to the caching format are made. These changes are rare. If you have a different Cache Version in your Cache Key, you are using incompatible FASTBuild versions.</p>
 </div>
 
-<div id='ToolchainKey' class='newsitemheader'>Diffing Inputs To <b>toolchainKey</b> Cache Misses</div>
+<div id='lightcache' class='newsitemheader'>LightCache Considerations</div>
 <div class='newsitembody'>
-    <p>If you have verified that the <b>commandLineKey</b> matches for a given <b>object file</b>, but the <b>toolchainKey</b> differs, then this section can help you.</p>
-    <p>TODO: Elaborate on the best way to root-cause <b>toolchainKey</b> mismatches. Diff <b>.bff</b> files?</p>
-</div>
-
-<div id='PCHKey' class='newsitemheader'>Diffing Inputs To <b>pchKey</b> Cache Misses</div>
-<div class='newsitembody'>
-    <p>If you have verified that the <b>commandLineKey</b> matches for a given <b>object file</b>, but the <b>pchKey</b> differs, then this section can help you.</p>
-    <p>TODO: Elaborate on the best way to root-cause <b>pchKey</b> mismatches.</p>
-    <p>Follow the instructions for <b><a href="#PreprocessedSourceKey">preprocessedSourceKey</a></b> mismatches but applied to the <b>.pch</b> file preprocessing?</p>
-</div>
-
-<div id='LightCache' class='newsitemheader'>Known LightCache Issues</div>
-<div class='newsitembody'>
-  <p><b>1.</b> <b>LightCache</b> currently doesn't emit the command line used for pre-processing.</p>
-  <p><b>2.</b> When executing a <b>LightCache -showcmds</b> derived command with the desire to see the preprocessed output, you'll need to manually append <b>/E</b>.</p>
-  <p><b>3.</b> <b>BUG: LightCache</b> occasionally randomly generates different cache keys for the same inputs.</p>
-    <ul><li><a href="https://github.com/fastbuild/fastbuild/pull/716">https://github.com/fastbuild/fastbuild/pull/716</a></li></ul>
-</div>
-
-<div id='GitHub' class='newsitemheader'>GitHub Discussions about Shared Cache Debugging</div>
-<div class='newsitembody'>
-  <p><b>1.</b> <a href="https://github.com/fastbuild/fastbuild/issues/727">https://github.com/fastbuild/fastbuild/issues/727</a> - Unexpected Shared Network Cache Misses</p>
-</div>
+  <p>The LightCache feature replaces the use of the Compiler's preprocessor with FASTBuild's own internal processor. This accelerates Source Hash generation by an order of magnitude, but may add
+  some additional considerations when troubleshooting.</p>
+  <h4>No Preprocessor</h4>
+  <p>Since there is no preprocessor invocation, there is no preprocessor command line that you can examine with <b>-showcmds.</b> As a work-around, you can disable use of the LightCache until you have caching working.</p>
+  <h4>Different Source Hash</h4>
+  <p>The LightCache uses a different mechanism for hashing the source files and as such the Source Hash component of the Cache Key differs compared to using the Compiler's preprocessor. IF debugging caching, be sure to consistently use (or not) the LightCache to ensure you are comparing comparable Cache Keys.</p>
 
     </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
