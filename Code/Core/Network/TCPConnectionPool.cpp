@@ -266,8 +266,21 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_
 {
     ASSERT( !host.IsEmpty() );
 
+    // Extract values from host string
+    Array< AString > hosts;
+    host.Tokenize( hosts, '+' );
+
     // get IP
-    uint32_t hostIP = Network::GetHostIPFromName( host, timeout );
+    uint32_t hostIP( 0 );
+    for ( const AString & value : hosts )
+    {
+        hostIP = Network::GetHostIPFromName( value, timeout);
+        if ( hostIP != 0 )
+        {
+            break;
+        }
+    }
+
     if ( hostIP == 0 )
     {
         TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );

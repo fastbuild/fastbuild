@@ -19,6 +19,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Network/Network.h"
+#include "Core/Network/TCPConnectionPool.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Process/Thread.h"
@@ -28,6 +29,8 @@
 //------------------------------------------------------------------------------
 static const float sBrokerageElapsedTimeBetweenClean = ( 12 * 60 * 60.0f );
 static const uint32_t sBrokerageCleanOlderThan = ( 24 * 60 * 60 );
+static const float sBrokerageAvailabilityUpdateTimeMS = ( 10000.0f );
+static const float sBrokerageIpAddressUpdateTime = ( 5 * 60.0f );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -49,7 +52,7 @@ void WorkerBrokerage::Init()
         return;
     }
 
-    // brokerage path includes version to reduce unnecssary comms attempts
+    // brokerage path includes version to reduce unnecessary comms attempts
     uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
     // root folder
@@ -57,7 +60,7 @@ void WorkerBrokerage::Init()
     if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath) )
     {
         // FASTBUILD_BROKERAGE_PATH can contain multiple paths separated by semi-colon. The worker will register itself into the first path only but
-        // the additional paths are paths to additional broker roots allowed for finding remote workers(in order of priority)
+        // the additional paths are paths to additional broker roots allowed for finding remote workers (in order of priority)
         const char * start = brokeragePath.Get();
         const char * end = brokeragePath.GetEnd();
         AStackString<> pathSeparator( ";" );
@@ -112,6 +115,7 @@ void WorkerBrokerage::Init()
         m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
     }
     m_TimerLastUpdate.Start();
+    m_TimerLastIpUpdate.Start();
     m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
 
     m_Initialized = true;
@@ -121,7 +125,7 @@ void WorkerBrokerage::Init()
 //------------------------------------------------------------------------------
 WorkerBrokerage::~WorkerBrokerage()
 {
-    // Ensure the file disapears when closing
+    // Ensure the file disappears when closing
     if ( m_Availability )
     {
         FileIO::FileDelete( m_BrokerageFilePath.Get() );
@@ -146,7 +150,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
     for( AString& root : m_BrokerageRoots )
     {
         size_t filesBeforeSearch = results.GetSize();
-        if ( !FileIO::GetFiles(root,
+        if ( !FileIO::GetFiles( root,
                                 AStackString<>( "*" ),
                                 false,
                                 &results ) )
@@ -172,7 +176,10 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
         const AString & fileName = *it;
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
         AStackString<> workerName( lastSlash + 1 );
-        if ( workerName.CompareI( m_HostName ) != 0 )
+        Array< AString > hosts;
+        workerName.Tokenize( hosts, '+' );
+        // First entry is the host name
+        if ( hosts.GetSize() > 0 && hosts[ 0 ].CompareI( m_HostName ) != 0 )
         {
             workerList.Append( workerName );
         }
@@ -181,7 +188,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 
 // SetAvailability
 //------------------------------------------------------------------------------
-void WorkerBrokerage::SetAvailability(bool available)
+void WorkerBrokerage::SetAvailability( bool available )
 {
     Init();
 
@@ -194,14 +201,50 @@ void WorkerBrokerage::SetAvailability(bool available)
     if ( available )
     {
         // Check the last update time to avoid too much File IO.
-        float elapsedTime = m_TimerLastUpdate.GetElapsedMS();
-        if ( elapsedTime >= 10000.0f )
+        float elapsedTimeMS = m_TimerLastUpdate.GetElapsedMS();
+        if ( elapsedTimeMS >= sBrokerageAvailabilityUpdateTimeMS )
         {
             // If settings have changed, (re)create the file 
             // If settings have not changed, update the modification timestamp
             const WorkerSettings & workerSettings = WorkerSettings::Get();
             const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
             bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
+
+            // Check IP last update time and determine if IP address has changed
+            if ( m_IpAddress.IsEmpty() || m_TimerLastIpUpdate.GetElapsed() >= sBrokerageIpAddressUpdateTime )
+            {
+                // Resolve host name to ip address
+                uint32_t ip = Network::GetHostIPFromName( m_HostName );
+                AStackString<> ipString;
+                if ( ip != 0 && ip != 0x0100007f )
+                {
+                    TCPConnectionPool::GetAddressAsString( ip, ipString );
+                }
+
+                if ( ipString != m_IpAddress )
+                {
+                    m_IpAddress = ipString;
+
+                    // Remove existing brokerage file, as filename is being updated
+                    FileIO::FileDelete( m_BrokerageFilePath.Get() );
+
+                    // Update brokerage path
+                    if ( m_IpAddress.IsEmpty() )
+                    {
+                        m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
+                    }
+                    else
+                    {
+                        m_BrokerageFilePath.Format( "%s%s+%s", m_BrokerageRoots[0].Get(), m_HostName.Get(), m_IpAddress.Get() );
+                    }
+
+                    // IP address changed - create the file
+                    createBrokerageFile = true;
+                }
+
+                // Restart the IP timer
+                m_TimerLastIpUpdate.Start();
+            }
 
             if ( createBrokerageFile == false )
             {
@@ -225,11 +268,20 @@ void WorkerBrokerage::SetAvailability(bool available)
                 Env::GetLocalUserName( userName );
                 buffer.AppendFormat( "User: %s\n", userName.Get() );
 
+                // Host Name
+                buffer.AppendFormat( "Host Name: %s\n", m_HostName.Get() );
+
+                // IP Address
+                buffer.AppendFormat( "IPv4 Address: %s\n", m_IpAddress.Get() );
+
                 // CPU Thresholds
                 static const uint32_t numProcessors = Env::GetNumProcessors();
                 buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
 
-                // Move
+                // Memory Threshold
+                buffer.AppendFormat( "Memory: %u\n", workerSettings.GetMinimumFreeMemoryMiB() );
+
+                // Mode
                 switch ( workerSettings.GetMode() )
                 {
                     case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
@@ -241,7 +293,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                 // Create/write file which signifies availability
                 FileIO::EnsurePathExists( m_BrokerageRoots[0] );
                 FileStream fs;
-                if (fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ))
+                if ( fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ) )
                 {
                     fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
 
@@ -249,7 +301,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                     m_SettingsWriteTime = settingsWriteTime;
                 }
             }
-            
+
             // Restart the timer
             m_TimerLastUpdate.Start();
         }
@@ -264,7 +316,7 @@ void WorkerBrokerage::SetAvailability(bool available)
     }
     m_Availability = available;
     
-    // Handle brokereage cleaning
+    // Handle brokerage cleaning
     if ( m_TimerLastCleanBroker.GetElapsed() >= sBrokerageElapsedTimeBetweenClean )
     {
         const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
@@ -290,7 +342,7 @@ void WorkerBrokerage::SetAvailability(bool available)
 
         // Restart the timer
         m_TimerLastCleanBroker.Start();
-    }    
+    }
 }
 
 //------------------------------------------------------------------------------
