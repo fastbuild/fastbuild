@@ -29,7 +29,7 @@
 //------------------------------------------------------------------------------
 static const float sBrokerageElapsedTimeBetweenClean = ( 12 * 60 * 60.0f );
 static const uint32_t sBrokerageCleanOlderThan = ( 24 * 60 * 60 );
-static const float sBrokerageAvailabilityUpdateTimeMS = ( 10000.0f );
+static const float sBrokerageAvailabilityUpdateTime = ( 10.0f );
 static const float sBrokerageIpAddressUpdateTime = ( 5 * 60.0f );
 
 // CONSTRUCTOR
@@ -57,7 +57,7 @@ void WorkerBrokerage::Init()
 
     // root folder
     AStackString<> brokeragePath;
-    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath) )
+    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath ) )
     {
         // FASTBUILD_BROKERAGE_PATH can contain multiple paths separated by semi-colon. The worker will register itself into the first path only but
         // the additional paths are paths to additional broker roots allowed for finding remote workers (in order of priority)
@@ -201,8 +201,8 @@ void WorkerBrokerage::SetAvailability( bool available )
     if ( available )
     {
         // Check the last update time to avoid too much File IO.
-        float elapsedTimeMS = m_TimerLastUpdate.GetElapsedMS();
-        if ( elapsedTimeMS >= sBrokerageAvailabilityUpdateTimeMS )
+        float elapsedTime = m_TimerLastUpdate.GetElapsed();
+        if ( elapsedTime >= sBrokerageAvailabilityUpdateTime )
         {
             // If settings have changed, (re)create the file 
             // If settings have not changed, update the modification timestamp
