@@ -45,7 +45,7 @@
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
         char domainBuffer[ 256 ];
-        if ( ::getdomainname( domainBuffer, 256 ) )
+        if ( ::getdomainname( domainBuffer, 256 ) == 0 )
         {
             hostName += ".";
             hostName += domainBuffer;
