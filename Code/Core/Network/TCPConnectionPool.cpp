@@ -274,7 +274,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_
     uint32_t hostIP( 0 );
     for ( const AString & value : hosts )
     {
-        hostIP = Network::GetHostIPFromName( value, timeout);
+        hostIP = Network::GetHostIPFromName( value, timeout );
         if ( hostIP != 0 )
         {
             break;
