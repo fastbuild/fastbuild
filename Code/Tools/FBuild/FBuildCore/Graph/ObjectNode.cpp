@@ -997,7 +997,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     {
         // creation of the PCH must be done locally to generate a usable PCH
         // Objective C/C++ cannot be distributed
-        if ( !creatingPCH && !objectiveC )
+        // Source mappings are not currently forwarded so can only compiled locally
+        const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
+        if ( !creatingPCH && !objectiveC && !hasSourceMapping )
         {
             if ( isDistributableCompiler )
             {

@@ -57,7 +57,7 @@ public:
 
     const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
     const char * GetEnvironmentString() const;
-    const AString & GetSourceMapping() const { return m_SourceMapping; };
+    const AString & GetSourceMapping() const { return m_SourceMapping; }
 
 private:
     bool InitializeCompilerFamily( const BFFToken * iter, const Function * function );
