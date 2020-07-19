@@ -57,6 +57,7 @@ public:
 
     const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
     const char * GetEnvironmentString() const;
+    const AString & GetSourceMapping() const { return m_SourceMapping; };
 
 private:
     bool InitializeCompilerFamily( const BFFToken * iter, const Function * function );
@@ -81,6 +82,7 @@ private:
     bool                    m_UseRelativePaths;
     ToolManifest            m_Manifest;
     Array< AString >        m_Environment;
+    AString                 m_SourceMapping;
 
     // Internal state
     mutable const char *    m_EnvironmentString;

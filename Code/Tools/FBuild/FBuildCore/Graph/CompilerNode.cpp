@@ -31,6 +31,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT_ARRAY( m_Environment,   "Environment",          MetaOptional() )
     REFLECT( m_UseLightCache,       "UseLightCache_Experimental", MetaOptional() )
     REFLECT( m_UseRelativePaths,    "UseRelativePaths_Experimental", MetaOptional() )
+    REFLECT( m_SourceMapping,       "SourceMapping_Experimental", MetaOptional() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
