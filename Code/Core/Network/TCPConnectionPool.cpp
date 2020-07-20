@@ -265,28 +265,40 @@ bool TCPConnectionPool::Listen( uint16_t port )
 const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_t port, uint32_t timeout, void * userData )
 {
     ASSERT( !host.IsEmpty() );
+    Array< AString > hosts;
+    Array< uint32_t > attemptedIPs;
 
     // Extract values from host string
-    Array< AString > hosts;
     host.Tokenize( hosts, '+' );
 
-    // get IP
-    uint32_t hostIP( 0 );
     for ( const AString & value : hosts )
     {
-        hostIP = Network::GetHostIPFromName( value, timeout );
-        if ( hostIP != 0 )
+        // Resolve IP address
+        const uint32_t hostIP = Network::GetHostIPFromName( value, timeout );
+        if ( hostIP == 0 )
         {
-            break;
+            TCPDEBUG( "Failed to get address for '%s'\n", value.Get() );
+            continue;
+        }
+
+        // Don't attempt to connect to an address that has already failed
+        if ( attemptedIPs.Find( hostIP ) != nullptr )
+        {
+            continue;
+        }
+
+        attemptedIPs.Append( hostIP );
+
+        // Attempt to connect
+        const ConnectionInfo * connectionInfo = Connect( hostIP, port, timeout, userData );
+        if ( connectionInfo )
+        {
+            return connectionInfo;
         }
     }
 
-    if ( hostIP == 0 )
-    {
-        TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );
-        return nullptr;
-    }
-    return Connect( hostIP, port, timeout, userData );
+    TCPDEBUG( "Failed to connect to '%s'\n", host.Get() );
+    return nullptr;
 }
 
 // Connect
