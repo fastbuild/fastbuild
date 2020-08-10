@@ -620,7 +620,7 @@ bool Process::ReadAllData( AString & outMem,
                 if ( result == WAIT_TIMEOUT )
                 {
                     // Check if timeout is hit
-                    if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= timeOutMS ) )
+                    if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= (float)timeOutMS ) )
                     {
                         Terminate();
                         return false; // Timed out

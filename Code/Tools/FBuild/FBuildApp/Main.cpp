@@ -216,9 +216,8 @@ int Main( int argc, char * argv[] )
     if ( options.m_ShowTotalTimeTaken )
     {
         float totalBuildTime = t.GetElapsed();
-        uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
-        totalBuildTime -= ( minutes * 60.0f );
-        const float seconds = totalBuildTime;
+        const uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
+        const float seconds = ( totalBuildTime - (float)( minutes * 60 ) );
         if ( minutes > 0 )
         {
             FLOG_OUTPUT( "Time: %um %05.3fs\n", minutes, (double)seconds );

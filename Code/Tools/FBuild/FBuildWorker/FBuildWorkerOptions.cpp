@@ -71,7 +71,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             {
                 if ( token.EndsWith( '%' ) )
                 {
-                    num = (int32_t)( numCPUs * (float)num / 100.0f );
+                    num = (int32_t)( (float)numCPUs * (float)num / 100.0f );
                     m_CPUAllocation = (uint32_t)Math::Clamp( num, 1, numCPUs );
                     m_OverrideCPUAllocation = true;
                     continue;

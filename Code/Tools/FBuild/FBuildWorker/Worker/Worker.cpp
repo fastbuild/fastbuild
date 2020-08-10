@@ -325,7 +325,7 @@ void Worker::UpdateAvailability()
         {
             if ( ( m_IdleDetection.IsIdleFloat() >= 0.0f ) && ( m_IdleDetection.IsIdleFloat() <= 1.0f ) )
             {
-                numCPUsToUse = uint32_t( numCPUsToUse * m_IdleDetection.IsIdleFloat() );
+                numCPUsToUse = uint32_t( (float)numCPUsToUse * m_IdleDetection.IsIdleFloat() );
             }
             else
             {
