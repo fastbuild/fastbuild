@@ -79,6 +79,7 @@ private:
     void Variables() const;
     void Functions() const;
     void ErrorRowAndColumn() const;
+    void ForEach() const;
 };
 
 // Register Tests
@@ -141,6 +142,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Variables )
     REGISTER_TEST( Functions )
     REGISTER_TEST( ErrorRowAndColumn )
+    REGISTER_TEST( ForEach )
 REGISTER_TESTS_END
 
 // Empty
@@ -970,6 +972,30 @@ void TestBFFParsing::ErrorRowAndColumn() const
     TEST_PARSE_FAIL( "\r\n\r\nX",   "(3,1)" ); // \r\n line endings
     TEST_PARSE_FAIL( "\n\r\nX",     "(3,1)" ); // mixed line endings
     TEST_PARSE_FAIL( "\r\n\nX",     "(3,1)" ); // mixed line endings
+}
+
+// ForEach
+//------------------------------------------------------------------------------
+void TestBFFParsing::ForEach() const
+{
+    // Simple Loop
+    TEST_PARSE_OK( ".Array1 = { 'A', 'B' }\n"
+                   "ForEach( .A in .Array1 )"
+                   "{}" );
+
+    // Dual Loop
+    // - Without comma separator
+    TEST_PARSE_OK( ".Array1 = { 'A', 'B' }\n"
+                   ".Array2 = { 'A', 'B' }\n"
+                   "ForEach( .A in .Array1"
+                   "         .B in .Array2 )"
+                   "{}" );
+    // - With comma separator
+    TEST_PARSE_OK( ".Array1 = { 'A', 'B' }\n"
+                   ".Array2 = { 'A', 'B' }\n"
+                   "ForEach( .A in .Array1,"
+                   "         .B in .Array2 )"
+                   "{}" );
 }
 
 //------------------------------------------------------------------------------
