@@ -1,0 +1,103 @@
+//
+// ExcludePattern
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Compile an executable to run
+//------------------------------------------------------------------------------
+ObjectList( 'Obj' )
+{
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestExec/Exclusions/main.cpp'
+    .CompilerOutputPath = '$Out$/Test/Exec/Exclusions/'
+}
+Executable( 'Exe' )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+    .LinkerOutput       = '$Out$/Test/Exec/Exclusions/test.exe'
+    .Libraries          = { 'Obj' }
+}
+
+// Run the executable we compiled with various exclusions
+//------------------------------------------------------------------------------
+{
+    .ExecExecutable         = 'Exe'
+    .ExecUseStdOutAsOutput  = true
+
+    // Include some files recursively
+    .ExecInputPath          = '$_CURRENT_BFF_DIR_$/'
+    .ExecInputPattern       = '*.txt'
+    .ExecInputPathRecurse   = true
+
+    // ExcludePath - forward slash
+    Exec( 'ExcludePath-ForwardSlash' )
+    {
+        .ExecInputExcludePath       = '$_CURRENT_BFF_DIR_$/SubDirA/' // <- Forward slashes
+        .ExecOutput                 = '$Out$/Test/Exec/Exclusions/ExcludePath-ForwardSlash.txt'
+    }
+
+    // ExcludePath - backslash
+    Exec( 'ExcludePath-Backslash' )
+    {
+        .ExecInputExcludePath       = '$_CURRENT_BFF_DIR_$\SubDirA\' // <- Backslashes
+        .ExecOutput                 = '$Out$/Test/Exec/Exclusions/ExcludePath-Backslash.txt'
+    }
+
+    // ExcludedFiles
+    Exec( 'ExcludedFiles-File' )
+    {
+        .ExecInputExcludedFiles     = 'FileA.txt'
+        .ExecOutput                 = '$Out$/Test/Exec/Exclusions/ExcludedFiles.txt'
+    }
+
+    // ExcludedFiles - path (forward slash)
+    Exec( 'ExcludedFiles-Path-ForwardSlash' )
+    {
+        .ExecInputExcludedFiles     = 'SubDirA/FileA.txt' // <- Forward slashes
+        .ExecOutput                 = '$Out$/Test/Exec/Exclusions/ExcludedFiles-Path-ForwardSlash.txt'
+    }
+
+    // ExcludedFiles - path (backslash)
+    Exec( 'ExcludedFiles-Path-Backslash' )
+    {
+        .ExecInputExcludedFiles     = 'SubDirA\FileA.txt' // <- Backslashes
+        .ExecOutput                 = '$Out$/Test/Exec/Exclusions/ExcludedFiles-Path-Backslash.txt'
+    }
+
+
+    // ExcludePattern - forward slash
+    Exec( 'ExcludePattern-ForwardSlash' )
+    {
+        .ExecInputExcludePattern    = '*/SubDirA/*.txt' // <- Forward slashes
+        .ExecOutput                 = '$Out$/Test/Exec/Exclusions/ExcludePattern-ForwardSlash.txt'
+    }
+
+    // ExcludePattern - backslash
+    Exec( 'ExcludePattern-Backslash' )
+    {
+        .ExecInputExcludePattern    = '*\SubDirA\*.txt' // <- Backslashes
+        .ExecOutput                 = '$Out$/Test/Exec/Exclusions/ExcludePattern-Backslash.txt'
+    }
+}
+Alias( 'Test' )
+{
+    .Targets    = {
+                    'ExcludePath-ForwardSlash'
+                    'ExcludePath-Backslash'
+                    'ExcludedFiles-File'
+                    'ExcludedFiles-Path-ForwardSlash'
+                    'ExcludedFiles-Path-Backslash'
+                    'ExcludePattern-ForwardSlash'
+                    'ExcludePattern-Backslash'
+                  }
+}
+
+//------------------------------------------------------------------------------

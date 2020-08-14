@@ -27,6 +27,7 @@ private:
     void Build_ExecCommand_MultipleInputChange() const;
     void Build_ExecCommand_UseStdOut() const;
     void Build_ExecCommand_ExpectedFailures() const;
+    void Exclusions() const;
 };
 
 // Register Tests
@@ -39,6 +40,7 @@ REGISTER_TESTS_BEGIN( TestExec )
     REGISTER_TEST( Build_ExecCommand_MultipleInputChange )
     REGISTER_TEST( Build_ExecCommand_UseStdOut )
     REGISTER_TEST( Build_ExecCommand_ExpectedFailures )
+    REGISTER_TEST( Exclusions )
 REGISTER_TESTS_END
 
 // Helpers
@@ -297,3 +299,42 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     targets.EmplaceBack( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" );
     TEST_ASSERT( !fBuild.Build( targets ) );
 }
+
+// Exclusions
+//------------------------------------------------------------------------------
+void TestExec::Exclusions() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/Exclusions/fbuild.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( "Test" ) );
+
+    // Check all the exclusion methods worked as expected
+    const char* const aliasesToCheck[] =
+    {
+        "ExcludePath-ForwardSlash",
+        "ExcludePath-Backslash",
+        "ExcludedFiles-File",
+        "ExcludedFiles-Path-ForwardSlash",
+        "ExcludedFiles-Path-Backslash",
+        "ExcludePattern-ForwardSlash",
+        "ExcludePattern-Backslash",
+    };
+    for (const char* const aliasToCheck : aliasesToCheck)
+    {
+        // Get the TestNode (via the Alias)
+        const Node * aliasNode = fBuild.GetNode( aliasToCheck );
+        TEST_ASSERT( aliasNode );
+        const Node * testNode = aliasNode->GetStaticDependencies()[ 0 ].GetNode();
+        TEST_ASSERT( testNode );
+
+        // Check that it has one dynamic dependency, and that it's the 'B' file
+        TEST_ASSERT( testNode->GetDynamicDependencies().GetSize() == 1 );
+        TEST_ASSERT( testNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "FileB.txt" ) );
+    }
+}
+
+//------------------------------------------------------------------------------

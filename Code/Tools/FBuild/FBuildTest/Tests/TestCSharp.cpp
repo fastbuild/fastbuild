@@ -32,6 +32,7 @@ private:
     void TestMixedAssemblyWithCPP() const;
     void CSharpWithObjectListFails() const;
     void UsingNonCSharpCompilerFails() const;
+    void Exclusions() const;
 };
 
 // Register Tests
@@ -49,6 +50,7 @@ REGISTER_TESTS_BEGIN( TestCSharp )
 //  REGISTER_TEST( TestMixedAssemblyWithCPP ) // TODO:A Enable
     REGISTER_TEST( CSharpWithObjectListFails )
     REGISTER_TEST( UsingNonCSharpCompilerFails )
+    REGISTER_TEST( Exclusions )
 REGISTER_TESTS_END
 
 // TestSingleFile
@@ -328,6 +330,43 @@ void TestCSharp::UsingNonCSharpCompilerFails() const
 
     // Check for the expected failure
     TEST_ASSERT( GetRecordedOutput().Find( "#1504 - CSAssembly() - CSAssembly requires a C# Compiler." ) );
+}
+
+// Exclusions
+//------------------------------------------------------------------------------
+void TestCSharp::Exclusions() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/Exclusions/fbuild.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( "Test" ) );
+
+    // Check all the exclusion methods worked as expected
+    const char* const aliasesToCheck[] =
+    {
+        "ExcludePath-ForwardSlash",
+        "ExcludePath-Backslash",
+        "ExcludedFiles-File",
+        "ExcludedFiles-Path-ForwardSlash",
+        "ExcludedFiles-Path-Backslash",
+        "ExcludePattern-ForwardSlash",
+        "ExcludePattern-Backslash",
+    };
+    for ( const char* const aliasToCheck : aliasesToCheck )
+    {
+        // Get the TestNode (via the Alias)
+        const Node * aliasNode = fBuild.GetNode( aliasToCheck );
+        TEST_ASSERT( aliasNode );
+        const Node * testNode = aliasNode->GetStaticDependencies()[ 0 ].GetNode();
+        TEST_ASSERT( testNode );
+
+        // Check that it has one dynamic dependency, and that it's the 'B' file
+        TEST_ASSERT( testNode->GetDynamicDependencies().GetSize() == 1 );
+        TEST_ASSERT( testNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "FileB.cs" ) );
+    }
 }
 
 //------------------------------------------------------------------------------
