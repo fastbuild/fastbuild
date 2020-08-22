@@ -11,6 +11,7 @@ int main( int, char *[] )
 {
     // tests to run
     REGISTER_TESTGROUP( TestAlias )
+    REGISTER_TESTGROUP( TestArgs )
     REGISTER_TESTGROUP( TestBFFParsing )
     REGISTER_TESTGROUP( TestBuildAndLinkLibrary )
     REGISTER_TESTGROUP( TestBuildFBuild )

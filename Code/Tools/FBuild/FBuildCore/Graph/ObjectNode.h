@@ -18,6 +18,7 @@ class Function;
 class NodeGraph;
 class NodeProxy;
 class ObjectNode;
+enum class ArgsResponseFileMode : uint32_t;
 
 // ObjectNode
 //------------------------------------------------------------------------------
@@ -146,7 +147,7 @@ private:
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;
-    bool CanUseResponseFile() const;
+    ArgsResponseFileMode GetResponseFileMode() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
     void DoClangUnityFixup( Job * job ) const;

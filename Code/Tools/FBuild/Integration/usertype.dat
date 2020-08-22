@@ -115,6 +115,7 @@ ExecutableRootPath
 ExternalProjectPath
 ExtraFiles
 FileType
+ForceResponseFile
 ForcedIncludes
 ForcedUsingAssemblies
 Hidden
@@ -127,6 +128,7 @@ LayoutExtensionFilter
 Librarian
 LibrarianAdditionalInputs
 LibrarianAllowResponseFile
+LibrarianForceResponseFile
 LibrarianOptions
 LibrarianOutput
 LibrarianType
@@ -134,6 +136,7 @@ Libraries
 Linker
 LinkerAllowResponseFile
 LinkerAssemblyResources
+LinkerForceResponseFile
 LinkerLinkObjects
 LinkerOptions
 LinkerOutput

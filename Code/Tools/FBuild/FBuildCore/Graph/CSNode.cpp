@@ -343,8 +343,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
     }
 
     // Handle all the special needs of args
-    const bool canUseResponseFile( true );
-    if ( fullArgs.Finalize( m_CompilerOptions, GetName(), canUseResponseFile ) == false )
+    if ( fullArgs.Finalize( m_CompilerOptions, GetName(), ArgsResponseFileMode::IF_NEEDED ) == false )
     {
         return false; // Finalize will have emitted an error
     }

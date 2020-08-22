@@ -2062,7 +2062,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         job->GetToolManifest()->GetRemoteFilePath( 0, remoteCompiler );
     }
     const AString& compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
-    if ( fullArgs.Finalize( compiler, GetName(), CanUseResponseFile() ) == false )
+    if ( fullArgs.Finalize( compiler, GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error
     }
@@ -2804,18 +2804,40 @@ bool ObjectNode::ShouldUseCache() const
     return useCache;
 }
 
-// CanUseResponseFile
+// GetResponseFileMode
 //------------------------------------------------------------------------------
-bool ObjectNode::CanUseResponseFile() const
+ArgsResponseFileMode ObjectNode::GetResponseFileMode() const
 {
-    const bool canUseResponseFile = GetCompiler() ? GetCompiler()->CanUseResponseFile() : false;
+    // User forces response files to be used, regardless of args length?
+    if ( GetCompiler() && GetCompiler()->ShouldForceResponseFileUse() )
+    {
+        return ArgsResponseFileMode::ALWAYS;
+    }
 
+    // User explicitly says we can use response file if needed?
+    if ( GetCompiler() && GetCompiler()->CanUseResponseFile() )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+
+    // Detect a compiler that supports response file args?
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
-        return ( canUseResponseFile || GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
-    #else
-        return canUseResponseFile;
+        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+        // probably want this for other platforms as well though.
+        if ( GetFlag( FLAG_MSVC ) ||
+             GetFlag( FLAG_GCC ) ||
+             GetFlag( FLAG_SNC ) ||
+             GetFlag( FLAG_CLANG ) ||
+             GetFlag( CODEWARRIOR_WII ) ||
+             GetFlag( GREENHILLS_WIIU ) )
+        {
+            return ArgsResponseFileMode::IF_NEEDED;
+        }
     #endif
+
+    // Cannot use response files
+    return ArgsResponseFileMode::NEVER;
 }
 
 // GetVBCCPreprocessedOutput
