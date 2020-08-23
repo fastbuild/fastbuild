@@ -164,7 +164,10 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, Args
     if ( m_DisableResponseFileWrite == false ) // Used by tests
     {
         PROFILE_SECTION( "CreateResponseFile" )
-        m_ResponseFile.Create( *this );
+        if ( m_ResponseFile.Create( *this ) == false )
+        {
+            return false; // Create will have emitted an error
+        }
     }
 
     // Create new args referencing response file
