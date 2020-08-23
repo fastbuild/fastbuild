@@ -6,13 +6,14 @@
 #include "ResponseFile.h"
 
 // FBuild
-#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Process/Atomic.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -78,8 +79,13 @@ bool ResponseFile::Create( const AString & contents )
 //------------------------------------------------------------------------------
 bool ResponseFile::CreateInternal( const AString & contents )
 {
-    // store in tmp folder, and give back to user
-    WorkerThread::CreateTempFilePath( "args.rsp", m_ResponseFilePath );
+    // Store in tmp folder, and give back to user. Uniquify the filename to
+    // reduce the chance of problems with security software when rapidly
+    // re-using the same file.
+    static volatile uint32_t s_Uniquifier = 0;
+    AStackString<> fileName;
+    fileName.Format( "args%04x.rsp", AtomicIncU32( &s_Uniquifier ) & 0xFFFF );
+    WorkerThread::CreateTempFilePath( fileName.Get(), m_ResponseFilePath );
 
     // write file to disk
     const uint32_t flags = FileStream::WRITE_ONLY       // we only want to write
