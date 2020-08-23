@@ -110,7 +110,7 @@ bool ResponseFile::CreateInternal( const AString & contents )
 
     m_File.Close(); // must be closed so MSVC link.exe can open it
 
-    FileIO::WorkAroundForWindowsFilePermissionProblem( m_ResponseFilePath );
+    FileIO::WorkAroundForWindowsFilePermissionProblem( m_ResponseFilePath, FileStream::READ_ONLY, 5 ); // 5s max wait
 
     return ok;
 }
