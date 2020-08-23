@@ -1396,7 +1396,11 @@
             // timeout so we don't get stuck in here forever
             if ( timer.GetElapsed() > (float)timeoutSeconds )
             {
-                ASSERTM( false, "WorkAroundForWindowsFilePermissionProblem Failed: %s (timeout %u s)", LAST_ERROR_STR, timeoutSeconds );
+                ASSERTM( false, "WorkAroundForWindowsFilePermissionProblem Failed\n"
+                                "File   : %s\n"
+                                "Error  : %s\n"
+                                "Timeout: %u s",
+                                fileName.Get(), LAST_ERROR_STR, timeoutSeconds );
                 return;
             }
         }
