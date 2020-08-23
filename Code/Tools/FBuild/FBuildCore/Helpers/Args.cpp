@@ -25,6 +25,7 @@ Args::Args()
     #if defined( ASSERTS_ENABLED )
         , m_Finalized( false )
     #endif
+    , m_DisableResponseFileWrite( false )
 {
 }
 
@@ -160,6 +161,7 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, Args
     #endif
 
     // Write args to response file
+    if ( m_DisableResponseFileWrite == false ) // Used by tests
     {
         PROFILE_SECTION( "CreateResponseFile" )
         m_ResponseFile.Create( *this );

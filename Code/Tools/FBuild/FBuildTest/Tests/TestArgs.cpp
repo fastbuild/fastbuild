@@ -119,6 +119,9 @@ void TestArgs::Check( ArgsResponseFileMode mode,
     // Build args
     Args args;
 
+    // Prevent actual write to disk as this depends on running in a WorkerThread
+    args.DisableResponseFileWrite();
+
     if ( longArgs )
     {
         // Add ~320 KiB of command line args ( 32 * 10 * 1024 )
@@ -133,10 +136,6 @@ void TestArgs::Check( ArgsResponseFileMode mode,
         // Add short args
         args += "short";
     }
-
-    FBuildTestOptions options;
-    FBuildForTest fBuild( options );
-    WorkerThread::InitTmpDir();
 
     // Check result
     if ( expectedResult == true )

@@ -43,6 +43,7 @@ public:
 
     // Set Response File options
     void SetEscapeSlashesInResponseFile() { ASSERT( !m_Finalized ); m_ResponseFile.SetEscapeSlashes(); }
+    void DisableResponseFileWrite() { m_DisableResponseFileWrite = true; } // Used by tests
 
     // Do final fixups and create response file if needed/supported
     bool Finalize( const AString & exe, const AString & nodeNameForError, ArgsResponseFileMode responseFileMode );
@@ -62,6 +63,7 @@ protected:
     #if defined( ASSERTS_ENABLED )
         bool                m_Finalized;
     #endif
+    bool                    m_DisableResponseFileWrite; // Used by tests
 };
 
 //------------------------------------------------------------------------------
