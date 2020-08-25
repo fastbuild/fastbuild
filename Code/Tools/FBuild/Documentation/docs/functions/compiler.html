@@ -48,6 +48,7 @@ distribution, caching and more.
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
   .Environment                  // (optional) Environment variables to use for local build
   .AllowResponseFile            // (optional) Allow response files to be used if not auto-detected (default: false)
+  .ForceResponseFile            // (optional) Force use of response files (default: false)
   
   // Temporary Options
   .UseLightCache_Experimental   // (optional) Enable experimental "light" caching mode (default: false)
@@ -181,6 +182,15 @@ Compiler( 'Test' )
     <p>Allow the use of Response Files for passing arguments to the compiler when they exceed operating system limits.</p>
     <p>FASTBuild automatically detects that some compilers can use Response Files and uses them accordingly. For situations
     that FASTBuild doesn't auto-detect (such as custom compilers), AllowResponseFile can be set manually.</p>
+
+    <p><hr></p>
+
+    <p><b>.ForceResponseFile</b> - Boolean - (Optional)</p>	
+    <p>Force the use of Response Files for passing arguments to the compiler.</p>
+    <p>FASTBuild uses Response Files to pass command line arguments to Compilers that support them only when needed (length
+    exceeds operating system limits). This is to limit the overhead of Response File creation to situations that
+    require it.</p>
+    <p>Use of Response Files in all cases can be forced with .ForceResponseFile if required.</p>
 
   	<p><hr></p>
 
