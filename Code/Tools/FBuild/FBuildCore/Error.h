@@ -109,6 +109,8 @@ public:
     static void Error_1043_CyclicDependencyDetected( const BFFToken * iter, const AString & nodeName );
     static void Error_1044_OperatorExpected( const BFFToken * iter );
     static void Error_1045_ExtraneousTokenFollowingDirective( const BFFToken * iter, const char * directiveName );
+    static void Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken* iter );
+    static void Error_1047_IfExpressionTooComplex( const BFFToken* iter );
 
     // 1050 - 1099 : Variable type errors
     //------------------------------------------------------------------------------

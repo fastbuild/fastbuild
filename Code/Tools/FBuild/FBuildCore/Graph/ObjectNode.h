@@ -18,6 +18,7 @@ class Function;
 class NodeGraph;
 class NodeProxy;
 class ObjectNode;
+enum class ArgsResponseFileMode : uint32_t;
 
 // ObjectNode
 //------------------------------------------------------------------------------
@@ -130,7 +131,7 @@ private:
     static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index );
     static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
     static bool StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
-    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
+    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
     bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
@@ -146,7 +147,7 @@ private:
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;
-    bool CanUseResponseFile() const;
+    ArgsResponseFileMode GetResponseFileMode() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
     void DoClangUnityFixup( Job * job ) const;

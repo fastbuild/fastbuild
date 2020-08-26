@@ -572,7 +572,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
         case PT_STRUCT:
         {
-            const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+            const ReflectedPropertyStruct & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
 
             if ( property.IsArray() )
             {
@@ -738,7 +738,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
         }
         case PT_STRUCT:
         {
-            const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+            const ReflectedPropertyStruct & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
 
             if ( property.IsArray() )
             {
@@ -848,7 +848,7 @@ void Node::ReplaceDummyName( const AString & newName )
                 copy += '\n';
 
                 // Clang format fixup for Visual Studio
-                // (FBuild is null in remote context - fixup occurs on master)
+                // (FBuild is null in remote context - fixup occurs on fbuild client machine)
                 if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_FixupErrorPaths )
                 {
                     FixupPathForVSIntegration( copy );

@@ -371,7 +371,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             }
 
             // have we hit our real connection timeout?
-            if ( connectionTimer.GetElapsedMS() >= timeout )
+            if ( connectionTimer.GetElapsedMS() >= (float)timeout )
             {
                 #ifdef TCPCONNECTION_DEBUG
                     AStackString<> host;
@@ -626,7 +626,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
                     break;
                 }
 
-                if ( timer.GetElapsedMS() > timeoutMS )
+                if ( timer.GetElapsedMS() > (float)timeoutMS )
                 {
                     Disconnect( connection );
                     sendOK = false;

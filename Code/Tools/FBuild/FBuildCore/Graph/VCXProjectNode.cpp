@@ -116,7 +116,7 @@ REFLECT_END( VCXProjectNode )
     ASSERT( ( ( iter == nullptr ) && ( function == nullptr ) ) ||
             ( iter && function ) );
 
-    for ( auto & config : configs )
+    for ( VSProjectConfig & config : configs )
     {
         // Target is allowed to be empty (perhaps this project represents
         // something that cannot be built, like header browsing information

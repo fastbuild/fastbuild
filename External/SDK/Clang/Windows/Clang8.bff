@@ -21,6 +21,9 @@ Compiler( 'Compiler-Clang8' )
     #if ENABLE_RELATIVE_PATHS
         .UseRelativePaths_Experimental = true
     #endif
+    #if ENABLE_SOURCE_MAPPING
+        .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
 }
 
 // ToolChain

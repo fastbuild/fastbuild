@@ -47,6 +47,7 @@ Worker::Worker( const AString & args, bool consoleMode )
     , m_NetworkStartupHelper( nullptr )
     , m_BaseArgs( args )
     , m_LastWriteTime( 0 )
+    , m_WantToQuit( false )
     , m_RestartNeeded( false )
     #if defined( __WINDOWS__ )
         , m_LastDiskSpaceResult( -1 )
@@ -192,20 +193,9 @@ uint32_t Worker::WorkThread()
         }
     }
 
+    // Main Loop
     for ( ;; )
     {
-        if ( InConsoleMode() )
-        {
-            // TODO: Handle Ctrl+C gracefully to remove worker token etc
-        }
-        else
-        {
-            if ( WorkerWindow::Get().WantToQuit() )
-            {
-                break;
-            }
-        }
-
         UpdateAvailability();
 
         UpdateUI();
@@ -214,13 +204,17 @@ uint32_t Worker::WorkThread()
 
         PROFILE_SYNCHRONIZE
 
+        // Check if we want to exit
+        if ( m_WantToQuit )
+        {
+            break;
+        }
+
         Thread::Sleep( 500 );
     }
 
-    #if defined( __OSX__ )
-        extern void WindowOSX_StopMessageLoop(); // TODO:C tidy this up
-        WindowOSX_StopMessageLoop();
-    #endif
+    // Now that we will no longer interact with the UI, we can stop the message pump
+    m_MainWindow->StopMessagePump();
 
     m_WorkerBrokerage.SetAvailability( false );
 
@@ -331,7 +325,7 @@ void Worker::UpdateAvailability()
         {
             if ( ( m_IdleDetection.IsIdleFloat() >= 0.0f ) && ( m_IdleDetection.IsIdleFloat() <= 1.0f ) )
             {
-                numCPUsToUse = uint32_t( numCPUsToUse * m_IdleDetection.IsIdleFloat() );
+                numCPUsToUse = uint32_t( (float)numCPUsToUse * m_IdleDetection.IsIdleFloat() );
             }
             else
             {
@@ -437,7 +431,7 @@ void Worker::CheckForExeUpdate()
         // can we restart yet?
         if ( JobQueueRemote::Get().HaveWorkersStopped() )
         {
-            WorkerWindow::Get().SetWantToQuit();
+            m_WantToQuit = true;
         }
 
         return;

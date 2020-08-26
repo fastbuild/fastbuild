@@ -38,7 +38,7 @@ namespace
     bool IsStringStart( const char c )      { return ( ( c == '\'' ) || ( c == '"') ); }
     bool IsVariableStart( const char c )    { return ( ( c == '.' ) || ( c == '^' ) ); }
     bool IsVariable( const char c )         { return IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsNumber( c ) || IsUnderscore( c );  }
-    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) ); }
+    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' )); }
     bool IsComma( const char c )            { return ( c == ',' ); }
     bool IsDirective( const char c )        { return ( c == '#' ); }
     void SkipWhitespace( const char * & pos )
@@ -235,7 +235,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         }
 
         // Two character operator?
-        if ( ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) )
+        if ( ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' ) )
         {
             if ( ( pos + 1 ) < end )
             {
@@ -246,7 +246,9 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
                 if ( ( opString == "==" ) ||
                      ( opString == "!=" ) ||
                      ( opString == "<=" ) ||
-                     ( opString == ">=" ) )
+                     ( opString == ">=" ) ||
+                     ( opString == "&&" ) ||
+                     ( opString == "||" ) )
                 {
                     m_Tokens.EmplaceBack( file, pos, BFFTokenType::Operator, pos, pos + 2 );
                     pos += 2;
@@ -573,50 +575,117 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     ASSERT( argsIter->IsKeyword( "if" ) );
     argsIter++;
 
-    // Check for negation operator
-    bool negate = false;
-    if ( argsIter->IsOperator( "!" ) )
-    {
-        negate = true;
-        argsIter++; // consume negation operator
-    }
+    enum { IF_NONE = 1, IF_AND = 2, IF_OR = 4, IF_NEGATE = 8 };
+    bool ranOnce = false;
+    uint8_t operatorHistory[ BFFParser::MAX_OPERATOR_HISTORY ];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
+    uint32_t numOperators = 0;
 
-    // Keyword or identifier?
+    while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator( "&&" ) || argsIter->IsOperator( "||" ) ) ) )
+    {
+        uint32_t ifOperator = IF_NONE;
+        if ( argsIter->IsOperator( "&&" ) || argsIter->IsOperator( "||" ) )
+        {
+            // check if this has been run once, to avoid
+            // expressions like #if &&a
+            if ( !ranOnce )
+            {
+                Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( argsIter.GetCurrent() );
+                return false;
+            }
+
+            ifOperator = ( argsIter->IsOperator( "&&" ) ? IF_AND : IF_OR );
+            argsIter++; // consume operator
+        }
+
+        // Check for negation operator
+        if ( argsIter->IsOperator( '!' ) )
+        {
+            ifOperator |= IF_NEGATE; // the condition will be inverted
+            argsIter++; // consume negation operator
+        }
+
+        bool result;
+
+        // Keyword or identifier?
+        if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
+        {
+            argsIter++; // consume keyword
+            if ( HandleDirective_IfExists( argsIter, result ) == false )
+            {
+                return false;
+            }
+        }
+        else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
+        {
+            argsIter++; // consume keyword
+            if ( HandleDirective_IfFileExists( file, argsIter, result ) == false )
+            {
+                return false;
+            }
+        }
+        else if ( argsIter->IsIdentifier() )
+        {
+            if ( HandleDirective_IfDefined( argsIter, result ) == false )
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // TODO:C A better error
+            Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
+            return false;
+        }
+
+        // Negate result to handle "#if !"
+        if ( ifOperator & IF_NEGATE )
+        {
+            result = !( result );
+        }
+
+        // First expression in sequence?
+        if ( !ranOnce )
+        {
+            const uint8_t r = ( result ? 1u : 0u );
+            operatorHistory[ numOperators++ ] = r;
+            ranOnce = true;
+        }
+        else
+        {
+            // Record boolean operator
+            uint8_t r = (uint8_t)( ( ifOperator & IF_AND ) ? IF_AND : IF_OR );
+
+            // Merge in result
+            r |= ( result ? 1u : 0u );
+
+            // Store to history
+            operatorHistory[ numOperators++ ] = r;
+            
+            // Check for excessive complexity
+            if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
+            {
+                Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
+                return false;
+            }            
+        }
+    }
+    
+    // Apply any && operators. Any valid expression isn't going to end with an operator, so we don't check that.
+    for ( uint32_t i = 0; i < ( numOperators - 1 ); i++ )
+    {
+        if ( operatorHistory[ i + 1 ] & IF_AND )
+        {
+            // Do the AND operation and store it in the right hand operator being tested
+            operatorHistory[ i + 1 ] = ( uint8_t )( operatorHistory[ i ] & operatorHistory[ i + 1 ] );
+            // Clear the left hand operator, its job is now done
+            operatorHistory[ i ] = 0;
+        }
+    }
+    // Apply any || operators
     bool result = false;
-    if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
+    for ( uint32_t i = 0; i < numOperators; i++ )
     {
-        argsIter++; // consume keyword
-        if ( HandleDirective_IfExists( argsIter, result ) == false )
-        {
-            return false;
-        }
-    }
-    else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
-    {
-        argsIter++; // consume keyword
-        if ( HandleDirective_IfFileExists( file, argsIter, result ) == false )
-        {
-            return false;
-        }
-    }
-    else if ( argsIter->IsIdentifier() )
-    {
-        if ( HandleDirective_IfDefined( argsIter, result ) == false )
-        {
-            return false;
-        }
-    }
-    else
-    {
-        // TODO:C A better error
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
-        return false;
-    }
-
-    // Negate result to handle "#if !"
-    if ( negate )
-    {
-        result = !( result );
+        result |= ( operatorHistory[ i ] & 1 );
     }
 
     // take note of start of "true" block

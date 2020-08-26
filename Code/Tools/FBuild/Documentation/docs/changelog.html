@@ -26,6 +26,56 @@
 
 <h1>Changelog</h1>
 
+<div class='newsitemheader'>
+    v1.02&nbsp;<font color='#bbbbbb'>(25th-Aug-2020)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+	<ul>
+		<li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>ForEach correctly handles comma separator in parallel loops</li>
+		</ul>
+		<li>[Windows] Prevent deadlock in FBuildWorker on shutdown when it's sent a WM_QUIT by another application</li>
+		<li>Fix documentation errors for VCXProject and XCodeProject</li>
+		<li>Exec node times are emitted to the -monitor log (Thanks to Joe Kirchoff)</li>
+		<li>CSAssembly() handles forward and backslashes correctly on all platforms in .CompilerInputExcludePattern</li>
+		<li>Exec() handles forward and backslashes correctly on all platforms in .ExecInputExcludePattern</li>
+		<li>ObjectList() handles forward and backslashes correctly on all platforms in .CompilerInputExcludePattern</li>
+		<li>Test() handles forward and backslashes correctly on all platforms in .TestInputExcludePattern</li>
+		<li>[Linux] Various "CanUseResponseFile" options are respected on Linux</li>
+		<li>Fix a failure path writing response files that was not stopping compilation correctly</li>
+    </ul>
+	<b>Improvements</b>
+	<ul>
+		<li>Caching:</li>
+		<ul>
+			<li>Increase thread stack size to avoid unexpected problems with cache plugins</li>
+			<li>Cache plugin can be initialized via InitEx which provides details of operating mode (read/write/verbose)</li>
+			<li>Settings exposes .CachePluginDLLConfig to all passing of custom config to cache plugins</li>
+			<li>[Windows] Cache plugin DLL function names no longer need to be mangled</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>#if operator supports compound expressions using && and || (Thanks to ggnkua)</li>
+		</ul>
+		<li>AllowResponseFile can be set on Compiler (Thanks to Axel Wefers)</li>
+		<li>LibrarianAllowResponseFile can be set on Library (Thanks to Axel Wefers)</li>
+		<li>LinkerAllowResponseFile can be set on DLL or Executable (Thanks to Axel Wefers)</li>
+		<li>ObjectLists can be chained using .CompilerInputObjectLists</li>
+		<li>VCXProject and XCodeProject include .editorconfig files by default</li>
+		<li>Add troubleshooting documentation for the Cache (Thanks to Layla Mah)</li>
+		<li>Add .SourceMapping_Experimental to Compiler() to control -fdebug-source-map (Thanks to Jaview Blazquez)</li>
+		<li>Compiler() response file use can be forced with .ForceResponseFile</li>
+		<li>Library() response file use can be forced with .LibrarianForceResponseFile</li>
+		<li>Executable()/DLL() response file use can be forced with .LinkerForceResponseFile</li>
+		<li>[Linux] Command line limits (128 KiB) are enforced on Linux to make problems more obvious</li>
+	</ul>
+</div>
 
 <div class='newsitemheader'>
     v1.01&nbsp;<font color='#bbbbbb'>(6th-Jun-2020)</font>
@@ -383,7 +433,7 @@
             <li>[OSX] Sockets don't trigger spurious SIG_PIPE errors</li>
             <li>[OSX] Port reuse updated for OS X behavior change (SO_REUSEADDR vs SO_REUSEPORT)</li>
             <li>Nagle's algorithm is disabled for return connection from server->client</li>
-            <li>Fix -distverbose stack overflow when remote worker is blacklisted (and possibly in other situations)</li>
+            <li>Fix -distverbose stack overflow when remote worker is deny listed (and possibly in other situations)</li>
             <li>Fix file handle leak on IO error transferring compiler files (Thanks to dummyunit)</li>
             <li>Remote system failure info is shown when -distverbose is used</li>
         </ul>
@@ -1412,7 +1462,7 @@ Fixes
 <ul>
   <li>Differentiate remote "system" failures from compilation failures
   <ul>
-    <li>a remote failure will cause the worker to be blacklisted and the task retried on another worker</li>
+    <li>a remote failure will cause the worker to be deny listed and the task retried on another worker</li>
     <li>remote failure on 3 different workers will fail as before (indicates a configuration problem)</li>
   </ul>
   <li>Error path fixup now handles "remark:" and "fatal error:" style messages</li>

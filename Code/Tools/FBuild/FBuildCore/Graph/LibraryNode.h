@@ -14,6 +14,7 @@ class CompilerNode;
 class Function;
 class NodeGraph;
 class ObjectNode;
+enum class ArgsResponseFileMode : uint32_t;
 
 // LibraryNode
 //------------------------------------------------------------------------------
@@ -51,7 +52,7 @@ private:
 
     inline bool GetFlag( Flag flag ) const { return ( ( m_LibrarianFlags & (uint32_t)flag ) != 0 ); }
 
-    bool CanUseResponseFile() const;
+    ArgsResponseFileMode GetResponseFileMode() const;
 
     // Exposed Properties
     AString             m_Librarian;
@@ -60,6 +61,8 @@ private:
     AString             m_LibrarianOutput;
     Array< AString >    m_LibrarianAdditionalInputs;
     Array< AString >    m_Environment;
+    bool                m_LibrarianAllowResponseFile;
+    bool                m_LibrarianForceResponseFile;
 
     // Internal State
     uint32_t            m_NumLibrarianAdditionalInputs  = 0;

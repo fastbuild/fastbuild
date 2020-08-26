@@ -7,6 +7,7 @@
 #include "FileStream.h"
 
 // Core
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
@@ -1395,7 +1396,11 @@
             // timeout so we don't get stuck in here forever
             if ( timer.GetElapsed() > (float)timeoutSeconds )
             {
-                ASSERT( false && "WorkAroundForWindowsFilePermissionProblem Failed!" );
+                ASSERTM( false, "WorkAroundForWindowsFilePermissionProblem Failed\n"
+                                "File   : %s\n"
+                                "Error  : %s\n"
+                                "Timeout: %u s",
+                                fileName.Get(), LAST_ERROR_STR, timeoutSeconds );
                 return;
             }
         }

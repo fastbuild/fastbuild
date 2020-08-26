@@ -523,7 +523,7 @@ void TestCache::LightCache_IncludeUsingMacro2() const
 //------------------------------------------------------------------------------
 void TestCache::LightCache_IncludeUsingMacro3() const
 {
-    // Defines are accumulated during traversal, resulting in the master defines
+    // Defines are accumulated during traversal, resulting in the main defines
     // vector vector being resized while being iterated. This needs to be handled
     // correctly.
 

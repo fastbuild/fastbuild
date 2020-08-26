@@ -120,7 +120,7 @@ NO_INLINE bool MemPoolBlock::AllocPage()
         block = next;
     }
 
-    // hook last block into master chain
+    // hook last block into main chain
     block->m_Next = m_FreeBlockChain;
     m_FreeBlockChain = firstBlock;
 

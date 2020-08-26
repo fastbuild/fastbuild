@@ -314,8 +314,9 @@ ObjectNode::~ObjectNode()
     // Format compiler args string
     Args fullArgs;
     const bool showIncludes( true );
+    const bool useSourceMapping( true );
     const bool finalize( true );
-    if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, finalize ) )
+    if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
@@ -371,9 +372,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 {
     Args fullArgs;
     const bool showIncludes( false );
+    const bool useSourceMapping( true );
     const bool finalize( true );
     Pass pass = useSimpleDist ? PASS_PREP_FOR_SIMPLE_DISTRIBUTION : PASS_PREPROCESSOR_ONLY;
-    if ( !BuildArgs( job, fullArgs, pass, useDeoptimization, showIncludes, finalize ) )
+    if ( !BuildArgs( job, fullArgs, pass, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
@@ -569,8 +571,9 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
 
         const bool showIncludes( false );
+        const bool useSourceMapping( true );
         const bool finalize( true );
-        if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, finalize, tmpFileName ) )
+        if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize, tmpFileName ) )
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
@@ -578,8 +581,9 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     else
     {
         const bool showIncludes( false );
+        const bool useSourceMapping( true );
         const bool finalize( true );
-        if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, finalize ) )
+        if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
@@ -638,9 +642,10 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         // Format compiler args string
         const bool useDeoptimization( false );
         const bool showIncludes( false );
+        const bool useSourceMapping( true );
         const bool finalize( true );
         Args fullArgs;
-        if ( !BuildArgs( job, fullArgs, PASS_PREPROCESSOR_ONLY, useDeoptimization, showIncludes, finalize ) )
+        if ( !BuildArgs( job, fullArgs, PASS_PREPROCESSOR_ONLY, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
@@ -680,9 +685,10 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         // Format compiler args string
         const bool useDeoptimization( false );
         const bool showIncludes( false );
+        const bool useSourceMapping( true );
         const bool finalize( true );
         Args fullArgs;
-        if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, finalize ) )
+        if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
@@ -707,8 +713,9 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
     // Format compiler args string
     Args fullArgs;
     const bool showIncludes( false );
+    const bool useSourceMapping( true );
     const bool finalize( true );
-    if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, finalize ) )
+    if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
@@ -990,7 +997,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     {
         // creation of the PCH must be done locally to generate a usable PCH
         // Objective C/C++ cannot be distributed
-        if ( !creatingPCH && !objectiveC )
+        // Source mappings are not currently forwarded so can only compiled locally
+        const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
+        if ( !creatingPCH && !objectiveC && !hasSourceMapping )
         {
             if ( isDistributableCompiler )
             {
@@ -1189,8 +1198,19 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         Args args;
         const bool useDeoptimization = false;
         const bool showIncludes = false;
-        const bool finalize = false; // Don't write args to reponse file
-        BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, finalize );
+        const bool useSourceMapping = false; // Source mapping compiler flags contain local paths, so we treat them specially
+        const bool finalize = false; // Don't write args to response file
+        BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize );
+
+        if ( job->IsLocal() )
+        {
+            // Append the source mapping destination only, so different machines with different
+            // working directory local paths compute consistent keys.
+            const AString& sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
+            args.AddDelimiter();
+            args += sourceMapping;
+        }
+
         commandLineKey = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
     }
     ASSERT( commandLineKey );
@@ -1574,7 +1594,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
 
 // BuildArgs
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool finalize, const AString & overrideSrcFile ) const
+bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile ) const
 {
     PROFILE_FUNCTION
 
@@ -2009,6 +2029,26 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         fullArgs += " -fdiagnostics-color=always";
     }
 
+    if ( useSourceMapping && job->IsLocal() )
+    {
+        if ( isClang || isGCC )
+        {
+            const AString& workingDir = FBuild::Get().GetOptions().GetWorkingDir();
+            const AString& mapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
+
+            if ( !mapping.IsEmpty() )
+            {
+                AStackString<> tmp;
+                // Using -ffile-prefix-map would be better since that would change not only the file paths in
+                // the DWARF debugging information but also in the __FILE__ and related predefined macros, but
+                // -ffile-prefix-map is only supported starting with GCC 8 and Clang 10. The -fdebug-prefix-map
+                // option is available starting with Clang 3.8 and all modern GCC versions.
+                tmp.Format(" \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), mapping.Get());
+                fullArgs += tmp;
+            }
+        }
+    }
+
     // Skip finalization?
     if ( finalize == false )
     {
@@ -2022,7 +2062,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         job->GetToolManifest()->GetRemoteFilePath( 0, remoteCompiler );
     }
     const AString& compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
-    if ( fullArgs.Finalize( compiler, GetName(), CanUseResponseFile() ) == false )
+    if ( fullArgs.Finalize( compiler, GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error
     }
@@ -2764,16 +2804,40 @@ bool ObjectNode::ShouldUseCache() const
     return useCache;
 }
 
-// CanUseResponseFile
+// GetResponseFileMode
 //------------------------------------------------------------------------------
-bool ObjectNode::CanUseResponseFile() const
+ArgsResponseFileMode ObjectNode::GetResponseFileMode() const
 {
+    // User forces response files to be used, regardless of args length?
+    if ( GetCompiler() && GetCompiler()->ShouldForceResponseFileUse() )
+    {
+        return ArgsResponseFileMode::ALWAYS;
+    }
+
+    // User explicitly says we can use response file if needed?
+    if ( GetCompiler() && GetCompiler()->CanUseResponseFile() )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+
+    // Detect a compiler that supports response file args?
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
-        return ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
-    #else
-        return false;
+        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+        // probably want this for other platforms as well though.
+        if ( GetFlag( FLAG_MSVC ) ||
+             GetFlag( FLAG_GCC ) ||
+             GetFlag( FLAG_SNC ) ||
+             GetFlag( FLAG_CLANG ) ||
+             GetFlag( CODEWARRIOR_WII ) ||
+             GetFlag( GREENHILLS_WIIU ) )
+        {
+            return ArgsResponseFileMode::IF_NEEDED;
+        }
     #endif
+
+    // Cannot use response files
+    return ArgsResponseFileMode::NEVER;
 }
 
 // GetVBCCPreprocessedOutput

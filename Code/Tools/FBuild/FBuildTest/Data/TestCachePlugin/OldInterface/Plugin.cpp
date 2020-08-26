@@ -13,7 +13,7 @@
 #define CACHEPLUGIN_DLL_EXPORT
 #endif
 
-#include "Tools/FBuild/FBuildCore/Cache/CachePluginInterface.h"
+#include "CachePluginInterface.h"
 
 // CacheInit
 //------------------------------------------------------------------------------
@@ -21,9 +21,9 @@
 extern "C" {
 #endif
 
-bool STDCALL CacheInit( const char * settings )
+bool STDCALL CacheInit( const char * cachePath )
 {
-    printf( "Init : %s\n", settings );
+    printf( "Init : %s\n", cachePath );
     return true;
 }
 

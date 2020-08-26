@@ -43,6 +43,7 @@ AdditionalOptions
 AdditionalSymbolSearchPaths
 AllowCaching
 AllowDistribution
+AllowResponseFile
 ApplicationEnvironment
 ApplicationType
 ApplicationTypeRevision
@@ -54,6 +55,7 @@ BuildLogFile
 CachePath
 CachePathMountPoint
 CachePluginDLL
+CachePluginDLLConfig
 ClangFixupUnity_Disable
 ClangRewriteIncludes
 Compiler
@@ -66,6 +68,7 @@ CompilerInputExcludedFiles
 CompilerInputFile
 CompilerInputFiles
 CompilerInputFilesRoot
+CompilerInputObjectLists
 CompilerInputPath
 CompilerInputPathRecurse
 CompilerInputPattern
@@ -112,6 +115,7 @@ ExecutableRootPath
 ExternalProjectPath
 ExtraFiles
 FileType
+ForceResponseFile
 ForcedIncludes
 ForcedUsingAssemblies
 Hidden
@@ -123,12 +127,16 @@ LayoutDir
 LayoutExtensionFilter
 Librarian
 LibrarianAdditionalInputs
+LibrarianAllowResponseFile
+LibrarianForceResponseFile
 LibrarianOptions
 LibrarianOutput
 LibrarianType
 Libraries
 Linker
+LinkerAllowResponseFile
 LinkerAssemblyResources
+LinkerForceResponseFile
 LinkerLinkObjects
 LinkerOptions
 LinkerOutput
@@ -194,6 +202,7 @@ SolutionProjects
 SolutionVisualStudioVersion
 Source
 SourceExcludePaths
+SourceMapping_Experimental
 SourcePaths
 SourcePathsPattern
 SourcePathsRecurse

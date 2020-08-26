@@ -80,6 +80,7 @@ protected:
     Array< AString >    m_CompilerInputFiles;
     Array< AString >    m_CompilerInputUnity;
     AString             m_CompilerInputFilesRoot;
+    Array< AString >    m_CompilerInputObjectLists;
     Array< AString >    m_CompilerForceUsing;
     bool                m_CompilerInputAllowNoFiles         = false;
     bool                m_CompilerInputPathRecurse          = true;
@@ -103,6 +104,7 @@ protected:
     uint32_t            m_ObjectListInputEndIndex           = 0;
     uint32_t            m_NumCompilerInputUnity             = 0;
     uint32_t            m_NumCompilerInputFiles             = 0;
+    uint32_t            m_NumCompilerInputObjectLists       = 0;
 };
 
 //------------------------------------------------------------------------------

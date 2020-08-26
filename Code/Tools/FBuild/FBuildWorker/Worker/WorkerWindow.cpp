@@ -11,6 +11,7 @@
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
+#include "Tools/FBuild/FBuildWorker/Worker/Worker.h"
 
 // OSUI
 #include "OSUI/OSDropDown.h"
@@ -36,7 +37,6 @@
 //------------------------------------------------------------------------------
 WorkerWindow::WorkerWindow()
     : OSWindow()
-    , m_WantToQuit( false )
     , m_TrayIcon( nullptr )
     , m_Font( nullptr )
     , m_ModeLabel( nullptr )
@@ -217,31 +217,8 @@ void WorkerWindow::SetWorkerState( size_t index, const AString & hostName, const
 //------------------------------------------------------------------------------
 void WorkerWindow::Work()
 {
-    #if defined( __WINDOWS__ )
-        // process messages until wo need to quit
-        MSG msg;
-        do
-        {
-            // any messages pending?
-            if ( PeekMessage( &msg, nullptr, 0, 0, PM_NOREMOVE ) )
-            {
-                // message available, process it
-                VERIFY( GetMessage( &msg, NULL, 0, 0 ) != 0 );
-                TranslateMessage( &msg );
-                DispatchMessage( &msg );
-                continue; // immediately handle any new messages
-            }
-            else
-            {
-                // no message right now - prevent CPU thrashing by having a sleep
-                Sleep( 100 );
-            }
-        } while ( m_WantToQuit == false );
-    #endif
-
-    #if defined( __OSX__ )
-        PumpMessages();
-    #endif
+    // This will block until the Window closes
+    OSWindow::StartMessagePump();
 }
 
 // OnMinimize
@@ -275,7 +252,7 @@ void WorkerWindow::Work()
 //------------------------------------------------------------------------------
 /*virtual*/ bool WorkerWindow::OnQuit()
 {
-    SetWantToQuit();
+    Worker::Get().SetWantToQuit();
     return true; // Handled
 }
 
@@ -331,7 +308,7 @@ void WorkerWindow::Work()
 /*virtual*/ void WorkerWindow::OnTrayIconMenuItemSelected( uint32_t /*index*/ )
 {
     // We only have one menu item right now
-    SetWantToQuit();
+    Worker::Get().SetWantToQuit();
 }
 
 // ToggleMinimized

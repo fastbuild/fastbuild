@@ -21,12 +21,13 @@ private:
     DECLARE_TESTS
 
     // Tests
-    void TestExcludedFiles() const;
+    void Exclusions() const;
     void CompilerInputFilesRoot() const;
     void ConflictingObjects1() const;
     void ConflictingObjects2() const;
     void ExtraOutputFolders_PathExtraction() const;
     void ObjectListChaining() const;
+    void ObjectListChaining_Bad() const;
     #if defined( __WINDOWS__ )
         void ExtraOutputFolders_Build() const;
     #endif
@@ -35,50 +36,56 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestObjectList )
-    REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
+    REGISTER_TEST( Exclusions )
     REGISTER_TEST( CompilerInputFilesRoot )
     REGISTER_TEST( ConflictingObjects1 )
     REGISTER_TEST( ConflictingObjects2 )
     REGISTER_TEST( ExtraOutputFolders_PathExtraction )
     REGISTER_TEST( ObjectListChaining )
+    REGISTER_TEST( ObjectListChaining_Bad )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( ExtraOutputFolders_Build )
     #endif
 REGISTER_TESTS_END
 
-// TestExcludedFiles
+// Exclusions
 //------------------------------------------------------------------------------
-void TestObjectList::TestExcludedFiles() const
+void TestObjectList::Exclusions() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/Exclusions/fbuild.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( "Test" ) );
+
+    // Check all the exclusion methods worked as expected
+    const char* const nodesToCheck[] =
     {
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
-
-        TEST_ASSERT( fBuild.Build( "ExcludeFileName" ) );
-    }
-
+        "ExcludedFiles-FileName",
+        "ExcludedFiles-FileNameWithPath-ForwardSlash",
+        "ExcludedFiles-FileNameWithPath-Backslash",
+        "ExcludedFiles-FileNameWithRelativePath-ForwardSlash",
+        "ExcludedFiles-FileNameWithRelativePath-Backslash",
+        "ExcludePattern",
+        "ExcludePattern-ForwardSlash",
+        "ExcludePattern-Backslash",
+    };
+    for (const char* const nodeName : nodesToCheck)
     {
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+        // Get the ObjectListNode
+        const Node * objectListNode = fBuild.GetNode( nodeName );
+        TEST_ASSERT( objectListNode );
+        TEST_ASSERT( objectListNode->GetType() == Node::OBJECT_LIST_NODE );
 
-        TEST_ASSERT( fBuild.Build( "ExcludeFilePath" ) );
-    }
-
-    {
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
-
-        TEST_ASSERT( fBuild.Build( "ExcludeFilePathRelative" ) );
-    }
-
-    {
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
-
-        TEST_ASSERT( fBuild.Build( "ExcludeFilePattern" ) );
+        // Check that it has one dynamic dependency, and that it's the 'B' file
+        TEST_ASSERT( objectListNode->GetDynamicDependencies().GetSize() == 1 );
+        #if defined( __WINDOWS__ )
+            TEST_ASSERT( objectListNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "ok.obj" ) );
+        #else
+            TEST_ASSERT( objectListNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "ok.o" ) );
+        #endif
     }
 }
 
@@ -174,6 +181,84 @@ void TestObjectList::ObjectListChaining() const
         //               Seen,  Built,  Type
         CheckStatsNode(     2,      2,  Node::OBJECT_LIST_NODE );
         CheckStatsNode(     2,      2,  Node::OBJECT_NODE );
+        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+
+        fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText1 );
+    }
+
+    // Check no-rebuild
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
+        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
+        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+    }
+
+    // Check no-rebuild DB migration
+    {
+        options.m_ForceDBMigration_Debug = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
+        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
+        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+
+        fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText2 );
+    }
+
+    // Check node graph is the same after migration
+    TEST_ASSERT( depGraphText1 == depGraphText2 );
+}
+
+// ObjectListChaining_Bad
+//------------------------------------------------------------------------------
+void TestObjectList::ObjectListChaining_Bad() const
+{
+    // Ensure that an ObjectList consuming the output of another ObjectList
+    // is managed correctly when using PreBuildDependencies and dynamic discovery
+    // of output files.
+    //
+    // NOTE: This setup has some fundamental problems and should generally not be used.
+    //       For example, deletion of a file in the source directory won't remove the
+    //       interemediate file and copies of the stale file can still occur, and/or
+    //       cause build failures.
+    //
+    // The preferred mechanism is to chain ObjectLists together via .CompileInputObjectList
+    // (see ObjectListChaining test above)
+    //
+    // This test is kept to ensure that setup doesn't regress for users who might be
+    // using it
+    //
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ObjectListChaining_Bad/fbuild.bff";
+    const char * dbFile = "../tmp/Test/TestObjectList/ObjectListChaining_Bad/fbuild.fdb";
+
+    AString depGraphText1( 8 * 1024 );
+    AString depGraphText2( 8 * 1024 );
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
+
+        // Save DB for reloading below
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode(     2,      2,  Node::OBJECT_LIST_NODE );
+        CheckStatsNode(     2,      2,  Node::OBJECT_NODE );
         CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText1 );
@@ -202,9 +287,9 @@ void TestObjectList::ObjectListChaining() const
 
         // Check stats
         //               Seen,  Built,  Type
-        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
-        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
-        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
+        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
+        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText2 );
     }

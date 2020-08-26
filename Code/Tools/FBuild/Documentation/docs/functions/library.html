@@ -49,6 +49,8 @@ Builds a statically linked library.
                             ; Default is 'auto' (use the librarian executable name to detect)
   .LibrarianOutput          ; Output path for lib file
   .LibrarianAdditionalInputs; (optional) Additional inputs to merge into library
+  .LibrarianAllowResponseFile ; (optional) Allow response files to be used if not auto-detected (default: false)  
+  .LibrarianForceResponseFile ; (optional) Force use of response files (default: false)
 
   ; Specify inputs for compilation
   .CompilerInputPath           ; (optional) Path to find files in
@@ -60,6 +62,7 @@ Builds a statically linked library.
   .CompilerInputFiles          ; (optional) Explicit array of files to build
   .CompilerInputFilesRoot      ; (optional) Root path to use for .obj path generation for explicitly listed files
   .CompilerInputUnity          ; (optional) Unity to build (or Unities)
+  .CompilerInputObjectLists    ; (optional) ObjectList(s) whos output should be used as an input
 
   ; Cache & Distributed compilation control
   .AllowCaching             ; (optional) Allow caching of compiled objects if available (default true)

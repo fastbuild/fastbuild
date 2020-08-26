@@ -6,9 +6,9 @@
 #include "ResponseFile.h"
 
 // FBuild
-#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"

@@ -126,7 +126,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
 
     // if the total CPU time is below the idle theshold, we don't need to
     // check to know acurately what the cpu use of FASTBuild is
-    if ( m_CPUUsageTotal < idleThresholdPercent )
+    if ( m_CPUUsageTotal < (float)idleThresholdPercent )
     {
         idleCurrent = 1.0f;
         return true;
@@ -167,7 +167,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
     }
 
     idleCurrent = ( 1.0f - ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) * 0.01f ) );
-    return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < idleThresholdPercent );
+    return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < (float)idleThresholdPercent );
 }
 
 // GetSystemTotalCPUUsage

@@ -47,10 +47,13 @@ distribution, caching and more.
   .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
   .Environment                  // (optional) Environment variables to use for local build
+  .AllowResponseFile            // (optional) Allow response files to be used if not auto-detected (default: false)
+  .ForceResponseFile            // (optional) Force use of response files (default: false)
   
   // Temporary Options
-  .UseLightCache_Experimental   // (optional) Enabled experimental "light" caching mode (default: false)
-  .UseRelativePaths_Experimental// (optional) Enabled experimental relative path use (default: false)
+  .UseLightCache_Experimental   // (optional) Enable experimental "light" caching mode (default: false)
+  .UseRelativePaths_Experimental// (optional) Enable experimental relative path use (default: false)
+  .SourceMapping_Experimental   // (optional) Use Clang's -fdebug-source-map option to remap source files
   .ClangFixupUnity_Disable      // (optional) Disable preprocessor fixup for Unity files (default: false)
 }
 </div>
@@ -172,6 +175,22 @@ Compiler( 'Test' )
     
 	<p><b>.CustomEnvironmentVariables</b> - String or ArrayOfStrings - (Optional)</p>
 	<p>When compiling on a remote host, a clean environment is used. If needed, environment variables can be set.<p>
+
+  	<p><hr></p>
+
+    <p><b>.AllowResponseFile</b> - Boolean - (Optional)</p>	
+    <p>Allow the use of Response Files for passing arguments to the compiler when they exceed operating system limits.</p>
+    <p>FASTBuild automatically detects that some compilers can use Response Files and uses them accordingly. For situations
+    that FASTBuild doesn't auto-detect (such as custom compilers), AllowResponseFile can be set manually.</p>
+
+    <p><hr></p>
+
+    <p><b>.ForceResponseFile</b> - Boolean - (Optional)</p>	
+    <p>Force the use of Response Files for passing arguments to the compiler.</p>
+    <p>FASTBuild uses Response Files to pass command line arguments to Compilers that support them only when needed (length
+    exceeds operating system limits). This is to limit the overhead of Response File creation to situations that
+    require it.</p>
+    <p>Use of Response Files in all cases can be forced with .ForceResponseFile if required.</p>
 
   	<p><hr></p>
 
@@ -368,6 +387,20 @@ Compiler( 'Compiler-x64Intel' )
     <p><font color=red>NOTE:</font> This feature is incomplete and should not be used.</p>
 
   	<p><hr></p>
+
+  <p><b>.SourceMapping_Experimental</b> - String - (Optional)</p>
+  <p>Provides a new root to remap source file paths to so they are recorded in the debugging information as if they were stored under the new root. For example, if $_WORKING_DIR_$ is "/path/to/original", a source file "src/main.cpp" would normally be recorded as being stored under "/path/to/original/src/main.cpp", but with .SourceMapping_Experimental='/another/root' it would be recorded as "/another/root/src/main.cpp" instead.</p>
+
+  <p>While the same effect could be achieved by passing "-fdebug-prefix-map=$_WORKING_DIR_$=/another/root" to the compiler via .CompilerOptions, doing so prevents caching from working across machines that use different root paths because the cache keys would not match.</p>
+
+  <p>Source mapping can help make builds more reproducible, and also improve the debugging experience by making it easier for the debugger to find source files when debugging a binary built on another machine. See the <a href="https://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html">GCC documentation for -fdebug-prefix-map</a> for more information.</p>
+
+    <p><font color=red>NOTE:</font> This feature currently only works on Clang 3.8+ and GCC.</p>
+    <p><font color=red>NOTE:</font> Paths expanded from the __FILE__ macro are not remapped because that requires Clang 10+ and GCC 8+ (-fmacro-debug-map).</p>
+    <p><font color=red>NOTE:</font> Only one mapping can be provided, and the source directory for the mapping is always $_WORKING_DIR_$.</p>
+    <p><font color=red>NOTE:</font> This option currently inhibits dsitributed compilation. This will be resolved in a future release.</p>
+
+    <p><hr></p>
 
 	<p><b>.ClangFixupUnity_Disable</b> - Boolean - (Optional)</p>
 	<p>Disable preprocessor fixup for Unity files (default: false).</p> 

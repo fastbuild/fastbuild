@@ -50,7 +50,12 @@ public:
 
 // Init
 //------------------------------------------------------------------------------
-/*virtual*/ bool Cache::Init( const AString & cachePath, const AString & cachePathMountPoint )
+/*virtual*/ bool Cache::Init( const AString & cachePath,
+                              const AString & cachePathMountPoint,
+                              bool /*cacheRead*/,
+                              bool /*cacheWrite*/,
+                              bool /*cacheVerbose*/,
+                              const AString & /*pluginDLLConfig*/ )
 {
     PROFILE_FUNCTION
 

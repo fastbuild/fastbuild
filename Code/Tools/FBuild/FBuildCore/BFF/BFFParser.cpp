@@ -889,12 +889,11 @@ bool BFFParser::StoreVariableString( const AString & name,
             }
             else if ( !dstIsEmpty )
             {
-                auto end = var->GetArrayOfStrings().End();
-                for ( auto it=var->GetArrayOfStrings().Begin(); it!=end; ++it )
+                for ( const AString & it : var->GetArrayOfStrings() )
                 {
-                    if ( *it != value ) // remove equal strings
+                    if ( it != value ) // remove equal strings
                     {
-                        finalValues.Append( *it );
+                        finalValues.Append( it );
                     }
                 }
             }
@@ -1360,12 +1359,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
             {
                 if ( dstIsEmpty == false )
                 {
-                    auto end = varDst->GetArrayOfStrings().End();
-                    for ( auto it = varDst->GetArrayOfStrings().Begin(); it!=end; ++it )
+                    for ( const AString & it : varDst->GetArrayOfStrings() )
                     {
-                        if ( *it != varSrc->GetString() ) // remove equal strings
+                        if ( it != varSrc->GetString() ) // remove equal strings
                         {
-                            values.Append( *it );
+                            values.Append( it );
                         }
                     }
                 }

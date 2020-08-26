@@ -36,6 +36,8 @@ REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) +
     REFLECT( m_LibrarianType,                   "LibrarianType",                MetaOptional() )
     REFLECT( m_LibrarianOutput,                 "LibrarianOutput",              MetaFile() )
     REFLECT_ARRAY( m_LibrarianAdditionalInputs, "LibrarianAdditionalInputs",    MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
+    REFLECT( m_LibrarianAllowResponseFile,      "LibrarianAllowResponseFile",   MetaOptional() )
+    REFLECT( m_LibrarianForceResponseFile,      "LibrarianForceResponseFile",   MetaOptional() )   
 
     REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
     REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )
@@ -47,6 +49,8 @@ REFLECT_END( LibraryNode )
 LibraryNode::LibraryNode()
 : ObjectListNode()
 , m_LibrarianType( "auto" )
+, m_LibrarianAllowResponseFile( false )
+, m_LibrarianForceResponseFile( false )
 {
     m_Type = LIBRARY_NODE;
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
@@ -300,7 +304,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     }
 
     // Handle all the special needs of args
-    if ( fullArgs.Finalize( GetLibrarian()->GetName(), GetName(), CanUseResponseFile() ) == false )
+    if ( fullArgs.Finalize( GetLibrarian()->GetName(), GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error
     }
@@ -412,16 +416,38 @@ FileNode * LibraryNode::GetLibrarian() const
     return m_StaticDependencies[ 0 ].GetNode()->CastTo< FileNode >();
 }
 
-// CanUseResponseFile
+// GetResponseFileMode
 //------------------------------------------------------------------------------
-bool LibraryNode::CanUseResponseFile() const
+ArgsResponseFileMode LibraryNode::GetResponseFileMode() const
 {
+    // User forces response files to be used, regardless of args length?
+    if ( m_LibrarianForceResponseFile )
+    {
+        return ArgsResponseFileMode::ALWAYS;
+    }
+
+    // User explicitly says we can use response file if needed?
+    if ( m_LibrarianAllowResponseFile )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+
+    // Detect a librarian that supports response file args?
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
-        return ( GetFlag( LIB_FLAG_LIB ) || GetFlag( LIB_FLAG_AR ) || GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_GREENHILLS_AX ) );
-    #else
-        return false;
+        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+        // probably want this for other platforms as well though.
+        if ( GetFlag( LIB_FLAG_LIB ) ||
+             GetFlag( LIB_FLAG_AR ) ||
+             GetFlag( LIB_FLAG_ORBIS_AR ) ||
+             GetFlag( LIB_FLAG_GREENHILLS_AX ) )
+        {
+            return ArgsResponseFileMode::IF_NEEDED;
+        }
     #endif
+
+    // Cannot use response files
+    return ArgsResponseFileMode::NEVER;
 }
 
 //------------------------------------------------------------------------------

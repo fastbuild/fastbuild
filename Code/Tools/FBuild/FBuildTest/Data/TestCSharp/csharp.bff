@@ -15,6 +15,7 @@ Compiler( 'CSharpCompiler' )
 
 .Compiler           = 'CSharpCompiler'
 .CompilerOptions    = '/out:"%2" /target:library "%1"'
+.CompilerInputPathRecurse = false
 
 ;
 ; A single c# file

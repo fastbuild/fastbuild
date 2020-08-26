@@ -54,6 +54,7 @@ public:
     enum { BFF_PREPROCESSOR_START = '#' };
 
     enum { MAX_VARIABLE_NAME_LENGTH = 256 };
+    enum { MAX_OPERATOR_HISTORY = 256 };
 
     static bool PerformVariableSubstitutions( const BFFToken * inputToken, AString & value );
     static bool ParseVariableName( const BFFToken * iter, AString & name, bool & parentScope );

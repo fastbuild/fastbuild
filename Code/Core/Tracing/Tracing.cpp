@@ -241,7 +241,7 @@ bool Tracing::Callbacks::DispatchCallbacksDebugSpam( const char * message )
     }
     m_InCallbackDispatch = true;
 
-    for ( auto cb : m_CallbacksDebugSpam )
+    for ( Tracing::Callback * cb : m_CallbacksDebugSpam )
     {
         if ( (*cb)( message ) == false )
         {
@@ -271,7 +271,7 @@ bool Tracing::Callbacks::DispatchCallbacksOutput( const char * message )
     }
     m_InCallbackDispatch = true;
 
-    for ( auto cb : m_CallbacksOutput )
+    for ( Tracing::Callback * cb : m_CallbacksOutput )
     {
         if ( (*cb)( message ) == false )
         {

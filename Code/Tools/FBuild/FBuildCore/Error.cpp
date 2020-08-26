@@ -398,6 +398,20 @@
     FormatError( iter, 1045u, nullptr, "Extraneous token(s) following '%s' directive.", directiveName );
 }
 
+// Error_1046_IfExpressionCannotStartWithBooleanOperator
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter )
+{
+    FormatError( iter, 1046u, nullptr, "#if expression cannot start with boolean operator." );
+}
+
+// Error_1047_IfExpressionTooComplex
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken* iter )
+{
+    FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %i boolean operators supported.", BFFParser::MAX_OPERATOR_HISTORY );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFToken * iter,

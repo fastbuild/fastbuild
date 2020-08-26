@@ -15,6 +15,15 @@
 //------------------------------------------------------------------------------
 class AString;
 
+// ArgsResponseFileMode
+//------------------------------------------------------------------------------
+enum class ArgsResponseFileMode : uint32_t
+{
+    NEVER,          // Don't use a reponse file under any circumstances
+    IF_NEEDED,      // Use a response file if args are long enough to require it
+    ALWAYS,         // Force the use of a response file no matter what
+};
+
 // Args
 //------------------------------------------------------------------------------
 class Args
@@ -34,9 +43,10 @@ public:
 
     // Set Response File options
     void SetEscapeSlashesInResponseFile() { ASSERT( !m_Finalized ); m_ResponseFile.SetEscapeSlashes(); }
+    void DisableResponseFileWrite() { m_DisableResponseFileWrite = true; } // Used by tests
 
     // Do final fixups and create response file if needed/supported
-    bool Finalize( const AString & exe, const AString & nodeNameForError, bool canUseResponseFile );
+    bool Finalize( const AString & exe, const AString & nodeNameForError, ArgsResponseFileMode responseFileMode );
 
     // After finalization, access args
     const AString& GetRawArgs() const   { return m_Args; }
@@ -53,6 +63,7 @@ protected:
     #if defined( ASSERTS_ENABLED )
         bool                m_Finalized;
     #endif
+    bool                    m_DisableResponseFileWrite; // Used by tests
 };
 
 //------------------------------------------------------------------------------

@@ -8,12 +8,12 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //
-#if file_exists( "2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe" )
+#if file_exists( "2019/Community/VC/Tools/MSVC/14.27.29110/bin/Hostx64/x64/cl.exe" )
     //
     // Use vendorized toolchain
     //
     .VS2019_BasePath        = '$_CURRENT_BFF_DIR_$/2019/Community/VC'
-    .VS2019_Version         = '14.25.28610'
+    .VS2019_Version         = '14.27.29110'
 #else
     //
     // Use environment variable if available (VS Command Prompt)
@@ -27,9 +27,9 @@
         //
         // Use Visual Studio installation
         //
-        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe" )
+        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.27.29110/bin/Hostx64/x64/cl.exe" )
             .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC'
-            .VS2019_Version         = '14.25.28610'
+            .VS2019_Version         = '14.27.29110'
         #else
             //
             // Failed
@@ -106,11 +106,13 @@ Compiler( 'Compiler-VS2019-x64' )
                                     + ' /wd4514' // '%s': unreferenced inline function has been removed
                                     + ' /wd4571' // Informational: catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught
                                     + ' /wd4577' // 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed. Specify /EHsc
+                                    + ' /wd4625' // '%s' : copy constructor was implicitly defined as deleted
                                     + ' /wd4710' // '%s': function not inlined
                                     + ' /wd4711' // function '%s' selected for automatic inline expansion
                                     + ' /wd4820' // '%s': '%u' bytes padding added after data member '%s'
                                     + ' /wd5039' // '%s': pointer or reference to potentially throwing function passed to extern C function under -EHc. Undefined behavior may occur if this function throws an exception.
                                     + ' /wd5045' // Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
+                                    + ' /wd5220' // '%s': a non-static data member with a volatile qualified type no longer implies that compiler generated copy/move constructors and copy/move assignment operators are not trivial
 
                                     // Include Paths
                                     + ' /I"./"'

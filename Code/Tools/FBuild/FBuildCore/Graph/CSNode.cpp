@@ -29,7 +29,7 @@ REFLECT_NODE_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_CompilerInputPattern,         "CompilerInputPattern",         MetaOptional() )
     REFLECT_ARRAY(  m_CompilerInputExcludePath,     "CompilerInputExcludePath",     MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_CompilerInputExcludedFiles,   "CompilerInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_CompilerInputExcludePattern,  "CompilerInputExcludePattern",  MetaOptional() + MetaOptional() )
+    REFLECT_ARRAY(  m_CompilerInputExcludePattern,  "CompilerInputExcludePattern",  MetaOptional() + MetaFile( true ) )
     REFLECT_ARRAY(  m_CompilerInputFiles,           "CompilerInputFiles",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_CompilerReferences,           "CompilerReferences",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,      "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
@@ -343,8 +343,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
     }
 
     // Handle all the special needs of args
-    const bool canUseResponseFile( true );
-    if ( fullArgs.Finalize( m_CompilerOptions, GetName(), canUseResponseFile ) == false )
+    if ( fullArgs.Finalize( m_CompilerOptions, GetName(), ArgsResponseFileMode::IF_NEEDED ) == false )
     {
         return false; // Finalize will have emitted an error
     }

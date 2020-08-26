@@ -334,7 +334,7 @@ Job * JobQueue::GetDistributableJobToRace()
 Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
 {
     MutexHolder m( m_DistributedJobsMutex );
-    auto jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
+    Job * * jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
     if ( jobIt )
     {
         Job * job = *jobIt;
@@ -669,6 +669,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
          ( node->GetType() == Node::LIBRARY_NODE ) ||
          ( node->GetType() == Node::DLL_NODE ) ||
          ( node->GetType() == Node::CS_NODE ) ||
+         ( node->GetType() == Node::EXEC_NODE ) ||
          ( node->GetType() == Node::TEST_NODE ) )
     {
         nodeRelevantToMonitorLog = true;

@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.h"
 
 // Core
+#include "Core/Containers/Singleton.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Process/Thread.h"
@@ -22,15 +23,17 @@ class JobQueueRemote;
 class NetworkStartupHelper;
 class WorkerSettings;
 
-// WorkerWindow
+// Worker
 //------------------------------------------------------------------------------
-class Worker
+class Worker : public Singleton<Worker>
 {
 public:
     explicit Worker( const AString & args, bool consoleMode );
     ~Worker();
 
     int32_t Work();
+
+    void SetWantToQuit() { m_WantToQuit = true; }
 
 private:
     static uint32_t WorkThreadWrapper( void * userData );
@@ -57,6 +60,7 @@ private:
     AString             m_BaseExeName;
     AString             m_BaseArgs;
     uint64_t            m_LastWriteTime;
+    bool                m_WantToQuit;
     bool                m_RestartNeeded;
     Timer               m_UIUpdateTimer;
     FileStream          m_TargetIncludeFolderLock;

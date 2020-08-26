@@ -95,7 +95,7 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "MSVC                 : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "MSVC                 : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
 // TestMSVCPreprocessedOutput_Indent
@@ -166,7 +166,7 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "MSVC /showincludes   : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "MSVC /showincludes   : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
 // TestMSVC_P
@@ -285,7 +285,7 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "GCC                  : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "GCC                  : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
 // TestClangPreprocessedOutput
@@ -335,7 +335,7 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "Clang                : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "Clang                : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
 // TestClangMSExtensionsPreprocessedOutput
@@ -384,7 +384,7 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "Clang (ms-extensions): %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "Clang (ms-extensions): %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
 //

@@ -38,7 +38,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Process::Process( const volatile bool * masterAbortFlag,
+Process::Process( const volatile bool * mainAbortFlag,
                   const volatile bool * abortFlag )
     : m_Started( false )
 #if defined( __WINDOWS__ )
@@ -53,7 +53,7 @@ Process::Process( const volatile bool * masterAbortFlag,
     , m_HasAlreadyWaitTerminated( false )
 #endif
     , m_HasAborted( false )
-    , m_MasterAbortFlag( masterAbortFlag )
+    , m_MainAbortFlag( mainAbortFlag )
     , m_AbortFlag( abortFlag )
 {
     #if defined( __WINDOWS__ )
@@ -178,9 +178,9 @@ bool Process::Spawn( const char * executable,
     ASSERT( !m_Started );
     ASSERT( executable );
 
-    if ( m_MasterAbortFlag && AtomicLoadRelaxed( m_MasterAbortFlag ) )
+    if ( m_MainAbortFlag && AtomicLoadRelaxed( m_MainAbortFlag ) )
     {
-        // Once master process has aborted, we no longer permit spawning sub-processes.
+        // Once main process has aborted, we no longer permit spawning sub-processes.
         return false;
     }
 
@@ -312,7 +312,7 @@ bool Process::Spawn( const char * executable,
             argCopy.Tokenize( splitArgs );
 
             // Build Vector
-            for ( auto & arg : splitArgs )
+            for ( AString & arg : splitArgs )
             {
                 if ( arg.BeginsWith( '"' ) && arg.EndsWith( '"' ) )
                 {
@@ -587,9 +587,9 @@ bool Process::ReadAllData( AString & outMem,
     bool processExited = false;
     for ( ;; )
     {
-        const bool masterAbort = ( m_MasterAbortFlag && AtomicLoadRelaxed( m_MasterAbortFlag ) );
+        const bool mainAbort = ( m_MainAbortFlag && AtomicLoadRelaxed( m_MainAbortFlag ) );
         const bool abort = ( m_AbortFlag && AtomicLoadRelaxed( m_AbortFlag ) );
-        if ( abort || masterAbort )
+        if ( abort || mainAbort )
         {
             PROFILE_SECTION( "Abort" )
             KillProcessTree();
@@ -620,7 +620,7 @@ bool Process::ReadAllData( AString & outMem,
                 if ( result == WAIT_TIMEOUT )
                 {
                     // Check if timeout is hit
-                    if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= timeOutMS ) )
+                    if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= (float)timeOutMS ) )
                     {
                         Terminate();
                         return false; // Timed out

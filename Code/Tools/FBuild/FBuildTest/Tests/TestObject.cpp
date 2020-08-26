@@ -31,6 +31,7 @@ private:
     void TestStaleDynamicDeps() const;
     void ModTimeChangeBackwards() const;
     void CacheUsingRelativePaths() const;
+    void SourceMapping() const;
 };
 
 // Register Tests
@@ -41,6 +42,7 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( TestStaleDynamicDeps )       // Test dynamic deps are cleared when necessary
     REGISTER_TEST( ModTimeChangeBackwards )
     REGISTER_TEST( CacheUsingRelativePaths )
+    REGISTER_TEST( SourceMapping )
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -414,6 +416,68 @@ void TestObject::CacheUsingRelativePaths() const
         TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
 
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
+    }
+}
+
+// SourceMapping
+//------------------------------------------------------------------------------
+void TestObject::SourceMapping() const
+{
+    // Source files
+    const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestObject/SourceMapping/";
+    const char * fileA = "File.cpp";
+    const char * fileB = "fbuild.bff";
+    const char * files[] = { fileA, fileB };
+
+    // Dest paths
+    const char * dstPath = "../tmp/Test/Object/SourceMapping/Code";
+
+    #if defined( __WINDOWS__ )
+        const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.obj";
+    #else
+        const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.o";
+    #endif
+
+    // Copy file structure to destination
+    for ( const char * file : files )
+    {
+        AStackString<> src, dst;
+        src.Format( "%s/%s", srcPath, file );
+        dst.Format( "%s/%s", dstPath, file );
+        TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
+        TEST_ASSERT( FileIO::FileCopy( src.Get(), dst.Get() ) );
+    }
+
+    // Build in destination path
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "fbuild.bff";
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Object/SourceMapping/Code/";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    }
+
+    // Check the object file to make sure the debugging information has been remapped
+    {
+        // Read obj file into memory
+        AString buffer;
+        {
+            FileStream f;
+            TEST_ASSERT( f.Open( objFile ) );
+            buffer.SetLength( (uint32_t)f.GetFileSize() );
+            TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+            buffer.Replace( (char)0, ' ' ); // Make string seaches simpler
+        }
+
+        TEST_ASSERT( buffer.Find( "/fastbuild-test-mapping" ) );
     }
 }
 

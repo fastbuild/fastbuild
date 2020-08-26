@@ -317,7 +317,7 @@ UnityNode::~UnityNode()
 
     // how many files should go in each unity file?
     const size_t numFiles = files.GetSize();
-    float numFilesPerUnity = (float)numFiles / m_NumUnityFilesToCreate;
+    const float numFilesPerUnity = (float)numFiles / (float)m_NumUnityFilesToCreate;
     float remainingInThisUnity( 0.0 );
 
     uint32_t numFilesWritten( 0 );
@@ -643,7 +643,7 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
             // iterate all the files in the object list
             Array< AString > objListFiles;
             objListNode->GetInputFiles( objListFiles );
-            for ( const auto& file : objListFiles )
+            for ( const AString & file : objListFiles )
             {
                 FileIO::FileInfo * fi = FNEW( FileIO::FileInfo() );
                 m_FilesInfo.Append( fi ); // keep ptr to delete later

@@ -40,10 +40,11 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_CompilerInputPathRecurse,            "CompilerInputPathRecurse",         MetaOptional() )
     REFLECT_ARRAY( m_CompilerInputExcludePath,      "CompilerInputExcludePath",         MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_CompilerInputExcludedFiles,    "CompilerInputExcludedFiles",       MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY( m_CompilerInputExcludePattern,   "CompilerInputExcludePattern",      MetaOptional() )
+    REFLECT_ARRAY( m_CompilerInputExcludePattern,   "CompilerInputExcludePattern",      MetaOptional() + MetaFile( true ) )
     REFLECT_ARRAY( m_CompilerInputUnity,            "CompilerInputUnity",               MetaOptional() )
     REFLECT_ARRAY( m_CompilerInputFiles,            "CompilerInputFiles",               MetaOptional() + MetaFile() )
     REFLECT( m_CompilerInputFilesRoot,              "CompilerInputFilesRoot",           MetaOptional() + MetaPath() )
+    REFLECT_ARRAY( m_CompilerInputObjectLists,      "CompilerInputObjectLists",         MetaOptional() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
     REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
@@ -67,6 +68,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_ObjectListInputEndIndex,             "ObjectListInputEndIndex",          MetaHidden() )
     REFLECT( m_NumCompilerInputUnity,               "NumCompilerInputUnity",            MetaHidden() )
     REFLECT( m_NumCompilerInputFiles,               "NumCompilerInputFiles",            MetaHidden() )
+    REFLECT( m_NumCompilerInputObjectLists,         "NumCompilerInputObjectLists",      MetaHidden() )
 REFLECT_END( ObjectListNode )
 
 // ObjectListNode
@@ -159,10 +161,11 @@ ObjectListNode::ObjectListNode()
         m_UsingPrecompiledHeader = true;
     }
 
-    // Are wo compiling and files?
+    // Are we compiling and files?
     const bool compilingFiles = ( ( m_CompilerInputPath.IsEmpty() == false ) ||
                                   ( m_CompilerInputFiles.IsEmpty() == false ) ||
-                                  ( m_CompilerInputUnity.IsEmpty() == false ) );
+                                  ( m_CompilerInputUnity.IsEmpty() == false ) ||
+                                  ( m_CompilerInputObjectLists.IsEmpty() == false ) );
     if ( compilingFiles )
     {
         // Using a PCH?
@@ -272,11 +275,26 @@ ObjectListNode::ObjectListNode()
     }
     m_NumCompilerInputFiles = (uint32_t)compilerInputFiles.GetSize();
 
+    // .CompilerInputObjectLists
+    Dependencies compilerInputObjectLists;
+    if ( Function::GetObjectListNodes( nodeGraph, iter, function, m_CompilerInputObjectLists, "CompilerInputObjectLists", compilerInputObjectLists ) == false )
+    {
+        return false; //
+    }
+    m_NumCompilerInputObjectLists = (uint32_t)compilerInputObjectLists.GetSize();
+
     // Extra output paths
     ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions, m_ExtraPDBPath, m_ExtraASMPath );
 
     // Store dependencies
-    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + 1 + ( preprocessorNode ? 1 : 0 ) + ( precompiledHeader ? 1 : 0 ) + compilerInputPath.GetSize() + m_NumCompilerInputUnity + m_NumCompilerInputFiles );
+    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() +
+                                      1 +
+                                      ( preprocessorNode ? 1 : 0 ) +
+                                      ( precompiledHeader ? 1 : 0 ) +
+                                      compilerInputPath.GetSize() +
+                                      m_NumCompilerInputUnity +
+                                      m_NumCompilerInputFiles +
+                                      m_NumCompilerInputObjectLists );
     m_StaticDependencies.EmplaceBack( compilerNode );
     if ( preprocessorNode )
     {
@@ -289,6 +307,7 @@ ObjectListNode::ObjectListNode()
     m_StaticDependencies.Append( compilerInputPath );
     m_StaticDependencies.Append( compilerInputUnity );
     m_StaticDependencies.Append( compilerInputFiles );
+    m_StaticDependencies.Append( compilerInputObjectLists );
     //m_StaticDependencies.Append( compilerForceUsing ); // NOTE: Deliberately not depending on this
 
     // Take note of how many things are not to be treated as inputs (the compiler and preprocessor)
@@ -417,6 +436,35 @@ ObjectListNode::~ObjectListNode() = default;
 
                 // create the object that will compile the above file
                 if ( CreateDynamicObjectNode( nodeGraph, n, isolatedFile.GetDirListOriginPath(), false, true ) == false )
+                {
+                    return false; // CreateDynamicObjectNode will have emitted error
+                }
+            }
+        }
+        else if ( dep.GetNode()->GetType() == Node::OBJECT_LIST_NODE )
+        {
+            // get the list of files from the ObjectListNode
+            ObjectListNode * objListNode = dep.GetNode()->CastTo< ObjectListNode >();
+            Array< AString > objListFiles;
+            objListNode->GetInputFiles( objListFiles );
+
+            // iterate all the files in the object list
+            for ( const AString & file : objListFiles )
+            {
+                Node * n = nodeGraph.FindNode( file );
+                if ( n == nullptr )
+                {
+                    FLOG_ERROR( "ObjectListNode: Missing Node '%s'", file.Get() );
+                    return false;
+                }
+                else if ( n->IsAFile() == false )
+                {
+                    FLOG_ERROR( "ObjectListNode: '%s' is not a FileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
+                    return false;
+                }
+
+                // create the object that will compile the above file
+                if ( CreateDynamicObjectNode( nodeGraph, n, AString::GetEmpty() ) == false )
                 {
                     return false; // CreateDynamicObjectNode will have emitted error
                 }
