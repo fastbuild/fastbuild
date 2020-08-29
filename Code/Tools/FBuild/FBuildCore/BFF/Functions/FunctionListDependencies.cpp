@@ -9,7 +9,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionListDependencies::FunctionListDependencies()
-: Function( "ListDependencies" )
+    : Function( "ListDependencies" )
 {
 }
 

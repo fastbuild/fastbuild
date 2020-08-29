@@ -4,7 +4,7 @@
 #include "HeaderA.h"
 #include "HeaderB.h"
 
-int main(int argc, char ** )
+int main( int argc, char ** )
 {
     return functionC( functionB( functionA( argc ) ) );
 }

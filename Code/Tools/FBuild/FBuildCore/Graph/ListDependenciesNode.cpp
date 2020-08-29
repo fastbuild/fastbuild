@@ -21,7 +21,7 @@
 
 // REFLECTION
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( ListDependenciesNode, Node, MetaName("Dest") + MetaFile() )
+REFLECT_NODE_BEGIN( ListDependenciesNode, Node, MetaName( "Dest" ) + MetaFile() )
     REFLECT(        m_Source,                   "Source",                   MetaFile() + MetaAllowNonFile() )
     REFLECT(        m_Dest,                     "Dest",                     MetaFile() )
     REFLECT_ARRAY(  m_Patterns,                 "Patterns",                 MetaOptional() )
@@ -52,7 +52,7 @@ static void FilterFileDependencies( Array< const AString * > * dependencyList , 
 
             if ( patterns.GetSize() > 0 )
             {
-                for ( const AString& pattern : patterns )
+                for ( const AString & pattern : patterns )
                 {
                     if ( PathUtils::IsWildcardMatch( pattern.Get(), depNode->GetName().Get() ) )
                     {
@@ -76,11 +76,11 @@ class DependencyAscendingCompareIDeref
 public:
     inline bool operator () ( const AString * a, const AString * b ) const
     {
-#if defined( __WINDOWS__ )
-        return ( a->CompareI( *b ) < 0 );
-#else
-        return ( a->Compare( *b ) < 0 );
-#endif
+        #if defined( __WINDOWS__ )
+            return ( a->CompareI( *b ) < 0 );
+        #else
+            return ( a->Compare( *b ) < 0 );
+        #endif
     }
 };
 
@@ -119,7 +119,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ListDependenciesNode::DoBuild( Job * /*job*/ )
 {
-    FLOG_VERBOSE( "DEPLIST: '%s' -> '%s'", m_Source.Get(), GetName().Get() );
+    EmitOutputMessage();
 
     // Collect all file dependencies
     Array< const AString * > dependencyList;
@@ -159,7 +159,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     const AString * prevDep = nullptr;
     for ( const AString * depName : dependencyList )
     {
-        if ( prevDep && *prevDep == *depName ) // ignore duplicated entries
+        if ( prevDep && ( *prevDep == *depName ) ) // ignore duplicated entries
         {
             continue;
         }
@@ -167,35 +167,43 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         prevDep = depName;
         fileContents += *depName;
 
-#if defined( __WINDOWS__ )
-        fileContents += "\r\n";
-#else
-        fileContents += '\n';
-#endif
+        #if defined( __WINDOWS__ )
+            fileContents += "\r\n";
+        #else
+            fileContents += '\n';
+        #endif
     }
 
     // Dump to text file
     FileStream stream;
     if ( !stream.Open( m_Name.Get(), FileStream::WRITE_ONLY ) )
     {
-        FLOG_ERROR( "Could not open '%s' for writing", GetName().Get() );
-
+        FLOG_ERROR( "Could not open '%s' for write. Error: %s", GetName().Get(), LAST_ERROR_STR );
         return NODE_RESULT_FAILED;
     }
 
-    uint64_t nWritten = stream.WriteBuffer( fileContents.Get(), fileContents.GetLength() );
+    const uint64_t nWritten = stream.WriteBuffer( fileContents.Get(), fileContents.GetLength() );
     stream.Close();
 
     if ( nWritten != fileContents.GetLength() )
     {
-        FLOG_ERROR( "Failed to write all to '%s'", GetName().Get() );
-
+        FLOG_ERROR( "Failed to write to '%s'. Error: %s", GetName().Get(), LAST_ERROR_STR );
         return NODE_RESULT_FAILED;
     }
 
     Node::RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
+}
+
+// EmitOutputMessage
+//------------------------------------------------------------------------------
+void ListDependenciesNode::EmitOutputMessage() const
+{
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "DepList: '%s' -> '%s'", m_Source.Get(), GetName().Get() );
+    }
 }
 
 //------------------------------------------------------------------------------

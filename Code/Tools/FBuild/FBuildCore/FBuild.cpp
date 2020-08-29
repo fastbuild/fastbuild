@@ -711,7 +711,6 @@ void FBuild::DisplayTargetList( bool showHidden ) const
         {
             case Node::PROXY_NODE:          ASSERT( false ); break;
             case Node::COPY_FILE_NODE:      break;
-            case Node::LIST_DEPENDENCIES_NODE:break;
             case Node::DIRECTORY_LIST_NODE: break;
             case Node::EXEC_NODE:           break;
             case Node::FILE_NODE:           break;
@@ -733,6 +732,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::XCODEPROJECT_NODE:   break;
             case Node::SETTINGS_NODE:       break;
             case Node::TEXT_FILE_NODE:      displayName = true; hidden = node->IsHidden(); break;
+            case Node::LIST_DEPENDENCIES_NODE: break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
         if ( displayName && ( !hidden || showHidden ) )

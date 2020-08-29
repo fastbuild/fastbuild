@@ -14,13 +14,13 @@
 #include "Tools/FBuild/FBuildCore/Graph/CopyDirNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CSNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/ListDependenciesNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ExecNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ListDependenciesNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
@@ -325,7 +325,6 @@ void Node::SetLastBuildTime( uint32_t ms )
     {
         case Node::PROXY_NODE:          ASSERT( false ); return nullptr;
         case Node::COPY_FILE_NODE:      return nodeGraph.CreateCopyFileNode( name );
-        case Node::LIST_DEPENDENCIES_NODE:return nodeGraph.CreateListDependenciesNode( name );
         case Node::DIRECTORY_LIST_NODE: return nodeGraph.CreateDirectoryListNode( name );
         case Node::EXEC_NODE:           return nodeGraph.CreateExecNode( name );
         case Node::FILE_NODE:           return nodeGraph.CreateFileNode( name );
@@ -347,6 +346,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
         case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
         case Node::TEXT_FILE_NODE:      return nodeGraph.CreateTextFileNode( name );
+        case Node::LIST_DEPENDENCIES_NODE: return nodeGraph.CreateListDependenciesNode( name );
         case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
     }
 

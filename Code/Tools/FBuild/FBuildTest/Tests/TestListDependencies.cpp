@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 
+// Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -42,7 +43,6 @@ void TestListDependencies::Build() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestListDependencies/fbuild.bff";
-    options.m_ForceCleanBuild = true;
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
@@ -110,9 +110,8 @@ void TestListDependencies::Build_NoRebuild_BFFChange() const
 //------------------------------------------------------------------------------
 void TestListDependencies::Check_SourceResults( const FBuildTestOptions & options ) const
 {
-    AStackString<> outputFilename{ options.GetWorkingDir() };
-    outputFilename += "/";
-    outputFilename += "../tmp/Test/ListDependencies/SourceDeps.txt";
+    AStackString<> outputFilename( options.GetWorkingDir() );
+    outputFilename += "/../tmp/Test/ListDependencies/SourceDeps.txt";
 
     PathUtils::FixupFilePath( outputFilename );
 

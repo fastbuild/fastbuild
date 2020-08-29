@@ -8,7 +8,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // ListDependenciesNode
@@ -25,6 +24,8 @@ public:
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;
+
+    void EmitOutputMessage() const;
 
     friend class FunctionListDependencies;
     AString             m_Source;
