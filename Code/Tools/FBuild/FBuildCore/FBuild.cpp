@@ -711,6 +711,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
         {
             case Node::PROXY_NODE:          ASSERT( false ); break;
             case Node::COPY_FILE_NODE:      break;
+            case Node::LIST_DEPENDENCIES_NODE:break;
             case Node::DIRECTORY_LIST_NODE: break;
             case Node::EXEC_NODE:           break;
             case Node::FILE_NODE:           break;

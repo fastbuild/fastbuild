@@ -79,6 +79,7 @@ public:
         SETTINGS_NODE       = 20,
         VSPROJEXTERNAL_NODE = 21,
         TEXT_FILE_NODE      = 22,
+        LIST_DEPENDENCIES_NODE= 23,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
     };
