@@ -80,7 +80,7 @@ private:
         uint32_t                m_NumJobsAvailable;     // num jobs we've told this server we have available
         Array< Job * >          m_Jobs;                 // jobs we've sent to this server
 
-        bool                    m_Blacklisted;
+        bool                    m_Denylisted;
     };
     Mutex                   m_ServerListMutex;
     Array< ServerState >    m_ServerList;

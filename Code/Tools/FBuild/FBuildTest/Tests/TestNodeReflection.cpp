@@ -170,9 +170,13 @@ class BaseNode : public Node
     REFLECT_DECLARE( BaseNode )
 public:
     BaseNode()
-        : Node( AStackString<>( "dummy" ), Node:: PROXY_NODE, 0 )
+        : Node( AStackString<>( "dummy" ), Node::PROXY_NODE, 0 )
     {}
-    virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ ) override { ASSERT( false ); return false; }
+    virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ ) override
+    {
+        ASSERT( false );
+        return false;
+    }
     virtual bool IsAFile() const override { return true; }
 
     AString         m_String;
@@ -205,8 +209,13 @@ public:
 class TestHelper
 {
 public:
-    explicit TestHelper( BaseNode * node ) : m_Node( node ) {}
-    ~TestHelper() { delete m_Node; delete m_Function; }
+    explicit TestHelper( BaseNode * node )
+        : m_Node( node ) {}
+    ~TestHelper()
+    {
+        delete m_Node;
+        delete m_Function;
+    }
 
     NodeGraph           m_NodeGraph;
     FBuild              m_FBuild;
@@ -380,7 +389,7 @@ void TestNodeReflection::ArrayOfStrings_Optional_Set() const
     // Check array was set
     TEST_ASSERT( helper.Populate() );
     TEST_ASSERT( helper.m_Node->m_ArrayOfStrings.GetSize() == 1 );
-    TEST_ASSERT( helper.m_Node->m_ArrayOfStrings[0] == "value" );
+    TEST_ASSERT( helper.m_Node->m_ArrayOfStrings[ 0 ] == "value" );
 }
 
 // ArrayOfStrings_Optional_Empty
@@ -449,7 +458,7 @@ void TestNodeReflection::ArrayOfStrings_Required_Set() const
     // Check array was set
     TEST_ASSERT( helper.Populate() );
     TEST_ASSERT( helper.m_Node->m_ArrayOfStrings.GetSize() == 1 );
-    TEST_ASSERT( helper.m_Node->m_ArrayOfStrings[0] == "value" );
+    TEST_ASSERT( helper.m_Node->m_ArrayOfStrings[ 0 ] == "value" );
 }
 
 // ArrayOfStrings_Required_Empty

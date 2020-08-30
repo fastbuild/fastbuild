@@ -28,21 +28,14 @@ ObjectList( 'ObjectList1' )
 //------------------------------------------------------------------------------
 ObjectList( 'ObjectList2' )
 {
-    // Ensure ObjectList1 builds first, since we cannot define static dependencies on the output
-    .PreBuildDependencies       = 'ObjectList1'
-
     // Consume the output of 'ObjectList1'. This will generate a warning, as an .obj is
     // not a valid input for the compiler, but the dependency alone is enough for us
-    // Do it via a directly list so that it's discovered dynamically
-    .CompilerInputPath          = '$Out$/Test/ObjectList/ObjectListChaining/1/'
-    #if __WINDOWS__
-        .CompilerInputPattern       = '*.obj'
-    #else
-        .CompilerInputPattern       = '*.o'
-        #if __OSX__
-            .CompilerOptions        + ' -Wno-unused-command-line-argument'
-        #endif
+    .CompilerInputObjectLists   = 'ObjectList1'
+
+    #if __OSX__
+        .CompilerOptions        + ' -Wno-unused-command-line-argument'
     #endif
+
     .CompilerOutputPath         = '$Out$/Test/ObjectList/ObjectListChaining/2/'
 
     // Add a cpp to the command line manually so the compilation succeeds despite the warning for the .obj

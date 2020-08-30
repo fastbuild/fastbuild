@@ -11,43 +11,80 @@
 Using( .StandardEnvironment )
 Settings {}
 
-// Common settings
-.CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestObjectList/Exclusions/'
-.UnityOutputPath            = '$Out$/Test/ObjectList/Exclusions/'
-.CompilerOutputPath         = '$Out$/Test/ObjectList/Exclusions/'
-
-//
-// Exclude by file name
-//------------------------------------------------------------------------------
-ObjectList( 'ExcludeFileName' )
 {
-    .CompilerInputExcludedFiles = 'ignore.cpp'
-    .CompilerOutputPath         + 'ExcludeFileName/'
+    // Common settings
+    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestObjectList/Exclusions/'
+    .UnityOutputPath            = '$Out$/Test/ObjectList/Exclusions/'
+    .CompilerOutputPath         = '$Out$/Test/ObjectList/Exclusions/'
+
+    // ExcludedFiles - file name
+    ObjectList( 'ExcludedFiles-FileName' )
+    {
+        .CompilerInputExcludedFiles = 'ignore.cpp'
+        .CompilerOutputPath         + 'ExcludedFiles-FileName/'
+    }
+
+    // ExcludedFiles - file name with path (forward slash)
+    ObjectList( 'ExcludedFiles-FileNameWithPath-ForwardSlash' )
+    {
+        .CompilerInputExcludedFiles = 'Exclusions/ignore.cpp' // <- Forward slashes
+        .CompilerOutputPath         + 'ExcludedFiles-FileNameWithPath-ForwardSlash/'
+    }
+
+    // ExcludedFiles - file name with path (backslash)
+    ObjectList( 'ExcludedFiles-FileNameWithPath-Backslash' )
+    {
+        .CompilerInputExcludedFiles = 'Exclusions\ignore.cpp' // <- Backslashes
+        .CompilerOutputPath         + 'ExcludedFiles-FileNameWithPath-Backslash/'
+    }
+
+
+    // ExcludedFiles - file name with relative path (forward slash)
+    ObjectList( 'ExcludedFiles-FileNameWithRelativePath-ForwardSlash' )
+    {
+        .CompilerInputExcludedFiles = '../Code/Tools/FBuild/FBuildTest/Data/TestObjectList/Exclusions/ignore.cpp' // <- Forward slashes
+        .CompilerOutputPath         + 'ExcludedFiles-FileNameWithRelativePath-ForwardSlash/'
+    }
+
+    // ExcludedFiles - file name with relative path (backslash)
+    ObjectList( 'ExcludedFiles-FileNameWithRelativePath-Backslash' )
+    {
+        .CompilerInputExcludedFiles = '..\Code\Tools\FBuild\FBuildTest\Data\TestObjectList\Exclusions\ignore.cpp' // <- Backslashes
+        .CompilerOutputPath         + 'ExcludedFiles-FileNameWithRelativePath-Backslash/'
+    }
+
+    // ExcludePattern
+    ObjectList( 'ExcludePattern' )
+    {
+        .CompilerInputExcludePattern    = "*nore.cpp"
+        .CompilerOutputPath             + 'ExcludePattern/'
+    }
+
+    // ExcludePattern - with path (forward slash)
+    ObjectList( 'ExcludePattern-ForwardSlash' )
+    {
+        .CompilerInputExcludePattern    = "*/Exclusions/*nore.cpp" // <- Forward slashes
+        .CompilerOutputPath             + 'ExcludePattern-ForwardSlash'
+    }
+
+    // ExcludePattern - with path (backslash)
+    ObjectList( 'ExcludePattern-Backslash' )
+    {
+        .CompilerInputExcludePattern    = "*\Exclusions\*nore.cpp" // <- Backslashes
+        .CompilerOutputPath             + 'ExcludePattern-Backslash'
+    }
 }
 
-//
-// Exclude by file path
-//------------------------------------------------------------------------------
-ObjectList( 'ExcludeFilePath' )
+Alias( 'Test' )
 {
-    .CompilerInputExcludedFiles = 'Exclusions/ignore.cpp'
-    .CompilerOutputPath         + 'ExcludeFilePath/'
-}
-
-//
-// Exclude by file path (relative)
-//------------------------------------------------------------------------------
-ObjectList( 'ExcludeFilePathRelative' )
-{
-    .CompilerInputExcludedFiles = '../Code/Tools/FBuild/FBuildTest/Data/TestObjectList/Exclusions/ignore.cpp'
-    .CompilerOutputPath         + 'ExcludeFilePathRelative/'
-}
-
-//
-// Exclude by file pattern
-//------------------------------------------------------------------------------
-ObjectList( 'ExcludeFilePattern' )
-{
-    .CompilerInputExcludePattern    = "*nore.cpp"
-    .CompilerOutputPath             + 'ExcludeFilePattern/'
+    .Targets    = {
+                    'ExcludedFiles-FileName'
+                    'ExcludedFiles-FileNameWithPath-ForwardSlash'
+                    'ExcludedFiles-FileNameWithPath-Backslash'
+                    'ExcludedFiles-FileNameWithRelativePath-ForwardSlash'
+                    'ExcludedFiles-FileNameWithRelativePath-Backslash'
+                    'ExcludePattern'
+                    'ExcludePattern-ForwardSlash'
+                    'ExcludePattern-Backslash'
+                  }
 }

@@ -8,6 +8,14 @@ Compiler( 'Compiler-Clang6' )
 {
     .Root                           = '$Clang6_BasePath$'
     .Executable                     = '$Root$/clang'
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif
+    #if ENABLE_SOURCE_MAPPING
+        .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
 }
 
 // ToolChain
@@ -23,6 +31,7 @@ Compiler( 'Compiler-Clang6' )
                                     + ' -g'             // Generate debug info
                                     + ' -m64'           // x86_64
                                     + ' -D__LINUX__'    // Platform define
+                                    + ' -D__X64__'      // Architecture define
 
                                     // Include paths
                                     + ' -I./'

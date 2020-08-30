@@ -6,8 +6,8 @@
 #include "TestFramework/UnitTest.h"
 
 // Core
-#include <Core/Process/Thread.h>
 #include <Core/Process/Semaphore.h>
+#include <Core/Process/Thread.h>
 
 // TestSemaphore
 //------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ void TestSemaphore::WaitForSignal() const
     Thread::ThreadHandle h = Thread::CreateThread( WaitForSignal_Thread, "Test::WaitForSignal", ( 32 * KILOBYTE ), &s );
 
     // Wait or the expected signal count
-    for ( size_t i=0; i<100; ++i )
+    for ( size_t i = 0; i < 100; ++i )
     {
         s.Wait();
     }
@@ -66,7 +66,7 @@ void TestSemaphore::WaitForSignal() const
 /*static*/ uint32_t TestSemaphore::WaitForSignal_Thread( void * userData )
 {
     Semaphore * s = static_cast< Semaphore * >( userData );
-    for ( size_t i=0; i<100; ++i )
+    for ( size_t i = 0; i < 100; ++i )
     {
         s->Signal();
     }

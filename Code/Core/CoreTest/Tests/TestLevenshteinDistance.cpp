@@ -5,8 +5,8 @@
 //------------------------------------------------------------------------------
 #include "TestFramework/UnitTest.h"
 
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 #include "Core/Strings/LevenshteinDistance.h"
 
 // TestLevenshteinDistance

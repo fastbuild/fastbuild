@@ -53,6 +53,7 @@ RemoveDirNode::RemoveDirNode()
                                               Array< AString >(), // unused FilesToExclude
                                               Array< AString >(), // unused ExcludePatterns
                                               m_RemovePathsRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_RemovePatterns,
                                               "RemovePaths",
                                               fileListDeps ) )

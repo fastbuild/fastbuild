@@ -46,7 +46,8 @@ public:
 
     static uint32_t GetPrimaryScreenWidth();
 
-    void PumpMessages();
+    void StartMessagePump();    // Call from main thread. Blocks.
+    void StopMessagePump();     // Call from work thread once it will no longer accesses UI. StartMessagePump will then return.
 
     // Events for derived classes to respond to
     virtual bool OnMinimize();
@@ -61,6 +62,7 @@ protected:
     void * m_Handle;
     #if defined( __WINDOWS__ )
         void * m_HInstance;
+        volatile bool m_RunMessagePump;
     #endif
     Array< OSWidget * > m_ChildWidgets;
 };

@@ -116,7 +116,7 @@ REFLECT_END( VCXProjectNode )
     ASSERT( ( ( iter == nullptr ) && ( function == nullptr ) ) ||
             ( iter && function ) );
 
-    for ( auto & config : configs )
+    for ( VSProjectConfig & config : configs )
     {
         // Target is allowed to be empty (perhaps this project represents
         // something that cannot be built, like header browsing information
@@ -171,7 +171,18 @@ VCXProjectNode::VCXProjectNode()
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
     Dependencies dirNodes( m_ProjectInputPaths.GetSize() );
-    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, m_ProjectPatternToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              function,
+                                              m_ProjectInputPaths,
+                                              m_ProjectInputPathsExclude,
+                                              m_ProjectFilesToExclude,
+                                              m_ProjectPatternToExclude,
+                                              true, // Recursive
+                                              false, // Don't include read-only status in hash
+                                              &m_ProjectAllowedFileExtensions,
+                                              "ProjectInputPaths",
+                                              dirNodes ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }

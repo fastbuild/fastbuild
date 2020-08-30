@@ -98,13 +98,23 @@ void FBuildTest::EnsureDirExists( const char * dirPath ) const
 
 // LoadFileContentsAsString
 //------------------------------------------------------------------------------
-void FBuildTest::LoadFileContentsAsString( const char* fileName, AString& outString ) const
+void FBuildTest::LoadFileContentsAsString( const char * fileName, AString & outString ) const
 {
     FileStream f;
     TEST_ASSERT( f.Open( fileName ) );
     const uint32_t fileSize = (uint32_t)f.GetFileSize();
     outString.SetLength( fileSize );
     TEST_ASSERT( f.ReadBuffer( outString.Get(), fileSize ) );
+}
+
+// MakeFile
+//------------------------------------------------------------------------------
+void FBuildTest::MakeFile( const char * fileName, const char * fileContents ) const
+{
+    FileStream f;
+    TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
+    const size_t len = AString::StrLen( fileContents );
+    TEST_ASSERT( f.WriteBuffer( fileContents, len ) == len );
 }
 
 // Parse
@@ -127,11 +137,13 @@ void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
 
 // ParseFromString
 //------------------------------------------------------------------------------
-bool FBuildTest::ParseFromString( const char * bffContents,
-                                  const char * expectedError ) const
+bool FBuildTest::ParseFromString( bool expectedResult,
+                                  const char * bffContents,
+                                  const char * expectedMessage ) const
 {
-    // Note size of output so we can check if error was part of this invocation
+    // Note size of output so we can check if message was part of this invocation
     const size_t outputSizeBefore = GetRecordedOutput().GetLength();
+    const char * searchStart = GetRecordedOutput().Get() + outputSizeBefore;
 
     // Parse
     FBuild fBuild;
@@ -139,46 +151,28 @@ bool FBuildTest::ParseFromString( const char * bffContents,
     BFFParser p( ng );
     const bool result = p.ParseFromString( "test.bff", bffContents );
 
-    // Handle result
-    if ( result == true )
+    // Check result is as expected
+    if ( result != expectedResult )
     {
-        // Success
-
-        // Did we expect to fail?
-        if ( expectedError )
-        {
-            OUTPUT( "Expected failure but did not fail" );
-            return false; // break in calling code
-        }
-
-        // Expected success so everything is ok
-        return true;
-    }
-    else
-    {
-        // Failure
-        
-        // Did we expected to fail?
-        if ( expectedError )
-        {
-            // Search for expected error
-            const char * searchStart = GetRecordedOutput().Get() + outputSizeBefore;
-            const bool foundExpectedError = ( GetRecordedOutput().Find( expectedError, searchStart ) != nullptr );
-
-            if ( foundExpectedError == false )
-            {
-                OUTPUT( "Failed in an unexpected way" );
-                return false; // break in calling code
-            }
-
-            // Failed in the expected way so everything is ok
-            return true;
-        }
-
-        // Failed but should not have
-        OUTPUT( "Unexpected failure" );
+        // Emit message about mismatch
+        OUTPUT( "Test %s but %s was expected", result ? "succeeded" : "failed",
+                                               expectedResult ? "success" : "failure" );
         return false; // break in calling code
     }
+
+    // Check message was present if needed
+    if ( expectedMessage )
+    {
+        // Search for expected message in output
+        const bool foundExpectedMessage = ( GetRecordedOutput().Find( expectedMessage, searchStart ) != nullptr );
+        if ( foundExpectedMessage == false )
+        {
+            OUTPUT( "Expected %s was not found: %s", expectedResult ? "message" : "error", expectedMessage );
+            return false;
+        }
+    }
+
+    return true;
 }
 
 // CheckStatsNode
@@ -278,9 +272,9 @@ FBuildTestOptions::FBuildTestOptions()
 size_t FBuildForTest::GetRecursiveDependencyCount( const Node * node ) const
 {
     size_t count = 0;
-    const Dependencies * depLists[3] = { &node->GetPreBuildDependencies(),
-                                            &node->GetStaticDependencies(),
-                                            &node->GetDynamicDependencies() };
+    const Dependencies * depLists[ 3 ] = { &node->GetPreBuildDependencies(),
+                                           &node->GetStaticDependencies(),
+                                           &node->GetDynamicDependencies() };
     for ( const Dependencies * depList : depLists )
     {
         for ( const Dependency & dep : *depList )
@@ -325,7 +319,7 @@ const Node * FBuildForTest::GetNode( const char * nodeName ) const
 
 // SerializeDepGraphToText
 //------------------------------------------------------------------------------
-void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString& outBuffer ) const
+void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const
 {
     Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
     Dependencies deps( 1, false );

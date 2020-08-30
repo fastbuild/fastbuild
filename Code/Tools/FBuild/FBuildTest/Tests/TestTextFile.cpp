@@ -4,9 +4,11 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"

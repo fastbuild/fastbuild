@@ -5,11 +5,13 @@
 //------------------------------------------------------------------------------
 #include "WorkerWindow.h"
 
+// FBuildWorker
 #include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
-#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
+#include "Tools/FBuild/FBuildWorker/Worker/Worker.h"
 
 // OSUI
 #include "OSUI/OSDropDown.h"
@@ -25,8 +27,8 @@
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
 #include "Core/Network/Network.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 
 // Defines
 //------------------------------------------------------------------------------
@@ -35,7 +37,6 @@
 //------------------------------------------------------------------------------
 WorkerWindow::WorkerWindow()
     : OSWindow()
-    , m_WantToQuit( false )
     , m_TrayIcon( nullptr )
     , m_Font( nullptr )
     , m_ModeLabel( nullptr )
@@ -47,7 +48,7 @@ WorkerWindow::WorkerWindow()
     , m_Menu( nullptr )
 {
     // obtain host name
-    Network::GetHostName(m_HostName);
+    Network::GetHostName( m_HostName );
 
     // center the window on screen
     const uint32_t w = 700;
@@ -78,7 +79,7 @@ WorkerWindow::WorkerWindow()
     m_ThreadList->AddColumn( "Status", 2, 530 );
     size_t numWorkers = JobQueueRemote::Get().GetNumWorkers();
     m_ThreadList->SetItemCount( (uint32_t)numWorkers );
-    for ( size_t i=0; i<numWorkers; ++i )
+    for ( size_t i = 0; i < numWorkers; ++i )
     {
         AStackString<> string;
         string.Format( "%u", (uint32_t)( i + 1 ) );
@@ -135,7 +136,7 @@ WorkerWindow::WorkerWindow()
         // add items
         uint32_t numProcessors = Env::GetNumProcessors();
         AStackString<> buffer;
-        for ( uint32_t i=0; i<numProcessors; ++i )
+        for ( uint32_t i = 0; i < numProcessors; ++i )
         {
             float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
             buffer.Format( "%u CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
@@ -216,31 +217,8 @@ void WorkerWindow::SetWorkerState( size_t index, const AString & hostName, const
 //------------------------------------------------------------------------------
 void WorkerWindow::Work()
 {
-    #if defined( __WINDOWS__ )
-        // process messages until wo need to quit
-        MSG msg;
-        do
-        {
-            // any messages pending?
-            if ( PeekMessage( &msg, nullptr, 0, 0, PM_NOREMOVE ) )
-            {
-                // message available, process it
-                VERIFY( GetMessage( &msg, NULL, 0, 0 ) != 0 );
-                TranslateMessage( &msg );
-                DispatchMessage( &msg );
-                continue; // immediately handle any new messages
-            }
-            else
-            {
-                // no message right now - prevent CPU thrashing by having a sleep
-                Sleep( 100 );
-            }
-        } while ( m_WantToQuit == false );
-    #endif
-
-    #if defined( __OSX__ )
-        PumpMessages();
-    #endif
+    // This will block until the Window closes
+    OSWindow::StartMessagePump();
 }
 
 // OnMinimize
@@ -274,7 +252,7 @@ void WorkerWindow::Work()
 //------------------------------------------------------------------------------
 /*virtual*/ bool WorkerWindow::OnQuit()
 {
-    SetWantToQuit();
+    Worker::Get().SetWantToQuit();
     return true; // Handled
 }
 
@@ -309,7 +287,7 @@ void WorkerWindow::Work()
     if ( dropDown == m_ModeDropDown )
     {
         WorkerSettings::Get().SetMode( (WorkerSettings::Mode)index );
-        
+
         // Threshold dropdown is enabled when we're in Idle move
         const bool idleMode = ( WorkerSettings::Get().GetMode() == WorkerSettings::WHEN_IDLE );
         m_ThresholdDropDown->SetEnabled( idleMode );
@@ -330,7 +308,7 @@ void WorkerWindow::Work()
 /*virtual*/ void WorkerWindow::OnTrayIconMenuItemSelected( uint32_t /*index*/ )
 {
     // We only have one menu item right now
-    SetWantToQuit();
+    Worker::Get().SetWantToQuit();
 }
 
 // ToggleMinimized

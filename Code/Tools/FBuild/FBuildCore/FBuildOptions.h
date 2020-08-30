@@ -75,6 +75,7 @@ public:
 
     // General Output
     bool        m_ShowVerbose                       = false;
+    bool        m_ShowBuildReason                   = false;
     bool        m_ShowCommandSummary                = true;
     bool        m_ShowCommandLines                  = false;
     bool        m_ShowCommandOutput                 = false;

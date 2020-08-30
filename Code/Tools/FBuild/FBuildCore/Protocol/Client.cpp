@@ -190,8 +190,8 @@ void Client::LookForWorkers()
             continue;
         }
 
-        // ignore blacklisted workers
-        if ( ss.m_Blacklisted )
+        // ignore deny listed workers
+        if ( ss.m_Denylisted )
         {
             continue;
         }
@@ -397,8 +397,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
 
-    // no jobs for blacklisted workers
-    if ( ss->m_Blacklisted )
+    // no jobs for deny listed workers
+    if ( ss->m_Denylisted )
     {
         MutexHolder mh( ss->m_Mutex );
         Protocol::MsgNoJobAvailable msg;
@@ -569,14 +569,14 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         {
             if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
             {
-                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer );
             }
         }
         else if ( objectNode->IsClang() || objectNode->IsGCC() )
         {
             if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
             {
-                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer );
             }
         }
     }
@@ -596,8 +596,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         // was it a system error?
         if ( systemError )
         {
-            // blacklist misbehaving worker
-            ss->m_Blacklisted = true;
+            // deny list misbehaving worker
+            ss->m_Denylisted = true;
 
             // take note of failure of job
             job->OnSystemError();
@@ -606,7 +606,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
             const AString & workerName = m_WorkerList[ workerIndex ];
             DIST_INFO( "Remote System Failure!\n"
-                       " - Blacklisted Worker: %s\n"
+                       " - Deny listed Worker: %s\n"
                        " - Node              : %s\n"
                        " - Job Error Count   : %u / %u\n"
                        " - Details           :\n"
@@ -636,7 +636,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             failureOutput += tmp;
         }
 
-        Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
+        Node::DumpOutput( nullptr, failureOutput, nullptr );
     }
 
     if ( FLog::IsMonitorEnabled() )
@@ -761,7 +761,7 @@ Client::ServerState::ServerState()
     , m_CurrentMessage( nullptr )
     , m_NumJobsAvailable( 0 )
     , m_Jobs( 16, true )
-    , m_Blacklisted( false )
+    , m_Denylisted( false )
 {
     m_DelayTimer.Start( 999.0f );
 }

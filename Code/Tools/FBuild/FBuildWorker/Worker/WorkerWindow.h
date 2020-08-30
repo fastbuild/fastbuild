@@ -9,7 +9,6 @@
 #include "OSUI/OSWindow.h"
 
 // Core
-#include "Core/Containers/Singleton.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AString.h"
 
@@ -26,7 +25,7 @@ class OSWindow;
 
 // WorkerWindow
 //------------------------------------------------------------------------------
-class WorkerWindow : public OSWindow, public Singleton< WorkerWindow >
+class WorkerWindow : public OSWindow
 {
 public:
     WorkerWindow();
@@ -40,9 +39,6 @@ public:
 
     const OSMenu * GetMenu() const { return m_Menu; }
 
-    bool WantToQuit() const { return m_WantToQuit; }
-    void SetWantToQuit() { m_WantToQuit = true; }
-
 private:
     // OSWindow events
     virtual bool OnClose() override;
@@ -55,9 +51,6 @@ private:
 
     // Internal Helpers
     void ToggleMinimized();
-
-    // Set when UI wants to quit
-    volatile bool       m_WantToQuit;
 
     // Window Elements
     OSTrayIcon *        m_TrayIcon;

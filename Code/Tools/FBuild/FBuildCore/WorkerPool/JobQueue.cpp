@@ -239,20 +239,6 @@ void JobQueue::AddJobToBatch( Node * node )
     // mark as building
     node->SetState( Node::BUILDING );
 
-    // trivial build tasks are processed immediately and returned
-    if ( node->GetControlFlags() & Node::FLAG_TRIVIAL_BUILD )
-    {
-        Job localJob( node );
-        Node::BuildResult result = DoBuild( &localJob );
-        switch( result )
-        {
-            case Node::NODE_RESULT_FAILED:  node->SetState( Node::FAILED ); break;
-            case Node::NODE_RESULT_OK:      node->SetState( Node::UP_TO_DATE ); break;
-            default:                        ASSERT( false ); break;
-        }
-        return;
-    }
-
     m_LocalJobs_Staging.Append( node );
 }
 
@@ -348,7 +334,7 @@ Job * JobQueue::GetDistributableJobToRace()
 Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
 {
     MutexHolder m( m_DistributedJobsMutex );
-    auto jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
+    Job * * jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
     if ( jobIt )
     {
         Job * job = *jobIt;
@@ -683,6 +669,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
          ( node->GetType() == Node::LIBRARY_NODE ) ||
          ( node->GetType() == Node::DLL_NODE ) ||
          ( node->GetType() == Node::CS_NODE ) ||
+         ( node->GetType() == Node::EXEC_NODE ) ||
          ( node->GetType() == Node::TEST_NODE ) )
     {
         nodeRelevantToMonitorLog = true;

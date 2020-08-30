@@ -76,6 +76,7 @@ public:
                                           const Array< AString > & filesToExclude,
                                           const Array< AString > & excludePatterns,
                                           bool recurse,
+                                          bool includeReadOnlyStatusInHash,
                                           const Array< AString > * patterns,
                                           const char * inputVarName,
                                           Dependencies & nodes );

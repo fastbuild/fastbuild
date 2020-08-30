@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Error Reference</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>1500 - Compiler detection failed. Unrecognized executable '%s'.</h1>
+    <div class='newsitemheader'>Description</div>
+    <div class='newsitembody'>
+FASTBuild will try to determine the type of compiler by default, using the filename of the specified executable.
+If the compiler type cannot be determined this way, Error #1500 will be emitted. If necessary, you can manually
+specify the compiler type using the .CompilerFamily option.<br>
+<br>
+If you are using a compiler that is not natively supported, but adheres to the convention of one of the supported compilers, you can use the matching CompilerFamily.<br>
+<br>
+If you are using a custom tool or compiler, you can use the "custom" CompilerFamily. Note that for "custom" compilers, dependency tracking will be limitted to only the direct inputs and outputs (no additional dependencies will be discovered).<br>
+<br>
+See the <a href='functions/compiler.html'>Compiler()</a> documentation for more details.
+    </div>
+<div class='newsitemheader'>Example</div>
+    <div class='newsitembody'>
+Config:
+<div class='code'>Compiler( 'gcc' )
+{
+    .Executable     = 'gccc'
+}</div>
+Output:
+<div class='output'>c:\test\fbuild.bff(1,1): FASTBuild Error #1500 - Compiler() - Compiler detection failed. Unrecognized executable 'C:\Test\gccc'.
+Compiler( 'gcc' )
+^
+\--here
+</div>
+Config:
+<div class='code'>Compiler( 'gcc' )
+{
+    .Executable     = 'gccc'
+    .CompilerFamily = 'gcc'
+}</div>
+    </div>
+
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+</body>
+</html>

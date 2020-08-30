@@ -16,7 +16,12 @@ public:
     explicit Cache();
     virtual ~Cache() override;
 
-    virtual bool Init( const AString & cachePath, const AString & cachePathMountPoint ) override;
+    virtual bool Init( const AString & cachePath,
+                       const AString & cachePathMountPoint,
+                       bool cacheRead,
+                       bool cacheWrite,
+                       bool cacheVerbose,
+                       const AString & pluginDLLConfig ) override;
     virtual void Shutdown() override;
     virtual bool Publish( const AString & cacheId, const void * data, size_t dataSize ) override;
     virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize ) override;

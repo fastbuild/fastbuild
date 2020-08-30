@@ -33,6 +33,8 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_Linker,                          "Linker",                       MetaFile() )
     REFLECT( m_LinkerOptions,                   "LinkerOptions",                MetaNone() )
     REFLECT( m_LinkerType,                      "LinkerType",                   MetaOptional() )
+    REFLECT( m_LinkerAllowResponseFile,         "LinkerAllowResponseFile",      MetaOptional() )
+    REFLECT( m_LinkerForceResponseFile,         "LinkerForceResponseFile",      MetaOptional() )
     REFLECT_ARRAY( m_Libraries,                 "Libraries",                    MetaFile() + MetaAllowNonFile() )
     REFLECT_ARRAY( m_LinkerAssemblyResources,   "LinkerAssemblyResources",      MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
     REFLECT( m_LinkerLinkObjects,               "LinkerLinkObjects",            MetaOptional() )
@@ -53,6 +55,8 @@ REFLECT_END( LinkerNode )
 LinkerNode::LinkerNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_LinkerType( "auto" )
+    , m_LinkerAllowResponseFile( false )
+    , m_LinkerForceResponseFile( false )
 {
     m_LastBuildTimeMs = 20000; // Assume link times are fairly long by default
 }
@@ -224,11 +228,9 @@ LinkerNode::~LinkerNode()
         }
 
         // capture all of the stdout and stderr
-        AutoPtr< char > memOut;
-        AutoPtr< char > memErr;
-        uint32_t memOutSize = 0;
-        uint32_t memErrSize = 0;
-        p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+        AString memOut;
+        AString memErr;
+        p.ReadAllData( memOut, memErr );
 
         ASSERT( !p.IsRunning() );
         // Get result
@@ -290,8 +292,8 @@ LinkerNode::~LinkerNode()
         {
             if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
             {
-                if ( memOut.Get() ) { Node::DumpOutput( job, memOut.Get(), memOutSize ); }
-                if ( memErr.Get() ) { Node::DumpOutput( job, memErr.Get(), memErrSize ); }
+                Node::DumpOutput( job, memOut );
+                Node::DumpOutput( job, memErr );
             }
             else
             {
@@ -299,7 +301,7 @@ LinkerNode::~LinkerNode()
                 // (since compilation will fail anyway, and the output will be shown)
                 if ( GetFlag( LINK_FLAG_MSVC ) && !GetFlag( LINK_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
                 {
-                    HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+                    HandleWarningsMSVC( job, GetName(), memOut );
                 }
             }
             break; // success!
@@ -329,11 +331,9 @@ LinkerNode::~LinkerNode()
         }
 
         // capture all of the stdout and stderr
-        AutoPtr< char > memOut;
-        AutoPtr< char > memErr;
-        uint32_t memOutSize = 0;
-        uint32_t memErrSize = 0;
-        stampProcess.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+        AString memOut;
+        AString memErr;
+        stampProcess.ReadAllData( memOut, memErr );
         ASSERT( !stampProcess.IsRunning() );
 
         // Get result
@@ -348,8 +348,8 @@ LinkerNode::~LinkerNode()
                                        FBuild::Get().GetOptions().m_ShowCommandOutput;
         if ( showCommandOutput )
         {
-            if ( memOut.Get() ) { Node::DumpOutput( job, memOut.Get(), memOutSize ); }
-            if ( memErr.Get() ) { Node::DumpOutput( job, memErr.Get(), memErrSize ); }
+            Node::DumpOutput( job, memOut );
+            Node::DumpOutput( job, memErr );
         }
 
         // did the executable fail?
@@ -512,7 +512,7 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
     }
 
     // Handle all the special needs of args
-    if ( fullArgs.Finalize( m_Linker, GetName(), CanUseResponseFile() ) == false )
+    if ( fullArgs.Finalize( m_Linker, GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error
     }
@@ -655,7 +655,7 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
             flags |= LinkerNode::LINK_FLAG_GREENHILLS_ELXR;
         }
         else if ( ( linkerName.EndsWithI( "mwldeppc.exe" ) ) ||
-            ( linkerName.EndsWithI( "mwldeppc." ) ) )
+            ( linkerName.EndsWithI( "mwldeppc" ) ) )
         {
             flags |= LinkerNode::LINK_FLAG_CODEWARRIOR_LD;
         }
@@ -929,15 +929,40 @@ void LinkerNode::EmitStampMessage() const
     FLOG_OUTPUT( output );
 }
 
-// CanUseResponseFile
+// GetResponseFileMode
 //------------------------------------------------------------------------------
-bool LinkerNode::CanUseResponseFile() const
+ArgsResponseFileMode LinkerNode::GetResponseFileMode() const
 {
+    // User forces response files to be used, regardless of args length?
+    if ( m_LinkerForceResponseFile )
+    {
+        return ArgsResponseFileMode::ALWAYS;
+    }
+
+    // User explicitly says we can use response file if needed?
+    if ( m_LinkerAllowResponseFile )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+
+    // Detect a compiler that supports response file args?
     #if defined( __WINDOWS__ )
-        return ( GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD ) );
-    #else
-        return false;
+        // Generally only windows applications support response files (to overcome Windows command line limits)
+        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+        // probably want this for other platforms as well though.
+        if ( GetFlag( LINK_FLAG_MSVC ) ||
+             GetFlag( LINK_FLAG_GCC ) ||
+             GetFlag( LINK_FLAG_SNC ) ||
+             GetFlag( LINK_FLAG_ORBIS_LD ) ||
+             GetFlag( LINK_FLAG_GREENHILLS_ELXR ) ||
+             GetFlag( LINK_FLAG_CODEWARRIOR_LD ) )
+        {
+            return ArgsResponseFileMode::IF_NEEDED;
+        }
     #endif
+
+    // Cannot use response files
+    return ArgsResponseFileMode::NEVER;
 }
 
 // GetImportLibName

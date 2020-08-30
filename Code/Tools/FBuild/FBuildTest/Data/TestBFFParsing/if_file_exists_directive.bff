@@ -1,0 +1,9 @@
+//
+// #if file_exists() directive
+//
+
+#if file_exists("file.dat")
+    Print("File exists")
+#else
+    Print("File does not exist")
+#endif

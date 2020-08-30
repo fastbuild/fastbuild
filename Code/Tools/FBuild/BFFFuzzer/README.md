@@ -54,9 +54,9 @@ Currently there are build configurations only for Linux, although it can be buil
 *   Get libFuzzer source code (see above).
 *   Build libFuzzer with required flags (using libc++ instead of libstdc++, with MSan instrumentation and ignoring MSan diagnostics from libFuzzer itself):
     ```bash
-    echo "fun:_ZN6fuzzer*" > blacklist.txt
-    echo "fun:_ZNK6fuzzer*" >> blacklist.txt
-    CXX='clang -stdlib=libc++ -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-blacklist=blacklist.txt' ./build.sh
+    echo "fun:_ZN6fuzzer*" > denylist.txt
+    echo "fun:_ZNK6fuzzer*" >> denylist.txt
+    CXX='clang -stdlib=libc++ -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-blacklist=denylist.txt' ./build.sh
     ```
 *   Copy resulting library to `External/MSan/` subdirectory in the FASTBuild repo:
     ```bash

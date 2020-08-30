@@ -8,8 +8,10 @@
 #endif
 
 #include "Worker.h"
-#include "WorkerWindow.h"
-#include "WorkerSettings.h"
+
+// FBuildWorker
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerWindow.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -19,6 +21,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h"
 
+// Core
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/Env/Types.h"
@@ -44,11 +47,12 @@ Worker::Worker( const AString & args, bool consoleMode )
     , m_NetworkStartupHelper( nullptr )
     , m_BaseArgs( args )
     , m_LastWriteTime( 0 )
+    , m_WantToQuit( false )
     , m_RestartNeeded( false )
     #if defined( __WINDOWS__ )
         , m_LastDiskSpaceResult( -1 )
         , m_LastMemoryCheckResult( -1 )
-#endif
+    #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
@@ -110,7 +114,7 @@ int32_t Worker::Work()
         #if __WINDOWS__
             VERIFY( ::AllocConsole() );
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-            VERIFY( freopen("CONOUT$", "w", stdout) ); // TODO:C consider using freopen_s
+            VERIFY( freopen( "CONOUT$", "w", stdout ) ); // TODO:C consider using freopen_s
             PRAGMA_DISABLE_POP_MSVC // 4996
         #endif
 
@@ -121,15 +125,15 @@ int32_t Worker::Work()
         // Create UI
         m_MainWindow = FNEW( WorkerWindow() );
     }
-    
+
     // spawn work thread
     m_WorkThread = Thread::CreateThread( &WorkThreadWrapper,
-                                        "WorkerThread",
-                                        ( 256 * KILOBYTE ),
-                                        this );
+                                         "WorkerThread",
+                                         ( 256 * KILOBYTE ),
+                                         this );
     ASSERT( m_WorkThread != INVALID_THREAD_HANDLE );
-    
-	// Run the UI message loop if we're not in console mode
+
+    // Run the UI message loop if we're not in console mode
     if ( m_MainWindow )
     {
         m_MainWindow->Work(); // Blocks until exit
@@ -189,20 +193,9 @@ uint32_t Worker::WorkThread()
         }
     }
 
-    for(;;)
+    // Main Loop
+    for ( ;; )
     {
-        if ( InConsoleMode() )
-        {
-            // TODO: Handle Ctrl+C gracefully to remove worker token etc
-        }
-        else
-        {
-            if ( WorkerWindow::Get().WantToQuit() )
-            {
-                break;
-            }
-        }
-
         UpdateAvailability();
 
         UpdateUI();
@@ -211,13 +204,17 @@ uint32_t Worker::WorkThread()
 
         PROFILE_SYNCHRONIZE
 
+        // Check if we want to exit
+        if ( m_WantToQuit )
+        {
+            break;
+        }
+
         Thread::Sleep( 500 );
     }
 
-    #if defined( __OSX__ )
-        extern void WindowOSX_StopMessageLoop(); // TODO:C tidy this up
-        WindowOSX_StopMessageLoop();
-    #endif
+    // Now that we will no longer interact with the UI, we can stop the message pump
+    m_MainWindow->StopMessagePump();
 
     m_WorkerBrokerage.SetAvailability( false );
 
@@ -328,7 +325,7 @@ void Worker::UpdateAvailability()
         {
             if ( ( m_IdleDetection.IsIdleFloat() >= 0.0f ) && ( m_IdleDetection.IsIdleFloat() <= 1.0f ) )
             {
-                numCPUsToUse = uint32_t(numCPUsToUse * m_IdleDetection.IsIdleFloat());
+                numCPUsToUse = uint32_t( (float)numCPUsToUse * m_IdleDetection.IsIdleFloat() );
             }
             else
             {
@@ -355,7 +352,7 @@ void Worker::UpdateAvailability()
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
 
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0 );
 }
 
 // UpdateUI
@@ -392,13 +389,12 @@ void Worker::UpdateUI()
         m_MainWindow->SetStatus( status.Get() );
     }
 
-
     if ( InConsoleMode() == false )
     {
         // thread output
         JobQueueRemote & jqr = JobQueueRemote::Get();
         const size_t numWorkers = jqr.GetNumWorkers();
-        for ( size_t i=0; i<numWorkers; ++i )
+        for ( size_t i = 0; i < numWorkers; ++i )
         {
             // get status of worker
             AStackString<> workerStatus;
@@ -435,7 +431,7 @@ void Worker::CheckForExeUpdate()
         // can we restart yet?
         if ( JobQueueRemote::Get().HaveWorkersStopped() )
         {
-            WorkerWindow::Get().SetWantToQuit();
+            m_WantToQuit = true;
         }
 
         return;
@@ -484,7 +480,7 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     AStackString<> buffer;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
     va_end( args );
 
@@ -510,7 +506,7 @@ void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     AStackString<> buffer;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
     va_end( args );
 

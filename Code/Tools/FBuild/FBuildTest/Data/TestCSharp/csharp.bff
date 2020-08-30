@@ -11,11 +11,11 @@ Settings {}
 Compiler( 'CSharpCompiler' )
 {
     .Executable     = "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe"
-    .CompilerFamily    = "custom"
 }
 
 .Compiler           = 'CSharpCompiler'
 .CompilerOptions    = '/out:"%2" /target:library "%1"'
+.CompilerInputPathRecurse = false
 
 ;
 ; A single c# file

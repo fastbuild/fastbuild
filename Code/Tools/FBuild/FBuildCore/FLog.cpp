@@ -36,6 +36,7 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ bool FLog::s_ShowVerbose = false;
+/*static*/ bool FLog::s_ShowBuildReason = false;
 /*static*/ bool FLog::s_ShowErrors = true;
 /*static*/ bool FLog::s_ShowProgress = false;
 /*static*/ bool FLog::s_MonitorEnabled = false;
@@ -171,7 +172,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ void FLog::OutputInternal( const char * type, const char * message )
 {
-    if( type == nullptr )
+    if ( type == nullptr )
     {
         OUTPUT( "%s", message );
         return;

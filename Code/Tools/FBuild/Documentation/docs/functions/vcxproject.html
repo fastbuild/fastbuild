@@ -19,7 +19,6 @@
 	        <div class='navbar'>
 	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
@@ -45,7 +44,7 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
   .ProjectFiles                   // (optional) List of files to include in project
   .ProjectFilesToExclude          // (optional) List of files to exclude from project
   .ProjectBasePath                // (optional) Base path(s) for root folder(s) in project
-  .ProjectFileTypes               // (optional) List of filters to overide base file types (see below)
+  .ProjectFileTypes               // (optional) List of filters to override base file types (see below)
 
   // Build Config Options
   .ProjectConfigs                 // (optional) List of project configurations, see below for details.
@@ -168,10 +167,10 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
       Example:
 <div class='code'>.ProjectInputPaths  = 'Code/Library/'</div>
       Example:
-<div class='code'>.ProjectInputPaths  = [
+<div class='code'>.ProjectInputPaths  = {
                         'Code/Library/Folder1/'
                         'Code/Library/Folder2/'
-                      ]</div>
+                      }</div>
       <hr>    
 
       <p><b>.ProjectInputPathsExclude</b> - String or ArrayOfStrings - (Optional)</p>
@@ -179,10 +178,10 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
       Example:
 <div class='code'>.ProjectInputPathsExclude   = 'Code/Library/SubDir/'</div>
       Example:
-<div class='code'>.ProjectInputPathsExclude   = [
+<div class='code'>.ProjectInputPathsExclude   = {
                                 'Code/Library/SubDir1/'
                                 'Code/Library/SubDir2/'
-                              ]</div>
+                              }</div>
       <hr>    
 
       
@@ -191,41 +190,44 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
       Example:
 <div class='code'>.ProjectPatternToExclude   = '*/OSX/*'</div>
       Example:
-<div class='code'>.ProjectPatternToExclude   = [
+<div class='code'>.ProjectPatternToExclude   = {
                                 '*/OSX/*'
                                 '*/Linux/*'
-                              ]</div>
+                              }</div>
       <hr>    
         
         
       <p><b>.ProjectAllowedFileExtensions</b> - String or ArrayOfStrings - (Optional)</p>
       <p>Filter for file type(s) to include in the project.</p>
       Example:
-<div class='code'>.ProjectAllowedFileExtensions   = [ '*.cpp', '*.h' ]</div>
+<div class='code'>.ProjectAllowedFileExtensions   = { '*.cpp', '*.h' }</div>
       If not specified, the following filters will be used:
-<div class='code'>.ProjectAllowedFileExtensions   = [
-                                    '*.cpp', '*.hpp', '*.cxx', '*.hxx', '*.c',   '*.h',  '*.cc',   '*.hh',
-                                    '*.cp',  '*.hp',  '*.cs',  '*.inl', '*.bff', '*.rc', '*.resx', '*.m",  '*.mm',
-                                    '*.cu''
-                              ]</div>
+<div class='code'>
+.ProjectAllowedFileExtensions 	= {
+                                  '*.cpp', '*.hpp', '*.cxx', '*.hxx', '*.c',   '*.h',  '*.cc',   '*.hh',
+                                  '*.cp',  '*.hp',  '*.cs',  '*.inl', '*.bff', '*.rc', '*.resx', '*.m',  '*.mm',
+                                  '*.cu',
+                                  '*.asm', '*.s',
+                                  '*.natvis', '*.editorconfig'
+                              }</div>
       <hr>       
 
       <p><b>.ProjectFiles</b> - String or ArrayOfStrings - (Optional)</p>
       <p>File(s) to explicitly include in the project.</p>
       Example:
-<div class='code'>.ProjectFiles   = [
+<div class='code'>.ProjectFiles   = {
                     'Code/Library/SubDir/FileA.cpp'
                     'Code/Library/SubDir/FileA.h'
-                  ]</div>
+                  }</div>
       <hr> 
 
       <p><b>.ProjectFilesToExclude</b> - String or ArrayOfStrings - (Optional)</p>
       <p>Files to exclude from the project (filtered from files discovered via ProjectInputPaths).</p>
       Example:
-<div class='code'>.ProjectFilesToExclude  = [
+<div class='code'>.ProjectFilesToExclude  = {
                             'Code/Library/SubDir/FileB.cpp'
                             'Code/Library/SubDir/FileB.h'
-                          ]</div>
+                          }</div>
       <hr> 
 
 
@@ -287,7 +289,7 @@ Example:
 <div class='newsitembody'>
 
       <p><b>.ProjectReferences</b> - String or ArrayOfStrings - (Optional)</p>
-      <p>References to assemblies can be specified.  This may be necessary if mixing C#, Mangaged C++ and C++ projects.</p>
+      <p>References to assemblies can be specified.  This may be necessary if mixing C#, Managed C++ and C++ projects.</p>
       Example:
 <div class='code'>.ProjectReferences = 'System.Core'</div>
       Example:

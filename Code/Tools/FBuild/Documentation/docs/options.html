@@ -19,7 +19,6 @@
 	        <div class='navbar'>
 	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
@@ -66,7 +65,7 @@
   </tr>
   <tr>
     <td><a href="#config">-config [path]</a></td>
-    <td>Explicity specify the config file to use.</td>
+    <td>Explicitly specify the config file to use.</td>
   </tr>
   <tr>
     <td><a href="#continueafterdbmove">-continueafterdbmove</a></td>
@@ -185,6 +184,10 @@
     <td>Wait for a previous build to complete before starting.</td>
   </tr>  
   <tr>
+    <td><a href="#why">-why</a></td>
+    <td>For each item that builds, show the trigger reason.</td>
+  </tr>
+  <tr>
     <td><a href="#wrapper">-wrapper</a></td>
     <td>Wrapper mode for Visual Studio. (Windows only)</td>
   </tr>
@@ -246,12 +249,12 @@ of the cache and how quickly it is growing. (See the related <a href='#cachetrim
     <div class='newsitembody'>
 <p>Control compression level of items stored in the cache. (Default -1)</p>
 <p>This can be used to increase the level of compression, trading increased CPU time when storing to the cache
-        in order to reduce network transfer and storage. This can be useful in network bandwidth limitted environments.
+        in order to reduce network transfer and storage. This can be useful in network bandwidth limited environments.
         Since decompression speed remains fairly constant, an increase in compression time may also be a worthwhile
-        tradeoff for environments that populate a cache once for many users to consume (an automated build environment
+        trade-off for environments that populate a cache once for many users to consume (an automated build environment
         for example).</p>
 <p>This can also be used to reduce the level of compression, with the reverse considerations. This can be useful in CPU
-        limitted environments with high network bandwidth availability.</p>
+        limited environments with high network bandwidth availability.</p>
 <table>
     <tr><th width=150>Level</th><th>Description</th></tr>
     <tr><td>-128 to -1</td><td>LZ4 compression. Lower values are faster but compress less. Default is -1.</td></tr>
@@ -259,7 +262,7 @@ of the cache and how quickly it is growing. (See the related <a href='#cachetrim
     <tr><td>1 to 12</td><td>LZ4 HC compression. Higher values compress more, but are slower.</td></tr>
 </table>
 <p>Timings will vary depending on hardware and objects being cached, but example timings compressing a
-~900KiB object files file is as follows:
+~900KiB object file is as follows:
     <div class="code">
 File : Tools/FBuild/FBuildTest/Data/TestCompressor/TestObjFile.o
 Size : 897329
@@ -300,7 +303,7 @@ information and performance metrics. This can be used to assist troubleshooting.
 
     <div class='newsitemheader' id="clean">-clean</div>
     <div class='newsitembody'>
-<p>Force a clean build.  The build configuration file is re-parsed and all exsiting dependency information is discarded.  A build is performed as if building for the first time with no built files present.</p>
+<p>Force a clean build.  The build configuration file is re-parsed and all existing dependency information is discarded.  A build is performed as if building for the first time with no built files present.</p>
 </div>
 
     <div class='newsitemheader' id="compdb">-compdb</div>
@@ -310,7 +313,7 @@ information and performance metrics. This can be used to assist troubleshooting.
 
     <div class='newsitemheader' id="config">-config [path]</div>
     <div class='newsitembody'>
-<p>Explicity specify the config file to use.  By default, FASTBuild looks for "fbuild.bff" in the current directory.  This options allows a file to be explicitly
+<p>Explicitly specify the config file to use.  By default, FASTBuild looks for "fbuild.bff" in the current directory.  This options allows a file to be explicitly
 specified instead.</p>
 </div>
 
@@ -472,10 +475,6 @@ suppressed.</p>
 <p>NOTE: This option will lengthen the total build time, depending on the complexity of the build.</p>
 </div>
 
-  <tr>
-    <td><a href="#showcmdoutput">-showcmdoutput</a></td>
-    <td>Show output of external processes.</td>
-  </tr>  
     <div class='newsitemheader' id="showcmdoutput">-showcmdoutput</div>
     <div class='newsitembody'>
 <p>Displays the full output of external processes regardless of outcome.</p>
@@ -550,17 +549,23 @@ those which have the .Hidden property set.</p>
 <p>Only one instance of FASTBuild can run at a time within the same root working directory. If you launch another FASTBuild while
 one is already running, the error "Another FASTBuild is already running." will be emitted.</p>
 <p>If you wish to build multiple targets, you should specify them together on the command line.  
-This allows for paralellization across both targets.</p>
+This allows for parallelization across both targets.</p>
 <p>Alternatively, the -wait command line arg allows you to queue the second build, so instead of failing, it will start 
 after the first build completes.  This will be slower than if both targets were invoked together 
 on the original command line.</p>
+</div>
+
+    <div class='newsitemheader' id="why">-why</div>
+    <div class='newsitembody'>
+<p>While building, the reason for each item being built is shown. This can be useful for diagnosing
+unexpected dependencies.</p>
 </div>
 
 
     <div class='newsitemheader' id="wrapper">-wrapper (Windows Only)</div>
     <div class='newsitembody'>
 <p>Spawns FASTBuild via an intermediate sub-process to be able to cleanly terminate a build from Visual Studio.</p>
-<p>When cancelling a build in Visual Studio, the FASTBuild process will be killed, with no opportunity to save the build database, resulting in lost compilation work. Specifying this option spawns an orpaphaned child process to do the actual work. When the parent process is terminated by Visual Studio, the child process detects this and cleanly shuts down.</p>
+<p>When canceling a build in Visual Studio, the FASTBuild process will be killed, with no opportunity to save the build database, resulting in lost compilation work. Specifying this option spawns an orphaned child process to do the actual work. When the parent process is terminated by Visual Studio, the child process detects this and cleanly shuts down.</p>
 <p>If a subsequent "wrapper mode" build is initiated before the first terminates, FASTBuild will wait for this first process to complete.</p>
 </div>
 
@@ -609,7 +614,7 @@ than this amount it will not accept work.</p>
 <table>
   <tr><th width=150>Syntax</th><th>Description</th></tr>
   <tr><td>-mode=disabled</td><td>Worker will accept no tasks.</td></tr>
-  <tr><td>-mode=idle</td><td>Worker will accept tasks when PC is considerd idle.</td>
+  <tr><td>-mode=idle</td><td>Worker will accept tasks when PC is considered idle.</td>
   <tr><td>-mode=dedicated</td><td>Worker will accept tasks regardless of PC state.</td></tr>
   <tr><td>-mode=proportional</td><td>Worker will accept tasks proportional to PC's idle CPU power.</td>
 </table>
@@ -621,7 +626,7 @@ than this amount it will not accept work.</p>
     <div class='newsitembody'>
 <p>Don't spawn a sub-process copy of the worker.</p>
 <p>By default, when the FBuildWorker is launched, it makes a copy of itself (FBuildWorker.exe.copy), launches the copy and terminates.  The duplicate process monitors the original executable file for changes, and re-launches itself if the file is updated. In this way, the FBuildWorker.exe can be kept under revision control, and when synchronized to a new version, will automatically re-start.</p>
-<p>The "-nosubprocess" option supresses this behaviour.</p>
+<p>The "-nosubprocess" option suppresses this behaviour.</p>
 </div>
 
 

@@ -27,18 +27,20 @@ private:
     void Build_ExecCommand_MultipleInputChange() const;
     void Build_ExecCommand_UseStdOut() const;
     void Build_ExecCommand_ExpectedFailures() const;
+    void Exclusions() const;
 };
 
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestExec )
-    REGISTER_TEST(BuildHelperExe)
-    REGISTER_TEST(Build_ExecCommand_ExpectedSuccesses)
-    REGISTER_TEST(Build_ExecCommand_NoRebuild)
-    REGISTER_TEST(Build_ExecCommand_SingleInputChange)
-    REGISTER_TEST(Build_ExecCommand_MultipleInputChange)
-    REGISTER_TEST(Build_ExecCommand_UseStdOut)
-    REGISTER_TEST(Build_ExecCommand_ExpectedFailures)
+    REGISTER_TEST( BuildHelperExe )
+    REGISTER_TEST( Build_ExecCommand_ExpectedSuccesses )
+    REGISTER_TEST( Build_ExecCommand_NoRebuild )
+    REGISTER_TEST( Build_ExecCommand_SingleInputChange )
+    REGISTER_TEST( Build_ExecCommand_MultipleInputChange )
+    REGISTER_TEST( Build_ExecCommand_UseStdOut )
+    REGISTER_TEST( Build_ExecCommand_ExpectedFailures )
+    REGISTER_TEST( Exclusions )
 REGISTER_TESTS_END
 
 // Helpers
@@ -46,8 +48,8 @@ REGISTER_TESTS_END
 void CreateInputFile( const AString & target )
 {
     FileStream f;
-    f.Open( target.Get(), FileStream::WRITE_ONLY);
-    f.WriteBuffer("I", 1);
+    f.Open( target.Get(), FileStream::WRITE_ONLY );
+    f.WriteBuffer( "I", 1 );
     f.Close();
 }
 
@@ -67,14 +69,14 @@ void TestExec::BuildHelperExe() const
     const AStackString<> exec( "../tmp/Test/Exec/exec.exe" );
 
     // clean up anything left over from previous runs
-    EnsureFileDoesNotExist(exec);
+    EnsureFileDoesNotExist( exec );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "HelperExe" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Exec/exec.fdb" ) );
 
     // make sure all output is where it is expected
-    EnsureFileExists(exec);
+    EnsureFileExists( exec );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -92,7 +94,7 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
 
-    FBuild fBuild(options);
+    FBuild fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // Make the relevant inputs
@@ -105,8 +107,8 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     // First file commented out because it is supposed to not exist
     CreateInputFile( inFile_oneInput );
     CreateInputFile( inFile_stdout );
-    CreateInputFile(inFile_multiInputA);
-    CreateInputFile(inFile_multiInputB);
+    CreateInputFile( inFile_multiInputA );
+    CreateInputFile( inFile_multiInputB );
 
     // make sure all output is where it is expected
     const AStackString<> outFile_dummy( "../tmp/Test/Exec/dummy_file_does_not_exist.txt.out" );
@@ -116,21 +118,21 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     const AStackString<> outFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt.out" );
 
     // clean up anything left over from previous runs
-    EnsureFileDoesNotExist(outFile_dummy);
-    EnsureFileDoesNotExist(outFile_oneInput);
-    EnsureFileDoesNotExist(outFile_stdout);
-    EnsureFileDoesNotExist(outFile_multiInputA);
-    EnsureFileDoesNotExist(outFile_multiInputB);
+    EnsureFileDoesNotExist( outFile_dummy );
+    EnsureFileDoesNotExist( outFile_oneInput );
+    EnsureFileDoesNotExist( outFile_stdout );
+    EnsureFileDoesNotExist( outFile_multiInputA );
+    EnsureFileDoesNotExist( outFile_multiInputB );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "ExecCommandTest_ExpectedSuccesses" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Exec/exec.fdb" ) );
 
-    EnsureFileExists(outFile_dummy);
-    EnsureFileExists(outFile_oneInput);
-    EnsureFileExists(outFile_stdout);
-    EnsureFileExists(outFile_multiInputA);
-    EnsureFileExists(outFile_multiInputB);
+    EnsureFileExists( outFile_dummy );
+    EnsureFileExists( outFile_oneInput );
+    EnsureFileExists( outFile_stdout );
+    EnsureFileExists( outFile_multiInputA );
+    EnsureFileExists( outFile_multiInputB );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -151,7 +153,7 @@ void TestExec::Build_ExecCommand_NoRebuild() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild(options);
+    FBuild fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     TEST_ASSERT( fBuild.Build( "ExecCommandTest_ExpectedSuccesses" ) );
@@ -178,7 +180,7 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild(options);
+    FBuild fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     const AStackString<> inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
@@ -215,11 +217,11 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild(options);
+    FBuild fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
-    CreateInputFile(inFile_multiInputA);
+    CreateInputFile( inFile_multiInputA );
 
     TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
 
@@ -237,7 +239,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
     // ------- Now try the other file
 
     const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
-    CreateInputFile(inFile_multiInputB);
+    CreateInputFile( inFile_multiInputB );
 
     TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
 
@@ -260,20 +262,20 @@ void TestExec::Build_ExecCommand_UseStdOut() const
     // did actually make it into the stdout file
 
     const AStackString<> outFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
-    EnsureFileExists(outFile_stdout);
+    EnsureFileExists( outFile_stdout );
 
     // Expected contents begin with:
     const AStackString<> expectedData( "Touched: " );
     const size_t firstLineBufferSize = 21;
-    char firstLineBuffer[firstLineBufferSize];
+    char firstLineBuffer[ firstLineBufferSize ];
 
     FileStream f;
-    f.Open(outFile_stdout.Get(), FileStream::READ_ONLY);
-    f.ReadBuffer(static_cast<char*>(&firstLineBuffer[0]), firstLineBufferSize - 1);
+    f.Open( outFile_stdout.Get(), FileStream::READ_ONLY );
+    f.ReadBuffer( static_cast< char * >( &firstLineBuffer[ 0 ] ), firstLineBufferSize - 1 );
     f.Close();
 
-    const AStackString<> firstLine(&firstLineBuffer[0], &firstLineBuffer[firstLineBufferSize]);
-    TEST_ASSERT( firstLine.BeginsWith(expectedData) );
+    const AStackString<> firstLine( &firstLineBuffer[ 0 ], &firstLineBuffer[ firstLineBufferSize ] );
+    TEST_ASSERT( firstLine.BeginsWith( expectedData ) );
 }
 
 //------------------------------------------------------------------------------
@@ -288,7 +290,7 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     options.m_FastCancel = true;
     options.m_NumWorkerThreads = 2;
 
-    FBuild fBuild(options);
+    FBuild fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // build
@@ -297,3 +299,42 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     targets.EmplaceBack( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" );
     TEST_ASSERT( !fBuild.Build( targets ) );
 }
+
+// Exclusions
+//------------------------------------------------------------------------------
+void TestExec::Exclusions() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/Exclusions/fbuild.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( "Test" ) );
+
+    // Check all the exclusion methods worked as expected
+    const char* const aliasesToCheck[] =
+    {
+        "ExcludePath-ForwardSlash",
+        "ExcludePath-Backslash",
+        "ExcludedFiles-File",
+        "ExcludedFiles-Path-ForwardSlash",
+        "ExcludedFiles-Path-Backslash",
+        "ExcludePattern-ForwardSlash",
+        "ExcludePattern-Backslash",
+    };
+    for (const char* const aliasToCheck : aliasesToCheck)
+    {
+        // Get the TestNode (via the Alias)
+        const Node * aliasNode = fBuild.GetNode( aliasToCheck );
+        TEST_ASSERT( aliasNode );
+        const Node * testNode = aliasNode->GetStaticDependencies()[ 0 ].GetNode();
+        TEST_ASSERT( testNode );
+
+        // Check that it has one dynamic dependency, and that it's the 'B' file
+        TEST_ASSERT( testNode->GetDynamicDependencies().GetSize() == 1 );
+        TEST_ASSERT( testNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "FileB.txt" ) );
+    }
+}
+
+//------------------------------------------------------------------------------

@@ -100,6 +100,13 @@ bool BFFParser::ParseFromString( const char * fileName, const char * fileContent
 //------------------------------------------------------------------------------
 bool BFFParser::Parse( BFFTokenRange & iter )
 {
+    // Check for excessive depth (deeply recusive function calls for example)
+    if ( BFFStackFrame::GetDepth() >= 128 )
+    {
+        Error::Error_1035_ExcessiveDepthComplexity( iter.GetCurrent() );
+        return false;
+    }
+
     while ( iter.IsAtEnd() == false )
     {
         // Handle updating current bff path variable
@@ -147,6 +154,34 @@ bool BFFParser::Parse( BFFTokenRange & iter )
                 return false;
             }
             continue;
+        }
+
+        // User-defined function (declaration)
+        if ( token->IsKeyword( BFF_KEYWORD_FUNCTION ) )
+        {
+            if ( ParseUserFunctionDeclaration( iter ) == false )
+            {
+                return false;
+            }
+            continue;
+        }
+
+        // User-defined function (invocation)
+        if ( token->IsIdentifier() )
+        {
+            // Is it a used function?
+            const BFFUserFunction * func = GetUserFunction( token->GetValueString() );
+            if ( func )
+            {
+                // Try and invoke it
+                if ( ParseUserFunctionCall( iter, *func ) == false )
+                {
+                    return false;
+                }
+                continue;
+            }
+
+            // Not a user function - fallthrough
         }
 
         // End of File
@@ -500,6 +535,223 @@ bool BFFParser::ParseUnnamedScope( BFFTokenRange & iter )
     return true;
 }
 
+// ParseUserFunctionDeclaration
+//------------------------------------------------------------------------------
+bool BFFParser::ParseUserFunctionDeclaration( BFFTokenRange & iter )
+{
+    ASSERT( iter->IsKeyword( BFF_KEYWORD_FUNCTION) );
+    iter++;
+
+    // Get function name
+    if ( iter->IsIdentifier() == false )
+    {
+        Error::Error_1107_ExpectedFunctionNameFollowingFunctionKeyword( iter.GetCurrent() );
+        return false;
+    }
+    const BFFToken * functionName = iter.GetCurrent();
+    iter++;
+
+    // Check function is not already declared
+    if ( FBuild::Get().GetUserFunctions().FindFunction( functionName->GetValueString() ) )
+    {
+        Error::Error_1108_FunctionAlreadyDefined( functionName );
+        return false;
+    }
+
+    // Find parameter declaration range
+    if ( iter-> IsRoundBracket( '(' ) == false )
+    {
+        Error::Error_1023_FunctionRequiresAHeader( iter.GetCurrent(), nullptr );
+        return false;
+    }
+    BFFTokenRange header;
+    if ( FindBracedRange( iter, header ) == false )
+    {
+        return false; // FindBracedRange will have emitted an error
+    }
+
+    // Validate/parse argument declarations (ok to be empty)
+    StackArray< const BFFToken * > arguments;
+    while ( header.IsAtEnd() == false )
+    {
+        // Get parameter name
+        if ( header->IsVariable() == false )
+        {
+            Error::Error_1007_ExpectedVariable( header.GetCurrent(), nullptr );
+            return false;
+        }
+        const BFFToken * newArg = header.GetCurrent();
+        header++;
+
+        // TODO:B Support default values for arguments
+
+        // Check arg is not already defined
+        for ( const BFFToken * existingArg : arguments )
+        {
+            if ( newArg->GetValueString() == existingArg->GetValueString() )
+            {
+                Error::Error_1109_FunctionArgumentAlreadyDefined( newArg );
+                return false;
+            }
+        }
+
+        // Store arg
+        arguments.Append( newArg );
+
+        // Allow optional commas between args
+        if ( header->IsComma() )
+        {
+            header++;
+        }
+    }
+
+    // Find body
+    if ( iter->IsCurlyBracket( '{' ) == false )
+    {
+        Error::Error_1024_FunctionRequiresABody( iter.GetCurrent(), nullptr );
+        return false;
+    }
+    BFFTokenRange bodyRange;
+    if ( FindBracedRange( iter, bodyRange ) == false )
+    {
+        return false; // FindBracedRange will have emitted an error
+    }
+
+    // Store function
+    FBuild::Get().GetUserFunctions().AddFunction( functionName->GetValueString(), arguments, bodyRange );
+    return true;
+}
+
+// ParseUserFunctionCall
+//------------------------------------------------------------------------------
+bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFunction & function )
+{
+    ASSERT( iter->IsIdentifier() ); // Pointing to the function name
+    const BFFToken * functionToken = iter.GetCurrent();
+    iter++;
+
+    // Find arguments block
+    if ( iter->IsRoundBracket( '(' ) == false )
+    {
+        Error::Error_1110_ExpectedArgumentBlockForFunctionCall( iter.GetCurrent() );
+        return false;
+    }
+    BFFTokenRange argsIter;
+    if ( FindBracedRange( iter, argsIter ) == false )
+    {
+        return false; // FindBracedRange will have emitted an error
+    }
+
+    // Get arguments
+    StackArray< const BFFToken * > arguments;
+    while ( argsIter.IsAtEnd() == false )
+    {
+        // Get parameter
+        if ( argsIter->IsString() ||
+             argsIter->IsBooelan() ||
+             argsIter->IsNumber() )
+        {
+            // Literal value
+            arguments.Append( argsIter.GetCurrent() );
+        }
+        else if ( argsIter->IsVariable() )
+        {
+            // Variable
+            arguments.Append( argsIter.GetCurrent() );
+        }
+        else
+        {
+            Error::Error_1112_FunctionCallExpectedArgument( argsIter.GetCurrent() );
+            return false;
+        }
+        argsIter++;
+
+        // Allow optional commas between args
+        if ( argsIter->IsComma() )
+        {
+            argsIter++;
+        }
+    }
+
+    // Check arguments against function signature
+    const Array< const BFFToken * > & expectedArgs = function.GetArgs();
+    if ( arguments.GetSize() != expectedArgs.GetSize() )
+    {
+        Error::Error_1111_FunctionCallArgumentMismatch( functionToken,
+                                                        (uint32_t)arguments.GetSize(),
+                                                        (uint32_t)expectedArgs.GetSize() );
+        return false;
+    }
+
+    // Function call has its own stack frame
+    BFFStackFrame frame;
+
+    // Push args into function call stack frame
+    const size_t numArgs = arguments.GetSize();
+    for ( size_t i = 0; i < numArgs; ++i )
+    {
+        const BFFToken * expectedArg = expectedArgs[ i ];
+        const AString & argName = expectedArg->GetValueString();
+        const BFFToken * arg = arguments[ i ];
+        if ( arg->IsString() )
+        {
+            BFFStackFrame::SetVarString( argName, arg->GetValueString(), &frame );
+        }
+        else if ( arg->IsBooelan() )
+        {
+            BFFStackFrame::SetVarBool( argName, arg->GetBoolean(), &frame );
+        }
+        else if ( arg->IsNumber() )
+        {
+            BFFStackFrame::SetVarInt( argName, arg->GetValueInt(), &frame );
+        }
+        else
+        {
+            ASSERT( arg->IsVariable() );
+
+            // a variable, possibly with substitutions
+            AStackString<> srcVarName;
+            bool srcParentScope;
+            if ( ParseVariableName( arg, srcVarName, srcParentScope ) == false )
+            {
+                return false; // ParseVariableName will have emitted an error
+            }
+
+            // Determine stack frame to use for Src var
+            BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();
+            if ( srcParentScope )
+            {
+                srcVarName[ 0 ] = BFF_DECLARE_VAR_INTERNAL;
+                srcFrame = BFFStackFrame::GetCurrent()->GetParent();
+            }
+
+            // get the variable
+            const BFFVariable * varSrc = srcFrame ? srcFrame->GetVariableRecurse( srcVarName ) : nullptr;
+            if ( varSrc == nullptr )
+            {
+                Error::Error_1009_UnknownVariable( arg, nullptr, srcVarName );
+                return false;
+            }
+
+            // Set in function frame with argument name
+            BFFStackFrame::SetVar( varSrc, argName, &frame );
+        }
+    }
+
+    // Isolate stack frame (function calls cannot access anything outside
+    // of their own scope)
+    frame.DisconnectStackChain();
+
+    // Invoke function
+    BFFTokenRange functionImplementation( function.GetBodyTokenRange() );
+    if ( Parse( functionImplementation ) == false )
+    {
+        return false; // Parse will have emitted an error
+    }
+
+    return true;
+}
+
 // FindBracedRange
 //------------------------------------------------------------------------------
 bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBracedRange, const Function * function ) const
@@ -637,12 +889,11 @@ bool BFFParser::StoreVariableString( const AString & name,
             }
             else if ( !dstIsEmpty )
             {
-                auto end = var->GetArrayOfStrings().End();
-                for ( auto it=var->GetArrayOfStrings().Begin(); it!=end; ++it )
+                for ( const AString & it : var->GetArrayOfStrings() )
                 {
-                    if ( *it != value ) // remove equal strings
+                    if ( it != value ) // remove equal strings
                     {
-                        finalValues.Append( *it );
+                        finalValues.Append( it );
                     }
                 }
             }
@@ -1108,12 +1359,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
             {
                 if ( dstIsEmpty == false )
                 {
-                    auto end = varDst->GetArrayOfStrings().End();
-                    for ( auto it = varDst->GetArrayOfStrings().Begin(); it!=end; ++it )
+                    for ( const AString & it : varDst->GetArrayOfStrings() )
                     {
-                        if ( *it != varSrc->GetString() ) // remove equal strings
+                        if ( it != varSrc->GetString() ) // remove equal strings
                         {
-                            values.Append( *it );
+                            values.Append( it );
                         }
                     }
                 }
@@ -1474,6 +1724,19 @@ void BFFParser::SetBuiltInVariable_CurrentBFFDir( const char * fileName )
     const AStackString<> varName( "._CURRENT_BFF_DIR_" );
     BFFStackFrame::SetVarString( varName, relativePath, &m_BaseStackFrame );
     // TODO:B Add a mechanism to mark variable as read-only
+}
+
+// GetUserFunction
+//------------------------------------------------------------------------------
+BFFUserFunction * BFFParser::GetUserFunction( const AString & name )
+{
+    // Handle no FBuild (for tests)
+    if ( FBuild::IsValid() == false )
+    {
+        return nullptr;
+    }
+
+    return FBuild::Get().GetUserFunctions().FindFunction( name );
 }
 
 //------------------------------------------------------------------------------

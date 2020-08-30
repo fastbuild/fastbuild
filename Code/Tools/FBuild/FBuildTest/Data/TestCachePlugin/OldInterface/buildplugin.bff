@@ -1,0 +1,45 @@
+//
+// Build an external cache plugin
+//
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // Activate standard settings
+
+// Plugin library (X64)
+//------------------------------------------------------------------------------
+ObjectList( 'CachePlugin-Lib-X64' )
+{
+#if __WINDOWS__
+    Using( .VisualStudioToolChain_X64 )
+#endif
+#if __LINUX__
+    .CompilerOptions    + ' -fPIC'
+#endif
+    .CompilerInputFiles = "$TestRoot$/Data/TestCachePlugin/OldInterface/Plugin.cpp"
+    .CompilerOutputPath = "$Out$/Test/CachePlugin/OldInterface/"
+}
+
+// Plugin DLL (X64)
+//------------------------------------------------------------------------------
+DLL( 'Plugin-DLL-X64' )
+{
+    #if __WINDOWS__
+        Using( .VisualStudioToolChain_X64 )
+        .LinkerOptions      + ' /DLL'
+                            + .CRTLibs_Static
+                            + ' OLDNAMES.LIB'
+                            + ' kernel32.lib'
+        .LinkerOutput       = '$Out$/Test/CachePlugin/OldInterface/CachePlugin.dll'
+    #endif
+    #if __LINUX__
+        .LinkerOptions      + ' -shared'
+        .LinkerOutput       = '$Out$/Test/CachePlugin/OldInterface/CachePlugin.so'
+    #endif
+    #if __OSX__
+        .LinkerOptions      + ' -shared'
+        .LinkerOutput       = '$Out$/Test/CachePlugin/OldInterface/CachePlugin.so'
+    #endif
+
+    .Libraries          = { 'CachePlugin-Lib-X64' }
+}

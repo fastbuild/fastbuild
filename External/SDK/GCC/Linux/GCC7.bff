@@ -13,6 +13,11 @@ Compiler( 'Compiler-GCC7' )
                                         '/usr/lib/gcc/x86_64-linux-gnu/7/cc1plus'
                                       }
     .CompilerFamily                 = 'gcc' // TODO: Remove when FASTBuild detection is improved
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_SOURCE_MAPPING
+        .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
 }
 
 // ToolChain
@@ -28,6 +33,7 @@ Compiler( 'Compiler-GCC7' )
                                     + ' -g'             // Generate debug info
                                     + ' -m64'           // x86_64
                                     + ' -D__LINUX__'    // Platform define
+                                    + ' -D__X64__'      // Architecture define
                                     + ' -ffreestanding' // prevent extra magic includes like stdc-predefs.h
 
                                     // Include paths

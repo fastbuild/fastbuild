@@ -42,6 +42,7 @@ _fbuild() {
 		-version
 		-vs
 		-wait
+		-why
 		-wrapper
 	"
 

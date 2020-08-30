@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Error Reference</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>1005 - Unsupported node type in '%s'.<br>(Node: '%s', Type: '%s')</h1>
+    <div class='newsitemheader'>Description</div>
+    <div class='newsitembody'>
+A Function references a previously defined node, but that node is of a type that cannot be sensibly handled in
+the context of said Function.  For example, an Executable can link previously defined libraries, but not Unity nodes.
+    </div>
+<div class='newsitemheader'>Example</div>
+    <div class='newsitembody'>
+Config:
+<div class='code'>Unity( 'MyUnity' )
+{
+    .UnityInputPath     = 'Code/'
+    .UnityOutputPath    = 'tmp/'
+}
+Executable( 'MyExe' )
+{
+    .Libraries          = 'MyUnity' // Can't link to unity generated files (they must be compiled)
+    .Linker             = 'link.exe'
+    .LinkerOptions      = '%1 %2'
+    .LinkerOutput       = 'tmp/my.exe'
+}</div>
+Output:
+<div class='output'>c:\Test\fbuild.bff(6):(1) FASTBuild Error #1005 - Executable() - Unsupported node type in 'Libraries'. 
+(Node: 'MyUnity', Type: 'Unity')
+Executable( 'MyExe' )
+^
+\--here
+</div>
+Fix:
+<div class='code'>Unity( 'MyUnity' )
+{
+    .UnityInputPath     = 'Code/'
+    .UnityOutputPath    = 'tmp/'
+}
+ObjectList( 'MyLib' )
+{
+    .Compiler           = 'MyCompiler' // Previously defined
+    .CompilerInputUnity = 'MyUnity'
+    .CompilerOutputPath = 'out/'
+}
+Executable( 'MyExe' )
+{
+    .Libraries          = 'MyLib' // Valid input
+    .Linker             = 'link.exe'
+    .LinkerOptions      = '%1 %2'
+    .LinkerOutput       = 'tmp/my.exe'
+}</div>
+    </div>
+
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+</body>
+</html>

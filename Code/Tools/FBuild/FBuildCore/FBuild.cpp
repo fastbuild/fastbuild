@@ -83,13 +83,14 @@ FBuild::FBuild( const FBuildOptions & options )
 
     // poke options where required
     FLog::SetShowVerbose( m_Options.m_ShowVerbose );
+    FLog::SetShowBuildReason( m_Options.m_ShowBuildReason );
     FLog::SetShowErrors( m_Options.m_ShowErrors );
     FLog::SetShowProgress( m_Options.m_ShowProgress );
     FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
 
     Function::Create();
 
-    NetworkStartupHelper::SetMasterShutdownFlag( &s_AbortBuild );
+    NetworkStartupHelper::SetMainShutdownFlag( &s_AbortBuild );
 }
 
 // DESTRUCTOR
@@ -181,7 +182,12 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_Cache = FNEW( Cache() );
         }
 
-        if ( m_Cache->Init( settings->GetCachePath(), settings->GetCachePathMountPoint() ) == false )
+        if ( m_Cache->Init( settings->GetCachePath(),
+                            settings->GetCachePathMountPoint(),
+                            m_Options.m_UseCacheRead,
+                            m_Options.m_UseCacheWrite,
+                            m_Options.m_CacheVerbose,
+                            settings->GetCachePluginDLLConfig() ) == false )
         {
             m_Options.m_UseCacheRead = false;
             m_Options.m_UseCacheWrite = false;
@@ -444,7 +450,7 @@ bool FBuild::Build( Node * nodeToBuild )
                 stopping = true;
                 if ( m_Options.m_FastCancel )
                 {
-                    // Notify the system that the master process has been killed and that it can kill its process.
+                    // Notify the system that the main process has been killed and that it can kill its process.
                     AtomicStoreRelaxed( &s_AbortBuild, true );
                 }
             }
@@ -562,6 +568,13 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     return true;
 }
 
+// AddFileExistsCheck
+//------------------------------------------------------------------------------
+bool FBuild::AddFileExistsCheck( const AString & fileName )
+{
+    return m_FileExistsInfo.CheckFile( fileName );
+}
+
 // GetLibEnvVar
 //------------------------------------------------------------------------------
 void FBuild::GetLibEnvVar( AString & value ) const
@@ -586,7 +599,7 @@ void FBuild::AbortBuild()
     AtomicStoreRelaxed( &s_StopBuild, true );
     if ( FBuild::IsValid() && FBuild::Get().m_Options.m_FastCancel )
     {
-        // Notify the system that the master process has been killed and that it can kill its process.
+        // Notify the system that the main process has been killed and that it can kill its process.
         AtomicStoreRelaxed( &s_AbortBuild, true );
     }
 }
@@ -719,6 +732,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::XCODEPROJECT_NODE:   break;
             case Node::SETTINGS_NODE:       break;
             case Node::TEXT_FILE_NODE:      displayName = true; hidden = node->IsHidden(); break;
+            case Node::LIST_DEPENDENCIES_NODE: break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
         if ( displayName && ( !hidden || showHidden ) )

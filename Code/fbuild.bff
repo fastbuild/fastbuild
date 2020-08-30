@@ -2,12 +2,16 @@
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// Windows Platform
+// Includes
 //------------------------------------------------------------------------------
+// Platforms
 #include "../External/SDK/GCC/GCC.bff"
 #include "../External/SDK/VisualStudio/VisualStudio.bff"
 #include "../External/SDK/Clang/Clang.bff"
 #include "../External/SDK/Windows/Windows.bff"
+
+// Helpers
+#include ".FASTBuild/HelperFunctions.bff"
 
 //------------------------------------------------------------------------------
 // Settings
@@ -16,11 +20,10 @@ Settings
 {
     #if __WINDOWS__
         #import TMP
-        .Environment    = { "PATH=$VS_PATH$",
+        .Environment    = { "PATH=$VS_PATH$;$WINDOWS_SDK_2019_PATH$",
                             "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
     #endif
-    .AllowDBMigration_Experimental = true
 }
 
 //------------------------------------------------------------------------------
@@ -256,6 +259,18 @@ Settings
     .X64ProfileConfig_OSX       = .ToolChain_Clang_OSX
                                 + .Profile_Config
                                 + .Profile_Optimizations
+
+    #if CLANG_SUPPORTS_ARMOSX
+        .ARM64DebugConfig_OSX       = .ToolChain_Clang_ARMOSX
+                                    + .Debug_Config
+                                    + .Debug_Optimizations
+        .ARM64ReleaseConfig_OSX     = .ToolChain_Clang_ARMOSX
+                                    + .Release_Config
+                                    + .Release_Optimizations
+        .ARM64ProfileConfig_OSX     = .ToolChain_Clang_ARMOSX
+                                    + .Profile_Config
+                                    + .Profile_Optimizations
+    #endif
 #endif
 
 //------------------------------------------------------------------------------
@@ -270,24 +285,26 @@ Settings
 //------------------------------------------------------------------------------
 // VisualStudio Project Generation
 //------------------------------------------------------------------------------
-.ProjectCommon =
-[
-    .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache ^$(ProjectName)-^$(Configuration)'
-    .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean ^$(ProjectName)-^$(Configuration)'
-    .OutputDirectory            = '^$(SolutionDir)\Temp'
-    .IntermediateDirectory      = '^$(SolutionDir)\Temp'
-    .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'
-    .Platform                   = 'x64'
-    .PlatformToolset            = '$VS_PlatformToolset$'
-]
+#if __WINDOWS__
+    .ProjectCommon =
+    [
+        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache ^$(ProjectName)-^$(Configuration)'
+        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean ^$(ProjectName)-^$(Configuration)'
+        .OutputDirectory            = '^$(SolutionDir)\Temp'
+        .IntermediateDirectory      = '^$(SolutionDir)\Temp'
+        .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'
+        .Platform                   = 'x64'
+        .PlatformToolset            = '$VS_PlatformToolset$'
+    ]
 
-.Project_x64_Debug        = [ Using( .ProjectCommon ) .Config = 'x64-Debug' ]
-.Project_x64_Analyze      = [ Using( .ProjectCommon ) .Config = 'x64-Analyze' ]
-.Project_x64_Profile      = [ Using( .ProjectCommon ) .Config = 'x64-Profile' ]
-.Project_x64_Release      = [ Using( .ProjectCommon ) .Config = 'x64-Release' ]
-.Project_x64Clang_Debug   = [ Using( .ProjectCommon ) .Config = 'x64Clang-Debug' ]
-.Project_x64Clang_Profile = [ Using( .ProjectCommon ) .Config = 'x64Clang-Profile' ]
-.Project_x64Clang_Release = [ Using( .ProjectCommon ) .Config = 'x64Clang-Release' ]
+    .Project_x64_Debug        = [ Using( .ProjectCommon ) .Config = 'x64-Debug' ]
+    .Project_x64_Analyze      = [ Using( .ProjectCommon ) .Config = 'x64-Analyze' ]
+    .Project_x64_Profile      = [ Using( .ProjectCommon ) .Config = 'x64-Profile' ]
+    .Project_x64_Release      = [ Using( .ProjectCommon ) .Config = 'x64-Release' ]
+    .Project_x64Clang_Debug   = [ Using( .ProjectCommon ) .Config = 'x64Clang-Debug' ]
+    .Project_x64Clang_Profile = [ Using( .ProjectCommon ) .Config = 'x64Clang-Profile' ]
+    .Project_x64Clang_Release = [ Using( .ProjectCommon ) .Config = 'x64Clang-Release' ]
+#endif
 
 // Configurations
 //------------------------------------------------------------------------------
@@ -303,6 +320,9 @@ Settings
 #endif
 #if __OSX__
     .BuildConfigs               = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
+    #if CLANG_SUPPORTS_ARMOSX
+                                + { .ARM64DebugConfig_OSX, .ARM64ProfileConfig_OSX, .ARM64ReleaseConfig_OSX }
+    #endif
 #endif
 
 .Targets_x64_Debug = {}
@@ -328,6 +348,9 @@ Settings
 .Targets_x64OSX_Debug = {}
 .Targets_x64OSX_Profile = {}
 .Targets_x64OSX_Release = {}
+.Targets_ARMOSX_Debug = {}
+.Targets_ARMOSX_Profile = {}
+.Targets_ARMOSX_Release = {}
 
 // External
 #include "..\External\LZ4\LZ4.bff"
@@ -370,7 +393,7 @@ Alias( 'Exes' )
 
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
-.Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
+.Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX', 'ARMOSX' }
 .PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
@@ -379,6 +402,7 @@ Alias( 'Exes' )
                                + { 'ASan', 'MSan', 'TSan' }
 #endif
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_ARMOSX        = { 'Debug', 'Profile', 'Release' }
 ForEach( .Platform in .Platforms )
 {
     Alias( 'All-$Platform$' )
@@ -405,6 +429,9 @@ ForEach( .Platform in .Platforms )
     Alias( 'All' )
     {
         .Targets        = { 'All-x64OSX' }
+        #if CLANG_SUPPORTS_OSXARM
+                        + { 'All-ARMOSX' }
+        #endif
     }
 #endif
 #if __LINUX__
@@ -430,10 +457,17 @@ ForEach( .Platform in .Platforms )
 #if __OSX__
     Alias( 'Tests' )
     {
-        .Targets        = { 'CoreTest-RunTest-x64OSX-Debug',
-                            'CoreTest-RunTest-x64OSX-Release',
-                            'FBuildTest-RunTest-x64OSX-Debug'
-                          }
+        #if __ARM64__
+            .Targets        = { 'CoreTest-RunTest-ARMOSX-Debug',
+                                'CoreTest-RunTest-ARMOSX-Release',
+                                'FBuildTest-RunTest-ARMOSX-Debug'
+                              }
+        #else
+            .Targets        = { 'CoreTest-RunTest-x64OSX-Debug',
+                                'CoreTest-RunTest-x64OSX-Release',
+                                'FBuildTest-RunTest-x64OSX-Debug'
+                              }
+        #endif
     }
 #endif
 #if __LINUX__
@@ -466,7 +500,7 @@ Alias( 'All+Tests' )
         //.ProjectConfigs             = .AllProjectConfigs_x64
 
         .ProjectConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = 'All-$Platform$-$BuildConfigName$' ]
@@ -483,7 +517,7 @@ Alias( 'All+Tests' )
         .ProjectBasePath            = .ProjectInputPaths
 
         .ProjectConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
@@ -505,7 +539,7 @@ Alias( 'All+Tests' )
         ]
 
         .ProjectConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) Using( .GenerateProjectsCommands ) ]
@@ -521,7 +555,7 @@ Alias( 'All+Tests' )
                               }
         .SolutionBuildProject = 'All-proj'
         .SolutionConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .SolutionConfig         = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
@@ -582,7 +616,7 @@ Alias( 'All+Tests' )
                                         'OSUI-xcodeproj'
                                         'TestFramework-xcodeproj' }
         .ProjectConfigs = {}
-        ForEach( .BuildConfig in.BuildConfigs )
+        ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
             .ProjectConfig          = [ .Config = '$BuildConfigName$' .Target = 'All-x64OSX-$BuildConfigName$' ]

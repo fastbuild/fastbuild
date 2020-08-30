@@ -5,8 +5,9 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
@@ -29,6 +30,9 @@ private:
     void TestMultipleAssemblies_NoRebuild() const;
     void TestMultipleAssemblies_NoRebuild_BFFChange() const;
     void TestMixedAssemblyWithCPP() const;
+    void CSharpWithObjectListFails() const;
+    void UsingNonCSharpCompilerFails() const;
+    void Exclusions() const;
 };
 
 // Register Tests
@@ -44,6 +48,9 @@ REGISTER_TESTS_BEGIN( TestCSharp )
     REGISTER_TEST( TestMultipleAssemblies_NoRebuild )
     REGISTER_TEST( TestMultipleAssemblies_NoRebuild_BFFChange )
 //  REGISTER_TEST( TestMixedAssemblyWithCPP ) // TODO:A Enable
+    REGISTER_TEST( CSharpWithObjectListFails )
+    REGISTER_TEST( UsingNonCSharpCompilerFails )
+    REGISTER_TEST( Exclusions )
 REGISTER_TESTS_END
 
 // TestSingleFile
@@ -98,7 +105,6 @@ void TestCSharp::TestSingleFile_NoRebuild() const
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsTotal( 4,     2 );
 }
-
 
 // TestSingleFile_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
@@ -237,7 +243,6 @@ void TestCSharp::TestMultipleAssemblies() const
     CheckStatsTotal( 8,     8 );
 }
 
-
 // TestMultipleAssemblies_NoRebuild
 //------------------------------------------------------------------------------
 void TestCSharp::TestMultipleAssemblies_NoRebuild() const
@@ -289,6 +294,79 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild_BFFChange() const
 void TestCSharp::TestMixedAssemblyWithCPP() const
 {
     // TODO:A Implement functionality and tests
+}
+
+// CSharpWithObjectListFails
+//------------------------------------------------------------------------------
+void TestCSharp::CSharpWithObjectListFails() const
+{
+    //
+    // The C# compiler should only be used with CSAssembly
+    //
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/ObjectListFails/fbuild.bff";
+
+    // Expect failure
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() == false );
+
+    // Check for the expected failure
+    TEST_ASSERT( GetRecordedOutput().Find( "#1503 - ObjectList() - C# compiler should use CSAssembly." ) );
+}
+
+// UsingNonCSharpCompilerFails
+//------------------------------------------------------------------------------
+void TestCSharp::UsingNonCSharpCompilerFails() const
+{
+    //
+    // CSAssembly should only use the C# Compiler
+    //
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/UsingNonCSharpCompilerFails/fbuild.bff";
+
+    // Expect failure
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() == false );
+
+    // Check for the expected failure
+    TEST_ASSERT( GetRecordedOutput().Find( "#1504 - CSAssembly() - CSAssembly requires a C# Compiler." ) );
+}
+
+// Exclusions
+//------------------------------------------------------------------------------
+void TestCSharp::Exclusions() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/Exclusions/fbuild.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( "Test" ) );
+
+    // Check all the exclusion methods worked as expected
+    const char* const aliasesToCheck[] =
+    {
+        "ExcludePath-ForwardSlash",
+        "ExcludePath-Backslash",
+        "ExcludedFiles-File",
+        "ExcludedFiles-Path-ForwardSlash",
+        "ExcludedFiles-Path-Backslash",
+        "ExcludePattern-ForwardSlash",
+        "ExcludePattern-Backslash",
+    };
+    for ( const char* const aliasToCheck : aliasesToCheck )
+    {
+        // Get the TestNode (via the Alias)
+        const Node * aliasNode = fBuild.GetNode( aliasToCheck );
+        TEST_ASSERT( aliasNode );
+        const Node * testNode = aliasNode->GetStaticDependencies()[ 0 ].GetNode();
+        TEST_ASSERT( testNode );
+
+        // Check that it has one dynamic dependency, and that it's the 'B' file
+        TEST_ASSERT( testNode->GetDynamicDependencies().GetSize() == 1 );
+        TEST_ASSERT( testNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "FileB.cs" ) );
+    }
 }
 
 //------------------------------------------------------------------------------

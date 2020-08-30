@@ -30,6 +30,7 @@
     .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
                                     + ' -DWIN64'
+                                    + ' -D__X64__'
 
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions
@@ -45,5 +46,9 @@ Compiler( 'ResourceCompiler-Windows10' )
     .Executable                 = '$Windows10_SDKBasePath$/Bin/$Windows10_SDKVersion$/x64/RC.exe'
     .CompilerFamily             = 'custom'
 }
+
+// PATH environment variable
+//------------------------------------------------------------------------------
+.WINDOWS_SDK_2019_PATH          = '$Windows10_SDKBasePath$/bin/$Windows10_SDKVersion$/x64'
 
 //------------------------------------------------------------------------------

@@ -29,7 +29,10 @@ public:
 
     inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
     inline bool GetUseLightCache() const { return m_UseLightCache; }
+    inline bool GetUseRelativePaths() const { return m_UseRelativePaths; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
+    inline bool CanUseResponseFile() const { return m_AllowResponseFile; }
+    inline bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
@@ -49,11 +52,13 @@ public:
         QT_RCC          = 8,
         VBCC            = 9,
         ORBIS_WAVE_PSSLC= 10,
+        CSHARP          = 11,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 
     const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
     const char * GetEnvironmentString() const;
+    const AString & GetSourceMapping() const { return m_SourceMapping; }
 
 private:
     bool InitializeCompilerFamily( const BFFToken * iter, const Function * function );
@@ -66,6 +71,8 @@ private:
     Array< AString >        m_ExtraFiles;
     Array< AString >        m_CustomEnvironmentVariables;
     bool                    m_AllowDistribution;
+    bool                    m_AllowResponseFile;
+    bool                    m_ForceResponseFile;
     bool                    m_VS2012EnumBugFix;
     bool                    m_ClangRewriteIncludes;
     bool                    m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
@@ -74,8 +81,10 @@ private:
     uint8_t                 m_CompilerFamilyEnum;
     bool                    m_SimpleDistributionMode;
     bool                    m_UseLightCache;
+    bool                    m_UseRelativePaths;
     ToolManifest            m_Manifest;
     Array< AString >        m_Environment;
+    AString                 m_SourceMapping;
 
     // Internal state
     mutable const char *    m_EnvironmentString;

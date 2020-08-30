@@ -111,7 +111,7 @@ public:
     #if defined( WIN32 ) || defined( WIN64 )
         ::Sleep( ms );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        usleep(ms * 1000);
+        usleep( ms * 1000 );
     #else
         #error Unknown platform
     #endif
@@ -124,7 +124,7 @@ public:
                                                       uint32_t stackSize,
                                                       void * userData )
 {
-    ThreadStartInfo& info = *FNEW( ThreadStartInfo( entryFunc, userData, threadName ) );
+    ThreadStartInfo & info = *FNEW( ThreadStartInfo( entryFunc, userData, threadName ) );
     MemoryBarrier();
 
     #if defined( __WINDOWS__ )
@@ -272,7 +272,7 @@ public:
 {
     #if defined( __WINDOWS__ )
         (void)handle; // Nothing to do
-    #elif defined( __APPLE__ ) || defined(__LINUX__)
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
         VERIFY( pthread_detach( (pthread_t)handle ) == 0 );
     #else
         #error Unknown platform
@@ -285,7 +285,7 @@ public:
 {
     #if defined( __WINDOWS__ )
         ::CloseHandle( h );
-    #elif defined( __APPLE__ ) || defined(__LINUX__)
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
         (void)h; // Nothing to do
     #else
         #error Unknown platform
@@ -300,7 +300,7 @@ public:
         ASSERT( name );
 
         #if defined( __WINDOWS__ )
-            #if defined(__clang__)
+            #if defined( __clang__ )
                 // Clang for windows (3.7.1) crashes trying to compile this
             #else
                 const DWORD MS_VC_EXCEPTION=0x406D1388;
@@ -313,7 +313,7 @@ public:
 
                 __try
                 {
-                    RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
+                    RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info );
                 }
                 PRAGMA_DISABLE_PUSH_MSVC( 6320 ) // Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER
                 __except( EXCEPTION_EXECUTE_HANDLER )

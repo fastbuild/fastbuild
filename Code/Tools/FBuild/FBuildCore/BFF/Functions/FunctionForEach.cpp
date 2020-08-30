@@ -159,7 +159,7 @@ FunctionForEach::FunctionForEach()
         }
 
         // skip optional separator
-        if ( headerIter->IsOperator( "," ) )
+        if ( headerIter->IsComma() )
         {
             headerIter++;
         }

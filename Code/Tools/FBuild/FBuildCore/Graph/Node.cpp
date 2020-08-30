@@ -20,6 +20,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ExecNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ListDependenciesNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
@@ -82,6 +83,7 @@
     "Settings",
     "VSExtProj",
     "TextFile",
+    "ListDependencies",
 };
 static Mutex g_NodeEnvStringMutex;
 
@@ -168,7 +170,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
     // can also occur if explicitly dirtied in a previous build
     if ( m_Stamp == 0 )
     {
-        FLOG_VERBOSE( "Need to build '%s' (first time or dirtied)", GetName().Get() );
+        FLOG_BUILD_REASON( "Need to build '%s' (first time or dirtied)\n", GetName().Get() );
         return true;
     }
 
@@ -179,7 +181,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         if ( lastWriteTime == 0 )
         {
             // file is missing on disk
-            FLOG_VERBOSE( "Need to build '%s' (missing)", GetName().Get() );
+            FLOG_BUILD_REASON( "Need to build '%s' (missing)\n", GetName().Get() );
             return true;
         }
 
@@ -187,7 +189,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         {
             // on disk file doesn't match our file
             // (modified by some external process)
-            FLOG_VERBOSE( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")", GetName().Get(), m_Stamp, lastWriteTime );
+            FLOG_BUILD_REASON( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")\n", GetName().Get(), m_Stamp, lastWriteTime );
             return true;
         }
     }
@@ -207,7 +209,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         if ( stamp == 0 )
         {
             // file missing - this may be ok, but node needs to build to find out
-            FLOG_VERBOSE( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
+            FLOG_BUILD_REASON( "Need to build '%s' (dep missing: '%s')\n", GetName().Get(), n->GetName().Get() );
             return true;
         }
 
@@ -216,7 +218,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         const uint64_t oldStamp = dep.GetNodeStamp();
         if ( stamp != oldStamp )
         {
-            FLOG_VERBOSE( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
+            FLOG_BUILD_REASON( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")\n", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
             return true;
         }
     }
@@ -344,6 +346,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
         case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
         case Node::TEXT_FILE_NODE:      return nodeGraph.CreateTextFileNode( name );
+        case Node::LIST_DEPENDENCIES_NODE: return nodeGraph.CreateListDependenciesNode( name );
         case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
     }
 
@@ -572,7 +575,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
         case PT_STRUCT:
         {
-            const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+            const ReflectedPropertyStruct & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
 
             if ( property.IsArray() )
             {
@@ -738,7 +741,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
         }
         case PT_STRUCT:
         {
-            const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+            const ReflectedPropertyStruct & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
 
             if ( property.IsArray() )
             {
@@ -796,11 +799,10 @@ void Node::ReplaceDummyName( const AString & newName )
 // DumpOutput
 //------------------------------------------------------------------------------
 /*static*/ void Node::DumpOutput( Job * job,
-                                  const char * data,
-                                  uint32_t dataSize,
+                                  const AString & output,
                                   const Array< AString > * exclusions )
 {
-    if ( ( data == nullptr ) || ( dataSize == 0 ) )
+    if ( output.IsEmpty() )
     {
         return;
     }
@@ -808,7 +810,8 @@ void Node::ReplaceDummyName( const AString & newName )
     // preallocate a large buffer
     AString buffer( MEGABYTE );
 
-    const char * end = data + dataSize;
+    const char * data = output.Get();
+    const char * end = output.GetEnd();
     while( data < end )
     {
         // find the limits of the current line
@@ -848,7 +851,7 @@ void Node::ReplaceDummyName( const AString & newName )
                 copy += '\n';
 
                 // Clang format fixup for Visual Studio
-                // (FBuild is null in remote context - fixup occurs on master)
+                // (FBuild is null in remote context - fixup occurs on fbuild client machine)
                 if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_FixupErrorPaths )
                 {
                     FixupPathForVSIntegration( copy );
@@ -1001,7 +1004,7 @@ void Node::ReplaceDummyName( const AString & newName )
     AStackString<> beforeTag( line.Get(), tag );
 
     const char * openBracket = beforeTag.Find( '(' );
-    if( openBracket == nullptr )
+    if ( openBracket == nullptr )
     {
         return; // failed to find bracket where expected
     }
@@ -1124,7 +1127,13 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
 void Node::RecordStampFromBuiltFile()
 {
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp != 0 );
+    
+    // An external tool might fail to write a file. Higher level code checks for
+    // that (see "missing despite success"), so we don't need to do anything here.
+    if ( m_Stamp == 0 )
+    {
+        return;
+    }
     
     // On OS X, the 'ar' tool (for making libraries) appears to clamp the
     // modification time of libraries to whole seconds. On HFS/HFS+ file systems,

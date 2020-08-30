@@ -71,7 +71,7 @@ public:
         , m_Int16( 0 )
         , m_Int32( 0 )
         , m_Int64( 0 )
-        , m_Bool( false)
+        , m_Bool( false )
         , m_AString( "" )
     {
     }
@@ -98,7 +98,6 @@ public:
     }
 
 private: // ensure reflection can set private members
-
     friend class TestReflection;
 
     float       m_Float;
