@@ -427,7 +427,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     prefixes[ 3 ].EmplaceBack( "-idirafter" );
     prefixes[ 4 ].EmplaceBack( "-iquote" );
 
-    for ( const auto & group : prefixes )
+    for ( const StackArray<AString, 2> & group : prefixes )
     {
         const bool keepFullOption = false;
         ExtractIntellisenseOptions( compilerArgs, group, outIncludes, escapeQuotes, keepFullOption );

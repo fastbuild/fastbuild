@@ -441,7 +441,6 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
     bool additionalOptionsOk = false;
     for ( const AString & token : tokens )
     {
-        const char * pos;
         if ( token.Find( "NMakePreprocessorDefinitions" ) )
         {
             TEST_ASSERT( token.Find( "INTELLISENSE_DEFINE" ) );
@@ -454,28 +453,30 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( token.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE" ) );
             definesOk = true;
         }
-        else if ( nullptr != ( pos = token.Find( "<NMakeIncludeSearchPath>" ) ) )
+        else if ( token.Find( "<NMakeIncludeSearchPath>" ) )
         {
-            const auto openTagEnd = token.Find( '>', pos );
+            const char * pos = token.Find( "<NMakeIncludeSearchPath>" );
+
+            const char * openTagEnd = token.Find( '>', pos );
             TEST_ASSERT( openTagEnd != nullptr );
 
-            const auto closeTagBegin = token.FindLast( "</NMakeIncludeSearchPath>" );
+            const char * closeTagBegin = token.FindLast( "</NMakeIncludeSearchPath>" );
             TEST_ASSERT( closeTagBegin != nullptr );
             TEST_ASSERT( openTagEnd < closeTagBegin );
 
-            AStackString<> tagValue ( openTagEnd + 1, closeTagBegin );
-            Array< AString > paths;
+            const AStackString<> tagValue( openTagEnd + 1, closeTagBegin );
+            StackArray< AString > paths;
             tagValue.Tokenize( paths, ';' );
 
             // We only interested in checking relative ordering of paths that contain "Intellisense\\".
             Array< AString > includes;
-            for ( const auto & path : paths )
+            for ( const AString & path : paths )
             {
-                const auto pathStartPos = path.Find( "Intellisense\\" );
+                const char * pathStartPos = path.Find( "Intellisense\\" );
                 if ( pathStartPos != nullptr )
                 {
                     // Check that we separated path from the option name correctly.
-                    TEST_ASSERT( pathStartPos == path.Get() || pathStartPos[ -1 ] == '\\' );
+                    TEST_ASSERT( ( pathStartPos == path.Get() ) || ( pathStartPos[ -1 ] == '\\' ) );
 
                     includes.EmplaceBack( pathStartPos, path.GetEnd() );
                 }
@@ -593,14 +594,14 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
         if ( inIncludeSection )
         {
             // We only interested in checking relative ordering of paths that contain "Intellisense\\".
-            const auto pathStartPos = token.Find( "Intellisense/" );
+            const char * pathStartPos = token.Find( "Intellisense/" );
             if ( pathStartPos != nullptr )
             {
 
                 // Check that we separated path from the option name correctly.
-                TEST_ASSERT( pathStartPos == token.Get() || pathStartPos[ -1 ] == '/' );
+                TEST_ASSERT( ( pathStartPos == token.Get() ) || ( pathStartPos[ -1 ] == '/' ) );
 
-                const auto pathEndPos = token.GetEnd() - ( token.EndsWith( ',' ) ? 1 : 0 );
+                const char * pathEndPos = token.GetEnd() - ( token.EndsWith( ',' ) ? 1 : 0 );
                 includes.EmplaceBack( pathStartPos, pathEndPos );
             }
             continue;
