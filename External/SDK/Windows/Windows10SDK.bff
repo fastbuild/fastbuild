@@ -16,7 +16,6 @@
                                 + ' -DWIN32'
                                 + ' -D_WIN32'
                                 + ' -D__WINDOWS__'
-                                + ' -D__X64__'
 
 // Windows 10 SDK
 //------------------------------------------------------------------------------
@@ -31,6 +30,7 @@
     .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
                                     + ' -DWIN64'
+                                    + ' -D__X64__'
 
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions

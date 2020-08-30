@@ -81,7 +81,7 @@
         .CachePath          = '/tmp/.fbuild.cache'
         #if __ARM64__
             #if !CLANG_SUPPORTS_ARMOSX
-                Error("Clang 12 or later is required to build ARMOSX tests")
+                Error( "Clang 12 or later is required to build ARMOSX tests" )
             #endif
             Using( .ARMOSXClangToolChain )
         #else

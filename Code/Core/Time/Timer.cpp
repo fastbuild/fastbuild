@@ -66,7 +66,7 @@ int64_t Timer::GetNow()
     #elif defined( __APPLE__ )
         #if defined( __ARM64__ )
             // mach_absolute_time seems to return the wrong time on Apple Silicon
-            return (int64_t)clock_gettime_nsec_np(CLOCK_MONOTONIC);
+            return (int64_t)clock_gettime_nsec_np( CLOCK_MONOTONIC );
         #else
             return (int64_t)mach_absolute_time();
         #endif
