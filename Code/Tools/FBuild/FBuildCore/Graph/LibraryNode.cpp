@@ -176,7 +176,7 @@ LibraryNode::~LibraryNode()
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    bool spawnOK = p.Spawn( GetLibrarian()->GetName().Get(),
+    bool spawnOK = p.Spawn( m_Librarian.Get(),
                             fullArgs.GetFinalArgs().Get(),
                             workingDir,
                             environment );
@@ -304,7 +304,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     }
 
     // Handle all the special needs of args
-    if ( fullArgs.Finalize( GetLibrarian()->GetName(), GetName(), GetResponseFileMode() ) == false )
+    if ( fullArgs.Finalize( m_Librarian, GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error
     }
@@ -406,14 +406,6 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += '\n';
     }
     FLOG_OUTPUT( output );
-}
-
-// GetLibrarian
-//------------------------------------------------------------------------------
-FileNode * LibraryNode::GetLibrarian() const
-{
-    // Librarian is always at index 0
-    return m_StaticDependencies[ 0 ].GetNode()->CastTo< FileNode >();
 }
 
 // GetResponseFileMode
