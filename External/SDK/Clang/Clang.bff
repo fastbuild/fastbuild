@@ -9,6 +9,7 @@
 #endif
 #if __OSX__
     #define USING_CLANG_8
+    //#define USING_CLANG_12
 #endif
 #if __WINDOWS__
     #define USING_CLANG_7
@@ -37,6 +38,9 @@
     #else
         #if USING_CLANG_8
             #include "OSX/Clang8.bff"
+        #endif
+        #if USING_CLANG_12
+            #include "OSX/Clang12.bff"
         #endif
     #endif
 #endif
