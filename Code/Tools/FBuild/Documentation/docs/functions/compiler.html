@@ -19,7 +19,6 @@
 	        <div class='navbar'>
 	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
@@ -43,14 +42,18 @@ distribution, caching and more.
   .CompilerFamily               // (optional) Explicitly specify compiler type (default: auto)
   .AllowDistribution            // (optional) Allow distributed compilation (if available) (default: true)
   .ExecutableRootPath           // (optional) Override default path for executable distribution
-  .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsuported "compilers" (default: false)
+  .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsupported "compilers" (default: false)
   .CustomEnvironmentVariables   // (optional) Environment variables to set on remote host
   .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
   .Environment                  // (optional) Environment variables to use for local build
+  .AllowResponseFile            // (optional) Allow response files to be used if not auto-detected (default: false)
+  .ForceResponseFile            // (optional) Force use of response files (default: false)
   
   // Temporary Options
-  .UseLightCache_Experimental   // (optional) Enabled experimental "light" caching mode (default: false)
+  .UseLightCache_Experimental   // (optional) Enable experimental "light" caching mode (default: false)
+  .UseRelativePaths_Experimental// (optional) Enable experimental relative path use (default: false)
+  .SourceMapping_Experimental   // (optional) Use Clang's -fdebug-source-map option to remap source files
   .ClangFixupUnity_Disable      // (optional) Disable preprocessor fixup for Unity files (default: false)
 }
 </div>
@@ -141,6 +144,7 @@ Compiler( 'Test' )
         <tr><td>qt-rcc</td><td>Qt's resource compiler</td></tr>
         <tr><td>vbcc</td><td>vbcc compiler</td></tr>
         <tr><td>orbis-wave-psslc</td><td>orbis wave psslc shader compiler</td></tr>
+        <tr><td>csharp</td><td>C# compiler</td></tr>
         <tr><td>&nbsp;</td><td></td></tr>
         <tr><th>Value</th><th>Notes</th></tr>
         <tr><td>custom</td><td>Any custom compiler. <font color=red>NOTE:</font> Only primary input and output dependencies will be tracked. No additional
@@ -174,13 +178,29 @@ Compiler( 'Test' )
 
   	<p><hr></p>
 
+    <p><b>.AllowResponseFile</b> - Boolean - (Optional)</p>	
+    <p>Allow the use of Response Files for passing arguments to the compiler when they exceed operating system limits.</p>
+    <p>FASTBuild automatically detects that some compilers can use Response Files and uses them accordingly. For situations
+    that FASTBuild doesn't auto-detect (such as custom compilers), AllowResponseFile can be set manually.</p>
+
+    <p><hr></p>
+
+    <p><b>.ForceResponseFile</b> - Boolean - (Optional)</p>	
+    <p>Force the use of Response Files for passing arguments to the compiler.</p>
+    <p>FASTBuild uses Response Files to pass command line arguments to Compilers that support them only when needed (length
+    exceeds operating system limits). This is to limit the overhead of Response File creation to situations that
+    require it.</p>
+    <p>Use of Response Files in all cases can be forced with .ForceResponseFile if required.</p>
+
+  	<p><hr></p>
+
 	<p><b>.ClangRewriteIncludes</b> - Bool - (Optional)</p>
 	<p>FASTBuild uses the -E preprocessor option when compiling with Clang to preprocess the source code. In order to
     improve consistency between this preprocessed source and the original source, FASTBuild also uses the -frewrite-includes
-    option by default. An exmaple of this improved consistency is that compiler errors originating from macros will
+    option by default. An example of this improved consistency is that compiler errors originating from macros will
     have the caret point to the correct column location of the source code instead of the column location where the error
     would be in the expanded macro.</p>
-    <p>If for some reason the use of -frewrite-includes is not desireable, it can be disabled by setting
+    <p>If for some reason the use of -frewrite-includes is not desirable, it can be disabled by setting
     .ClangRewriteIncludes to false as follows:</p>
 	<div class='code'>.ClangRewriteIncludes = false</div>
     
@@ -191,7 +211,7 @@ Compiler( 'Test' )
 	<p>A bug exists in the Visual Studio 2012 compiler whereby enums in preprocessed code are sometimes incorrectly 
 	processed when they lie on specific buffer alignment boundaries. This bug is fixed in Visual Studio 2013 
 	and later.<p>
-	<p>If a manual work around (described below) is impractical or undesireable, the .VS2012EnumBugFix
+	<p>If a manual work around (described below) is impractical or undesirable, the .VS2012EnumBugFix
 	option can be enabled to work around the problem at build time.<p>
 	<p>When the bug occurs, the following code:
 	<div class='code'>enum dateorder
@@ -226,7 +246,7 @@ This results in very unintuitive compile errors.</p>
 <div id='compiler' class='newsitemheader'>Examples</div>
     <div class='newsitembody'>
 
-<b>MSVC - 2019 (v16.2)</b>
+<b>MSVC - 2019 (v16.5.1)</b>
 <div class='code'>// VisualStudio 2019 x64 Compiler
 .VS2017_BasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\2017\Community'
 .VS2017_Version          = '14.16.27023'
@@ -246,6 +266,7 @@ Compiler( 'Compiler-VS2017-x64' )
                     '$Root$/msvcp140.dll'
                     '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
+                    '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
                     '$Root$/1033/clui.dll'
                     '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
                   }
@@ -359,14 +380,36 @@ Compiler( 'Compiler-x64Intel' )
 
   	<p><hr></p>
 
+	<p><b>.UseRelativePaths_Experimental</b> - Boolean - (Optional)</p>
+	<p>Use relative paths where possible. This is an experiment to lay a possible foundation for path-independent
+	caching.</p>
+
+    <p><font color=red>NOTE:</font> This feature is incomplete and should not be used.</p>
+
+  	<p><hr></p>
+
+  <p><b>.SourceMapping_Experimental</b> - String - (Optional)</p>
+  <p>Provides a new root to remap source file paths to so they are recorded in the debugging information as if they were stored under the new root. For example, if $_WORKING_DIR_$ is "/path/to/original", a source file "src/main.cpp" would normally be recorded as being stored under "/path/to/original/src/main.cpp", but with .SourceMapping_Experimental='/another/root' it would be recorded as "/another/root/src/main.cpp" instead.</p>
+
+  <p>While the same effect could be achieved by passing "-fdebug-prefix-map=$_WORKING_DIR_$=/another/root" to the compiler via .CompilerOptions, doing so prevents caching from working across machines that use different root paths because the cache keys would not match.</p>
+
+  <p>Source mapping can help make builds more reproducible, and also improve the debugging experience by making it easier for the debugger to find source files when debugging a binary built on another machine. See the <a href="https://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html">GCC documentation for -fdebug-prefix-map</a> for more information.</p>
+
+    <p><font color=red>NOTE:</font> This feature currently only works on Clang 3.8+ and GCC.</p>
+    <p><font color=red>NOTE:</font> Paths expanded from the __FILE__ macro are not remapped because that requires Clang 10+ and GCC 8+ (-fmacro-debug-map).</p>
+    <p><font color=red>NOTE:</font> Only one mapping can be provided, and the source directory for the mapping is always $_WORKING_DIR_$.</p>
+    <p><font color=red>NOTE:</font> This option currently inhibits dsitributed compilation. This will be resolved in a future release.</p>
+
+    <p><hr></p>
+
 	<p><b>.ClangFixupUnity_Disable</b> - Boolean - (Optional)</p>
 	<p>Disable preprocessor fixup for Unity files (default: false).</p> 
 	<p>When compiling Unity files with Clang, FASTBuild will modify the preprocessed output so that
 	the files included by the Unity are considered to be the top level file(s), instead of the Unity file. This
 	makes Clang's warning behavior (particularly for static analysis) consistent between Unity and non-Unity
 	compilation.</p>
-	<p>This temporary option disables this behavior and is provided as a safety mechanism incase there are
-	unforseen problems with this feature. This toggle is expected to be removed in v1.01.</p>
+	<p>This temporary option disables this behavior and is provided as a safety mechanism in case there are
+	unforeseen problems with this feature. This toggle is expected to be removed in v1.01.</p>
 </div>
 
     </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>

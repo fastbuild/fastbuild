@@ -45,6 +45,18 @@
                             + .CommonCompilerOptions
                             + ' -std=c++11'
     ]
+
+    #if CLANG_SUPPORTS_ARMOSX
+        .ARMOSXClangToolChain =
+        [
+            Using( .ToolChain_Clang_ARMOSX )
+
+            // TODO: Move this to ToolChain
+            .PCHOptions         = ' -x c++-header'
+                                + .CommonCompilerOptions
+                                + ' -std=c++11'
+        ]
+    #endif
 #endif
 
 //==============================================================================
@@ -67,7 +79,14 @@
     #endif
     #if __OSX__
         .CachePath          = '/tmp/.fbuild.cache'
-        Using( .OSXClangToolChain )
+        #if __ARM64__
+            #if !CLANG_SUPPORTS_ARMOSX
+                Error( "Clang 12 or later is required to build ARMOSX tests" )
+            #endif
+            Using( .ARMOSXClangToolChain )
+        #else
+            Using( .OSXClangToolChain )
+        #endif
     #endif
 
     // Default location for tmp files

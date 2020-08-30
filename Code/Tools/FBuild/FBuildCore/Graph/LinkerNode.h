@@ -10,6 +10,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
+enum class ArgsResponseFileMode : uint32_t;
 
 // LinkerNode
 //------------------------------------------------------------------------------
@@ -62,7 +63,7 @@ protected:
 
     inline const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
 
-    bool CanUseResponseFile() const;
+    ArgsResponseFileMode GetResponseFileMode() const;
 
     void GetImportLibName( const AString & args, AString & importLibName ) const;
 
@@ -92,6 +93,8 @@ protected:
     Array< AString >    m_Libraries;
     Array< AString >    m_LinkerAssemblyResources;
     bool                m_LinkerLinkObjects             = false;
+    bool                m_LinkerAllowResponseFile;
+    bool                m_LinkerForceResponseFile;    
     AString             m_LinkerStampExe;
     AString             m_LinkerStampExeArgs;
     Array< AString >    m_PreBuildDependencyNames;

@@ -1,0 +1,43 @@
+//
+// Config to compile a source file, which will be used in multiple dirs
+//
+#define ENABLE_RELATIVE_PATHS // Shared compiler config will check this
+
+#include "../../../../../../Code/Tools/FBuild/FBuildTest/Data/testcommon.bff"
+Settings
+{
+    #if __WINDOWS__
+        #import TMP
+        .CachePath          = '$TMP$\.fbuild.cache'
+    #endif
+    #if __LINUX__
+        .CachePath          = '/tmp/.fbuild.cache'
+        Using( .LinuxGCCToolChain )
+    #endif
+    #if __OSX__
+        .CachePath          = '/tmp/.fbuild.cache'
+        Using( .OSXClangToolChain )
+    #endif
+}
+
+// Compile object
+//------------------------------------------------------------------------------
+ObjectList( 'ObjectList' )
+{
+    #if __WINDOWS__
+        Using( .ToolChain_Clang_Windows )
+    #endif
+    #if __LINUX__
+        Using( .ToolChain_Clang_Linux )
+    #endif
+    #if __OSX__
+        #if __ARM64__
+            Using( .ToolChain_Clang_ARMOSX )
+        #else
+            Using( .ToolChain_Clang_OSX )
+        #endif
+    #endif
+
+    .CompilerInputFiles         = 'File.cpp'
+    .CompilerOutputPath         = '../out/'
+}

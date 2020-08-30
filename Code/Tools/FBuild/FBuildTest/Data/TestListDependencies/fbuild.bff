@@ -1,0 +1,34 @@
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// A simple object
+//--------------------
+ObjectList( "SimpleObject" )
+{
+    .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestListDependencies/SimpleObject.cpp"
+    .CompilerOutputPath = "$Out$/Test/Compiler/"
+}
+
+// List dependencies for the target
+//-----------------------------------
+
+ListDependencies( 'SimpleDependencies' )
+{
+    .Source = "SimpleObject"
+    .Dest = "$Out$/Test/ListDependencies/AllDeps.txt"
+}
+
+ListDependencies( 'OnlySourceFiles' )
+{
+    .Source = "SimpleObject"
+    .Patterns = { '*.h', '*.cpp' }
+    .Dest = "$Out$/Test/ListDependencies/SourceDeps.txt"
+}
+
+Alias( 'ListDependencies' )
+{
+    .Targets = { 'SimpleDependencies', 'OnlySourceFiles' }
+}

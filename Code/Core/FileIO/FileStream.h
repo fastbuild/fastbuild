@@ -15,9 +15,9 @@ public:
 
     enum FileMode
     {
-        READ_ONLY       = 0x1,
-        WRITE_ONLY      = 0x2,
-        TEMP            = 0x4,
+        READ_ONLY                     = 0x1,
+        WRITE_ONLY                    = 0x2,
+        TEMP                          = 0x4,
         NO_RETRY_ON_SHARING_VIOLATION = 0x80,
     };
 

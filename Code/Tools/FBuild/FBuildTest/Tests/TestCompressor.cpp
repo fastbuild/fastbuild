@@ -62,7 +62,6 @@ void TestCompressor::CompressSimple() const
                           20,
                           false );
 
-
     // a more representative piece of data
     const char * testData = "#include \"a.cpp\"\r\n#include \"b.cpp\"\r\n#include \"b.cpp\"\r\n";
     CompressSimpleHelper( testData, AString::StrLen( testData ), 0, true );
@@ -190,8 +189,8 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         const double ratio = ( (double)dataSize / (double)compressedSize );
 
         OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n", compressionLevel,
-                                                            (compressTimeTaken / numRepeats), compressThroughputMBs, (double)ratio,
-                                                            (decompressTimeTaken / numRepeats), decompressThroughputMBs );
+                                                            ( compressTimeTaken / numRepeats ), compressThroughputMBs, (double)ratio,
+                                                            ( decompressTimeTaken / numRepeats ), decompressThroughputMBs );
     }
     OUTPUT( "------------------------------------------------\n" );
 }
@@ -209,20 +208,20 @@ void TestCompressor::TestHeaderValidity() const
     TEST_ASSERT( c.IsValidData( buffer.Get(), 12 ) );
 
     // compressed buffer of 0 length is valid
-    data[0] = 1;
+    data[ 0 ] = 1;
     TEST_ASSERT( c.IsValidData( buffer.Get(), 12 ) );
 
     // compressed data
-    data[1] = 32; // uncompressed
-    data[2] = 8; // compressed
+    data[ 1 ] = 32; // uncompressed
+    data[ 2 ] = 8;  // compressed
     TEST_ASSERT( c.IsValidData( buffer.Get(), 20 ) );
 
     // INVALID data - data too small
     TEST_ASSERT( c.IsValidData( buffer.Get(), 4 ) == false );
 
     // INVALID data - compressed bigger than uncompressed
-    data[1] = 8; // uncompressed
-    data[2] = 32; // compressed
+    data[ 1 ] = 8;  // uncompressed
+    data[ 2 ] = 32; // compressed
     TEST_ASSERT( c.IsValidData( buffer.Get(), 44 ) == false );
 }
 

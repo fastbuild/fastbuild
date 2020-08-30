@@ -24,7 +24,7 @@ uint64_t Time::GetCurrentFileTime()
         GetSystemTime( &st );
         if ( SystemTimeToFileTime( &st, &ft ) == FALSE )
         {
-            ASSERT(false); // Should never fail
+            ASSERT( false ); // Should never fail
             return 0;
         }
         const uint64_t fileTimeNow = ( (uint64_t)ft.dwLowDateTime | ( (uint64_t)ft.dwHighDateTime << 32 ) );

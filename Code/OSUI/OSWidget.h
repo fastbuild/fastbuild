@@ -22,8 +22,8 @@ public:
 
     inline OSWindow * GetParentWindow() const { return m_Parent; }
     inline void * GetHandle() const { return m_Handle; }
-protected:
 
+protected:
     OSWindow *  m_Parent;
     void *      m_Handle;
     bool        m_Initialized;

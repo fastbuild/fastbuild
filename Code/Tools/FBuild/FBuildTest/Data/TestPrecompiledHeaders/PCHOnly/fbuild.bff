@@ -1,0 +1,23 @@
+
+#include "..\..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'PCHOnly' )
+{
+    // PCH
+    #if __WINDOWS__
+        .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHOnly/PrecompiledHeader.cpp"
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PCHOnly/PrecompiledHeader.pch"
+    #endif
+    #if __LINUX__
+        .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHOnly/PrecompiledHeader.h"
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PCHOnly/PrecompiledHeader.h.gch"
+    #endif
+    #if __OSX__
+        .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHOnly/PrecompiledHeader.h"
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PCHOnly/PrecompiledHeader.pch"
+    #endif
+}

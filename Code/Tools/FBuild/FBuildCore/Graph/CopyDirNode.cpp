@@ -53,6 +53,7 @@ CopyDirNode::CopyDirNode()
                                               Array< AString >(),     // Unsupported: Excluded files
                                               Array< AString >(),    // Unsupported: Excluded patterns
                                               m_SourcePathsRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_SourcePathsPattern,
                                               "SourcePaths",
                                               sourcePaths ) )
@@ -90,7 +91,7 @@ CopyDirNode::~CopyDirNode() = default;
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
     Array< AString > preBuildDependencyNames( m_PreBuildDependencies.GetSize(), false );
-    for ( const auto & dep : m_PreBuildDependencies )
+    for ( const Dependency & dep : m_PreBuildDependencies )
     {
         preBuildDependencyNames.Append( dep.GetNode()->GetName() );
     }

@@ -297,14 +297,16 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::GetDefaultAllowedFileExtensions( Array< AString > & extensions )
 {
-    static const char * defaultExtensions[] =   {
-                                        "*.cpp", "*.hpp", "*.cxx", "*.hxx", "*.c",   "*.h",  "*.cc",   "*.hh",
-                                        "*.cp",  "*.hp",  "*.cs",  "*.inl", "*.bff", "*.rc", "*.resx", "*.m",  "*.mm",
-                                        "*.cu",
-                                        "*.asm", "*.s",
-                                        "*.natvis" };
+    static const char * const defaultExtensions[] =
+    {
+        "*.cpp", "*.hpp", "*.cxx", "*.hxx", "*.c",   "*.h",  "*.cc",   "*.hh",
+        "*.cp",  "*.hp",  "*.cs",  "*.inl", "*.bff", "*.rc", "*.resx", "*.m",  "*.mm",
+        "*.cu",
+        "*.asm", "*.s",
+        "*.natvis", "*.editorconfig"
+    };
     extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
-    for ( auto & ext : defaultExtensions )
+    for ( const char * const ext : defaultExtensions )
     {
         extensions.EmplaceBack( ext );
     }
@@ -318,7 +320,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     // To normalize run-time behaviour, we convert everything to wildcard format
 
     // convert any that are not wildcards patterns
-    for ( auto & ext : extensions )
+    for ( AString & ext : extensions )
     {
         if ( ext.Find('*') || ext.Find('?') )
         {
@@ -327,7 +329,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
         // convert ".ext" to "*.ext"
         AStackString<> tmp;
-        tmp.Format("*%s", ext.Get());
+        tmp.Format( "*%s", ext.Get() );
         ext = tmp;
     }
 }

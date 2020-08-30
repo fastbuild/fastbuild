@@ -1,0 +1,5 @@
+
+
+Tools/FBuild/FBuildTest/Data/TestUnity/IsolateListFile/file.1.cpp
+Tools/FBuild/FBuildTest/SomeFileThatDoesNotExist.cpp
+

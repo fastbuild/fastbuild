@@ -12,8 +12,8 @@
 #include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
 #include "Core/Reflection/ReflectedProperty.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 #include "Core/Tracing/Tracing.h"
 
 // System
@@ -37,10 +37,9 @@ ReflectionInfo::ReflectionInfo()
 //------------------------------------------------------------------------------
 ReflectionInfo::~ReflectionInfo()
 {
-    auto end = m_Properties.End();
-    for ( auto it = m_Properties.Begin(); it != end; ++it )
+    for ( ReflectedProperty * property : m_Properties )
     {
-        delete *it;
+        delete property;
     }
 
     const IMetaData * md = m_MetaDataChain;
@@ -239,12 +238,11 @@ const ReflectedProperty * ReflectionInfo::FindProperty( const char * name ) cons
 //------------------------------------------------------------------------------
 const ReflectedProperty * ReflectionInfo::FindPropertyRecurse( uint32_t nameCRC ) const
 {
-    auto end = m_Properties.End();
-    for ( auto it = m_Properties.Begin(); it != end; ++it )
+    for ( const ReflectedProperty * property : m_Properties )
     {
-        if ( ( *it )->GetNameCRC() == nameCRC )
+        if ( property->GetNameCRC() == nameCRC )
         {
-            return *it;
+            return property;
         }
     }
     if ( m_SuperClass )

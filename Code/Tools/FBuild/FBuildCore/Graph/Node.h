@@ -79,6 +79,7 @@ public:
         SETTINGS_NODE       = 20,
         VSPROJEXTERNAL_NODE = 21,
         TEXT_FILE_NODE      = 22,
+        LIST_DEPENDENCIES_NODE = 23,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
     };
@@ -86,8 +87,7 @@ public:
     enum ControlFlag
     {
         FLAG_NONE                   = 0x00,
-        FLAG_TRIVIAL_BUILD          = 0x01, // DoBuild is performed locally in main thread
-        FLAG_ALWAYS_BUILD           = 0x02, // DoBuild is always performed (for e.g. directory listings)
+        FLAG_ALWAYS_BUILD           = 0x01, // DoBuild is always performed (for e.g. directory listings)
     };
 
     enum StatsFlag
@@ -169,8 +169,7 @@ public:
     inline uint32_t GetIndex() const { return m_Index; }
 
     static void DumpOutput( Job * job,
-                            const char * data,
-                            uint32_t dataSize,
+                            const AString & output,
                             const Array< AString > * exclusions = nullptr );
 
     inline void     SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }

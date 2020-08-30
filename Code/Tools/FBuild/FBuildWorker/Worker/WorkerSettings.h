@@ -41,12 +41,13 @@ public:
 
     // Time settings were last changed/written to disk
     uint64_t GetSettingsWriteTime() const { return m_SettingsWriteTime; }
-  
+
     inline uint32_t GetMinimumFreeMemoryMiB() { return m_MinimumFreeMemoryMiB; }
     void SetMinimumFreeMemoryMiB( uint32_t value );
 
     void Load();
     void Save();
+
 private:
     Mode        m_Mode;
     uint32_t	m_IdleThresholdPercent;

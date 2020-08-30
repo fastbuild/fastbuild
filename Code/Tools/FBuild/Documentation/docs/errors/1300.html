@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Error Reference</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>1300 - Precompiled Header use requires 'PCHInputFile', 'PCHOutputFile' and 'PCHOptions' parameters.</h1>
+    <div class='newsitemheader'>Description</div>
+    <div class='newsitembody'>
+An attempt was made to use Precompiled headers for a Library, but not all required properties were defined.
+    </div>
+<div class='newsitemheader'>Example</div>
+    <div class='newsitembody'>
+Config:
+<div class='code'>ObjectList( 'compile' )
+{
+    .Compiler           = 'cl.exe'
+    .CompilerInputPath  = 'Code/'
+    .CompilerOutputPath = 'Tmp/'
+    .CompilerOptions    = '%1 %2'
+    .PCHInputFile       = 'PrecompiledHeader.cpp'
+}</div>
+Output:
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1300 - ObjectList() - Precompiled Header use requires
+'PCHInputFile', 'PCHOutputFile' and 'PCHOptions' parameters.
+ObjectList( 'compile' )
+^
+\--here
+</div>
+Fix:
+<div class='code'>ObjectList( 'compile' )
+{
+    .Compiler           = 'cl.exe'
+    .CompilerInputPath  = 'Code/'
+    .CompilerOutputPath = 'tmp/'
+    .CompilerOptions    = '%1 %2'
+    .PCHInputFile       = 'PrecompiledHeader.cpp'
+  
+    // Add missing options
+    .PCHOutputFile      = 'out/PrecompiledHeader.pch'
+    .PCHOptions         = .CompilerOptions + ' /Yc"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+}</div>
+    </div>
+
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+</body>
+</html>

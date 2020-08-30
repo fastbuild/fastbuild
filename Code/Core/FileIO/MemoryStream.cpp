@@ -74,7 +74,8 @@ uint64_t MemoryStream::WriteBuffer( IOStream & stream, uint64_t bytesToWrite )
 //------------------------------------------------------------------------------
 uint64_t MemoryStream::ReadBuffer( void * buffer, uint64_t bytesToRead )
 {
-    (void)buffer; (void)bytesToRead;
+    (void)buffer;
+    (void)bytesToRead;
     ASSERT( false ); // Not implemented - implement if required
     return 0;
 }

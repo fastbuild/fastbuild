@@ -29,7 +29,7 @@ REFLECT_NODE_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_CompilerInputPattern,         "CompilerInputPattern",         MetaOptional() )
     REFLECT_ARRAY(  m_CompilerInputExcludePath,     "CompilerInputExcludePath",     MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_CompilerInputExcludedFiles,   "CompilerInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_CompilerInputExcludePattern,  "CompilerInputExcludePattern",  MetaOptional() + MetaOptional() )
+    REFLECT_ARRAY(  m_CompilerInputExcludePattern,  "CompilerInputExcludePattern",  MetaOptional() + MetaFile( true ) )
     REFLECT_ARRAY(  m_CompilerInputFiles,           "CompilerInputFiles",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_CompilerReferences,           "CompilerReferences",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,      "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
@@ -69,6 +69,13 @@ CSNode::CSNode()
         return false; // GetCompilerNode will have emitted an error
     }
 
+    // Compiler must be C# compiler
+    if ( compilerNode->GetCompilerFamily() != CompilerNode::CompilerFamily::CSHARP )
+    {
+        Error::Error_1504_CSAssemblyRequiresACSharpCompiler( iter, function );
+        return false;
+    }
+
     // .CompilerInputPath
     Dependencies compilerInputPath;
     if ( !Function::GetDirectoryListNodeList( nodeGraph,
@@ -79,6 +86,7 @@ CSNode::CSNode()
                                               m_CompilerInputExcludedFiles,
                                               m_CompilerInputExcludePattern,
                                               m_CompilerInputPathRecurse,
+                                              false, // Don't include read-only status in hash
                                               &m_CompilerInputPattern,
                                               "CompilerInputPath",
                                               compilerInputPath ) )
@@ -192,11 +200,9 @@ CSNode::~CSNode() = default;
     }
 
     // capture all of the stdout and stderr
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+    AString memOut;
+    AString memErr;
+    p.ReadAllData( memOut, memErr );
 
     // Get result
     int result = p.WaitForExit();
@@ -212,8 +218,8 @@ CSNode::~CSNode() = default;
                             FBuild::Get().GetOptions().m_ShowCommandOutput;
     if ( showOutput )
     {
-        Node::DumpOutput( job, memOut.Get(), memOutSize );
-        Node::DumpOutput( job, memErr.Get(), memErrSize );
+        Node::DumpOutput( job, memOut );
+        Node::DumpOutput( job, memErr );
     }
 
     if ( !ok )
@@ -337,8 +343,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
     }
 
     // Handle all the special needs of args
-    const bool canUseResponseFile( true );
-    if ( fullArgs.Finalize( m_CompilerOptions, GetName(), canUseResponseFile ) == false )
+    if ( fullArgs.Finalize( m_CompilerOptions, GetName(), ArgsResponseFileMode::IF_NEEDED ) == false )
     {
         return false; // Finalize will have emitted an error
     }

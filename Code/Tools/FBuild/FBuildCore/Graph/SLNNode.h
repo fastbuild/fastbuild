@@ -59,6 +59,7 @@ class SolutionFolder : public Struct
 public:
     AString             m_Path;
     Array< AString >    m_Projects;
+    Array< AString >    m_Items;
 };
 
 // SolutionDependency

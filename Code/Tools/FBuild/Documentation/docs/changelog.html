@@ -19,13 +19,213 @@
 	        <div class='navbar'>
 	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
-	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
 	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
 	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
 	        </div>
 	        <div class='inner'>
 
 <h1>Changelog</h1>
+
+<div class='newsitemheader'>
+    v1.02&nbsp;<font color='#bbbbbb'>(25th-Aug-2020)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+	<ul>
+		<li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>ForEach correctly handles comma separator in parallel loops</li>
+		</ul>
+		<li>[Windows] Prevent deadlock in FBuildWorker on shutdown when it's sent a WM_QUIT by another application</li>
+		<li>Fix documentation errors for VCXProject and XCodeProject</li>
+		<li>Exec node times are emitted to the -monitor log (Thanks to Joe Kirchoff)</li>
+		<li>CSAssembly() handles forward and backslashes correctly on all platforms in .CompilerInputExcludePattern</li>
+		<li>Exec() handles forward and backslashes correctly on all platforms in .ExecInputExcludePattern</li>
+		<li>ObjectList() handles forward and backslashes correctly on all platforms in .CompilerInputExcludePattern</li>
+		<li>Test() handles forward and backslashes correctly on all platforms in .TestInputExcludePattern</li>
+		<li>[Linux] Various "CanUseResponseFile" options are respected on Linux</li>
+		<li>Fix a failure path writing response files that was not stopping compilation correctly</li>
+    </ul>
+	<b>Improvements</b>
+	<ul>
+		<li>Caching:</li>
+		<ul>
+			<li>Increase thread stack size to avoid unexpected problems with cache plugins</li>
+			<li>Cache plugin can be initialized via InitEx which provides details of operating mode (read/write/verbose)</li>
+			<li>Settings exposes .CachePluginDLLConfig to all passing of custom config to cache plugins</li>
+			<li>[Windows] Cache plugin DLL function names no longer need to be mangled</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>#if operator supports compound expressions using && and || (Thanks to ggnkua)</li>
+		</ul>
+		<li>AllowResponseFile can be set on Compiler (Thanks to Axel Wefers)</li>
+		<li>LibrarianAllowResponseFile can be set on Library (Thanks to Axel Wefers)</li>
+		<li>LinkerAllowResponseFile can be set on DLL or Executable (Thanks to Axel Wefers)</li>
+		<li>ObjectLists can be chained using .CompilerInputObjectLists</li>
+		<li>VCXProject and XCodeProject include .editorconfig files by default</li>
+		<li>Add troubleshooting documentation for the Cache (Thanks to Layla Mah)</li>
+		<li>Add .SourceMapping_Experimental to Compiler() to control -fdebug-source-map (Thanks to Jaview Blazquez)</li>
+		<li>Compiler() response file use can be forced with .ForceResponseFile</li>
+		<li>Library() response file use can be forced with .LibrarianForceResponseFile</li>
+		<li>Executable()/DLL() response file use can be forced with .LinkerForceResponseFile</li>
+		<li>[Linux] Command line limits (128 KiB) are enforced on Linux to make problems more obvious</li>
+	</ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.01&nbsp;<font color='#bbbbbb'>(6th-Jun-2020)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+	<ul>
+		<li>DB Version Changed : clean build will occur</li>
+		<li>Network protocol version has changed. Please update FBuildWorkers</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>[Windows] Terminated remote jobs are once again system failues (Regression in v1.0)</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>Environment variables imported with #import no longer have carets (^) swallowed</li>
+			<li>Environment variables containing $ imported with #import no longer cause parsing errors</li>
+		</ul>
+		<li>[Windows] Correctly handle long paths on Windows (if enabled at OS level)</li>
+		<li>Many documentation typos fixed (Thanks to Fedya Zentsev)</li>
+    </ul>
+	<b>Improvements</b>
+	<ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>[OSX][Linux] Remote Clang and GCC disk space erorrs are System Failures and are re-scheduled</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>BFF parsing speed improved significantly (as much as 2x)</li>
+		</ul>
+		<li>Unity node supports relative paths with UseRelativePaths_Experimental</li>
+		<li>Minor improvements to error documentation</li>
+		<li>CSharp compiler is auto detected, removing need to set "custom" .CompilerFamily</li>
+	</ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.00&nbsp;<font color='#bbbbbb'>(3rd-May-2020)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+	<ul>
+		<li>BFF directives (#if/#include etc) are now processed in a preprocessor pass, consistent with C/C++. This fix means it is
+		no longer possible to use variables inside include paths.</li>
+		<li>Unity order was potentially inconsistent between platforms, OSs, filesystems and locales. A fix for this may result in a change
+		of include order in Unity files.</li>
+        <li>DB Version Changed : clean build will occur</li>
+		<li>Cache version has changed</li>
+    </ul>
+    <b>New</b>
+    <ul>
+		<li>BFF syntax supports users defined functions</li>
+		<li>TextFile allows the generation of text files (Thanks to mkujawa)</li>
+		<li>file_exists directive can be used with #if to detect the presence of files</li>
+		<li>-why command line option details the trigger for each thing that builds</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>FBuildWorker CPU drop down scrolls when there are many CPUs</li>
+			<li>[Windows] Fix FBuildWorker menu item not hiding correctly (Thanks to deter2030)</li>
+			<li>[OSX][Linux] Periodically touch synchronized toolchains to prevent deletion from tmp dir</li>
+		</ul>
+		<li>Project Generation:</li>
+		<ul>
+			<li>XCodeProjectGenerator properly quotes strings containing '+' (Thanks to Javier Blazquez)</li>
+			<li>Add missing documentation for several XCode project generation debugging settings</li>
+		</ul>
+		<li>Caching:</li>
+		<ul>
+			<li>-cacheinfo and -cachetrim work correctly on case-sensitive filesystems (Thanks to dummyunit)</li>
+			<li>Crash in LightCache when #includes via macros are encountered (Thanks to Francisco Facioni & Brian Burgin)</li>
+			<li>Fix LightCache missing dependency information when using macros (Thanks to Francisco Facioni)</li>
+			<li>If LightCache cannot handle a macro-based include, it will fall back to normal caching correctly</li>
+		</ul>
+		<li>Order of files in Unity is consistent between OSs, file systems and locales</li>
+		<li>Rebuilds correctly trigger if dependent files are deleted even if no other changes occur</li>
+		<li>Rebuilds correctly trigger when mod times change to the past</li>
+		<li>Rebuilds occur correctly if time is adjusted during or shortly after a build (daylight savings, clock drift, timezone change etc)</li>
+		<li>Rebuilds occur correctly if files are modified externally during a build</li>		
+		<li>CopyDir and RemoveDir report error when target name is not specified (Thanks to dummyunit)</li>		
+		<li>-fixuperrorpaths no longer mangles "function" level errors when using VBCC</li>
+		<li>MSVC PrecompiledHeader works correctly when .obj filename is different from .pch file (Thanks to Francisco Facioni)</li>
+		<li>[Linux][OSX] Fix directory being treated as a file in some situations</li>
+		<li>Executable/DLL .LinkerAssemblyResources accepts ObjectLists as input (Thanks to Lambert Clara)</li>
+		<li>Prevent malformed errors with -fixuperrorpaths and VBCC</li>
+		<li>-verbose info for directory lists is contiguous</li>
+		<li>Fix Green Hills linker detection when exe is specified without .exe extension (Thanks to Francisco Facioni)</li>
+		<li>-showtargets no longer returns error code -7 when -wrapper is used</li>
+    </ul>
+	<b>Improvements</b>
+	<ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>[Windows] FBuildWorker has a -debug option to match FBuild to assist debugging (Thanks to Lambert Clara)</li>
+			<li>[Windows] FBuildWorker checks available mem before taking jobs (control with -minfreememory) (Thanks to Lambert Clara)</li>			
+			<li>FBuildWorker brokerage file contains configuration info (Thanks to Lambert Clara)</li>
+			<li>FBuildWorker CPU idle detection level can be set in the UI (Thanks to Lambert Clara)</li>
+			<li>FASTBUILD_BROKERAGE_PATH can contain multiple ; delimited paths (Thanks to Lambert Clara)</li>
+			<li>Local race of distributed jobs can be disable with -nolocalrace debug option (Thanks to Lambert Clara)</li>
+			<li>Brokers periodically (~12hrs) delete stale tokens (>24hrs old) left by other workers (Thanks to Lambert Clara)</li>
+			<li>Improved -help/usage option for FBuild and FBuildWorker</li>
+			<li>Workers periodically update brokerage modification time to allow pruning (Thanks to Brian Burgin)</li>
+			<li>[Windows] Decompression speed on remote workers improved by ~10%</li>
+		</ul>
+		<li>Project Generation:</li>
+		<ul>
+			<li>iOS deployment target can be set with  XCodeIphoneOSDeploymentTarget option</li>
+			<li>VSProjectExternal allows existing project use in FASTBuild generated VS Solutions (Thanks to Lucian Muresan)</li>
+			<li>Clang static analysis is applied consistently to files in Unity</li>
+			<li>Visual Studio Solution() generation supports "Solution Items" (Thanks to Lucian Muresan)</li>
+		</ul>
+		<li>Caching:</li>
+		<ul>
+			<li>Stronger compression can be enabled for cache artifacts via the command line (Thanks to Lambert Clara)</li>
+			<li>-cachecompressionlevel controls level of compression for cache artifacts</li>
+			<li>LightCache emits reason for not being used when -cacheverbose is active</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>BFF parsing consistently handles comments and whitespace everywhere</li>
+			<li>BFF parsing speed improved significantly for many scenarios</li>
+			<li>BFF includes are handled during preprocessing (consistent with C/C++)</li>
+			<li>Parsing errors relating to invalid characters avoid printing garbage</li>
+			<li>BFF parsing speed improved slightly by reducing memory allocations and string copying</li>
+		</ul>
+		<li>ExecAlwaysShowOutput option allows Exec to alway print output (Thanks to Lambert Clara)
+		<li>Add .Environment option to TestNode (Thanks to Brian Burgin)
+		<li>--continueafterdbmove allows a clean build after warning of DB move (Thanks to Lambert Clara)
+		<li>Warning when retrieving corrupt data from the cache constains cache key
+		<li>Unknown variables in dynamic variable names emit error 1009 instead of 1026</li>
+		<li>Multiple ObjectLists building the same obj with different settings are now detected</li>
+		<li>"conflicting files found" error improved to include "owner" ObjectList info</li>
+		<li>Clang/GCC #line directives are ignored unless they result from the preprocessor including a file (Thanks to crondog)</li>
+		<li>Corrupt DB does not prevent builds. Corrupt db is renamed and a warning is emitted (Thanks to Lambert Clara)</li>
+		<li>Updated bash completion script (Thanks to dummyunit)</li>
+		<li>-showcmdoutput cmdline option shows the full output of all external processes</li>
+		<li>Librarian() exposed .LibrarianType to allow explicit control of type (Thanks to Francisco Facioni)</li>
+		<li>Unity can isolate files listed in an file specified by .UnityInputIsolateListFile (Thanks to  poppolopoppo)</li>
+		<li>PrecompiledHeaders can be re-used between multiple ObjectLists</li>
+		<li>Dependency graph traversal optimized by parallelizing file timestamp retrieval</li>
+		<li>Unity evaluation is avoided when no inputs have changed</li>
+		<li>[Windows] Directly listing cost reduced by ~30%</li>
+	</ul>
+</div>
 
 
 <div class='newsitemheader'>
@@ -233,7 +433,7 @@
             <li>[OSX] Sockets don't trigger spurious SIG_PIPE errors</li>
             <li>[OSX] Port reuse updated for OS X behavior change (SO_REUSEADDR vs SO_REUSEPORT)</li>
             <li>Nagle's algorithm is disabled for return connection from server->client</li>
-            <li>Fix -distverbose stack overflow when remote worker is blacklisted (and possibly in other situations)</li>
+            <li>Fix -distverbose stack overflow when remote worker is deny listed (and possibly in other situations)</li>
             <li>Fix file handle leak on IO error transferring compiler files (Thanks to dummyunit)</li>
             <li>Remote system failure info is shown when -distverbose is used</li>
         </ul>
@@ -1262,7 +1462,7 @@ Fixes
 <ul>
   <li>Differentiate remote "system" failures from compilation failures
   <ul>
-    <li>a remote failure will cause the worker to be blacklisted and the task retried on another worker</li>
+    <li>a remote failure will cause the worker to be deny listed and the task retried on another worker</li>
     <li>remote failure on 3 different workers will fail as before (indicates a configuration problem)</li>
   </ul>
   <li>Error path fixup now handles "remark:" and "fatal error:" style messages</li>

@@ -4,6 +4,8 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FBuildWorkerOptions.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // Core
@@ -46,7 +48,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 
     // Check each token
     const AString * const end = tokens.End();
-    for ( const AString * it=tokens.Begin(); it != end; ++it )
+    for ( const AString * it = tokens.Begin(); it != end; ++it )
     {
         const AString & token = *it;
         #if defined( __WINDOWS__ ) || defined( __OSX__ )
@@ -69,7 +71,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             {
                 if ( token.EndsWith( '%' ) )
                 {
-                    num = (int32_t)( numCPUs * (float)num / 100.0f );
+                    num = (int32_t)( (float)numCPUs * (float)num / 100.0f );
                     m_CPUAllocation = (uint32_t)Math::Clamp( num, 1, numCPUs );
                     m_OverrideCPUAllocation = true;
                     continue;

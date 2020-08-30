@@ -53,43 +53,43 @@ FileNode::~FileNode() = default;
 
 // HandleWarningsMSVC
 //------------------------------------------------------------------------------
-void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const char * data, uint32_t dataSize )
+void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const AString & data )
 {
-    if ( ( data == nullptr ) || ( dataSize == 0 ) )
+    if ( data.IsEmpty() )
     {
         return;
     }
 
     // Are there any warnings? (string is ok even in non-English)
-    if ( strstr( data, ": warning " ) )
+    if ( data.Find( ": warning " ) )
     {
         const bool treatAsWarnings = true;
-        DumpOutput( job, data, dataSize, name, treatAsWarnings );
+        DumpOutput( job, data, name, treatAsWarnings );
     }
 }
 
 // HandleWarningsClangGCC
 //------------------------------------------------------------------------------
-void FileNode::HandleWarningsClangGCC( Job * job, const AString & name, const char * data, uint32_t dataSize )
+void FileNode::HandleWarningsClangGCC( Job * job, const AString & name, const AString & data )
 {
-    if ( ( data == nullptr ) || ( dataSize == 0 ) )
+    if ( data.IsEmpty() )
     {
         return;
     }
 
     // Are there any warnings? (string is ok even in non-English)
-    if ( strstr( data, "warning: " ) )
+    if ( data.Find( "warning: " ) )
     {
         const bool treatAsWarnings = true;
-        DumpOutput( job, data, dataSize, name, treatAsWarnings );
+        DumpOutput( job, data, name, treatAsWarnings );
     }
 }
 
 // DumpOutput
 //------------------------------------------------------------------------------
-void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings )
+void FileNode::DumpOutput( Job * job, const AString & buffer, const AString & name, bool treatAsWarnings )
 {
-    if ( ( data != nullptr ) && ( dataSize > 0 ) )
+    if ( buffer.IsEmpty() == false )
     {
         Array< AString > exclusions( 2, false );
         exclusions.EmplaceBack( "Note: including file:" );
@@ -98,11 +98,11 @@ void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, cons
         AStackString<> msg;
         msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
 
-        AutoPtr< char > mem( (char *)ALLOC( dataSize + msg.GetLength() ) );
-        memcpy( mem.Get(), msg.Get(), msg.GetLength() );
-        memcpy( mem.Get() + msg.GetLength(), data, dataSize );
+        AString finalBuffer( buffer.GetLength() + msg.GetLength() );
+        finalBuffer += msg;
+        finalBuffer += buffer;
 
-        Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions );
+        Node::DumpOutput( job, finalBuffer, &exclusions );
     }
 }
 

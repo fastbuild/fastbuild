@@ -1,0 +1,18 @@
+//
+// CSharp Compiler should not be used with ObjectList
+//
+
+Compiler( 'CSharpCompiler' )
+{
+    .Executable         = 'csc.exe'
+}
+
+// It's not valid to use ObjectList with the CSharp compiler
+ObjectList( 'Obj' )
+{
+    .Compiler           = 'CSharpCompiler' // Invalid
+
+    .CompilerOptions    = '/out:"%2" /target:library "%1"'
+    .CompilerInputFiles = 'src/file.cs'
+    .CompilerOutput     = 'out/out.dll'
+}

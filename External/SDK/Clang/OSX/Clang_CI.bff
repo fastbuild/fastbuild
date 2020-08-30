@@ -7,6 +7,14 @@ Compiler( 'Compiler-Clang' )
 {
     .Executable                     = 'CLANGXX_BINARY'
     .CompilerFamily                 = 'clang' // Specify compiler family explicitly because binary name may change at any moment
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif    
+    #if ENABLE_SOURCE_MAPPING
+        .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
 }
 
 // ToolChain
@@ -23,6 +31,7 @@ Compiler( 'Compiler-Clang' )
                                     + ' -m64'           // x86_64
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
+                                    + ' -D__X64__'      // Architecture define
 
                                     // Include paths
                                     + ' -I./'

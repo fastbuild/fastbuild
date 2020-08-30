@@ -14,7 +14,7 @@
 #include <Core/Time/Timer.h>
 #include <Core/Tracing/Tracing.h>
 
-#if defined(__LINUX__) || defined(__APPLE__)
+#if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <sys/types.h>
     #include <sys/wait.h>
     #include <unistd.h>
@@ -45,9 +45,9 @@ REGISTER_TESTS_END
 void TestSharedMemory::CreateAccessDestroy() const
 {
 
-#if defined(__WINDOWS__)
+#if defined( __WINDOWS__ )
     // TODO:WINDOWS Test SharedMemory (without fork, so).
-#elif defined(__LINUX__) || defined(__APPLE__)
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
     AStackString<> sharedMemoryName;
     sharedMemoryName.Format( "FBuild_SHM_Test_%u", (uint32_t)Process::GetCurrentId() );
 
@@ -119,12 +119,12 @@ void TestSharedMemory::CreateAccessDestroy() const
         int status;
         TEST_ASSERT( -1 != wait( &status ) );
         TEST_ASSERT( WIFEXITED( status ) && "Child process didn't terminate cleanly" );
-        const auto exitStatus = WEXITSTATUS( status );
-        OUTPUT( "Child exit status: %u", (uint32_t)exitStatus );
+        const uint32_t exitStatus = (uint32_t)WEXITSTATUS( status );
+        OUTPUT( "Child exit status: %u", exitStatus );
         TEST_ASSERT( ( exitStatus == 0 ) && "Non-zero exit status from forked child" );
 
         // Check expected value from child
-        TEST_ASSERT(*magic == 0xB0AFB0AF);
+        TEST_ASSERT( *magic == 0xB0AFB0AF );
     }
 #else
     #error Unknown Platform

@@ -143,7 +143,7 @@ FunctionPrint::FunctionPrint()
         }
         case BFFVariable::VAR_ARRAY_OF_STRINGS:
         {
-            const auto & strings = var.GetArrayOfStrings();
+            const Array<AString> & strings = var.GetArrayOfStrings();
             FLOG_OUTPUT( "%s = // ArrayOfStrings, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)strings.GetSize(), indentStr.Get() );
             for ( const AString & string : strings )
             {
@@ -171,7 +171,7 @@ FunctionPrint::FunctionPrint()
         }
         case BFFVariable::VAR_ARRAY_OF_STRUCTS:
         {
-            const auto & structs = var.GetArrayOfStructs();
+            const Array<const BFFVariable *> & structs = var.GetArrayOfStructs();
             FLOG_OUTPUT( "%s = // ArrayOfStructs, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)structs.GetSize(), indentStr.Get() );
             for ( const BFFVariable * subVar : structs )
             {

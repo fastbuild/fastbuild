@@ -16,6 +16,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
+#include "Core/Containers/AutoPtr.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -42,7 +43,8 @@ REFLECT_END( SolutionConfig )
 
 REFLECT_STRUCT_BEGIN_BASE( SolutionFolder )
     REFLECT(        m_Path,                                 "Path",                                     MetaNone() )
-    REFLECT_ARRAY(  m_Projects,                             "Projects",                                 MetaFile() )
+    REFLECT_ARRAY(  m_Projects,                             "Projects",                                 MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_Items,                                "Items",                                    MetaOptional() + MetaFile() )
 REFLECT_END( SolutionFolder )
 
 REFLECT_STRUCT_BEGIN_BASE( SolutionDependency )
@@ -162,6 +164,9 @@ SLNNode::SLNNode()
         {
             // Merge list of projects
             found->m_Projects.Append( folder.m_Projects );
+            
+            // Merge list of items
+            found->m_Items.Append( folder.m_Items );
         }
         else
         {

@@ -25,6 +25,7 @@ Args::Args()
     #if defined( ASSERTS_ENABLED )
         , m_Finalized( false )
     #endif
+    , m_DisableResponseFileWrite( false )
 {
 }
 
@@ -87,84 +88,94 @@ void Args::Clear()
 
 // Finalize
 //------------------------------------------------------------------------------
-bool Args::Finalize( const AString & exe, const AString & nodeNameForError, bool canUseResponseFile )
+bool Args::Finalize( const AString & exe, const AString & nodeNameForError, ArgsResponseFileMode responseFileMode )
 {
     ASSERT( !m_Finalized );
-
-    #if defined( __WINDOWS__ ) || defined( __OSX__ )
-        #if defined( __WINDOWS__ )
-            // Windows has a 32KiB (inc null terminator) command line length limit with CreateProcess
-            // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
-            const uint32_t argLimit( 32767 );
-        #elif defined( __OSX__ )
-            const uint32_t argLimit( ARG_MAX - 1 );
-        #endif
-
-        // Calculate final length of args (including exe name)
-        const uint32_t exeLen = exe.GetLength();
-        const uint32_t extraLen = 3; // quotes around exe name and space
-        const uint32_t argLen = m_Args.GetLength();
-
-        // We need to consider the executable, quotes around the exe and a space
-        // as well as the args: "%exe%" %args%
-        const uint32_t totalLen = ( argLen + exeLen + extraLen );
-
-        // Small enough?
-        if ( totalLen < argLimit )
-        {
-            #if defined( ASSERTS_ENABLED )
-                m_Finalized = true;
-            #endif
-            return true; // Ok to proceed
-        }
-
-        // Args are too long. Can we cope using a Response File?
-        if ( canUseResponseFile )
-        {
-            // Handle per-line limit within response files (e.g. link.exe)
-            #if defined( __WINDOWS__ )
-                if ( argLen >= 131071 ) // From LNK1170
-                {
-                    // Change spaces to carriage returns
-                    for ( uint32_t i : m_DelimiterIndices )
-                    {
-                        ASSERT( m_Args[ i ] == ' ' );
-                        m_Args[ i ] = '\n';
-                    }
-                }
-            #endif
-
-            #if defined( ASSERTS_ENABLED )
-                m_Finalized = true;
-            #endif
-
-            // Write args to response file
-            {
-                PROFILE_SECTION( "CreateResponseFile" )
-                m_ResponseFile.Create( *this );
-            }
-
-            // Create new args referencing response file
-            m_ResponseFileArgs = "@\"";
-            m_ResponseFileArgs += m_ResponseFile.GetResponseFilePath();
-            m_ResponseFileArgs += "\"";
-
-            return true; // Ok to proceed
-        }
-
-        // Need response file but not supported
-        FLOG_ERROR( "FBuild: Error: Command Line Limit Exceeded (len: %u, limit: %u) '%s'\n", argLen, argLimit, nodeNameForError.Get() );
-        return false;
-    #elif defined( __LINUX__ )
-        (void)exe;
-        (void)nodeNameForError;
-        (void)canUseResponseFile;
-        // TODO:LINUX Difficult to reliably determine this due to complex interaction with environment
-        #if defined( ASSERTS_ENABLED )
-            m_Finalized = true;
-        #endif
-        return true; // Ok to proceed
+    #if defined( ASSERTS_ENABLED )
+        m_Finalized = true;
     #endif
+
+    // Calculate final length of args (including exe name)
+    const uint32_t exeLen = exe.GetLength();
+    const uint32_t extraLen = 3; // quotes around exe name and space
+    const uint32_t argLen = m_Args.GetLength();
+
+    // We need to consider the executable, quotes around the exe and a space
+    // as well as the args: "%exe%" %args%
+    const uint32_t totalLen = ( argLen + exeLen + extraLen );
+
+    #if defined( __WINDOWS__ )
+        // Windows has a 32KiB (inc null terminator) command line length limit with CreateProcess
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
+        const uint32_t argLimit( 32767 );
+    #elif defined( __OSX__ )
+        const uint32_t argLimit( ARG_MAX - 1 );
+    #elif defined( __LINUX__ )
+        // On Linux it's problematic to reliably determine this, so we make a best guess
+        const uint32_t argLimit( ( 128 * 1024 ) - 1 );
+    #endif
+
+    // If the args exceed the cmd line limit, a response file is required
+    const bool needResponseFile = ( totalLen >= argLimit );
+
+
+    if ( needResponseFile )
+    {
+        switch ( responseFileMode )
+        {
+            case ArgsResponseFileMode::NEVER:
+            {
+                // Need response file but not supported
+                FLOG_ERROR( "FBuild: Error: Command Line Limit Exceeded (len: %u, limit: %u) '%s'\n", argLen, argLimit, nodeNameForError.Get() );
+                return false;
+            }
+            case ArgsResponseFileMode::IF_NEEDED:   break; // Create below
+            case ArgsResponseFileMode::ALWAYS:      break; // Create below
+        }
+    }
+    else
+    {
+        switch ( responseFileMode )
+        {
+            case ArgsResponseFileMode::NEVER:       return true;
+            case ArgsResponseFileMode::IF_NEEDED:   return true;
+            case ArgsResponseFileMode::ALWAYS:      break; // Create below
+        }
+    }
+
+    // Create response file
+
+    // Handle per-line limit within response files (e.g. link.exe)
+    #if defined( __WINDOWS__ )
+        // TODO:C Should this be the behavior on all platforms?
+        // TODO:C Should this be the behavior regardless of length?
+        if ( argLen >= 131071 ) // From LNK1170
+        {
+            // Change spaces to carriage returns
+            for ( uint32_t i : m_DelimiterIndices )
+            {
+                ASSERT( m_Args[ i ] == ' ' );
+                m_Args[ i ] = '\n';
+            }
+        }
+    #endif
+
+    // Write args to response file
+    if ( m_DisableResponseFileWrite == false ) // Used by tests
+    {
+        PROFILE_SECTION( "CreateResponseFile" )
+        if ( m_ResponseFile.Create( *this ) == false )
+        {
+            return false; // Create will have emitted an error
+        }
+    }
+
+    // Create new args referencing response file
+    m_ResponseFileArgs = "@\"";
+    m_ResponseFileArgs += m_ResponseFile.GetResponseFilePath();
+    m_ResponseFileArgs += "\"";
+
+    return true; // Ok to proceed
 }
 
 // Generate

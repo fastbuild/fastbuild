@@ -6,8 +6,8 @@
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
 #include "Core/Env/Types.h"
-#include "Core/Reflection/ReflectionIter.h"
 #include "Core/Reflection/PropertyType.h"
+#include "Core/Reflection/ReflectionIter.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ public:
     const T * HasMetaData() const
     {
         const ReflectionInfo * ri = T::GetReflectionInfoS();
-        return ( const T* )HasMetaDataInternal( ri );
+        return (const T *)HasMetaDataInternal( ri );
     }
 
 protected:

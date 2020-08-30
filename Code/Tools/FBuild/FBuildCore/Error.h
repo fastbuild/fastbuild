@@ -109,6 +109,8 @@ public:
     static void Error_1043_CyclicDependencyDetected( const BFFToken * iter, const AString & nodeName );
     static void Error_1044_OperatorExpected( const BFFToken * iter );
     static void Error_1045_ExtraneousTokenFollowingDirective( const BFFToken * iter, const char * directiveName );
+    static void Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken* iter );
+    static void Error_1047_IfExpressionTooComplex( const BFFToken* iter );
 
     // 1050 - 1099 : Variable type errors
     //------------------------------------------------------------------------------
@@ -159,6 +161,14 @@ public:
                                                  const Function * function,
                                                  const char * propertyName,
                                                  const char * token );
+    static void Error_1107_ExpectedFunctionNameFollowingFunctionKeyword( const BFFToken * iter );
+    static void Error_1108_FunctionAlreadyDefined( const BFFToken * iter );
+    static void Error_1109_FunctionArgumentAlreadyDefined( const BFFToken * iter );
+    static void Error_1110_ExpectedArgumentBlockForFunctionCall( const BFFToken * iter );
+    static void Error_1111_FunctionCallArgumentMismatch( const BFFToken * iter,
+                                                         uint32_t numArgsProvided,
+                                                         uint32_t numArgsExpected );
+    static void Error_1112_FunctionCallExpectedArgument( const BFFToken * iter );
 
     // 1200 - 1299 : ForEach specific errors
     //------------------------------------------------------------------------------
@@ -207,6 +217,10 @@ public:
                                                        const AString & badCompilerFamily );
     static void Error_1502_LightCacheIncompatibleWithCompiler( const BFFToken * iter,
                                                                const Function * function );
+    static void Error_1503_CSharpCompilerShouldUseCSAssembly( const BFFToken * iter,
+                                                              const Function * function );
+    static void Error_1504_CSAssemblyRequiresACSharpCompiler( const BFFToken * iter,
+                                                              const Function * function );
 
     // 1900-1999 : User-generate errors
     //------------------------------------------------------------------------------

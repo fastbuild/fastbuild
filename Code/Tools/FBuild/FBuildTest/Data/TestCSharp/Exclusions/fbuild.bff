@@ -1,0 +1,109 @@
+//
+// ExcludePattern
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Compiler - TODO: Centralize this
+//------------------------------------------------------------------------------
+Compiler( 'CSharpCompiler' )
+{
+    .Executable     = "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+}
+
+// Compile an executable to run
+//------------------------------------------------------------------------------
+ObjectList( 'Obj' )
+{
+    .CompilerOutputPath = '$Out$/Test/CSharp/Exclusions/'
+}
+Executable( 'Exe' )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+    .LinkerOutput       = '$Out$/Test/CSharp/Exclusions/test.exe'
+    .Libraries          = { 'Obj' }
+}
+
+// Run the executable we compiled with various exclusions
+//------------------------------------------------------------------------------
+{
+    .Compiler           = 'CSharpCompiler'
+    .CompilerOptions    = '/out:"%2" /target:library "%1"'
+
+    // Include some files recursively
+    .CompilerInputPath          = '$_CURRENT_BFF_DIR_$/'
+    .CompilerInputPattern       = '*.cs'
+    .CompilerInputPathRecurse   = true
+
+    // ExcludePath - forward slash
+    CSAssembly( 'ExcludePath-ForwardSlash' )
+    {
+        .CompilerInputExcludePath       = '$_CURRENT_BFF_DIR_$/SubDirA/' // <- Forward slashes
+        .CompilerOutput                 = '$Out$/Test/CSharp/Exclusions/ExcludePath-ForwardSlash.dll'
+    }
+
+    // ExcludePath - backslash
+    CSAssembly( 'ExcludePath-Backslash' )
+    {
+        .CompilerInputExcludePath       = '$_CURRENT_BFF_DIR_$\SubDirA\' // <- Backslashes
+        .CompilerOutput                 = '$Out$/Test/CSharp/Exclusions/ExcludePath-Backslash.dll'
+    }
+
+    // ExcludedFiles
+    CSAssembly( 'ExcludedFiles-File' )
+    {
+        .CompilerInputExcludedFiles     = 'FileA.cs'
+        .CompilerOutput                 = '$Out$/Test/CSharp/Exclusions/ExcludedFiles.dll'
+    }
+
+    // ExcludedFiles - path (forward slash)
+    CSAssembly( 'ExcludedFiles-Path-ForwardSlash' )
+    {
+        .CompilerInputExcludedFiles     = 'SubDirA/FileA.cs' // <- Forward slashes
+        .CompilerOutput                 = '$Out$/Test/CSharp/Exclusions/ExcludedFiles-Path-ForwardSlash.dll'
+    }
+
+    // ExcludedFiles - path (backslash)
+    CSAssembly( 'ExcludedFiles-Path-Backslash' )
+    {
+        .CompilerInputExcludedFiles     = 'SubDirA\FileA.cs' // <- Backslashes
+        .CompilerOutput                 = '$Out$/Test/CSharp/Exclusions/ExcludedFiles-Path-Backslash.dll'
+    }
+
+
+    // ExcludePattern - forward slash
+    CSAssembly( 'ExcludePattern-ForwardSlash' )
+    {
+        .CompilerInputExcludePattern    = '*/SubDirA/*.cs' // <- Forward slashes
+        .CompilerOutput                 = '$Out$/Test/CSharp/Exclusions/ExcludePattern-ForwardSlash.dll'
+    }
+
+    // ExcludePattern - backslash
+    CSAssembly( 'ExcludePattern-Backslash' )
+    {
+        .CompilerInputExcludePattern    = '*\SubDirA\*.cs' // <- Backslashes
+        .CompilerOutput                 = '$Out$/Test/CSharp/Exclusions/ExcludePattern-Backslash.dll'
+    }
+}
+Alias( 'Test' )
+{
+    .Targets    = {
+                    'ExcludePath-ForwardSlash'
+                    'ExcludePath-Backslash'
+                    'ExcludedFiles-File'
+                    'ExcludedFiles-Path-ForwardSlash'
+                    'ExcludedFiles-Path-Backslash'
+                    'ExcludePattern-ForwardSlash'
+                    'ExcludePattern-Backslash'
+                  }
+}
+
+//------------------------------------------------------------------------------

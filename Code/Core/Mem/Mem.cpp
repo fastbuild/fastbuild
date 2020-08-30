@@ -57,7 +57,7 @@ void * Alloc( size_t size, size_t alignment )
         // enforce a minimum 16 byte alignment
         // Last seen in Apple LLVM version 10.0.0 (clang-1000.11.45.5) but exists in
         // other versions as well
-        alignment = (alignment < 16) ? 16 : alignment;
+        alignment = ( alignment < 16 ) ? 16 : alignment;
     #endif
 
     void * mem;

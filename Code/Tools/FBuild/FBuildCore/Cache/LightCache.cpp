@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -19,6 +20,9 @@
 #include "Core/Process/Mutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+
+// System
+#include <stdarg.h> // for va_start
 
 // Include Type
 //------------------------------------------------------------------------------
@@ -46,11 +50,14 @@ public:
         IncludeType                 m_Type;
     };
 
+    ~IncludedFile();
+
     uint64_t                        m_FileNameHash;
     AString                         m_FileName;
     bool                            m_Exists;
     uint64_t                        m_ContentHash;
     Array< Include >                m_Includes;
+    Array< const IncludeDefine * >  m_IncludeDefines;
 
     inline bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
     inline bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
@@ -207,6 +214,16 @@ public:
     IncludeType                     m_Type;
 };
 
+// DESTRUCTOR
+//------------------------------------------------------------------------------
+IncludedFile::~IncludedFile()
+{
+    for ( const IncludeDefine * def : m_IncludeDefines )
+    {
+        FDELETE def;
+    }
+}
+
 // IncludedFileBucket
 //------------------------------------------------------------------------------
 class IncludedFileBucket
@@ -238,19 +255,12 @@ LightCache::LightCache()
     : m_IncludePaths( 32, true )
     , m_AllIncludedFiles( 2048, true )
     , m_IncludeStack( 32, true )
-    , m_ProblemParsing( false )
 {
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LightCache::~LightCache()
-{
-    for ( const IncludeDefine * def : m_IncludeDefines )
-    {
-        FDELETE def;
-    }
-}
+LightCache::~LightCache() = default;
 
 // Hash
 //------------------------------------------------------------------------------
@@ -287,7 +297,7 @@ bool LightCache::Hash( ObjectNode * node,
     }
 
     // Was there a problem during parsing? (Some construct we don't know how to handle for example)
-    if ( m_ProblemParsing )
+    if ( m_Errors.IsEmpty() == false )
     {
         outSourceHash = 0;
         return false;
@@ -330,7 +340,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
     fileContents.SetLength( (uint32_t)fileSize );
     if ( f.Read( fileContents.Get(), (size_t)fileSize ) != fileSize )
     {
-        m_ProblemParsing = true;
+        AddError( file, nullptr, "Error reading file: %s", LAST_ERROR_STR );
         return;
     }
     f.Close();
@@ -364,7 +374,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
         {
             if ( ParseDirective( *file, pos ) == false )
             {
-                m_ProblemParsing = true;
+                ASSERT( m_Errors.IsEmpty() == false ); // ParseDirective reports error if encountered
                 return;
             }
         }
@@ -425,7 +435,8 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
         // Looks like a normal include
         if ( ParseIncludeString( pos, include, includeType ) == false )
         {
-            // We encountered an include we can't handle (using a macro for the path for example)
+            // We encountered an include we can't handle
+            AddError( &file, pos, "Invalid or unsupported include." );
             return false;
         }
 
@@ -437,7 +448,9 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
     AStackString<> macroName;
     if ( ParseMacroName( pos, macroName ) == false )
     {
-        return false; // We saw an unexpected sequence after the #include
+        // We saw an unexpected sequence after the #include
+        AddError( &file, pos, "Unexpected sequence after include." );
+        return false;
     }
 
     // Store the macro include which will be resolved later
@@ -447,7 +460,7 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
 
 // ParseDirective_Define
 //------------------------------------------------------------------------------
-bool LightCache::ParseDirective_Define( IncludedFile & /*file*/, const char * & pos )
+bool LightCache::ParseDirective_Define( IncludedFile & file, const char * & pos )
 {
     // skip "include" and whitespace
     ASSERT( AString::StrNCmp( pos, "define", 6 ) == 0 );
@@ -456,9 +469,12 @@ bool LightCache::ParseDirective_Define( IncludedFile & /*file*/, const char * & 
 
     // Get macro name
     AStackString<> macroName;
+    const char * macroStart = pos;
     if ( ParseMacroName( pos, macroName ) == false )
     {
-        return false; // Unexpected macro form - we don't know how to handle this
+        // Unexpected macro form - we don't know how to handle this
+        AddError( &file, macroStart, "Unexpected macro form." );
+        return false;
     }
 
     SkipWhitespace( pos );
@@ -472,17 +488,18 @@ bool LightCache::ParseDirective_Define( IncludedFile & /*file*/, const char * & 
         return true;
     }
 
-    // Take not of the macro and the path it defines
-    m_IncludeDefines.Append( FNEW( IncludeDefine( macroName, include, includeType ) ) );
+    // Take note of the macro and the path it defines
+    file.m_IncludeDefines.Append( FNEW( IncludeDefine( macroName, include, includeType ) ) );
 
     return true;
 }
 
 // ParseDirective_Import
 //------------------------------------------------------------------------------
-bool LightCache::ParseDirective_Import( IncludedFile & /*file*/, const char * & /*pos*/ )
+bool LightCache::ParseDirective_Import( IncludedFile & file, const char * & pos )
 {
     // We encountered an import directive, we can't handle them.
+    AddError( &file, pos, "#import is unsupported." );
     return false;
 }
 
@@ -595,13 +612,28 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
         if ( type == IncludeType::MACRO )
         {
 
-            // Find macro - expand each possible value
-            for ( const IncludeDefine * def : m_IncludeDefines )
+            // Find macro - expand each possible value (we must
+            // expand all values because we can't definitively know
+            // which one is correct)
+            // NOTE: Array can be extended/can move while being iterated,
+            // so iterate by index only to original size
+            bool found = false;
+            const size_t originalSize = m_IncludeDefines.GetSize();
+            for ( size_t i = 0; i < originalSize; ++i )
             {
+                const IncludeDefine * def = m_IncludeDefines[ i ];
                 if ( def->m_Macro == include )
                 {
                     ProcessInclude( def->m_Include, def->m_Type );
+                    found = true;
                 }
+            }
+            // If the macro was not seen at all then we've encountered something
+            // we don't know how to handle
+            if ( found == false )
+            {
+                AddError( nullptr, nullptr, "Could not resovle macro '%s'.",
+                                            include.Get() );
             }
             return;
         }
@@ -788,6 +820,8 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         const IncludedFile * location = bucket.m_HashSet.Find( fileName, fileNameHash );
         if ( location )
         {
+            m_IncludeDefines.Append( location->m_IncludeDefines );
+            
             return location; // File previously handled so we can re-use the result
         }
     }
@@ -822,12 +856,50 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         retval = bucket.m_HashSet.Insert( newFile );
     }
 
+    m_IncludeDefines.Append( retval->m_IncludeDefines );
+
     return retval;
+}
+
+// AddError
+//------------------------------------------------------------------------------
+void LightCache::AddError( IncludedFile * file,
+                           const char * pos,
+                           MSVC_SAL_PRINTF const char * formatString,
+                           ... )
+{
+    // Format the error-specific output
+    AStackString< 1024 > msgBuffer;
+    va_list args;
+    va_start( args, formatString );
+    msgBuffer.VFormat( formatString, args );
+    va_end( args );
+
+    AStackString< 1024 > finalBuffer;
+    finalBuffer.Format( "  Problem: %s\n", msgBuffer.Get() );
+
+    // Annotate with file name
+    if ( file )
+    {
+        finalBuffer.AppendFormat( "  File   : %s\n", file->m_FileName.Get() );
+    }
+
+    // Annotate with problem line
+    if ( pos )
+    {
+        // Get the problem line
+        AStackString<> line;
+        ExtractLine( pos, line );
+        finalBuffer.AppendFormat( "  Line   : %s\n", line.Get() );
+    }
+
+    // Append to list of errors
+    m_Errors.Append( finalBuffer );
 }
 
 // SkipWhitepspace
 //------------------------------------------------------------------------------
-void LightCache::SkipWhitespace( const char * & pos ) const
+/*static*/ void LightCache::SkipWhitespace( const char * & pos )
 {
     for (;;)
     {
@@ -843,7 +915,7 @@ void LightCache::SkipWhitespace( const char * & pos ) const
 
 // IsAtEndOfLine
 //------------------------------------------------------------------------------
-bool LightCache::IsAtEndOfLine( const char * pos ) const
+/*static*/ bool LightCache::IsAtEndOfLine( const char * pos )
 {
     const char c = *pos;
     return ( ( c == '\r' ) || ( c== '\n' ) );
@@ -851,7 +923,7 @@ bool LightCache::IsAtEndOfLine( const char * pos ) const
 
 // SkipLineEnd
 //------------------------------------------------------------------------------
-void LightCache::SkipLineEnd( const char * & pos ) const
+/*static*/ void LightCache::SkipLineEnd( const char * & pos )
 {
     while ( IsAtEndOfLine( pos ) )
     {
@@ -862,7 +934,7 @@ void LightCache::SkipLineEnd( const char * & pos ) const
 
 // SkipToEndOfLine
 //------------------------------------------------------------------------------
-void LightCache::SkipToEndOfLine( const char * & pos ) const
+/*static*/ void LightCache::SkipToEndOfLine( const char * & pos )
 {
     for ( ;; )
     {
@@ -878,7 +950,7 @@ void LightCache::SkipToEndOfLine( const char * & pos ) const
 
 // SkipToEndOfQuotedString
 //------------------------------------------------------------------------------
-bool LightCache::SkipToEndOfQuotedString( const char * & pos ) const
+/*static*/ bool LightCache::SkipToEndOfQuotedString( const char * & pos )
 {
     // Skip opening char
     const char c = *pos;
@@ -913,6 +985,15 @@ bool LightCache::SkipToEndOfQuotedString( const char * & pos ) const
         // Keep searching
         ++pos;
     }
+}
+
+// ExtractLine
+//------------------------------------------------------------------------------
+/*static*/ void LightCache::ExtractLine( const char * pos, AString & outLine )
+{
+    const char * start = pos;
+    SkipToEndOfLine( pos );
+    outLine.Assign( start, pos );
 }
 
 //------------------------------------------------------------------------------

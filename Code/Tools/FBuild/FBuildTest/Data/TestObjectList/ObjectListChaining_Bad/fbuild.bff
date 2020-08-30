@@ -1,0 +1,56 @@
+//
+// Chaining
+//
+// NOTE: This setup is bad and should not be used (it can result in stale files)
+//       CompilerInputObjectList should be used instead
+//
+// Chain the output of one ObjectList as the input of another
+//
+// This can be useful for custom "compilers" that are preprocessors
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// ObjectList1
+//------------------------------------------------------------------------------
+ObjectList( 'ObjectList1' )
+{
+    // Build a cpp file. Using a directory list so that it's discovered dynamically
+    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestObjectList/ObjectListChaining_Bad/'
+    .CompilerInputPattern       = '*.1.cpp'
+    .CompilerOutputPath         = '$Out$/Test/ObjectList/ObjectListChaining_Bad/1/'
+}
+
+// ObjectList2
+//  - consume output of ObjectList1
+//------------------------------------------------------------------------------
+ObjectList( 'ObjectList2' )
+{
+    // Ensure ObjectList1 builds first, since we cannot define static dependencies on the output
+    .PreBuildDependencies       = 'ObjectList1'
+
+    // Consume the output of 'ObjectList1'. This will generate a warning, as an .obj is
+    // not a valid input for the compiler, but the dependency alone is enough for us
+    // Do it via a directory list so that it's discovered dynamically
+    .CompilerInputPath          = '$Out$/Test/ObjectList/ObjectListChaining_Bad/1/'
+    #if __WINDOWS__
+        .CompilerInputPattern       = '*.obj'
+    #else
+        .CompilerInputPattern       = '*.o'
+        #if __OSX__
+            .CompilerOptions        + ' -Wno-unused-command-line-argument'
+        #endif
+    #endif
+    .CompilerOutputPath         = '$Out$/Test/ObjectList/ObjectListChaining_Bad/2/'
+
+    // Add a cpp to the command line manually so the compilation succeeds despite the warning for the .obj
+    // We're not concerned that this dependency is invisible to FASTBuild
+    .CompilerOptions            + ' Tools/FBuild/FBuildTest/Data/TestObjectList/ObjectListChaining_Bad/file.2.cpp'
+}
+
+//------------------------------------------------------------------------------

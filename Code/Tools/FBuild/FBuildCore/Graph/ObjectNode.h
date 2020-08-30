@@ -18,6 +18,7 @@ class Function;
 class NodeGraph;
 class NodeProxy;
 class ObjectNode;
+enum class ArgsResponseFileMode : uint32_t;
 
 // ObjectNode
 //------------------------------------------------------------------------------
@@ -130,7 +131,7 @@ private:
     static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index );
     static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
     static bool StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
-    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
+    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
     bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
@@ -142,11 +143,11 @@ private:
     inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
-    static void HandleSystemFailures( Job * job, int result, const char * stdOut, const char * stdErr );
+    static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;
-    bool CanUseResponseFile() const;
+    ArgsResponseFileMode GetResponseFileMode() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
     void DoClangUnityFixup( Job * job ) const;
@@ -171,19 +172,15 @@ private:
         inline int                      GetResult() const { return m_Result; }
 
         // access output/error
-        inline const AutoPtr< char > &  GetOut() const { return m_Out; }
-        inline uint32_t                 GetOutSize() const { return m_OutSize; }
-        inline const AutoPtr< char > &  GetErr() const { return m_Err; }
-        inline uint32_t                 GetErrSize() const { return m_ErrSize; }
+        inline const AString &          GetOut() const { return m_Out; }
+        inline const AString &          GetErr() const { return m_Err; }
         inline bool                     HasAborted() const { return m_Process.HasAborted(); }
 
     private:
         bool            m_HandleOutput;
         Process         m_Process;
-        AutoPtr< char > m_Out;
-        uint32_t        m_OutSize;
-        AutoPtr< char > m_Err;
-        uint32_t        m_ErrSize;
+        AString         m_Out;
+        AString         m_Err;
         int             m_Result;
     };
 

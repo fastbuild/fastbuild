@@ -30,10 +30,9 @@ private:
     void FileCopy() const;
     void FileCopySymlink() const;
     void FileMove() const;
-
     void ReadOnly() const;
-
     void FileTime() const;
+    void LongPaths() const;
 
     // Helpers
     mutable Random m_Random;
@@ -50,6 +49,7 @@ REGISTER_TESTS_BEGIN( TestFileIO )
     REGISTER_TEST( FileMove )
     REGISTER_TEST( ReadOnly )
     REGISTER_TEST( FileTime )
+    REGISTER_TEST( LongPaths )
 REGISTER_TESTS_END
 
 // FileExists
@@ -302,6 +302,160 @@ void TestFileIO::FileTime() const
     TEST_ASSERT( FileIO::SetFileLastWriteTime( path, oldTime ) == true );
     uint64_t timeNow = FileIO::GetFileLastWriteTime( path );
     TEST_ASSERT( timeNow == oldTime );
+}
+
+// LongPaths
+//------------------------------------------------------------------------------
+void TestFileIO::LongPaths() const
+{
+    //
+    // Ensure long paths are correctly handled by various functions
+    //
+    
+    #if defined( __WINDOWS__ )
+        // On Windows, long path support must be enabled via a registry key
+        // Only if this is enabled can we expect our test to pass
+        if ( FileIO::IsWindowsLongPathSupportEnabled() == false )
+        {
+            return;
+        }
+    #endif
+
+    // Constants used to build long paths
+    AString a( 255 );
+    AString b( 255 );
+    for ( size_t i = 0; i < 255; ++i )
+    {
+        a += 'a';
+        b += 'B';
+    }
+
+    // We'll operate in the tmp dir under a long sub folder (256 chars long)
+    AStackString<> tmpPath1;
+    AStackString<> tmpPath2;
+    {
+        VERIFY( FileIO::GetTempDir( tmpPath1 ) );
+        tmpPath1 += "CoreTest_TestFileIO";
+        tmpPath2.Format( "%s/%s", tmpPath1.Get(), a.Get() );
+        TEST_ASSERT( tmpPath2.GetLength() > 260 );
+    }
+
+    // Create some file paths to work with
+    AStackString<> filePathA;
+    AStackString<> filePathB;
+    AStackString<> subDir1;
+    AStackString<> subDir2;
+    AStackString<> filePathC;
+    {
+        // long file name A
+        filePathA.Format( "%s/%s", tmpPath2.Get(), b.Get() );
+        TEST_ASSERT( filePathA.GetLength() == ( tmpPath2.GetLength() + 1 + 255 ) );
+
+        // long file name B
+        filePathB = filePathA;
+        filePathB.Trim( 0, 5 );
+        filePathB += ".copy";
+        TEST_ASSERT( filePathB.GetLength() == ( filePathA.GetLength() ) );
+        
+        // long subdir 1
+        subDir1.Format( "%s/%s", tmpPath2.Get(), a.Get() );
+        TEST_ASSERT( subDir1.GetLength() == ( tmpPath2.GetLength() + 1 + 255 ) );
+
+        // long file name C
+        filePathC.Format( "%s/%s", subDir1.Get(), b.Get() );
+        TEST_ASSERT( filePathC.GetLength() == ( subDir1.GetLength() + 1 + 255 ) );
+
+        // long subdir 2
+        subDir2 = subDir1.Get();
+        subDir2.Trim( 0, 2 );
+        subDir2 += ".2";
+        TEST_ASSERT( subDir2.GetLength() == subDir1.GetLength() );
+    }
+
+    // Cleanup anything left over from previous runs
+    {
+        FileIO::FileDelete( filePathA.Get() );
+        FileIO::FileDelete( filePathB.Get() );
+        FileIO::FileDelete( filePathC.Get() );
+        FileIO::DirectoryDelete( subDir1 );
+        FileIO::DirectoryDelete( subDir2 );
+        FileIO::DirectoryDelete( tmpPath2 );
+        FileIO::DirectoryDelete( tmpPath1 );
+    }
+
+    // EnsurePathExists (tmp)
+    TEST_ASSERT( FileIO::EnsurePathExists( tmpPath2 ) );
+
+    // Create a file (A)
+    {
+        FileStream f;
+        TEST_ASSERT( f.Open( filePathA.Get(), FileStream::WRITE_ONLY ) );
+    }
+
+    // FileExists (A)
+    TEST_ASSERT( FileIO::FileExists( filePathA.Get() ) );
+
+    // Get/SetFileLastWriteTime
+    {
+        const uint64_t time = FileIO::GetFileLastWriteTime( filePathA );
+        ASSERT( time != 0 );
+        FileIO::SetFileLastWriteTime( filePathA, time );
+    }
+
+    // SetFileLastWriteTimeToNow
+    TEST_ASSERT( FileIO::SetFileLastWriteTimeToNow( filePathA ) );
+
+    // Get/SetReadOnly
+    {
+        TEST_ASSERT( FileIO::GetReadOnly( filePathA ) == false );
+        TEST_ASSERT( FileIO::SetReadOnly( filePathA.Get(), true ) );
+        TEST_ASSERT( FileIO::SetReadOnly( filePathA.Get(), false ) );
+    }
+
+    // EnsurePathExistsForFile (C) (subdir 1)
+    TEST_ASSERT( FileIO::EnsurePathExistsForFile( filePathC ) );
+
+    // FileCopy (A -> C)
+    TEST_ASSERT( FileIO::FileCopy( filePathA.Get(), filePathC.Get() ) );
+
+    // FileMove (C -> B)
+    TEST_ASSERT( FileIO::FileExists( filePathC.Get() ) );
+    TEST_ASSERT( FileIO::FileExists( filePathB.Get() ) == false );
+    TEST_ASSERT( FileIO::FileMove( filePathC, filePathB ) );
+
+    // DirectoryCreate (2)
+    TEST_ASSERT( FileIO::DirectoryCreate( subDir2 ) );
+
+    // DirectoryExists (2)
+    TEST_ASSERT( FileIO::DirectoryExists( subDir2 ) );
+
+    // GetFiles
+    {
+        StackArray<AString> files;
+        TEST_ASSERT( FileIO::GetFiles( tmpPath1, AStackString<>( "*" ), true, &files ) );
+        TEST_ASSERT( files.GetSize() == 2 );
+        files.Sort();
+        TEST_ASSERT( files[ 0 ].EndsWith( filePathB.FindLast( '/' ) + 1 ) );
+        TEST_ASSERT( files[ 1 ].EndsWith( filePathA.FindLast( '/' ) + 1 ) );
+    }
+
+    // Get/SetCurrentDir
+    {
+        AStackString<> original;
+        TEST_ASSERT( FileIO::GetCurrentDir( original ) );
+        TEST_ASSERT( FileIO::SetCurrentDir( tmpPath2 ) );
+        TEST_ASSERT( FileIO::SetCurrentDir( original ) );
+    }
+
+    // FileDelete
+    TEST_ASSERT( FileIO::FileDelete( filePathA.Get() ) );
+    TEST_ASSERT( FileIO::FileDelete( filePathB.Get() ) );
+
+    // DirectoryDelete
+    TEST_ASSERT( FileIO::DirectoryDelete( subDir1 ) );
+    TEST_ASSERT( FileIO::DirectoryDelete( subDir2 ) );
+    TEST_ASSERT( FileIO::DirectoryDelete( tmpPath2 ) );
+    TEST_ASSERT( FileIO::DirectoryDelete( tmpPath1 ) );
 }
 
 // GenerateTempFileName

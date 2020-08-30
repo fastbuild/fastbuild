@@ -38,7 +38,7 @@ namespace
     bool IsStringStart( const char c )      { return ( ( c == '\'' ) || ( c == '"') ); }
     bool IsVariableStart( const char c )    { return ( ( c == '.' ) || ( c == '^' ) ); }
     bool IsVariable( const char c )         { return IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsNumber( c ) || IsUnderscore( c );  }
-    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) ); }
+    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' )); }
     bool IsComma( const char c )            { return ( c == ',' ); }
     bool IsDirective( const char c )        { return ( c == '#' ); }
     void SkipWhitespace( const char * & pos )
@@ -235,7 +235,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         }
 
         // Two character operator?
-        if ( ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) )
+        if ( ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' ) )
         {
             if ( ( pos + 1 ) < end )
             {
@@ -246,7 +246,9 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
                 if ( ( opString == "==" ) ||
                      ( opString == "!=" ) ||
                      ( opString == "<=" ) ||
-                     ( opString == ">=" ) )
+                     ( opString == ">=" ) ||
+                     ( opString == "&&" ) ||
+                     ( opString == "||" ) )
                 {
                     m_Tokens.EmplaceBack( file, pos, BFFTokenType::Operator, pos, pos + 2 );
                     pos += 2;
@@ -376,6 +378,8 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
     if ( ( identifier == BFF_KEYWORD_DEFINE ) ||
          ( identifier == BFF_KEYWORD_ELSE ) ||
          ( identifier == BFF_KEYWORD_EXISTS ) ||
+         ( identifier == BFF_KEYWORD_FILE_EXISTS ) ||
+         ( identifier == BFF_KEYWORD_FUNCTION ) ||
          ( identifier == BFF_KEYWORD_IF ) ||
          ( identifier == BFF_KEYWORD_IMPORT ) ||
          ( identifier == BFF_KEYWORD_INCLUDE ) ||
@@ -571,42 +575,117 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     ASSERT( argsIter->IsKeyword( "if" ) );
     argsIter++;
 
-    // Check for negation operator
-    bool negate = false;
-    if ( argsIter->IsOperator( "!" ) )
-    {
-        negate = true;
-        argsIter++; // consume negation operator
-    }
+    enum { IF_NONE = 1, IF_AND = 2, IF_OR = 4, IF_NEGATE = 8 };
+    bool ranOnce = false;
+    uint8_t operatorHistory[ BFFParser::MAX_OPERATOR_HISTORY ];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
+    uint32_t numOperators = 0;
 
-    // Keyword or identifier?
+    while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator( "&&" ) || argsIter->IsOperator( "||" ) ) ) )
+    {
+        uint32_t ifOperator = IF_NONE;
+        if ( argsIter->IsOperator( "&&" ) || argsIter->IsOperator( "||" ) )
+        {
+            // check if this has been run once, to avoid
+            // expressions like #if &&a
+            if ( !ranOnce )
+            {
+                Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( argsIter.GetCurrent() );
+                return false;
+            }
+
+            ifOperator = ( argsIter->IsOperator( "&&" ) ? IF_AND : IF_OR );
+            argsIter++; // consume operator
+        }
+
+        // Check for negation operator
+        if ( argsIter->IsOperator( '!' ) )
+        {
+            ifOperator |= IF_NEGATE; // the condition will be inverted
+            argsIter++; // consume negation operator
+        }
+
+        bool result;
+
+        // Keyword or identifier?
+        if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
+        {
+            argsIter++; // consume keyword
+            if ( HandleDirective_IfExists( argsIter, result ) == false )
+            {
+                return false;
+            }
+        }
+        else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
+        {
+            argsIter++; // consume keyword
+            if ( HandleDirective_IfFileExists( file, argsIter, result ) == false )
+            {
+                return false;
+            }
+        }
+        else if ( argsIter->IsIdentifier() )
+        {
+            if ( HandleDirective_IfDefined( argsIter, result ) == false )
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // TODO:C A better error
+            Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
+            return false;
+        }
+
+        // Negate result to handle "#if !"
+        if ( ifOperator & IF_NEGATE )
+        {
+            result = !( result );
+        }
+
+        // First expression in sequence?
+        if ( !ranOnce )
+        {
+            const uint8_t r = ( result ? 1u : 0u );
+            operatorHistory[ numOperators++ ] = r;
+            ranOnce = true;
+        }
+        else
+        {
+            // Record boolean operator
+            uint8_t r = (uint8_t)( ( ifOperator & IF_AND ) ? IF_AND : IF_OR );
+
+            // Merge in result
+            r |= ( result ? 1u : 0u );
+
+            // Store to history
+            operatorHistory[ numOperators++ ] = r;
+            
+            // Check for excessive complexity
+            if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
+            {
+                Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
+                return false;
+            }            
+        }
+    }
+    
+    // Apply any && operators. Any valid expression isn't going to end with an operator, so we don't check that.
+    for ( uint32_t i = 0; i < ( numOperators - 1 ); i++ )
+    {
+        if ( operatorHistory[ i + 1 ] & IF_AND )
+        {
+            // Do the AND operation and store it in the right hand operator being tested
+            operatorHistory[ i + 1 ] = ( uint8_t )( operatorHistory[ i ] & operatorHistory[ i + 1 ] );
+            // Clear the left hand operator, its job is now done
+            operatorHistory[ i ] = 0;
+        }
+    }
+    // Apply any || operators
     bool result = false;
-    if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
+    for ( uint32_t i = 0; i < numOperators; i++ )
     {
-        argsIter++; // consume keyword
-        if ( HandleDirective_IfExists( argsIter, result ) == false )
-        {
-            return false;
-        }
-    }
-    else if ( argsIter->IsIdentifier() )
-    {
-        if ( HandleDirective_IfDefined( argsIter, result ) == false )
-        {
-            return false;
-        }
-    }
-    else
-    {
-        // TODO:C A better error
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
-        return false;
-    }
-
-    // Negate result to handle "#if !"
-    if ( negate )
-    {
-        result = !( result );
+        result |= ( operatorHistory[ i ] & 1 );
     }
 
     // take note of start of "true" block
@@ -697,6 +776,44 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
     FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash );
     outResult = ( varHash != 0 ); // a hash of 0 means the env var was not found
+    return true;
+}
+
+// HandleDirective_IfFileExists
+//------------------------------------------------------------------------------
+bool BFFTokenizer::HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool & outResult )
+{
+    // Expect open bracket
+    if ( iter->IsRoundBracket( '(' ) == false )
+    {
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), "file_exists", '(' );
+        return false;
+    }
+    iter++; // consume open (
+
+    // Expect string
+    if ( iter->IsString() == false )
+    {
+        // TODO:C Better error?
+        Error::Error_1030_UnknownDirective( iter.GetCurrent(), iter->GetValueString() );
+        return false;
+    }
+    const AString & fileName = iter->GetValueString();
+    iter++; // consume string value
+
+    // Expect close bracket
+    if ( iter->IsRoundBracket( ')' ) == false )
+    {
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), "file_exists", ')' );
+        return false;
+    }
+    iter++; // consume close )
+
+    AStackString<> includePath( fileName );
+    ExpandIncludePath( file, includePath );
+
+    // check if file exists
+    outResult = FBuild::Get().AddFileExistsCheck( includePath );
     return true;
 }
 
@@ -819,6 +936,10 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
     }
     argsIter++;
 
+    // We must escape ^ and $ so they won't be interpretted as special chars
+    varValue.Replace( "^", "^^" );
+    varValue.Replace( "$", "^$" );
+
     // Inject variable declaration
     AStackString<> varName( "." );
     varName += envVarToImport;
@@ -854,20 +975,7 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
 
     // TODO:B Check for empty string
 
-    // NOTE: Substitutions are not supported on includes
-
-    // Includes are relative to current file, unless full paths
-    if ( PathUtils::IsFullPath( include ) == false )
-    {
-        // Determine path from current file
-        const AString & currentFile = file.GetFileName();
-        const char * lastSlash = currentFile.FindLast( NATIVE_SLASH );
-        lastSlash = lastSlash ? lastSlash : currentFile.FindLast( OTHER_SLASH );
-        lastSlash = lastSlash ? ( lastSlash + 1 ): currentFile.Get(); // file only, truncate to empty
-        AStackString<> tmp( currentFile.Get(), lastSlash );
-        tmp += include;
-        include = tmp;
-    }
+    ExpandIncludePath( file, include );
 
     // Recursively tokenize
     const bool result = TokenizeFromFile( include, argsIter.GetCurrent() );
@@ -1005,6 +1113,24 @@ bool BFFTokenizer::GetDirective( const BFFFile & file, const char * & pos, AStri
     }
 
     return true;
+}
+
+// ExpandIncludePath
+//------------------------------------------------------------------------------
+void BFFTokenizer::ExpandIncludePath( const BFFFile & file, AString & includePath ) const
+{
+    // Includes are relative to current file, unless full paths
+    if ( PathUtils::IsFullPath( includePath ) == false )
+    {
+        // Determine path from current file
+        const AString & currentFile = file.GetFileName();
+        const char * lastSlash = currentFile.FindLast( NATIVE_SLASH );
+        lastSlash = lastSlash ? lastSlash : currentFile.FindLast( OTHER_SLASH );
+        lastSlash = lastSlash ? ( lastSlash + 1 ): currentFile.Get(); // file only, truncate to empty
+        AStackString<> tmp( currentFile.Get(), lastSlash );
+        tmp += includePath;
+        includePath = tmp;
+    }
 }
 
 //------------------------------------------------------------------------------
