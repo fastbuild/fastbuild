@@ -17,14 +17,20 @@ Settings {}
                         + ' -D INTELLISENSE_QUOTED_SPACE_DEFINE'
                         + ' /DINTELLISENSE_QUOTED_SLASH_DEFINE'
                         + ' /D INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE'
-                        + ' -IIntellisense/Include/Path'
-                        + ' -I Intellisense/Include/Space/Path'
-                        + ' /IIntellisense/Include/Slash/Path'
-                        + ' /I Intellisense/Include/Slash/Space/Path'
-                        + ' -I"Intellisense/Include/Quoted/Path"'
-                        + ' -I "Intellisense/Include/Quoted/Space/Path"'
-                        + ' /I"Intellisense/Include/Quoted/Slash/Path"'
-                        + ' /I "Intellisense/Include/Quoted/Slash/Space/Path"'
+                        // Include path options are listed in the reverse order of their priority,
+                        // to check that we will extract them in the correct order.
+                        + ' -idirafterIntellisense/DirAfterInclude/Path'
+                        + ' -idirafter Intellisense/DirAfterInclude/Space/Path'
+                        + ' -idirafter"Intellisense/DirAfterInclude/Quoted/Path"'
+                        + ' -idirafter "Intellisense/DirAfterInclude/Quoted/Space/Path"'
+                        + ' -imsvcIntellisense/MSVCInclude/Path'
+                        + ' -imsvc Intellisense/MSVCInclude/Space/Path'
+                        + ' /imsvcIntellisense/MSVCInclude/Slash/Path'
+                        + ' /imsvc Intellisense/MSVCInclude/Slash/Space/Path'
+                        + ' -imsvc"Intellisense/MSVCInclude/Quoted/Path"'
+                        + ' -imsvc "Intellisense/MSVCInclude/Quoted/Space/Path"'
+                        + ' /imsvc"Intellisense/MSVCInclude/Quoted/Slash/Path"'
+                        + ' /imsvc "Intellisense/MSVCInclude/Quoted/Slash/Space/Path"'
                         + ' -isystemIntellisense/SystemInclude/Path'
                         + ' -isystem Intellisense/SystemInclude/Space/Path'
                         + ' -isystem"Intellisense/SystemInclude/Quoted/Path"'
@@ -33,6 +39,14 @@ Settings {}
                         + ' -isystem-after Intellisense/SystemAfterInclude/Space/Path'
                         + ' -isystem-after"Intellisense/SystemAfterInclude/Quoted/Path"'
                         + ' -isystem-after "Intellisense/SystemAfterInclude/Quoted/Space/Path"'
+                        + ' -IIntellisense/Include/Path'
+                        + ' -I Intellisense/Include/Space/Path'
+                        + ' /IIntellisense/Include/Slash/Path'
+                        + ' /I Intellisense/Include/Slash/Space/Path'
+                        + ' -I"Intellisense/Include/Quoted/Path"'
+                        + ' -I "Intellisense/Include/Quoted/Space/Path"'
+                        + ' /I"Intellisense/Include/Quoted/Slash/Path"'
+                        + ' /I "Intellisense/Include/Quoted/Slash/Space/Path"'
                         + ' -iquoteIntellisense/QuoteInclude/Path'
                         + ' -iquote Intellisense/QuoteInclude/Space/Path'
                         + ' -iquote"Intellisense/QuoteInclude/Quoted/Path"'
@@ -64,8 +78,6 @@ XCodeProject( 'ObjectList-xcode' )
 //------------------------------------------------------------------------------
 Library( 'Library' )
 {
-    .CompilerOptions    + ' -DINTELLISENSE_DEFINE'          // Define to be checked by test
-                        + ' -IIntellisense/Include/Path'    // Include to be checked by test
     .CompilerOutputPath = '$Out$/'
     .LibrarianOutput    = '$Out$/Library.lib'
 }
