@@ -123,7 +123,7 @@ stages:
 
 install:
   # Download and unpack archive for a release version.
-  - DL_VER=1.01
+  - DL_VER=1.02
   - |
     case "${TRAVIS_OS_NAME}" in
     linux)   FN=FASTBuild-Linux-x64-v${DL_VER}.zip   FBUILD=fbuild ;;
