@@ -14,6 +14,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 
 // Core
+#include "Core/Containers/UniquePtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -517,7 +518,7 @@ UnityNode::~UnityNode()
                 else
                 {
                     // files the same size - are the contents the same?
-                    AutoPtr< char > mem( (char *)ALLOC( fileSize ) );
+                    UniquePtr< char > mem( (char *)ALLOC( fileSize ) );
                     if ( f.Read( mem.Get(), fileSize ) != fileSize )
                     {
                         // problem reading file - try to write it again

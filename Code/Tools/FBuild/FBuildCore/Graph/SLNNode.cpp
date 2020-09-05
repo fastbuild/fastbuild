@@ -16,12 +16,10 @@
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/ErrorFormat.h"
-#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -328,7 +326,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
         else
         {
             // check content
-            AutoPtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "SLN - Failed to read '%s'", fileName.Get() );

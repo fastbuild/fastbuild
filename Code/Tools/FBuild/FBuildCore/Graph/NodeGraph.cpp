@@ -37,7 +37,7 @@
 #include "XCodeProjectNode.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
@@ -224,7 +224,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
 
     // Read it into memory to avoid lots of tiny disk accesses
     const size_t fileSize = (size_t)fs.GetFileSize();
-    AutoPtr< char > memory( (char *)ALLOC( fileSize ) );
+    UniquePtr< char > memory( (char *)ALLOC( fileSize ) );
     if ( fs.ReadBuffer( memory.Get(), fileSize ) != fileSize )
     {
         FLOG_ERROR( "Could not read Database. Error: %s File: '%s'", LAST_ERROR_STR, nodeGraphDBFile );
@@ -285,7 +285,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         }
 
         const size_t size = (size_t)fs.GetFileSize();
-        AutoPtr< void > mem( ALLOC( size ) );
+        UniquePtr< void > mem( ALLOC( size ) );
         if ( fs.Read( mem.Get(), size ) != size )
         {
             return LoadResult::LOAD_ERROR; // error reading
@@ -317,7 +317,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
     {
         return LoadResult::LOAD_ERROR;
     }
-    AutoPtr< char > envString;
+    UniquePtr< char > envString;
     AStackString<> libEnvVar;
     if ( envStringSize > 0 )
     {

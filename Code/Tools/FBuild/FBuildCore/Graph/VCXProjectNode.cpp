@@ -15,7 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -332,7 +332,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
         else
         {
             // check content
-            AutoPtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "VCXProject - Failed to read '%s'", fileName.Get() );

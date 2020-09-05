@@ -9,7 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
 #include "Core/Math/Conversions.h"
@@ -67,7 +67,7 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
 
     // allocate worst case output size for LZ4
     const int worstCaseSize = LZ4_compressBound( (int)dataSize );
-    AutoPtr< char > output( (char *)ALLOC( (size_t)worstCaseSize ) );
+    UniquePtr< char > output( (char *)ALLOC( (size_t)worstCaseSize ) );
 
     int32_t compressedSize;
 

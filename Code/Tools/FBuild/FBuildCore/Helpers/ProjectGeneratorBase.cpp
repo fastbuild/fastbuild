@@ -16,7 +16,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -219,7 +219,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         else
         {
             // check content
-            AutoPtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "%s - Failed to read '%s'", generatorId, fileName.Get() );

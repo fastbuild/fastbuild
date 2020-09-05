@@ -1,4 +1,4 @@
-// AutoPtr
+// UniquePtr
 //------------------------------------------------------------------------------
 #pragma once
 
@@ -23,15 +23,15 @@ public:
     static inline void Delete( T * ptr ) { FDELETE ptr; }
 };
 
-// AutoPtr
+// UniquePtr
 //------------------------------------------------------------------------------
 template < class T, class DELETOR = FreeDeletor >
-class AutoPtr
+class UniquePtr
 {
 public:
-    explicit inline AutoPtr() : m_Pointer( nullptr ) {}
-    explicit inline AutoPtr( T * ptr ) : m_Pointer( ptr ) {}
-    inline         ~AutoPtr() { DELETOR::Delete( m_Pointer ); }
+    explicit inline UniquePtr() : m_Pointer( nullptr ) {}
+    explicit inline UniquePtr( T * ptr ) : m_Pointer( ptr ) {}
+    inline         ~UniquePtr() { DELETOR::Delete( m_Pointer ); }
 
     // access the pointer
     inline       T * Get()       { return m_Pointer; }

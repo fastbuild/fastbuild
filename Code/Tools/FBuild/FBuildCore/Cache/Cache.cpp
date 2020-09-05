@@ -9,7 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -157,7 +157,7 @@ public:
     if ( cacheFile.Open( fullPath.Get(), FileStream::READ_ONLY ) )
     {
         const size_t cacheFileSize = (size_t)cacheFile.GetFileSize();
-        AutoPtr< char > mem( (char *)ALLOC( cacheFileSize ) );
+        UniquePtr< char > mem( (char *)ALLOC( cacheFileSize ) );
         if ( cacheFile.Read( mem.Get(), cacheFileSize ) == cacheFileSize )
         {
             dataSize = cacheFileSize;

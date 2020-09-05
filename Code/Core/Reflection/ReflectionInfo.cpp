@@ -4,17 +4,12 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "ReflectionInfo.h"
-#include "Core/Containers/AutoPtr.h"
-#include "Core/FileIO/ConstMemoryStream.h"
-#include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
-#include "Core/FileIO/MemoryStream.h"
+
+// Core
 #include "Core/Math/xxHash.h"
-#include "Core/Process/Process.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
-#include "Core/Tracing/Tracing.h"
 
 // System
 #include <memory.h>

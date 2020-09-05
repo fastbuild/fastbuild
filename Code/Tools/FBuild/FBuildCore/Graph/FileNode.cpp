@@ -8,9 +8,8 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
-#include "Core/Containers/AutoPtr.h"
+// Core
 #include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
 #include <string.h> // for strstr

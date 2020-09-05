@@ -15,7 +15,6 @@
 
 // Core
 #include "Core/Env/ErrorFormat.h"
-#include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"

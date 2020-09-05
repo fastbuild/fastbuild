@@ -25,6 +25,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 
 // Core
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
@@ -2148,7 +2149,7 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
         return false;
     }
     uint32_t contentSize = (uint32_t)fs.GetFileSize();
-    AutoPtr< void > mem( ALLOC( contentSize ) );
+    UniquePtr< void > mem( ALLOC( contentSize ) );
     if ( fs.Read( mem.Get(), contentSize ) != contentSize )
     {
         FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest\n", fileName.Get() );
@@ -2431,7 +2432,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
             // for remote jobs, we must serialize the errors to return with the job
             if ( job->IsLocal() == false )
             {
-                AutoPtr< char > mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
+                UniquePtr< char > mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
                 memcpy( mem.Get(), ch.GetOut().Get(), ch.GetOut().GetLength() );
                 memcpy( mem.Get() + ch.GetOut().GetLength(), ch.GetErr().Get(), ch.GetErr().GetLength() );
                 job->OwnData( mem.Release(), ( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );

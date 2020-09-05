@@ -23,7 +23,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
@@ -332,8 +332,8 @@ void TestGraph::TestSerialization() const
         fs1.Open( dbFile1 );
         fs2.Open( dbFile2 );
         TEST_ASSERT( fs1.GetFileSize() == fs2.GetFileSize() ); // size should be the same
-        AutoPtr< char > buffer1( (char *)ALLOC( MEGABYTE ) );
-        AutoPtr< char > buffer2( (char *)ALLOC( MEGABYTE ) );
+        UniquePtr< char > buffer1( (char *)ALLOC( MEGABYTE ) );
+        UniquePtr< char > buffer2( (char *)ALLOC( MEGABYTE ) );
         uint32_t remaining = (uint32_t)fs1.GetFileSize();
         while ( remaining > 0 )
         {

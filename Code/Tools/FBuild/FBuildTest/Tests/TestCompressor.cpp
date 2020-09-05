@@ -7,7 +7,8 @@
 
 #include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
 
-#include "Core/Containers/AutoPtr.h"
+// Core
+#include "Core/Containers/UniquePtr.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
@@ -122,7 +123,7 @@ void TestCompressor::CompressObjFile() const
 void TestCompressor::CompressHelper( const char * fileName ) const
 {
     // read some test data into a file
-    AutoPtr< void > data;
+    UniquePtr< void > data;
     size_t dataSize;
     {
         FileStream fs;
@@ -156,7 +157,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         uint64_t compressedSize;
 
         // Compression speed
-        AutoPtr< Compressor, DeleteDeletor > c;
+        UniquePtr< Compressor, DeleteDeletor > c;
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Compress
@@ -199,7 +200,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 //------------------------------------------------------------------------------
 void TestCompressor::TestHeaderValidity() const
 {
-    AutoPtr< uint32_t > buffer( (uint32_t *)ALLOC( 1024 ) );
+    UniquePtr< uint32_t > buffer( (uint32_t *)ALLOC( 1024 ) );
     memset( buffer.Get(), 0, 1024 );
     Compressor c;
     uint32_t * data = (uint32_t *)buffer.Get();
