@@ -11,7 +11,6 @@
 
 // Core
 #include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
