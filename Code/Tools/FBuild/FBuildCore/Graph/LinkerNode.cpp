@@ -1108,19 +1108,19 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
             }
 
             // -Bdynamic (switching -l to looking up dynamic libraries before static libraries)
-            if ( token == "-Wl,-Bdynamic" || token == "-Bdynamic" ||
-                 token == "-Wl,-dy" || token == "-dy" ||
-                 token == "-Wl,-call_shared" || token == "-call_shared" )
+            if ( ( token == "-Wl,-Bdynamic" ) || ( token == "-Bdynamic" ) ||
+                 ( token == "-Wl,-dy" ) || ( token == "-dy" ) ||
+                 ( token == "-Wl,-call_shared" ) || ( token == "-call_shared" ) )
             {
                 isBstatic = false;
                 continue;
             }
 
             // -Bstatic (switching -l to looking up static libraries only)
-            if ( token == "-Wl,-Bstatic" || token == "-Bstatic" ||
-                 token == "-Wl,-dn" || token == "-dn" ||
-                 token == "-Wl,-non_shared" || token == "-non_shared" ||
-                 token == "-Wl,-static" ) // -static means something different in GCC, so we don't check for it.
+            if ( ( token == "-Wl,-Bstatic" ) || (token == "-Bstatic" ) ||
+                 ( token == "-Wl,-dn" ) || ( token == "-dn" ) ||
+                 ( token == "-Wl,-non_shared" ) || ( token == "-non_shared" ) ||
+                 ( token == "-Wl,-static" ) ) // -static means something different in GCC, so we don't check for it.
             {
                 isBstatic = true;
                 continue;
@@ -1214,7 +1214,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // Convert -l options to nodes
     if ( !msvc )
     {
-        for ( const auto & lib : dashlDynamicLibs )
+        for ( const AString & lib : dashlDynamicLibs )
         {
             AStackString<> dynamicLib;
             dynamicLib += "lib";
@@ -1225,7 +1225,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
             staticLib += lib;
             staticLib += ".a";
 
-            for ( const auto & path : libPaths )
+            for ( const AString & path : libPaths )
             {
                 bool found = false;
 
@@ -1251,7 +1251,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
             }
         }
 
-        for ( const auto & lib : dashlStaticLibs )
+        for ( const AString & lib : dashlStaticLibs )
         {
             AStackString<> staticLib;
             staticLib += "lib";
@@ -1263,7 +1263,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
             }
         }
 
-        for ( const auto & fileName : dashlFiles )
+        for ( const AString & fileName : dashlFiles )
         {
             if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, libPaths, fileName ) )
             {
@@ -1335,7 +1335,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
                                              const Array< AString > & paths,
                                              const AString & lib )
 {
-    for ( const auto & path : paths )
+    for ( const AString & path : paths )
     {
         bool found = false;
         if ( !GetOtherLibrary( nodeGraph, iter, function, libs, path, lib, found ) )
