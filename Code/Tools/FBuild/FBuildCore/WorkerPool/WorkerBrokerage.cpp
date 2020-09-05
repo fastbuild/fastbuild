@@ -33,18 +33,18 @@ static const uint32_t sBrokerageCleanOlderThan = ( 24 * 60 * 60 );
 //------------------------------------------------------------------------------
 WorkerBrokerage::WorkerBrokerage()
     : m_Availability( false )
-    , m_Initialized( false )
+    , m_BrokerageInitialized( false )
     , m_SettingsWriteTime( 0 )
 {
 }
 
-// Init
+// InitBrokerage
 //------------------------------------------------------------------------------
-void WorkerBrokerage::Init()
+void WorkerBrokerage::InitBrokerage()
 {
     PROFILE_FUNCTION
 
-    if ( m_Initialized )
+    if ( m_BrokerageInitialized )
     {
         return;
     }
@@ -114,7 +114,7 @@ void WorkerBrokerage::Init()
     m_TimerLastUpdate.Start();
     m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
 
-    m_Initialized = true;
+    m_BrokerageInitialized = true;
 }
 
 // DESTRUCTOR
@@ -134,8 +134,23 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 {
     PROFILE_FUNCTION
 
-    Init();
+    // Check for workers for the FASTBUILD_WORKERS environment variable
+    // which is a list of worker addresses separated by a semi-colon.
+    AStackString<> workersEnv;
+    if ( Env::GetEnvVariable( "FASTBUILD_WORKERS", workersEnv ) )
+    {
+        // If we find a valid list of workers, we'll use that
+        workersEnv.Tokenize( workerList, ';' );
+        if ( workerList.IsEmpty() == false )
+        {
+            return;
+        }
+    }
 
+    // check for workers through brokerage
+
+    // Init the brokerage
+    InitBrokerage();
     if ( m_BrokerageRoots.IsEmpty() )
     {
         FLOG_WARN( "No brokerage root; did you set FASTBUILD_BROKERAGE_PATH?" );
@@ -183,7 +198,8 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 //------------------------------------------------------------------------------
 void WorkerBrokerage::SetAvailability(bool available)
 {
-    Init();
+    // Init the brokerage if not already
+    InitBrokerage();
 
     // ignore if brokerage not configured
     if ( m_BrokerageRoots.IsEmpty() )
