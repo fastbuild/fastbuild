@@ -202,7 +202,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     {
     public:
         ~TestServer() { ShutdownAllConnections(); }
-        virtual void OnReceive( const ConnectionInfo *, void * data, uint32_t size, bool & )
+        virtual void OnReceive( const ConnectionInfo *, void * data, uint32_t size, bool & ) override
         {
             TEST_ASSERT( size == m_DataSize );
             TEST_ASSERT( memcmp( data, m_ExpectedData, size ) == 0 );
@@ -273,7 +273,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     {
     public:
         ~SlowServer() { ShutdownAllConnections(); }
-        virtual void OnReceive( const ConnectionInfo *, void *, uint32_t, bool & )
+        virtual void OnReceive( const ConnectionInfo *, void *, uint32_t, bool & ) override
         {
             Thread::Sleep( 200 );
         }

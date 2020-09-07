@@ -153,7 +153,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-config" )
             {
-                int pathIndex = ( i + 1 );
+                const int32_t pathIndex = ( i + 1 );
                 if ( pathIndex >= argc )
                 {
                     OUTPUT( "FBuild: Error: Missing <path> for '-config' argument\n" );

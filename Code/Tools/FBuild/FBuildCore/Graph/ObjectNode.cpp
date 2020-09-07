@@ -1109,7 +1109,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 CompilerNode * ObjectNode::GetCompiler() const
 {
     // node can be null if compiling remotely
-    Node * node = m_StaticDependencies[0].GetNode();
+    const Node * node = m_StaticDependencies[0].GetNode();
     return node ? node->CastTo< CompilerNode >() : nullptr;
 }
 
@@ -2079,7 +2079,7 @@ void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre,
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i=startIndex; i<endIndex; ++i )
     {
-        Node * n = m_StaticDependencies[ i ].GetNode();
+        const Node * n = m_StaticDependencies[ i ].GetNode();
 
         fullArgs += pre;
         fullArgs += n->GetName();
@@ -2191,7 +2191,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
         bool doVS2012Fixup = false;
         if ( GetCompiler()->GetType() == Node::COMPILER_NODE )
         {
-            CompilerNode* cn = GetCompiler();
+            const CompilerNode* cn = GetCompiler();
             doVS2012Fixup = cn->IsVS2012EnumBugFixEnabled();
         }
 
@@ -2282,7 +2282,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 {
     ASSERT( job->GetData() && job->GetDataSize() );
 
-    Node * sourceFile = GetSourceFile();
+    const Node * sourceFile = GetSourceFile();
     uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
 
     FileStream tmpFile;

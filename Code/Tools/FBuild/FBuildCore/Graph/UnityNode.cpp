@@ -639,7 +639,7 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
         }
         else if ( node->GetType() == Node::OBJECT_LIST_NODE )
         {
-            ObjectListNode * objListNode = sIt->GetNode()->CastTo< ObjectListNode >();
+            const ObjectListNode * objListNode = sIt->GetNode()->CastTo< ObjectListNode >();
 
             // iterate all the files in the object list
             Array< AString > objListFiles;

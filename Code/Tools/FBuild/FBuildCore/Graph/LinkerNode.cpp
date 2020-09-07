@@ -544,7 +544,7 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
 
         if ( linkObjectsInsteadOfLibs )
         {
-            LibraryNode * ln = n->CastTo< LibraryNode >();
+            const LibraryNode * ln = n->CastTo< LibraryNode >();
             ln->GetInputFiles( fullArgs, pre, post, linkObjectsInsteadOfLibs );
         }
         else
@@ -559,13 +559,13 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
     {
         const bool linkObjectsInsteadOfLibs = m_LinkerLinkObjects;
 
-        ObjectListNode * ol = n->CastTo< ObjectListNode >();
+        const ObjectListNode * ol = n->CastTo< ObjectListNode >();
         ol->GetInputFiles( fullArgs, pre, post, linkObjectsInsteadOfLibs );
     }
     else if ( n->GetType() == Node::DLL_NODE )
     {
         // for a DLL, link to the import library
-        DLLNode * dllNode = n->CastTo< DLLNode >();
+        const DLLNode * dllNode = n->CastTo< DLLNode >();
         AStackString<> importLibName;
         dllNode->GetImportLibName( importLibName );
         fullArgs += pre;
@@ -574,7 +574,7 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
     }
     else if ( n->GetType() == Node::COPY_FILE_NODE )
     {
-        CopyFileNode * copyNode = n->CastTo< CopyFileNode >();
+        const CopyFileNode * copyNode = n->CastTo< CopyFileNode >();
         Node * srcNode = copyNode->GetSourceNode();
         GetInputFiles( srcNode, fullArgs, pre, post );
     }
@@ -597,18 +597,18 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
     const Dependency * end = start + m_AssemblyResourcesNum;
     for ( const Dependency * i = start; i != end; ++i )
     {
-        Node * n( i->GetNode() );
+        const Node * n( i->GetNode() );
 
         if ( n->GetType() == Node::OBJECT_LIST_NODE )
         {
-            ObjectListNode * oln = n->CastTo< ObjectListNode >();
+            const ObjectListNode * oln = n->CastTo< ObjectListNode >();
             oln->GetInputFiles( fullArgs, pre, post, false );
             continue;
         }
 
         if ( n->GetType() == Node::LIBRARY_NODE )
         {
-            LibraryNode * ln = n->CastTo< LibraryNode >();
+            const LibraryNode * ln = n->CastTo< LibraryNode >();
             ln->GetInputFiles( fullArgs, pre, post, false );
             continue;
         }
@@ -1523,7 +1523,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::ALIAS_NODE )
     {
         // handle all targets in alias
-        AliasNode * an = node->CastTo< AliasNode >();
+        const AliasNode * an = node->CastTo< AliasNode >();
         const Dependencies & aliasNodeList = an->GetAliasedNodes();
         const Dependencies::Iter end = aliasNodeList.End();
         for ( Dependencies::Iter it = aliasNodeList.Begin();

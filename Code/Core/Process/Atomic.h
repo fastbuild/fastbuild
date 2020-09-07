@@ -27,7 +27,7 @@ inline bool AtomicLoadAcquire( const volatile bool * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
     #elif defined( _MSC_VER )
-        bool value = *x;
+        const bool value = *x;
         _ReadWriteBarrier();
         return value;
     #else
@@ -192,7 +192,7 @@ inline int32_t AtomicLoadAcquire( const volatile int32_t * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
     #elif defined( _MSC_VER )
-        int32_t value = *x;
+        const int32_t value = *x;
         _ReadWriteBarrier();
         return value;
     #else
@@ -319,7 +319,7 @@ inline int64_t AtomicLoadAcquire( const volatile int64_t * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
     #elif defined( _MSC_VER )
-        int64_t value = *x;
+        const int64_t value = *x;
         _ReadWriteBarrier();
         return value;
     #else

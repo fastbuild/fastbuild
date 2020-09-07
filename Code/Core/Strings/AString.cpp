@@ -601,7 +601,7 @@ uint32_t AString::Replace( char from, char to, uint32_t maxReplaces )
 void AString::ToLower()
 {
     char * pos = m_Contents;
-    char * end = m_Contents + m_Length;
+    const char * const end = m_Contents + m_Length;
     while ( pos < end )
     {
         char c = *pos;
@@ -619,7 +619,7 @@ void AString::ToLower()
 void AString::ToUpper()
 {
     char * pos = m_Contents;
-    char * end = m_Contents + m_Length;
+    const char * const end = m_Contents + m_Length;
     while ( pos < end )
     {
         char c = *pos;

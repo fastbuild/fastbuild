@@ -1882,7 +1882,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         for ( const Dependency & oldDep : oldDeps )
         {
             // See if the depenceny already exists in the new DB
-            Node * oldDepNode = oldDep.GetNode();
+            const Node * oldDepNode = oldDep.GetNode();
             Node * newDepNode = FindNodeInternal( oldDepNode->GetName() );
 
             // If the dependency exists, but has changed type, then dependencies
@@ -2206,8 +2206,8 @@ bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependenc
     const size_t numDeps = depsA.GetSize();
     for ( size_t i = 0; i<numDeps; ++i )
     {
-        Node * nodeA = depsA[ i ].GetNode();
-        Node * nodeB = depsB[ i ].GetNode();
+        const Node * nodeA = depsA[ i ].GetNode();
+        const Node * nodeB = depsB[ i ].GetNode();
         if ( nodeA->GetType() != nodeB->GetType() )
         {
             return false;

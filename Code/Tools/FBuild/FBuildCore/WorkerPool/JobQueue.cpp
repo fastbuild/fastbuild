@@ -700,7 +700,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             const char * profilingTag = node->GetTypeName();
             if ( node->GetType() == Node::OBJECT_NODE )
             {
-                ObjectNode * on = (ObjectNode *)node;
+                const ObjectNode * on = (ObjectNode *)node;
                 profilingTag = on->IsCreatingPCH() ? "PCH" : on->IsUsingPCH() ? "Obj (+PCH)" : profilingTag;
             }
             PROFILE_SECTION( profilingTag );

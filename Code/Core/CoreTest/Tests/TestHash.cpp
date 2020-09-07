@@ -59,7 +59,7 @@ void TestHash::CompareHashTimes_Large() const
         Timer t;
         uint64_t sum( 0 );
         uint64_t * it = data.Get();
-        uint64_t * end = it + ( dataSize / sizeof( uint64_t ) );
+        const uint64_t * const end = it + ( dataSize / sizeof( uint64_t ) );
         while ( it != end )
         {
             sum += *it;
@@ -75,7 +75,7 @@ void TestHash::CompareHashTimes_Large() const
         Timer t;
         uint32_t sum( 0 );
         uint32_t * it = (uint32_t *)data.Get();
-        uint32_t * end = it + ( dataSize / sizeof( uint32_t ) );
+        const uint32_t * const end = it + ( dataSize / sizeof( uint32_t ) );
         while ( it != end )
         {
             sum += *it;

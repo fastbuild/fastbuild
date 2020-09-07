@@ -276,7 +276,7 @@ SLNNode::~SLNNode() = default;
     Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize(), false );
     for ( Dependency & dep : m_StaticDependencies )
     {
-        Node * node = dep.GetNode();
+        const Node * node = dep.GetNode();
         VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
                                         ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )
                                         : static_cast< VSProjectBaseNode * >( node->CastTo< VSProjectExternalNode >() );
@@ -382,7 +382,7 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
                              Array< VSProjectBaseNode * > & inOutProjects ) const
 {
     // Get associated project file
-    Node * node = nodeGraph.FindNode( projectName );
+    const Node * node = nodeGraph.FindNode( projectName );
     if ( node == nullptr )
     {
         Error::Error_1104_TargetNotDefined( iter, function, propertyName, projectName );

@@ -348,10 +348,10 @@ void Array< T >::Swap( Array< T > & other )
     ASSERT( ( other.m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 );
 
     T * tmpBegin = m_Begin;
-    uint32_t tmpSize = m_Size;
-    uint32_t tmpCapacityAndFlags = m_CapacityAndFlags;
+    const uint32_t tmpSize = m_Size;
+    const uint32_t tmpCapacityAndFlags = m_CapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
-        bool tmpResizeable = m_Resizeable;
+        const bool tmpResizeable = m_Resizeable;
     #endif
     m_Begin = other.m_Begin;
     m_Size = other.m_Size;
@@ -659,9 +659,9 @@ void Array< T >::Grow()
     ASSERT( m_Resizeable );
 
     // grow by 1.5 times (but at least by one)
-    size_t currentCapacity = GetCapacity();
-    size_t size = GetSize();
-    size_t newCapacity = ( currentCapacity + ( currentCapacity >> 1 ) + 1 );
+    const size_t currentCapacity = GetCapacity();
+    const size_t size = GetSize();
+    const size_t newCapacity = ( currentCapacity + ( currentCapacity >> 1 ) + 1 );
     T * newMem = Allocate( newCapacity );
 
     T * src = m_Begin;
@@ -686,7 +686,7 @@ template < class T >
 T * Array< T >::Allocate( size_t numElements ) const
 {
     ASSERT( m_Resizeable );
-    const size_t align = __alignof( T ) > sizeof( void * ) ? __alignof( T ) : sizeof( void * );
+    constexpr size_t align = __alignof( T ) > sizeof( void * ) ? __alignof( T ) : sizeof( void * );
     return static_cast< T * >( ALLOC( sizeof( T ) * numElements, align ) );
 }
 

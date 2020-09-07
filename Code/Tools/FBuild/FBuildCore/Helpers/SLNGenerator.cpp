@@ -99,7 +99,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 {
     // Project Listings
 
-    VSProjectBaseNode ** const projectsEnd = projects.End();
+    const VSProjectBaseNode * const * projectsEnd = projects.End();
     for( VSProjectBaseNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
     {
         AStackString<> projectPath( (*it)->GetName() );

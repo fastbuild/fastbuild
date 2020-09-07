@@ -124,7 +124,7 @@ void TestLinker::LibrariesOnCommandLine() const
 {
     FBuild fBuild;
     NodeGraph nodeGraph;
-    BFFToken * iter = nullptr;
+    const BFFToken * iter = nullptr;
 
     // MSVC: 2 libraries
     {

@@ -136,12 +136,12 @@ const char * TestNode::GetEnvironmentString() const
     const size_t endIndex =  ( 1 + m_NumTestInputFiles + m_TestInputPath.GetSize() );
     for ( size_t i=startIndex; i<endIndex; ++i )
     {
-        Node * n = m_StaticDependencies[ i ].GetNode();
+        const Node * n = m_StaticDependencies[ i ].GetNode();
 
         ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
         // get the list of files
-        DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
         const Array< FileIO::FileInfo > & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )

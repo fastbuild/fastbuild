@@ -115,7 +115,7 @@ public:
     }
 
     // write data
-    bool cacheTmpWriteOk = ( cacheTmpFile.Write( data, dataSize ) == dataSize );
+    const bool cacheTmpWriteOk = ( cacheTmpFile.Write( data, dataSize ) == dataSize );
     cacheTmpFile.Close();
 
     if ( !cacheTmpWriteOk )
@@ -260,7 +260,7 @@ public:
     uint32_t numDeleted = 0;
     if ( limit < totalSize )
     {
-        Timer timer;
+        const Timer timer;
         float lastProgressTime = 0.0f;
         if ( showProgress )
         {
@@ -317,7 +317,7 @@ void Cache::GetCacheFiles( bool showProgress,
 {
     // Throttle progress messages to avoid impacting performance significantly
     // (network cache is usually the bottleneck, but a local caches is not)
-    Timer timer;
+    const Timer timer;
     float lastProgressTime = 0.0f;
     if ( showProgress )
     {

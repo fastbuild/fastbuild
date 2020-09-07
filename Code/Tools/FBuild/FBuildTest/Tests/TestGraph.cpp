@@ -165,7 +165,7 @@ void TestGraph::TestNodeTypes() const
         #else
             AStackString<> dllName( "/tmp/lib.so" );
         #endif
-        Node * n = ng.CreateDLLNode( dllName );
+        const Node * n = ng.CreateDLLNode( dllName );
         TEST_ASSERT( n->GetType() == Node::DLL_NODE );
         TEST_ASSERT( DLLNode::GetTypeS() == Node::DLL_NODE );
         TEST_ASSERT( AStackString<>( "DLL" ) == n->GetTypeName() );
@@ -176,7 +176,7 @@ void TestGraph::TestNodeTypes() const
         #else
             AStackString<> exeName( "/tmp/exe.exe" );
         #endif
-        Node * n = ng.CreateExeNode( exeName );
+        const Node * n = ng.CreateExeNode( exeName );
         TEST_ASSERT( n->GetType() == Node::EXE_NODE );
         TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
         TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );
@@ -189,9 +189,9 @@ void TestGraph::TestNodeTypes() const
     }
     {
         #if defined( __WINDOWS__ )
-            Node * n = ng.CreateCSNode( AStackString<>( "c:\\csharp.dll" ) );
+            const Node * n = ng.CreateCSNode( AStackString<>( "c:\\csharp.dll" ) );
         #else
-            Node * n = ng.CreateCSNode( AStackString<>( "/dummy/csharp.dll" ) );
+            const Node * n = ng.CreateCSNode( AStackString<>( "/dummy/csharp.dll" ) );
         #endif
         TEST_ASSERT( n->GetType() == Node::CS_NODE);
         TEST_ASSERT( CSNode::GetTypeS() == Node::CS_NODE );
@@ -267,7 +267,7 @@ void TestGraph::TestDirectoryListNode() const
     DirectoryListNode * node = ng.CreateDirectoryListNode( name );
     node->m_Path = testFolder;
     node->m_Patterns = patterns;
-    BFFToken * token = nullptr;
+    const BFFToken * token = nullptr;
     TEST_ASSERT( node->Initialize( ng, token, nullptr ) );
     TEST_ASSERT( ng.FindNode( name ) == node );
 

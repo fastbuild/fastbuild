@@ -19,13 +19,13 @@ public:
 
     float GetElapsed() const
     {
-        int64_t now = GetNow();
+        const int64_t now = GetNow();
         return ( (float)( now - m_StartTime ) * GetFrequencyInvFloat() );
     }
 
     float GetElapsedMS() const
     {
-        int64_t now = GetNow();
+        const int64_t now = GetNow();
         return ( (float)( now - m_StartTime ) * GetFrequencyInvFloatMS() );
     }
 

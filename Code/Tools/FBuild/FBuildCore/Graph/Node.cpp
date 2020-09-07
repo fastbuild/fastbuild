@@ -203,7 +203,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
             continue;
         }
 
-        Node * n = dep.GetNode();
+        const Node * n = dep.GetNode();
 
         const uint64_t stamp = n->GetStamp();
         if ( stamp == 0 )

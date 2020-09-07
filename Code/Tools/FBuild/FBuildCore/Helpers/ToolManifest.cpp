@@ -477,7 +477,7 @@ void ToolManifest::CancelSynchronizingFiles()
     bool atLeastOneFileCancelled = false;
 
     // is completely synchronized?
-    ToolManifestFile * const end = m_Files.End();
+    const ToolManifestFile * const end = m_Files.End();
     for ( ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
     {
         if ( it->GetSyncState() == ToolManifestFile::SYNCHRONIZING )

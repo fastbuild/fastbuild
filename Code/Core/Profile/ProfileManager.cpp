@@ -122,7 +122,7 @@ void ProfileEventBuffer::Stop()
     size_t currentDepth = m_CurrentDepth;
     if ( --currentDepth == 0 )
     {
-        ProfileEvent * events = m_Begin;
+        const ProfileEvent * events = m_Begin;
         ProfileManager::PushThreadEvents( events, (size_t)( m_Current - events ), m_ThreadName );
         m_Begin = nullptr;
         m_Current = nullptr;

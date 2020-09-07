@@ -280,7 +280,7 @@ void WorkerThread::WaitForStop()
     // create isolated subdir
     AStackString<> tmpFileName;
     CreateTempFilePath( ".tmp", tmpFileName );
-    char * lastSlash = tmpFileName.FindLast( NATIVE_SLASH );
+    const char * lastSlash = tmpFileName.FindLast( NATIVE_SLASH );
     tmpFileName.SetLength( (uint32_t)( lastSlash - tmpFileName.Get() ) );
     FileIO::EnsurePathExists( tmpFileName );
 }

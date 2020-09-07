@@ -46,7 +46,7 @@ FunctionError::FunctionError()
                                                const BFFTokenRange & headerRange,
                                                const BFFTokenRange & /*bodyRange*/ ) const
 {
-    BFFTokenRange iter( headerRange );
+    const BFFTokenRange iter( headerRange );
 
     // We expect a quoted string
     if ( iter->IsString() == false )

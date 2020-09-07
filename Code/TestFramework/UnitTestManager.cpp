@@ -105,14 +105,15 @@ UnitTestManager::~UnitTestManager()
 
     // link to end of list
     UnitTest * thisGroup = s_FirstTest;
-loop:
-    if ( thisGroup->m_NextTestGroup == nullptr )
+    for ( ;; )
     {
-        thisGroup->m_NextTestGroup = testGroup;
-        return;
+        if ( thisGroup->m_NextTestGroup == nullptr )
+        {
+            thisGroup->m_NextTestGroup = testGroup;
+            return;
+        }
+        thisGroup = thisGroup->m_NextTestGroup;
     }
-    thisGroup = thisGroup->m_NextTestGroup;
-    goto loop;
 }
 
 // RunTests

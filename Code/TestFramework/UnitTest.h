@@ -70,8 +70,8 @@ private:
 // Test Declarations
 //------------------------------------------------------------------------------
 #define DECLARE_TESTS                                               \
-    virtual void RunTests();                                        \
-    virtual const char * GetName() const;
+    virtual void RunTests() override;                               \
+    virtual const char * GetName() const override;
 
 #define REGISTER_TESTS_BEGIN( testGroupName )                       \
     void testGroupName##Register()                                  \
