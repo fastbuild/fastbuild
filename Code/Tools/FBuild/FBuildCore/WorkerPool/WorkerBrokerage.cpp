@@ -49,15 +49,15 @@ void WorkerBrokerage::InitBrokerage()
         return;
     }
 
-    // brokerage path includes version to reduce unnecssary comms attempts
+    // brokerage path includes version to reduce unnecessary comms attempts
     uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
     // root folder
     AStackString<> brokeragePath;
-    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath) )
+    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath ) )
     {
         // FASTBUILD_BROKERAGE_PATH can contain multiple paths separated by semi-colon. The worker will register itself into the first path only but
-        // the additional paths are paths to additional broker roots allowed for finding remote workers(in order of priority)
+        // the additional paths are paths to additional broker roots allowed for finding remote workers (in order of priority)
         const char * start = brokeragePath.Get();
         const char * end = brokeragePath.GetEnd();
         AStackString<> pathSeparator( ";" );
@@ -121,7 +121,7 @@ void WorkerBrokerage::InitBrokerage()
 //------------------------------------------------------------------------------
 WorkerBrokerage::~WorkerBrokerage()
 {
-    // Ensure the file disapears when closing
+    // Ensure the file disappears when closing
     if ( m_Availability )
     {
         FileIO::FileDelete( m_BrokerageFilePath.Get() );
@@ -161,7 +161,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
     for( AString& root : m_BrokerageRoots )
     {
         size_t filesBeforeSearch = results.GetSize();
-        if ( !FileIO::GetFiles(root,
+        if ( !FileIO::GetFiles( root,
                                 AStackString<>( "*" ),
                                 false,
                                 &results ) )
@@ -196,7 +196,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 
 // SetAvailability
 //------------------------------------------------------------------------------
-void WorkerBrokerage::SetAvailability(bool available)
+void WorkerBrokerage::SetAvailability( bool available )
 {
     // Init the brokerage if not already
     InitBrokerage();
@@ -245,7 +245,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                 static const uint32_t numProcessors = Env::GetNumProcessors();
                 buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
 
-                // Move
+                // Mode
                 switch ( workerSettings.GetMode() )
                 {
                     case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
@@ -257,7 +257,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                 // Create/write file which signifies availability
                 FileIO::EnsurePathExists( m_BrokerageRoots[0] );
                 FileStream fs;
-                if (fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ))
+                if ( fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ) )
                 {
                     fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
 
@@ -265,7 +265,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                     m_SettingsWriteTime = settingsWriteTime;
                 }
             }
-            
+
             // Restart the timer
             m_TimerLastUpdate.Start();
         }
@@ -280,7 +280,7 @@ void WorkerBrokerage::SetAvailability(bool available)
     }
     m_Availability = available;
     
-    // Handle brokereage cleaning
+    // Handle brokerage cleaning
     if ( m_TimerLastCleanBroker.GetElapsed() >= sBrokerageElapsedTimeBetweenClean )
     {
         const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
@@ -306,7 +306,7 @@ void WorkerBrokerage::SetAvailability(bool available)
 
         // Restart the timer
         m_TimerLastCleanBroker.Start();
-    }    
+    }
 }
 
 //------------------------------------------------------------------------------
