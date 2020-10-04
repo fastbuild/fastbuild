@@ -10,8 +10,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CompilationDatabase.h"
 
-#include "Core/Containers/AutoPtr.h"
-#include "Core/FileIO/FileStream.h"
+// Core
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 

@@ -12,9 +12,6 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ToolManifest.h"
 
-#include "Core/Containers/AutoPtr.h"
-#include "Core/FileIO/FileStream.h"
-
 // TestCompiler
 //------------------------------------------------------------------------------
 class TestCompiler : public FBuildTest

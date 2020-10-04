@@ -88,7 +88,7 @@ public:
 
     const IncludedFile * Find( const AString & fileName, uint64_t fileNameHash )
     {
-        IncludedFile ** location = InternalFind( fileName, fileNameHash );
+        const IncludedFile * const * location = InternalFind( fileName, fileNameHash );
         if ( location && *location )
         {
             return *location;
@@ -429,10 +429,10 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
 
     // Get include string
     AStackString<> include;
-    IncludeType includeType;
     if ( ( *pos == '"' ) || ( *pos == '<' ) )
     {
         // Looks like a normal include
+        IncludeType includeType;
         if ( ParseIncludeString( pos, include, includeType ) == false )
         {
             // We encountered an include we can't handle
@@ -717,7 +717,7 @@ const IncludedFile * LightCache::ProcessIncludeFromFullPath( const AString & inc
     outCyclic = false;
 
     // Handle cyclic includes
-    const IncludedFile ** found = m_IncludeStack.FindDeref( include );
+    const IncludedFile * const * found = m_IncludeStack.FindDeref( include );
     if ( found )
     {
         outCyclic = true;
@@ -752,7 +752,7 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString &
         NodeGraph::CleanPath( possibleIncludePath );
 
         // Handle cyclic includes
-        const IncludedFile ** found = m_IncludeStack.FindDeref( possibleIncludePath );
+        const IncludedFile * const * found = m_IncludeStack.FindDeref( possibleIncludePath );
         if ( found )
         {
             outCyclic = true;

@@ -29,6 +29,7 @@ class FileNode;
 class IOStream;
 class LibraryNode;
 class LinkerNode;
+class ListDependenciesNode;
 class Node;
 class ObjectListNode;
 class ObjectNode;
@@ -127,6 +128,7 @@ public:
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
+    ListDependenciesNode* CreateListDependenciesNode( const AString& name );
     TextFileNode * CreateTextFileNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );

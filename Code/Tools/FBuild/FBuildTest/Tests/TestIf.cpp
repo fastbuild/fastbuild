@@ -5,15 +5,6 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-// FBuildCore
-#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-
-#include "Core/Containers/AutoPtr.h"
-#include "Core/Env/Env.h"
-#include "Core/FileIO/FileStream.h"
-
 // TestIf
 //------------------------------------------------------------------------------
 class TestIf : public FBuildTest

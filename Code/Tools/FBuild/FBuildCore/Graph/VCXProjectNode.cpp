@@ -15,7 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -274,7 +274,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     // files from directory listings
     for ( const Dependency & staticDep : m_StaticDependencies )
     {
-        DirectoryListNode * dirNode = staticDep.GetNode()->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dirNode = staticDep.GetNode()->CastTo< DirectoryListNode >();
         for ( const FileIO::FileInfo & fileInfo : dirNode->GetFiles() )
         {
             pg.AddFile( fileInfo.m_Name );
@@ -332,7 +332,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
         else
         {
             // check content
-            AutoPtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "VCXProject - Failed to read '%s'", fileName.Get() );

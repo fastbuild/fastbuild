@@ -7,7 +7,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -48,7 +48,7 @@ extern "C" int LLVMFuzzerTestOneInput( const uint8_t * data, size_t size )
     static FuzzerEnvironment env;
 
     // Because BFFParser expects null-terminated input, we have to make a copy of the data and append null.
-    AutoPtr< char > str( (char *)ALLOC( size + 1 ) );
+    UniquePtr< char > str( (char *)ALLOC( size + 1 ) );
     memcpy( str.Get(), data, size );
     str.Get()[ size ] = 0;
 

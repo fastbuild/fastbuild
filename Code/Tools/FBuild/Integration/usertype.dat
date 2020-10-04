@@ -26,6 +26,7 @@ Executable
 ForEach
 If
 Library
+ListDependencies
 ObjectList
 Print
 RemoveDir
@@ -156,6 +157,7 @@ PCHOutputFile
 PackagePath
 Path
 Pattern
+Patterns
 Platform
 PlatformToolset
 PreBuildDependencies

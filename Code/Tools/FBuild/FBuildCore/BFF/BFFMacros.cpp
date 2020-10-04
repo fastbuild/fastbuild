@@ -50,6 +50,18 @@ bool BFFMacros::IsDefined( const AString & token ) const
             return true;
         }
     #endif
+    #if defined( __X64__ )
+        if ( token == "__X64__" )
+        {
+            return true;
+        }
+    #endif
+    #if defined( __ARM64__ )
+        if ( token == "__ARM64__" )
+        {
+            return true;
+        }
+    #endif
 
     return false;
 }

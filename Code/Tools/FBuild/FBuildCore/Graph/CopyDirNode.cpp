@@ -103,7 +103,7 @@ CopyDirNode::~CopyDirNode() = default;
           ++dep )
     {
         // Grab the files
-        DirectoryListNode * dln = dep->GetNode()->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dln = dep->GetNode()->CastTo< DirectoryListNode >();
         const Array< FileIO::FileInfo > & files = dln->GetFiles();
         const FileIO::FileInfo * const fEnd = files.End();
         for ( const FileIO::FileInfo * fIt = files.Begin();
@@ -141,7 +141,7 @@ CopyDirNode::~CopyDirNode() = default;
                 CopyFileNode * copyFileNode = nodeGraph.CreateCopyFileNode( dstFile );
                 copyFileNode->m_Source = srcFileNode->GetName();
                 copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames; // inherit PreBuildDependencies
-                BFFToken * token = nullptr;
+                const BFFToken * token = nullptr;
                 if ( !copyFileNode->Initialize( nodeGraph, token, nullptr ) )
                 {
                     return false; // Initialize will have emitted an error
@@ -155,7 +155,7 @@ CopyDirNode::~CopyDirNode() = default;
             }
             else
             {
-                CopyFileNode * cn = n->CastTo< CopyFileNode >();
+                const CopyFileNode * cn = n->CastTo< CopyFileNode >();
                 if ( srcFileNode != cn->GetSourceNode() )
                 {
                     FLOG_ERROR( "Conflicting objects found during CopyDir:\n"
@@ -189,7 +189,7 @@ CopyDirNode::~CopyDirNode() = default;
         Array< uint64_t > stamps( m_DynamicDependencies.GetSize(), false );
         for ( const Dependency & dep: m_DynamicDependencies )
         {
-            CopyFileNode * cn = dep.GetNode()->CastTo< CopyFileNode >();
+            const CopyFileNode * cn = dep.GetNode()->CastTo< CopyFileNode >();
             ASSERT( cn->GetStamp() );
             stamps.Append( cn->GetStamp() );
         }

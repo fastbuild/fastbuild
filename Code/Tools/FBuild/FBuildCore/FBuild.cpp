@@ -277,12 +277,12 @@ bool FBuild::Build( const Array< AString > & targets )
     proxy.m_StaticDependencies = deps;
 
     // build all targets in one sweep
-    bool result = Build( &proxy );
+    const bool result = Build( &proxy );
 
     // output per-target results
     for ( size_t i=0; i<targets.GetSize(); ++i )
     {
-        bool nodeResult = ( deps[ i ].GetNode()->GetState() == Node::UP_TO_DATE );
+        const bool nodeResult = ( deps[ i ].GetNode()->GetState() == Node::UP_TO_DATE );
         OUTPUT( "FBuild: %s: %s\n", nodeResult ? "OK" : "Error: BUILD FAILED", targets[ i ].Get() );
     }
 
@@ -299,7 +299,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
     FLOG_VERBOSE( "Saving DepGraph '%s'", nodeGraphDBFile );
 
-    Timer t;
+    const Timer t;
 
     // serialize into memory first
     MemoryStream memoryStream( 32 * 1024 * 1024, 8 * 1024 * 1024 );
@@ -375,16 +375,12 @@ bool FBuild::Build( Node * nodeToBuild )
     {
         const SettingsNode * settings = m_DependencyGraph->GetSettings();
 
-        Array< AString > workers;
-        if ( settings->GetWorkerList().IsEmpty() )
+        // Worker list from Settings takes priority
+        Array< AString > workers( settings->GetWorkerList() );
+        if ( workers.IsEmpty() )
         {
-            // check for workers through brokerage
-            // TODO:C This could be moved out of the main code path
+            // check for workers through brokerage or environment
             m_WorkerBrokerage.FindWorkers( workers );
-        }
-        else
-        {
-            workers = settings->GetWorkerList();
         }
 
         if ( workers.IsEmpty() )
@@ -432,8 +428,8 @@ bool FBuild::Build( Node * nodeToBuild )
             WorkerThread::Update();
         }
 
-        bool complete = ( nodeToBuild->GetState() == Node::UP_TO_DATE ) ||
-                        ( nodeToBuild->GetState() == Node::FAILED );
+        const bool complete = ( nodeToBuild->GetState() == Node::UP_TO_DATE ) ||
+                              ( nodeToBuild->GetState() == Node::FAILED );
 
         if ( AtomicLoadRelaxed( &s_StopBuild ) || complete )
         {
@@ -500,7 +496,7 @@ bool FBuild::Build( Node * nodeToBuild )
     }
 
     // TODO:C Move this into BuildStats
-    float timeTaken = m_Timer.GetElapsed();
+    const float timeTaken = m_Timer.GetElapsed();
     m_BuildStats.m_TotalBuildTime = timeTaken;
 
     m_BuildStats.OnBuildStop( nodeToBuild );
@@ -638,9 +634,9 @@ void FBuild::UpdateBuildStatus( const Node * node )
     const float OUTPUT_FREQUENCY( 1.0f );
     const float CALC_FREQUENCY( 5.0f );
 
-    float timeNow = m_Timer.GetElapsed();
+    const float timeNow = m_Timer.GetElapsed();
 
-    bool doUpdate = ( ( timeNow - m_LastProgressOutputTime ) >= OUTPUT_FREQUENCY );
+    const bool doUpdate = ( ( timeNow - m_LastProgressOutputTime ) >= OUTPUT_FREQUENCY );
     if ( doUpdate == false )
     {
         return;
@@ -658,10 +654,10 @@ void FBuild::UpdateBuildStatus( const Node * node )
         m_LastProgressCalcTime = m_Timer.GetElapsed();
 
         // calculate percentage
-        float doneRatio = (float)( (double)bs.m_NodeTimeProgressms / (double)bs.m_NodeTimeTotalms );
+        const float doneRatio = (float)( (double)bs.m_NodeTimeProgressms / (double)bs.m_NodeTimeTotalms );
 
         // don't allow it to reach 100% (handles rounding inaccuracies)
-        float donePerc = Math::Min< float >( doneRatio * 100.0f, 99.9f );
+        const float donePerc = Math::Min< float >( doneRatio * 100.0f, 99.9f );
 
         // don't allow progress to go backwards
         m_SmoothedProgressTarget = Math::Max< float >( donePerc, m_SmoothedProgressTarget );
@@ -704,7 +700,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
     const size_t totalNodes = m_DependencyGraph->GetNodeCount();
     for ( size_t i = 0; i < totalNodes; ++i )
     {
-        Node * node = m_DependencyGraph->GetNodeByIndex( i );
+        const Node * node = m_DependencyGraph->GetNodeByIndex( i );
         bool displayName = false;
         bool hidden = node->IsHidden();
         switch ( node->GetType() )
@@ -732,6 +728,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::XCODEPROJECT_NODE:   break;
             case Node::SETTINGS_NODE:       break;
             case Node::TEXT_FILE_NODE:      displayName = true; hidden = node->IsHidden(); break;
+            case Node::LIST_DEPENDENCIES_NODE: break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
         if ( displayName && ( !hidden || showHidden ) )

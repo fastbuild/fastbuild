@@ -12,7 +12,6 @@
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 
 // Core
-#include "Core/FileIO/FileStream.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 

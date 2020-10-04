@@ -188,7 +188,7 @@ void TCPConnectionPool::ShutdownAllConnections()
         // incoming connections
         for ( size_t i = 0; i < m_Connections.GetSize(); ++i )
         {
-            ConnectionInfo * ci = m_Connections[ i ];
+            const ConnectionInfo * const ci = m_Connections[ i ];
             Disconnect( ci );
         }
 
@@ -493,7 +493,7 @@ void TCPConnectionPool::Disconnect( const ConnectionInfo * ci )
         return;
     }
 
-    ConnectionInfo ** iter = m_Connections.Find( ci );
+    const ConnectionInfo * const * iter = m_Connections.Find( ci );
     if ( iter != nullptr )
     {
         AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
@@ -685,7 +685,7 @@ bool TCPConnectionPool::Broadcast( const void * data, size_t size )
     bool result = true;
 
     ConnectionInfo ** it = m_Connections.Begin();
-    ConnectionInfo * const * end = m_Connections.End();
+    const ConnectionInfo * const * end = m_Connections.End();
     while ( it < end )
     {
         result &= Send( *it, data, size );

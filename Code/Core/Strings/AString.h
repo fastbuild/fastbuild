@@ -106,16 +106,16 @@ public:
 
     // searching
     const char *    Find( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    char *          Find( char c, char * startPos = nullptr, char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->Find( c, startPos, endPos ) ); }
+    char *          Find( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->Find( c, startPos, endPos ) ); }
     const char *    Find( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    char *          Find( const char * subString, char * startPos = nullptr, char * endPos = nullptr ) { return const_cast<char *>( ((const AString *)this)->Find( subString, startPos, endPos ) ); }
+    char *          Find( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ((const AString *)this)->Find( subString, startPos, endPos ) ); }
     const char *    Find( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
     char *          Find( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->Find( subString, startPos, endPos ) ); }
 
     const char *    FindI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    char *          FindI( char c, char * startPos = nullptr, char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindI( c, startPos, endPos ) ); }
+    char *          FindI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindI( c, startPos, endPos ) ); }
     const char *    FindI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    char *          FindI( const char * subString, char * startPos = nullptr, char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindI( subString, startPos, endPos ) ); }
+    char *          FindI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindI( subString, startPos, endPos ) ); }
     const char *    FindI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
     char *          FindI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindI( subString, startPos, endPos ) ); }
 

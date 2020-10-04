@@ -20,6 +20,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ExecNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ListDependenciesNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
@@ -82,6 +83,7 @@
     "Settings",
     "VSExtProj",
     "TextFile",
+    "ListDependencies",
 };
 static Mutex g_NodeEnvStringMutex;
 
@@ -201,7 +203,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
             continue;
         }
 
-        Node * n = dep.GetNode();
+        const Node * n = dep.GetNode();
 
         const uint64_t stamp = n->GetStamp();
         if ( stamp == 0 )
@@ -344,6 +346,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
         case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
         case Node::TEXT_FILE_NODE:      return nodeGraph.CreateTextFileNode( name );
+        case Node::LIST_DEPENDENCIES_NODE: return nodeGraph.CreateListDependenciesNode( name );
         case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
     }
 

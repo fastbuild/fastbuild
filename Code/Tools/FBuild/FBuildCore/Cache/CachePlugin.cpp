@@ -189,7 +189,7 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
     if ( m_RetrieveFunc )
     {
         unsigned long long size;
-        bool ok = (*m_RetrieveFunc)( cacheId.Get(), data, size );
+        const bool ok = (*m_RetrieveFunc)( cacheId.Get(), data, size );
         dataSize = (size_t)size;
         return ok;
     }

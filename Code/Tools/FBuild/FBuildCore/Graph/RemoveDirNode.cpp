@@ -88,7 +88,7 @@ RemoveDirNode::~RemoveDirNode() = default;
     for ( const Dependency & dep : m_StaticDependencies )
     {
         // Grab the files
-        DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
         const Array< FileIO::FileInfo > & files = dln->GetFiles();
         for ( const FileIO::FileInfo & fileInfo : files )
         {

@@ -10,7 +10,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 
-#include "Core/Containers/AutoPtr.h"
+// Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Process/Thread.h"

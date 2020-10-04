@@ -73,10 +73,10 @@ void CompilationDatabase::VisitNodes( const Dependencies & dependencies, Array< 
 {
     for ( const Dependency & dep : dependencies )
     {
-        Node * node = dep.GetNode();
+        const Node * node = dep.GetNode();
 
         // Skip already visited nodes
-        uint32_t nodeIndex = node->GetIndex();
+        const uint32_t nodeIndex = node->GetIndex();
         ASSERT( nodeIndex != INVALID_NODE_INDEX );
         if ( visited[ nodeIndex ] )
         {

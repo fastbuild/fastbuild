@@ -11,10 +11,8 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
-#include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
 // Defines
@@ -133,7 +131,7 @@ void SettingsNode::ProcessEnvironment( const Array< AString > & envStrings ) con
     }
 
     // allocate space
-    AutoPtr< char > envString( (char *)ALLOC( size + 1 ) ); // +1 for extra double-null
+    UniquePtr< char > envString( (char *)ALLOC( size + 1 ) ); // +1 for extra double-null
 
     // while iterating, extract the LIB environment variable (if there is one)
     AStackString<> libEnvVar;

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - TextFile</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='../home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>ListDependencies</h1>
+    <div id='summary' class='newsitemheader'>
+        Summary
+    </div>
+    <div class='newsitembody'>
+        <p>Creates a text file containing all file dependencies for the given source.</p>
+        <p>This function can be useful to pipe FASTBuild dependency inspection inside another build system.</p>
+<div class='code'>ListDependencies( alias )  ; (optional) Alias
+{
+    .Source                 ; Source target (filename or node name)
+    .Dest                   ; Destination filename where dependent files list will be exported
+    .SourcePattern          ; (optional) String, or array of strings, to filter exported dependencies
+    .PreBuildDependencies   ; (optional) Force targets to be built before this ListDependencies (Rarely needed)
+}</div>
+    </div>
+
+<div id='details' class='newsitemheader'>Details</div>
+<div class='newsitembody'>
+    <ul>
+        <li>Output file format is simple: on file per line.</li>
+        <li>Each dependency is always expressed as an absolute path.</li>
+        <li>Results are sorted lexically, by ascending order.</li>
+        <li>Output file is using CRLF on Windows, and LF on other platforms.</li>
+        <li>List only direct dependencies of the source, <b>no recursive descent.</b></li>
+    </ul>
+</div>
+
+<div id='examples' class='newsitemheader'>Examples</div>
+<div class='newsitembody'>
+  <p>
+  The following sample BFF:
+  </p>
+  <div class='code'>ObjectList( 'SimpleObject' )
+{
+    .CompilerInputFiles = "C:/Test/SimpleObject.cpp"
+    .CompilerOutputPath = "C:/Test/Output"
+}
+
+ListDependencies( 'SimpleDependencies' )
+{
+    .Source = 'SimpleObject'
+    .SourcePattern = { '*.h', '*.c', '*.cpp' }
+    .Dest = 'C:/Test/Output/Dependencies.txt'
+}</div>
+  <p>
+    With 'SimpleObject.cpp' containing:
+  </p>
+  <div class='code'>#include "HeaderA.h"
+#include "HeaderB.h"</div>
+  <p>
+  Will generate the following 'Dependencies.txt' output file:
+  </p>
+  <div class='output'>C:/Test/HeaderA.h
+C:/Test/HeaderB.h
+C:/Test/SimpleObject.cpp</div>
+</div>
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+</body>
+</html>

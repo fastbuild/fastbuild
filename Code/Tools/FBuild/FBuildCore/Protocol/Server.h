@@ -37,9 +37,9 @@ public:
 
 private:
     // TCPConnection interface
-    virtual void OnConnected( const ConnectionInfo * connection );
-    virtual void OnDisconnected( const ConnectionInfo * connection );
-    virtual void OnReceive( const ConnectionInfo * connection, void * data, uint32_t size, bool & keepMemory );
+    virtual void OnConnected( const ConnectionInfo * connection ) override;
+    virtual void OnDisconnected( const ConnectionInfo * connection ) override;
+    virtual void OnReceive( const ConnectionInfo * connection, void * data, uint32_t size, bool & keepMemory ) override;
 
     // helpers to handle messages
     void Process( const ConnectionInfo * connection, const Protocol::MsgConnection * msg );

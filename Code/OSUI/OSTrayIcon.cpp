@@ -81,7 +81,7 @@ OSTrayIcon::~OSTrayIcon()
 void OSTrayIcon::ShowNotification( const char * msg )
 {
     #if defined( __WINDOWS__ )
-        size_t len = strlen( msg );
+        const size_t len = strlen( msg );
         AString::Copy( msg, m_NotifyIconData.szTip, Math::Min<size_t>( len, sizeof( m_NotifyIconData.szTip ) - 1 ) );
         m_NotifyIconData.uFlags = NIF_INFO;
         m_NotifyIconData.dwInfoFlags = NIIF_INFO;

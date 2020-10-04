@@ -12,7 +12,6 @@
 
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
 // REFLECTION
@@ -74,7 +73,7 @@ CopyFileNode::~CopyFileNode() = default;
     }
 
     // Ensure the dst file's "last modified" time is equal to or newer than the source
-    uint64_t srcStamp = FileIO::GetFileLastWriteTime( GetSourceNode()->GetName() );
+    const uint64_t srcStamp = FileIO::GetFileLastWriteTime( GetSourceNode()->GetName() );
     uint64_t dstStamp = FileIO::GetFileLastWriteTime( m_Name );
     ASSERT( srcStamp && dstStamp );
     if ( dstStamp < srcStamp )

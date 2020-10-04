@@ -185,7 +185,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
     while ( pos < end )
     {
         // Skip whitespace
-        char c = *pos;
+        const char c = *pos;
         if ( IsWhiteSpace( c ) )
         {
             SkipWhitespace( pos );
@@ -772,7 +772,7 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     // look for varName in system environment
     AStackString<> varValue;
     uint32_t varHash = 0;
-    bool optional = true;
+    const bool optional = true;
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
     FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash );
     outResult = ( varHash != 0 ); // a hash of 0 means the env var was not found
@@ -924,7 +924,7 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
     // look for varName in system environment
     AStackString<> varValue;
     uint32_t varHash = 0;
-    bool optional = false;
+    const bool optional = false;
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
     if ( FBuild::IsValid() ) // TODO:B Remove singleton validity check when ImportEnvironmentVar moved to BFFTokenizer
     {

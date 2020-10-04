@@ -27,12 +27,12 @@ public:
     // server interface
     void SetAvailability( bool available );
 private:
-    void Init();
+    void InitBrokerage();
 
     Array<AString>      m_BrokerageRoots;
     AString             m_BrokerageRootPaths;
     bool                m_Availability;
-    bool                m_Initialized;
+    bool                m_BrokerageInitialized;
     AString             m_HostName;
     AString             m_IpAddress;
     AString             m_BrokerageFilePath;

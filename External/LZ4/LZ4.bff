@@ -37,6 +37,9 @@
     .LZ4Options_x64OSX  = [
                             .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
+    .LZ4Options_ARMOSX  = [
+                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
+                          ]
 
     // Library
     //--------------------------------------------------------------------------

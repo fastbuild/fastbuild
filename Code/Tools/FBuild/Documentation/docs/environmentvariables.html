@@ -44,6 +44,10 @@
     <td>Set location of the Brokerage Path for distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#FASTBUILD_WORKERS">FASTBUILD_WORKERS</a></td>
+    <td>Set the list of workers explicitly.</td>
+  </tr>
+  <tr>
     <td><a href="#FASTBUILD_CACHE_PATH">FASTBUILD_CACHE_PATH</a></td>
     <td>Set the location of the cache.</td>
   </tr> 
@@ -71,6 +75,12 @@ executables being spawned from the temp directory.</p>
     <div class='newsitembody'>
 <p>FBuildWorkers signal their availability by writing a token to the "Brokerage Path".
 The location of the brokerage path can be set via the FASTBUILD_BROKERAGE_PATH.</p>
+</div>
+
+    <div class='newsitemheader' id="FASTBUILD_WORKERS">FASTBUILD_WORKERS</div>
+    <div class='newsitembody'>
+<p>The list of FBuildWorkers can be set explicitly as a ; delimited list via the FASTBUILD_WORKERS
+environment variable.</p>
 </div>
 
     <div class='newsitemheader' id="FASTBUILD_CACHE_PATH">FASTBUILD_CACHE_PATH</div>

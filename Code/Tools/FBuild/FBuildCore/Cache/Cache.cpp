@@ -9,7 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -115,7 +115,7 @@ public:
     }
 
     // write data
-    bool cacheTmpWriteOk = ( cacheTmpFile.Write( data, dataSize ) == dataSize );
+    const bool cacheTmpWriteOk = ( cacheTmpFile.Write( data, dataSize ) == dataSize );
     cacheTmpFile.Close();
 
     if ( !cacheTmpWriteOk )
@@ -157,7 +157,7 @@ public:
     if ( cacheFile.Open( fullPath.Get(), FileStream::READ_ONLY ) )
     {
         const size_t cacheFileSize = (size_t)cacheFile.GetFileSize();
-        AutoPtr< char > mem( (char *)ALLOC( cacheFileSize ) );
+        UniquePtr< char > mem( (char *)ALLOC( cacheFileSize ) );
         if ( cacheFile.Read( mem.Get(), cacheFileSize ) == cacheFileSize )
         {
             dataSize = cacheFileSize;
@@ -260,7 +260,7 @@ public:
     uint32_t numDeleted = 0;
     if ( limit < totalSize )
     {
-        Timer timer;
+        const Timer timer;
         float lastProgressTime = 0.0f;
         if ( showProgress )
         {
@@ -317,7 +317,7 @@ void Cache::GetCacheFiles( bool showProgress,
 {
     // Throttle progress messages to avoid impacting performance significantly
     // (network cache is usually the bottleneck, but a local caches is not)
-    Timer timer;
+    const Timer timer;
     float lastProgressTime = 0.0f;
     if ( showProgress )
     {

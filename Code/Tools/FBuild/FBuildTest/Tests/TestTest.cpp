@@ -50,7 +50,7 @@ void TestTest::CreateNode() const
 
     AStackString<> outputPath;
     NodeGraph::CleanPath( AStackString<>( "output.txt" ), outputPath );
-    TestNode * testNode = ng.CreateTestNode( outputPath );
+    const TestNode * testNode = ng.CreateTestNode( outputPath );
 
     TEST_ASSERT( testNode->GetType() == Node::TEST_NODE );
     TEST_ASSERT( TestNode::GetTypeS() == Node::TEST_NODE );

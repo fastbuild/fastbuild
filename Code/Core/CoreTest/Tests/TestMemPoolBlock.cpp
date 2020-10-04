@@ -106,7 +106,7 @@ void TestMemPoolBlock::TestSpeed()
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
-                uint32_t * mem = (uint32_t *)malloc( allocSize );
+                uint32_t * const mem = (uint32_t *)malloc( allocSize );
                 allocs.Append( mem );
             }
             for ( uint32_t i = 0; i < numAllocs; ++i )
