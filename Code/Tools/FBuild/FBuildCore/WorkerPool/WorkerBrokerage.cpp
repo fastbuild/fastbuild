@@ -108,7 +108,7 @@ void WorkerBrokerage::InitBrokerage()
         }
     }
 
-    Network::GetHostName(m_HostName);
+    Network::GetHostName( m_HostName );
 
     if ( !m_BrokerageRoots.IsEmpty() )
     {
@@ -226,19 +226,24 @@ void WorkerBrokerage::SetAvailability( bool available )
             const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
             bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
 
-            // Check IP last update time and determine if IP address has changed
+            // Check IP last update time and determine if host name or IP address has changed
             if ( m_IpAddress.IsEmpty() || m_TimerLastIpUpdate.GetElapsed() >= sBrokerageIpAddressUpdateTime )
             {
+                // Get host name as FQDN could have changed
+                AStackString<> hostname;
+                Network::GetHostName( hostname );
+
                 // Resolve host name to ip address
-                uint32_t ip = Network::GetHostIPFromName( m_HostName );
+                uint32_t ip = Network::GetHostIPFromName( hostname );
                 AStackString<> ipString;
                 if ( ip != 0 && ip != 0x0100007f )
                 {
                     TCPConnectionPool::GetAddressAsString( ip, ipString );
                 }
 
-                if ( ipString != m_IpAddress )
+                if ( hostname != m_HostName || ipString != m_IpAddress )
                 {
+                    m_HostName = hostname;
                     m_IpAddress = ipString;
 
                     // Remove existing brokerage file, as filename is being updated
@@ -254,7 +259,7 @@ void WorkerBrokerage::SetAvailability( bool available )
                         m_BrokerageFilePath.Format( "%s%s+%s", m_BrokerageRoots[0].Get(), m_HostName.Get(), m_IpAddress.Get() );
                     }
 
-                    // IP address changed - create the file
+                    // Host name or IP address changed - create the file
                     createBrokerageFile = true;
                 }
 

@@ -20,6 +20,7 @@ public:
 
     inline const Array<AString> & GetBrokerageRoots() const { return m_BrokerageRoots; }
     inline const AString & GetBrokerageRootPaths() const { return m_BrokerageRootPaths; }
+    inline const AString & GetHostName() const { return m_HostName; }
 
     // client interface
     void FindWorkers( Array< AString > & workerList );
