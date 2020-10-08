@@ -59,7 +59,7 @@
     }
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
     char buffer[ 256 ];
-    if ( ::getdomainname( domainBuffer, 256 ) == 0 )
+    if ( ::getdomainname( buffer, 256 ) == 0 )
     {
         domainName = buffer;
         return;
