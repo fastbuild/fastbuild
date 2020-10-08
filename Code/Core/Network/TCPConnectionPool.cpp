@@ -266,25 +266,14 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_
 {
     ASSERT( !host.IsEmpty() );
 
-    // Resolve IP address
-    const uint32_t hostIP = Network::GetHostIPFromName( host, timeout );
-    if ( hostIP != 0 )
-    {
-        // Attempt to connect
-        const ConnectionInfo * connectionInfo = Connect( hostIP, port, timeout, userData );
-        if ( connectionInfo )
-        {
-            return connectionInfo;
-        }
-
-        TCPDEBUG( "Failed to connect to '%s'\n", host.Get() );
-    }
-    else
+    // get IP
+    uint32_t hostIP = Network::GetHostIPFromName( host, timeout );
+    if ( hostIP == 0 )
     {
         TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );
+        return nullptr;
     }
-
-    return nullptr;
+    return Connect( hostIP, port, timeout, userData );
 }
 
 // Connect
