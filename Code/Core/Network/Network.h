@@ -18,6 +18,7 @@ class Network
 {
 public:
     static void GetHostName( AString & hostName );
+    static void GetDomainName( AString & domainName );
 
     static uint32_t GetHostIPFromName( const AString & hostName, uint32_t timeoutMS = 1000 );
 

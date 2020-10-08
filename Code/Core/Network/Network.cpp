@@ -34,29 +34,42 @@
     if ( ::gethostname( buffer, 64 ) == 0 )
     {
         hostName = buffer;
+        return;
+    }
+
+    ASSERT( false && "GetHostName should never fail" );
+    hostName = "Unknown";
+}
+
+// GetDomainName
+//------------------------------------------------------------------------------
+/*static*/ void Network::GetDomainName( AString & domainName )
+{
+    PROFILE_FUNCTION
+
+    NetworkStartupHelper nsh; // ensure network is up if not already
+
 #if defined( __WINDOWS__ )
-        TCHAR domainBuffer[ 256 ];
-        DWORD domainBufferSize = sizeof( domainBuffer );
-        if ( GetComputerNameEx( ComputerNameDnsDomain, domainBuffer, &domainBufferSize ) )
-        {
-            hostName += ".";
-            hostName += domainBuffer;
-        }
-#endif
-#if defined( __LINUX__ ) || defined( __APPLE__ )
-        char domainBuffer[ 256 ];
-        if ( ::getdomainname( domainBuffer, 256 ) == 0 )
-        {
-            hostName += ".";
-            hostName += domainBuffer;
-        }
-#endif
-    }
-    else
+    TCHAR buffer[ 256 ];
+    DWORD bufferSize = sizeof( buffer );
+    if ( GetComputerNameEx( ComputerNameDnsDomain, buffer, &bufferSize ) )
     {
-        hostName = "Unknown";
-        ASSERT( false && "This should never fail" );
+        domainName = buffer;
+        return;
     }
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    char buffer[ 256 ];
+    if ( ::getdomainname( domainBuffer, 256 ) == 0 )
+    {
+        domainName = buffer;
+        return;
+    }
+#else
+    #error Unknown platform
+#endif
+
+    ASSERT( false && "GetDomainName should never fail" );
+    domainName = "Unknown";
 }
 
 // GetHostIPFromName

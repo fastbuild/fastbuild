@@ -110,10 +110,8 @@ void WorkerBrokerage::InitBrokerage()
 
     Network::GetHostName( m_HostName );
 
-    if ( !m_BrokerageRoots.IsEmpty() )
-    {
-        m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
-    }
+    UpdateBrokerageFilePath();
+
     m_TimerLastUpdate.Start();
     m_TimerLastIpUpdate.Start();
     m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
@@ -229,37 +227,34 @@ void WorkerBrokerage::SetAvailability( bool available )
             // Check IP last update time and determine if host name or IP address has changed
             if ( m_IpAddress.IsEmpty() || m_TimerLastIpUpdate.GetElapsed() >= sBrokerageIpAddressUpdateTime )
             {
-                // Get host name as FQDN could have changed
-                AStackString<> hostname;
-                Network::GetHostName( hostname );
+                AStackString<> hostName;
+                AStackString<> domainName;
+                AStackString<> ipAddress;
+
+                // Get host and domain name as FQDN could have changed
+                Network::GetHostName( hostName );
+                Network::GetDomainName( domainName );
 
                 // Resolve host name to ip address
-                uint32_t ip = Network::GetHostIPFromName( hostname );
-                AStackString<> ipString;
+                uint32_t ip = Network::GetHostIPFromName( hostName );
                 if ( ip != 0 && ip != 0x0100007f )
                 {
-                    TCPConnectionPool::GetAddressAsString( ip, ipString );
+                    TCPConnectionPool::GetAddressAsString( ip, ipAddress );
                 }
 
-                if ( hostname != m_HostName || ipString != m_IpAddress )
+                if ( hostName != m_HostName || domainName != m_DomainName || ipAddress != m_IpAddress )
                 {
-                    m_HostName = hostname;
-                    m_IpAddress = ipString;
+                    m_HostName = hostName;
+                    m_DomainName = domainName;
+                    m_IpAddress = ipAddress;
 
                     // Remove existing brokerage file, as filename is being updated
                     FileIO::FileDelete( m_BrokerageFilePath.Get() );
 
                     // Update brokerage path
-                    if ( m_IpAddress.IsEmpty() )
-                    {
-                        m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
-                    }
-                    else
-                    {
-                        m_BrokerageFilePath.Format( "%s%s+%s", m_BrokerageRoots[0].Get(), m_HostName.Get(), m_IpAddress.Get() );
-                    }
+                    UpdateBrokerageFilePath();
 
-                    // Host name or IP address changed - create the file
+                    // Host name, domain name, or IP address changed - create the file
                     createBrokerageFile = true;
                 }
 
@@ -291,6 +286,15 @@ void WorkerBrokerage::SetAvailability( bool available )
 
                 // Host Name
                 buffer.AppendFormat( "Host Name: %s\n", m_HostName.Get() );
+
+                if ( !m_DomainName.IsEmpty() )
+                {
+                    // Domain Name
+                    buffer.AppendFormat( "Domain Name: %s\n", m_DomainName.Get() );
+
+                    // Fully Quantified Domain Name
+                    buffer.AppendFormat( "FQDN: %s.%s\n", m_HostName.Get(), m_DomainName.Get() );
+                }
 
                 // IP Address
                 buffer.AppendFormat( "IPv4 Address: %s\n", m_IpAddress.Get() );
@@ -363,6 +367,25 @@ void WorkerBrokerage::SetAvailability( bool available )
 
         // Restart the timer
         m_TimerLastCleanBroker.Start();
+    }
+}
+
+//------------------------------------------------------------------------------
+
+// UpdateBrokerageFilePath
+//------------------------------------------------------------------------------
+void WorkerBrokerage::UpdateBrokerageFilePath()
+{
+    if ( !m_BrokerageRoots.IsEmpty() )
+    {
+        if ( !m_IpAddress.IsEmpty() )
+        {
+            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_IpAddress.Get() );
+        }
+        else
+        {
+            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
+        }
     }
 }
 

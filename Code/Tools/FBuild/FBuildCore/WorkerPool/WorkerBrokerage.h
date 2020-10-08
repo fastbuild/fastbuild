@@ -29,12 +29,14 @@ public:
     void SetAvailability( bool available );
 private:
     void InitBrokerage();
+    void UpdateBrokerageFilePath();
 
     Array<AString>      m_BrokerageRoots;
     AString             m_BrokerageRootPaths;
     bool                m_Availability;
     bool                m_BrokerageInitialized;
     AString             m_HostName;
+    AString             m_DomainName;
     AString             m_IpAddress;
     AString             m_BrokerageFilePath;
     Timer               m_TimerLastUpdate;      // Throttle network access
