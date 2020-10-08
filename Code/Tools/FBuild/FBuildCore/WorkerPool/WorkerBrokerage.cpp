@@ -189,10 +189,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
         const AString & fileName = *it;
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
         AStackString<> workerName( lastSlash + 1 );
-        Array< AString > hosts;
-        workerName.Tokenize( hosts, '+' );
-        // First entry is the host name
-        if ( hosts.GetSize() > 0 && hosts[ 0 ].CompareI( m_HostName ) != 0 )
+        if ( workerName.CompareI( m_HostName ) != 0 )
         {
             workerList.Append( workerName );
         }
