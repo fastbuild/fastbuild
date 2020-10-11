@@ -120,7 +120,7 @@ Settings
 .Analyze_Optimizations_MSVC =
 [
     Using( .Debug_Optimizations_MSVC )
-    .CompilerOptions                + ' /analyze'
+    .CompilerOptions                + .StaticAnalysisOptions
     .CompilerOptionsC               = .CompilerOptions
 ]
 .Profile_Optimizations_MSVC =

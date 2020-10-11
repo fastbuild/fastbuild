@@ -168,6 +168,60 @@ Compiler( 'Compiler-VS2019-x64' )
     .ToolChain_VS_Windows_X64       = .ToolChain_VS2019_Windows_X64
     .VS_PATH                        = .VS_2019_PATH
     .VS_PlatformToolset             = .VS_2019_PlatformToolset
+
+                                    // Enable and specify analysis engine
+    .StaticAnalysisOptions          = ' /analyze'
+                                    + ' /analyze:plugin"$VS2019_ToolchainPath$\bin\HostX64\x64\EspXEngine.dll"'
+
+                                    // To investigate: These warnings might be useful and should be checked
+                                    + ' /wd26400' // Do not assign the result of an allocation or a function call with an owner<T> return value to a raw pointer, use owner<T> instead (i.11).
+                                    + ' /wd26401' // Do not delete a raw pointer that is not an owner<T> (i.11).
+                                    + ' /wd26408' // Avoid malloc() and free(), prefer the nothrow version of new with delete (r.10).
+                                    + ' /wd26430' // Symbol '%s' is not tested for nullness on all paths (f.23).: Lines: ...
+                                    + ' /wd26432' // If you define or delete any default operation in the type '%s', define or delete them all (c.21).
+                                    + ' /wd26434' // Function '%s' hides a non-virtual function '%s' (c.128).
+                                    + ' /wd26436' // The type '%s' with a virtual function needs either public virtual or protected non-virtual destructor (c.35).
+                                    + ' /wd26438' // Avoid 'goto' (es.76).
+                                    + ' /wd26451' // Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+                                    + ' /wd26460' // The reference argument '%s' for function '%s' can be marked as const (con.3).
+                                    + ' /wd26471' // Don't use reinterpret_cast. A cast from void* can use static_cast (type.1).
+                                    + ' /wd26474' // Don't cast between pointer types when the conversion could be implicit (type.1).
+                                    + ' /wd26475' // Do not use function style C-casts (es.49).
+                                    + ' /wd26476' // Expression/symbol '%s' uses a naked union '%s' with multiple type pointers: Use variant instead (type.7).
+                                    + ' /wd26491' // Don't use static_cast downcasts (type.2).
+                                    + ' /wd26494' // Variable 'uhighProduct' is uninitialized. Always initialize an object (type.5).
+                                    //+ ' /wd26495' // Variable '%s' is uninitialized. Always initialize a member variable (type.6).
+                                    + ' /wd26456' // Operator '%s' hides a non-virtual operator '%s' (c.128).
+                                    + ' /wd26497' // The function '%s' could be marked constexpr if compile-time evaluation is desired (f.4).
+                                    + ' /wd26812' // The enum type '%s' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+                                    //+ ' /wd26818' // Switch statement does not cover all cases. Consider adding a 'default' label (es.79).
+                                    + ' /wd26814' // The const variable '%s' can be computed at compile-time. Consider using constexpr (con.5).
+
+                                    // These warnings are not useful. They either:
+                                    // a) Occur in Windows headers
+                                    // b) Are about things we want to do or have no viable alternative
+                                    // c) Are nonsensical, undesirable or impractical
+                                    + ' /wd26402' // Return a scoped object instead of a heap-allocated if it has a move constructor (r.3).
+                                    + ' /wd26409' // Avoid calling new and delete explicitly, use std::make_unique<T> instead (r.11).
+                                    + ' /wd26426' // Global initializer calls a non-constexpr function '%s' (i.22).
+                                    + ' /wd26429' // Symbol '%s' is never tested for nullness, it can be marked as not_null (f.23).
+                                    + ' /wd26435' // Function '%s' should specify exactly one of 'virtual', 'override', or 'final' (c.128).
+                                    + ' /wd26439' // This kind of function may not throw. Declare it 'noexcept' (f.6).
+                                    + ' /wd26440' // Function '%s' can be declared 'noexcept' (f.6).
+                                    + ' /wd26443' // Overriding destructor should not use explicit 'override' or 'virtual' specifiers (c.128).
+                                    + ' /wd26446' // Prefer to use gsl::at() instead of unchecked subscript operator (bounds.4).
+                                    + ' /wd26447' // The function is declared 'noexcept' but calls function '%s' which may throw exceptions (f.6).
+                                    + ' /wd26455' // Default constructor may not throw. Declare it 'noexcept' (f.6).
+                                    + ' /wd26461' // The pointer argument '%s' for function '%s' can be marked as a pointer to const (con.3).
+                                    + ' /wd26472' // Don't use a static_cast for arithmetic conversions. Use brace initialization, gsl::narrow_cast or gsl::narrow (type.1).
+                                    + ' /wd26473' // Don't cast between pointer types where the source type and the target type are the same (type.1).
+                                    + ' /wd26481' // Don't use pointer arithmetic. Use span instead (bounds.1).
+                                    + ' /wd26482' // Only index into arrays using constant expressions (bounds.2).'
+                                    + ' /wd26485' // Expression '%s': No array to pointer decay (bounds.3).
+                                    + ' /wd26490' // Don't use reinterpret_cast (type.1).
+                                    + ' /wd26492' // Don't use const_cast to cast away const or volatile (type.3).
+                                    + ' /wd26493' // Don't use C-style casts (type.4).
+                                    + ' /wd26496' // The variable '%s' is assigned only once, mark it as const (con.4).
 ]
 
 //------------------------------------------------------------------------------
