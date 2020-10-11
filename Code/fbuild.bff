@@ -112,30 +112,32 @@ Settings
 //------------------------------------------------------------------------------
 // Optimizations (MSVC)
 //------------------------------------------------------------------------------
-.Debug_Optimizations_MSVC =
-[
-    .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
-    .CompilerOptionsC               = .CompilerOptions
-]
-.Analyze_Optimizations_MSVC =
-[
-    Using( .Debug_Optimizations_MSVC )
-    .CompilerOptions                + .StaticAnalysisOptions
-    .CompilerOptionsC               = .CompilerOptions
-]
-.Profile_Optimizations_MSVC =
-[
-    .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
-    .CompilerOptionsC               = .CompilerOptions
-    .LinkerOptions                  = ' /OPT:REF,ICF'
-]
-.Release_Optimizations_MSVC =
-[
-    Using( .Profile_Optimizations_MSVC )
-    .CompilerOptionsDeoptimized     = .CompilerOptions
-                                    - ' /Ox'
-                                    + ' /Od'
-]
+#if __WINDOWS__
+    .Debug_Optimizations_MSVC =
+    [
+        .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
+        .CompilerOptionsC               = .CompilerOptions
+    ]
+    .Analyze_Optimizations_MSVC =
+    [
+        Using( .Debug_Optimizations_MSVC )
+        .CompilerOptions                + .StaticAnalysisOptions
+        .CompilerOptionsC               = .CompilerOptions
+    ]
+    .Profile_Optimizations_MSVC =
+    [
+        .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
+        .CompilerOptionsC               = .CompilerOptions
+        .LinkerOptions                  = ' /OPT:REF,ICF'
+    ]
+    .Release_Optimizations_MSVC =
+    [
+        Using( .Profile_Optimizations_MSVC )
+        .CompilerOptionsDeoptimized     = .CompilerOptions
+                                        - ' /Ox'
+                                        + ' /Od'
+    ]
+#endif
 
 //------------------------------------------------------------------------------
 // Optimizations (Clang/GCC)
