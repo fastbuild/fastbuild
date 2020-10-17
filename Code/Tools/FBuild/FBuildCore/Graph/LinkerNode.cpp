@@ -262,6 +262,15 @@ LinkerNode::~LinkerNode()
                     continue; // try again
                 }
 
+                // Did the linker encounter "fatal error LNK1201: error writing to program database"?
+                // The MSVC toolchain (as of VS2019 upto 16.7.5) occasionally emits this error. It seems there
+                // is a bug where the PDB size can grow a lot and this error will start to occur.
+                if ( result == 1201 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker failed with (LNK1201), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
                 // Did the linker have an "unexpected PDB error" (LNK1318)?
                 // Example: "fatal error LNK1318: Unexpected PDB error; CORRUPT (13)"
                 // (The linker or mspdbsrv.exe (as of VS2017) seems to have bugs which cause the PDB
