@@ -190,11 +190,10 @@ Compiler( 'Compiler-VS2019-x64' )
                                     + ' /wd26476' // Expression/symbol '%s' uses a naked union '%s' with multiple type pointers: Use variant instead (type.7).
                                     + ' /wd26491' // Don't use static_cast downcasts (type.2).
                                     + ' /wd26494' // Variable 'uhighProduct' is uninitialized. Always initialize an object (type.5).
-                                    //+ ' /wd26495' // Variable '%s' is uninitialized. Always initialize a member variable (type.6).
+                                    + ' /wd26495' // Variable '%s' is uninitialized. Always initialize a member variable (type.6).
                                     + ' /wd26456' // Operator '%s' hides a non-virtual operator '%s' (c.128).
                                     + ' /wd26497' // The function '%s' could be marked constexpr if compile-time evaluation is desired (f.4).
                                     + ' /wd26812' // The enum type '%s' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
-                                    //+ ' /wd26818' // Switch statement does not cover all cases. Consider adding a 'default' label (es.79).
                                     + ' /wd26814' // The const variable '%s' can be computed at compile-time. Consider using constexpr (con.5).
 
                                     // These warnings are not useful. They either:
