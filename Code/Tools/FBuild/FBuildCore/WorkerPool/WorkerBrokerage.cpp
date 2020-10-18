@@ -19,6 +19,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Network/Network.h"
+#include "Core/Network/TCPConnectionPool.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Process/Thread.h"
@@ -28,6 +29,8 @@
 //------------------------------------------------------------------------------
 static const float sBrokerageElapsedTimeBetweenClean = ( 12 * 60 * 60.0f );
 static const uint32_t sBrokerageCleanOlderThan = ( 24 * 60 * 60 );
+static const float sBrokerageAvailabilityUpdateTime = ( 10.0f );
+static const float sBrokerageIpAddressUpdateTime = ( 5 * 60.0f );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -105,13 +108,12 @@ void WorkerBrokerage::InitBrokerage()
         }
     }
 
-    Network::GetHostName(m_HostName);
+    Network::GetHostName( m_HostName );
 
-    if ( !m_BrokerageRoots.IsEmpty() )
-    {
-        m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
-    }
+    UpdateBrokerageFilePath();
+
     m_TimerLastUpdate.Start();
+    m_TimerLastIpUpdate.Start();
     m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
 
     m_BrokerageInitialized = true;
@@ -210,14 +212,52 @@ void WorkerBrokerage::SetAvailability( bool available )
     if ( available )
     {
         // Check the last update time to avoid too much File IO.
-        float elapsedTime = m_TimerLastUpdate.GetElapsedMS();
-        if ( elapsedTime >= 10000.0f )
+        float elapsedTime = m_TimerLastUpdate.GetElapsed();
+        if ( elapsedTime >= sBrokerageAvailabilityUpdateTime )
         {
             // If settings have changed, (re)create the file 
             // If settings have not changed, update the modification timestamp
             const WorkerSettings & workerSettings = WorkerSettings::Get();
             const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
             bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
+
+            // Check IP last update time and determine if host name or IP address has changed
+            if ( m_IpAddress.IsEmpty() || m_TimerLastIpUpdate.GetElapsed() >= sBrokerageIpAddressUpdateTime )
+            {
+                AStackString<> hostName;
+                AStackString<> domainName;
+                AStackString<> ipAddress;
+
+                // Get host and domain name as FQDN could have changed
+                Network::GetHostName( hostName );
+                Network::GetDomainName( domainName );
+
+                // Resolve host name to ip address
+                uint32_t ip = Network::GetHostIPFromName( hostName );
+                if ( ip != 0 && ip != 0x0100007f )
+                {
+                    TCPConnectionPool::GetAddressAsString( ip, ipAddress );
+                }
+
+                if ( hostName != m_HostName || domainName != m_DomainName || ipAddress != m_IpAddress )
+                {
+                    m_HostName = hostName;
+                    m_DomainName = domainName;
+                    m_IpAddress = ipAddress;
+
+                    // Remove existing brokerage file, as filename is being updated
+                    FileIO::FileDelete( m_BrokerageFilePath.Get() );
+
+                    // Update brokerage path
+                    UpdateBrokerageFilePath();
+
+                    // Host name, domain name, or IP address changed - create the file
+                    createBrokerageFile = true;
+                }
+
+                // Restart the IP timer
+                m_TimerLastIpUpdate.Start();
+            }
 
             if ( createBrokerageFile == false )
             {
@@ -241,9 +281,27 @@ void WorkerBrokerage::SetAvailability( bool available )
                 Env::GetLocalUserName( userName );
                 buffer.AppendFormat( "User: %s\n", userName.Get() );
 
+                // Host Name
+                buffer.AppendFormat( "Host Name: %s\n", m_HostName.Get() );
+
+                if ( !m_DomainName.IsEmpty() )
+                {
+                    // Domain Name
+                    buffer.AppendFormat( "Domain Name: %s\n", m_DomainName.Get() );
+
+                    // Fully Quantified Domain Name
+                    buffer.AppendFormat( "FQDN: %s.%s\n", m_HostName.Get(), m_DomainName.Get() );
+                }
+
+                // IP Address
+                buffer.AppendFormat( "IPv4 Address: %s\n", m_IpAddress.Get() );
+
                 // CPU Thresholds
                 static const uint32_t numProcessors = Env::GetNumProcessors();
                 buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
+
+                // Memory Threshold
+                buffer.AppendFormat( "Memory: %u\n", workerSettings.GetMinimumFreeMemoryMiB() );
 
                 // Mode
                 switch ( workerSettings.GetMode() )
@@ -306,6 +364,25 @@ void WorkerBrokerage::SetAvailability( bool available )
 
         // Restart the timer
         m_TimerLastCleanBroker.Start();
+    }
+}
+
+//------------------------------------------------------------------------------
+
+// UpdateBrokerageFilePath
+//------------------------------------------------------------------------------
+void WorkerBrokerage::UpdateBrokerageFilePath()
+{
+    if ( !m_BrokerageRoots.IsEmpty() )
+    {
+        if ( !m_IpAddress.IsEmpty() )
+        {
+            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_IpAddress.Get() );
+        }
+        else
+        {
+            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
+        }
     }
 }
 
