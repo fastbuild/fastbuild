@@ -37,10 +37,10 @@ private:
     bool                m_BrokerageInitialized;
     AString             m_HostName;
     AString             m_DomainName;
-    AString             m_IpAddress;
+    AString             m_IPAddress;
     AString             m_BrokerageFilePath;
     Timer               m_TimerLastUpdate;      // Throttle network access
-    Timer               m_TimerLastIpUpdate;    // Throttle dns access
+    Timer               m_TimerLastIPUpdate;    // Throttle dns access
     uint64_t            m_SettingsWriteTime;    // FileTime of settings time when last changed
     Timer               m_TimerLastCleanBroker;
 };
