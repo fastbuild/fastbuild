@@ -24,8 +24,11 @@
     #include <unistd.h>
 #endif
 
-const uint32_t Network::Loopback = 0x0100007f;
-const in6_addr Network::Loopback6 = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}};
+const uint32_t Network::InvalidAddress = 0;
+const in6_addr Network::InvalidAddress6 = {{{ 0 }}};
+
+const uint32_t Network::LoopbackAddress = 0x0100007f;
+const in6_addr Network::LoopbackAddress6 = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}};
 
 struct NameResolutionData
 {
@@ -34,8 +37,28 @@ struct NameResolutionData
     in6_addr        address6;
     Semaphore       completed;
     Semaphore       safeToFree;
+    bool            resolve4and6;
     bool            success;
 };
+
+/*static*/ bool Network::IsValidAddress( const uint32_t ipAddress )
+{
+    return ipAddress != Network::InvalidAddress;
+}
+/*static*/ bool Network::IsValidAddress( const in6_addr & ipAddress )
+{
+    return memcmp( &Network::InvalidAddress6, &ipAddress, sizeof( in6_addr ) ) != 0;
+}
+
+/*static*/ bool Network::IsLoopbackAddress( const uint32_t ipAddress )
+{
+    return ipAddress == Network::LoopbackAddress;
+}
+
+/*static*/ bool Network::IsLoopbackAddress( const in6_addr & ipAddress )
+{
+    return memcmp( &Network::LoopbackAddress6, &ipAddress, sizeof( Network::LoopbackAddress6 ) ) == 0;
+}
 
 // GetHostName
 //------------------------------------------------------------------------------
@@ -87,29 +110,29 @@ struct NameResolutionData
 
 // GetHostIPFromName
 //------------------------------------------------------------------------------
-/*static*/ bool Network::GetHostIPFromName( const AString & hostName, uint32_t & ipAddress, in6_addr & ipAddress6, const uint32_t timeoutMS )
+/*static*/ bool Network::GetHostIPFromName( const AString & hostName, uint32_t & ipAddress, in6_addr & ipAddress6, const uint32_t timeoutMS, const bool resolve4and6)
 {
     PROFILE_FUNCTION
 
-    ipAddress = 0;
-    ipAddress6 = {{{ 0 }}};
+    ipAddress = Network::InvalidAddress;
+    ipAddress6 = Network::InvalidAddress6;
 
     // Fast path for "localhost". Although we have a fast path for detecting ip4 or ip6
     // format addresses, it can still take several ms to call
     if ( hostName == "localhost" )
     {
-        ipAddress = Loopback;
-        ipAddress6 = Loopback6;
+        ipAddress = Network::LoopbackAddress;
+        ipAddress6 = Network::LoopbackAddress6;
         return true;
     }
     else if ( hostName == "127.0.0.1" ) // Fast path for ipv4 localhost only
     {
-        ipAddress = Loopback;
+        ipAddress = Network::LoopbackAddress;
         return true;
     }
     else if ( hostName == "::1" ) // Fast path for ipv6 localhost only
     {
-        ipAddress6 = Loopback6;
+        ipAddress6 = Network::LoopbackAddress6;
         return true;
     }
 
@@ -130,8 +153,9 @@ struct NameResolutionData
     // Data to communicate between threads, will be deleted by background thread
     NameResolutionData * data = FNEW( NameResolutionData() );
     data->success = false;
-    data->address = 0;
-    data->address6 = {{{ 0 }}};
+    data->resolve4and6 = resolve4and6;
+    data->address = Network::InvalidAddress;
+    data->address6 = Network::InvalidAddress6;
     data->hostName = hostName;
 
     // Create thread to perform resolution
@@ -142,8 +166,8 @@ struct NameResolutionData
 
     // wait for name resolution with timeout
     bool timedOut( false );
-    uint32_t remainingTimeMS( timeoutMS );
     const uint32_t sleepInterval( 100 ); // Check exit condition periodically - TODO:C would be better to use an event
+    uint32_t remainingTimeMS( Math::Max( timeoutMS, sleepInterval ) );
     for ( ;; )
     {
         timedOut = !data->completed.Wait( sleepInterval );
@@ -158,6 +182,10 @@ struct NameResolutionData
         // Manage timeout
         if ( timedOut )
         {
+            if ( timeoutMS == 0 )
+            {
+                continue; // Never timeout
+            }
             if ( remainingTimeMS < sleepInterval )
             {
                 break; // timeout hit
@@ -170,7 +198,6 @@ struct NameResolutionData
         break; // success!
     }
     Thread::DetachThread( handle ); // Always detach
-    Thread::CloseHandle( handle );
 
     bool success = !timedOut && data->success;
     // Save results if not timed out
@@ -183,6 +210,13 @@ struct NameResolutionData
     // Signal that the background thread is safe to free memory and exit
     data->safeToFree.Signal();
     data = nullptr;
+
+    // Wait for thread to terminate if not timed out to free memory (prevents false positive unit-test memory leak)
+    if ( !timedOut )
+    {
+        Thread::WaitForThread( handle );
+    }
+    Thread::CloseHandle( handle );
 
     // return if the name was resolved successfully or not
     return success;
@@ -309,10 +343,10 @@ struct NameResolutionData
         // perform ipv4 lookup first
         success = Network::NameResolution( data->hostName, data->address );
 
-        // perform ipv6 lookup only if ipv4 fails to return a result
-        if ( !success )
+        // perform ipv6 lookup only if ipv4 fails to return a result, unless requested
+        if ( !success || data->resolve4and6 )
         {
-            success = Network::NameResolution( data->hostName, data->address6 );
+            success = Network::NameResolution( data->hostName, data->address6 ) || success;
         }
 
         data->success = success;

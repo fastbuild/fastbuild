@@ -6,7 +6,6 @@
 #include "TestFramework/UnitTest.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
 #include "Core/Network/TCPConnectionPool.h"

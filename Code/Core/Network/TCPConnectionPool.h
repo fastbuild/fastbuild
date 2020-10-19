@@ -7,7 +7,7 @@
 #include "NetworkStartupHelper.h"
 
 #include "Core/Containers/Array.h"
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Types.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
@@ -44,7 +44,7 @@ private:
 
     TCPSocket                   m_Socket;
     uint32_t                    m_RemoteAddress;
-    AutoPtr< struct in6_addr >  m_RemoteAddress6;
+    UniquePtr< struct in6_addr >  m_RemoteAddress6;
     uint16_t                    m_RemotePort;
     volatile mutable bool       m_ThreadQuitNotification;
     TCPConnectionPool *         m_TCPConnectionPool; // back pointer to parent pool

@@ -258,7 +258,7 @@ bool TCPConnectionPool::Listen( uint16_t port )
     }
 
     // spawn the handler thread
-    CreateListenThread( sockfd, Network::Loopback, port );
+    CreateListenThread( sockfd, Network::LoopbackAddress, port );
 
     // everything is ok - we are now listening, managing connections on the other thread
     return true;
@@ -271,22 +271,23 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, const u
     ASSERT( !host.IsEmpty() );
 
     // get IP
-    uint32_t hostIP;
-    in6_addr hostIP6;
-    bool result = Network::GetHostIPFromName( host, hostIP, hostIP6, timeout);
-    if ( !result )
+    uint32_t ipAddress;
+    in6_addr ipAddress6;
+    bool result = Network::GetHostIPFromName( host, ipAddress, ipAddress6, timeout);
+    if ( result )
     {
-        TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );
-        return nullptr;
+        if ( Network::IsValidAddress( ipAddress ) )
+        {
+            return Connect( ipAddress, port, timeout, userData );
+        }
+        else if ( Network::IsValidAddress( ipAddress6 ) )
+        {
+            return Connect( ipAddress6, port, timeout, userData );
+        }
     }
-    if ( hostIP != 0 )
-    {
-        return Connect( hostIP, port, timeout, userData );
-    }
-    else
-    {
-        return Connect( hostIP6, port, timeout, userData );
-    }
+
+    TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );
+    return nullptr;
 }
 
 // Connect
@@ -687,7 +688,7 @@ bool TCPConnectionPool::WaitForConnection( TCPSocket sockfd, const AString & hos
             }
 
             // have we hit our real connection timeout?
-            if ( connectionTimer.GetElapsedMS() >= timeout )
+            if ( uint32_t( connectionTimer.GetElapsedMS() ) >= timeout )
             {
                 #ifdef TCPCONNECTION_DEBUG
                     TCPDEBUG( "connect() time out %u hit (Host: %s, Port: %u)\n", timeout, host.Get(), port );

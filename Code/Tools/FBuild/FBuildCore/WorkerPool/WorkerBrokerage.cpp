@@ -25,6 +25,17 @@
 #include "Core/Process/Thread.h"
 #include "Core/Time/Time.h"
 
+// system
+#if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h"
+#endif
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+    #include <arpa/inet.h>
+    #include <netdb.h>
+    #include <string.h>
+    #include <unistd.h>
+#endif
+
 // Constants
 //------------------------------------------------------------------------------
 static const float sBrokerageElapsedTimeBetweenClean = ( 12 * 60 * 60.0f );
@@ -189,6 +200,8 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
         const AString & fileName = *it;
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
         AStackString<> workerName( lastSlash + 1 );
+        // Replace semicolons with colons (sanitized ipv6)
+        workerName.Replace( ';', ':' );
         if ( workerName.CompareI( m_HostName ) != 0 )
         {
             workerList.Append( workerName );
@@ -222,28 +235,39 @@ void WorkerBrokerage::SetAvailability( bool available )
             bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
 
             // Check IP last update time and determine if host name or IP address has changed
-            if ( m_IPAddress.IsEmpty() || ( m_TimerLastIPUpdate.GetElapsed() >= sBrokerageIPAddressUpdateTime ) )
+            if ( ( m_IPAddress4.IsEmpty() && m_IPAddress6.IsEmpty() ) || ( m_TimerLastIPUpdate.GetElapsed() >= sBrokerageIPAddressUpdateTime ) )
             {
                 AStackString<> hostName;
                 AStackString<> domainName;
-                AStackString<> ipAddress;
+                AStackString<> ipAddress4;
+                AStackString<> ipAddress6;
 
                 // Get host and domain name as FQDN could have changed
                 Network::GetHostName( hostName );
                 Network::GetDomainName( domainName );
 
-                // Resolve host name to ip address
-                uint32_t ip = Network::GetHostIPFromName( hostName );
-                if ( ( ip != 0 ) && ( ip != 0x0100007f ) )
+                // Resolve host name to both ipv4 & ipv6 address
+                uint32_t ip;
+                in6_addr ip6;
+                bool result = Network::GetHostIPFromName( hostName, ip, ip6, 2000, true );
+                if ( result )
                 {
-                    TCPConnectionPool::GetAddressAsString( ip, ipAddress );
+                    if ( Network::IsValidAddress( ip ) && !Network::IsLoopbackAddress( ip ) )
+                    {
+                        Network::GetAddressAsString( ip, ipAddress4 );
+                    }
+                    if ( Network::IsValidAddress( ip6 ) && !Network::IsLoopbackAddress( ip6 ) )
+                    {
+                        Network::GetAddressAsString( ip6, ipAddress6 );
+                    }
                 }
 
-                if ( ( hostName != m_HostName ) || ( domainName != m_DomainName ) || ( ipAddress != m_IPAddress ) )
+                if ( ( hostName != m_HostName ) || ( domainName != m_DomainName ) || ( ipAddress4 != m_IPAddress4 ) || ( ipAddress6 != m_IPAddress6 ) )
                 {
                     m_HostName = hostName;
                     m_DomainName = domainName;
-                    m_IPAddress = ipAddress;
+                    m_IPAddress4 = ipAddress4;
+                    m_IPAddress6 = ipAddress6;
 
                     // Remove existing brokerage file, as filename is being updated
                     FileIO::FileDelete( m_BrokerageFilePath.Get() );
@@ -294,7 +318,14 @@ void WorkerBrokerage::SetAvailability( bool available )
                 }
 
                 // IP Address
-                buffer.AppendFormat( "IPv4 Address: %s\n", m_IPAddress.Get() );
+                if ( !m_IPAddress4.IsEmpty() )
+                {
+                    buffer.AppendFormat( "IPv4 Address: %s\n", m_IPAddress4.Get() );
+                }
+                if ( !m_IPAddress6.IsEmpty() )
+                {
+                    buffer.AppendFormat( "IPv6 Address: %s\n", m_IPAddress6.Get() );
+                }
 
                 // CPU Thresholds
                 static const uint32_t numProcessors = Env::GetNumProcessors();
@@ -374,9 +405,16 @@ void WorkerBrokerage::UpdateBrokerageFilePath()
 {
     if ( !m_BrokerageRoots.IsEmpty() )
     {
-        if ( !m_IPAddress.IsEmpty() )
+        if ( !m_IPAddress4.IsEmpty() )
         {
-            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_IPAddress.Get() );
+            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_IPAddress4.Get() );
+        }
+        else if ( !m_IPAddress6.IsEmpty() )
+        {
+            // IPv6 strings are not valid filenames on Windows as they contain colons, replace with semicolons
+            AStackString<> sanitized( m_IPAddress6 );
+            sanitized.Replace( ':', ';' );
+            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), sanitized.Get() );
         }
         else
         {
