@@ -31,7 +31,8 @@ public:
         WRAPPER_MODE_NONE,
         WRAPPER_MODE_MAIN_PROCESS,
         WRAPPER_MODE_INTERMEDIATE_PROCESS,
-        WRAPPER_MODE_FINAL_PROCESS
+        WRAPPER_MODE_FINAL_PROCESS,
+        WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX,
     };
 
     void SetWorkingDir( const AString & path );
@@ -43,6 +44,7 @@ public:
     AString     m_ProgramName;
     AString     m_Args; // Stored copy of args
     WrapperMode m_WrapperMode                       = WRAPPER_MODE_NONE;
+    AString     m_WSLPath;
 
     // Targets
     Array< AString > m_Targets;
