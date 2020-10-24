@@ -1,8 +1,8 @@
-// FBuildApp
+// FBuild
 //------------------------------------------------------------------------------
 {
-    .ProjectName        = 'FBuildApp'
-    .ProjectPath        = 'Tools/FBuild/FBuildApp'
+    .ProjectName        = 'FBuild'
+    .ProjectPath        = 'Tools/FBuild/FBuild'
 
     // Executable
     //--------------------------------------------------------------------------
@@ -45,7 +45,7 @@
         Executable( '$ProjectName$-Exe-$Platform$-$BuildConfigName$' )
         {
             .Libraries                  = {
-                                            'FBuildApp-Lib-$Platform$-$BuildConfigName$',
+                                            'FBuild-Lib-$Platform$-$BuildConfigName$',
                                             'FBuildCore-Lib-$Platform$-$BuildConfigName$',
                                             'Core-Lib-$Platform$-$BuildConfigName$',
                                             'LZ4-Lib-$Platform$-$BuildConfigName$'
@@ -104,7 +104,7 @@
             .ProjectInputPaths          = '$ProjectPath$\'
             .ProjectBasePath            = '$ProjectPath$\'
 
-            .LocalDebuggerCommand       = '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuildApp\FBuild.exe'
+            .LocalDebuggerCommand       = '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuild\FBuild.exe'
             .LocalDebuggerWorkingDirectory = '^$(SolutionDir)..\..\Code'
         }
     #endif

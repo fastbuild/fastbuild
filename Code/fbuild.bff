@@ -369,7 +369,7 @@ Settings
 
 // FBuild
 #include "Tools\FBuild\FBuildCore\FBuildCore.bff"
-#include "Tools\FBuild\FBuildApp\FBuildApp.bff"
+#include "Tools\FBuild\FBuild\FBuild.bff"
 #include "Tools\FBuild\FBuildWorker\FBuildWorker.bff"
 #include "Tools\FBuild\FBuildTest\FBuildTest.bff"
 #if !CI_BUILD
@@ -390,7 +390,7 @@ ForEach( .BuildConfig in .BuildConfigs )
 Alias( 'Exes' )
 {
     .Targets    = { 'FBuildWorker-Debug',   'FBuildWorker-Profile', 'FBuildWorker-Release'
-                    'FBuildApp-Debug',      'FBuildApp-Profile',    'FBuildApp-Release' }
+                    'FBuild-Debug',         'FBuild-Profile',       'FBuild-Release' }
 }
 
 // Aliases : All-$Platform$
@@ -568,7 +568,7 @@ Alias( 'All+Tests' )
 
         // Work around for Visual Studio F5 behaviour up-to-date check
         .Deps               = [
-                                .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuildApp-proj', 'FBuildWorker-proj' }
+                                .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuild-proj', 'FBuildWorker-proj' }
                                 .Dependencies = { 'All-proj' }
                               ]
         .SolutionDependencies = { .Deps }
@@ -591,7 +591,7 @@ Alias( 'All+Tests' )
         .Folder_3_Apps =
         [
             .Path           = '3. Apps'
-            .Projects       = { 'FBuildApp-proj', 'FBuildWorker-proj' }
+            .Projects       = { 'FBuild-proj', 'FBuildWorker-proj' }
         ]
         .SolutionFolders    = { .Folder_0_External, .Folder_1_Test, .Folder_2_Libs, .Folder_3_Apps }
     }
@@ -610,7 +610,7 @@ Alias( 'All+Tests' )
 
         .ProjectFiles               = { 'Core-xcodeproj'
                                         'CoreTest-xcodeproj'
-                                        'FBuildApp-xcodeproj'
+                                        'FBuild-xcodeproj'
                                         'FBuildCore-xcodeproj'
                                         'FBuildTest-xcodeproj'
                                         'FBuildWorker-xcodeproj'
