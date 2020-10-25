@@ -412,6 +412,18 @@ void TestBFFParsing::IfDirective() const
     TEST_PARSE_FAIL( "#if X Y\n"
                      "#endif",          "Error #1045 - Extraneous token(s)" );
     TEST_PARSE_FAIL( "##if!X\n ",       "Error #1010 - Unknown construct" );
+
+    // Ensure directives inside lists are handled correctly
+    TEST_PARSE_OK( ".A = {\n"
+                   "#if __UNDEFINED__\n"
+                   "    'X'\n"
+                   "#endif\n"
+                   "}" );
+    TEST_PARSE_OK( ".A = {\n"
+                   "#if !__UNDEFINED__\n"
+                   "    'X'\n"
+                   "#endif\n"
+                   "}" );
 }
 
 // IfExistsDirective

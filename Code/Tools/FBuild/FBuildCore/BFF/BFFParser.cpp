@@ -43,8 +43,7 @@ bool BFFParser::ParseFromFile( const char * fileName )
     PROFILE_FUNCTION
 
     // Tokenize file
-    const BFFToken * token = nullptr; // The root include doesn't have an associated token
-    if ( m_Tokenizer.TokenizeFromFile( AStackString<>( fileName ), token ) == false )
+    if ( m_Tokenizer.TokenizeFromFile( AStackString<>( fileName ) ) == false )
     {
         return false; // Tokenize will have emitted an error
     }
@@ -179,6 +178,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         if ( token->GetType() == BFFTokenType::EndOfFile )
         {
             iter++;
+            ASSERT( iter.IsAtEnd() ); // Should always be last arg
             continue;
         }
 
