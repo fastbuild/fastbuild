@@ -686,7 +686,13 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
         const BFFToken * arg = arguments[ i ];
         if ( arg->IsString() )
         {
-            BFFStackFrame::SetVarString( argName, arg->GetValueString(), &frame );
+            // unescape and subsitute embedded variables
+            AStackString< 2048 > value;
+            if ( PerformVariableSubstitutions( arg, value ) == false )
+            {
+                return false;
+            }
+            BFFStackFrame::SetVarString( argName, value, &frame );
         }
         else if ( arg->IsBooelan() )
         {
