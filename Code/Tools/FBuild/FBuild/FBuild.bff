@@ -98,15 +98,7 @@
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------
     #if __WINDOWS__
-        VCXProject( '$ProjectName$-proj' )
-        {
-            .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-            .ProjectInputPaths          = '$ProjectPath$\'
-            .ProjectBasePath            = '$ProjectPath$\'
-
-            .LocalDebuggerCommand       = '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuild\FBuild.exe'
-            .LocalDebuggerWorkingDirectory = '^$(SolutionDir)..\..\Code'
-        }
+        CreateVCXProject_Exe( .ProjectName, .ProjectPath, .ProjectConfigs )
     #endif
 
     // XCode Project Generation

@@ -100,14 +100,7 @@
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------
     #if __WINDOWS__
-        VCXProject( '$ProjectName$-proj' )
-        {
-            .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-            .ProjectInputPaths          = '$ProjectPath$\'
-            .ProjectBasePath            = '$ProjectPath$\'
-
-            .LocalDebuggerCommand       = '^$(SolutionDir)..\^$(Configuration)\Core\CoreTest\CoreTest.exe'
-        }
+        CreateVCXProject_Exe( .ProjectName, .ProjectPath, .ProjectConfigs )
     #endif
 
     // XCode Project Generation
