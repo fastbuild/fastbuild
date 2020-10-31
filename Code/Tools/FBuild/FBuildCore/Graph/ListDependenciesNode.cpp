@@ -202,7 +202,7 @@ void ListDependenciesNode::EmitOutputMessage() const
 {
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        FLOG_OUTPUT( "DepList: '%s' -> '%s'", m_Source.Get(), GetName().Get() );
+        FLOG_OUTPUT( "DepList: '%s' -> '%s'\n", m_Source.Get(), GetName().Get() );
     }
 }
 
