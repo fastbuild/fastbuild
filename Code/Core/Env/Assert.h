@@ -13,7 +13,7 @@
 #elif defined( __APPLE__ )
     #define BREAK_IN_DEBUGGER __builtin_trap();
 #elif defined( __LINUX__ )
-    #if defined(__X64__)
+    #if defined( __X64__ )
         #define BREAK_IN_DEBUGGER __asm__ __volatile__("int $3")
     #else
         #define BREAK_IN_DEBUGGER __builtin_trap();
