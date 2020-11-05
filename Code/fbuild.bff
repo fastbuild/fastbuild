@@ -492,15 +492,9 @@ Alias( 'All+Tests' )
 // Visual Studio Solution
 //------------------------------------------------------------------------------
 #if __WINDOWS__
-    // Project to compile everything
-    VCXProject( 'All-proj' )
+    // 'All' - Compile everything
     {
-        .ProjectOutput              = '../tmp/VisualStudio/Projects/All.vcxproj'
-        .ProjectFiles           = { '.\fbuild.bff' }
-        .ProjectBasePath            = '.\'
-
-        //.ProjectConfigs             = .AllProjectConfigs_x64
-
+        .ExtraOptions   = [ .ProjectInputPaths = {} ]
         .ProjectConfigs = {}
         ForEach( .BuildConfig in .BuildConfigs )
         {
@@ -508,16 +502,12 @@ Alias( 'All+Tests' )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = 'All-$Platform$-$BuildConfigName$' ]
             ^ProjectConfigs         + .ProjectConfig
         }
+        CreateVCXProject_Lib( 'All', '/', .ProjectConfigs, .ExtraOptions )
     }
 
-    // Project for Platform/Compiler SDKs
-    VCXProject( 'SDKs-proj' )
+    // 'SDKs' - Browse Platform/Compiler SDKs
     {
-        .ProjectOutput              = '../tmp/VisualStudio/Projects/SDKs.vcxproj'
-        .ProjectInputPaths          = '../External/SDK/'
-        .ProjectAllowedFileExtensions = '*.bff'
-        .ProjectBasePath            = .ProjectInputPaths
-
+        .ExtraOptions   = [ .ProjectAllowedFileExtensions = '*.bff' ]
         .ProjectConfigs = {}
         ForEach( .BuildConfig in .BuildConfigs )
         {
@@ -525,28 +515,24 @@ Alias( 'All+Tests' )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
             ^ProjectConfigs         + .ProjectConfig
         }
+        CreateVCXProject_Lib( 'SDKs', '../External/SDK/', .ProjectConfigs, .ExtraOptions )
     }
 
-    // Project to regenerate projects/solutions
-    VCXProject( 'UpdateSolution-proj' )
+    // 'UpdateSolution' - Regenerate projects/solutions
     {
-        .ProjectOutput              = '../tmp/VisualStudio/Projects/UpdateSolution.vcxproj'
-        .ProjectFiles           = { '.\fbuild.bff' }
-        .ProjectBasePath            = '.\'
-
-        .GenerateProjectsCommands =
-        [
-            .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
-            .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
-        ]
-
+        .ExtraOptions   = [ .ProjectInputPaths = {} ]
         .ProjectConfigs = {}
         ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
-            .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) Using( .GenerateProjectsCommands ) ]
+            .ProjectConfig          = [ 
+                                        Using( .'Project_$Platform$_$BuildConfigName$' )
+                                        .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
+                                        .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
+                                      ]
             ^ProjectConfigs         + .ProjectConfig
         }
+        CreateVCXProject_Lib( 'UpdateSolution', '/', .ProjectConfigs, .ExtraOptions )
     }
 
     VSSolution( 'solution' )
@@ -573,27 +559,35 @@ Alias( 'All+Tests' )
                               ]
         .SolutionDependencies = { .Deps }
 
-        .Folder_0_External =
+        .Folder_Config =
         [
-            .Path           = '0. External'
+            .Path           = 'Config'
+            .Items          = {
+                                'fbuild.bff'
+                                '.FASTBuild/HelperFunctions.bff'
+                              }
+        ]
+        .Folder_External =
+        [
+            .Path           = 'External'
             .Projects       = { 'LZ4-proj', 'SDKs-proj' }
         ]
-        .Folder_1_Test =
+        .Folder_Test =
         [
-            .Path           = '1. Test'
+            .Path           = 'Test'
             .Projects       = { 'CoreTest-proj', 'FBuildTest-proj', 'TestFramework-proj' }
         ]
-        .Folder_2_Libs =
+        .Folder_Libs =
         [
-            .Path           = '2. Libs'
+            .Path           = 'Libs'
             .Projects       = { 'Core-proj', 'FBuildCore-proj', 'OSUI-proj' }
         ]
-        .Folder_3_Apps =
+        .Folder_Apps =
         [
-            .Path           = '3. Apps'
+            .Path           = 'Apps'
             .Projects       = { 'FBuild-proj', 'FBuildWorker-proj' }
         ]
-        .SolutionFolders    = { .Folder_0_External, .Folder_1_Test, .Folder_2_Libs, .Folder_3_Apps }
+        .SolutionFolders    = { .Folder_Config, .Folder_External, .Folder_Test, .Folder_Libs, .Folder_Apps }
     }
 #endif
 

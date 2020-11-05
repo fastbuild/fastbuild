@@ -84,7 +84,7 @@ function CreateCommonAliases( .ProjectName )
 function CreateVCXProject_Lib( .Name
                                .Path
                                .Configs
-                               .PathsToExclude )
+                               .ExtraOptions )
 {
     VCXProject( '$Name$-proj' )
     {
@@ -94,8 +94,8 @@ function CreateVCXProject_Lib( .Name
         .ProjectInputPaths          = '$Path$\'
         .ProjectBasePath            = '$Path$\'
 
-        // Exclude Tests
-        .ProjectInputPathsExclude   = .PathsToExclude
+
+        Using( .ExtraOptions )
     }
 }
 
@@ -105,17 +105,11 @@ function CreateVCXProject_Exe( .Name
                                .Path
                                .Configs )
 {
-    VCXProject( '$Name$-proj' )
-    {
-        .ProjectConfigs             = .Configs
-
-        .ProjectOutput              = '../tmp/VisualStudio/Projects/$Name$.vcxproj'
-        .ProjectInputPaths          = '$Path$\'
-        .ProjectBasePath            = '$Path$\'
-
-        .LocalDebuggerCommand           = '^$(SolutionDir)..\^$(Configuration)\$Path$\$Name$.exe'
-        .LocalDebuggerWorkingDirectory  = '^$(SolutionDir)..\..\Code\$Path$'
-    }
+    .ExtraOptions   = [
+                        .LocalDebuggerCommand           = '^$(SolutionDir)..\^$(Configuration)\$Path$\$Name$.exe'
+                        .LocalDebuggerWorkingDirectory  = '^$(SolutionDir)..\..\Code\$Path$'
+                      ]
+    CreateVCXProject_Lib( .Name, .Path, .Configs, .ExtraOptions )
 }
 
 //------------------------------------------------------------------------------
