@@ -48,9 +48,15 @@ public:
     AString             m_LocalDebuggerWorkingDirectory;
     AString             m_LocalDebuggerCommand;
     AString             m_LocalDebuggerEnvironment;
+    AString             m_RemoteDebuggerCommand;
+    AString             m_RemoteDebuggerCommandArguments;
+    AString             m_RemoteDebuggerWorkingDirectory;
     AString             m_Keyword;
+    AString             m_RootNamespace;
     AString             m_ApplicationType;
     AString             m_ApplicationTypeRevision;
+    AString             m_TargetLinuxPlatform;
+    AString             m_LinuxProjectType;
     AString             m_PackagePath;
     AString             m_AdditionalSymbolSearchPaths;
 };
@@ -132,7 +138,6 @@ private:
     Array< VSProjectConfig > m_ProjectConfigs;
     Array< VSProjectFileType > m_ProjectFileTypes;
 
-    AString             m_RootNamespace;
     AString             m_DefaultLanguage;
     AString             m_ApplicationEnvironment;
     bool                m_ProjectSccEntrySAK = false;

@@ -144,6 +144,7 @@ LinkerOutput
 LinkerStampExe
 LinkerStampExeArgs
 LinkerType
+LinuxProjectType
 LocalDebuggerCommand
 LocalDebuggerCommandArguments
 LocalDebuggerEnvironment
@@ -185,6 +186,9 @@ ProjectReferences
 ProjectSccEntrySAK
 ProjectTypeGuid
 Projects
+RemoteDebuggerCommand
+RemoteDebuggerCommandArguments
+RemoteDebuggerWorkingDirectory
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
@@ -209,6 +213,7 @@ SourcePaths
 SourcePathsPattern
 SourcePathsRecurse
 Target
+TargetLinuxPlatform
 Targets
 TestAlwaysShowOutput
 TestArguments

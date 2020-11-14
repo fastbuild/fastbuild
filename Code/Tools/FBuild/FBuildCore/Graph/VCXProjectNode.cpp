@@ -57,9 +57,15 @@ REFLECT_STRUCT_BEGIN_BASE( VSProjectConfigBase )
     REFLECT(        m_LocalDebuggerWorkingDirectory,"LocalDebuggerWorkingDirectory",MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_LocalDebuggerCommand,         "LocalDebuggerCommand",         MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_LocalDebuggerEnvironment,     "LocalDebuggerEnvironment",     MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_RemoteDebuggerCommand,            "RemoteDebuggerCommand",            MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_RemoteDebuggerCommandArguments,   "RemoteDebuggerCommandArguments",   MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_RemoteDebuggerWorkingDirectory,   "RemoteDebuggerWorkingDirectory",   MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_Keyword,                      "Keyword",                      MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_RootNamespace,                "RootNamespace",                MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_ApplicationType,              "ApplicationType",              MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_ApplicationTypeRevision,      "ApplicationTypeRevision",      MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_TargetLinuxPlatform,          "TargetLinuxPlatform",          MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_LinuxProjectType,             "LinuxProjectType",             MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_PackagePath,                  "PackagePath",                  MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_AdditionalSymbolSearchPaths,  "AdditionalSymbolSearchPaths",  MetaInheritFromOwner() + MetaOptional() )
 REFLECT_END( VSProjectConfigBase )
@@ -91,7 +97,6 @@ REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput"
     REFLECT_ARRAY_OF_STRUCT(    m_ProjectConfigs,   "ProjectConfigs",               VSProjectConfig,    MetaOptional() )
     REFLECT_ARRAY_OF_STRUCT(    m_ProjectFileTypes, "ProjectFileTypes",             VSProjectFileType,  MetaOptional() )
 
-    REFLECT(        m_RootNamespace,                "RootNamespace",                MetaOptional() )
     REFLECT(        m_DefaultLanguage,              "DefaultLanguage",              MetaOptional() )
     REFLECT(        m_ApplicationEnvironment,       "ApplicationEnvironment",       MetaOptional() )
     REFLECT(        m_ProjectSccEntrySAK,           "ProjectSccEntrySAK",           MetaOptional() )
@@ -261,7 +266,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     pg.SetBasePaths( m_ProjectBasePaths );
 
     // Globals
-    pg.SetRootNamespace( m_RootNamespace );
+    pg.SetRootNamespace( m_BaseProjectConfig.m_RootNamespace );
     pg.SetProjectGuid( m_ProjectGuid );
     pg.SetDefaultLanguage( m_DefaultLanguage );
     pg.SetApplicationEnvironment( m_ApplicationEnvironment );
