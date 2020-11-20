@@ -214,7 +214,7 @@ ObjectNode::~ObjectNode()
     bool useCache = ShouldUseCache();
     bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
     bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
-    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) || GetFlag( FLAG_ORBIS_WAVE_PSSLC ) );
+    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag(FLAG_CUDA_NVCC) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) || GetFlag( FLAG_ORBIS_WAVE_PSSLC ) );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -793,11 +793,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         bool msvcStyle;
         if ( GetDedicatedPreprocessor() != nullptr )
         {
-            msvcStyle = GetPreprocessorFlag( FLAG_MSVC ) || GetPreprocessorFlag( FLAG_CUDA_NVCC );
+            msvcStyle = GetPreprocessorFlag( FLAG_MSVC );
         }
         else
         {
-            msvcStyle = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CUDA_NVCC );
+            msvcStyle = GetFlag( FLAG_MSVC );
         }
         bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
                                 : parser.ParseGCC_Preprocessed( output, outputSize );
@@ -1649,7 +1649,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // -o removal for preprocessor
         if ( pass == PASS_PREPROCESSOR_ONLY )
         {
-            if ( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA || isVBCC || isOrbisWavePsslc )
+            if ( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isVBCC || isOrbisWavePsslc )
             {
                 if ( StripTokenWithArg( "-o", token, i ) )
                 {
@@ -1673,6 +1673,18 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue;
                 }
             }
+			else if (isCUDA)
+			{
+				// remove --output-file (or alias -o) so preprocessor output goes to stdout
+				// remove --compile (or alias -c) when using preprocessor only
+				if (StripTokenWithArg("--output-file", token, i) ||
+					StripTokenWithArg("-o", token, i) ||
+					StripToken("--compile", token) || 
+					StripToken("-c", token))
+				{
+					continue;
+				}
+			}
         }
 
         if ( isClang || isGCC ) // Also check when invoked via gcc sym link
