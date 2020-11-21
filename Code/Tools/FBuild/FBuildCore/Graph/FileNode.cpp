@@ -94,9 +94,9 @@ void FileNode::HandleWarningsClangGCC( Job * job, const AString & name, const AS
 
 // DumpOutput
 //------------------------------------------------------------------------------
-void FileNode::DumpOutput( Job * job, const AString & buffer, const AString & name, bool treatAsWarnings )
+void FileNode::DumpOutput( Job * job, const AString & name, const AString & data, bool treatAsWarnings )
 {
-    if ( buffer.IsEmpty() == false )
+    if ( data.IsEmpty() == false )
     {
         Array< AString > exclusions( 2, false );
         exclusions.EmplaceBack( "Note: including file:" );
@@ -105,9 +105,9 @@ void FileNode::DumpOutput( Job * job, const AString & buffer, const AString & na
         AStackString<> msg;
         msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
 
-        AString finalBuffer( buffer.GetLength() + msg.GetLength() );
+        AString finalBuffer( data.GetLength() + msg.GetLength() );
         finalBuffer += msg;
-        finalBuffer += buffer;
+        finalBuffer += data;
 
         Node::DumpOutput( job, finalBuffer, &exclusions );
     }
