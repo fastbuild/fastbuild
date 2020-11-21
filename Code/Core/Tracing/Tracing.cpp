@@ -245,10 +245,12 @@ bool Tracing::Callbacks::DispatchCallbacksDebugSpam( const char * message )
     {
         if ( (*cb)( message ) == false )
         {
+            m_InCallbackDispatch = false;
             return true; // callback wants msg supressed
         }
     }
 
+    m_InCallbackDispatch = false;
     return false;
 }
 
