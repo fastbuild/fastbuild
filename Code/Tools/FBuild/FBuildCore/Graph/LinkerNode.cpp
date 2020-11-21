@@ -124,7 +124,7 @@ LinkerNode::LinkerNode()
     Dependencies otherLibraryNodes( 64, true );
     if ( ( m_Flags & ( LinkerNode::LINK_FLAG_MSVC | LinkerNode::LINK_FLAG_GCC | LinkerNode::LINK_FLAG_SNC | LinkerNode::LINK_FLAG_ORBIS_LD | LinkerNode::LINK_FLAG_GREENHILLS_ELXR | LinkerNode::LINK_FLAG_CODEWARRIOR_LD ) ) != 0 )
     {
-        const bool msvcStyle = ( ( m_Flags & LinkerNode::LINK_FLAG_MSVC ) == LinkerNode::LINK_FLAG_MSVC );
+        const bool msvcStyle = GetFlag( LinkerNode::LINK_FLAG_MSVC );
         if ( !GetOtherLibraries( nodeGraph, iter, function, m_LinkerOptions, otherLibraryNodes, msvcStyle ) )
         {
             return false; // will have emitted error
@@ -639,7 +639,7 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
     {
         // Detect based upon linker executable name
         if ( ( linkerName.EndsWithI( "link.exe" ) ) ||
-            ( linkerName.EndsWithI( "link" ) ) )
+             ( linkerName.EndsWithI( "link" ) ) ) // this will also recognize lld-link
         {
             flags |= LinkerNode::LINK_FLAG_MSVC;
         }
@@ -810,8 +810,13 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         const AString * const end = tokens.End();
         for ( const AString * it=tokens.Begin(); it!=end; ++it )
         {
-            const AString & token = *it;
-            if ( ( token == "-shared" ) || ( token == "-dynamiclib" ) || ( token == "--oformat=prx" ) ||
+            AStackString<256> token( *it );
+            token.ToLower();
+
+            if ( ( token == "-shared" ) ||
+                 ( token == "-dynamiclib" ) ||
+                 ( token == "--oformat=prx" ) ||
+                 ( token == "/dll" ) || // For clang-cl
                  ( token.BeginsWith( "-Wl" ) && token.Find( "--oformat=prx" ) ) )
             {
                 flags |= LinkerNode::LINK_FLAG_DLL;

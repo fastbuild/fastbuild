@@ -54,16 +54,24 @@ FileNode::~FileNode() = default;
 //------------------------------------------------------------------------------
 void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const AString & data )
 {
+    constexpr const char * msvcWarningString = ": warning ";  // string is ok even in non-English
+    return HandleWarnings( job, name, data, msvcWarningString );
+}
+
+// HandleWarnings
+//------------------------------------------------------------------------------
+void FileNode::HandleWarnings( Job * job, const AString & name, const AString & data, const char * warningString )
+{
     if ( data.IsEmpty() )
     {
         return;
     }
 
-    // Are there any warnings? (string is ok even in non-English)
-    if ( data.Find( ": warning " ) )
+    // Are there any warnings?
+    if ( data.Find( warningString ) )
     {
         const bool treatAsWarnings = true;
-        DumpOutput( job, data, name, treatAsWarnings );
+        DumpOutput( job, name, data, treatAsWarnings );
     }
 }
 
@@ -80,7 +88,7 @@ void FileNode::HandleWarningsClangGCC( Job * job, const AString & name, const AS
     if ( data.Find( "warning: " ) )
     {
         const bool treatAsWarnings = true;
-        DumpOutput( job, data, name, treatAsWarnings );
+        DumpOutput( job, name, data, treatAsWarnings );
     }
 }
 

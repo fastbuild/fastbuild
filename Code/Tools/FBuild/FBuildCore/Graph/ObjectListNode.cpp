@@ -136,7 +136,7 @@ ObjectListNode::ObjectListNode()
         // Check PCH creation command line options
         AStackString<> pchObjectName; // TODO:A Use this
         const uint32_t pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
-        if ( pchFlags & ObjectNode::FLAG_MSVC )
+        if ( pchFlags & ( ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL ) )
         {
             if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
             {
@@ -174,7 +174,7 @@ ObjectListNode::ObjectListNode()
         if ( usingPCH )
         {
             // Check for correct PCH usage options
-            if ( objFlags & ObjectNode::FLAG_MSVC )
+            if ( objFlags & ( ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL ) )
             {
                 if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Use( iter, m_CompilerOptions, objFlags ) == false )
                 {
@@ -341,7 +341,7 @@ ObjectListNode::~ObjectListNode() = default;
         // On Windows, with MSVC we compile a cpp file to generate the PCH
         // Filter here to ensure that doesn't get compiled twice
         Node * pchCPP = nullptr;
-        if ( m_UsingPrecompiledHeader && GetPrecompiledHeader()->IsMSVC() )
+        if ( m_UsingPrecompiledHeader && ( GetPrecompiledHeader()->IsMSVC() || GetPrecompiledHeader()->IsClangCl() ) )
         {
             pchCPP = GetPrecompiledHeader()->GetPrecompiledHeaderCPPFile();
         }
@@ -574,7 +574,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             const ObjectNode * on = n->CastTo< ObjectNode >();
             if ( on->IsCreatingPCH() )
             {
-                if ( on->IsMSVC() )
+                if ( on->IsMSVC() || on->IsClangCl() )
                 {
                     fullArgs += pre;
                     fullArgs += on->GetPCHObjectName();
