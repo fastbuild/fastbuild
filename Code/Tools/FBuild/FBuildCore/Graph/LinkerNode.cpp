@@ -283,12 +283,12 @@ LinkerNode::~LinkerNode()
                 }
             }
 
-            if ( memOut.Get() )
+            if ( memOut.IsEmpty() == false )
             {
                 job->ErrorPreformatted( memOut.Get() );
             }
 
-            if ( memErr.Get() )
+            if ( memErr.IsEmpty() == false )
             {
                 job->ErrorPreformatted( memErr.Get() );
             }

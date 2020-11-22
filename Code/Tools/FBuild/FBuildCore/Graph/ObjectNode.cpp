@@ -2124,7 +2124,7 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
         if ( ( ch.GetResult() != 0 ) && !ch.HasAborted() )
         {
             // Use the error text, but if it's empty, use the output
-            if ( ch.GetErr().Get() )
+            if ( ch.GetErr().IsEmpty() == false )
             {
                 DumpOutput( job, GetName(), ch.GetErr() );
             }
@@ -2566,7 +2566,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         else
         {
             // output any errors (even if succeeded, there might be warnings)
-            if ( m_Err.Get() )
+            if ( m_Err.IsEmpty() == false )
             {
                 const bool treatAsWarnings = true; // change msg formatting
                 DumpOutput( job, name, m_Err, treatAsWarnings );
