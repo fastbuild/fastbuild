@@ -132,6 +132,7 @@
 ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
     : m_Socket( INVALID_SOCKET )
     , m_RemoteAddress( 0 )
+    , m_RemoteAddress6( nullptr )
     , m_RemotePort( 0 )
     , m_ThreadQuitNotification( false )
     , m_TCPConnectionPool( ownerPool )
@@ -141,6 +142,20 @@ ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
     #endif
 {
     ASSERT( ownerPool );
+}
+
+// GetRemoteAddressString
+//------------------------------------------------------------------------------
+void ConnectionInfo::GetRemoteAddressString( AString & remoteAddress ) const
+{
+    if ( m_RemoteAddress )
+    {
+        Network::GetAddressAsString( m_RemoteAddress, remoteAddress );
+    }
+    else if ( m_RemoteAddress6.Get() )
+    {
+        Network::GetAddressAsString( *m_RemoteAddress6.Get(), remoteAddress );
+    }
 }
 
 // CONSTRUCTOR
@@ -199,16 +214,6 @@ void TCPConnectionPool::ShutdownAllConnections()
     m_ConnectionsMutex.Unlock();
 }
 
-// GetAddressAsString
-//------------------------------------------------------------------------------
-/*static*/ void TCPConnectionPool::GetAddressAsString( uint32_t addr, AString & address )
-{
-    address.Format( "%u.%u.%u.%u", (unsigned int)( addr & 0x000000FF ) ,
-                                   (unsigned int)( addr & 0x0000FF00 ) >> 8,
-                                   (unsigned int)( addr & 0x00FF0000 ) >> 16,
-                                   (unsigned int)( addr & 0xFF000000 ) >> 24 );
-}
-
 // Listen
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::Listen( uint16_t port )
@@ -217,7 +222,7 @@ bool TCPConnectionPool::Listen( uint16_t port )
     ASSERT( m_ListenConnection == nullptr );
 
     // create the socket
-    TCPSocket sockfd = CreateSocket();
+    TCPSocket sockfd = CreateSocket( AF_INET6 );
     if ( sockfd == INVALID_SOCKET )
     {
         return false;
@@ -227,13 +232,13 @@ bool TCPConnectionPool::Listen( uint16_t port )
     AllowSocketReuse( sockfd );     // Allow socket re-use
     DisableSigPipe( sockfd );       // Prevent socket inheritence by child processes
     DisableNagle( sockfd );         // Disable Nagle's algorithm
+    DisableV6Only( sockfd );        // Accept ipv4 over ipv6 connection
 
     // set up the listen params
-    struct sockaddr_in addrInfo;
+    struct sockaddr_in6 addrInfo;
     memset( &addrInfo, 0, sizeof( addrInfo ) );
-    addrInfo.sin_family = AF_INET;
-    addrInfo.sin_port = htons( port );
-    addrInfo.sin_addr.s_addr = INADDR_ANY;
+    addrInfo.sin6_family = AF_INET6;
+    addrInfo.sin6_port = htons( port );
 
     // bind
     if ( bind( sockfd, (struct sockaddr *)&addrInfo, sizeof( addrInfo ) ) != 0 )
@@ -244,17 +249,16 @@ bool TCPConnectionPool::Listen( uint16_t port )
     }
 
     // listen
-    TCPDEBUG( "Listen on port %i (%x)\n", port, (uint32_t)sockfd );
+    TCPDEBUG( "Listen on port %u (%x)\n", port, (uint32_t)sockfd );
     if ( listen( sockfd, 0 ) == SOCKET_ERROR ) // no backlog
     {
-        TCPDEBUG( "Listen FAILED %i (%x)\n", port, (uint32_t)sockfd );
+        TCPDEBUG( "Listen FAILED %u (%x)\n", port, (uint32_t)sockfd );
         CloseSocket( sockfd );
         return false;
     }
 
     // spawn the handler thread
-    uint32_t loopback = 127 & ( 1 << 24 ); // 127.0.0.1
-    CreateListenThread( sockfd, loopback, port );
+    CreateListenThread( sockfd, Network::LoopbackAddress, port );
 
     // everything is ok - we are now listening, managing connections on the other thread
     return true;
@@ -262,28 +266,38 @@ bool TCPConnectionPool::Listen( uint16_t port )
 
 // Connect
 //------------------------------------------------------------------------------
-const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_t port, uint32_t timeout, void * userData )
+const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, const uint16_t port, const uint32_t timeout, void * userData )
 {
     ASSERT( !host.IsEmpty() );
 
     // get IP
-    uint32_t hostIP = Network::GetHostIPFromName( host, timeout );
-    if ( hostIP == 0 )
+    uint32_t ipAddress;
+    in6_addr ipAddress6;
+    bool result = Network::GetHostIPFromName( host, ipAddress, ipAddress6, timeout);
+    if ( result )
     {
-        TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );
-        return nullptr;
+        if ( Network::IsValidAddress( ipAddress ) )
+        {
+            return Connect( ipAddress, port, timeout, userData );
+        }
+        else if ( Network::IsValidAddress( ipAddress6 ) )
+        {
+            return Connect( ipAddress6, port, timeout, userData );
+        }
     }
-    return Connect( hostIP, port, timeout, userData );
+
+    TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );
+    return nullptr;
 }
 
 // Connect
 //------------------------------------------------------------------------------
-const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t port, uint32_t timeout, void * userData )
+const ConnectionInfo * TCPConnectionPool::Connect( const uint32_t hostIP, const uint16_t port, const uint32_t timeout, void * userData )
 {
     PROFILE_FUNCTION
 
     // create a socket
-    TCPSocket sockfd = CreateSocket();
+    TCPSocket sockfd = CreateSocket( AF_INET );
     if ( sockfd == INVALID_SOCKET )
     {
         return nullptr; // outright failure?
@@ -311,7 +325,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             // connection initiation failed
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
-                GetAddressAsString( hostIP, host );
+                Network::GetAddressAsString( hostIP, host );
                 TCPDEBUG( "connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
             #endif
             CloseSocket( sockfd );
@@ -319,129 +333,67 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         }
     }
 
-    Timer connectionTimer;
-
-    // wait for connection
-    for ( ;; )
+    AStackString<> host;
+    Network::GetAddressAsString( hostIP, host );
+    if ( !WaitForConnection( sockfd, host, port, timeout ) )
     {
-        fd_set write, err;
-        FD_ZERO( &write );
-        FD_ZERO( &err );
-        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
-        PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
-        FD_SET( sockfd, &write );
-        FD_SET( sockfd, &err );
-        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
-        PRAGMA_DISABLE_POP_MSVC // 6319
-        PRAGMA_DISABLE_POP_MSVC // 4548
+        CloseSocket( sockfd );
+        return nullptr;
+    }
 
-        // check connection every 10ms
-        timeval pollingTimeout;
-        memset( &pollingTimeout, 0, sizeof( timeval ) );
-        pollingTimeout.tv_usec = 10 * 1000;
+    return CreateConnectionThread( sockfd, hostIP, port, userData );
+}
 
-        // check if the socket is ready
-        int selRet = Select( sockfd + 1, nullptr, &write, &err, &pollingTimeout );
-        if ( selRet == SOCKET_ERROR )
+// Connect
+//------------------------------------------------------------------------------
+const ConnectionInfo * TCPConnectionPool::Connect( const in6_addr & hostIP, const uint16_t port, const uint32_t timeout, void * userData )
+{
+    PROFILE_FUNCTION
+
+    // create a socket
+    TCPSocket sockfd = CreateSocket( AF_INET6 );
+    if ( sockfd == INVALID_SOCKET )
+    {
+        return nullptr; // outright failure?
+    }
+
+    // Configure socket
+    DisableSigPipe( sockfd );       // Prevent socket inheritence by child processes
+    DisableNagle( sockfd );         // Disable Nagle's algorithm
+    SetLargeBufferSizes( sockfd );  // Set large send/recv buffer sizes
+    SetNonBlocking( sockfd );       // Set non-blocking
+    DisableV6Only( sockfd );        // Allow ipv4 connections over ipv6
+
+    // setup destination address
+    struct sockaddr_in6 destAddr;
+    memset( &destAddr, 0, sizeof( destAddr ) );
+    destAddr.sin6_family = AF_INET6;
+    destAddr.sin6_addr = hostIP;
+    destAddr.sin6_port = htons( port );
+
+    // initiate connection
+    if ( connect( sockfd, (struct sockaddr *)&destAddr, sizeof( destAddr ) ) != 0 )
+    {
+        // we expect WSAEWOULDBLOCK
+        if ( !WouldBlock() )
         {
-            // connection failed
+            // connection initiation failed
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
-                GetAddressAsString( hostIP, host );
-                TCPDEBUG( "select() after connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+                Network::GetAddressAsString( hostIP, host );
+                TCPDEBUG( "connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
             #endif
             CloseSocket( sockfd );
             return nullptr;
         }
+    }
 
-        // polling timeout hit?
-        if ( selRet == 0 )
-        {
-            // are we shutting down?
-            if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
-            {
-                #ifdef TCPCONNECTION_DEBUG
-                    AStackString<> host;
-                    GetAddressAsString( hostIP, host );
-                    TCPDEBUG( "connect() aborted (Shutting Down) (Host: %s, Port: %u)\n", host.Get(), port );
-                #endif
-                CloseSocket( sockfd );
-                return nullptr;
-            }
-
-            // have we hit our real connection timeout?
-            if ( connectionTimer.GetElapsedMS() >= (float)timeout )
-            {
-                #ifdef TCPCONNECTION_DEBUG
-                    AStackString<> host;
-                    GetAddressAsString( hostIP, host );
-                    TCPDEBUG( "connect() time out %u hit (Host: %s, Port: %u)\n", timeout, host.Get(), port );
-                #endif
-                CloseSocket( sockfd );
-                return nullptr;
-            }
-
-            // keep waiting
-            continue;
-        }
-
-        if ( FD_ISSET( sockfd, &err ) )
-        {
-            // connection failed
-            #ifdef TCPCONNECTION_DEBUG
-                AStackString<> host;
-                GetAddressAsString( hostIP, host );
-                const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
-
-                int32_t error = 0;
-                socklen_t size = sizeof(error);
-                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) != SOCKET_ERROR )
-                {
-                    TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i, SO_ERROR %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet, error );
-                }
-                else
-                {
-                    TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet );
-                }
-            #endif
-            CloseSocket( sockfd );
-            return nullptr;
-        }
-
-        if ( FD_ISSET( sockfd, &write ) )
-        {
-            #if defined( __APPLE__ ) || defined( __LINUX__ )
-                // On Linux a write flag set by select() doesn't mean that
-                // connect() succeeded, it only means that it is completed.
-                // To get the result we need to query SO_ERROR value via getsockopt().
-                int32_t error = 0;
-                socklen_t size = sizeof(error);
-                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) == SOCKET_ERROR )
-                {
-                    #ifdef TCPCONNECTION_DEBUG
-                        AStackString<> host;
-                        GetAddressAsString( hostIP, host );
-                        TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
-                    #endif
-                    CloseSocket( sockfd );
-                    return nullptr;
-                }
-                if ( error != 0 )
-                {
-                    #ifdef TCPCONNECTION_DEBUG
-                        AStackString<> host;
-                        GetAddressAsString( hostIP, host );
-                        TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
-                    #endif
-                    CloseSocket( sockfd );
-                    return nullptr;
-                }
-            #endif
-            break; // connection success!
-        }
-
-        ASSERT( false ); // should never get here
+    AStackString<> host;
+    Network::GetAddressAsString( hostIP, host );
+    if ( !WaitForConnection( sockfd, host, port, timeout ) )
+    {
+        CloseSocket( sockfd );
+        return nullptr;
     }
 
     return CreateConnectionThread( sockfd, hostIP, port, userData );
@@ -576,7 +528,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
 
     ASSERT( connection->m_Socket != INVALID_SOCKET );
 
-    TCPDEBUG( "Send: %i (%x)\n", totalBytes, (uint32_t)( connection->m_Socket ) );
+    TCPDEBUG( "Send: %u (%x)\n", totalBytes, (uint32_t)( connection->m_Socket ) );
 
     bool sendOK = true;
 
@@ -683,6 +635,122 @@ bool TCPConnectionPool::Broadcast( const void * data, size_t size )
     FREE( data );
 }
 
+// WaitForConnection
+//------------------------------------------------------------------------------
+bool TCPConnectionPool::WaitForConnection( TCPSocket sockfd, const AString & host, const uint16_t port, const uint32_t timeout )
+{
+    (void)host;
+    (void)port;
+
+    Timer connectionTimer;
+
+    // wait for connection
+    for ( ;; )
+    {
+        fd_set write, err;
+        FD_ZERO( &write );
+        FD_ZERO( &err );
+        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
+        PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
+        FD_SET( sockfd, &write );
+        FD_SET( sockfd, &err );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
+        PRAGMA_DISABLE_POP_MSVC // 6319
+        PRAGMA_DISABLE_POP_MSVC // 4548
+
+        // check connection every 10ms
+        timeval pollingTimeout;
+        memset( &pollingTimeout, 0, sizeof( timeval ) );
+        pollingTimeout.tv_usec = 10 * 1000;
+
+        // check if the socket is ready
+        int selRet = Select( sockfd + 1, nullptr, &write, &err, &pollingTimeout );
+        if ( selRet == SOCKET_ERROR )
+        {
+            // connection failed
+            #ifdef TCPCONNECTION_DEBUG
+                TCPDEBUG( "select() after connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+            #endif
+            return false;
+        }
+
+        // polling timeout hit?
+        if ( selRet == 0 )
+        {
+            // are we shutting down?
+            if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
+            {
+                #ifdef TCPCONNECTION_DEBUG
+                    TCPDEBUG( "connect() aborted (Shutting Down) (Host: %s, Port: %u)\n", host.Get(), port );
+                #endif
+                return false;
+            }
+
+            // have we hit our real connection timeout?
+            if ( uint32_t( connectionTimer.GetElapsedMS() ) >= timeout )
+            {
+                #ifdef TCPCONNECTION_DEBUG
+                    TCPDEBUG( "connect() time out %u hit (Host: %s, Port: %u)\n", timeout, host.Get(), port );
+                #endif
+                return false;
+            }
+
+            // keep waiting
+            continue;
+        }
+
+        if ( FD_ISSET( sockfd, &err ) )
+        {
+            // connection failed
+            #ifdef TCPCONNECTION_DEBUG
+                const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
+                (void)lastNetworkError;
+
+                int32_t error = 0;
+                socklen_t size = sizeof(error);
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) != SOCKET_ERROR )
+                {
+                    TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i, SO_ERROR %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet, error );
+                }
+                else
+                {
+                    TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet );
+                }
+            #endif
+            return false;
+        }
+
+        if ( FD_ISSET( sockfd, &write ) )
+        {
+            #if defined( __APPLE__ ) || defined( __LINUX__ )
+                // On Linux a write flag set by select() doesn't mean that
+                // connect() succeeded, it only means that it is completed.
+                // To get the result we need to query SO_ERROR value via getsockopt().
+                int32_t error = 0;
+                socklen_t size = sizeof(error);
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) == SOCKET_ERROR )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+                    #endif
+                    return false;
+                }
+                if ( error != 0 )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
+                    #endif
+                    return false;
+                }
+            #endif
+            return true; // connection success!
+        }
+
+        ASSERT( false ); // should never get here
+    }
+}
+
 // HandleRead
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
@@ -713,7 +781,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
         bytesToRead -= numBytes;
     }
 
-    TCPDEBUG( "Handle read: %i (%x)\n", size, (uint32_t)( ci->m_Socket ) );
+    TCPDEBUG( "Handle read: %u (%x)\n", size, (uint32_t)( ci->m_Socket ) );
 
     // get output location
     void * buffer = AllocBuffer( size );
@@ -851,20 +919,20 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
 
 // CreateSocket
 //------------------------------------------------------------------------------
-TCPSocket TCPConnectionPool::CreateSocket() const
+TCPSocket TCPConnectionPool::CreateSocket( const int af ) const
 {
     #if defined( __LINUX__ )
         // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
-        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
+        TCPSocket newSocket = socket( af, SOCK_STREAM | SOCK_CLOEXEC, 0 );
     #elif defined( __WINDOWS__ )
-        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+        TCPSocket newSocket = socket( af, SOCK_STREAM, 0 );
 
         // TODO: Re-enable
         // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
         //TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
     #else
         // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
-        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+        TCPSocket newSocket = socket( af, SOCK_STREAM, 0 );
     #endif
 
     // Failure?
@@ -928,7 +996,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
 {
     ASSERT( ci->m_Socket != INVALID_SOCKET );
 
-    struct sockaddr_in remoteAddrInfo;
+    struct sockaddr_in6 remoteAddrInfo;
     int remoteAddrInfoSize = sizeof( remoteAddrInfo );
 
     while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
@@ -973,20 +1041,20 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
 
         #ifdef TCPCONNECTION_DEBUG
             AStackString<32> addr;
-            GetAddressAsString( remoteAddrInfo.sin_addr.s_addr, addr );
-            TCPDEBUG( "Connection accepted from %s : %i (%x)\n", addr.Get(), ntohs( remoteAddrInfo.sin_port ), (uint32_t)newSocket );
+            Network::GetAddressAsString( remoteAddrInfo.sin6_addr, addr );
+            TCPDEBUG( "Connection accepted from %s : %u (%x)\n", addr.Get(), ntohs( remoteAddrInfo.sin6_port ), (uint32_t)newSocket );
         #endif
 
         // Configure socket
-        DisableSigPipe( newSocket );        // Prevent socket inheritence by child processes
+        DisableSigPipe( newSocket );        // Prevent socket inheritance by child processes
         DisableNagle( newSocket );          // Disable Nagle's algorithm
         SetLargeBufferSizes( newSocket );   // Set send/recv buffer sizes
         SetNonBlocking( newSocket );        // Set non-blocking
 
         // keep the new connected socket
         CreateConnectionThread( newSocket,
-                                remoteAddrInfo.sin_addr.s_addr,
-                                ntohs( remoteAddrInfo.sin_port ) );
+                                remoteAddrInfo.sin6_addr,
+                                ntohs( remoteAddrInfo.sin6_port ) );
 
         continue; // keep listening for more connections
     }
@@ -1025,8 +1093,40 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 
     #ifdef TCPCONNECTION_DEBUG
         AStackString<32> addr;
-        GetAddressAsString( ci->m_RemoteAddress, addr );
-        TCPDEBUG( "Connected to %s : %i (%x)\n", addr.Get(), port, (uint32_t)socket );
+        ci->GetRemoteAddressString( addr );
+        TCPDEBUG( "Connected to %s : %u (%x)\n", addr.Get(), port, (uint32_t)socket );
+    #endif
+
+    // Spawn thread to handle socket
+    Thread::ThreadHandle h = Thread::CreateThread( &ConnectionThreadWrapperFunction,
+                                                   "TCPConnection",
+                                                   ( 64 * KILOBYTE ),
+                                                   ci ); // user data argument
+    ASSERT( h != INVALID_THREAD_HANDLE );
+    Thread::DetachThread( h );
+    Thread::CloseHandle( h ); // we don't need this anymore
+
+    m_Connections.Append( ci );
+
+    return ci;
+}
+
+ConnectionInfo* TCPConnectionPool::CreateConnectionThread( TCPSocket socket, const in6_addr & host, uint16_t port, void * userData )
+{
+    MutexHolder mh( m_ConnectionsMutex );
+
+    ConnectionInfo * ci = FNEW( ConnectionInfo( this ) );
+    ci->m_Socket = socket;
+    ci->m_RemoteAddress6 = ( in6_addr * )ALLOC( sizeof( in6_addr ) );
+    *ci->m_RemoteAddress6.Get() = host;
+    ci->m_RemotePort = port;
+    ci->m_ThreadQuitNotification = false;
+    ci->m_UserData = userData;
+
+    #ifdef TCPCONNECTION_DEBUG
+        AStackString<32> addr;
+        ci->GetRemoteAddressString( addr );
+        TCPDEBUG( "Connected to %s : %u (%x)\n", addr.Get(), port, (uint32_t)socket );
     #endif
 
     // Spawn thread to handle socket
@@ -1191,6 +1291,18 @@ void TCPConnectionPool::DisableSigPipe( TCPSocket socket ) const
         int nosigpipe = 1;
         VERIFY( setsockopt( socket, SOL_SOCKET, SO_NOSIGPIPE, (void *)&nosigpipe, sizeof(int) ) == 0 );
     #endif
+}
+
+// DisableV6Only
+//------------------------------------------------------------------------------
+void TCPConnectionPool::DisableV6Only( TCPSocket socket ) const
+{
+    static const int disableV6Only = 0;
+    int ret = setsockopt( socket, IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&disableV6Only, sizeof( disableV6Only ) );
+    if ( ret != 0 )
+    {
+        TCPDEBUG( "setsockopt(IPV6_V6ONLY) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
+    }
 }
 
 // SetLargeBufferSizes

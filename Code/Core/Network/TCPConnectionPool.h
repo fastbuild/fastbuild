@@ -7,6 +7,7 @@
 #include "NetworkStartupHelper.h"
 
 #include "Core/Containers/Array.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Types.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
@@ -36,20 +37,21 @@ public:
 
     // access to info about this connection
     TCPConnectionPool & GetTCPConnectionPool() const { return *m_TCPConnectionPool; }
-    inline uint32_t GetRemoteAddress() const { return m_RemoteAddress; }
+    void GetRemoteAddressString( AString & remoteAddress ) const;
 
 private:
     friend class TCPConnectionPool;
 
-    TCPSocket               m_Socket;
-    uint32_t                m_RemoteAddress;
-    uint16_t                m_RemotePort;
-    volatile mutable bool   m_ThreadQuitNotification;
-    TCPConnectionPool *     m_TCPConnectionPool; // back pointer to parent pool
-    mutable void *          m_UserData;
+    TCPSocket                   m_Socket;
+    uint32_t                    m_RemoteAddress;
+    UniquePtr< struct in6_addr >  m_RemoteAddress6;
+    uint16_t                    m_RemotePort;
+    volatile mutable bool       m_ThreadQuitNotification;
+    TCPConnectionPool *         m_TCPConnectionPool; // back pointer to parent pool
+    mutable void *              m_UserData;
 
 #ifdef DEBUG
-    mutable bool            m_InUse; // sanity check we aren't sending from multiple threads unsafely
+    mutable bool                m_InUse; // sanity check we aren't sending from multiple threads unsafely
 #endif
 };
 
@@ -67,8 +69,9 @@ public:
     // manage connections
     bool Listen( uint16_t port );
     void StopListening();
-    const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
-    const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( const AString & host, const uint16_t port, const uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( const uint32_t hostIP, const uint16_t port, const uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( const struct in6_addr & hostIP, const uint16_t port, const uint32_t timeout = 2000, void * userData = nullptr );
     void Disconnect( const ConnectionInfo * ci );
     void SetShuttingDown();
 
@@ -79,8 +82,6 @@ public:
     bool Send( const ConnectionInfo * connection, const void * data, size_t size, uint32_t timeoutMS = 30000 );
     bool Send( const ConnectionInfo * connection, const void * data, size_t size, const void * payloadData, size_t payloadSize, uint32_t timeoutMS = 30000 );
     bool Broadcast( const void * data, size_t size );
-
-    static void GetAddressAsString( uint32_t addr, AString & address );
 
 protected:
     // network events - NOTE: these happen in another thread! (but never at the same time)
@@ -94,6 +95,7 @@ protected:
 
 private:
     // helper functions
+    bool        WaitForConnection( TCPSocket sockfd, const AString & host, const uint16_t port, const uint32_t timeout );
     bool        HandleRead( ConnectionInfo * ci );
 
     // platform specific abstraction
@@ -108,7 +110,7 @@ private:
     TCPSocket   Accept( TCPSocket socket,
                         struct sockaddr * address,
                         int * addressSize ) const;
-    TCPSocket   CreateSocket() const;
+    TCPSocket   CreateSocket( const int af ) const;
 
     struct SendBuffer
     {
@@ -121,7 +123,8 @@ private:
     void                CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );
     static uint32_t     ListenThreadWrapperFunction( void * data );
     void                ListenThreadFunction( ConnectionInfo * ci );
-    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData = nullptr );
+    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, const uint32_t host, const uint16_t port, void * userData = nullptr );
+    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, const struct in6_addr & host, const uint16_t port, void * userData = nullptr );
     static uint32_t     ConnectionThreadWrapperFunction( void * data );
     void                ConnectionThreadFunction( ConnectionInfo * ci );
 
@@ -129,6 +132,7 @@ private:
     void                AllowSocketReuse( TCPSocket socket ) const;
     void                DisableNagle( TCPSocket socket ) const;
     void                DisableSigPipe( TCPSocket socket ) const;
+    void                DisableV6Only( TCPSocket socket ) const;
     void                SetLargeBufferSizes( TCPSocket socket ) const;
     void                SetNonBlocking( TCPSocket socket ) const;
 
