@@ -36,6 +36,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_LinkerAllowResponseFile,         "LinkerAllowResponseFile",      MetaOptional() )
     REFLECT( m_LinkerForceResponseFile,         "LinkerForceResponseFile",      MetaOptional() )
     REFLECT_ARRAY( m_Libraries,                 "Libraries",                    MetaFile() + MetaAllowNonFile() )
+    REFLECT_ARRAY( m_Libraries2,                "Libraries2",                   MetaFile() + MetaAllowNonFile() + MetaOptional() )
     REFLECT_ARRAY( m_LinkerAssemblyResources,   "LinkerAssemblyResources",      MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
     REFLECT( m_LinkerLinkObjects,               "LinkerLinkObjects",            MetaOptional() )
     REFLECT( m_LinkerStampExe,                  "LinkerStampExe",               MetaOptional() + MetaFile() )
@@ -44,6 +45,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
 
     // Internal State
+    REFLECT( m_Libraries2StartIndex,            "Libraries2StartIndex",         MetaHidden() )
     REFLECT( m_Flags,                           "Flags",                        MetaHidden() )
     REFLECT( m_AssemblyResourcesStartIndex,     "AssemblyResourcesStartIndex",  MetaHidden() )
     REFLECT( m_AssemblyResourcesNum,            "AssemblyResourcesNum",         MetaHidden() )
@@ -112,6 +114,14 @@ LinkerNode::LinkerNode()
             return false; // DependOnNode will have emitted an error
         }
     }
+    Dependencies libraries2( 64, true );
+    for ( const AString & library : m_Libraries2 )
+    {
+        if ( DependOnNode( nodeGraph, iter, function, library, libraries2 ) == false )
+        {
+            return false; // DependOnNode will have emitted an error
+        }
+    }
 
     // Assembly Resources
     Dependencies assemblyResources( 32, true );
@@ -150,6 +160,8 @@ LinkerNode::LinkerNode()
                                       ( linkerStampExe.IsEmpty() ? 0 : 1 ) );
     m_StaticDependencies.Append( linkerExe );
     m_StaticDependencies.Append( libraries );
+    m_Libraries2StartIndex = (uint32_t)m_StaticDependencies.GetSize();
+    m_StaticDependencies.Append( libraries2 );
     m_AssemblyResourcesStartIndex = (uint32_t)m_StaticDependencies.GetSize();
     m_StaticDependencies.Append( assemblyResources );
     m_AssemblyResourcesNum = (uint32_t)assemblyResources.GetSize();
@@ -449,9 +461,7 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
         const char * found = token.Find( "%1" );
         if ( found )
         {
-            AStackString<> pre( token.Get(), found );
-            AStackString<> post( found + 2, token.GetEnd() );
-            GetInputFiles( fullArgs, pre, post );
+            GetInputFiles( token, fullArgs );
             fullArgs.AddDelimiter();
             continue;
         }
@@ -531,11 +541,48 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void LinkerNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const
+void LinkerNode::GetInputFiles( const AString & token, Args & fullArgs ) const
+{
+    // Currently we support the following:
+    //  - %1[0] = .Libraries                    1 -> m_Libraries2StartIndex
+    //  - %1[1] = .Libraries2                   m_Libraries2StartIndex -> m_AssemblyResourcesStartIndex
+    //  - %1    = .Libraries & .Libraries2      1 -> m_AssemblyResourcesStartIndex
+    //
+    // TODO:C Extend this into something more flexible. Currently difficult to
+    //        do as there isn't an easy way to REFLECT an Array of Arrays
+    //
+    const char * foundA = token.Find( "%1[0]" );
+    if ( foundA )
+    {
+        AStackString<> pre( token.Get(), foundA );
+        AStackString<> post( foundA + 5, token.GetEnd() );
+        GetInputFiles( fullArgs, 1, m_Libraries2StartIndex, pre, post );
+        return;
+    }
+
+    const char * foundB = token.Find( "%1[1]" );
+    if ( foundA )
+    {
+        AStackString<> pre( token.Get(), foundB );
+        AStackString<> post( foundB + 5, token.GetEnd() );
+        GetInputFiles( fullArgs, m_Libraries2StartIndex, m_AssemblyResourcesStartIndex, pre, post );
+        return;
+    }
+
+    const char * found = token.Find( "%1" );
+    ASSERT( found );
+    AStackString<> pre( token.Get(), found );
+    AStackString<> post( found + 2, token.GetEnd() );
+    GetInputFiles( fullArgs, 1, m_AssemblyResourcesStartIndex, pre, post );
+}
+
+// GetInputFiles
+//------------------------------------------------------------------------------
+void LinkerNode::GetInputFiles( Args & fullArgs, uint32_t startIndex, uint32_t endIndex, const AString & pre, const AString & post ) const
 {
     // Regular inputs are after linker and before AssemblyResources
-    const Dependency * start = m_StaticDependencies.Begin() + 1; // Skip first item which is linker exe
-    const Dependency * end = m_StaticDependencies.Begin() + m_AssemblyResourcesStartIndex;
+    const Dependency * start = m_StaticDependencies.Begin() + startIndex;
+    const Dependency * end = m_StaticDependencies.Begin() + endIndex;
     for ( const Dependency * i = start; i != end; ++i )
     {
         Node * n( i->GetNode() );
