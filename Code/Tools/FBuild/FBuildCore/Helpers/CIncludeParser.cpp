@@ -216,6 +216,13 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
         {
             return false;
         }
+ 
+        // only store files which the preprocessor found (files which were 
+        // resolved to absolute paths)
+        if( incStart[1] != ':' )
+        {
+            continue;
+        }
 
         const char * incEnd = pos;
 
