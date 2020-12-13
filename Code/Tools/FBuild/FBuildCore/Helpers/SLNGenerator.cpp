@@ -17,6 +17,7 @@
 
 // system
 #include <stdarg.h> // for va_args
+#include <stdio.h>
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -82,9 +83,22 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 
     AStackString<> shortVersion( shortVersionStart, shortVersionEnd );
 
+    // Extract primary version as an int
+    uint32_t shortVersionInt = 0;
+    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+    VERIFY( sscanf( shortVersion.Get(), "%u", &shortVersionInt ) == 1 );
+    PRAGMA_DISABLE_POP_MSVC // 4996
+
     // header
     Write( "Microsoft Visual Studio Solution File, Format Version 12.00\r\n" );
-    Write( "# Visual Studio %s\r\n", shortVersion.Get() );
+    if ( shortVersionInt >= 16 )
+    {
+        Write( "# Visual Studio Version %s\r\n", shortVersion.Get() );
+    }
+    else
+    {
+        Write( "# Visual Studio %s\r\n", shortVersion.Get() );
+    }
     Write( "VisualStudioVersion = %s\r\n", version );
     Write( "MinimumVisualStudioVersion = %s\r\n", minimumVersion );
 }
@@ -99,7 +113,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 {
     // Project Listings
 
-    VSProjectBaseNode ** const projectsEnd = projects.End();
+    const VSProjectBaseNode * const * projectsEnd = projects.End();
     for( VSProjectBaseNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
     {
         AStackString<> projectPath( (*it)->GetName() );

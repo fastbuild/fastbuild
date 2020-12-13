@@ -8,9 +8,8 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
-#include "Core/Containers/AutoPtr.h"
+// Core
 #include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
 #include <string.h> // for strstr
@@ -55,16 +54,24 @@ FileNode::~FileNode() = default;
 //------------------------------------------------------------------------------
 void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const AString & data )
 {
+    constexpr const char * msvcWarningString = ": warning ";  // string is ok even in non-English
+    return HandleWarnings( job, name, data, msvcWarningString );
+}
+
+// HandleWarnings
+//------------------------------------------------------------------------------
+void FileNode::HandleWarnings( Job * job, const AString & name, const AString & data, const char * warningString )
+{
     if ( data.IsEmpty() )
     {
         return;
     }
 
-    // Are there any warnings? (string is ok even in non-English)
-    if ( data.Find( ": warning " ) )
+    // Are there any warnings?
+    if ( data.Find( warningString ) )
     {
         const bool treatAsWarnings = true;
-        DumpOutput( job, data, name, treatAsWarnings );
+        DumpOutput( job, name, data, treatAsWarnings );
     }
 }
 
@@ -81,15 +88,15 @@ void FileNode::HandleWarningsClangGCC( Job * job, const AString & name, const AS
     if ( data.Find( "warning: " ) )
     {
         const bool treatAsWarnings = true;
-        DumpOutput( job, data, name, treatAsWarnings );
+        DumpOutput( job, name, data, treatAsWarnings );
     }
 }
 
 // DumpOutput
 //------------------------------------------------------------------------------
-void FileNode::DumpOutput( Job * job, const AString & buffer, const AString & name, bool treatAsWarnings )
+void FileNode::DumpOutput( Job * job, const AString & name, const AString & data, bool treatAsWarnings )
 {
-    if ( buffer.IsEmpty() == false )
+    if ( data.IsEmpty() == false )
     {
         Array< AString > exclusions( 2, false );
         exclusions.EmplaceBack( "Note: including file:" );
@@ -98,9 +105,9 @@ void FileNode::DumpOutput( Job * job, const AString & buffer, const AString & na
         AStackString<> msg;
         msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
 
-        AString finalBuffer( buffer.GetLength() + msg.GetLength() );
+        AString finalBuffer( data.GetLength() + msg.GetLength() );
         finalBuffer += msg;
-        finalBuffer += buffer;
+        finalBuffer += data;
 
         Node::DumpOutput( job, finalBuffer, &exclusions );
     }

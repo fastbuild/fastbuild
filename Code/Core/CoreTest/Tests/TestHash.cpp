@@ -5,7 +5,8 @@
 //------------------------------------------------------------------------------
 #include "TestFramework/UnitTest.h"
 
-#include "Core/Containers/AutoPtr.h"
+// Core
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Math/CRC32.h"
 #include "Core/Math/Random.h"
 #include "Core/Math/xxHash.h"
@@ -47,7 +48,7 @@ void TestHash::CompareHashTimes_Large() const
     #else
         const size_t dataSize( 64 * 1024 * 1024 );
     #endif
-    AutoPtr< uint64_t > data( (uint64_t *)ALLOC( dataSize ) );
+    UniquePtr< uint64_t > data( (uint64_t *)ALLOC( dataSize ) );
     for ( size_t i = 0; i < dataSize / sizeof( uint64_t ); ++i )
     {
         data.Get()[ i ] = ( (uint64_t)r.GetRand() << 32 ) | (uint64_t)r.GetRand();
@@ -58,7 +59,7 @@ void TestHash::CompareHashTimes_Large() const
         Timer t;
         uint64_t sum( 0 );
         uint64_t * it = data.Get();
-        uint64_t * end = it + ( dataSize / sizeof( uint64_t ) );
+        const uint64_t * const end = it + ( dataSize / sizeof( uint64_t ) );
         while ( it != end )
         {
             sum += *it;
@@ -74,7 +75,7 @@ void TestHash::CompareHashTimes_Large() const
         Timer t;
         uint32_t sum( 0 );
         uint32_t * it = (uint32_t *)data.Get();
-        uint32_t * end = it + ( dataSize / sizeof( uint32_t ) );
+        const uint32_t * const end = it + ( dataSize / sizeof( uint32_t ) );
         while ( it != end )
         {
             sum += *it;

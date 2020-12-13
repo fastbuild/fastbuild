@@ -22,9 +22,6 @@
 
 // Core
 #include "Core/Env/ErrorFormat.h"
-#include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
-#include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
@@ -176,7 +173,7 @@ LibraryNode::~LibraryNode()
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    bool spawnOK = p.Spawn( GetLibrarian()->GetName().Get(),
+    bool spawnOK = p.Spawn( m_Librarian.Get(),
                             fullArgs.GetFinalArgs().Get(),
                             workingDir,
                             environment );
@@ -207,12 +204,12 @@ LibraryNode::~LibraryNode()
     // did the executable fail?
     if ( result != 0 )
     {
-        if ( memOut.Get() )
+        if ( memOut.IsEmpty() == false )
         {
             job->ErrorPreformatted( memOut.Get() );
         }
 
-        if ( memErr.Get() )
+        if ( memErr.IsEmpty() == false )
         {
             job->ErrorPreformatted( memErr.Get() );
         }
@@ -304,7 +301,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     }
 
     // Handle all the special needs of args
-    if ( fullArgs.Finalize( GetLibrarian()->GetName(), GetName(), GetResponseFileMode() ) == false )
+    if ( fullArgs.Finalize( m_Librarian, GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error
     }
@@ -406,14 +403,6 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += '\n';
     }
     FLOG_OUTPUT( output );
-}
-
-// GetLibrarian
-//------------------------------------------------------------------------------
-FileNode * LibraryNode::GetLibrarian() const
-{
-    // Librarian is always at index 0
-    return m_StaticDependencies[ 0 ].GetNode()->CastTo< FileNode >();
 }
 
 // GetResponseFileMode

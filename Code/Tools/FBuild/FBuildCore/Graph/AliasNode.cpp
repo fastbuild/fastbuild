@@ -10,8 +10,6 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
-#include "Core/FileIO/FileStream.h"
-
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( AliasNode, Node, MetaNone() )

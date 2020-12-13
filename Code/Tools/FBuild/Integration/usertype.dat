@@ -26,6 +26,7 @@ Executable
 ForEach
 If
 Library
+ListDependencies
 ObjectList
 Print
 RemoveDir
@@ -133,6 +134,7 @@ LibrarianOptions
 LibrarianOutput
 LibrarianType
 Libraries
+Libraries2
 Linker
 LinkerAllowResponseFile
 LinkerAssemblyResources
@@ -143,6 +145,7 @@ LinkerOutput
 LinkerStampExe
 LinkerStampExeArgs
 LinkerType
+LinuxProjectType
 LocalDebuggerCommand
 LocalDebuggerCommandArguments
 LocalDebuggerEnvironment
@@ -156,6 +159,7 @@ PCHOutputFile
 PackagePath
 Path
 Pattern
+Patterns
 Platform
 PlatformToolset
 PreBuildDependencies
@@ -183,6 +187,9 @@ ProjectReferences
 ProjectSccEntrySAK
 ProjectTypeGuid
 Projects
+RemoteDebuggerCommand
+RemoteDebuggerCommandArguments
+RemoteDebuggerWorkingDirectory
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
@@ -207,6 +214,7 @@ SourcePaths
 SourcePathsPattern
 SourcePathsRecurse
 Target
+TargetLinuxPlatform
 Targets
 TestAlwaysShowOutput
 TestArguments

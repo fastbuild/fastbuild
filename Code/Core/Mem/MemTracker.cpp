@@ -206,9 +206,9 @@
             Allocation * a = s_AllocationHashTable[ i ];
             while ( a )
             {
-                uint32_t id     = a->m_Id;
-                uint64_t addr   = (size_t)a->m_Ptr;
-                uint64_t size   = a->m_Size;
+                const uint32_t id     = a->m_Id;
+                const uint64_t addr   = (size_t)a->m_Ptr;
+                const uint64_t size   = a->m_Size;
 
                 // format a view of the memory contents
                 const char * src = (const char *)addr;

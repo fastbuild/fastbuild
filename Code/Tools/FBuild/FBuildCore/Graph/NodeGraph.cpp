@@ -23,6 +23,7 @@
 #include "ExecNode.h"
 #include "FileNode.h"
 #include "LibraryNode.h"
+#include "ListDependenciesNode.h"
 #include "ObjectListNode.h"
 #include "ObjectNode.h"
 #include "RemoveDirNode.h"
@@ -36,7 +37,7 @@
 #include "XCodeProjectNode.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
@@ -223,7 +224,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
 
     // Read it into memory to avoid lots of tiny disk accesses
     const size_t fileSize = (size_t)fs.GetFileSize();
-    AutoPtr< char > memory( (char *)ALLOC( fileSize ) );
+    UniquePtr< char > memory( (char *)ALLOC( fileSize ) );
     if ( fs.ReadBuffer( memory.Get(), fileSize ) != fileSize )
     {
         FLOG_ERROR( "Could not read Database. Error: %s File: '%s'", LAST_ERROR_STR, nodeGraphDBFile );
@@ -284,7 +285,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         }
 
         const size_t size = (size_t)fs.GetFileSize();
-        AutoPtr< void > mem( ALLOC( size ) );
+        UniquePtr< void > mem( ALLOC( size ) );
         if ( fs.Read( mem.Get(), size ) != size )
         {
             return LoadResult::LOAD_ERROR; // error reading
@@ -316,7 +317,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
     {
         return LoadResult::LOAD_ERROR;
     }
-    AutoPtr< char > envString;
+    UniquePtr< char > envString;
     AStackString<> libEnvVar;
     if ( envStringSize > 0 )
     {
@@ -1010,6 +1011,18 @@ SettingsNode * NodeGraph::CreateSettingsNode( const AString & name )
     ASSERT( Thread::IsMainThread() );
 
     SettingsNode * node = FNEW( SettingsNode() );
+    node->SetName( name );
+    AddNode( node );
+    return node;
+}
+
+// CreateListDependenciesNode
+//------------------------------------------------------------------------------
+ListDependenciesNode * NodeGraph::CreateListDependenciesNode( const AString & name )
+{
+    ASSERT( Thread::IsMainThread() );
+
+    ListDependenciesNode * node = FNEW( ListDependenciesNode() );
     node->SetName( name );
     AddNode( node );
     return node;
@@ -1869,7 +1882,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         for ( const Dependency & oldDep : oldDeps )
         {
             // See if the depenceny already exists in the new DB
-            Node * oldDepNode = oldDep.GetNode();
+            const Node * oldDepNode = oldDep.GetNode();
             Node * newDepNode = FindNodeInternal( oldDepNode->GetName() );
 
             // If the dependency exists, but has changed type, then dependencies
@@ -2193,8 +2206,8 @@ bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependenc
     const size_t numDeps = depsA.GetSize();
     for ( size_t i = 0; i<numDeps; ++i )
     {
-        Node * nodeA = depsA[ i ].GetNode();
-        Node * nodeB = depsB[ i ].GetNode();
+        const Node * nodeA = depsA[ i ].GetNode();
+        const Node * nodeB = depsB[ i ].GetNode();
         if ( nodeA->GetType() != nodeB->GetType() )
         {
             return false;

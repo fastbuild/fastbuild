@@ -269,7 +269,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
     // format progress % (we know it never goes above 99.9%)
     uint32_t intPerc = (uint32_t)( percentage * 10.0f ); // 0 to 999
-    uint32_t hundreds = ( intPerc / 100 ); intPerc -= ( hundreds * 100 );
+    const uint32_t hundreds = ( intPerc / 100 ); intPerc -= ( hundreds * 100 );
     uint32_t tens = ( intPerc / 10 ); intPerc -= ( tens * 10 );
     uint32_t ones = intPerc;
     m_ProgressText = g_OutputString;
@@ -278,15 +278,15 @@ static FileStream * g_MonitorFileStream = nullptr;
     m_ProgressText[ 4 ] = '0' + (char)ones;
 
     // 20 column output (100/20 = 5% per char)
-    uint32_t numStarsDone = (uint32_t)( percentage * 20.0f / 100.0f ); // 20 columns
+    const uint32_t numStarsDone = (uint32_t)( percentage * 20.0f / 100.0f ); // 20 columns
     for ( uint32_t i=0; i<20; ++i )
     {
         m_ProgressText[ 9 + i ] = ( i < numStarsDone ) ? '*' : '-';
     }
 
     // time " [%um] %02us"
-    uint32_t timeTakenMinutes = uint32_t( time / 60.0f );
-    uint32_t timeTakenSeconds = (uint32_t)time - ( timeTakenMinutes * 60 );
+    const uint32_t timeTakenMinutes = uint32_t( time / 60.0f );
+    const uint32_t timeTakenSeconds = (uint32_t)time - ( timeTakenMinutes * 60 );
     if ( timeTakenMinutes > 0 )
     {
         char buffer[ 8 ];
@@ -350,7 +350,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ bool FLog::TracingOutputCallback( const char * message )
 {
-    uint32_t threadIndex = WorkerThread::GetThreadIndex();
+    const uint32_t threadIndex = WorkerThread::GetThreadIndex();
 
     AStackString< 2048 > tmp;
 

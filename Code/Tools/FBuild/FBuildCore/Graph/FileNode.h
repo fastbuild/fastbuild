@@ -25,7 +25,8 @@ protected:
     friend class ObjectNode;
     virtual BuildResult DoBuild( Job * job ) override;
 
-    static void DumpOutput( Job * job, const AString & buffer, const AString & name, bool treatAsWarnings = false );
+    static void DumpOutput( Job * job, const AString & name, const AString & data, bool treatAsWarnings = false );
+    static void HandleWarnings( Job * job, const AString & name, const AString & data, const char * warningString );
 
     friend class Client;
 };

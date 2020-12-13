@@ -16,12 +16,10 @@
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/ErrorFormat.h"
-#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -278,7 +276,7 @@ SLNNode::~SLNNode() = default;
     Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize(), false );
     for ( Dependency & dep : m_StaticDependencies )
     {
-        Node * node = dep.GetNode();
+        const Node * node = dep.GetNode();
         VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
                                         ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )
                                         : static_cast< VSProjectBaseNode * >( node->CastTo< VSProjectExternalNode >() );
@@ -328,7 +326,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
         else
         {
             // check content
-            AutoPtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "SLN - Failed to read '%s'", fileName.Get() );
@@ -384,7 +382,7 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
                              Array< VSProjectBaseNode * > & inOutProjects ) const
 {
     // Get associated project file
-    Node * node = nodeGraph.FindNode( projectName );
+    const Node * node = nodeGraph.FindNode( projectName );
     if ( node == nullptr )
     {
         Error::Error_1104_TargetNotDefined( iter, function, propertyName, projectName );

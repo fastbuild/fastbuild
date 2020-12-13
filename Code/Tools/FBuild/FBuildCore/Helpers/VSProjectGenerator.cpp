@@ -213,14 +213,20 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     for ( const VSProjectConfig & config : configs )
     {
         const bool needSection = ( config.m_Keyword.IsEmpty() == false ) ||
+                                 ( config.m_RootNamespace.IsEmpty() == false ) ||
                                  ( config.m_ApplicationType.IsEmpty() == false ) ||
-                                 ( config.m_ApplicationTypeRevision.IsEmpty() == false );
+                                 ( config.m_ApplicationTypeRevision.IsEmpty() == false ) ||
+                                 ( config.m_TargetLinuxPlatform.IsEmpty() == false ) ||
+                                 ( config.m_LinuxProjectType.IsEmpty() == false );
         if ( needSection )
         {
             WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Globals\">\n", config.m_Config.Get(), config.m_Platform.Get() );
             WritePGItem( "Keyword", config.m_Keyword );
+            WritePGItem( "RootNamespace", config.m_RootNamespace );
             WritePGItem( "ApplicationType", config.m_ApplicationType );
             WritePGItem( "ApplicationTypeRevision", config.m_ApplicationTypeRevision );
+            WritePGItem( "TargetLinuxPlatform", config.m_TargetLinuxPlatform );
+            WritePGItem( "LinuxProjectType", config.m_LinuxProjectType );
             Write( "  </PropertyGroup>\n" );
         }
     }
@@ -363,6 +369,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "AdditionalSymbolSearchPaths",     cIt->m_AdditionalSymbolSearchPaths );
             WritePGItem( "LayoutDir",                       cIt->m_LayoutDir );
             WritePGItem( "LayoutExtensionFilter",           cIt->m_LayoutExtensionFilter );
+            WritePGItem( "RemoteDebuggerCommand",           cIt->m_RemoteDebuggerCommand );
+            WritePGItem( "RemoteDebuggerCommandArguments",  cIt->m_RemoteDebuggerCommandArguments );
+            WritePGItem( "RemoteDebuggerWorkingDirectory",  cIt->m_RemoteDebuggerWorkingDirectory );
             Write( "  </PropertyGroup>\n" );
         }
     }

@@ -419,14 +419,10 @@ bool Process::IsRunning() const
     #if defined( __WINDOWS__ )
         switch ( WaitForSingleObject( GetProcessInfo().hProcess, 0 ) )
         {
-            case WAIT_OBJECT_0:
-                return false;
-
-            case WAIT_TIMEOUT:
-                return true;
+            case WAIT_OBJECT_0: return false;
+            case WAIT_TIMEOUT:  return true;
+            default:            ASSERT( false ); return false; // we should never get here
         }
-        ASSERT( false ); // we should never get here
-        return false;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // already waited?
         if ( m_HasAlreadyWaitTerminated )

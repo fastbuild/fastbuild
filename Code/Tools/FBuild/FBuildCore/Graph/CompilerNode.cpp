@@ -182,11 +182,17 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
              compiler.EndsWithI( "clang++" ) ||
              compiler.EndsWithI( "clang.exe" ) ||
              compiler.EndsWithI( "clang.cmd" ) ||
-             compiler.EndsWithI( "clang" ) ||
-             compiler.EndsWithI( "clang-cl.exe" ) ||
-             compiler.EndsWithI( "clang-cl" ) )
+             compiler.EndsWithI( "clang" ) )
         {
             m_CompilerFamilyEnum = CLANG;
+            return true;
+        }
+
+        // Clang in "cl mode" (MSVC compatibility)
+        if ( compiler.EndsWithI( "clang-cl.exe" ) ||
+             compiler.EndsWithI( "clang-cl" ) )
+        {
+            m_CompilerFamilyEnum = CLANG_CL;
             return true;
         }
 
@@ -296,6 +302,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
         m_CompilerFamilyEnum = GCC;
         return true;
     }
+    if ( m_CompilerFamilyString.EqualsI( "clang-cl" ) )
+    {
+        m_CompilerFamilyEnum = CLANG_CL;
+        return true;
+    }    
     if ( m_CompilerFamilyString.EqualsI( "snc" ) )
     {
         m_CompilerFamilyEnum = SNC;

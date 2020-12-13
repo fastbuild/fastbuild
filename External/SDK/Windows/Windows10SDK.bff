@@ -30,6 +30,7 @@
     .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
                                     + ' -DWIN64'
+                                    + ' -D__X64__'
 
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions

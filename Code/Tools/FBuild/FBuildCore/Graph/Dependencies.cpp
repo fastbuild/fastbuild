@@ -17,7 +17,7 @@
 //------------------------------------------------------------------------------
 void Dependencies::Save( IOStream & stream ) const
 {
-    size_t numDeps = GetSize();
+    const size_t numDeps = GetSize();
     stream.Write( (uint32_t)numDeps );
 
     Iter endIt = End();
@@ -26,7 +26,7 @@ void Dependencies::Save( IOStream & stream ) const
         const Dependency & dep = *it;
 
         // Nodes are saved by index to simplify deserialization
-        uint32_t index = dep.GetNode()->GetIndex();
+        const uint32_t index = dep.GetNode()->GetIndex();
         stream.Write( index );
 
         // Save stamp
@@ -34,7 +34,7 @@ void Dependencies::Save( IOStream & stream ) const
         stream.Write( stamp );
 
         // Save weak flag
-        bool isWeak = dep.IsWeak();
+        const bool isWeak = dep.IsWeak();
         stream.Write( isWeak );
     }
 }

@@ -53,7 +53,8 @@ protected:
     bool DoPreLinkCleanup() const;
 
     bool BuildArgs( Args & fullArgs ) const;
-    void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
+    void GetInputFiles( const AString & token, Args & fullArgs ) const;
+    void GetInputFiles( Args & fullArgs, uint32_t startIndex, uint32_t endIndex, const AString & pre, const AString & post ) const;
     void GetInputFiles( Node * n, Args & fullArgs, const AString & pre, const AString & post ) const;
     void GetAssemblyResourceFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
     void EmitCompilationMessage( const Args & fullArgs ) const;
@@ -69,6 +70,13 @@ protected:
 
     static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found );
+    static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const Array< AString > & paths, const AString & lib );
+    static bool GetOtherLibsArg( const char * arg,
+                                 AString & value,
+                                 const AString * & it,
+                                 const AString * const & end,
+                                 bool canonicalizePath,
+                                 bool isMSVC );
     static bool GetOtherLibsArg( const char * arg,
                                  Array< AString > & list,
                                  const AString * & it,
@@ -91,6 +99,7 @@ protected:
     AString             m_LinkerOptions;
     AString             m_LinkerType;
     Array< AString >    m_Libraries;
+    Array< AString >    m_Libraries2;
     Array< AString >    m_LinkerAssemblyResources;
     bool                m_LinkerLinkObjects             = false;
     bool                m_LinkerAllowResponseFile;
@@ -101,6 +110,7 @@ protected:
     Array< AString >    m_Environment;
 
     // Internal State
+    uint32_t            m_Libraries2StartIndex          = 0;
     uint32_t            m_Flags                         = 0;
     uint32_t            m_AssemblyResourcesStartIndex   = 0;
     uint32_t            m_AssemblyResourcesNum          = 0;

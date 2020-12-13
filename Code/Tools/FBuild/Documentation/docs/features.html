@@ -49,8 +49,8 @@
         <li>Build multiple platforms at once</li>
         <li>Build multiple targets at once</li>
 		<li>Compile on Windows, OS X and Linux</li>
-        <li>Target Windows, OS X, Linux, IOS, Android, Xbox 360, Xbox One, PS3, PS4, PS5, Wii, WiiU, Switch and more</li>
-		<li>Supports MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior, NVCC (CUDA) & VBCC and more</li>
+        <li>Target Windows, OS X, Linux, IOS, Android, Xbox 360, Xbox One, Xbox Series S/X, PS3, PS4, PS5, Wii, WiiU, Switch and more</li>
+		<li>Supports MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior, NVCC (CUDA), VBCC and more</li>
       </ul>
     </div>
   </td>
@@ -123,7 +123,7 @@ Performance of no-op build is important in automated testing and build scenarios
 
     <div class='newsitemheader'>Unity/Blob</div>
     <div class='newsitembody'>
-FASTBuild supports automatically generated Unity/Blob builds.  By including many cpp files into single a single Unity (or Blob) file, compilation and link times can be greatly reduced. Improvements of 10x or more are not common. Unity in FASTBuild is compatible with network distribution and caching.  Unity can automatically build "open for edit" (writable) files individually, allowing quicker iteration times when working.<br>
+FASTBuild supports automatically generated Unity/Blob builds.  By including many cpp files into single a single Unity (or Blob) file, compilation and link times can be greatly reduced. Improvements of 10x or more are not uncommon. Unity in FASTBuild is compatible with network distribution and caching.  Unity can automatically build "open for edit" (writable) files individually, allowing quicker iteration times when working.<br>
 </div>
 
     <div class='newsitemheader'>Distributed Compilation</div>
@@ -134,19 +134,15 @@ FASTBuild supports automatically generated Unity/Blob builds.  By including many
 
 <h1>Lightweight</h1>
 
-    <div class='newsitemheader'>Tiny, self-contained executable</div>
+    <div class='newsitemheader'>Tiny, self-contained executables</div>
     <div class='newsitembody'>
-FASTBuild is a single executable, weighing in at ~1MiB.
+FASTBuild executables are small, weighing in at ~1MiB each. FASTBuild requires no external DLLs, libraries, 3rd party software or executables (other than those belonging to your compiler(s)).
+It runs on a clean install of Windows (7 or later), OS X (10.7+) or Linux.
 </div>
 
     <div class='newsitemheader'>Small run-time memory usage</div>
     <div class='newsitembody'>
 FASTBuild uses very little memory, apart from some per-cpu work buffers.  A typical 8 core machine has a footprint of under 100MB.  More free memory means better IO caching by the OS.
-</div>
-
-    <div class='newsitemheader'>No external dependencies</div>
-    <div class='newsitembody'>
-FASTBuild requires no external DLLs, libraries, 3rd party software or executables (other than those belonging to your compiler(s)).  It runs on a clean install of Windows (7 or later), OS X (10.7+) or Linux.
 </div>
 
     <div class='newsitemheader'>No installation required</div>
@@ -169,7 +165,7 @@ As with buiding multiple platforms simultaneously, FASTBuild can build multiple 
 
     <div class='newsitemheader'>Support Consoles, Windows, Linux, OS X, Smartphones and more</div>
     <div class='newsitembody'>
-FASTBuild runs on Windows, Linux and OS X, targeting those platforms. It also supports all major consoles (PS3, PS4, Xbox360, XboxOne, Wii & WiiU) smartphones (IOS & Android) and retro development.  Supported compilers are MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior &amp; CUDA. It will also work with any other syntactically compatible command line compilers, preparing it for more platforms in the future.
+FASTBuild runs on Windows, Linux and OS X, targeting those platforms. It also supports targetting all major consoles, smartphones, tablets and retro systems.  Supported compilers are MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior &amp; CUDA. It will also work with any other syntactically compatible command line compilers, preparing it for more platforms in the future.
 </div>
 
 

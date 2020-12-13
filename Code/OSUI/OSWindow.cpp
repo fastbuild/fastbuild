@@ -63,6 +63,10 @@
                         }
                         break;
                     }
+                    default:
+                    {
+                        break; // Ignore
+                    }
                 }
                 break;
             }
@@ -105,6 +109,7 @@
             default:
             {
                 // nothing...  fall through
+                break;
             }
         }
 

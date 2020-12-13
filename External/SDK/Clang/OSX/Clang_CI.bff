@@ -31,6 +31,7 @@ Compiler( 'Compiler-Clang' )
                                     + ' -m64'           // x86_64
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
+                                    + ' -D__X64__'      // Architecture define
 
                                     // Include paths
                                     + ' -I./'

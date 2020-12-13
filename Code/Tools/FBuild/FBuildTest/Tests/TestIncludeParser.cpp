@@ -9,7 +9,6 @@
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"

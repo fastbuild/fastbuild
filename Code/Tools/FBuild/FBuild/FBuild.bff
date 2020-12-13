@@ -1,8 +1,8 @@
-// FBuildApp
+// FBuild
 //------------------------------------------------------------------------------
 {
-    .ProjectName        = 'FBuildApp'
-    .ProjectPath        = 'Tools/FBuild/FBuildApp'
+    .ProjectName        = 'FBuild'
+    .ProjectPath        = 'Tools/FBuild/FBuild'
 
     // Executable
     //--------------------------------------------------------------------------
@@ -45,7 +45,7 @@
         Executable( '$ProjectName$-Exe-$Platform$-$BuildConfigName$' )
         {
             .Libraries                  = {
-                                            'FBuildApp-Lib-$Platform$-$BuildConfigName$',
+                                            'FBuild-Lib-$Platform$-$BuildConfigName$',
                                             'FBuildCore-Lib-$Platform$-$BuildConfigName$',
                                             'Core-Lib-$Platform$-$BuildConfigName$',
                                             'LZ4-Lib-$Platform$-$BuildConfigName$'
@@ -98,15 +98,7 @@
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------
     #if __WINDOWS__
-        VCXProject( '$ProjectName$-proj' )
-        {
-            .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-            .ProjectInputPaths          = '$ProjectPath$\'
-            .ProjectBasePath            = '$ProjectPath$\'
-
-            .LocalDebuggerCommand       = '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuildApp\FBuild.exe'
-            .LocalDebuggerWorkingDirectory = '^$(SolutionDir)..\..\Code'
-        }
+        CreateVCXProject_Exe( .ProjectName, .ProjectPath, .ProjectConfigs )
     #endif
 
     // XCode Project Generation

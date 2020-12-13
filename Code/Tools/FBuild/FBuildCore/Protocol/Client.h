@@ -38,8 +38,8 @@ public:
     ~Client();
 
 private:
-    virtual void OnDisconnected( const ConnectionInfo * connection );
-    virtual void OnReceive( const ConnectionInfo * connection, void * data, uint32_t size, bool & keepMemory );
+    virtual void OnDisconnected( const ConnectionInfo * connection ) override;
+    virtual void OnReceive( const ConnectionInfo * connection, void * data, uint32_t size, bool & keepMemory ) override;
 
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestJob * msg );
     void Process( const ConnectionInfo * connection, const Protocol::MsgJobResult *, const void * payload, size_t payloadSize );

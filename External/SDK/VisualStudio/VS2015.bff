@@ -114,6 +114,8 @@ Compiler( 'Compiler-VS2015-x64' )
     .ToolChain_VS_Windows_X64       = .ToolChain_VS2015_Windows_X64
     .VS_PATH                        = .VS_2015_PATH
     .VS_PlatformToolset             = .VS_2015_PlatformToolset
+
+    .StaticAnalysisOptions          = ' /analyze'
 ]
 
 //------------------------------------------------------------------------------

@@ -124,6 +124,7 @@ int32_t Worker::Work()
     {
         // Create UI
         m_MainWindow = FNEW( WorkerWindow() );
+        m_MainWindow->SetStatus( m_WorkerBrokerage.GetHostName(), AStackString<>( "Idle" ) );
     }
 
     // spawn work thread
@@ -234,7 +235,7 @@ bool Worker::HasEnoughDiskSpace()
         }
         m_TimerLastDiskSpaceCheck.Start();
 
-        static const uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
+        static constexpr uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
 
         unsigned __int64 freeBytesAvailable = 0;
         unsigned __int64 totalNumberOfBytes = 0;
@@ -386,7 +387,7 @@ void Worker::UpdateUI()
     }
     else
     {
-        m_MainWindow->SetStatus( status.Get() );
+        m_MainWindow->SetStatus( m_WorkerBrokerage.GetHostName(), status );
     }
 
     if ( InConsoleMode() == false )

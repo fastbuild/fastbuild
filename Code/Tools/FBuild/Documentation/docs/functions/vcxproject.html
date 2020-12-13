@@ -58,7 +58,6 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
   .ProjectProjectImports          // (optional) Array of ProjectImports, see below for details
 								  
   // Other Options
-  .RootNamespace                  // (optional) Set RootNamespace for project
   .ProjectGuid                    // (optional) Override default generated ProjectGuid
   .DefaultLanguage                // (optional) Default Language Property (for XboxOne/WinRT)
   .ApplicationEnvironment         // (optional) Application Environment (for XboxOne/WinRT)
@@ -122,12 +121,17 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 .LocalDebuggerCommandArguments  // (optional) Args passed to executable when debugging.
 .LocalDebuggerWorkingDirectory  // (optional) Working Dir for executable when debugging.
 .LocalDebuggerEnvironment       // (optional) Environment variables when debugging.
+.RemoteDebuggerCommand          // (optional) Executable to launch when debugging remotely.
+.RemoteDebuggerCommandArguments // (optional) Args passed to remote executable when debugging.
+.RemoteDebuggerWorkingDirectory // (optional) Working Dir for remote executable when debugging.
 .Xbox360DebuggerCommand         // (optional) Debugger command for Xbox360 only.
 .DebuggerFlavor                 // (optional) Debugger flavor.
 .AumidOverride                  // (optional) Aumid override (for XboxOne).
 .Keyword,                       // (optional) Keyword
 .ApplicationType,               // (optional) Application type
 .ApplicationTypeRevision,       // (optional) Application type revision
+.TargetLinuxPlatform            // (optional) Set the Linux platform type
+.LinuxProjectType               // (optional) Set the project type GUID for Linux
 .PackagePath,                   // (optional) Path to package to debug
 .AdditionalSymbolSearchPaths,   // (optional) Additional symbol search paths for debugging
 
@@ -135,6 +139,7 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 .PlatformToolset                // (optional) Specify PlatformToolset.
 .DeploymentType                 // (optional) Specify deployment type for Xbox360.
 .DeploymentFiles                // (optional) Specify files to add to deployment for Xbox360.
+.RootNamespace                  // (optional) Set RootNamespace for project
 </div>
 </div>
 
@@ -339,13 +344,6 @@ Example:
 
 <div class='newsitemheader'>Other Options</div>
 <div class='newsitembody'>
-      <p><b>.RootNamespace</b> - String - (Optional)</p>
-      <p>Set the RootNamespace for a project.</p>
-      Example:
-<div class='code'>.RootNamespace = 'MyProject'</div>
-      <hr> 
-
-      
       <p><b>.ProjectGuid</b> - String - (Optional)</p>
       <p>Override default generated ProjectGuid.</p>
       <p>By default, a Guid for a project will be generated automatically.  If necessary, a 
@@ -451,7 +449,7 @@ Example:
 <div class='code'>.PreprocessorDefinitions = 'DEBUG;MY_LIB_DEFINE;__WINDOWS__;'</div>
 <hr>
       <p><b>IncludeSearchPath</b> - String - (Optional)</p>
-      <p>Include search paths for Intellisense can be manually specified. If the .Target for a configuration is specified, this will be populated automatically by detecting use of /I or -I
+      <p>Include search paths for Intellisense can be manually specified. If the .Target for a configuration is specified, this will be populated automatically by detecting use of /I, -I, -isystem, -isystem-after, /imsvc, -imsvc, -idirafter or -iquote
       in the compiler command line. Manual specification will override the automated detection.</p>
       Example:
 <div class='code'>.IncludeSearchPath = 'Code/Core/;Code/Engine/;'</div>
@@ -503,6 +501,26 @@ build configuration), but can be explicitily set via .LocalDebuggerCommand if de
 <div class='code'>.LocalDebuggerEnvironment = '_NO_DEBUG_HEAP=1' // Disable debug heap</div>
 <hr>
 
+      <p><b>RemoteDebuggerCommand</b> - String - (Optional)</p>
+      <p>Executable to launch when debugging remotely.</p>
+      Specify the executable to launch when debugging remotely, when using the
+      Windows Subsystem for Linux for example.<p>
+      Example:
+<div class='code'>.RemoteDebuggerCommand  = '/mnt/c/bin/myexe'</div>
+<hr>
+
+      <p><b>RemoteDebuggerCommandArguments</b> - String - (Optional)</p>
+      <p>Args passed to remote executable when debugging.</p>
+      Example:
+<div class='code'>.RemoteDebuggerCommandArguments = '-myArg'</div>
+<hr>
+
+      <p><b>RemoteDebuggerWorkingDirectory</b> - String - (Optional)</p>
+      <p>Working Dir for remote executable when debugging.</p>
+      Example:
+<div class='code'>.LocalDebuggerWorkingDirectory = '/mnt/c/bin/'</div>
+<hr>
+
       <p><b>Xbox360DebuggerCommand</b> - String - (Optional)</p>
       <p>Debugger command for Xbox360 only.</p>
 <hr>
@@ -529,6 +547,18 @@ build configuration), but can be explicitily set via .LocalDebuggerCommand if de
       <p>ApplicationType e.g. '3.0'</p>
 
 <hr>
+      <p><b>TargetLinuxPlatform</b> - String - (Optional)</p>
+      <p>Set the Linux platform type.</p>
+      Example:
+<div class='code'>.TargetLinuxPlatform = 'Generic'</div>
+
+<hr>
+      <p><b>LinuxProjectType</b> - String - (Optional)</p>
+      <p>Set the project type GUID for Linux.</p>
+      Example:
+<div class='code'>.LinuxProjectType = '{D51BCBC9-82E9-4017-911E-C93873C4EA2B}'</div>
+
+<hr>
       <p><b>PackagePath</b> - String - (Optional)</p>
       <p>Path to the package to be used for debugging.</p>
 
@@ -549,6 +579,14 @@ build configuration), but can be explicitily set via .LocalDebuggerCommand if de
 
       <p><b>DeploymentFiles</b> - String - (Optional)</p>
       <p>Specify files to add to deployment for Xbox360.</p>
+<hr>
+
+      <p><b>.RootNamespace</b> - String - (Optional)</p>
+      <p>Set the RootNamespace for a project.</p>
+      Example:
+<div class='code'>.RootNamespace = 'MyProject'</div>
+      <hr> 
+
 
 </div>
 

@@ -191,6 +191,10 @@
     <td><a href="#wrapper">-wrapper</a></td>
     <td>Wrapper mode for Visual Studio. (Windows only)</td>
   </tr>
+  <tr>
+    <td><a href="#wsl">-wsl [wslPath] [args...]</a></td>
+    <td>Invoke a command inside the Windows Subsystem for Linux.</td>
+  </tr>
 </table>
 </div>
 
@@ -568,6 +572,17 @@ unexpected dependencies.</p>
 <p>When canceling a build in Visual Studio, the FASTBuild process will be killed, with no opportunity to save the build database, resulting in lost compilation work. Specifying this option spawns an orphaned child process to do the actual work. When the parent process is terminated by Visual Studio, the child process detects this and cleanly shuts down.</p>
 <p>If a subsequent "wrapper mode" build is initiated before the first terminates, FASTBuild will wait for this first process to complete.</p>
 </div>
+
+    <div class='newsitemheader' id="wsl">-wsl [wslPath] [args...] (Windows Only)</div>
+    <div class='newsitembody'>
+<p>Invoke a command inside the Windows Subsystem for Linux.</p>
+<p>It doesn't seem to be possible to invoke wsl.exe directly from Visual Studio as a BuildCommand. To allow this to be possible,
+FASTBuild can act as a forwarder using the -wsl command line option. This can be used to run the Linux version of FASTBuild
+for example.</p>
+<p>Example:</p>
+<div class='code'>fbuild.exe -wsl c:\Windows\System32\wsl.exe ./FBuild-Linux Game-x64-Debug</div>
+</div>
+
 
 <h2>FBuildWorker.exe Detailed</h2>
 

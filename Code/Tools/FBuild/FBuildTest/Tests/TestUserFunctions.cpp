@@ -16,6 +16,7 @@ private:
     void DeclareWithArgs() const;
     void Invoke() const;
     void InvokeWithArgs() const;
+    void InvokeWithArgsLiteralHandling() const;
     void Scope() const;
     void DeferredEvaluation() const;
     void NestedFunctionCalls() const;
@@ -29,6 +30,7 @@ REGISTER_TESTS_BEGIN( TestUserFunctions )
     REGISTER_TEST( DeclareWithArgs )
     REGISTER_TEST( Invoke )
     REGISTER_TEST( InvokeWithArgs )
+    REGISTER_TEST( InvokeWithArgsLiteralHandling )
     REGISTER_TEST( Scope )
     REGISTER_TEST( DeferredEvaluation )
     REGISTER_TEST( NestedFunctionCalls )
@@ -174,6 +176,47 @@ void TestUserFunctions::InvokeWithArgs() const
                    "    Print( 'C = $Arg3$' )\n"
                    "}\n"
                    "Func( 'String', true, 99 )\n",     "A = String\nB = true\nC = 99" );
+}
+
+// InvokeWithArgsLiteralHandling
+//------------------------------------------------------------------------------
+void TestUserFunctions::InvokeWithArgsLiteralHandling() const
+{
+    // Literal
+    TEST_PARSE_OK( "function Func( .ArgA ){ Print( 'A = $ArgA$' ) }\n"
+                   "Func( 'Hello' )\n",                 "A = Hello" );
+
+    // Literal with dynamic injection
+    TEST_PARSE_OK( "function Func( .ArgA ){ Print( 'A = $ArgA$' ) }\n"
+                   ".Str = 'ello'\n"
+                   "Func( 'H$Str$' )\n",                "A = Hello" );
+
+    // Literal with escape characters
+    TEST_PARSE_OK( "function Func( .ArgA ){ Print( 'A = $ArgA$' ) }\n"
+                   "Func( '^$Hello' )\n",               "A = $Hello" );
+
+    // Ensure escaping & substitution occurs before function call and not
+    // inside function
+    TEST_PARSE_FAIL( "function Func( .ArgA )\n"
+                     "{\n"
+                     "    .Var = 'X'\n"
+                     "    Print( 'A = $ArgA$' )\n"
+                     "}\n"
+                     "Func( '$X$' )\n",                 "#1009 - Unknown variable 'X'." );
+
+    // Ensure substitution only occurs once
+    TEST_PARSE_OK( "function Func( .ArgA, .ArgB )\n"
+                   "{\n"
+                   "    .X = 'Y'\n"
+                   "    Print( 'A = $ArgA$' )\n"
+                   "    Print( 'B = $ArgB$' )\n"
+                   "    Print( .ArgA )\n"
+                   "    Print( .ArgB )\n"
+                   "}\n"
+                   "Func( '^$X^$', '^^^^' )\n",         "A = $X$\n"
+                                                        "B = ^^\n"
+                                                        ".ArgA = '$X$'\n"
+                                                        ".ArgB = '^^'\n" );
 }
 
 // Scope

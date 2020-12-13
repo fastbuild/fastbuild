@@ -34,7 +34,7 @@ public:
     // Show/Update UI (blocks)
     void Work();
 
-    void SetStatus( const char * statusText );
+    void SetStatus( const AString & hostName, const AString & statusText );
     void SetWorkerState( size_t index, const AString & hostName, const AString & status );
 
     const OSMenu * GetMenu() const { return m_Menu; }
@@ -64,8 +64,6 @@ private:
     OSDropDown *        m_ResourcesDropDown;
     OSSplitter *        m_Splitter;
     OSMenu *            m_Menu;
-
-    AString         m_HostName;
 };
 
 //------------------------------------------------------------------------------

@@ -48,7 +48,6 @@ private:
     // internal helpers
     bool BuildArgs( Args & fullArgs ) const;
     void EmitCompilationMessage( const Args & fullArgs ) const;
-    FileNode * GetLibrarian() const;
 
     inline bool GetFlag( Flag flag ) const { return ( ( m_LibrarianFlags & (uint32_t)flag ) != 0 ); }
 

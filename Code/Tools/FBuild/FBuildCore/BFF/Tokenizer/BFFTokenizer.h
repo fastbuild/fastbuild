@@ -26,7 +26,7 @@ public:
     ~BFFTokenizer();
 
     // Process bff file hierarchy from a root file
-    bool TokenizeFromFile( const AString & fileName, const BFFToken * token );
+    bool TokenizeFromFile( const AString & fileName );
 
     // Preocess from an buffer in memory (for tests)
     bool TokenizeFromString( const AString & fileName, const AString & fileContents );
@@ -36,6 +36,7 @@ public:
     const Array<BFFFile *> &    GetUsedFiles() const { return m_Files; }
 
 protected:
+    bool Tokenize( const AString & fileName, const BFFToken * token );
     bool Tokenize( const BFFFile * file );
     bool Tokenize( const BFFFile & file, const char * pos, const char * end );
 

@@ -37,6 +37,9 @@
     .LZ4Options_x64OSX  = [
                             .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
+    .LZ4Options_ARMOSX  = [
+                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
+                          ]
 
     // Library
     //--------------------------------------------------------------------------
@@ -99,13 +102,10 @@
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------
     #if __WINDOWS__
-        VCXProject( '$ProjectName$-proj' )
-        {
-            .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-            .ProjectInputPaths          = '$ProjectPath$\'
-            .ProjectFiles               = '../External/LZ4/LZ4.bff'
-            .ProjectBasePath            = '$ProjectPath$\'
-        }
+        .ExtraOptions   = [
+                            .ProjectFiles = '../External/LZ4/LZ4.bff'
+                          ]
+        CreateVCXProject_Lib( .ProjectName, .ProjectPath, .ProjectConfigs, .ExtraOptions )
     #endif
 
     // XCode Project Generation

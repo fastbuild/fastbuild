@@ -38,6 +38,7 @@ Builds an executable by linking together one or more libraries.
   .LinkerOutput            ; Output from linker
   .LinkerOptions           ; Options to pass to linker
   .Libraries               ; Libraries to link into executable
+  .Libraries2              ; Secondary libraries to link into executable
   .LinkerLinkObjects       ; (optional) Link objects used to make libs instead of libs (default false)
   .LinkerAssemblyResources ; (optional) List of assembly resources to use with %3
   
@@ -62,7 +63,9 @@ Builds an executable by linking together one or more libraries.
 <ul>
   <li><b>LinkerOptions</b></li>
   <ul>
-    <li>%1 - Input file(s) for the link, as specified by the 'Libraries' parameter.</li>
+    <li>%1 - Input file(s) for the link, as specified by the 'Libraries' and 'Libraries2' parameters.</li>
+    <li>%1[0] - Input file(s) for the link, as specified by 'Libraries' only.</li>
+    <li>%1[1] - Input file(s) for the link, as specified by 'Libraries2' only.</li>
     <li>%2 - Output assembly as specified by 'LinkerOutput'.</li>
     <li>%3 - AssemblyResources as specified in 'LinkerAssemblyResources'. For use with /ASSEMBLYRESOURCE"%3" (MSVC Only)</li>
   </ul>

@@ -35,14 +35,14 @@ public:
     inline uint32_t GetNumCPUsToUse() const { return m_NumCPUsToUse; }
     void SetNumCPUsToUse( uint32_t c );
 
-    // Start minimzed
+    // Start minimized
     void SetStartMinimized( bool startMinimized );
-    inline bool GetStartMinimzed() { return m_StartMinimized; }
+    inline bool GetStartMinimzed() const { return m_StartMinimized; }
 
     // Time settings were last changed/written to disk
     uint64_t GetSettingsWriteTime() const { return m_SettingsWriteTime; }
 
-    inline uint32_t GetMinimumFreeMemoryMiB() { return m_MinimumFreeMemoryMiB; }
+    inline uint32_t GetMinimumFreeMemoryMiB() const { return m_MinimumFreeMemoryMiB; }
     void SetMinimumFreeMemoryMiB( uint32_t value );
 
     void Load();

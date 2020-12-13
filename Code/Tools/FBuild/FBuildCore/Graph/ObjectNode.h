@@ -5,8 +5,9 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FileNode.h"
+
+// Core
 #include "Core/Containers/Array.h"
-#include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Assert.h"
 #include "Core/Process/Process.h"
 
@@ -63,6 +64,7 @@ public:
         FLAG_ORBIS_WAVE_PSSLC   =   0x400000,
         FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
         FLAG_WARNINGS_AS_ERRORS_CLANGGCC = 0x1000000,
+        FLAG_CLANG_CL           = 0x2000000,
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -75,7 +77,8 @@ public:
     inline bool IsUsingPCH() const { return GetFlag( FLAG_USING_PCH ); }
     inline bool IsClang() const { return GetFlag( FLAG_CLANG ); }
     inline bool IsGCC() const { return GetFlag( FLAG_GCC ); }
-    inline bool IsMSVC() const { return GetFlag(FLAG_MSVC); }
+    inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
+    inline bool IsClangCl() const { return GetFlag( FLAG_CLANG_CL ); }
     inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
     inline bool IsUsingStaticAnalysisMSVC() const { return GetFlag( FLAG_STATIC_ANALYSIS_MSVC ); }
 
@@ -144,6 +147,7 @@ private:
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
+    static void HandleWarningsClangCl( Job * job, const AString & name, const AString & data );
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;

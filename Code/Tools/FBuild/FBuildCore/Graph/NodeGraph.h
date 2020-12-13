@@ -29,6 +29,7 @@ class FileNode;
 class IOStream;
 class LibraryNode;
 class LinkerNode;
+class ListDependenciesNode;
 class Node;
 class ObjectListNode;
 class ObjectNode;
@@ -58,7 +59,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 155 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 157 };
 
     bool IsValid() const
     {
@@ -127,6 +128,7 @@ public:
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
+    ListDependenciesNode* CreateListDependenciesNode( const AString& name );
     TextFileNode * CreateTextFileNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );

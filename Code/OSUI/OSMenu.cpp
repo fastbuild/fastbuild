@@ -84,13 +84,13 @@ bool OSMenu::ShowAndWaitForSelection( uint32_t & outIndex )
 
         // Show menu and block until hidden
         // NOTE: TPM_RETURNCMD makes this BOOL return actually a UINT
-        UINT item = (UINT)TrackPopupMenu( (HMENU)m_Menu,
-                                          TPM_RETURNCMD | TPM_NONOTIFY,
-                                          curPoint.x,
-                                          curPoint.y,
-                                          0,
-                                          (HWND)m_Parent->GetHandle(),
-                                          nullptr );
+        const UINT item = (UINT)TrackPopupMenu( (HMENU)m_Menu,
+                                                TPM_RETURNCMD | TPM_NONOTIFY,
+                                                curPoint.x,
+                                                curPoint.y,
+                                                0,
+                                                (HWND)m_Parent->GetHandle(),
+                                                nullptr );
         if ( item == ID_TRAY_EXIT_CONTEXT_MENU_ITEM )
         {
             outIndex = 0;

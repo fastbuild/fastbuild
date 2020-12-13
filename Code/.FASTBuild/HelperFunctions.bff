@@ -79,4 +79,37 @@ function CreateCommonAliases( .ProjectName )
     }
 }
 
+// CreateVCXProj_Lib
+//------------------------------------------------------------------------------
+function CreateVCXProject_Lib( .Name
+                               .Path
+                               .Configs
+                               .ExtraOptions )
+{
+    VCXProject( '$Name$-proj' )
+    {
+        .ProjectConfigs             = .Configs
+
+        .ProjectOutput              = '../tmp/VisualStudio/Projects/$Name$.vcxproj'
+        .ProjectInputPaths          = '$Path$\'
+        .ProjectBasePath            = '$Path$\'
+
+
+        Using( .ExtraOptions )
+    }
+}
+
+// CreateVCXProject_Exe
+//------------------------------------------------------------------------------
+function CreateVCXProject_Exe( .Name
+                               .Path
+                               .Configs )
+{
+    .ExtraOptions   = [
+                        .LocalDebuggerCommand           = '^$(SolutionDir)..\^$(Configuration)\$Path$\$Name$.exe'
+                        .LocalDebuggerWorkingDirectory  = '^$(SolutionDir)..\..\Code\$Path$'
+                      ]
+    CreateVCXProject_Lib( .Name, .Path, .Configs, .ExtraOptions )
+}
+
 //------------------------------------------------------------------------------

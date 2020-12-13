@@ -26,7 +26,6 @@
 // Core
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
-#include "Core/Network/Network.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
@@ -47,9 +46,6 @@ WorkerWindow::WorkerWindow()
     , m_Splitter( nullptr )
     , m_Menu( nullptr )
 {
-    // obtain host name
-    Network::GetHostName( m_HostName );
-
     // center the window on screen
     const uint32_t w = 700;
     const uint32_t h = 300;
@@ -174,8 +170,6 @@ WorkerWindow::WorkerWindow()
             ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE ); // First call can be ignored
         }
     #endif
-
-    SetStatus( "Idle" );
 }
 
 // DESTRUCTOR
@@ -198,10 +192,18 @@ WorkerWindow::~WorkerWindow()
 
 // SetStatus
 //------------------------------------------------------------------------------
-void WorkerWindow::SetStatus( const char * statusText )
+void WorkerWindow::SetStatus( const AString & hostName, const AString & statusText )
 {
     AStackString< 512 > text;
-    text.Format( "FBuildWorker %s | \"%s\" | %s", FBUILD_VERSION_STRING, m_HostName.Get(), statusText );
+    text.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
+    if ( !hostName.IsEmpty() )
+    {
+        text.AppendFormat( " | \"%s\"", hostName.Get() );
+    }
+    if ( !statusText.IsEmpty() )
+    {
+        text.AppendFormat( " | %s", statusText.Get() );
+    }
     SetTitle( text.Get() );
 }
 

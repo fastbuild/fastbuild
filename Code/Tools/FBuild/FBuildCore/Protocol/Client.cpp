@@ -18,8 +18,6 @@
 
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
-#include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Random.h"
 #include "Core/Process/Atomic.h"
@@ -427,9 +425,9 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ss->m_Jobs.Append( job ); // Track in-flight job
 
     // if tool is explicity specified, get the id of the tool manifest
-    Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
+    const Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
     const ToolManifest & manifest = n->CastTo< CompilerNode >()->GetManifest();
-    uint64_t toolId = manifest.GetToolId();
+    const uint64_t toolId = manifest.GetToolId();
     ASSERT( toolId );
 
     // output to signify remote start
@@ -730,7 +728,7 @@ const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, ui
           it != ss->m_Jobs.End();
           ++it )
     {
-        Node * n = ( *it )->GetNode()->CastTo< ObjectNode >()->GetCompiler();
+        const Node * n = ( *it )->GetNode()->CastTo< ObjectNode >()->GetCompiler();
         const ToolManifest & m = n->CastTo< CompilerNode >()->GetManifest();
         if ( m.GetToolId() == toolId )
         {

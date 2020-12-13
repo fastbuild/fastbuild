@@ -57,15 +57,10 @@
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------
     #if __WINDOWS__
-        VCXProject( '$ProjectName$-proj' )
-        {
-            .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-            .ProjectInputPaths          = '$ProjectPath$\'
-            .ProjectBasePath            = '$ProjectPath$\'
-
-            // Exclude Tests
-            .ProjectInputPathsExclude   = '$ProjectPath$\CoreTest\'
-        }
+        .ExtraOptions   = [
+                            .ProjectInputPathsExclude = { '$ProjectPath$\CoreTest\' }
+                          ]
+        CreateVCXProject_Lib( .ProjectName, .ProjectPath, .ProjectConfigs, .ExtraOptions )
     #endif
 
     // XCode Project Generation

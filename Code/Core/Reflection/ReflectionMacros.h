@@ -33,8 +33,8 @@ class ReflectionInfo;
 // HELPER
 //------------------------------------------------------------------------------
 #define CHECK_BASE_CLASS( className, baseClass ) \
-    className * c = nullptr; \
-    baseClass * b = static_cast< baseClass * >( c ); (void)b;
+    const className * c = nullptr; \
+    const baseClass * b = static_cast< const baseClass * >( c ); (void)b;
 
 #define ADD_METADATA( metaData ) \
     AddMetaData( metaData );

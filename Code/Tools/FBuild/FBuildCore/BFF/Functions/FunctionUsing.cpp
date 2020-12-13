@@ -71,7 +71,7 @@ FunctionUsing::FunctionUsing()
 
     // find variable
     const BFFVariable * v = nullptr;
-    BFFStackFrame * const varFrame = ( parentScope )
+    const BFFStackFrame * const varFrame = ( parentScope )
         ? BFFStackFrame::GetParentDeclaration( varName, frame, v )
         : nullptr;
 

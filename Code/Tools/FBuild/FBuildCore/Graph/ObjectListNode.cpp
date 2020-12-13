@@ -136,7 +136,7 @@ ObjectListNode::ObjectListNode()
         // Check PCH creation command line options
         AStackString<> pchObjectName; // TODO:A Use this
         const uint32_t pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
-        if ( pchFlags & ObjectNode::FLAG_MSVC )
+        if ( pchFlags & ( ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL ) )
         {
             if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
             {
@@ -174,7 +174,7 @@ ObjectListNode::ObjectListNode()
         if ( usingPCH )
         {
             // Check for correct PCH usage options
-            if ( objFlags & ObjectNode::FLAG_MSVC )
+            if ( objFlags & ( ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL ) )
             {
                 if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Use( iter, m_CompilerOptions, objFlags ) == false )
                 {
@@ -341,7 +341,7 @@ ObjectListNode::~ObjectListNode() = default;
         // On Windows, with MSVC we compile a cpp file to generate the PCH
         // Filter here to ensure that doesn't get compiled twice
         Node * pchCPP = nullptr;
-        if ( m_UsingPrecompiledHeader && GetPrecompiledHeader()->IsMSVC() )
+        if ( m_UsingPrecompiledHeader && ( GetPrecompiledHeader()->IsMSVC() || GetPrecompiledHeader()->IsClangCl() ) )
         {
             pchCPP = GetPrecompiledHeader()->GetPrecompiledHeaderCPPFile();
         }
@@ -356,7 +356,7 @@ ObjectListNode::~ObjectListNode() = default;
         if ( dep.GetNode()->GetType() == Node::DIRECTORY_LIST_NODE )
         {
             // get the list of files
-            DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
+            const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
             const Array< FileIO::FileInfo > & files = dln->GetFiles();
             m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
             for ( Array< FileIO::FileInfo >::Iter fIt = files.Begin();
@@ -394,7 +394,7 @@ ObjectListNode::~ObjectListNode() = default;
         else if ( dep.GetNode()->GetType() == Node::UNITY_NODE )
         {
             // get the dir list from the unity node
-            UnityNode * un = dep.GetNode()->CastTo< UnityNode >();
+            const UnityNode * un = dep.GetNode()->CastTo< UnityNode >();
 
             // unity files
             const Array< AString > & unityFiles = un->GetUnityFileNames();
@@ -444,7 +444,7 @@ ObjectListNode::~ObjectListNode() = default;
         else if ( dep.GetNode()->GetType() == Node::OBJECT_LIST_NODE )
         {
             // get the list of files from the ObjectListNode
-            ObjectListNode * objListNode = dep.GetNode()->CastTo< ObjectListNode >();
+            const ObjectListNode * objListNode = dep.GetNode()->CastTo< ObjectListNode >();
             Array< AString > objListFiles;
             objListNode->GetInputFiles( objListFiles );
 
@@ -547,7 +547,7 @@ ObjectListNode::~ObjectListNode() = default;
         Array< uint64_t > stamps( m_DynamicDependencies.GetSize(), false );
         for ( const Dependency & dep : m_DynamicDependencies )
         {
-            ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
+            const ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
             ASSERT( on->GetStamp() );
             stamps.Append( on->GetStamp() );
         }
@@ -574,7 +574,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             const ObjectNode * on = n->CastTo< ObjectNode >();
             if ( on->IsCreatingPCH() )
             {
-                if ( on->IsMSVC() )
+                if ( on->IsMSVC() || on->IsClangCl() )
                 {
                     fullArgs += pre;
                     fullArgs += on->GetPCHObjectName();
@@ -596,7 +596,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
 
             // insert all the objects in the object list
-            ObjectListNode * oln = n->CastTo< ObjectListNode >();
+            const ObjectListNode * oln = n->CastTo< ObjectListNode >();
             oln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
             continue;
         }
@@ -607,7 +607,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
 
             // insert all the objects in the object list
-            LibraryNode * ln = n->CastTo< LibraryNode >();
+            const LibraryNode * ln = n->CastTo< LibraryNode >();
             ln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
             continue;
         }
@@ -740,7 +740,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
             preprocessorFlags = ObjectNode::DetermineFlags( GetPreprocessor(), m_PreprocessorOptions, false, usingPCH );
         }
 
-        BFFToken * token = nullptr;
+        const BFFToken * token = nullptr;
         ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
         if ( !objectNode )
         {
@@ -756,7 +756,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     }
     else
     {
-        ObjectNode * other = on->CastTo< ObjectNode >();
+        const ObjectNode * other = on->CastTo< ObjectNode >();
 
         // Check for conflicts
         const bool conflict = ( inputFile != other->GetSourceFile() ) ||

@@ -177,7 +177,7 @@ bool FunctionCopy::GetSourceNodes( const BFFToken * iter, Node * node, Array< No
     if ( node->GetType() == Node::ALIAS_NODE )
     {
         // resolve aliases to real nodes
-        AliasNode * aliasNode = node->CastTo< AliasNode >();
+        const AliasNode * aliasNode = node->CastTo< AliasNode >();
         const Dependencies & aliasedNodes = aliasNode->GetAliasedNodes();
         const Dependency * const end = aliasedNodes.End();
         for ( const Dependency * it = aliasedNodes.Begin(); it != end; ++it )

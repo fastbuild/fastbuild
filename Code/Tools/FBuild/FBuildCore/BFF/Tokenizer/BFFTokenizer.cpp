@@ -100,7 +100,26 @@ BFFTokenizer::~BFFTokenizer()
 
 // TokenizeFromFile
 //------------------------------------------------------------------------------
-bool BFFTokenizer::TokenizeFromFile( const AString & fileName, const BFFToken * token )
+bool BFFTokenizer::TokenizeFromFile( const AString & fileName )
+{
+    const BFFToken * token = nullptr; // No token for the root
+    const bool result = Tokenize( fileName, token );
+
+    // Close the token stream
+    if ( result )
+    {
+        ASSERT( m_Tokens.IsEmpty() || ( m_Tokens.Top().GetType() != BFFTokenType::EndOfFile ) );
+        const BFFFile & firstFile = *m_Files[ 0 ];
+        const char * end = firstFile.GetSourceFileContents().GetEnd();
+        m_Tokens.EmplaceBack( firstFile, end, BFFTokenType::EndOfFile, AString::GetEmpty() );
+    }
+
+    return result;
+}
+
+// Tokenize
+//------------------------------------------------------------------------------
+bool BFFTokenizer::Tokenize( const AString & fileName, const BFFToken * token )
 {
     PROFILE_FUNCTION
 
@@ -129,23 +148,24 @@ bool BFFTokenizer::TokenizeFromFile( const AString & fileName, const BFFToken * 
         }
     }
 
-    // Parse a previously seen file again?
-    if ( fileToParse )
+    // A file seen for the first time?
+    if ( fileToParse == nullptr )
     {
-        return Tokenize( *fileToParse, fileToParse->GetSourceFileContents().Get(), fileToParse->GetSourceFileContents().GetEnd() );
-    }
+        // Load the new file
+        BFFFile * newFile = FNEW( BFFFile() );
+        if ( newFile->Load( cleanFileName, token ) == false )
+        {
+            FDELETE( newFile );
+            return false; // Load will have emitted an error
+        }
+        m_Files.Append( newFile );
 
-    // A file seen for the first time
-    BFFFile * newFile = FNEW( BFFFile() );
-    if ( newFile->Load( cleanFileName, token ) == false )
-    {
-        FDELETE( newFile );
-        return false; // Load will have emitted an error
+        // use the new file
+        fileToParse = newFile;
     }
-    m_Files.Append( newFile );
 
     // Recursively tokenize
-    return Tokenize( newFile );
+    return Tokenize( fileToParse );
 }
 
 // TokenizeFromString
@@ -163,7 +183,18 @@ bool BFFTokenizer::TokenizeFromString( const AString & fileName, const AString &
     m_Files.Append( newFile );
 
     // Recursively tokenize
-    return Tokenize( newFile );
+    const bool result = Tokenize( newFile );
+
+    // Close the token stream
+    if ( result )
+    {
+        ASSERT( m_Tokens.IsEmpty() || ( m_Tokens.Top().GetType() != BFFTokenType::EndOfFile ) );
+        const BFFFile & firstFile = *m_Files[ 0 ];
+        const char * end = firstFile.GetSourceFileContents().GetEnd();
+        m_Tokens.EmplaceBack( firstFile, end, BFFTokenType::EndOfFile, AString::GetEmpty() );
+    }
+
+    return result;
 }
 
 // Tokenize
@@ -185,7 +216,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
     while ( pos < end )
     {
         // Skip whitespace
-        char c = *pos;
+        const char c = *pos;
         if ( IsWhiteSpace( c ) )
         {
             SkipWhitespace( pos );
@@ -335,7 +366,6 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         return false;
     }
 
-    m_Tokens.EmplaceBack( file, end, BFFTokenType::EndOfFile, AString::GetEmpty() );
     return true;
 }
 
@@ -483,6 +513,10 @@ bool BFFTokenizer::HandleDirective( const char * & pos, const char * end, const 
     {
         m_Tokens.Pop(); // Avoiding use of SetSize as this requires a default constructor
     }
+
+    // Terminate arg stream so handlers can safely manage invalid cases
+    args.EmplaceBack( file, pos, BFFTokenType::EndOfFile, AString::GetEmpty() );
+
     BFFTokenRange argsRange( args.Begin(), args.End() );
 
     // Check keywords that are valid directives
@@ -772,7 +806,7 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     // look for varName in system environment
     AStackString<> varValue;
     uint32_t varHash = 0;
-    bool optional = true;
+    const bool optional = true;
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
     FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash );
     outResult = ( varHash != 0 ); // a hash of 0 means the env var was not found
@@ -924,7 +958,7 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
     // look for varName in system environment
     AStackString<> varValue;
     uint32_t varHash = 0;
-    bool optional = false;
+    const bool optional = false;
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
     if ( FBuild::IsValid() ) // TODO:B Remove singleton validity check when ImportEnvironmentVar moved to BFFTokenizer
     {
@@ -978,7 +1012,7 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
     ExpandIncludePath( file, include );
 
     // Recursively tokenize
-    const bool result = TokenizeFromFile( include, argsIter.GetCurrent() );
+    const bool result = Tokenize( include, argsIter.GetCurrent() );
     argsIter++;
 
     --m_Depth;

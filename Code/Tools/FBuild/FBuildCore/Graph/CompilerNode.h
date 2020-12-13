@@ -53,6 +53,7 @@ public:
         VBCC            = 9,
         ORBIS_WAVE_PSSLC= 10,
         CSHARP          = 11,
+        CLANG_CL        = 12,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 

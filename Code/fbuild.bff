@@ -112,30 +112,32 @@ Settings
 //------------------------------------------------------------------------------
 // Optimizations (MSVC)
 //------------------------------------------------------------------------------
-.Debug_Optimizations_MSVC =
-[
-    .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
-    .CompilerOptionsC               = .CompilerOptions
-]
-.Analyze_Optimizations_MSVC =
-[
-    Using( .Debug_Optimizations_MSVC )
-    .CompilerOptions                + ' /analyze'
-    .CompilerOptionsC               = .CompilerOptions
-]
-.Profile_Optimizations_MSVC =
-[
-    .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
-    .CompilerOptionsC               = .CompilerOptions
-    .LinkerOptions                  = ' /OPT:REF,ICF'
-]
-.Release_Optimizations_MSVC =
-[
-    Using( .Profile_Optimizations_MSVC )
-    .CompilerOptionsDeoptimized     = .CompilerOptions
-                                    - ' /Ox'
-                                    + ' /Od'
-]
+#if __WINDOWS__
+    .Debug_Optimizations_MSVC =
+    [
+        .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
+        .CompilerOptionsC               = .CompilerOptions
+    ]
+    .Analyze_Optimizations_MSVC =
+    [
+        Using( .Debug_Optimizations_MSVC )
+        .CompilerOptions                + .StaticAnalysisOptions
+        .CompilerOptionsC               = .CompilerOptions
+    ]
+    .Profile_Optimizations_MSVC =
+    [
+        .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
+        .CompilerOptionsC               = .CompilerOptions
+        .LinkerOptions                  = ' /OPT:REF,ICF'
+    ]
+    .Release_Optimizations_MSVC =
+    [
+        Using( .Profile_Optimizations_MSVC )
+        .CompilerOptionsDeoptimized     = .CompilerOptions
+                                        - ' /Ox'
+                                        + ' /Od'
+    ]
+#endif
 
 //------------------------------------------------------------------------------
 // Optimizations (Clang/GCC)
@@ -259,6 +261,18 @@ Settings
     .X64ProfileConfig_OSX       = .ToolChain_Clang_OSX
                                 + .Profile_Config
                                 + .Profile_Optimizations
+
+    #if CLANG_SUPPORTS_ARMOSX
+        .ARM64DebugConfig_OSX       = .ToolChain_Clang_ARMOSX
+                                    + .Debug_Config
+                                    + .Debug_Optimizations
+        .ARM64ReleaseConfig_OSX     = .ToolChain_Clang_ARMOSX
+                                    + .Release_Config
+                                    + .Release_Optimizations
+        .ARM64ProfileConfig_OSX     = .ToolChain_Clang_ARMOSX
+                                    + .Profile_Config
+                                    + .Profile_Optimizations
+    #endif
 #endif
 
 //------------------------------------------------------------------------------
@@ -308,6 +322,9 @@ Settings
 #endif
 #if __OSX__
     .BuildConfigs               = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
+    #if CLANG_SUPPORTS_ARMOSX
+                                + { .ARM64DebugConfig_OSX, .ARM64ProfileConfig_OSX, .ARM64ReleaseConfig_OSX }
+    #endif
 #endif
 
 .Targets_x64_Debug = {}
@@ -333,6 +350,9 @@ Settings
 .Targets_x64OSX_Debug = {}
 .Targets_x64OSX_Profile = {}
 .Targets_x64OSX_Release = {}
+.Targets_ARMOSX_Debug = {}
+.Targets_ARMOSX_Profile = {}
+.Targets_ARMOSX_Release = {}
 
 // External
 #include "..\External\LZ4\LZ4.bff"
@@ -349,7 +369,7 @@ Settings
 
 // FBuild
 #include "Tools\FBuild\FBuildCore\FBuildCore.bff"
-#include "Tools\FBuild\FBuildApp\FBuildApp.bff"
+#include "Tools\FBuild\FBuild\FBuild.bff"
 #include "Tools\FBuild\FBuildWorker\FBuildWorker.bff"
 #include "Tools\FBuild\FBuildTest\FBuildTest.bff"
 #if !CI_BUILD
@@ -370,12 +390,12 @@ ForEach( .BuildConfig in .BuildConfigs )
 Alias( 'Exes' )
 {
     .Targets    = { 'FBuildWorker-Debug',   'FBuildWorker-Profile', 'FBuildWorker-Release'
-                    'FBuildApp-Debug',      'FBuildApp-Profile',    'FBuildApp-Release' }
+                    'FBuild-Debug',         'FBuild-Profile',       'FBuild-Release' }
 }
 
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
-.Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
+.Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX', 'ARMOSX' }
 .PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
@@ -384,6 +404,7 @@ Alias( 'Exes' )
                                + { 'ASan', 'MSan', 'TSan' }
 #endif
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_ARMOSX        = { 'Debug', 'Profile', 'Release' }
 ForEach( .Platform in .Platforms )
 {
     Alias( 'All-$Platform$' )
@@ -410,6 +431,9 @@ ForEach( .Platform in .Platforms )
     Alias( 'All' )
     {
         .Targets        = { 'All-x64OSX' }
+        #if CLANG_SUPPORTS_OSXARM
+                        + { 'All-ARMOSX' }
+        #endif
     }
 #endif
 #if __LINUX__
@@ -435,10 +459,17 @@ ForEach( .Platform in .Platforms )
 #if __OSX__
     Alias( 'Tests' )
     {
-        .Targets        = { 'CoreTest-RunTest-x64OSX-Debug',
-                            'CoreTest-RunTest-x64OSX-Release',
-                            'FBuildTest-RunTest-x64OSX-Debug'
-                          }
+        #if __ARM64__
+            .Targets        = { 'CoreTest-RunTest-ARMOSX-Debug',
+                                'CoreTest-RunTest-ARMOSX-Release',
+                                'FBuildTest-RunTest-ARMOSX-Debug'
+                              }
+        #else
+            .Targets        = { 'CoreTest-RunTest-x64OSX-Debug',
+                                'CoreTest-RunTest-x64OSX-Release',
+                                'FBuildTest-RunTest-x64OSX-Debug'
+                              }
+        #endif
     }
 #endif
 #if __LINUX__
@@ -461,15 +492,9 @@ Alias( 'All+Tests' )
 // Visual Studio Solution
 //------------------------------------------------------------------------------
 #if __WINDOWS__
-    // Project to compile everything
-    VCXProject( 'All-proj' )
+    // 'All' - Compile everything
     {
-        .ProjectOutput              = '../tmp/VisualStudio/Projects/All.vcxproj'
-        .ProjectFiles           = { '.\fbuild.bff' }
-        .ProjectBasePath            = '.\'
-
-        //.ProjectConfigs             = .AllProjectConfigs_x64
-
+        .ExtraOptions   = [ .ProjectInputPaths = {} ]
         .ProjectConfigs = {}
         ForEach( .BuildConfig in .BuildConfigs )
         {
@@ -477,16 +502,12 @@ Alias( 'All+Tests' )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = 'All-$Platform$-$BuildConfigName$' ]
             ^ProjectConfigs         + .ProjectConfig
         }
+        CreateVCXProject_Lib( 'All', '/', .ProjectConfigs, .ExtraOptions )
     }
 
-    // Project for Platform/Compiler SDKs
-    VCXProject( 'SDKs-proj' )
+    // 'SDKs' - Browse Platform/Compiler SDKs
     {
-        .ProjectOutput              = '../tmp/VisualStudio/Projects/SDKs.vcxproj'
-        .ProjectInputPaths          = '../External/SDK/'
-        .ProjectAllowedFileExtensions = '*.bff'
-        .ProjectBasePath            = .ProjectInputPaths
-
+        .ExtraOptions   = [ .ProjectAllowedFileExtensions = '*.bff' ]
         .ProjectConfigs = {}
         ForEach( .BuildConfig in .BuildConfigs )
         {
@@ -494,28 +515,24 @@ Alias( 'All+Tests' )
             .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
             ^ProjectConfigs         + .ProjectConfig
         }
+        CreateVCXProject_Lib( 'SDKs', '../External/SDK/', .ProjectConfigs, .ExtraOptions )
     }
 
-    // Project to regenerate projects/solutions
-    VCXProject( 'UpdateSolution-proj' )
+    // 'UpdateSolution' - Regenerate projects/solutions
     {
-        .ProjectOutput              = '../tmp/VisualStudio/Projects/UpdateSolution.vcxproj'
-        .ProjectFiles           = { '.\fbuild.bff' }
-        .ProjectBasePath            = '.\'
-
-        .GenerateProjectsCommands =
-        [
-            .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
-            .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
-        ]
-
+        .ExtraOptions   = [ .ProjectInputPaths = {} ]
         .ProjectConfigs = {}
         ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
-            .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) Using( .GenerateProjectsCommands ) ]
+            .ProjectConfig          = [ 
+                                        Using( .'Project_$Platform$_$BuildConfigName$' )
+                                        .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
+                                        .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
+                                      ]
             ^ProjectConfigs         + .ProjectConfig
         }
+        CreateVCXProject_Lib( 'UpdateSolution', '/', .ProjectConfigs, .ExtraOptions )
     }
 
     VSSolution( 'solution' )
@@ -537,32 +554,40 @@ Alias( 'All+Tests' )
 
         // Work around for Visual Studio F5 behaviour up-to-date check
         .Deps               = [
-                                .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuildApp-proj', 'FBuildWorker-proj' }
+                                .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuild-proj', 'FBuildWorker-proj' }
                                 .Dependencies = { 'All-proj' }
                               ]
         .SolutionDependencies = { .Deps }
 
-        .Folder_0_External =
+        .Folder_Config =
         [
-            .Path           = '0. External'
+            .Path           = 'Config'
+            .Items          = {
+                                'fbuild.bff'
+                                '.FASTBuild/HelperFunctions.bff'
+                              }
+        ]
+        .Folder_External =
+        [
+            .Path           = 'External'
             .Projects       = { 'LZ4-proj', 'SDKs-proj' }
         ]
-        .Folder_1_Test =
+        .Folder_Test =
         [
-            .Path           = '1. Test'
+            .Path           = 'Test'
             .Projects       = { 'CoreTest-proj', 'FBuildTest-proj', 'TestFramework-proj' }
         ]
-        .Folder_2_Libs =
+        .Folder_Libs =
         [
-            .Path           = '2. Libs'
+            .Path           = 'Libs'
             .Projects       = { 'Core-proj', 'FBuildCore-proj', 'OSUI-proj' }
         ]
-        .Folder_3_Apps =
+        .Folder_Apps =
         [
-            .Path           = '3. Apps'
-            .Projects       = { 'FBuildApp-proj', 'FBuildWorker-proj' }
+            .Path           = 'Apps'
+            .Projects       = { 'FBuild-proj', 'FBuildWorker-proj' }
         ]
-        .SolutionFolders    = { .Folder_0_External, .Folder_1_Test, .Folder_2_Libs, .Folder_3_Apps }
+        .SolutionFolders    = { .Folder_Config, .Folder_External, .Folder_Test, .Folder_Libs, .Folder_Apps }
     }
 #endif
 
@@ -579,7 +604,7 @@ Alias( 'All+Tests' )
 
         .ProjectFiles               = { 'Core-xcodeproj'
                                         'CoreTest-xcodeproj'
-                                        'FBuildApp-xcodeproj'
+                                        'FBuild-xcodeproj'
                                         'FBuildCore-xcodeproj'
                                         'FBuildTest-xcodeproj'
                                         'FBuildWorker-xcodeproj'

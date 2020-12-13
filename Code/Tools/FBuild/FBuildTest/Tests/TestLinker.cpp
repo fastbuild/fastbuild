@@ -124,7 +124,7 @@ void TestLinker::LibrariesOnCommandLine() const
 {
     FBuild fBuild;
     NodeGraph nodeGraph;
-    BFFToken * iter = nullptr;
+    const BFFToken * iter = nullptr;
 
     // MSVC: 2 libraries
     {
@@ -186,7 +186,49 @@ void TestLinker::LibrariesOnCommandLine() const
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
 
         TEST_ASSERT( foundLibraries.GetSize() == 1 );
+        TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "libdummy1.so" ) );
+    }
+
+    // Other: -l style with -Bstatic and -Ddynamic
+    {
+        const bool isMSVC = false;
+        AStackString<> args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -Wl,-Bstatic -ldummy1 -Wl,-Bdynamic -ldummy2" );
+
+        Dependencies foundLibraries;
+        LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
+
+        TEST_ASSERT( foundLibraries.GetSize() == 2 );
+        // To not overcomplicate the test we depend on the order in which GetOtherLibraries() emits dependencies.
+        // The order is not important and can be freely changed.
+        TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "libdummy2.so" ) );
+        TEST_ASSERT( foundLibraries[ 1 ].GetNode()->GetName().EndsWith( "libdummy1.a" ) );
+    }
+
+    // Other: -l style, checking search order with -Bdynamic:
+    //        Preferring static library in the directory that comes earlier in the search path
+    //        over dynamic library in the directory that comes later in the search path.
+    {
+        const bool isMSVC = false;
+        AStackString<> args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine/StaticOnly -LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -Wl,-Bdynamic -ldummy1" );
+
+        Dependencies foundLibraries;
+        LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
+
+        TEST_ASSERT( foundLibraries.GetSize() == 1 );
         TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "libdummy1.a" ) );
+        TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().Find( "StaticOnly" ) );
+    }
+
+    // Other: -l: style
+    {
+        const bool isMSVC = false;
+        AStackString<> args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -l:dummy2.lib" );
+
+        Dependencies foundLibraries;
+        LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
+
+        TEST_ASSERT( foundLibraries.GetSize() == 1 );
+        TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "dummy2.lib" ) );
     }
 
     // Other - libs missing

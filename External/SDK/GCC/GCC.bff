@@ -5,7 +5,8 @@
 //------------------------------------------------------------------------------
 #if __LINUX__
     //#define USING_GCC_4
-    #define USING_GCC_7
+    //#define USING_GCC_7
+    #define USING_GCC_9
 #endif
 
 // Activate
@@ -19,6 +20,9 @@
         #endif
         #if USING_GCC_7
             #include "Linux/GCC7.bff"
+        #endif
+        #if USING_GCC_9
+            #include "Linux/GCC9.bff"
         #endif
     #endif
 #endif

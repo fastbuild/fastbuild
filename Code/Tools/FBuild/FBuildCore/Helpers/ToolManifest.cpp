@@ -6,7 +6,7 @@
 #include "ToolManifest.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
@@ -327,7 +327,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         FileIO::SetFileLastWriteTimeToNow( localFile );
 
         // is this file already present?
-        AutoPtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
+        UniquePtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
         FileStream & f = *( fileStream.Get() );
         if ( f.Open( localFile.Get() ) == false )
         {
@@ -337,7 +337,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         {
             continue; // file is not complete
         }
-        AutoPtr< char > mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
+        UniquePtr< char > mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
         if ( f.Read( mem.Get(), (size_t)f.GetFileSize() ) != f.GetFileSize() )
         {
             continue; // problem reading file
@@ -477,7 +477,7 @@ void ToolManifest::CancelSynchronizingFiles()
     bool atLeastOneFileCancelled = false;
 
     // is completely synchronized?
-    ToolManifestFile * const end = m_Files.End();
+    const ToolManifestFile * const end = m_Files.End();
     for ( ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
     {
         if ( it->GetSyncState() == ToolManifestFile::SYNCHRONIZING )
@@ -586,7 +586,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     #endif
 
     // open read-only
-    AutoPtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
+    UniquePtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
     if ( fileStream.Get()->Open( fileName.Get(), FileStream::READ_ONLY ) == false )
     {
         return false; // FAILED
@@ -687,7 +687,7 @@ bool ToolManifestFile::LoadFile( void * & uncompressedContent, uint32_t & uncomp
         return false;
     }
     uncompressedContentSize = (uint32_t)fs.GetFileSize();
-    AutoPtr< void > mem( ALLOC( uncompressedContentSize ) );
+    UniquePtr< void > mem( ALLOC( uncompressedContentSize ) );
     if ( fs.Read( mem.Get(), uncompressedContentSize ) != uncompressedContentSize )
     {
         FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest\n", m_Name.Get() );

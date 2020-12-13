@@ -1,0 +1,67 @@
+// GCC 9.3.0
+//------------------------------------------------------------------------------
+.GCC9_BasePath = '/usr/bin'
+
+// Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-GCC9' )
+{
+    .Executable                     = '$GCC9_BasePath$/x86_64-linux-gnu-gcc-9'
+    .ExtraFiles                     = {
+                                        '/usr/bin/as'
+                                        '/usr/lib/gcc/x86_64-linux-gnu/9/cc1'
+                                        '/usr/lib/gcc/x86_64-linux-gnu/9/cc1plus'
+                                      }
+    .CompilerFamily                 = 'gcc' // TODO: Remove when FASTBuild detection is improved
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_SOURCE_MAPPING
+        .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
+}
+
+// ToolChain
+//------------------------------------------------------------------------------
+.ToolChain_GCC_Linux =
+[
+    .Platform                       = 'x64Linux'
+
+    // Compiler Options
+    .Compiler                       = 'Compiler-GCC9'
+    .CommonCompilerOptions          = ' -o "%2" "%1"'   // Input/Output
+                                    + ' -c'             // Compile only
+                                    + ' -g'             // Generate debug info
+                                    + ' -m64'           // x86_64
+                                    + ' -D__LINUX__'    // Platform define
+                                    + ' -D__X64__'      // Architecture define
+                                    + ' -ffreestanding' // prevent extra magic includes like stdc-predefs.h
+
+                                    // Include paths
+                                    + ' -I./'
+
+                                    // Enable warnings
+                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                                    + ' -Wextra'
+                                    + ' -Wshadow'
+
+    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
+                                    + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+    .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+
+    // Librarian
+    .Librarian                      = '$GCC9_BasePath$/x86_64-linux-gnu-ar'
+    .LibrarianOptions               = 'rcs "%2" "%1"'
+
+    // Linker
+    .Linker                         = '$GCC9_BasePath$/x86_64-linux-gnu-g++-9'
+    .LinkerOptions                  = '"%1" -o "%2"'
+
+    // File Extensions
+    .LibExtension                   = '.a'
+    .ExeExtension                   = ''
+
+    // Exception Control
+    .UseExceptions                  = ' -fexceptions'
+]
+
+//------------------------------------------------------------------------------

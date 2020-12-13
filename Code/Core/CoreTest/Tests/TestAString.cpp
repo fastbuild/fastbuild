@@ -5,7 +5,8 @@
 //------------------------------------------------------------------------------
 #include "TestFramework/UnitTest.h"
 
-#include "Core/Containers/AutoPtr.h"
+// Core
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
@@ -238,7 +239,7 @@ void TestAString::AStackStringOverflow() const
 void TestAString::BigString() const
 {
     // create a massive string
-    AutoPtr< char > mem( (char *)ALLOC( ( 10 * MEGABYTE ) + 1 ) );
+    UniquePtr< char > mem( (char *)ALLOC( ( 10 * MEGABYTE ) + 1 ) );
     memset( mem.Get(), 'a', 10 * MEGABYTE );
     mem.Get()[ 10 * MEGABYTE ] = '\000';
 

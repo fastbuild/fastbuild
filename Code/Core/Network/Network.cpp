@@ -34,12 +34,40 @@
     if ( ::gethostname( buffer, 64 ) == 0 )
     {
         hostName = buffer;
+        return;
     }
-    else
-    {
-        hostName = "Unknown";
-        ASSERT( false && "This should never fail" );
-    }
+
+    ASSERT( false && "GetHostName should never fail" );
+    hostName = "Unknown";
+}
+
+// GetDomainName
+//------------------------------------------------------------------------------
+/*static*/ void Network::GetDomainName( AString & domainName )
+{
+    PROFILE_FUNCTION
+
+    NetworkStartupHelper nsh; // ensure network is up if not already
+
+    #if defined( __WINDOWS__ )
+        TCHAR buffer[ 256 ];
+        DWORD bufferSize = sizeof( buffer );
+        if ( GetComputerNameEx( ComputerNameDnsDomain, buffer, &bufferSize ) )
+        {
+            domainName = buffer;
+            return;
+        }
+    #else
+        char buffer[ 256 ];
+        if ( ::getdomainname( buffer, 256 ) == 0 )
+        {
+            domainName = buffer;
+            return;
+        }
+    #endif
+
+    ASSERT( false && "GetDomainName should never fail" );
+    domainName = "Unknown";
 }
 
 // GetHostIPFromName

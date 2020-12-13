@@ -61,12 +61,45 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     {
         AStackString<> thisArg( argv[ i ] );
 
+        // Check WSL wrapper
+        #if defined( __WINDOWS__ )
+            if ( ( m_WrapperMode  == WRAPPER_MODE_NONE ) && ( thisArg == "-wsl" ) )
+            {
+                // -wsl must be the first arg
+                if ( i != 1 )
+                {
+                    OUTPUT( "FBuild: Error: -wsl must be the first argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+
+                m_WrapperMode = WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX;
+                const int32_t wslExeIndex = ( i + 1 );
+                if ( wslExeIndex >= argc )
+                {
+                    OUTPUT( "FBuild: Error: Missing <wslPath> for '-wsl' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                m_WSLPath = argv[ wslExeIndex ];
+                i++; // Skip extra arg we've consumed for the wsl exe
+
+                continue;
+            }
+        #endif
+
         // Store into full arg string
         if ( m_Args.IsEmpty() == false )
         {
             m_Args += ' ';
         }
         m_Args += thisArg;
+
+        // Don't validate args for WSL forwarding
+        if ( m_WrapperMode == WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX )
+        {
+            continue;
+        }
 
         // options start with a '-'
         if ( thisArg.BeginsWith( '-' ) )
@@ -153,7 +186,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-config" )
             {
-                int pathIndex = ( i + 1 );
+                const int32_t pathIndex = ( i + 1 );
                 if ( pathIndex >= argc )
                 {
                     OUTPUT( "FBuild: Error: Missing <path> for '-config' argument\n" );
@@ -568,6 +601,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -why              Show build reason for each item.\n"
             " -wrapper          (Windows) Spawn a sub-process to gracefully handle\n"
             "                   termination from Visual Studio.\n"
+            " -wsl <wslPath> <args...>\n"
+            "                   (Windows) Forward to the Windows Subsystem for Linux\n"
             "--------------------------------------------------------------------------------\n" );
 }
 

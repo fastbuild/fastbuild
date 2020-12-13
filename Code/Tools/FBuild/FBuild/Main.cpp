@@ -33,12 +33,14 @@ enum ReturnCodes
     FBUILD_FAILED_TO_SPAWN_WRAPPER          = -5,
     FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL    = -6,
     FBUILD_WRAPPER_CRASHED                  = -7,
+    FBUILD_FAILED_TO_WSL_WRAPPER            = -8,
 };
 
 // Headers
 //------------------------------------------------------------------------------
 int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess );
 int WrapperIntermediateProcess( const FBuildOptions & options );
+int32_t WrapperModeForWSL( const FBuildOptions & options );
 int Main( int argc, char * argv[] );
 
 // Misc
@@ -90,6 +92,10 @@ int Main( int argc, char * argv[] )
     if ( wrapperMode == FBuildOptions::WRAPPER_MODE_INTERMEDIATE_PROCESS )
     {
         return WrapperIntermediateProcess( options );
+    }
+    if ( wrapperMode == FBuildOptions::WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX )
+    {
+        return WrapperModeForWSL( options );
     }
 
     #if defined( __WINDOWS__ )
@@ -303,6 +309,22 @@ int WrapperIntermediateProcess( const FBuildOptions & options )
     // don't wait for the final process (the main process will do that)
     p.Detach();
     return FBUILD_OK;
+}
+
+// WrapperModeForWSL
+//------------------------------------------------------------------------------
+int32_t WrapperModeForWSL( const FBuildOptions & options )
+{
+    // launch final process
+    Process p;
+    if ( !p.Spawn( options.m_WSLPath.Get(), options.m_Args.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
+    {
+        return FBUILD_FAILED_TO_WSL_WRAPPER;
+    }
+
+    // Return the result from the WSL process, which will itself forward the
+    // result of the target process
+    return p.WaitForExit();
 }
 
 //------------------------------------------------------------------------------
