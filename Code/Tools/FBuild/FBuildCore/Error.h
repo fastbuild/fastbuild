@@ -128,7 +128,9 @@ public:
     static void Error_1060_CantModifyFrozenVar( const BFFToken * iter,
                                                 const Function * function,
                                                 const BFFVariable * var );
-
+    static void Error_1061_MissingOpenBracket( const BFFToken * iter,
+                                               const Function * function );
+    
     //
     // 1100 - 1199 : General function definition errors
     //------------------------------------------------------------------------------
@@ -185,6 +187,10 @@ public:
                                                      uint32_t expectedSize );
     static void Error_1254_UnrecognizedOperator( const BFFToken * iter,
                                                  const Function * function );
+    static void Error_1255_UnexpectedOperator( const BFFToken* iter,
+                                               const Function* function );
+    static void Error_1256_UnexpectedToken( const BFFToken * iter,
+                                            const Function * function );
 
     // 1300 - 1399 : Library specific errors
     //------------------------------------------------------------------------------

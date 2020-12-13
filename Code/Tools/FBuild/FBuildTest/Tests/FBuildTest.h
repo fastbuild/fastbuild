@@ -42,7 +42,8 @@ protected:
     void Parse( const char * fileName, bool expectFailure = false ) const;
     bool ParseFromString( bool expectResult,
                           const char * bffContents,
-                          const char * expectedMessage = nullptr ) const;
+                          const char * expectedMessage = nullptr,
+                          const char * unexpectedMessage = nullptr ) const;
 
     // Helper macros
     #define TEST_PARSE_OK( ... )        TEST_ASSERT( ParseFromString( true, __VA_ARGS__ ) );

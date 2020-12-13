@@ -139,7 +139,8 @@ void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
 //------------------------------------------------------------------------------
 bool FBuildTest::ParseFromString( bool expectedResult,
                                   const char * bffContents,
-                                  const char * expectedMessage ) const
+                                  const char * expectedMessage,
+                                  const char * unexpectedMessage ) const
 {
     // Note size of output so we can check if message was part of this invocation
     const size_t outputSizeBefore = GetRecordedOutput().GetLength();
@@ -168,6 +169,18 @@ bool FBuildTest::ParseFromString( bool expectedResult,
         if ( foundExpectedMessage == false )
         {
             OUTPUT( "Expected %s was not found: %s", expectedResult ? "message" : "error", expectedMessage );
+            return false;
+        }
+    }
+
+    // Check message was present if unexpected
+    if ( unexpectedMessage )
+    {
+        // Search for unexpected message in output
+        const bool foundUnexpectedMessage = ( GetRecordedOutput().Find( unexpectedMessage, searchStart ) != nullptr );
+        if ( foundUnexpectedMessage )
+        {
+            OUTPUT( "Unexpected %s was found: %s", expectedResult ? "message" : "error", unexpectedMessage );
             return false;
         }
     }

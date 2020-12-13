@@ -12,6 +12,8 @@
 #include "Core/Math/Conversions.h"
 #include "Core/Mem/Mem.h"
 
+#include <initializer_list>
+
 // Array
 //------------------------------------------------------------------------------
 template < class T >
@@ -23,6 +25,7 @@ public:
     explicit Array( Array< T > && other );
     explicit Array( const T * otherBegin, const T * otherEnd );
     explicit Array( size_t initialCapacity, bool resizeable = false );
+    explicit Array( std::initializer_list<T> l );
     ~Array();
 
     void Destruct();
@@ -206,6 +209,24 @@ Array< T >::Array( size_t initialCapacity, bool resizeable )
     #else
         (void)resizeable;
     #endif
+}
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+template < class T >
+Array< T >::Array( std::initializer_list<T> elements )
+{
+#if defined( ASSERTS_ENABLED )
+    m_Resizeable = true; // allow initial allocation
+#endif
+    m_Begin = Allocate( elements.size() );
+    m_Size = 0;
+    m_CapacityAndFlags = (uint32_t)elements.size();
+
+    for ( const T & e : elements )
+    {
+        Append( e );
+    }
 }
 
 // DESTRUCTOR

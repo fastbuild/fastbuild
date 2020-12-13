@@ -23,6 +23,8 @@ private:
     void IfFunctionBool() const;
     void IfFunctionInt() const;
     void IfFunctionStringCompare() const;
+    void IfFunctionSet() const;
+    void IfFunctionBracket() const;
     void UsageError_ExtraTokensAfterExpression() const;
     void UsageError_UnsupportedTypeForIn() const;
     void UsageError_UnsupportedOperation() const;
@@ -42,10 +44,15 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( IfFunctionBool )
     REGISTER_TEST( IfFunctionInt )
     REGISTER_TEST( IfFunctionStringCompare )
+    REGISTER_TEST( IfFunctionBracket )
     REGISTER_TEST( UsageError_ExtraTokensAfterExpression )
     REGISTER_TEST( UsageError_UnsupportedTypeForIn )
     REGISTER_TEST( UsageError_UnsupportedOperation )
 REGISTER_TESTS_END
+
+#define TEST_EXP_TRUE( defines, exp )        TEST_ASSERT( ParseFromString( true, defines##"\nIf ( "##exp##" )\n{\nPrint('Success')\n}", "Success") );
+#define TEST_EXP_FALSE( defines, exp )       TEST_ASSERT( ParseFromString( true, defines##"\nIf ( "##exp##" )\n{\nPrint('Failure')\n}", nullptr, "Failure") );
+#define TEST_EXP_FAIL( defines, exp, error ) TEST_ASSERT( ParseFromString( false, defines##"\nIf ( "##exp##" )\n{\n}", error ) );
 
 // IfFunctionTrue
 //------------------------------------------------------------------------------
@@ -115,6 +122,23 @@ void TestIf::IfNotSetFunctionFalse() const
 //------------------------------------------------------------------------------
 void TestIf::IfFunctionBool() const
 {
+    TEST_EXP_TRUE( "", "false != true" );
+    
+    TEST_EXP_TRUE( ".Bool = true", ".Bool" );
+    TEST_EXP_TRUE( ".Bool = true", ".Bool != false" );
+    TEST_EXP_TRUE( ".Bool = true", "false != .Bool" );
+    TEST_EXP_FALSE( ".Bool = true", ".Bool != .Bool" );
+
+    TEST_EXP_TRUE(R"(
+        .True = true
+        .False = false
+    )", ".True && true || .False" );
+
+    TEST_EXP_TRUE( R"(
+        .True = true
+        .False = false
+    )", "true && .True && true && .True && true && .True || false || .False" );
+
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_boolean.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
@@ -124,6 +148,21 @@ void TestIf::IfFunctionBool() const
 //------------------------------------------------------------------------------
 void TestIf::IfFunctionInt() const
 {
+    TEST_EXP_TRUE( ".Int = 2", ".Int == 2" );
+    TEST_EXP_FALSE( ".Int = 2", ".Int == 1" );
+
+    TEST_EXP_TRUE( ".Int = 2", ".Int > 1" );
+    TEST_EXP_TRUE( ".Int = 2", ".Int >= 1" );
+    TEST_EXP_TRUE( ".Int = 2", "3 > .Int" );
+    TEST_EXP_TRUE( ".Int = 2", "3 >= .Int" );
+    TEST_EXP_TRUE( ".Int = 2", "2 >= .Int" );
+    
+    TEST_EXP_FALSE( ".Int = 2", "2 > .Int" );
+    TEST_EXP_FALSE( ".Int = 2", "1 >= .Int" );
+
+    TEST_EXP_TRUE( ".Int = 2", "1 < .Int" );
+    TEST_EXP_TRUE( ".Int = 2", "1 <= .Int" );
+
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_int.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
@@ -138,6 +177,67 @@ void TestIf::IfFunctionStringCompare() const
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
+// IfFunctionSet
+//------------------------------------------------------------------------------
+void TestIf::IfFunctionSet() const
+{
+#define defines R"(
+    .D = 'd'
+    .A = {'a'}
+    .AD = {'a', 'd'}
+    .ABC = {'a', 'b', 'c'}
+)"
+
+    TEST_EXP_TRUE( defines, ".D in .AD" );
+    TEST_EXP_TRUE( defines, ".D not in .ABC" );
+    TEST_EXP_TRUE( defines, ".AD in .ABC" );
+    TEST_EXP_FALSE( defines, ".D in .ABC" );
+
+#undef defines
+}
+
+void TestIf::IfFunctionBracket() const
+{
+    TEST_EXP_TRUE( "", "(true)" );
+    TEST_EXP_TRUE( "", "(!false)" );
+    TEST_EXP_FALSE( "", "(false)" );
+
+    TEST_EXP_TRUE( "", "((((!false))))" );
+    TEST_EXP_FAIL( "", "((((!false)))", "Matching closing token ) not found." );
+
+    TEST_EXP_TRUE( "", "(!!true)" );
+    TEST_EXP_TRUE( "", "(!(!true))" );
+    TEST_EXP_TRUE( "", "(true == true)" );
+
+    TEST_EXP_TRUE( "", "(1 == 1)" );
+    TEST_EXP_TRUE( "", "!(1 != 1)" );
+
+    TEST_EXP_TRUE( "", "('String' == 'String')" );
+    TEST_EXP_TRUE( "", "!('String' != 'String')" );
+
+    TEST_EXP_TRUE( "", "('String' == 'String') && (1 == 1)" );
+    TEST_EXP_TRUE( "", "('String' == 'Hello') || (1 == 1)" );
+    TEST_EXP_TRUE( "", "true && (false || true) || ((1 == 2) && ('abc' != 'def'))" );
+
+#define defines R"(
+    .D = 'd'
+    .A = {'a'}
+    .AD = {'a', 'd'}
+    .ABC = {'a', 'b', 'c'}
+)"
+
+    TEST_EXP_TRUE( defines, "(.A in .AD)" );
+    TEST_EXP_TRUE( defines, "(.D in .AD)" );
+    TEST_EXP_FALSE( defines, "(.D in .ABC)" );
+    TEST_EXP_TRUE( defines, "(.D not in .ABC)" );
+    TEST_EXP_TRUE( defines, "(.D == 'd') && (.AD in .ABC)" );
+
+#undef defines
+}
+
+#undef TEST_EXP_OK
+#undef TEST_EXP_FAIL
+
 // UsageError_ExtraTokensAfterExpression
 //------------------------------------------------------------------------------
 void TestIf::UsageError_ExtraTokensAfterExpression() const
@@ -151,7 +251,7 @@ void TestIf::UsageError_ExtraTokensAfterExpression() const
 void TestIf::UsageError_UnsupportedTypeForIn() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedtypeforin.bff", true ); // Expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "Property '.Int' must be of type <ArrayOfStrings> or <String> (found <Int>" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "Unexpected operator" ) );
 }
 
 // UsageError_UnsupportedOperation
@@ -159,7 +259,7 @@ void TestIf::UsageError_UnsupportedTypeForIn() const
 void TestIf::UsageError_UnsupportedOperation() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedoperation.bff", true ); // Expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "Operation not supported: 'Bool' >= 'Bool'" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "Unexpected operator" ) );
 }
 
 //------------------------------------------------------------------------------

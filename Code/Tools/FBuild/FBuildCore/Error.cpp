@@ -458,6 +458,13 @@
     FormatError( iter, 1060u, function, "Can't modify frozen variable '%s'", var->GetName().Get() );
 }
 
+// Error_1061_MissingOpenBracket
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1061_MissingOpenBracket( const BFFToken * iter, const Function * function )
+{
+    FormatError( iter, 1061u, function, "Missing corresponding open bracket '%c'.", BFFParser::BFF_FUNCTION_ARGS_OPEN );
+}
+
 // Error_1100_AlreadyDefined
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1100_AlreadyDefined( const BFFToken * iter,
@@ -634,6 +641,21 @@
                                                         const Function * function )
 {
     FormatError( iter, 1254u, function, "Unrecognized operator." );
+}
+
+// Error_1255_UnexpectedOperator
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1255_UnexpectedOperator( const BFFToken* iter,
+    const Function* function )
+{
+    FormatError( iter, 1255u, function, "Unexpected operator '%s'.", iter->GetValueString().Get() );
+}
+
+// Error_1255_UnexpectedOperator
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1256_UnexpectedToken( const BFFToken * iter, const Function * function )
+{
+    FormatError( iter, 1256u, function, "Unexpected token." );
 }
 
 // Error_1300_MissingPCHArgs
