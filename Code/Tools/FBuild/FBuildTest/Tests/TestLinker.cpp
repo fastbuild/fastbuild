@@ -49,19 +49,19 @@ void TestLinker::ArgHelpers() const
     // Exact match
     {
         AStackString<> token( "-L" );
-        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) )
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) );
     }
 
     // Starts with
     {
         AStackString<> token( "-Lthing" );
-        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) )
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) );
     }
 
     // Check case sensitive is respected
     {
         AStackString<> token( "-l" );
-        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) == false )
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) == false );
     }
 }
 
@@ -72,49 +72,49 @@ void TestLinker::ArgHelpers_MSVC() const
     // Exact match args, using /
     {
         AStackString<> token( "/DLL" );
-        TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) )
+        TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) );
     }
 
     // Exact match args, using -
     {
         AStackString<> token( "-DLL" );
-        TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) )
+        TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) );
     }
 
     // Exact match args, lower-case, using /
     {
         AStackString<> token( "/dll" );
-        TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) )
+        TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) );
     }
 
     // Exact match args, lower-case, using -
     {
         AStackString<> token( "-dll" );
-        TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) )
+        TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) );
     }
 
     // Starts with args, using /
     {
         AStackString<> token( "/ORDER:@orderfile.txt" );
-        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) )
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) );
     }
 
     // Starts with args, using -
     {
         AStackString<> token( "-ORDER:@orderfile.txt" );
-        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) )
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) );
     }
 
     // Starts with args, lower-case, using /
     {
         AStackString<> token( "/order:@orderfile.txt" );
-        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) )
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) );
     }
 
     // Starts with args, lower-case, using -
     {
         AStackString<> token( "-order:@orderfile.txt" );
-        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) )
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) );
     }
 }
 

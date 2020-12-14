@@ -5,7 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #include <winsock2.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 #include "Core/Env/Types.h"

@@ -95,9 +95,9 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
     if ( compressed )
     {
         // trim memory usage to compressed size
-        m_Result = ALLOC( compressedSize + sizeof( Header ) );
+        m_Result = ALLOC( (uint32_t)compressedSize + sizeof( Header ) );
         memcpy( (char *)m_Result + sizeof( Header ), output.Get(), (size_t)compressedSize );
-        m_ResultSize = compressedSize + sizeof( Header );
+        m_ResultSize = (uint32_t)compressedSize + sizeof( Header );
     }
     else
     {
@@ -111,7 +111,7 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
     Header * header = (Header*)m_Result;
     header->m_CompressionType = compressed ? 1u : 0u;   // compression type
     header->m_UncompressedSize = (uint32_t)dataSize;    // input size
-    header->m_CompressedSize = compressed ? compressedSize : (uint32_t)dataSize;    // output size
+    header->m_CompressedSize = compressed ? (uint32_t)compressedSize : (uint32_t)dataSize;    // output size
 
     return compressed;
 }

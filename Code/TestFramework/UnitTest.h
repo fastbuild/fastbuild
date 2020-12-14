@@ -42,6 +42,7 @@ private:
 #define TEST_ASSERT( expression )                                   \
     do {                                                            \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                                  \
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )       \
         if ( !( expression ) )                                      \
         {                                                           \
             if ( UnitTestManager::AssertFailure(  #expression, __FILE__, __LINE__ ) ) \
@@ -50,12 +51,14 @@ private:
             }                                                       \
             TEST_NO_RETURN                                          \
         }                                                           \
-    } while ( false );                                              \
+    } while ( false )                                               \
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS                                \
     PRAGMA_DISABLE_POP_MSVC
 
 #define TEST_ASSERTM( expression, ... )                             \
     do {                                                            \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                                  \
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )       \
         if ( !( expression ) )                                      \
         {                                                           \
             if ( UnitTestManager::AssertFailureM(  #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
@@ -65,6 +68,7 @@ private:
             TEST_NO_RETURN                                          \
         }                                                           \
     } while ( false )                                               \
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS                                \
     PRAGMA_DISABLE_POP_MSVC
 
 // Test Declarations

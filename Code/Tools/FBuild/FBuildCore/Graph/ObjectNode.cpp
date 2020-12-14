@@ -858,8 +858,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     uint32_t flags = 0;
 
     // set flags known from the context the args will be used in
-    flags |= ( creatingPCH  ? ObjectNode::FLAG_CREATING_PCH : 0 );
-    flags |= ( usingPCH     ? ObjectNode::FLAG_USING_PCH : 0 );
+    flags |= ( creatingPCH  ? (uint32_t)ObjectNode::FLAG_CREATING_PCH : 0 );
+    flags |= ( usingPCH     ? (uint32_t)ObjectNode::FLAG_USING_PCH : 0 );
 
     const bool isDistributableCompiler = compilerNode->CanBeDistributed();
 

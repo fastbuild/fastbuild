@@ -39,7 +39,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 
 
-    enum Flags
+    enum Flags : uint32_t
     {
         FLAG_CAN_BE_CACHED      =   0x01,
         FLAG_CAN_BE_DISTRIBUTED =   0x02,

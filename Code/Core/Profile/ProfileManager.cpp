@@ -42,7 +42,7 @@ void FormatU64( uint64_t value, char * outBuffer )
     char * pos = tmp;
     while ( value )
     {
-        *pos = ( '0' + (uint8_t)( value % 10 ) );
+        *pos = ( '0' + (char)( value % 10 ) );
         ++pos;
         value /= 10;
     }
@@ -234,7 +234,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     // write all the events we have
     const ProfileEventInfo * const end = infos.End();
     AStackString< 8192 > buffer;
-    const double freqMul = ( Timer::GetFrequencyInvFloatMS() * 1000.0 );
+    const double freqMul = ( (double)Timer::GetFrequencyInvFloatMS() * 1000.0 );
     if ( g_ProfileEventLog.IsOpen() )
     {
         for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )

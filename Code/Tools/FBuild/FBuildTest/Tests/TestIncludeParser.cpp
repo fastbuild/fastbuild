@@ -55,7 +55,7 @@ REGISTER_TESTS_END
 void TestIncludeParser::TestMSVCPreprocessedOutput() const
 {
     FileStream f;
-    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.msvc.ii", FileStream::READ_ONLY ) )
+    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.msvc.ii", FileStream::READ_ONLY ) );
     const uint32_t fileSize = (uint32_t)f.GetFileSize();
     AString mem;
     mem.SetLength( fileSize );
@@ -126,7 +126,7 @@ void TestIncludeParser::TestMSVCPreprocessedOutput_Indent() const
 void TestIncludeParser::TestMSVCShowIncludesOutput() const
 {
     FileStream f;
-    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.msvc.showincludes", FileStream::READ_ONLY ) )
+    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.msvc.showincludes", FileStream::READ_ONLY ) );
     const uint32_t fileSize = (uint32_t)f.GetFileSize();
     AString mem;
     mem.SetLength( fileSize );
@@ -205,7 +205,7 @@ void TestIncludeParser::TestMSVC_ShowIncludesWithWarnings() const
     FBuild fb; // needed for CleanPath
 
     FileStream f;
-    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/MSVC-ShowIncludes/WithWarnings.output", FileStream::READ_ONLY ) )
+    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/MSVC-ShowIncludes/WithWarnings.output", FileStream::READ_ONLY ) );
     const uint32_t fileSize = (uint32_t)f.GetFileSize();
     AString mem;
     mem.SetLength( fileSize );
@@ -245,7 +245,7 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
     FBuild fBuild; // needed fer CleanPath for relative dirs
 
     FileStream f;
-    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.gcc.ii", FileStream::READ_ONLY ) )
+    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.gcc.ii", FileStream::READ_ONLY ) );
     const uint32_t fileSize = (uint32_t)f.GetFileSize();
     AString mem;
     mem.SetLength( fileSize );
@@ -295,7 +295,7 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
 
     // Load the preprocessed test data
     FileStream f;
-    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.clang.ii", FileStream::READ_ONLY ) )
+    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.clang.ii", FileStream::READ_ONLY ) );
     const uint32_t fileSize = (uint32_t)f.GetFileSize();
     AString mem;
     mem.SetLength( fileSize );
@@ -344,7 +344,7 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
     FBuild fBuild; // needed fer CleanPath for relative dirs
 
     FileStream f;
-    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.clang.ms-extensions.ii", FileStream::READ_ONLY ) )
+    TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.clang.ms-extensions.ii", FileStream::READ_ONLY ) );
     const uint32_t fileSize = (uint32_t)f.GetFileSize();
     AString mem;
     mem.SetLength( fileSize );

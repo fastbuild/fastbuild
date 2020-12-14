@@ -67,6 +67,8 @@ static const uint32_t g_CRC32Table[ 256 ] =
 
 UINT g_crc_slicing[8][256];
 
+PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wsign-conversion" )
+
 void SlicingInit()
 {
     for (UINT i = 0; i <= 0xFF; i++) {
@@ -84,6 +86,8 @@ void SlicingInit()
         }
     }
 }
+
+PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wsign-conversion
 
 static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
 {

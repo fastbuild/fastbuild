@@ -29,7 +29,7 @@ class Server : public TCPConnectionPool
 {
 public:
     Server( uint32_t numThreadsInJobQueue = 0 );
-    ~Server();
+    virtual ~Server() override;
 
     static void GetHostForJob( const Job * job, AString & hostName );
 

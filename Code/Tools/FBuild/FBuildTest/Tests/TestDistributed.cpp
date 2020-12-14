@@ -385,7 +385,7 @@ void TestDistributed::ShutdownMemoryLeak() const
 
     // Start build and check it was aborted
     TEST_ASSERT( fBuild.Build( "ShutdownMemoryLeak" ) == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) )
+    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) );
 
     Thread::WaitForThread( h );
     Thread::CloseHandle( h );

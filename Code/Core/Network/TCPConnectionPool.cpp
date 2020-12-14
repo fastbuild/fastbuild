@@ -330,8 +330,10 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
         PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunused-value" ) // expression result unused [-Wunused-value]
         FD_SET( sockfd, &write );
         FD_SET( sockfd, &err );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wunused-value
         PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // 6319
         PRAGMA_DISABLE_POP_MSVC // 4548
@@ -710,7 +712,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
             TCPDEBUG( "recv() failed (A). Error: %s (Read: %i, Socket: %x)\n", LAST_NETWORK_ERROR_STR, numBytes, (uint32_t)( ci->m_Socket ) );
             return false;
         }
-        bytesToRead -= numBytes;
+        bytesToRead -= (uint32_t)numBytes;
     }
 
     TCPDEBUG( "Handle read: %i (%x)\n", size, (uint32_t)( ci->m_Socket ) );
@@ -742,7 +744,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
             FreeBuffer( buffer );
             return false;
         }
-        bytesRemaining -= numBytes;
+        bytesRemaining -= (uint32_t)numBytes;
         dest += numBytes;
     }
 
@@ -946,7 +948,9 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
         PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunused-value" ) // expression result unused [-Wunused-value]
         FD_SET( (uint32_t)ci->m_Socket, &set );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wunused-value
         PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // 6319
         PRAGMA_DISABLE_POP_MSVC // 4548
@@ -1080,7 +1084,9 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
         PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunused-value" ) // expression result unused [-Wunused-value]
         FD_SET( (uint32_t)ci->m_Socket, &readSet );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wunused-value
         PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // C6319
         PRAGMA_DISABLE_POP_MSVC // 4548
@@ -1228,7 +1234,7 @@ void TCPConnectionPool::SetNonBlocking( TCPSocket socket ) const
 {
     u_long nonBlocking = 1;
     #if defined( __WINDOWS__ )
-        VERIFY( ioctlsocket( socket, FIONBIO, &nonBlocking ) == 0 );
+        VERIFY( ioctlsocket( socket, (long)FIONBIO, &nonBlocking ) == 0 );
     #else
         VERIFY( ioctl( socket, FIONBIO, &nonBlocking ) == 0 );
     #endif

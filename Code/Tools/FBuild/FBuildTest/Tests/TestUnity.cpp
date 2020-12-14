@@ -728,9 +728,9 @@ void TestUnity::SortFiles() const
     class Helper : public UnityNode
     {
     public:
-        ~Helper()
+        virtual ~Helper() override
         {
-            for ( FileIO::FileInfo * info : m_FileInfos )
+            for ( FileIO::FileInfo * info : m_HelperFileInfos )
             {
                 FDELETE info;
             }
@@ -744,27 +744,27 @@ void TestUnity::SortFiles() const
             #if defined( __WINDOWS__ )
                 info->m_Name.Replace( '/', '\\' ); // Allow test to specify unix style slashes
             #endif
-            m_FileInfos.Append( info );
+            m_HelperFileInfos.Append( info );
 
             // Add entry
-            m_Files.EmplaceBack( info, nullptr );
+            m_HelperFiles.EmplaceBack( info, nullptr );
         }
 
         void Sort()
         {
-            m_Files.Sort();
+            m_HelperFiles.Sort();
             #if defined( __WINDOWS__ )
-                for ( FileIO::FileInfo * info : m_FileInfos )
+                for ( FileIO::FileInfo * info : m_HelperFileInfos )
                 {
                     info->m_Name.Replace( '\\', '/' ); // Allow test to specify unix style slashes
                 }
             #endif
         }
 
-        const AString & operator[] ( size_t index ) const { return m_Files[ index ].GetName(); }
+        const AString & operator[] ( size_t index ) const { return m_HelperFiles[ index ].GetName(); }
 
-        Array< UnityNode::UnityFileAndOrigin >  m_Files;
-        Array< FileIO::FileInfo * >             m_FileInfos;
+        Array< UnityNode::UnityFileAndOrigin >  m_HelperFiles;
+        Array< FileIO::FileInfo * >             m_HelperFileInfos;
     };
 
     // Helper marcos to reduce boilerplate code
