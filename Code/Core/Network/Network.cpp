@@ -26,7 +26,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Network::GetHostName( AString & hostName )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     NetworkStartupHelper nsh; // ensure network is up if not already
 
@@ -45,7 +45,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Network::GetDomainName( AString & domainName )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     NetworkStartupHelper nsh; // ensure network is up if not already
 
@@ -74,7 +74,7 @@
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Network::GetHostIPFromName( const AString & hostName, uint32_t timeoutMS )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // Fast path for "localhost". Although we have a fast path for detecting ip4
     // format adresses, it can still take several ms to call
@@ -85,7 +85,9 @@
 
     // see if string it already in ip4 format
     PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // Deprecated...
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'inet_addr' is deprecated: This function or variable may be unsafe...
     uint32_t ip = inet_addr( hostName.Get() ); // TODO:C Consider using inet_pton()
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
     PRAGMA_DISABLE_POP_MSVC // 4996
     if ( ip != INADDR_NONE )
     {
@@ -161,11 +163,11 @@
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Network::NameResolutionThreadFunc( void * userData )
 {
-    PROFILE_SET_THREAD_NAME( "DNSResolution" )
+    PROFILE_SET_THREAD_NAME( "DNSResolution" );
 
     uint32_t ip( 0 );
     {
-        PROFILE_FUNCTION
+        PROFILE_FUNCTION;
 
         NetworkStartupHelper helper;
 
@@ -183,7 +185,7 @@
 
         // perform lookup
         {
-            PROFILE_SECTION( "::getaddrinfo" )
+            PROFILE_SECTION( "::getaddrinfo" );
 
             // We want IPv4
             struct addrinfo hints;
@@ -196,7 +198,9 @@
             {
                 if ( result )
                 {
+                    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcast-align" ) // cast from 'struct sockaddr *' to 'sockaddr_in *' increases required alignment from 2 to 4
                     const sockaddr_in * sockaddr_ipv4 = (sockaddr_in *)result->ai_addr;
+                    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcast-align
                     ip = sockaddr_ipv4->sin_addr.s_addr;
                 }
             }

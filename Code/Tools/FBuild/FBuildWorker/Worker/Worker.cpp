@@ -34,7 +34,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <psapi.h>
+    #include <Psapi.h>
 #endif
 #include <stdio.h>
 
@@ -114,7 +114,9 @@ int32_t Worker::Work()
         #if __WINDOWS__
             VERIFY( ::AllocConsole() );
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'freopen' is deprecated: This function or variable may be unsafe...
             VERIFY( freopen( "CONOUT$", "w", stdout ) ); // TODO:C consider using freopen_s
+            PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
             PRAGMA_DISABLE_POP_MSVC // 4996
         #endif
 
@@ -237,9 +239,9 @@ bool Worker::HasEnoughDiskSpace()
 
         static constexpr uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
 
-        unsigned __int64 freeBytesAvailable = 0;
-        unsigned __int64 totalNumberOfBytes = 0;
-        unsigned __int64 totalNumberOfFreeBytes = 0;
+        uint64_t freeBytesAvailable = 0;
+        uint64_t totalNumberOfBytes = 0;
+        uint64_t totalNumberOfFreeBytes = 0;
 
         // Check available disk space of temp path
         AStackString<> tmpPath;

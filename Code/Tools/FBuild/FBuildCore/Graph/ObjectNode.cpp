@@ -1197,7 +1197,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         return job->GetCacheName();
     }
 
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
@@ -1256,7 +1256,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         return false;
     }
 
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     const AString & cacheFileName = GetCacheName(job);
 
@@ -1386,7 +1386,7 @@ void ObjectNode::WriteToCache( Job * job )
         return;
     }
 
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     const AString & cacheFileName = GetCacheName(job);
     ASSERT(!cacheFileName.IsEmpty());
@@ -1609,7 +1609,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
 //------------------------------------------------------------------------------
 bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile ) const
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     Array< AString > tokens( 1024, true );
 

@@ -42,9 +42,9 @@ void OSSplitter::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                    x, y,
                                    (int32_t)w, (int32_t)h,
                                    (HWND)m_Parent->GetHandle(),
-                                   NULL,
+                                   nullptr,
                                    (HINSTANCE)m_Parent->GetHInstance(),
-                                   NULL );
+                                   nullptr );
     #elif defined( __OSX__ )
         m_Handle = SplitterOSX_Create( this, x, y, w, h );
     #else

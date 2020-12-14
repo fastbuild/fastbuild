@@ -28,7 +28,7 @@
 #define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 0.1f )
 #define CONNECTION_REATTEMPT_DELAY_TIME ( 10.0f )
 #define SYSTEM_ERROR_ATTEMPT_COUNT ( 3 )
-#define DIST_INFO( ... ) if ( m_DetailedLogging ) { FLOG_OUTPUT( __VA_ARGS__ ); }
+#define DIST_INFO( ... ) do { if ( m_DetailedLogging ) { FLOG_OUTPUT( __VA_ARGS__ ); } } while( false )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ Client::~Client()
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Client::ThreadFuncStatic( void * param )
 {
-    PROFILE_SET_THREAD_NAME( "ClientThread" )
+    PROFILE_SET_THREAD_NAME( "ClientThread" );
 
     Client * c = (Client *)param;
     c->ThreadFunc();
@@ -112,7 +112,7 @@ Client::~Client()
 //------------------------------------------------------------------------------
 void Client::ThreadFunc()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // ensure first status update will be sent more rapidly
     m_StatusUpdateTimer.Start();
@@ -143,7 +143,7 @@ void Client::ThreadFunc()
 //------------------------------------------------------------------------------
 void Client::LookForWorkers()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     MutexHolder mh( m_ServerListMutex );
 
@@ -234,7 +234,7 @@ void Client::LookForWorkers()
 //------------------------------------------------------------------------------
 void Client::CommunicateJobAvailability()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // too soon since last status update?
     if ( m_StatusUpdateTimer.GetElapsed() < CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS )
@@ -266,7 +266,7 @@ void Client::CommunicateJobAvailability()
             {
                 if ( it->m_NumJobsAvailable != numJobsAvailable )
                 {
-                    PROFILE_SECTION( "UpdateJobAvailability" )
+                    PROFILE_SECTION( "UpdateJobAvailability" );
                     SendMessageInternal( connection, msg );
                     it->m_NumJobsAvailable = numJobsAvailable;
                 }
@@ -390,7 +390,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequestJob * )
 {
-    PROFILE_SECTION( "MsgRequestJob" )
+    PROFILE_SECTION( "MsgRequestJob" );
 
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
@@ -407,7 +407,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     Job * job = JobQueue::Get().GetDistributableJobToProcess( true );
     if ( job == nullptr )
     {
-        PROFILE_SECTION( "NoJob" )
+        PROFILE_SECTION( "NoJob" );
         // tell the client we don't have anything right now
         // (we completed or gave away the job already)
         MutexHolder mh( ss->m_Mutex );
@@ -438,7 +438,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
     {
-        PROFILE_SECTION( "SendJob" )
+        PROFILE_SECTION( "SendJob" );
         Protocol::MsgJob msg( toolId );
         SendMessageInternal( connection, msg, stream );
     }
@@ -448,7 +448,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobResult *, const void * payload, size_t payloadSize )
 {
-    PROFILE_SECTION( "MsgJobResult" )
+    PROFILE_SECTION( "MsgJobResult" );
 
     // find server
     ServerState * ss = (ServerState *)connection->GetUserData();
@@ -656,7 +656,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequestManifest * msg )
 {
-    PROFILE_SECTION( "MsgRequestManifest" )
+    PROFILE_SECTION( "MsgRequestManifest" );
 
     // find a job associated with this client with this toolId
     const uint64_t toolId = msg->GetToolId();
@@ -683,7 +683,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequestFile * msg )
 {
-    PROFILE_SECTION( "MsgRequestFile" )
+    PROFILE_SECTION( "MsgRequestFile" );
 
     // find a job associated with this client with this toolId
     const uint64_t toolId = msg->GetToolId();

@@ -175,9 +175,9 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         wc.cbWndExtra       = sizeof(void *); // For GWLP_USERDATA
         wc.hInstance        = (HINSTANCE)m_HInstance;
         wc.hIcon            = (HICON)LoadIcon( (HINSTANCE)m_HInstance, MAKEINTRESOURCE( IDI_MAIN_ICON ) );
-        wc.hCursor          = LoadCursor( NULL, IDC_ARROW );
+        wc.hCursor          = LoadCursor( nullptr, IDC_ARROW );
         wc.hbrBackground    = (HBRUSH)( COLOR_WINDOW );
-        wc.lpszMenuName     = NULL;
+        wc.lpszMenuName     = nullptr;
         wc.lpszClassName    = uniqueWindowClass.Get();
         wc.hIconSm          = wc.hIcon;
         VERIFY( RegisterClassEx( &wc ) );
@@ -197,7 +197,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         // Set user data
         SetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA, (LONG_PTR)this );
         // User data doesn't take effect until you call SetWindowPos
-        VERIFY( SetWindowPos( (HWND)m_Handle, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE ) );
+        VERIFY( SetWindowPos( (HWND)m_Handle, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE ) );
         ASSERT( this == (void *)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
     #elif defined( __OSX__ )
         m_Handle = WindowOSX_Create( this, x, y, w, h );
@@ -271,7 +271,7 @@ void OSWindow::StartMessagePump()
             if ( PeekMessage( &msg, nullptr, 0, 0, PM_NOREMOVE ) )
             {
                 // message available, process it
-                VERIFY( GetMessage( &msg, NULL, 0, 0 ) != 0 );
+                VERIFY( GetMessage( &msg, nullptr, 0, 0 ) != 0 );
                 TranslateMessage( &msg );
                 DispatchMessage( &msg );
                 continue; // immediately handle any new messages

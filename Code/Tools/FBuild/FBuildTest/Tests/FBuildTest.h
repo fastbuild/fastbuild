@@ -45,8 +45,8 @@ protected:
                           const char * expectedMessage = nullptr ) const;
 
     // Helper macros
-    #define TEST_PARSE_OK( ... )        TEST_ASSERT( ParseFromString( true, __VA_ARGS__ ) );
-    #define TEST_PARSE_FAIL( ... )      TEST_ASSERT( ParseFromString( false, __VA_ARGS__ ) );
+    #define TEST_PARSE_OK( ... )        TEST_ASSERT( ParseFromString( true, __VA_ARGS__ ) )
+    #define TEST_PARSE_FAIL( ... )      TEST_ASSERT( ParseFromString( false, __VA_ARGS__ ) )
 
     // Helpers to check build results
     void CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const;

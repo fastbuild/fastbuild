@@ -508,7 +508,7 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Server::ThreadFuncStatic( void * param )
 {
-    PROFILE_SET_THREAD_NAME( "ServerThread" )
+    PROFILE_SET_THREAD_NAME( "ServerThread" );
 
     Server * s = (Server *)param;
     s->ThreadFunc();
@@ -540,7 +540,7 @@ void Server::FindNeedyClients()
         return;
     }
 
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     MutexHolder mh( m_ClientListMutex );
 
@@ -613,7 +613,7 @@ void Server::FindNeedyClients()
 //------------------------------------------------------------------------------
 void Server::FinalizeCompletedJobs()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     JobQueueRemote & jcr = JobQueueRemote::Get();
     while ( Job * job = jcr.GetCompletedJob() )

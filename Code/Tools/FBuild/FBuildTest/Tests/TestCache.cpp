@@ -84,7 +84,7 @@ void TestCache::Write() const
     // Normal caching using compiler's preprocessor
     size_t numDepsA = 0;
     {
-        PROFILE_SECTION( "Normal" )
+        PROFILE_SECTION( "Normal" );
 
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/cache.bff";
 
@@ -106,7 +106,7 @@ void TestCache::Write() const
     #if defined( __WINDOWS__ )
         size_t numDepsB = 0;
         {
-            PROFILE_SECTION( "Light" )
+            PROFILE_SECTION( "Light" );
 
             options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
@@ -143,7 +143,7 @@ void TestCache::Read() const
     // Normal caching using compiler's preprocessor
     size_t numDepsA = 0;
     {
-        PROFILE_SECTION( "Normal" )
+        PROFILE_SECTION( "Normal" );
 
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/cache.bff";
 
@@ -165,7 +165,7 @@ void TestCache::Read() const
     #if defined( __WINDOWS__ )
         size_t numDepsB = 0;
         {
-            PROFILE_SECTION( "Light" )
+            PROFILE_SECTION( "Light" );
 
             options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
@@ -203,7 +203,7 @@ void TestCache::ReadWrite() const
     // Normal caching using compiler's preprocessor
     size_t numDepsA = 0;
     {
-        PROFILE_SECTION( "Normal" )
+        PROFILE_SECTION( "Normal" );
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/cache.bff";
 
         FBuildForTest fBuild( options );
@@ -224,7 +224,7 @@ void TestCache::ReadWrite() const
     #if defined( __WINDOWS__ )
         size_t numDepsB = 0;
         {
-            PROFILE_SECTION( "Light" )
+            PROFILE_SECTION( "Light" );
 
             options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 

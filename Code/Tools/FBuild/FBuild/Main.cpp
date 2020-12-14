@@ -70,7 +70,7 @@ int main( int argc, char * argv[] )
 //------------------------------------------------------------------------------
 int Main( int argc, char * argv[] )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     Timer t;
 

@@ -453,11 +453,11 @@ void TestGraph::TestCleanPathPartial() const
     FBuild f( fo );
 
     #define CHECK( input, expectedOutput, makeFullPath ) \
-        { \
+        do { \
             AStackString<> cleaned; \
             NodeGraph::CleanPath( AStackString<>( input ), cleaned, makeFullPath ); \
             TEST_ASSERT( cleaned == expectedOutput ); \
-        }
+        } while( false )
 
     #if defined( __WINDOWS__ )
         #define CHECK_RELATIVE( input, expectedWindows, expectedOther ) \

@@ -269,7 +269,7 @@ bool LightCache::Hash( ObjectNode * node,
                        uint64_t & outSourceHash,
                        Array< AString > & outIncludes )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ProjectGeneratorBase::ExtractIncludePaths( compilerArgs,
                                                m_IncludePaths,

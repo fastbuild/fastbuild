@@ -149,7 +149,7 @@ void Job::SetMessages( const Array< AString > & messages )
 //------------------------------------------------------------------------------
 void Job::Serialize( IOStream & stream )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // write jobid
     stream.Write( m_JobId );

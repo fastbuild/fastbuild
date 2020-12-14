@@ -130,7 +130,7 @@ Process::~Process()
 #if defined( __WINDOWS__ )
     /*static*/ uint64_t Process::GetProcessCreationTime( const void * hProc )
     {
-        if ( hProc == 0 )
+        if ( hProc == nullptr )
         {
             return 0;
         }
@@ -173,7 +173,7 @@ bool Process::Spawn( const char * executable,
                      const char * environment,
                      bool shareHandles )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ASSERT( !m_Started );
     ASSERT( executable );
@@ -587,7 +587,7 @@ bool Process::ReadAllData( AString & outMem,
         const bool abort = ( m_AbortFlag && AtomicLoadRelaxed( m_AbortFlag ) );
         if ( abort || mainAbort )
         {
-            PROFILE_SECTION( "Abort" )
+            PROFILE_SECTION( "Abort" );
             KillProcessTree();
             m_HasAborted = true;
             break;
@@ -699,7 +699,7 @@ bool Process::ReadAllData( AString & outMem,
 
         // read the new data
         DWORD bytesReadNow = 0;
-        if ( !::ReadFile( handle, buffer.Get() + sizeSoFar, bytesAvail, (LPDWORD)&bytesReadNow, 0 ) )
+        if ( !::ReadFile( handle, buffer.Get() + sizeSoFar, bytesAvail, (LPDWORD)&bytesReadNow, nullptr ) )
         {
             ASSERT( false ); // error!
         }

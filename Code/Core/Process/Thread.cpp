@@ -107,7 +107,7 @@ public:
 //------------------------------------------------------------------------------
 /*static*/ void Thread::Sleep( uint32_t ms )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     #if defined( WIN32 ) || defined( WIN64 )
         ::Sleep( ms );

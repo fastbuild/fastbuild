@@ -40,7 +40,7 @@ BFFParser::~BFFParser() = default;
 //------------------------------------------------------------------------------
 bool BFFParser::ParseFromFile( const char * fileName )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // Tokenize file
     if ( m_Tokenizer.TokenizeFromFile( AStackString<>( fileName ) ) == false )
@@ -65,7 +65,7 @@ bool BFFParser::ParseFromFile( const char * fileName )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseFromString( const char * fileName, const char * fileContents )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // Tokenize string
     if ( m_Tokenizer.TokenizeFromString( AStackString<>( fileName ), AStackString<>( fileContents ) ) == false )
@@ -929,7 +929,6 @@ bool BFFParser::StoreVariableString( const AString & name,
             return false;
         }
     }
-    return false;
 }
 
 // StoreVariableArray

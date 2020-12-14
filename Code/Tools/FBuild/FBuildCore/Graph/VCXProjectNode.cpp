@@ -107,7 +107,7 @@ REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput"
     REFLECT_ARRAY_OF_STRUCT(  m_ProjectProjectImports,  "ProjectProjectImports",    VSProjectImport,    MetaOptional() )
 
     // Base Project Config settings
-    REFLECT_STRUCT( m_BaseProjectConfig,            "BaseProjectConfig",            VSProjectConfigBase,    MetaEmbedMembers() );
+    REFLECT_STRUCT( m_BaseProjectConfig,            "BaseProjectConfig",            VSProjectConfigBase,    MetaEmbedMembers() )
 REFLECT_END( VCXProjectNode )
 
 // VSProjectConfig::ResolveTargets

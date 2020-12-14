@@ -107,6 +107,8 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
     for (; align; align--)
         crc = g_crc_slicing[0][(crc ^ *buf++) & 0xFF] ^ (crc >> 8);
 
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcast-align" )
+
     SIZE_T nqwords = len / (sizeof(uint32_t) + sizeof(uint32_t));
     for (; nqwords; nqwords--) {
         crc ^= *(uint32_t*)buf;
@@ -123,6 +125,8 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
             g_crc_slicing[1][(next >> 16) & 0xFF] ^
             g_crc_slicing[0][(next >> 24)];
     }
+
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcast-align
 
     len &= sizeof(uint32_t) * 2 - 1;
     for (; len; len--)

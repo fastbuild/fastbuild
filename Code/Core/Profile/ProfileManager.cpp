@@ -208,7 +208,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 //------------------------------------------------------------------------------
 /*static*/ void ProfileManager::Synchronize()
 {
-    PROFILE_SECTION( "ProfileManager::Synchronize" )
+    PROFILE_SECTION( "ProfileManager::Synchronize" );
     SynchronizeNoTag();
 }
 

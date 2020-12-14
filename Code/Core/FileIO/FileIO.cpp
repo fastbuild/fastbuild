@@ -76,7 +76,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileExists( const char * fileName )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 #if defined( __WINDOWS__ )
     // see if we can get attributes
     DWORD attributes = GetFileAttributes( fileName );
@@ -127,7 +127,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileDelete( const char * fileName )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 #if defined( __WINDOWS__ )
     BOOL result = DeleteFile( fileName );
     if ( result == FALSE )
@@ -1449,7 +1449,7 @@
         DWORD valueSize = sizeof(DWORD);
         const LONG result = ::RegQueryValueEx( key,
                                                 "LongPathsEnabled",
-                                                0,
+                                                nullptr,
                                                 nullptr,
                                                 reinterpret_cast<LPBYTE>( &value ),
                                                 &valueSize );

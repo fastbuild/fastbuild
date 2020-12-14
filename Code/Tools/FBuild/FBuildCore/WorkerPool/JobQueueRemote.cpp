@@ -97,7 +97,7 @@ void JobQueueRemote::GetWorkerStatus( size_t index, AString & hostName, AString 
 //------------------------------------------------------------------------------
 void JobQueueRemote::MainThreadWait( uint32_t timeoutMS )
 {
-    PROFILE_SECTION( "MainThreadWait" )
+    PROFILE_SECTION( "MainThreadWait" );
     m_MainThreadSemaphore.Wait( timeoutMS );
 }
 
@@ -112,7 +112,7 @@ void JobQueueRemote::WakeMainThread()
 //------------------------------------------------------------------------------
 void JobQueueRemote::WorkerThreadWait( uint32_t timeoutMS )
 {
-    PROFILE_SECTION( "WorkerThreadWait" )
+    PROFILE_SECTION( "WorkerThreadWait" );
     m_WorkerThreadSemaphore.Wait( timeoutMS );
 }
 

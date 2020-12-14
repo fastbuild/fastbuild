@@ -446,7 +446,7 @@ bool LinkerNode::DoPreLinkCleanup() const
 //------------------------------------------------------------------------------
 bool LinkerNode::BuildArgs( Args & fullArgs ) const
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // split into tokens
     Array< AString > tokens( 1024, true );

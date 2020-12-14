@@ -38,7 +38,7 @@ WorkerThread::WorkerThread( uint32_t threadIndex )
 //------------------------------------------------------------------------------
 void WorkerThread::Init()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // Start thread
     Thread::ThreadHandle h = Thread::CreateThread( ThreadWrapperFunc,
@@ -60,7 +60,7 @@ WorkerThread::~WorkerThread()
 //------------------------------------------------------------------------------
 /*static*/ void WorkerThread::InitTmpDir( bool remote )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     AStackString<> tmpDirPath;
     VERIFY( FBuild::GetTempDir( tmpDirPath ) );
@@ -99,7 +99,7 @@ bool WorkerThread::HasExited() const
 //------------------------------------------------------------------------------
 void WorkerThread::WaitForStop()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
     m_MainThreadWaitForExit.Wait();
 }
 
@@ -133,7 +133,7 @@ void WorkerThread::WaitForStop()
 //------------------------------------------------------------------------------
 /*virtual*/ void WorkerThread::Main()
 {
-    PROFILE_SECTION( "WorkerThread" )
+    PROFILE_SECTION( "WorkerThread" );
 
     for (;;)
     {

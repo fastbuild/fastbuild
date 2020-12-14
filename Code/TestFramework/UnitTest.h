@@ -119,7 +119,7 @@ private:
 
     // Take a snapshot of the memory state
     #define TEST_MEMORY_SNAPSHOT( snapshot )                            \
-        TestMemorySnapshot snapshot;
+        TestMemorySnapshot snapshot
 
     // Check for expected or unexpected allocations since a snapshot
     #define TEST_EXPECT_ALLOCATION_EVENTS( snapshot, expected )         \
@@ -136,7 +136,7 @@ private:
         }
 
 #else
-    #define TEST_MEMORY_SNAPSHOT( snapshot )
+    #define TEST_MEMORY_SNAPSHOT( snapshot ) (void)0
     #define TEST_EXPECT_ALLOCATION_EVENTS( snapshot, expected )
     #define TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( snapshot, expected )
 #endif

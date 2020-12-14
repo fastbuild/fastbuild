@@ -50,7 +50,7 @@ bool SystemMutex::TryLock()
         void * handle = (void *)CreateMutex( nullptr, TRUE, m_Name.Get() );
         if ( GetLastError() == ERROR_ALREADY_EXISTS )
         {
-            if ( ( handle != INVALID_HANDLE_VALUE ) && ( handle != 0 ) )
+            if ( ( handle != INVALID_HANDLE_VALUE ) && ( handle != nullptr ) )
             {
                 CloseHandle( handle );
             }

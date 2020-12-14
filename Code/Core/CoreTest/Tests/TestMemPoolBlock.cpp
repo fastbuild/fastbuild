@@ -31,8 +31,8 @@ private:
 REGISTER_TESTS_BEGIN( TestMemPoolBlock )
     REGISTER_TEST( TestUnused )
     REGISTER_TEST( TestAllocs )
-    REGISTER_TEST( TestAllocsMultiplePages );
-    REGISTER_TEST( TestSpeed );
+    REGISTER_TEST( TestAllocsMultiplePages )
+    REGISTER_TEST( TestSpeed )
 REGISTER_TESTS_END
 
 // TestUnused

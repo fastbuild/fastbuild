@@ -57,7 +57,7 @@ public:
                               bool /*cacheVerbose*/,
                               const AString & /*pluginDLLConfig*/ )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     m_CachePath = cachePath;
     PathUtils::EnsureTrailingSlash( m_CachePath );

@@ -123,7 +123,7 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
     m_CompletedJobsFailed2( 1024, true ),
     m_Workers( numWorkerThreads, false )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     WorkerThread::InitTmpDir();
 
@@ -450,7 +450,7 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job )
 //------------------------------------------------------------------------------
 void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     {
         MutexHolder m( m_CompletedJobsMutex );
@@ -545,7 +545,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
 //------------------------------------------------------------------------------
 void JobQueue::MainThreadWait( uint32_t maxWaitMS )
 {
-    PROFILE_SECTION( "MainThreadWait" )
+    PROFILE_SECTION( "MainThreadWait" );
     m_MainThreadSemaphore.Wait( maxWaitMS );
 }
 

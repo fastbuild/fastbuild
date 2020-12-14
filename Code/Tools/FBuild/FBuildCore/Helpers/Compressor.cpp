@@ -60,7 +60,7 @@ bool Compressor::IsValidData( const void * data, size_t dataSize ) const
 //------------------------------------------------------------------------------
 bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressionLevel )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ASSERT( data );
     ASSERT( m_Result == nullptr );
@@ -120,7 +120,7 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
 //------------------------------------------------------------------------------
 bool Compressor::Decompress( const void * data )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ASSERT( data );
     ASSERT( m_Result == nullptr );

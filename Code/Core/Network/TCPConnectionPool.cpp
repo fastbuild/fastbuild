@@ -44,10 +44,10 @@
 #ifdef TCPCONNECTION_DEBUG
     #include "Core/Tracing/Tracing.h"
     #define TCPDEBUG( ... ) DEBUGSPAM( __VA_ARGS__ )
+    #define LAST_NETWORK_ERROR_STR ERROR_STR( GetLastNetworkError() )
 #else
-    #define TCPDEBUG( ... )
+    #define TCPDEBUG( ... ) (void)0
 #endif
-#define LAST_NETWORK_ERROR_STR ERROR_STR( GetLastNetworkError() )
 
 // TCPConnectionPoolProfileHelper
 //------------------------------------------------------------------------------
@@ -93,7 +93,7 @@
             // Format and set
             AStackString<> threadName;
             threadName.Format( ( threadType == THREAD_LISTEN ) ? "Listen_%u" : "Connection_%u", bit );
-            PROFILE_SET_THREAD_NAME( threadName.Get() )
+            PROFILE_SET_THREAD_NAME( threadName.Get() );
         }
         ~TCPConnectionPoolProfileHelper()
         {
@@ -122,9 +122,9 @@
     /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection    = 0;
 
     #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )   \
-        TCPConnectionPoolProfileHelper threadNameHelper( threadType );
+        TCPConnectionPoolProfileHelper threadNameHelper( threadType )
 #else
-    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType ) (void)0
 #endif
 
 // CONSTRUCTOR - ConnectionInfo
@@ -167,7 +167,7 @@ TCPConnectionPool::~TCPConnectionPool()
 //------------------------------------------------------------------------------
 void TCPConnectionPool::ShutdownAllConnections()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     AtomicStoreRelaxed( &m_ShuttingDown, true );
 
@@ -280,7 +280,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_
 //------------------------------------------------------------------------------
 const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t port, uint32_t timeout, void * userData )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // create a socket
     TCPSocket sockfd = CreateSocket();
@@ -545,7 +545,7 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const TCPConnectionPool::SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ASSERT( connection );
 
@@ -689,7 +689,7 @@ bool TCPConnectionPool::Broadcast( const void * data, size_t size )
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // work out how many bytes there are
     uint32_t size( 0 );
@@ -806,7 +806,7 @@ int TCPConnectionPool::Select( TCPSocket socket,
                                void * a_ExceptionSocketSet,
                                timeval * a_TimeOut ) const
 {
-    PROFILE_SECTION( "Select" )
+    PROFILE_SECTION( "Select" );
     return select( (int)socket, // NOTE: ignored by Windows
                    (fd_set *)a_ReadSocketSet,
                    (fd_set *)a_WriteSocketSet,
@@ -917,7 +917,7 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
 /*static*/ uint32_t TCPConnectionPool::ListenThreadWrapperFunction( void * data )
 {
     TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_LISTEN );
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ConnectionInfo * ci = (ConnectionInfo *)data;
     ci->m_TCPConnectionPool->ListenThreadFunction( ci );
@@ -956,7 +956,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         PRAGMA_DISABLE_POP_MSVC // 4548
 
         // peek
-        int num = Select( ci->m_Socket + 1, &set, NULL, NULL, &timeout );
+        int num = Select( ci->m_Socket + 1, &set, nullptr, nullptr, &timeout );
         if ( num == 0 )
         {
             // timeout expired - loop again (checking quit notification)
@@ -1052,7 +1052,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 /*static*/ uint32_t TCPConnectionPool::ConnectionThreadWrapperFunction( void * data )
 {
     TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_CONNECTION );
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ConnectionInfo * ci = (ConnectionInfo *)data;
     ci->m_TCPConnectionPool->ConnectionThreadFunction( ci );
@@ -1091,7 +1091,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         PRAGMA_DISABLE_POP_MSVC // C6319
         PRAGMA_DISABLE_POP_MSVC // 4548
 
-        int num = Select( ci->m_Socket + 1, &readSet, NULL, NULL, &timeout );
+        int num = Select( ci->m_Socket + 1, &readSet, nullptr, nullptr, &timeout );
         if ( num == 0 )
         {
             // timeout expired - loop again (checking quit notification)

@@ -121,7 +121,7 @@ bool BFFTokenizer::TokenizeFromFile( const AString & fileName )
 //------------------------------------------------------------------------------
 bool BFFTokenizer::Tokenize( const AString & fileName, const BFFToken * token )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // The root bff doesn't have a token
     ASSERT( token || ( m_Depth == 0 ) );
@@ -172,7 +172,7 @@ bool BFFTokenizer::Tokenize( const AString & fileName, const BFFToken * token )
 //------------------------------------------------------------------------------
 bool BFFTokenizer::TokenizeFromString( const AString & fileName, const AString & fileContents )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // Canonicalize path
     AStackString<> cleanFileName;
@@ -919,7 +919,7 @@ bool BFFTokenizer::ParseToEndIf( const char * & pos, const char * end, const BFF
                     *outIsElse = true;
                 }
                 outBlockEnd = blockEnd;
-                return true;;
+                return true;
             }
 
             // continue searching....
