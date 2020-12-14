@@ -50,9 +50,9 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( UsageError_UnsupportedOperation )
 REGISTER_TESTS_END
 
-#define TEST_EXP_TRUE( defines, exp )        TEST_ASSERT( ParseFromString( true, defines##"\nIf ( "##exp##" )\n{\nPrint('Success')\n}", "Success") );
-#define TEST_EXP_FALSE( defines, exp )       TEST_ASSERT( ParseFromString( true, defines##"\nIf ( "##exp##" )\n{\nPrint('Failure')\n}", nullptr, "Failure") );
-#define TEST_EXP_FAIL( defines, exp, error ) TEST_ASSERT( ParseFromString( false, defines##"\nIf ( "##exp##" )\n{\n}", error ) );
+#define TEST_EXP_TRUE( defines, exp )        TEST_ASSERT( ParseFromString( true, defines "\nIf ( " exp " )\n{\nPrint('Success')\n}", "Success") );
+#define TEST_EXP_FALSE( defines, exp )       TEST_ASSERT( ParseFromString( true, defines "\nIf ( " exp " )\n{\nPrint('Failure')\n}", nullptr, "Failure") );
+#define TEST_EXP_FAIL( defines, exp, error ) TEST_ASSERT( ParseFromString( false, defines "\nIf ( " exp " )\n{\n}", error ) );
 
 // IfFunctionTrue
 //------------------------------------------------------------------------------
