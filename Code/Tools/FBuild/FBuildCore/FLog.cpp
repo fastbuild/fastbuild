@@ -93,7 +93,7 @@ static FileStream * g_MonitorFileStream = nullptr;
         return; // No - nothing to do
     }
 
-    PROFILE_SECTION( "FLog::Monitor" )
+    PROFILE_SECTION( "FLog::Monitor" );
 
     AStackString< 1024 > buffer;
     va_list args;
@@ -263,7 +263,7 @@ static FileStream * g_MonitorFileStream = nullptr;
                                       uint32_t numJobsDist,
                                       uint32_t numJobsDistActive )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ASSERT( s_ShowProgress );
 

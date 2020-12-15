@@ -95,7 +95,7 @@ NodeGraph::~NodeGraph()
                                                const char * nodeGraphDBFile,
                                                bool forceMigration )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ASSERT( bffFile ); // must be supplied (or left as default)
     ASSERT( nodeGraphDBFile ); // must be supplied (or left as default)
@@ -1079,7 +1079,7 @@ void NodeGraph::AddNode( Node * node )
 //------------------------------------------------------------------------------
 void NodeGraph::DoBuildPass( Node * nodeToBuild )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     s_BuildPassTag++;
 
@@ -1770,7 +1770,7 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
 //------------------------------------------------------------------------------
 void NodeGraph::Migrate( const NodeGraph & oldNodeGraph )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     s_BuildPassTag++;
 

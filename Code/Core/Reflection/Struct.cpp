@@ -14,7 +14,7 @@ class Struct_ReflectionInfo : public ReflectionInfo
 {
 public:
     explicit Struct_ReflectionInfo() { SetTypeName( "Struct" ); m_IsAbstract = true; }
-    virtual ~Struct_ReflectionInfo() = default;
+    virtual ~Struct_ReflectionInfo() override = default;
 };
 Struct_ReflectionInfo g_Struct_ReflectionInfo;
 

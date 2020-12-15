@@ -52,25 +52,25 @@ void TestObject::MSVCArgHelpers() const
     // Exact match args, using /
     {
         AStackString<> token( "/Zi" );
-        TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) )
+        TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) );
     }
 
     // Exact match args, using -
     {
         AStackString<> token( "-Zi" );
-        TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) )
+        TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) );
     }
 
     // Starts with args, using /
     {
         AStackString<> token( "/Ipath/path" );
-        TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) )
+        TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) );
     }
 
     // Starts with args, using -
     {
         AStackString<> token( "-Ipath/path" );
-        TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) )
+        TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) );
     }
 }
 

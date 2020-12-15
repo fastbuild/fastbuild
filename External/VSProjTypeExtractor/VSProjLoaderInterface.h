@@ -47,7 +47,7 @@ private:
 			Vspte_CleanUp();
 			::FreeLibrary(_hVSProjTypeExtractor);
 			//
-			_hVSProjTypeExtractor = NULL;
+			_hVSProjTypeExtractor = nullptr;
 			_Vspte_GetProjData = nullptr;
 			_Vspte_CleanUp = nullptr;
 			_Vspte_DeallocateProjDataCfgArray = nullptr;
@@ -55,20 +55,15 @@ private:
 	}
 	void Load()
 	{
-		try {
-			if (!_hVSProjTypeExtractor)
-			{
-				_hVSProjTypeExtractor = ::LoadLibrary("VSProjTypeExtractor");
-				if (_hVSProjTypeExtractor)
-				{
-					_Vspte_GetProjData = reinterpret_cast<Type_GetProjData>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_GetProjData"));
-					_Vspte_CleanUp = reinterpret_cast<Type_CleanUp>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_CleanUp"));
-					_Vspte_DeallocateProjDataCfgArray = reinterpret_cast<Type_DeallocateProjDataCfgArray>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_DeallocateProjDataCfgArray"));
-				}
-			}
-		}
-		catch (...)
+		if (!_hVSProjTypeExtractor)
 		{
+			_hVSProjTypeExtractor = ::LoadLibrary("VSProjTypeExtractor");
+			if (_hVSProjTypeExtractor)
+			{
+				_Vspte_GetProjData = reinterpret_cast<Type_GetProjData>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_GetProjData"));
+				_Vspte_CleanUp = reinterpret_cast<Type_CleanUp>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_CleanUp"));
+				_Vspte_DeallocateProjDataCfgArray = reinterpret_cast<Type_DeallocateProjDataCfgArray>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_DeallocateProjDataCfgArray"));
+			}
 		}
 	}
 	void Vspte_CleanUp()
@@ -82,7 +77,7 @@ private:
 	Type_GetProjData _Vspte_GetProjData = nullptr;
 	Type_CleanUp _Vspte_CleanUp = nullptr;
 	Type_DeallocateProjDataCfgArray _Vspte_DeallocateProjDataCfgArray = nullptr;
-	HMODULE _hVSProjTypeExtractor = NULL;
+	HMODULE _hVSProjTypeExtractor = nullptr;
 
 
 public:
@@ -101,7 +96,7 @@ public:
 	*/
 	bool IsLoaded()
 	{
-		return _hVSProjTypeExtractor != NULL && _Vspte_GetProjData != nullptr && _Vspte_CleanUp != nullptr && _Vspte_DeallocateProjDataCfgArray != nullptr;
+		return _hVSProjTypeExtractor != nullptr && _Vspte_GetProjData != nullptr && _Vspte_CleanUp != nullptr && _Vspte_DeallocateProjDataCfgArray != nullptr;
 	}
 
 	/** @brief  Retrieves basic project data from an existing project

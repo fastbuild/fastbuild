@@ -134,8 +134,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 const int sizeIndex = ( i + 1 );
                 PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
                 if ( ( sizeIndex >= argc ) ||
                      ( sscanf( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 ) // TODO:C Consider using sscanf_s
+                PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
                 PRAGMA_DISABLE_POP_MSVC // 4996
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <sizeMiB> for '-cachetrim' argument\n" );
@@ -158,9 +160,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 const int sizeIndex = ( i + 1 );
                 PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
                 if ( ( sizeIndex >= argc ) ||
                      ( sscanf( argv[ sizeIndex ], "%i", &m_CacheCompressionLevel ) != 1 ) || // TODO:C Consider using sscanf_s
                      ( ( m_CacheCompressionLevel < -128 ) || ( m_CacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
+                PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
                 PRAGMA_DISABLE_POP_MSVC // 4996
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <level> for '-cachecompressionlevel' argument\n" );
@@ -255,8 +259,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 continue;
             }
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
             else if ( thisArg.BeginsWith( "-j" ) &&
                       sscanf( thisArg.Get(), "-j%u", &m_NumWorkerThreads ) == 1 ) // TODO:C Consider using sscanf_s
+            PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
             PRAGMA_DISABLE_POP_MSVC // 4996
             {
                 // only accept within sensible range

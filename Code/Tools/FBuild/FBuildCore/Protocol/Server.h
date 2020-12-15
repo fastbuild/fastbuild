@@ -29,7 +29,7 @@ class Server : public TCPConnectionPool
 {
 public:
     Server( uint32_t numThreadsInJobQueue = 0 );
-    ~Server();
+    virtual ~Server() override;
 
     static void GetHostForJob( const Job * job, AString & hostName );
 
@@ -90,7 +90,7 @@ private:
     mutable Mutex           m_ToolManifestsMutex;
     Array< ToolManifest * > m_Tools;
     
-    #if defined( __OSX__ ) || ( __LINUX__ )
+    #if defined( __OSX__ ) || defined( __LINUX__ )
         Timer                   m_TouchToolchainTimer;
     #endif
 };

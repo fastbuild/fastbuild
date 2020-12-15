@@ -1340,7 +1340,7 @@ test_match:
 
         // different, so return relationship
         return ( *a > *b ) ? 1 : -1;
-    };
+    }
     return 0; // strings identical upto 'num' chars
 }
 
@@ -1376,7 +1376,7 @@ test_match:
 
         // different, so return relationship
         return ( a1 - b1 );
-    };
+    }
     return 0; // strings identical upto 'num' chars
 }
 

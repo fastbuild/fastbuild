@@ -50,8 +50,8 @@ REGISTER_TESTS_BEGIN( TestArgs )
     REGISTER_TEST( ResponseFile_Never_Long )
     REGISTER_TEST( ResponseFile_IfNeeded_Short )
     REGISTER_TEST( ResponseFile_IfNeeded_Long )
-    REGISTER_TEST( ResponseFile_Always_Short );
-    REGISTER_TEST( ResponseFile_Always_Long );
+    REGISTER_TEST( ResponseFile_Always_Short )
+    REGISTER_TEST( ResponseFile_Always_Long )
 REGISTER_TESTS_END
 
 // Unused

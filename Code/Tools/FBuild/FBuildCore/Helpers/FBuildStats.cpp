@@ -94,7 +94,7 @@ void FBuildStats::OnBuildStop( Node * node )
 //------------------------------------------------------------------------------
 void FBuildStats::GatherPostBuildStatistics( Node * node )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // recurse and gather the per-node-type statistics
     GatherPostBuildStatisticsRecurse( node );
@@ -119,7 +119,7 @@ void FBuildStats::GatherPostBuildStatistics( Node * node )
 //------------------------------------------------------------------------------
 void FBuildStats::OutputSummary() const
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     AStackString< 4096 > output;
 

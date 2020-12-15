@@ -27,6 +27,57 @@
 <h1>Changelog</h1>
 
 <div class='newsitemheader'>
+    v1.03&nbsp;<font color='#bbbbbb'>(13th-Dec-2020)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+	<ul>
+		<li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>New</b>
+	<ul>
+		<li>Support integration of FASTBuild, Windows Subsystem for Linux and Visual Studio</li>
+		<li>-wsl option can forward to Windows Subsystem for Linux in Visual Studio</li>
+		<li>FASTBuild can be built as a native exe for Apple ARM (Thanks to Javier Blazquez)</li>
+		<li>ListDependencies() function can output discovered dependencies (Thanks to poppolopoppo)</li>
+	</ul>
+    <b>Fixes</b>
+    <ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>$ Subsititutions in string literal args to User Functions were not handled in the correct scope</li>
+			<li>Escaped characters in string literal args to User Functions were not escaped correctly</li>
+			<li>#if directives were not correctly handled when used inside list declarations (and possibly other cases)</li>
+		</ul>
+		<li>-Bstatic and -Bdynamic are respected when parsing linker command line (Thanks to dummyunit)</li>
+		<li>-l option checks for dynamic libs first to match GNU ld behavior (Thanks to dummyunit)</li>
+		<li>Visual Studio solution header for VS2019 so version selector works correctly</li>
+		<li>Add missing \n to ListDependenciesNode output (Thanks to mhoulier)</li>
+		<li>Fix features documentation typo (Thanks to Aleksey Kladov)</li>
+		<li>Respect minimum stack size constraint on OSX and Linux (Thanks to Nicolas)</li>
+		<li>Missing errors for preprocessors that write to stdout on failure</li>
+    </ul>
+	<b>Improvements</b>
+	<ul>
+		<li>Distributed Compilaion:</li>
+		<ul>
+			<li>Workers write their IP directly to brokerage to improve discoverability (Thanks to Joe Kirchoff)</li>
+			<li>Workers can be explicity listed with a FASTBUILD_WORKERS env var (Thanks to eclazi)</li>
+		</ul>
+		<li>Project Generation:</li>
+		<ul>
+			<li>Intellisense/CodeSense detects more path types (/imsvsc, -isystem and others) (Thanks to dummyunit)</li>
+		</ul>
+		<li>Add explicit support for Clang on windows in clang-cl mode (Thanks to Lambert Clara)</li>
+		<li>Detect libraries provided directly on command line via -l:filename (Thanks to dummyunit)</li>
+		<li>MSVC linker failure LNK1201 is automatically retried to work around VS2019 bug</li>
+		<li>Allow FASTBuild to be compiled for ARM on Linux (Thanks to Nicolas)</li>
+		<li>Add .Libraries2 to Executable and DLL which can be accessed with %1[1]</li>
+	</ul>
+</div>
+
+
+<div class='newsitemheader'>
     v1.02&nbsp;<font color='#bbbbbb'>(25th-Aug-2020)</font>
 </div>
 <div class='newsitembody'>

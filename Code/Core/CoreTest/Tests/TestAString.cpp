@@ -651,21 +651,21 @@ void TestAString::Tokenize() const
 void TestAString::PatternMatch() const
 {
     #define CHECK_MATCH( pat, str, match )              \
-    {                                                   \
+    do {                                                \
         AStackString<> string( str );                   \
         TEST_ASSERT( string.Matches( pat ) == match );  \
-    }
+    } while( false )
 
-    CHECK_MATCH( "*.cpp",   "File.cpp", true )
-    CHECK_MATCH( "*",       "File.cpp", true )
-    CHECK_MATCH( "File*.*", "File.cpp", true )
-    CHECK_MATCH( "*.c*",    "File.cpp", true )
-    CHECK_MATCH( "File.cpp","File.cpp", true )
+    CHECK_MATCH( "*.cpp",   "File.cpp", true );
+    CHECK_MATCH( "*",       "File.cpp", true );
+    CHECK_MATCH( "File*.*", "File.cpp", true );
+    CHECK_MATCH( "*.c*",    "File.cpp", true );
+    CHECK_MATCH( "File.cpp","File.cpp", true );
 
-    CHECK_MATCH( "*.cpp",   "File.CPP", false )
-    CHECK_MATCH( "File*.*", "FILE.cpp", false )
-    CHECK_MATCH( "*.c*",    "File.CPP", false )
-    CHECK_MATCH( "File.cpp","file.cpp", false )
+    CHECK_MATCH( "*.cpp",   "File.CPP", false );
+    CHECK_MATCH( "File*.*", "FILE.cpp", false );
+    CHECK_MATCH( "*.c*",    "File.CPP", false );
+    CHECK_MATCH( "File.cpp","file.cpp", false );
 
     CHECK_MATCH( "*.cpp",   "File.c",           false );
     CHECK_MATCH( "*.cpp",   "File.cpp~",        false );
@@ -685,21 +685,21 @@ void TestAString::PatternMatch() const
 void TestAString::PatternMatchI() const
 {
     #define CHECK_MATCH( pat, str, match )              \
-    {                                                   \
+    do {                                                \
         AStackString<> string( str );                   \
         TEST_ASSERT( string.MatchesI( pat ) == match ); \
-    }
+    } while( false )
 
-    CHECK_MATCH( "*.cpp",   "File.cpp", true )
-    CHECK_MATCH( "*",       "File.cpp", true )
-    CHECK_MATCH( "File*.*", "File.cpp", true )
-    CHECK_MATCH( "*.c*",    "File.cpp", true )
-    CHECK_MATCH( "File.cpp","File.cpp", true )
+    CHECK_MATCH( "*.cpp",   "File.cpp", true );
+    CHECK_MATCH( "*",       "File.cpp", true );
+    CHECK_MATCH( "File*.*", "File.cpp", true );
+    CHECK_MATCH( "*.c*",    "File.cpp", true );
+    CHECK_MATCH( "File.cpp","File.cpp", true );
 
-    CHECK_MATCH( "*.cpp",   "File.CPP", true )
-    CHECK_MATCH( "File*.*", "FILE.cpp", true )
-    CHECK_MATCH( "*.c*",    "File.CPP", true )
-    CHECK_MATCH( "File.cpp","file.cpp", true )
+    CHECK_MATCH( "*.cpp",   "File.CPP", true );
+    CHECK_MATCH( "File*.*", "FILE.cpp", true );
+    CHECK_MATCH( "*.c*",    "File.CPP", true );
+    CHECK_MATCH( "File.cpp","file.cpp", true );
 
     CHECK_MATCH( "*.cpp",   "File.c",           false );
     CHECK_MATCH( "*.cpp",   "File.cpp~",        false );

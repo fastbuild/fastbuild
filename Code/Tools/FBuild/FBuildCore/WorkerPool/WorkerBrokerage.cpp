@@ -45,7 +45,7 @@ WorkerBrokerage::WorkerBrokerage()
 //------------------------------------------------------------------------------
 void WorkerBrokerage::InitBrokerage()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     if ( m_BrokerageInitialized )
     {
@@ -134,7 +134,7 @@ WorkerBrokerage::~WorkerBrokerage()
 //------------------------------------------------------------------------------
 void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // Check for workers for the FASTBUILD_WORKERS environment variable
     // which is a list of worker addresses separated by a semi-colon.

@@ -15,7 +15,7 @@
 // system
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
-    #include <tlhelp32.h>
+    #include <TlHelp32.h>
 #endif
 #if defined( __LINUX__ )
     #include <dirent.h>

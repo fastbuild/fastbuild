@@ -97,7 +97,7 @@ FBuild::FBuild( const FBuildOptions & options )
 //------------------------------------------------------------------------------
 FBuild::~FBuild()
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     Function::Destroy();
 
@@ -125,7 +125,7 @@ FBuild::~FBuild()
 //------------------------------------------------------------------------------
 bool FBuild::Initialize( const char * nodeGraphDBFile )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // handle working dir
     if ( !FileIO::SetCurrentDir( m_Options.GetWorkingDir() ) )
@@ -295,7 +295,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 {
     ASSERT( nodeGraphDBFile != nullptr );
 
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     FLOG_VERBOSE( "Saving DepGraph '%s'", nodeGraphDBFile );
 
@@ -621,7 +621,7 @@ void FBuild::AbortBuild()
 //------------------------------------------------------------------------------
 void FBuild::UpdateBuildStatus( const Node * node )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     if ( FBuild::Get().GetOptions().m_ShowProgress == false )
     {
@@ -645,7 +645,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
     // recalculate progress estimate?
     if ( ( timeNow - m_LastProgressCalcTime ) >= CALC_FREQUENCY )
     {
-        PROFILE_SECTION( "CalcPogress" )
+        PROFILE_SECTION( "CalcPogress" );
 
         FBuildStats & bs = m_BuildStats;
         bs.m_NodeTimeProgressms = 0;

@@ -33,12 +33,12 @@ REGISTER_TESTS_END
 void TestLibrary::LibraryType() const
 {
     #define TEST_LIBRARYTYPE( exeName, expectedFlag ) \
-    { \
+    do { \
         const uint32_t flags = LibraryNode::DetermineFlags( AStackString<>( "auto" ), \
                                                             AStackString<>( exeName ), \
                                                             AString::GetEmpty() ); \
         TEST_ASSERT( ( flags & expectedFlag ) == expectedFlag ); \
-    }
+    } while( false )
 
     TEST_LIBRARYTYPE( "link",       LibraryNode::LIB_FLAG_LIB );
     TEST_LIBRARYTYPE( "lib",        LibraryNode::LIB_FLAG_LIB );

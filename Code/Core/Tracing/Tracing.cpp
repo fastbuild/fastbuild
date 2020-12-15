@@ -30,7 +30,7 @@
     //------------------------------------------------------------------------------
     /*static*/ void Tracing::DebugSpam( const char * message )
     {
-        PROFILE_FUNCTION
+        PROFILE_FUNCTION;
 
         const bool messageConsumed = s_Callbacks.DispatchCallbacksDebugSpam( message );
         if ( messageConsumed )
