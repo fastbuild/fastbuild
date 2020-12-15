@@ -25,7 +25,7 @@ public:
     explicit Array( Array< T > && other );
     explicit Array( const T * otherBegin, const T * otherEnd );
     explicit Array( size_t initialCapacity, bool resizeable = false );
-    explicit Array( std::initializer_list<T> l );
+    explicit Array( std::initializer_list<T> elements );
     ~Array();
 
     void Destruct();

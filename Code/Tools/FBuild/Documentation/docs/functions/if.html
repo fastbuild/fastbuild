@@ -125,16 +125,16 @@ Examples:
 {
     // Evaluated if first integer is greater than or equal to second integer
 }
+</div>
 <div class='code'>If( .BoolA != .BoolB )
 {
     // Evaluated if booleans are not equal
 }
+</div>
 <div class='code'>If( ( 1 <= .Int ) && ( .Int <= 10 ) )
 {
     // Evaluated if the value of .Int is between 1 and 10.
 }
-</div>
-</div>
 </div>
 
 
@@ -143,6 +143,8 @@ Examples:
       <p>
 ArrayOfString variables can be checked for the presence of another String, using either a single String
 or another ArrayOfString.
+    </p>
+    <p>
 <b>NOTE:</b>Presence in ArrayOfStrings should be surrounded by round brackets (braces) in a compound expression.
       </p>
       <p>
@@ -153,9 +155,9 @@ Examples:
     // Evaluated if .StringA is found in .ArrayOfStrings
 }
 </div>
-<div class='code'>If( .StringA not in .ArrayOfStrings )
+<div class='code'>If( "StringLiteral" not in .ArrayOfStrings )
 {
-    // Evaluated if .StringA is not found in .ArrayOfStrings
+    // Evaluated if "StringLiteral" is not found in .ArrayOfStrings
 }
 </div>
 <div class='code'>If( .ArrayOfStrings1 in .ArrayOfStrings2 )
