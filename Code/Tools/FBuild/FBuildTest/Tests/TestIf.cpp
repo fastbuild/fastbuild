@@ -148,11 +148,24 @@ void TestIf::IfFunctionBool() const
 //------------------------------------------------------------------------------
 void TestIf::IfFunctionInt() const
 {
+    // Literals vs Literals
+    TEST_EXP_TRUE( "", "2 == 2" );
+    TEST_EXP_TRUE( "", "2 != 1" );
+    TEST_EXP_FALSE( "", "2 == 1" );
+
+    TEST_EXP_TRUE( "", "2 > 1" );
+    TEST_EXP_TRUE( "", "2 >= 1" );
+    TEST_EXP_TRUE( "", "2 < 3" );
+    TEST_EXP_TRUE( "", "2 <= 3" );
+    
+
+    // Vars vs Literals
     TEST_EXP_TRUE( ".Int = 2", ".Int == 2" );
     TEST_EXP_FALSE( ".Int = 2", ".Int == 1" );
 
     TEST_EXP_TRUE( ".Int = 2", ".Int > 1" );
     TEST_EXP_TRUE( ".Int = 2", ".Int >= 1" );
+    TEST_EXP_TRUE( ".Int = 2", ".Int >= 2" );
     TEST_EXP_TRUE( ".Int = 2", "3 > .Int" );
     TEST_EXP_TRUE( ".Int = 2", "3 >= .Int" );
     TEST_EXP_TRUE( ".Int = 2", "2 >= .Int" );
@@ -163,6 +176,7 @@ void TestIf::IfFunctionInt() const
     TEST_EXP_TRUE( ".Int = 2", "1 < .Int" );
     TEST_EXP_TRUE( ".Int = 2", "1 <= .Int" );
 
+    // Vars vs Vars
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_int.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
@@ -172,6 +186,35 @@ void TestIf::IfFunctionInt() const
 //------------------------------------------------------------------------------
 void TestIf::IfFunctionStringCompare() const
 {
+    // Literals vs Literals
+    TEST_EXP_TRUE( "", "'2' == '2'" );
+    TEST_EXP_TRUE( "", "'2' != '1'" );
+    TEST_EXP_FALSE( "", "'2' == '1'" );
+
+    TEST_EXP_TRUE( "", "'2' > '1'" );
+    TEST_EXP_TRUE( "", "'2' >= '1'" );
+    TEST_EXP_TRUE( "", "'2' < '3'" );
+    TEST_EXP_TRUE( "", "'2' <= '3'" );
+
+
+    // Vars vs Literals
+    TEST_EXP_TRUE( ".String = '2'", ".String == '2'" );
+    TEST_EXP_FALSE( ".String = '2'", ".String == '1'" );
+
+    TEST_EXP_TRUE( ".String = '2'", ".String > '1'" );
+    TEST_EXP_TRUE( ".String = '2'", ".String >= '1'" );
+    TEST_EXP_TRUE( ".String = '2'", ".String >= '2'" );
+    TEST_EXP_TRUE( ".String = '2'", "'3' > .String" );
+    TEST_EXP_TRUE( ".String = '2'", "'3' >= .String" );
+    TEST_EXP_TRUE( ".String = '2'", "'2' >= .String" );
+
+    TEST_EXP_FALSE( ".String = '2'", "'2' > .String" );
+    TEST_EXP_FALSE( ".String = '2'", "'1' >= .String" );
+
+    TEST_EXP_TRUE( ".String = '2'", "'1' < .String" );
+    TEST_EXP_TRUE( ".String = '2'", "'1' <= .String" );
+
+    // Vars vs Vars
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_stringcompare.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );

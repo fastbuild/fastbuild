@@ -36,8 +36,9 @@ The following types of expressions are supported:
   <li>Boolean Values</li>
   <li>Comparisons</li>
   <li>Presence in ArrayOfStrings</li>
+  <li>Compound boolean expressions of above three types</li>
 </ul>
-<b>NOTE:</b> Precise syntax is currently limited. Only single expressions using previously defined variables are supported. More flexible syntax (literals and compound expressions) will be added in the future.
+<b>NOTE:</b> Literal of ArrayOfStrings is not supported so far. 
       </p>
     </div>
 
@@ -50,6 +51,13 @@ Variables of type Boolean can be tested for their truth value.
       <p>
 Examples:
       </p>
+
+<table>
+      <tr><th width=100>Priority</th>   <th width=200>Operator</th> </tr>
+      <tr><td>1</td>                    <td>!</td>                  </tr>
+      <tr><td>2</td>                    <td>&&, ||</td>             </tr>
+</table>
+
 <div class='code'>If( .MyBoolean )
 {
     // Evaluated if .MyBoolean == true
@@ -60,6 +68,33 @@ Examples:
     // Evaluated if .MyBoolean == false
 }
 </div>
+<div class='code'>If( .MyBoolean == false )
+{
+    // Evaluated if .MyBoolean == false
+}
+</div>
+<div class='code'>If( .MyBoolean && .AnotherBoolean )
+{
+    // Evaluated if both .MyBoolean and .AnotherBoolean are true
+}
+</div>
+<div class='code'>If( .MyBoolean || .AnotherBoolean )
+{
+    // Evaluated if at least one of .MyBoolean and .AnotherBoolean is true
+}
+</div>
+<div class='code'>If( .Bool1 && .Bool2 && .Bool3 )
+{
+    // Evaluated if all those three variables are true
+}
+</div>
+<div class='code'>If( !.Bool1 && .Bool2 && .Bool3 )
+{
+    // Evaluated if .Bool is false, but .Bool2 and .Bool2 are true
+    // Note: '!' has the top priority
+}
+</div>
+        
 </div>
 
 
@@ -76,6 +111,7 @@ Two variables of the same type can be compared by the following operators.
   <tr><td>&gt;</td>                 <td>Greater Than</td>           <td align=center>&#10004;</td>          <td align=center>&#10004;</td>      <td></td>                           </tr>
   <tr><td>&gt;=</td>                <td>Greater Than Or Equal</td>  <td align=center>&#10004;</td>          <td align=center>&#10004;</td>      <td></td>                           </tr>
 </table>
+<b>NOTE:</b> Comparison should be surrounded by round brackets (braces) in a compound expression.
       </p>
       <p>
 Examples:
@@ -89,11 +125,15 @@ Examples:
 {
     // Evaluated if first integer is greater than or equal to second integer
 }
-</div>
 <div class='code'>If( .BoolA != .BoolB )
 {
     // Evaluated if booleans are not equal
 }
+<div class='code'>If( ( 1 <= .Int ) && ( .Int <= 10 ) )
+{
+    // Evaluated if the value of .Int is between 1 and 10.
+}
+</div>
 </div>
 </div>
 
@@ -103,6 +143,7 @@ Examples:
       <p>
 ArrayOfString variables can be checked for the presence of another String, using either a single String
 or another ArrayOfString.
+<b>NOTE:</b>Presence in ArrayOfStrings should be surrounded by round brackets (braces) in a compound expression.
       </p>
       <p>
 Examples:
@@ -125,6 +166,11 @@ Examples:
 <div class='code'>If( .ArrayOfStrings1 not in .ArrayOfStrings2 )
 {
     // Evaluated if no String in .ArrayOfStrings1 is found in .ArrayOfStrings2
+}
+</div>
+<div class='code'>If( !.Bool && ( .ArrayOfStrings1 not in .ArrayOfStrings2 ) )
+{
+    // Evaluated if .Bool is false and no String in .ArrayOfStrings1 is found in .ArrayOfStrings2
 }
 </div>
 </div>
