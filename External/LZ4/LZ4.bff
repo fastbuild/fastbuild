@@ -18,28 +18,10 @@
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
     .LZ4Options_x64Clang= [
-                            .LZ4CompilerOptions = ' -Wno-shift-count-overflow'
-                                                + ' -Wno-unused-macros'
-                                                + ' -Wno-unreachable-code'
-                                                + ' -Wno-sign-conversion'
-                                                + ' -Wno-covered-switch-default'
-                                                + ' -Wno-conversion'
-                                                + ' -Wno-missing-prototypes'
-                                                #if CLANG_USING_CLANG_CL
-                                                    + ' -Wno-bad-function-cast'
-                                                    + ' -Wno-implicit-fallthrough'
-                                                    + ' -Wno-undef'
-                                                    + ' -Wno-language-extension-token'
-                                                    + ' -Wno-extra-semi-stmt'
-                                                    + ' -Wno-comma'
-                                                #endif
-
-                                                + ' -O2'        // Compile with optimizations even in debug to improve performance
+                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
     .LZ4Options_x64Linux= [
-                            .LZ4CompilerOptions = ' -Wno-implicit-fallthrough'
-
-                                                + ' -O2'        // Compile with optimizations even in debug to improve performance
+                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
     .LZ4Options_x64ClangLinux  = .LZ4Options_x64Linux
     .LZ4Options_x64OSX  = [
@@ -87,6 +69,14 @@
                                         #else
                                             - ' -O0'
                                         #endif
+                                        
+                                        // Disable warnings if using Clang. There are too many warnings in LZ4
+                                        // and they differ with every version of Clang
+                                        - ' -Wall'
+                                        - ' -Werror'
+                                        - ' -Wfatal-errors'
+                                        - ' -Wextra'
+                                        - ' -Wshadow'                                                                                    
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/External/$ProjectName$/'
