@@ -25,6 +25,14 @@
                                                 + ' -Wno-covered-switch-default'
                                                 + ' -Wno-conversion'
                                                 + ' -Wno-missing-prototypes'
+                                                #if CLANG_USING_CLANG_CL
+                                                    + ' -Wno-bad-function-cast'
+                                                    + ' -Wno-implicit-fallthrough'
+                                                    + ' -Wno-undef'
+                                                    + ' -Wno-language-extension-token'
+                                                    + ' -Wno-extra-semi-stmt'
+                                                    + ' -Wno-comma'
+                                                #endif
 
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]

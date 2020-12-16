@@ -27,4 +27,7 @@ Settings {}
 ObjectList( 'ClangMacroExpansion' )
 {
     .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestWarnings/ClangMacroExpansion/clang_macro_expansion.cpp'
+    #if CLANG_USING_CLANG_CL
+        .CompilerOptions        + ' -Wno-tautological-unsigned-zero-compare'
+    #endif
 }

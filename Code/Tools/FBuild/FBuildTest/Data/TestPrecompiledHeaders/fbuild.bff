@@ -64,12 +64,25 @@ Executable( "PCHTest" )
     ObjectList( "PCHTestClang-Windows" )
     {
         Using( .ToolChain_Clang_Windows )
-
-        .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.h"
-        .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
-
-        .CompilerOptions    = ' -include-pch "$PCHOutputFile$" $CompilerOptions$'
-                            + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
+        
+        #if CLANG_USING_CLANG_CL
+            .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
+            .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
+            
+            .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
+                                + ' -Wno-unused-macros'
+                                + ' -Wno-anon-enum-enum-conversion'
+            .PCHOptions         + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
+                                + ' -Wno-unused-macros'
+                                + ' -Wno-anon-enum-enum-conversion'
+        #else
+            .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.h"
+            .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
+            
+            .CompilerOptions    = ' -include-pch "$PCHOutputFile$" $CompilerOptions$'
+                                + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
+        #endif
 
         .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders\PCHUser.cpp"
         .CompilerOutputPath = "$Out$\Test\PrecompiledHeaders\Clang-Windows\"

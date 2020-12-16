@@ -42,5 +42,10 @@ ObjectList( 'Compile' )
 // Compile with a header injected with -include
 ObjectList( 'Compile-InjectHeader' )
 {
+#if CLANG_USING_CLANG_CL
+    .CompilerOptions                = ' "/FICore/Env/glibc_compat.h" $CompilerOptions$'
+                                    + ' -Wno-reserved-id-macro'
+#else
     .CompilerOptions                = ' -include Core/Env/glibc_compat.h $CompilerOptions$'
+#endif
 }
