@@ -20,6 +20,7 @@ public:
     virtual bool IsAFile() const override { return true; }
 
     static void HandleWarningsMSVC( Job * job, const AString & name, const AString & data );
+    static void HandleWarningsClangCl( Job * job, const AString & name, const AString & data );
     static void HandleWarningsClangGCC( Job * job, const AString & name, const AString & data );
 protected:
     friend class ObjectNode;

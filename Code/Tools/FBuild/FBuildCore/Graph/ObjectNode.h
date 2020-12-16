@@ -147,7 +147,6 @@ private:
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
-    static void HandleWarningsClangCl( Job * job, const AString & name, const AString & data );
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;
