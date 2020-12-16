@@ -14,7 +14,7 @@ Compiler( 'Compiler-Clang10' )
                                         '$Root$/bin/msvcp140.dll'
                                         '$Root$/bin/vcruntime140.dll'
                                       }
-    .Executable                     = '$Root$\bin\clang++.exe'
+    .Executable                     = '$Root$\bin\clang-cl.exe'
 
     // Allow tests to activate some experimental behavior
     #if ENABLE_RELATIVE_PATHS
@@ -32,18 +32,17 @@ Compiler( 'Compiler-Clang10' )
     // Clang for Windows relies on the VS being present:
     //  - crt headers
     //  - crt libs/dlls
-    //  - linker
     Using( .ToolChain_VS_Windows_X64 )
 
     .Platform                       = 'x64Clang'
 
     // Compiler Options
     .Compiler                       = 'Compiler-Clang10'
-    .CommonCompilerOptions          = ' -c -g'
+    .CommonCompilerOptions          = ' -c'                             // Compile only
+                                    + ' /Z7'                            // Include debug info
 
                                     // Include paths
                                     + ' -I"./"'
-                                    + .VSIncludePaths
 
                                     // x64
                                     + ' -m64'
@@ -54,26 +53,29 @@ Compiler( 'Compiler-Clang10' )
                                     + ' -Wshadow'
 
                                     // No RTTI
-                                    + ' -fno-rtti'
+                                    + ' /GR-'
 
-                                    // MS compatibility
-                                    + ' -fms-compatibility'
-                                    + ' -fms-extensions'
-                                    + ' -fmsc-version=$MSC_VER$'
-                                    + ' -Xclang -flto-visibility-public-std' // LTO visibility matches MSVC behaviour
-
-                                    // as of v10.0.0, these warnings fire inside system headers
+                                    // Warnings that are not useful
                                     + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
-                                    + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
-                                    + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
-                                    + ' -Wno-expansion-to-defined'      // macro expansion producing 'defined' has undefined behavior [-Wexpansion-to-defined]
-                                    + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
-                                    + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
-                                    + ' -Wno-deprecated-declarations'   // '_vsnprintf_l' is deprecated : This function or variable may be unsafe.
+                                    + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
+                                    + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
+                                    + ' -Wno-global-constructors'       // declaration requires a global destructor
+                                    + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
+                                    + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
+                                    + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'
 
-    .CompilerOptions                = ' -o"%2" "%1" $CommonCompilerOptions$'
-    .CompilerOptionsC               = ' -x c -o"%2" "%1" $CommonCompilerOptions$'
-    .PCHOptions                     = ' -x c++-header "%1" -o"%2" $CommonCompilerOptions$'
+                                    // Warnings that fire but might be best to be fixed
+                                    + ' -Wno-cast-qual'                 // cast from 'const %s *' to '%s *' drops const qualifier
+                                    + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
+                                    + ' -Wno-missing-noreturn'          // function '%s' could be declared with attribute 'noreturn'
+                                    + ' -Wno-old-style-cast'            // use of old-style cast
+                                    + ' -Wno-switch-enum'               // %u enumeration values not explicitly handled in switch: '%s', '%s'...
+
+    .CompilerOptions                = ' /TP -o"%2" "%1" $CommonCompilerOptions$'
+                                    + ' /std:c++17'                     // Enable c++17 features
+    .CompilerOptionsC               = ' /TC -o"%2" "%1" $CommonCompilerOptions$'
+    .PCHOptions                     = ' /TP $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
+                                    + ' /std:c++17'                     // Enable c++17 features
 
     // Librarian
     .Librarian                      = '$Clang10_BasePath$\bin\llvm-ar.exe'
@@ -89,7 +91,7 @@ Compiler( 'Compiler-Clang10' )
     .ExeExtension                   = '.exe'
 
     // Exception Control
-    .UseExceptions                  = ' -fexceptions'
+    .UseExceptions                  = ' /EHs'
 ]
 
 //------------------------------------------------------------------------------

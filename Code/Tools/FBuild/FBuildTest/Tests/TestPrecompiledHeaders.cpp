@@ -694,19 +694,11 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
 
         // Check stats
         //              Seen,   Built,  Type
-        #if defined( CLANG_USING_CLANG_CL )
-            CheckStatsNode ( 4,     2,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
-        #else
-            CheckStatsNode ( 3,     2,      Node::FILE_NODE );  // pch.h + slow.h + pchuser.cpp
-        #endif
+        CheckStatsNode ( 4,     2,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
         CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
         CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );// obj + pch obj
         CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        #if defined( CLANG_USING_CLANG_CL )
-            CheckStatsTotal( 8,     6 );
-        #else
-            CheckStatsTotal( 7,     6 );
-        #endif
+        CheckStatsTotal( 8,     6 );
 
         // check we wrote all objects to the cache
         TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 ); // can store the pch & the obj using it
@@ -734,19 +726,11 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
 
         // Check stats
         //              Seen,   Built,  Type
-        #if defined( CLANG_USING_CLANG_CL )
-            CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
-        #else
-            CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
-        #endif
+        CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
         CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
         CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );// obj + pch obj
         CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-        #if defined( CLANG_USING_CLANG_CL )
-            CheckStatsTotal( 8,     4 );
-        #else
-            CheckStatsTotal( 7,     3 );
-        #endif
+        CheckStatsTotal( 8,     4 );
     }
 #endif
 
@@ -778,19 +762,11 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
 
         // Check stats
         //              Seen,   Built,  Type
-        #if defined( CLANG_USING_CLANG_CL )
-            CheckStatsNode ( 4,     2,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
-        #else
-            CheckStatsNode ( 3,     2,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
-        #endif
+        CheckStatsNode ( 4,     2,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
         CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
         CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );// obj + pch obj
         CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        #if defined( CLANG_USING_CLANG_CL )
-            CheckStatsTotal( 8,     4 );
-        #else
-            CheckStatsTotal( 7,     4 );
-        #endif
+        CheckStatsTotal( 8,     4 );
 
         // check we got both objects from the cache
         TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 2 ); // pch & the obj using it
@@ -815,19 +791,11 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
 
         // Check stats
         //              Seen,   Built,  Type
-        #if defined( CLANG_USING_CLANG_CL )
-            CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
-        #else
-            CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
-        #endif
+        CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp
         CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
         CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );// obj + pch obj
         CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-        #if defined( CLANG_USING_CLANG_CL )
-            CheckStatsTotal( 8,     4 );
-        #else
-            CheckStatsTotal( 7,     3 );
-        #endif
+        CheckStatsTotal( 8,     4 );
     }
 #endif
 

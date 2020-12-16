@@ -144,7 +144,7 @@ Settings
 //------------------------------------------------------------------------------
 .Debug_Optimizations =
 [
-    #if CLANG_USING_CLANG_CL
+    #if __WINDOWS__ // Using clang-cl.exe on Windows
         .CompilerOptions                = ' /Od'
     #else
         .CompilerOptions                = ' -O0'
@@ -169,7 +169,6 @@ Settings
 #if __WINDOWS__
     .X64BaseConfig              = .ToolChain_VS_Windows_X64
                                 + .Windows10_SDK_X64
-                                + .WindowsClangFlavorDefine
     .X64DebugConfig             = .X64BaseConfig
                                 + .Debug_Config
                                 + .Debug_Optimizations_MSVC
@@ -188,12 +187,7 @@ Settings
 //------------------------------------------------------------------------------
 #if __WINDOWS__
     .X64ClangBaseConfig         = .ToolChain_Clang_Windows
-                                #if CLANG_USING_CLANG_CL
-                                    + .Windows10_SDK_X64_ClangCl
-                                #else
-                                    + .Windows10_SDK_X64
-                                #endif
-                                + .WindowsClangFlavorDefine
+                                + .Windows10_SDK_X64_ClangCl
     .X64ClangDebugConfig        = .X64ClangBaseConfig
                                 + .Debug_Config
                                 + .Debug_Optimizations

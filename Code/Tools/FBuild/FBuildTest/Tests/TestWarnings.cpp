@@ -64,13 +64,19 @@ void TestWarnings::PragmaMessageWarningsAreShown() const
 //------------------------------------------------------------------------------
 void TestWarnings::ClangMacroExpansion() const
 {
-    FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestWarnings/ClangMacroExpansion/fbuild.bff";
+    #if defined( __WINDOWS__ )
+        // TODO:A Check if this is still relevant for newer versions of Clang
+        // The warning this test relies on has change and this test may need to
+        // be updated
+    #else
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestWarnings/ClangMacroExpansion/fbuild.bff";
 
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize() );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( "ClangMacroExpansion" ) );
+        TEST_ASSERT( fBuild.Build( "ClangMacroExpansion" ) );
+    #endif
 }
 
 //------------------------------------------------------------------------------

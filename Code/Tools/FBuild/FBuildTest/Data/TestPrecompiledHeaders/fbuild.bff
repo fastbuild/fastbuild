@@ -65,24 +65,20 @@ Executable( "PCHTest" )
     {
         Using( .ToolChain_Clang_Windows )
         
-        #if CLANG_USING_CLANG_CL
-            .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
-            .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
+        .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
+        .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
             
-            .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
-                                + ' -Wno-unused-macros'
+        .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                            + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
+                            + ' -Wno-unused-macros'
+                            #if USING_CLANG_10 || USING_CLANG_11
                                 + ' -Wno-anon-enum-enum-conversion'
-            .PCHOptions         + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
-                                + ' -Wno-unused-macros'
+                            #endif
+        .PCHOptions         + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
+                            + ' -Wno-unused-macros'
+                            #if USING_CLANG_10 || USING_CLANG_11
                                 + ' -Wno-anon-enum-enum-conversion'
-        #else
-            .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.h"
-            .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
-            
-            .CompilerOptions    = ' -include-pch "$PCHOutputFile$" $CompilerOptions$'
-                                + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
-        #endif
+                            #endif
 
         .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders\PCHUser.cpp"
         .CompilerOutputPath = "$Out$\Test\PrecompiledHeaders\Clang-Windows\"

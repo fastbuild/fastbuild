@@ -5,8 +5,6 @@
     .Clang11_BasePath = 'C:\Program Files\LLVM'
 #endif
 
-#define CLANG_USING_CLANG_CL
-
 // Compiler
 //------------------------------------------------------------------------------
 Compiler( 'Compiler-Clang11' )
@@ -65,7 +63,6 @@ Compiler( 'Compiler-Clang11' )
                                     + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
                                     + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
                                     + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'
-                                    + ' -Wno-documentation-unknown-command' // unknown command tag name
 
                                     // Warnings that fire but might be best to be fixed
                                     + ' -Wno-cast-qual'                 // cast from 'const %s *' to '%s *' drops const qualifier

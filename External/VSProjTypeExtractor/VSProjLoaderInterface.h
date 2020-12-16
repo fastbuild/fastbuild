@@ -92,7 +92,7 @@ public:
 
 	/** @brief  Queries if VSProjTypeExtractor.dll was successfully loaded
 
-		Helpful for avoiding to call @Vspte_GetProjData, @Vspte_DeallocateProjDataCfgArray or @Vspte_CleanUp without effect
+		Helpful for avoiding to call Vspte_GetProjData, Vspte_DeallocateProjDataCfgArray or Vspte_CleanUp without effect
 	*/
 	bool IsLoaded()
 	{
@@ -119,9 +119,9 @@ public:
 		}
 	}
 
-	/** @brief  Deallocates the configurations / platforms array of an ExtractedProjData instance already used in a call to @Vspte_GetProjData
+	/** @brief  Deallocates the configurations / platforms array of an ExtractedProjData instance already used in a call to Vspte_GetProjData
 
-		After a call to @Vspte_GetProjData and copying the data you're interested in from the ExtractedProjData object, you should call this
+		After a call to Vspte_GetProjData and copying the data you're interested in from the ExtractedProjData object, you should call this
 		in order to deallocate the configurations / platforms array with the correct runtime
 	*/
 	void Vspte_DeallocateProjDataCfgArray(ExtractedProjData* pProjData)

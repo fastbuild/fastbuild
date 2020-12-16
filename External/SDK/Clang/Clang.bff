@@ -69,19 +69,6 @@
             #include "Windows/Clang11.bff"
         #endif
     #endif
-
-    // Some tests need to know when flavor of clang is being used
-    .WindowsClangFlavorDefine =
-    [
-        .ClangFlavorDefine = ''
-        #if CLANG_USING_CLANG_CL
-            .ClangFlavorDefine      = ' -DCLANG_USING_CLANG_CL'
-        #endif
-        .CompilerOptions            = .ClangFlavorDefine
-        .CompilerOptionsC           = .ClangFlavorDefine
-        .PCHOptions                 = .ClangFlavorDefine
-        .CompilerOptionsDeoptimized = .ClangFlavorDefine
-    ]
 #endif
 
 //------------------------------------------------------------------------------
