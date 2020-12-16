@@ -1,6 +1,6 @@
 // Clang 10.x.x
 //------------------------------------------------------------------------------
-.Clang10_BasePath     = '$_CURRENT_BFF_DIR_$/10.0.0.RC3'
+.Clang10_BasePath     = 'C:\Program Files\LLVM'
 #if CI_BUILD
     .Clang10_BasePath = 'C:\Program Files\LLVM'
 #endif
@@ -52,6 +52,7 @@ Compiler( 'Compiler-Clang10' )
                                     + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                                     + ' -Wextra'
                                     + ' -Wshadow'
+                                    + ' -Wno-invalid-offsetof'
 
                                     // No RTTI
                                     + ' -fno-rtti'

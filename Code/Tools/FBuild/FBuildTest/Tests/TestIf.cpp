@@ -50,9 +50,9 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( UsageError_UnsupportedOperation )
 REGISTER_TESTS_END
 
-#define TEST_EXP_TRUE( defines, exp )        TEST_ASSERT( ParseFromString( true, defines "\nIf ( " exp " )\n{\nPrint('Success')\n}", "Success") );
-#define TEST_EXP_FALSE( defines, exp )       TEST_ASSERT( ParseFromString( true, defines "\nIf ( " exp " )\n{\nPrint('Failure')\n}", nullptr, "Failure") );
-#define TEST_EXP_FAIL( defines, exp, error ) TEST_ASSERT( ParseFromString( false, defines "\nIf ( " exp " )\n{\n}", error ) );
+#define TEST_EXP_TRUE( vars, exp )        TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Success')\n}", "Success") );
+#define TEST_EXP_FALSE( vars, exp )       TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Failure')\n}", nullptr, "Failure") );
+#define TEST_EXP_FAIL( vars, exp, error ) TEST_ASSERT( ParseFromString( false, vars "\nIf ( " exp " )\n{\n}", error ) );
 
 // IfFunctionTrue
 //------------------------------------------------------------------------------
@@ -224,19 +224,19 @@ void TestIf::IfFunctionStringCompare() const
 //------------------------------------------------------------------------------
 void TestIf::IfFunctionSet() const
 {
-#define defines R"(
+#define VARS R"(
     .D = 'd'
     .A = {'a'}
     .AD = {'a', 'd'}
     .ABC = {'a', 'b', 'c'}
 )"
 
-    TEST_EXP_TRUE( defines, ".D in .AD" );
-    TEST_EXP_TRUE( defines, ".D not in .ABC" );
-    TEST_EXP_TRUE( defines, ".AD in .ABC" );
-    TEST_EXP_FALSE( defines, ".D in .ABC" );
+    TEST_EXP_TRUE( VARS, ".D in .AD" );
+    TEST_EXP_TRUE( VARS, ".D not in .ABC" );
+    TEST_EXP_TRUE( VARS, ".AD in .ABC" );
+    TEST_EXP_FALSE( VARS, ".D in .ABC" );
 
-#undef defines
+#undef VARS
 }
 
 void TestIf::IfFunctionBracket() const
@@ -262,20 +262,20 @@ void TestIf::IfFunctionBracket() const
     TEST_EXP_TRUE( "", "('String' == 'Hello') || (1 == 1)" );
     TEST_EXP_TRUE( "", "true && (false || true) || ((1 == 2) && ('abc' != 'def'))" );
 
-#define defines R"(
+#define VARS R"(
     .D = 'd'
     .A = {'a'}
     .AD = {'a', 'd'}
     .ABC = {'a', 'b', 'c'}
 )"
 
-    TEST_EXP_TRUE( defines, "(.A in .AD)" );
-    TEST_EXP_TRUE( defines, "(.D in .AD)" );
-    TEST_EXP_FALSE( defines, "(.D in .ABC)" );
-    TEST_EXP_TRUE( defines, "(.D not in .ABC)" );
-    TEST_EXP_TRUE( defines, "(.D == 'd') && (.AD in .ABC)" );
+    TEST_EXP_TRUE( VARS, "(.A in .AD)" );
+    TEST_EXP_TRUE( VARS, "(.D in .AD)" );
+    TEST_EXP_FALSE( VARS, "(.D in .ABC)" );
+    TEST_EXP_TRUE( VARS, "(.D not in .ABC)" );
+    TEST_EXP_TRUE( VARS, "(.D == 'd') && (.AD in .ABC)" );
 
-#undef defines
+#undef VARS
 }
 
 #undef TEST_EXP_OK
