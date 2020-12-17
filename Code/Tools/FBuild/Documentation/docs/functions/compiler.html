@@ -250,7 +250,7 @@ This results in very unintuitive compile errors.</p>
 <b>MSVC - 2019 (v16.5.1)</b>
 <div class='code'>// VisualStudio 2019 x64 Compiler
 .VS2017_BasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\2017\Community'
-.VS2017_Version          = '14.16.27023'
+.VS2017_Version          = '14.28.29333'
 Compiler( 'Compiler-VS2017-x64' )
 {
     .Root       = '$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$/bin/Hostx64/x64'
@@ -265,6 +265,7 @@ Compiler( 'Compiler-VS2017-x64' )
                     '$Root$/mspdbsrv.exe'
                     '$Root$/mspft140.dll'
                     '$Root$/msvcp140.dll'
+                    '$Root$/msvcp140_atomic_wait.dll' // Required circa 16.8.3 (14.28.29333)
                     '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
                     '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
