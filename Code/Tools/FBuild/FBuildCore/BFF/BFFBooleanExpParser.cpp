@@ -80,7 +80,7 @@ struct Bool
     typedef bool Type;
     typedef bool ReturnType;
     typedef bool & OutParamType;
-    inline static BFFVariable::VarType VarType = BFFVariable::VAR_BOOL;
+    static const BFFVariable::VarType VarType = BFFVariable::VAR_BOOL;
 };
 
 // Number
@@ -90,7 +90,7 @@ struct Number
     typedef int32_t Type;
     typedef int32_t ReturnType;
     typedef int32_t & OutParamType;
-    inline static BFFVariable::VarType VarType = BFFVariable::VAR_INT;
+    static const BFFVariable::VarType VarType = BFFVariable::VAR_INT;
 };
 
 // String
@@ -100,7 +100,7 @@ struct String
     typedef AString Type;
     typedef const AString & ReturnType;
     typedef AString & OutParamType;
-    inline static BFFVariable::VarType VarType = BFFVariable::VAR_STRING;
+    static const BFFVariable::VarType VarType = BFFVariable::VAR_STRING;
 };
 
 // ArrayOfString
@@ -110,7 +110,7 @@ struct ArrayOfString
     typedef Array<AString> Type;
     typedef const Array<AString> & ReturnType;
     typedef Array<AString> & OutParamType;
-    inline static BFFVariable::VarType VarType = BFFVariable::VAR_ARRAY_OF_STRINGS;
+    static const BFFVariable::VarType VarType = BFFVariable::VAR_ARRAY_OF_STRINGS;
 };
 
 // Is
@@ -212,7 +212,7 @@ public:
     bool Is() const
     {
         ASSERT( m_Valid );
-        return m_Valid && ::Is<T>( &m_Token ) || ::Is<T>( m_Var );
+        return m_Valid && ( ::Is<T>( &m_Token ) || ::Is<T>( m_Var ) );
     }
 
     // A handy method for checking and setting error.
