@@ -655,7 +655,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1256_UnexpectedToken( const BFFToken * iter, const Function * function )
 {
-    FormatError( iter, 1256u, function, "Unexpected token." );
+    FormatError( iter, 1256u, function, "Unexpected token '%s'.", iter->GetValueString().Get() );
 }
 
 // Error_1300_MissingPCHArgs

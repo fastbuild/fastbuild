@@ -14,6 +14,9 @@
 
 #include "Core/Strings/AStackString.h"
 
+// Operator
+// Including keyword `in` and `not in`
+//------------------------------------------------------------------------------
 enum class Operator
 {
     OP_UNKNOWN,
@@ -32,7 +35,6 @@ enum class Operator
     OP_OR,
     // OP_XOR, not supported yet.
 };
-
 
 // GetVar
 //------------------------------------------------------------------------------
@@ -68,120 +70,177 @@ static const BFFVariable * GetVar( const Function * function, const BFFToken * t
     return var;
 }
 
-// GetBool
-//------------------------------------------------------------------------------
-static bool GetBool( const Function * function, const BFFToken * token, bool & value )
+// Meta of Types
+// ---------------------------------------------------------------
+
+// Bool
+// ---------------------------------------------------------------
+struct Bool
 {
-    if ( token->IsBooelan() )
-    {
-        value = token->GetBoolean();
-        return true;
-    }
+    typedef bool Type;
+    typedef bool ReturnType;
+    typedef bool & OutParamType;
+    inline static BFFVariable::VarType VarType = BFFVariable::VAR_BOOL;
+};
 
-    if ( token->IsVariable() )
-    {
-        const BFFVariable * var = GetVar( function, token );
-        if ( var == nullptr )
-        {
-            return false;
-        }
-        if ( !var->IsBool() )
-        {
-            Error::Error_1050_PropertyMustBeOfType( token, function, var->GetName().Get(), var->GetType(), BFFVariable::VAR_BOOL );
-            return false;
-        }
-        value = var->GetBool();
-        return true;
-    }
+// Number
+// ---------------------------------------------------------------
+struct Number
+{
+    typedef int32_t Type;
+    typedef int32_t ReturnType;
+    typedef int32_t & OutParamType;
+    inline static BFFVariable::VarType VarType = BFFVariable::VAR_INT;
+};
 
-    Error::Error_1256_UnexpectedToken( token, function );
-    return false;
+// String
+// ---------------------------------------------------------------
+struct String
+{
+    typedef AString Type;
+    typedef const AString & ReturnType;
+    typedef AString & OutParamType;
+    inline static BFFVariable::VarType VarType = BFFVariable::VAR_STRING;
+};
+
+// ArrayOfString
+// ---------------------------------------------------------------
+struct ArrayOfString
+{
+    typedef Array<AString> Type;
+    typedef const Array<AString> & ReturnType;
+    typedef Array<AString> & OutParamType;
+    inline static BFFVariable::VarType VarType = BFFVariable::VAR_ARRAY_OF_STRINGS;
+};
+
+// Is
+// Normalized type checkers.
+// ---------------------------------------------------------------
+template < typename T, typename VarOrLiteral >
+bool Is( const VarOrLiteral * token );
+
+template <>
+bool Is<Bool, BFFToken>( const BFFToken * token ) { return ( token != nullptr ) && token->IsBooelan(); }
+
+template <>
+bool Is<Number, BFFToken>( const BFFToken * token ) { return ( token != nullptr ) && token->IsNumber(); }
+
+template <>
+bool Is<String, BFFToken>( const BFFToken * token ) { return ( token != nullptr ) && token->IsString(); }
+
+template <>
+constexpr bool Is<ArrayOfString, BFFToken>( const BFFToken * /*token*/ ) { return false; } // No token represents an array of String.
+
+template <>
+bool Is<Bool, BFFVariable>( const BFFVariable * var ) { return ( var != nullptr ) && var->IsBool(); }
+
+template <>
+bool Is<Number, BFFVariable>( const BFFVariable * var ) { return ( var != nullptr ) && var->IsInt(); }
+
+template <>
+bool Is<String, BFFVariable>( const BFFVariable * var ) { return ( var != nullptr ) && var->IsString(); }
+
+template <>
+bool Is<ArrayOfString, BFFVariable>( const BFFVariable * var ) { return ( var != nullptr ) && var->IsArrayOfStrings(); }
+
+// Get
+// Normalized value getters.
+// ---------------------------------------------------------------
+template < typename T, typename VarOrLiteral >
+typename T::ReturnType Get( const VarOrLiteral & varOrToken );
+
+template <>
+Bool::ReturnType Get<Bool, BFFToken>( const BFFToken & token ) { ASSERT( token.IsBooelan() ); return token.GetBoolean(); }
+
+template <>
+Number::ReturnType Get<Number, BFFToken>( const BFFToken & token ) { ASSERT( token.IsNumber() ); return token.GetValueInt(); }
+
+template <>
+String::ReturnType Get<String, BFFToken>( const BFFToken & token ) { ASSERT( token.IsString() ); return token.GetValueString(); }
+
+template <>
+ArrayOfString::ReturnType Get<ArrayOfString, BFFToken>( const BFFToken & /*token*/ )
+{
+    ASSERT( false ); // It should not be here, or something went wrong.
+    static Array<AString> s_Empty;
+    return s_Empty;
 }
 
-// GetInt
-//------------------------------------------------------------------------------
-static bool GetInt( const Function * function, const BFFToken * token, int32_t & value )
+template <>
+Bool::ReturnType Get<Bool, BFFVariable>( const BFFVariable & var ) { ASSERT( var.IsBool() ); return var.GetBool(); }
+
+template <>
+Number::ReturnType Get<Number, BFFVariable>( const BFFVariable & var ) { ASSERT( var.IsInt() ); return var.GetInt(); }
+
+template <>
+String::ReturnType Get<String, BFFVariable>( const BFFVariable & var ) { ASSERT( var.IsString() ); return var.GetString(); }
+
+template <>
+ArrayOfString::ReturnType Get<ArrayOfString, BFFVariable>( const BFFVariable & var ) { ASSERT( var.IsArrayOfStrings() ); return var.GetArrayOfStrings(); }
+
+// Operand
+// Since GetVar is a slightly heavy op, cache it.
+// ---------------------------------------------------------------
+class Operand
 {
-    if ( token->IsNumber() )
+public:
+    explicit Operand( const BFFToken & token, const Function * function )
+        : m_Token( token )
+        , m_Var( nullptr )
+        , m_Valid( true )
+        , m_Function( function )
     {
-        value = token->GetValueInt();
-        return true;
+        if ( token.IsVariable() )
+        {
+            m_Var = ::GetVar( function, &token );
+            if ( m_Var == nullptr )
+            {
+                m_Valid = false; // GetVar emitted error
+            }
+        }
+    }
+    explicit Operand( const Operand & ) = default;
+
+    Operand( Operand && ) = delete;
+    Operand & operator = ( const Operand & ) = delete;
+    Operand & operator = ( Operand && ) = delete;
+
+    const BFFToken & GetToken() const { return m_Token; }
+    bool IsValid() const { return m_Valid; }
+
+    template <typename T>
+    bool Is() const
+    {
+        ASSERT( m_Valid );
+        return m_Valid && ::Is<T>( &m_Token ) || ::Is<T>( m_Var );
     }
 
-    if ( token->IsVariable() )
+    // A handy method for checking and setting error.
+    template <typename T>
+    bool Ensure() const
     {
-        const BFFVariable * var = GetVar( function, token );
-        if ( var == nullptr )
+        if ( Is<T>() )
         {
-            return false;
+            return true;
         }
-        if ( !var->IsInt() )
-        {
-            Error::Error_1050_PropertyMustBeOfType( token, function, var->GetName().Get(), var->GetType(), BFFVariable::VAR_INT );
-            return false;
-        }
-        value = var->GetInt();
-        return true;
+
+        Error::Error_1050_PropertyMustBeOfType( &m_Token, m_Function, m_Var->GetName().Get(), m_Var->GetType(), T::VarType );
+        return false;
     }
 
-    Error::Error_1256_UnexpectedToken( token, function );
-    return false;
-}
-
-// GetString
-//------------------------------------------------------------------------------
-static bool GetString( const Function * function, const BFFToken * token, AString & value )
-{
-    if ( token->IsString() )
+    template <typename T>
+    typename T::ReturnType GetValue() const
     {
-        value = token->GetValueString();
-        return true;
+        ASSERT( Is<T>() );
+        return ( m_Var != nullptr ) ? Get<T>( *m_Var ) : Get<T>( m_Token );
     }
 
-    if ( token->IsVariable() )
-    {
-        const BFFVariable * var = GetVar( function, token );
-        if ( var == nullptr )
-        {
-            return false;
-        }
-        if ( !var->IsString() )
-        {
-            Error::Error_1050_PropertyMustBeOfType( token, function, var->GetName().Get(), var->GetType(), BFFVariable::VAR_STRING );
-            return false;
-        }
-        value = var->GetString();
-        return true;
-    }
-
-    Error::Error_1256_UnexpectedToken( token, function );
-    return false;
-}
-
-// GetArrayOfString
-// Get the array of strings, `value` is guaranteed to be not null if returns true.
-//------------------------------------------------------------------------------
-static bool GetArrayOfString( const Function * function, const BFFToken * token, const Array<AString> * & value )
-{
-    if ( token->IsVariable() )
-    {
-        const BFFVariable * var = GetVar( function, token );
-        if ( var == nullptr )
-        {
-            return false;
-        }
-        if ( !var->IsArrayOfStrings() )
-        {
-            Error::Error_1050_PropertyMustBeOfType( token, function, var->GetName().Get(), var->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
-            return false;
-        }
-        value = &var->GetArrayOfStrings();
-        return true;
-    }
-
-    Error::Error_1256_UnexpectedToken( token, function );
-    return false;
-}
+protected:
+    const BFFToken & m_Token;
+    const BFFVariable * m_Var;
+    bool m_Valid;
+    const Function * m_Function;
+};
 
 static const Array<Operator> BoolOperators
 {
@@ -189,6 +248,35 @@ static const Array<Operator> BoolOperators
     Operator::OP_NOT_EQUAL,
     Operator::OP_AND,
     Operator::OP_OR,
+};
+
+// OperandOf<T>
+// ------------------------------------------------------------
+template <typename T>
+class OperandOf : public Operand
+{
+public:
+    explicit OperandOf( const BFFToken & token, const Function * function )
+        : Operand( token, function )
+    {
+        if( !Is<T>() )
+        {
+            m_Valid = false;
+            return;
+        }
+    }
+    explicit OperandOf( const Operand & operand )
+        : Operand( operand )
+    {
+        m_Valid = m_Valid && Is<T>();
+    }
+    OperandOf( const OperandOf & ) = delete;
+    OperandOf( OperandOf && ) = delete;
+    OperandOf & operator = ( const OperandOf & ) = delete;
+    OperandOf & operator = ( OperandOf && ) = delete;
+
+    bool EnsureValid() const { return Ensure<T>(); }
+    typename T::ReturnType GetValue() const { return Operand::GetValue<T>(); }
 };
 
 // CompareBools
@@ -305,8 +393,6 @@ static bool CompareStrings( const Function * function, const AString & lhs, cons
     return true;
 }
 
-static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bool endsOnCloseBracket, bool & expResult );
-
 // IsExpEnd
 // .a == .b
 //         ^end
@@ -323,8 +409,36 @@ static bool IsExpEnd( BFFTokenRange & iter, bool endsOnCloseBracket )
     return endsOnCloseBracket && iter.GetCurrent()->IsRoundBracket( ')' );
 }
 
-// ParseOperator consumes 1 or 2 tokens (2 for "not in").
+// ExpectExpEnd
+// A helper function for exp ending checking and error reporting.
+//------------------------------------------------------------------------------
+static bool ExpectExpEnd( const Function * function, BFFTokenRange & iter, bool endsOnCloseBracket )
+{
+    if ( IsExpEnd( iter, endsOnCloseBracket ) )
+    {
+        return true;
+    }
+    if ( endsOnCloseBracket )
+    {
+        Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), function, ')' );
+    }
+    else
+    {
+        Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
+    }
+    return false;
+}
+
+// Forward Declarations
+//------------------------------------------------------------------------------
+static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bool endsOnCloseBracket, bool & expResult );
+static bool ParseSubBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult );
+static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult );
+
+
+// ParseOperator
 // iter is expected pointing to the operator.
+// consumes 1 or 2 tokens (2 for "not in").
 //------------------------------------------------------------------------------
 static bool ParseOperator( const Function * function, BFFTokenRange & iter, Operator & op, const Array<Operator> * supportedOps = nullptr )
 {
@@ -401,7 +515,7 @@ static bool ParseOperator( const Function * function, BFFTokenRange & iter, Oper
     return true;
 }
 
-/*
+/* ParseStringInArray
 Forms:
     bool-exp =
              | string-exp in string-set
@@ -409,30 +523,21 @@ Forms:
     string-exp = string-literal | string-variable
     string-set = string-set-variable
 
-    iter is expected pointing to the rhs.
-*/
-//------------------------------------------------------------------------------
-bool ParseStringInArray( const Function * function, const BFFToken * lhsToken, Operator op, BFFTokenRange & iter, bool & expResult )
+iter is expected pointing to the rhs.
+------------------------------------------------------------------------------ */
+static bool ParseStringInArray( const Function * function, const OperandOf<String> & lhs, Operator op, BFFTokenRange & iter, bool & expResult )
 {
+    ASSERT( lhs.IsValid() );
     ASSERT( ( op == Operator::OP_IN ) || ( op == Operator::OP_NOT_IN ) );
-
-    AString lhs;
-    if ( !GetString( function, lhsToken, lhs ) )
-    {
-        return false;
-    }
 
     const BFFToken * rhsToken = iter.GetCurrent();
     iter++;
 
-    const Array< AString > * rhsArray = nullptr;
-    if ( !GetArrayOfString( function, rhsToken, rhsArray ) )
-    {
-        return false;
-    }
-    ASSERT( rhsArray != nullptr );
+    OperandOf<ArrayOfString> rhs( *rhsToken, function );
+    const Array< AString > & rhsArray = rhs.GetValue();
 
-    bool conditionSuccess = ( rhsArray->Find( lhs ) != nullptr );
+    const AString & lhsValue = lhs.GetValue();
+    bool conditionSuccess = ( rhsArray.Find( lhsValue ) != nullptr );
 
     if ( op == Operator::OP_NOT_IN )
     {
@@ -443,7 +548,7 @@ bool ParseStringInArray( const Function * function, const BFFToken * lhsToken, O
     return true;
 }
 
-/*
+/* ParseStringArrayInArray
 Forms:
     bool-exp =
              | string-set in string-set
@@ -451,10 +556,11 @@ Forms:
     string-set = string-set-variable
 
 iter is expected pointing to the operator.
-*/
-//------------------------------------------------------------------------------
-bool ParseStringArrayInArray( const Function * function, const BFFToken * lhsToken, BFFTokenRange & iter, bool & expResult )
+------------------------------------------------------------------------------ */
+static bool ParseStringArrayInArray( const Function * function, const OperandOf<ArrayOfString> & lhs, BFFTokenRange & iter, bool & expResult )
 {
+    ASSERT( lhs.IsValid() );
+
     const BFFToken * opToken = iter.GetCurrent();
     Operator op = Operator::OP_UNKNOWN;
     if ( !ParseOperator( function, iter, op ) )
@@ -467,29 +573,20 @@ bool ParseStringArrayInArray( const Function * function, const BFFToken * lhsTok
         return false;
     }
 
-    const Array< AString > * lhsArray = nullptr;
-    if ( !GetArrayOfString( function, lhsToken, lhsArray ) )
-    {
-        return false;
-    }
-
     const BFFToken * rhsToken = iter.GetCurrent();
     iter++;
 
-    const Array< AString > * rhsArray = nullptr;
-    if ( !GetArrayOfString( function, rhsToken, rhsArray ) )
-    {
-        return false;
-    }
-
-    ASSERT( ( lhsArray != nullptr ) || ( rhsArray != nullptr ) );
+    const OperandOf<ArrayOfString> rhs( *rhsToken, function );
 
     bool conditionSuccess = false;
 
+    const Array<AString> & lhsArray = lhs.GetValue();
+    const Array<AString> & rhsArray = rhs.GetValue();
+
     // Is any string in array?
-    for ( const AString & testStr : *lhsArray )
+    for ( const AString & testStr : lhsArray )
     {
-        if ( rhsArray->Find( testStr ) )
+        if ( rhsArray.Find( testStr ) )
         {
             conditionSuccess = true;
             break;
@@ -505,16 +602,15 @@ bool ParseStringArrayInArray( const Function * function, const BFFToken * lhsTok
     return true;
 }
 
-/*
+/* ParseUnaryBooleanOperand
 Forms:
     bool-exp = true | false
              | (bool-exp)
              | bool-variable
              | ! bool-exp
 
-iter is expected pointing to the operand.
-*/
-//------------------------------------------------------------------------------
+`iter` is expected pointing to the operand.
+------------------------------------------------------------------------------ */
 static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange & iter, bool & expResult )
 {
     switch ( iter.GetCurrent()->GetType() )
@@ -522,49 +618,56 @@ static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange &
     case BFFTokenType::Boolean:        // true or false
     case BFFTokenType::Variable:       // .Var or ^Var
     {
-        if ( !GetBool( function, iter.GetCurrent(), expResult ) )
+        OperandOf<Bool> operand( *iter.GetCurrent(), function );
+
+        if ( !operand.EnsureValid() )
         {
             return false;
         }
+        expResult = operand.GetValue();
         iter++;
         return true;
     }
     case BFFTokenType::Operator:       // = += > ! == etc
-        if ( iter->IsOperator( "!" ) )
-        {
-            iter++;
-            bool subResult;
-            if ( !ParseUnaryBooleanOperand( function, iter, subResult ) )
-            {
-                return false;
-            }
-            expResult = !subResult;
-            return true;
-        }
-        break;
+        return ParseUnaryBooleanExp( function, iter, expResult );
     case BFFTokenType::RoundBracket:   // ( or )
-        if ( iter->IsRoundBracket( '(' ) )
-        {
-            iter++;
-            bool result = ParseBooleanExp( function, iter, true, expResult );
-            if ( !result )
-            {
-                return false;
-            }
-            ASSERT( iter->IsRoundBracket( ')' ) );
-            iter++;
-            return true;
-        }
-        break;
+        return ParseSubBooleanExp( function, iter, expResult );
     default:
         break;
     }
 
-    Error::Error_1255_UnexpectedOperator( iter.GetCurrent(), function );
+    Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
     return false;
 }
 
-/*
+/* ParseUnaryBooleanExp
+Forms:
+    bool-exp = true | false
+             | (bool-exp)
+             | bool-variable
+             | ! bool-exp
+
+`iter` is expected pointing to the operator.
+------------------------------------------------------------------------------ */
+static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
+{
+    if ( !iter->IsOperator( "!" ) )
+    {
+        Error::Error_1255_UnexpectedOperator( iter.GetCurrent(), function );
+        return false;
+    }
+
+    iter++;
+    bool subResult;
+    if ( !ParseUnaryBooleanOperand( function, iter, subResult ) )
+    {
+        return false;
+    }
+    expResult = !subResult;
+    return true;
+}
+
+/* ParseBinaryBooleanExp
 Forms:
     bool-exp = true | false
              | (bool-exp)
@@ -573,8 +676,7 @@ Forms:
              | bool-exp ==/!=/&&/|| bool-exp
 
 iter is expected pointing to the operator.
-*/
-//------------------------------------------------------------------------------
+------------------------------------------------------------------------------ */
 static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFTokenRange & iter, bool & expResult )
 {
     const BFFToken * opToken = iter.GetCurrent();
@@ -590,26 +692,27 @@ static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFToken
     case BFFTokenType::Boolean:         // true, false
     case BFFTokenType::Variable:       // .Var or ^Var
     {
-        if ( !GetBool( function, iter.GetCurrent(), rhs ) )
+        OperandOf<Bool> rhsOperand( *iter.GetCurrent(), function );
+        if ( !rhsOperand.EnsureValid() )
         {
             return false;
         }
         iter++; // Consume the current token.
+        rhs = rhsOperand.GetValue();
         break;
     }
-    case BFFTokenType::RoundBracket:
-        if ( iter->IsRoundBracket( '(' ) )
+    case BFFTokenType::Operator:
+        if ( !ParseUnaryBooleanExp( function, iter, rhs ) )
         {
-            iter++;
-            if ( !ParseBooleanExp( function, iter, true, rhs ) )
-            {
-                return false;
-            }
-            ASSERT( iter.GetCurrent()->IsRoundBracket( ')' ) );
-            iter++; // Consume the current token.
-            break;
+            return false;
         }
-        [[fallthrough]];
+        break;
+    case BFFTokenType::RoundBracket:
+        if ( !ParseSubBooleanExp( function, iter, rhs ) )
+        {
+            return false;
+        }
+        break;
     default:
         Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
         return false;
@@ -617,18 +720,17 @@ static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFToken
     return CompareBools( function, lhs, rhs, opToken, op, expResult );
 }
 
-/*
+/* ParseIntComparisonExp
 Forms:
     bool-exp = 
              | number-exp ==/!=/>/>=/</<= number-exp
     number-exp = number-literal | number-variable
 
-    iter is expected pointing to the operator.
-*/
-//------------------------------------------------------------------------------
-static bool ParseIntComparisonExp( const Function * function, const BFFToken * lhsToken, BFFTokenRange & iter, bool & expResult )
+iter is expected pointing to the operator.
+------------------------------------------------------------------------------ */
+static bool ParseIntComparisonExp( const Function * function, const OperandOf<Number> & lhs, BFFTokenRange & iter, bool & expResult )
 {
-    ASSERT( lhsToken->IsNumber() || lhsToken->IsVariable() );
+    ASSERT( lhs.IsValid() );
 
     const BFFToken * opToken = iter.GetCurrent();
     Operator op = Operator::OP_UNKNOWN;
@@ -638,31 +740,16 @@ static bool ParseIntComparisonExp( const Function * function, const BFFToken * l
     }
 
     // TODO: Support literal int arrays.
-    switch ( iter.GetCurrent()->GetType() )
+    OperandOf<Number> rhs( *iter.GetCurrent(), function );
+    if ( !rhs.EnsureValid() )
     {
-    case BFFTokenType::Number:         // 123, -12
-    case BFFTokenType::Variable:       // .Var or ^Var
-    {
-        int32_t lhs;
-        if ( !GetInt( function, lhsToken, lhs ) )
-        {
-            return false;
-        }
-        int32_t rhs;
-        if ( !GetInt( function, iter.GetCurrent(), rhs ) )
-        {
-            return false;
-        }
-        iter++;
-        return CompareInts( function, lhs, rhs, opToken, op, expResult );
-    }
-    default:
-        Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
         return false;
     }
+    iter++; // Consume rhs.
+    return CompareInts( function, lhs.GetValue(), rhs.GetValue(), opToken, op, expResult );
 }
 
-/*
+/* ParseStringComparisonExp
 Forms:
     bool-exp = 
              | string-exp ==/!= string-exp
@@ -672,11 +759,10 @@ Forms:
     string-set = string-set-variable
 
 iter is expected pointing to the operator.
-*/
-//------------------------------------------------------------------------------
-static bool ParseStringComparisonExp( const Function * function, const BFFToken * lhsToken, BFFTokenRange & iter, bool & expResult )
+------------------------------------------------------------------------------ */
+static bool ParseStringComparisonExp( const Function * function, const OperandOf<String> & lhs, BFFTokenRange & iter, bool & expResult )
 {
-    ASSERT( lhsToken->IsString() || lhsToken->IsVariable() );
+    ASSERT( lhs.IsValid() );
 
     const BFFToken * opToken = iter.GetCurrent();
     Operator op = Operator::OP_UNKNOWN;
@@ -691,24 +777,18 @@ static bool ParseStringComparisonExp( const Function * function, const BFFToken 
     case BFFTokenType::String:         // "Hello"
     case BFFTokenType::Variable:       // .Var or ^Var
     {
-        AString lhs;
-        if ( !GetString( function, lhsToken, lhs ) )
-        {
-            return false;
-        }
-
         if ( ( op == Operator::OP_IN ) || ( op == Operator::OP_NOT_IN ) )
         {
-            return ParseStringInArray( function, lhsToken, op, iter, expResult );
+            return ParseStringInArray( function, lhs, op, iter, expResult );
         }
 
-        AString rhs;
-        if ( !GetString( function, iter.GetCurrent(), rhs ) )
+        OperandOf<String> rhs(*iter.GetCurrent(), function);
+        if ( !rhs.EnsureValid() )
         {
             return false;
         }
         iter++;
-        return CompareStrings( function, lhs, rhs, opToken, op, expResult );
+        return CompareStrings( function, lhs.GetValue(), rhs.GetValue(), opToken, op, expResult );
     }
     default:
         Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
@@ -716,7 +796,38 @@ static bool ParseStringComparisonExp( const Function * function, const BFFToken 
     }
 }
 
-/*
+/* ParseSubBooleanExp
+Forms:
+    bool-exp = (bool-exp)
+
+`iter` is expected pointing to the opening round bracket.
+------------------------------------------------------------------------------ */
+static bool ParseSubBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
+{
+    ASSERT( iter->GetType() == BFFTokenType::RoundBracket );
+
+    if ( iter->IsRoundBracket( ')' ) )
+    {
+        Error::Error_1061_MissingOpenBracket( iter.GetCurrent(), function );
+        return false;
+    }
+    ASSERT( iter->IsRoundBracket( '(' ) );
+    iter++;
+
+    if ( !ParseBooleanExp( function, iter, true, expResult ) )
+    {
+        return false;
+    }
+    if ( !iter->IsRoundBracket( ')' ) )
+    {
+        Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), function, ')' );
+        return false;
+    }
+    iter++;
+    return true;
+}
+
+/* ParseBooleanExp
 Forms:
     bool-exp = true | false
              | (bool-exp)
@@ -732,144 +843,103 @@ Forms:
     number-exp = number-literal | number-variable
     string-exp = string-literal | string-variable
     string-set = string-set-variable
-*/
+------------------------------------------------------------------------------ */
 static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bool endsOnCloseBracket, bool & expResult )
 {
-    switch ( iter.GetCurrent()->GetType() )
+    const BFFToken * const token = iter.GetCurrent();
+    ASSERT( token != nullptr ); // TODO: add a new error for "Unexpected end of expression".
+    switch ( token->GetType() )
     {
     case BFFTokenType::Variable:       // .Var or ^Var
-    {
-        const BFFToken * varToken = iter.GetCurrent();
-        const BFFVariable * var = GetVar( function, iter.GetCurrent() );
-        if ( var == nullptr )
-        {
-            return false;
-        }
-        iter++;
-        switch ( var->GetType() )
-        {
-        case BFFVariable::VAR_BOOL:
-        {
-            bool subResult = var->GetBool();
-            while ( !IsExpEnd( iter, endsOnCloseBracket ) )
-            {
-                if ( !ParseBinaryBooleanExp( function, subResult, iter, subResult ) )
-                {
-                    return false;
-                }
-            }
-            expResult = subResult;
-            return true;
-        }
-        case BFFVariable::VAR_INT:
-        {
-            // TODO: Removed duplication of cases: VAR_INT, VAR_STRING, VAR_ARRAY_OF_STRINGS
-            if ( ParseIntComparisonExp( function, varToken, iter, expResult ) )
-            {
-                if ( IsExpEnd( iter, endsOnCloseBracket ) )
-                {
-                    return true;
-                }
-                Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), function, ')' );
-            }
-            return false;
-        }
-        case BFFVariable::VAR_STRING:
-        {
-            if ( ParseStringComparisonExp( function, varToken, iter, expResult ) )
-            {
-                if ( IsExpEnd( iter, endsOnCloseBracket ) )
-                {
-                    return true;
-                }
-                Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), function, ')' );
-            }
-            return false;
-        }
-        case BFFVariable::VAR_ARRAY_OF_STRINGS:
-        {
-            if ( ParseStringArrayInArray( function, varToken, iter, expResult ) )
-            {
-                if ( IsExpEnd( iter, endsOnCloseBracket ) )
-                {
-                    return true;
-                }
-                Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), function, ')' );
-            }
-            return false;
-        }
-        default:
-            ASSERT( false );
-            return false;
-        }
-    }
     case BFFTokenType::Boolean:        // true or false
-    {
-        bool subResult = iter->GetBoolean();
-        iter++;
-        while ( !IsExpEnd( iter, endsOnCloseBracket ) )
-        {
-            if ( !ParseBinaryBooleanExp( function, subResult, iter, subResult ) )
-            {
-                return false;
-            }
-        }
-        expResult = subResult;
-        return true;
-    }
     case BFFTokenType::Number:         // 12, 56, -102 etc
-    {
-        const BFFToken * varToken = iter.GetCurrent();
-        iter++;
-        return ParseIntComparisonExp( function, varToken, iter, expResult );
-    }
     case BFFTokenType::String:         // "Hello"
     {
-        const BFFToken * varToken = iter.GetCurrent();
+        Operand operand( *token, function );
         iter++;
-        return ParseStringComparisonExp( function, varToken, iter, expResult );
-    }
-    case BFFTokenType::Operator:       // = += > ! == etc
-        if ( iter->IsOperator( "!" ) )
+        if ( operand.Is<Bool>() )
         {
-            iter++;
-            bool subResult;
-            if ( ParseUnaryBooleanOperand( function, iter, subResult ) )
+            // Form: bool-value = bool-literal | bool-variable
+            // Expect: bool-value [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
+            expResult = operand.GetValue<Bool>();
+            while ( !IsExpEnd( iter, endsOnCloseBracket ) )
             {
-                expResult = !subResult;
-                return true;
-            }
-            return false;
-        }
-        else
-        {
-            Error::Error_1255_UnexpectedOperator( iter.GetCurrent(), function );
-            return false;
-        }
-        break;
-    case BFFTokenType::RoundBracket:   // ( or )
-        if ( iter->IsRoundBracket( '(' ) )
-        {
-            iter++;
-            bool subResult;
-            if ( !ParseBooleanExp( function, iter, true, subResult ) )
-            {
-                return false;
-            }
-            ASSERT( iter->IsRoundBracket( ')' ) );
-            iter++;
-
-            while ( !IsExpEnd( iter, true ) )
-            {
-                if ( !ParseBinaryBooleanExp( function, subResult, iter, subResult ) )
+                if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
                 {
                     return false;
                 }
             }
-            expResult = subResult;
             return true;
         }
-        break;
+        else if ( operand.Is<Number>() )
+        {
+            // Form: number-value = number-literal | number-variable
+            // Expect: number-value, number-value <op> number-value
+            if ( !ParseIntComparisonExp( function, OperandOf<Number>( operand ), iter, expResult ) )
+            {
+                return false;
+            }
+        }
+        else if ( operand.Is<String>() )
+        {
+            // Form: string-value = string-literal | string-variable
+            // Expect: string-value, string-value <op> string-value
+            if ( !ParseStringComparisonExp( function, OperandOf<String>( operand ), iter, expResult ) )
+            {
+                return false;
+            }
+        }
+        else if ( operand.Is<ArrayOfString>() )
+        {
+            // Expect: array-of-string-variable [not] in array-of-string-variable
+            if ( !ParseStringArrayInArray( function, OperandOf<ArrayOfString>( operand ), iter, expResult ) )
+            {
+                return false;
+            }
+        }
+        else {
+            // TODO: Update the following error.
+            // Error::Error_1008_VariableOfWrongType was one of the options but we expected multiple types here,
+            // where the 1008 function accept a single expected type.
+            Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
+            return false;
+        }
+
+        return ExpectExpEnd( function, iter, endsOnCloseBracket );
+    }
+    case BFFTokenType::Operator:       // = += > ! == etc
+    {
+        // Expect: !bool-exp [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
+        if ( !ParseUnaryBooleanExp( function, iter, expResult ) )
+        {
+            return false;
+        }
+        while ( !IsExpEnd( iter, endsOnCloseBracket ) )
+        {
+            if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    case BFFTokenType::RoundBracket:   // ( or )
+    {
+        // Expect: (bool-exp) [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
+        if ( !ParseSubBooleanExp( function, iter, expResult ) )
+        {
+            return false;
+        }
+
+        while ( !IsExpEnd( iter, true ) )
+        {
+            if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     default:
         break;
     }
@@ -878,6 +948,8 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
     return false;
 }
 
+// Parse
+//------------------------------------------------------------------------------
 /*static*/ bool BFFBooleanExpParser::Parse( const Function * function, const BFFTokenRange & range, bool & expResult )
 {
     // The `iter` will be used across all the functions calls without copying.
@@ -885,4 +957,3 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
 
     return ParseBooleanExp( function, iter, false, expResult );
 }
-
