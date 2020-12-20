@@ -8,12 +8,12 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //
-#if file_exists( "2019/Community/VC/Tools/MSVC/14.27.29110/bin/Hostx64/x64/cl.exe" )
+#if file_exists( "2019/Community/VC/Tools/MSVC/14.28.29333/bin/Hostx64/x64/cl.exe" )
     //
     // Use vendorized toolchain
     //
     .VS2019_BasePath        = '$_CURRENT_BFF_DIR_$/2019/Community/VC'
-    .VS2019_Version         = '14.27.29110'
+    .VS2019_Version         = '14.28.29333'
 #else
     //
     // Use environment variable if available (VS Command Prompt)
@@ -27,9 +27,9 @@
         //
         // Use Visual Studio installation
         //
-        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.27.29110/bin/Hostx64/x64/cl.exe" )
+        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.28.29333/bin/Hostx64/x64/cl.exe" )
             .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC'
-            .VS2019_Version         = '14.27.29110'
+            .VS2019_Version         = '14.28.29333'
         #else
             //
             // Failed
@@ -60,6 +60,7 @@ Compiler( 'Compiler-VS2019-x64' )
                     '$Root$/mspdbsrv.exe'
                     '$Root$/mspft140.dll'
                     '$Root$/msvcp140.dll'
+                    '$Root$/msvcp140_atomic_wait.dll' // Required circa 16.8.3 (14.28.29333)
                     '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
                     '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
@@ -154,7 +155,7 @@ Compiler( 'Compiler-VS2019-x64' )
 
 // _MSC_VER
 //------------------------------------------------------------------------------
-.VS2019_MSC_VER                     = '1920'
+.VS2019_MSC_VER                     = '1928'
 
 // VisualStudioSettings
 //------------------------------------------------------------------------------

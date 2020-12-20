@@ -13,7 +13,7 @@
 
 #if __WINDOWS__
     .VisualStudioToolChain_X64  = .ToolChain_VS_Windows_X64
-                                + .WindowsSDK_X64
+                                + .Windows10_SDK_X64
 #endif
 
 //==============================================================================

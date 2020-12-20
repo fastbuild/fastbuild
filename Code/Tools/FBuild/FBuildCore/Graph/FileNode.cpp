@@ -58,6 +58,14 @@ void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const AStrin
     return HandleWarnings( job, name, data, msvcWarningString );
 }
 
+// HandleWarningsClangCl
+//------------------------------------------------------------------------------
+void FileNode::HandleWarningsClangCl( Job * job, const AString & name, const AString & data )
+{
+    constexpr const char * clangWarningString = " warning:";
+    return HandleWarnings( job, name, data, clangWarningString );
+}
+
 // HandleWarnings
 //------------------------------------------------------------------------------
 void FileNode::HandleWarnings( Job * job, const AString & name, const AString & data, const char * warningString )

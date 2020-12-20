@@ -41,6 +41,30 @@
                                     + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x64"'
                                     + ' /MACHINE:X64'
 ]
+.Windows10_SDK_X64_ClangCl =
+[
+    // When using clang-cl, we can use these include paths to suppress compile errors
+    // inside system headers (which are full of problems)
+    .WindowsSDK_IncludePaths        = ' /imsvc "$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
+                                    + ' /imsvc "$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
+                                    + ' /imsvc "$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
+
+    .WindowsDK_WinRTAssemblyPath    = '$Windows10_SDKBasePath$/UnionMetadata/$Windows10_SDKVersion$/'
+
+    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
+                                    + .WindowsSDK_Defines
+                                    + ' -DWIN64'
+                                    + ' -D__X64__'
+
+    .CompilerOptions                = .CommonCompilerOptions
+    .CompilerOptionsC               = .CommonCompilerOptions
+    .CompilerOptionsDeoptimized     = .CommonCompilerOptions
+    .PCHOptions                     = .CommonCompilerOptions
+
+    .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/x64"'
+                                    + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x64"'
+                                    + ' /MACHINE:X64'
+]
 Compiler( 'ResourceCompiler-Windows10' )
 {
     .Executable                 = '$Windows10_SDKBasePath$/Bin/$Windows10_SDKVersion$/x64/RC.exe'
