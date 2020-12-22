@@ -54,6 +54,7 @@ private:
     void DBCorrupt() const;
     void BFFDirtied() const;
     void DBVersionChanged() const;
+    void FixupErrorPaths() const;
 };
 
 // Register Tests
@@ -73,7 +74,30 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( DBCorrupt )
     REGISTER_TEST( BFFDirtied )
     REGISTER_TEST( DBVersionChanged )
+    REGISTER_TEST( FixupErrorPaths )
 REGISTER_TESTS_END
+
+// NodeTestHelper
+//------------------------------------------------------------------------------
+// Fake node to allow access to private internals
+class NodeTestHelper : public Node
+{
+    REFLECT_DECLARE( NodeTestHelper )
+public:
+    NodeTestHelper()
+        : Node( AStackString<>( "dummy" ), Node::PROXY_NODE, 0 )
+    {}
+    virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ ) override
+    {
+        ASSERT( false );
+        return false;
+    }
+    virtual bool IsAFile() const override { return true; }
+
+    using Node::FixupPathForVSIntegration;
+};
+REFLECT_BEGIN( NodeTestHelper, Node, MetaNone() )
+REFLECT_END( NodeTestHelper )
 
 // EmptyGraph
 //------------------------------------------------------------------------------
@@ -849,6 +873,54 @@ void TestGraph::DBVersionChanged() const
 
     // Ensure user was informed about change
     TEST_ASSERT( GetRecordedOutput().Find( "Database version has changed" ) );
+}
+
+// FixupErrorPaths
+//------------------------------------------------------------------------------
+void TestGraph::FixupErrorPaths() const
+{
+    // Use a known location we can test for
+    #if defined( __WINDOWS__ )
+        const AStackString<> workingDir( "C:\\Windows\\System32" );
+    #else
+        const AStackString<> workingDir( "/tmp/subDir" );
+    #endif
+
+    // FBuild is used during path cleaning to access working dir
+    FBuildOptions fo;
+    fo.SetWorkingDir( workingDir );
+    FBuild f( fo );
+
+    // Helper macro
+    AStackString<> fixup, original;
+    #define TEST_FIXUP( path ) \
+        original = path; \
+        fixup = path; \
+        NodeTestHelper::FixupPathForVSIntegration( fixup ); \
+        do { \
+            if ( fixup.BeginsWith( workingDir ) == false ) \
+            { \
+                TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
+                                     "Original           : %s\n" \
+                                     "Returned           : %s\n" \
+                                     "Expected BeginsWith: %s\n", \
+                                     original.Get(), \
+                                     fixup.Get(), \
+                                     workingDir.Get() ); \
+            } \
+        } while ( false )
+
+    // GCC/Clang style
+    TEST_FIXUP( "Core/Mem/Mem.h:23:1: warning: some warning text" );
+    TEST_FIXUP( ".\\Tools/FBuild/FBuildCore/Graph/Node.h(294,24): warning: some warning text" );
+
+    // SNC style
+    TEST_FIXUP( "Core/Mem/Mem.h(23,1): warning 55: some warning text" );
+
+    // VBCC Style
+    TEST_FIXUP( "warning 55 in line 23 of \"Core/Mem/Mem.h\": some warning text" );
+
+    #undef TEST_FIXUP
 }
 
 //------------------------------------------------------------------------------

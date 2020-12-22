@@ -887,6 +887,7 @@ void Node::ReplaceDummyName( const AString & newName )
     // Clang/GCC Style
     // Convert:
     //     Core/Mem/Mem.h:23:1: warning: some warning text
+    //     .\Tools/FBuild/FBuildCore/Graph/Node.h(294,24): warning: some warning text
     // To:
     //     <path>\Core\Mem\Mem.h(23,1): warning: some warning text
     //
@@ -945,6 +946,21 @@ void Node::ReplaceDummyName( const AString & newName )
 /*static*/ void Node::FixupPathForVSIntegration_GCC( AString & line, const char * tag )
 {
     AStackString<> beforeTag( line.Get(), tag );
+
+    // is the error position in (x,y) style? (As opposed to :x:y: style)
+    const bool commaStyle = ( ( beforeTag.Find( ':' ) == nullptr ) && beforeTag.Find( ',' ) );
+    if ( commaStyle )
+    {
+        // Convert brace style to : style
+        const uint32_t count = beforeTag.Replace( '(', ':' ) +
+                               beforeTag.Replace( ',', ':' ) +
+                               beforeTag.Replace( ')', ':' );
+        if ( count != 3 )
+        {
+            return; // Unexpected format
+        }
+    }
+
     Array< AString > tokens;
     beforeTag.Tokenize( tokens, ':' );
     const size_t numTokens = tokens.GetSize();
@@ -1064,7 +1080,6 @@ void Node::ReplaceDummyName( const AString & newName )
     //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
     AStackString<> buffer;
     buffer.Format( "%s(%s,1): %s %s: ", fileName.Get(), warningLine, problemType, warningNum );
-    buffer.Replace( '/', '\\' );
 
     // add rest of warning
     for ( size_t i=7; i < tokens.GetSize(); ++i )
