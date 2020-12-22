@@ -27,7 +27,7 @@
     // GlobalData
     //------------------------------------------------------------------------------
     class LeakDumper { public: ~LeakDumper() { MemTracker::DumpAllocations(); } };
-    #if defined( __WINDOWS__ )
+    #if defined( __WINDOWS__ ) && !defined( __clang__ )
         static LeakDumper g_LeakDumper;
     #else
         static LeakDumper g_LeakDumper __attribute__((init_priority(101)));
