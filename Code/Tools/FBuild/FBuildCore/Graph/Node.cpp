@@ -121,22 +121,11 @@ REFLECT_END( Node )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Node::Node( const AString & name, Type type, uint32_t controlFlags )
-    : m_State( NOT_PROCESSED )
-    , m_BuildPassTag( 0 )
-    , m_ControlFlags( controlFlags )
-    , m_StatsFlags( 0 )
-    , m_Stamp( 0 )
-    , m_RecursiveCost( 0 )
-    , m_Type( type )
-    , m_Next( nullptr )
-    , m_LastBuildTimeMs( 0 )
-    , m_ProcessingTime( 0 )
-    , m_CachingTime( 0 )
-    , m_ProgressAccumulator( 0 )
-    , m_Index( INVALID_NODE_INDEX )
-    , m_Hidden( false )
+Node::Node( const AString & name, Type type, uint8_t controlFlags )
 {
+    m_Type = type;
+    m_ControlFlags = controlFlags;
+
     SetName( name );
 
     // Compile time check to ensure name vector is in sync

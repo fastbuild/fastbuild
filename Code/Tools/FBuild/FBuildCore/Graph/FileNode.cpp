@@ -16,7 +16,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
+FileNode::FileNode( const AString & fileName, uint8_t controlFlags )
     : Node( fileName, Node::FILE_NODE, controlFlags )
 {
     ASSERT( fileName.EndsWith( "\\" ) == false );
