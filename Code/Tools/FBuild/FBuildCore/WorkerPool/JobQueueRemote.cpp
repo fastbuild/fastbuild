@@ -36,7 +36,7 @@ JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
     {
         // identify each worker with an id starting from 1
         // (the "main" thread is considered 0)
-        uint32_t threadIndex = ( i + 1001 );
+        const uint16_t threadIndex = static_cast<uint16_t>( i + 1001 );
         WorkerThread * wt = FNEW( WorkerThreadRemote( threadIndex ) );
         wt->Init();
         m_Workers.Append( wt );

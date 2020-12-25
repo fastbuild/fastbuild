@@ -131,7 +131,7 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
     {
         // identify each worker with an id starting from 1
         // (the "main" thread is considered 0)
-        uint32_t threadIndex = ( i + 1 );
+        const uint16_t threadIndex = static_cast<uint16_t>( i + 1 );
         WorkerThread * wt = FNEW( WorkerThread( threadIndex ) );
         wt->Init();
         m_Workers.Append( wt );

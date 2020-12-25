@@ -69,7 +69,10 @@ public:
     void                GetMessagesForLog( AString & buffer ) const;
     void                GetMessagesForMonitorLog( AString & buffer ) const;
 
-    enum DistributionState
+    void                SetRemoteThreadIndex( uint16_t threadIndex )    { m_RemoteThreadIndex = threadIndex; }
+    uint16_t            GetRemoteThreadIndex() const                    { return m_RemoteThreadIndex; }
+
+    enum DistributionState : uint8_t
     {
         DIST_NONE                           = 0, // All non-distributable jobs
         DIST_AVAILABLE                      = 1, // A distributable job, not in progress
@@ -102,6 +105,7 @@ private:
     bool                m_IsLocal           = true;
     uint8_t             m_SystemErrorCount  = 0; // On client, the total error count, on the worker a flag for the current attempt
     DistributionState   m_DistributionState = DIST_NONE;
+    uint16_t            m_RemoteThreadIndex = 0; // On server, the thread index used to build
     AString             m_RemoteName;
     AString             m_RemoteSourceRoot;
     AString             m_CacheName;

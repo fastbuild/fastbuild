@@ -22,12 +22,12 @@
 
 // Static
 //------------------------------------------------------------------------------
-static THREAD_LOCAL uint32_t s_WorkerThreadThreadIndex = 0;
+static THREAD_LOCAL uint16_t s_WorkerThreadThreadIndex = 0;
 Mutex WorkerThread::s_TmpRootMutex;
 AStackString<> WorkerThread::s_TmpRoot;
 
 //------------------------------------------------------------------------------
-WorkerThread::WorkerThread( uint32_t threadIndex )
+WorkerThread::WorkerThread( uint16_t threadIndex )
 : m_ShouldExit( false )
 , m_Exited( false )
 , m_ThreadIndex( threadIndex )
@@ -105,7 +105,7 @@ void WorkerThread::WaitForStop()
 
 // GetThreadIndex
 //------------------------------------------------------------------------------
-/*static*/ uint32_t WorkerThread::GetThreadIndex()
+/*static*/ uint16_t WorkerThread::GetThreadIndex()
 {
     return s_WorkerThreadThreadIndex;
 }

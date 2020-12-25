@@ -19,7 +19,7 @@ class FileStream;
 class WorkerThread
 {
 public:
-    explicit WorkerThread( uint32_t threadIndex );
+    explicit WorkerThread( uint16_t threadIndex );
     void Init();
     virtual ~WorkerThread();
 
@@ -29,7 +29,7 @@ public:
     bool HasExited() const;
     void WaitForStop();
 
-    static uint32_t GetThreadIndex();
+    static uint16_t GetThreadIndex();
 
     static void GetTempFileDirectory( AString & tmpFileDirectory );
 
@@ -50,7 +50,7 @@ protected:
     // signal to exit thread
     volatile bool m_ShouldExit;
     volatile bool m_Exited;
-    uint32_t      m_ThreadIndex;
+    uint16_t      m_ThreadIndex;
     Semaphore     m_MainThreadWaitForExit; // Used by main thread to wait for exit of worker
 
     static Mutex s_TmpRootMutex; // s_TmpRoot is shared by local and remote queues in tests
