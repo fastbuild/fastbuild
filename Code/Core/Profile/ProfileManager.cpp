@@ -38,19 +38,27 @@ struct ProfileEvent
 //------------------------------------------------------------------------------
 void FormatU64( uint64_t value, char * outBuffer )
 {
-    char tmp[ 24 ]; // 20 bytes needed for max U64 value: 18,446,744,073,709,551,615
-    char * pos = tmp;
-    while ( value )
+    if ( value == 0 )
     {
-        *pos = ( '0' + (char)( value % 10 ) );
-        ++pos;
-        value /= 10;
-    }
-    while ( pos > tmp )
-    {
-        --pos;
-        *outBuffer = *pos;
+        *outBuffer = '0';
         ++outBuffer;
+    }
+    else
+    {
+        char tmp[ 24 ]; // 20 bytes needed for max U64 value: 18,446,744,073,709,551,615
+        char * pos = tmp;
+        while ( value )
+        {
+            *pos = ( '0' + (char)( value % 10 ) );
+            ++pos;
+            value /= 10;
+        }
+        while ( pos > tmp )
+        {
+            --pos;
+            *outBuffer = *pos;
+            ++outBuffer;
+        }
     }
     *outBuffer = 0;
 }
