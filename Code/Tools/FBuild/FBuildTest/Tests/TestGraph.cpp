@@ -608,7 +608,6 @@ void TestGraph::TestNoStopOnFirstError() const
     FBuildTestOptions options;
     options.m_NumWorkerThreads = 0; // ensure test behaves deterministically
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/NoStopOnFirstError/fbuild.bff";
-    options.m_FastCancel = true;
 
     // "Stop On First Error" build (default behaviour)
     {

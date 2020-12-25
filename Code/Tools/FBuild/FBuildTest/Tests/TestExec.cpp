@@ -287,7 +287,6 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
-    options.m_FastCancel = true;
     options.m_NumWorkerThreads = 2;
 
     FBuild fBuild( options );

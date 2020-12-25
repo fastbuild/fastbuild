@@ -228,7 +228,8 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-fastcancel" )
             {
-                m_FastCancel = true;
+                // This is on by default now
+                OUTPUT( "FBuild: Warning: -fastcancel is deprecated. (\"fastcancel\" is on by default)\n" );
                 continue;
             }
             else if ( thisArg == "-fixuperrorpaths" )
@@ -276,15 +277,14 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_EnableMonitor = true;
                 continue;
             }
+            else if ( thisArg == "-nofastcancel" )
+            {
+                m_FastCancel = false;
+                continue;
+            }
             else if (thisArg == "-nolocalrace")
             {
                 m_AllowLocalRace = false;
-                continue;
-            }
-            else if ( thisArg == "-nooutputbuffering" )
-            {
-                // this doesn't do anything any more
-                OUTPUT( "FBuild: Warning: -nooutputbuffering is deprecated.\n" );
                 continue;
             }
             else if ( thisArg == "-noprogress" )
@@ -575,7 +575,6 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -debug            (Windows) Break at startup, to attach debugger.\n"
             " -dist             Allow distributed compilation.\n"
             " -distverbose      Print detailed info for distributed compilation.\n"
-            " -fastcancel       (Experimental) Fast cancellation on build failure.\n"
             " -fixuperrorpaths  Reformat error paths to be Visual Studio friendly.\n"
             " -forceremote      Force distributable jobs to only be built remotely.\n"
             " -help             Show this help.\n"
@@ -585,6 +584,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -j<x>             Explicitly set LOCAL worker thread count X, instead of\n"
             "                   default of hardware thread count.\n"
             " -monitor          Emit a machine-readable file while building.\n"
+            " -nofastcancel     Disable aborting other tasks as soon any task fails.\n"
             " -nolocalrace      Disable local race of remotely started jobs.\n"
             " -noprogress       Don't show the progress bar while building.\n"
             " -nounity          (Experimental) Build files individually, ignoring Unity.\n"

@@ -52,7 +52,7 @@ public:
     // Build Behaviour
     bool        m_ForceCleanBuild                   = false;
     bool        m_StopOnFirstError                  = true;
-    bool        m_FastCancel                        = false;
+    bool        m_FastCancel                        = true;
     bool        m_WaitMode                          = false;
     bool        m_DisplayTargetList                 = false;
     bool        m_ShowHiddenTargets                 = false;

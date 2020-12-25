@@ -84,10 +84,6 @@
     <td>Enable detailed logging for distributed compilation.</td>
   </tr>
   <tr>
-    <td><a href="#fastcancel">-fastcancel</a></td>
-    <td>[Experimental] Active fast cancellation on build failure.</td>
-  </tr>
-  <tr>
     <td><a href="#fixuperrorpaths">-fixuperrorpaths</a></td>
     <td>Reformat GCC/SNC/Clang error messages in Visual Studio format.</td>
   </tr>
@@ -110,6 +106,10 @@
   <tr>
     <td><a href="#monitor">-monitor</a></td>
     <td>Output a machine readable file for use by 3rd party tools.</td>
+  </tr>
+  <tr>
+    <td><a href="#nofastcancel">-nofastcancel</a></td>
+    <td>Disable aborting other tasks as soon any task fails.</td>
   </tr>
   <tr>
     <td><a href="#nolocalrace">-nolocalrace</a></td>
@@ -344,13 +344,6 @@ be reproduced in the debugger.</p>
 <p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
 </div>
 
-    <div class='newsitemheader' id="fastcancel">-fastcancel</div>
-    <div class='newsitembody'>
-<p><b>[Experimental]</b> Activate fast cancellation on build failure.</p>
-<p>Normally, when a build fails, FASTBuild will stop spawning new tasks, but will allow any other concurrently running processes to complete. In some cases, these tasks can
-take a long time to complete. When activated, the -fastcancel option will allow FASTBuild to instead terminate those concurrent jobs.</p>
-</div>
-
     <div class='newsitemheader' id="fixuperrorpaths">-fixuperrorpaths</div>
     <div class='newsitembody'>
 <p>Enables re-formatting of warnings, errors and notes for GCC/SNC & Clang to Visual Studio format. Additionally, relative paths are expanded to full paths. This allows these errors to be double-clickable inside Visual Studio.</p>
@@ -414,6 +407,14 @@ of FASTBuild to distribute work efficiently.</p>
 <p>Output a machine readable file for use by 3rd party tools.</p>
 <p>A machine readable file is written to %TEMP%/FastBuild/FastBuildLog.log and updated throughout the build. This file
 can be monitored by 3rd party applications to provide enhanced visualization of the build state.</p>
+</div>
+
+              <div class='newsitemheader' id="nofastcancel">-nofastcancel</div>
+    <div class='newsitembody'>
+<p>Disable aborting other tasks as soon any task fails.</p>
+<p>Normally, when a task fails, any tasks running on other threads are aborted (external processes are terminated), allowing
+builds with errors to fail quickly. If this behavior is undesirable, it can be disabled with -nofastcancel. If "fastcancel" is
+disabled, any already started tasks will be allowed to complete.</p>
 </div>
 
               <div class='newsitemheader' id="nolocalrace">-nolocalrace</div>
