@@ -636,6 +636,7 @@ void Server::FinalizeCompletedJobs()
             ms.Write( job->GetSystemErrorCount() > 0 );
             ms.Write( job->GetMessages() );
             ms.Write( job->GetNode()->GetLastBuildTime() );
+            ms.Write( job->GetRemoteThreadIndex() ); // The thread used to build the job to assist with visualization
 
             // write the data - build result for success, or output+errors for failure
             ms.Write( (uint32_t)job->GetDataSize() );

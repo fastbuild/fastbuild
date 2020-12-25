@@ -473,10 +473,13 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
     uint32_t buildTime;
     ms.Read( buildTime );
+    
+    uint16_t remoteThreadId = 0;
+    ms.Read( remoteThreadId );
 
     // get result data (built data or errors if failed)
-    uint32_t size = 0;
-    ms.Read( size );
+    uint32_t dataSize = 0;
+    ms.Read( dataSize );
     const void * data = (const char *)ms.GetData() + ms.Tell();
 
     {
@@ -502,7 +505,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     if ( result == true )
     {
         // built ok - serialize to disc
-        MultiBuffer mb( data, ms.GetSize() - ms.Tell() );
+        MultiBuffer mb( data, dataSize );
 
         ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
         const AString & nodeName = objectNode->GetName();
