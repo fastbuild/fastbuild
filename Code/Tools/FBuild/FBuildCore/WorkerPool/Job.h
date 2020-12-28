@@ -10,6 +10,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BuildProfilerScope;
 class IOStream;
 class Node;
 class ToolManifest;
@@ -94,6 +95,9 @@ public:
     // Access total memory usage by job data
     static uint64_t             GetTotalLocalDataMemoryUsage();
 
+    void                    SetBuildProfilerScope( BuildProfilerScope * scope );
+    BuildProfilerScope *    GetBuildProfilerScope() const { return m_BuildProfilerScope; }
+
 private:
     uint32_t            m_JobId             = 0;
     uint32_t            m_DataSize          = 0;
@@ -109,7 +113,7 @@ private:
     AString             m_RemoteName;
     AString             m_RemoteSourceRoot;
     AString             m_CacheName;
-
+    BuildProfilerScope * m_BuildProfilerScope = nullptr;    // Additional context when profiling a build
     ToolManifest *      m_ToolManifest      = nullptr;
 
     Array< AString >    m_Messages;

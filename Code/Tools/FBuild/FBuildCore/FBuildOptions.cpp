@@ -309,6 +309,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_NoUnity = true;
                 continue;
             }
+            else if ( thisArg == "-profile" )
+            {
+                m_Profile = true;
+                continue;
+            }
             else if ( thisArg == "-progress" )
             {
                 m_ShowProgress = true;
@@ -590,6 +595,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -nounity          (Experimental) Build files individually, ignoring Unity.\n"
             " -nostoponerror    On error, favor building as much as possible.\n"
             " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"
+            " -profile          Output an fbuild_profiling.json describing the build.\n"
             " -progress         Show build progress bar even if stdout is redirected.\n"
             " -quiet            Don't show build output.\n"
             " -report           Ouput report.html at build end. (Increases build time)\n"

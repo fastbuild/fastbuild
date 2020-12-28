@@ -13,7 +13,7 @@
 
 // FBuildOptions
 //------------------------------------------------------------------------------
-struct FBuildOptions
+class FBuildOptions
 {
 public:
     FBuildOptions();
@@ -89,6 +89,7 @@ public:
     bool        m_NoSummaryOnError                  = false;
     bool        m_GenerateReport                    = false;
     bool        m_EnableMonitor                     = false;
+    bool        m_Profile                           = false;
 
     // DB loading/saving
     bool        m_SaveDBOnCompletion                = false;

@@ -132,6 +132,10 @@
     <td>[Experimental] Individually build all files normally built in Unity.</td>
   </tr>
   <tr>
+    <td><a href="#profile">-profile</a></td>
+    <td>Output a Chrome tracing format fbuild_profile.json describing the build.</td>
+  </tr>
+  <tr>
     <td><a href="#progress">-progress</a></td>
     <td>Show the build progress bar even if it would otherwise be disabled.</td>
   </tr>
@@ -450,6 +454,14 @@ useful if you want to see as many errors as possible in your compilation output.
 <p><b>[Experimental]</b> Individually build all files normally in Unity.</p>
 <p>NOTE: When alternating between specifying -nounity and not, libraries may not relink when they should. The resulting
 executables are valid, but may contain the previous unity objects instead of the loose objects</p>
+</div>
+
+    <div class='newsitemheader' id="profile">-profile</div>
+    <div class='newsitembody'>
+<p>Output a Chrome tracing format fbuild_profile.json describing the build.</p>
+<p>When "build profiling" is activing, scheduling information for items (local and remote) is recored to a fbuild_profile.json file.
+This file is written at the very end of the build, and can be viewed in Chrome's profiling viewer (chrome://tracing).</p>
+<p>NOTE: This may have a small impact on build performance.</p>
 </div>
 
     <div class='newsitemheader' id="progress">-progress</div>

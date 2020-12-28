@@ -15,6 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
 #include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
@@ -186,6 +187,10 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuild( Job * job )
 {
+    // Set a sensible catch-all default name for compilation. This will be modified
+    // for various cases
+    job->GetBuildProfilerScope()->SetStepName( "Compile" );
+
     // Delete previous file(s) if doing a clean build
     if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
@@ -246,6 +251,8 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuild2( Job * job, bool racingRemoteJob = false )
 {
+    job->GetBuildProfilerScope()->SetStepName( racingRemoteJob ? "Compile (Race)" : "Compile" );
+
     // we may be using deoptimized options, but they are always
     // the "normal" args when remote compiling
     bool useDeoptimization = job->IsLocal() && ShouldUseDeoptimization();
@@ -379,6 +386,8 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist )
 {
+    job->GetBuildProfilerScope()->SetStepName( "Preprocess" );
+
     Args fullArgs;
     const bool showIncludes( false );
     const bool useSourceMapping( true );
@@ -506,6 +515,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 //------------------------------------------------------------------------------
 Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob )
 {
+    job->GetBuildProfilerScope()->SetStepName( racingRemoteJob ? "Compile (Race)" : "Compile" );
+
     // should never use preprocessor if using CLR
     ASSERT( GetFlag( FLAG_USING_CLR ) == false );
 
@@ -625,6 +636,13 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 
     if ( result == false )
     {
+        // If the failure is forced due to a local cancellation, mark up the profiler
+        // state so we can see that
+        if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+        {
+            job->GetBuildProfilerScope()->SetStepName( "Compile (Race Lost)" );
+        }
+
         return NODE_RESULT_FAILED; // BuildFinalOutput will have emitted error
     }
 
@@ -1371,6 +1389,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         {
             m_PCHCacheKey = pchKey;
         }
+
+        job->GetBuildProfilerScope()->SetStepName( "Cache Hit" );
 
         return true;
     }

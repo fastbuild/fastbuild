@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 #include <Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h>
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
@@ -490,6 +491,23 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     // Has the job been cancelled in the interim?
     // (Due to a Race by the main thread for example)
     Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
+
+    if ( BuildProfiler::IsValid() )
+    {
+        // Record information about worker
+        const uint32_t workerId = static_cast<uint32_t>( ss - m_ServerList.Begin() );
+        const int64_t now = Timer::GetNow();
+        const int64_t start = now - (int64_t)( ( (double)buildTime / 1000 ) * (double)Timer::GetFrequency() );
+        BuildProfiler::Get().RecordRemote( workerId,
+                                           ss->m_RemoteName,
+                                           remoteThreadId,
+                                           start,
+                                           now,
+                                           job ? "Compile" : "Compile (Race Lost)",
+                                           job ? job->GetNode()->GetName().Get() : "Unavailable" );
+
+    }
+
     if ( job == nullptr )
     {
         // don't save result as we were cancelled

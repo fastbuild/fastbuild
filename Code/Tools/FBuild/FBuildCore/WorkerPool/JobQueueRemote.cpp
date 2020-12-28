@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 #include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
 
 // Core
@@ -274,6 +275,8 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 //------------------------------------------------------------------------------
 /*static*/ Node::BuildResult JobQueueRemote::DoBuild( Job * job, bool racingRemoteJob )
 {
+    BuildProfilerScope profileScope( job, WorkerThread::GetThreadIndex(), job->GetNode()->GetTypeName() );
+
     Timer timer; // track how long the item takes
 
     ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();

@@ -16,6 +16,7 @@
 #include "Graph/NodeGraph.h"
 #include "Graph/NodeProxy.h"
 #include "Graph/SettingsNode.h"
+#include "Helpers/BuildProfiler.h"
 #include "Helpers/CompilationDatabase.h"
 #include "Helpers/Report.h"
 #include "Protocol/Client.h"
@@ -88,6 +89,11 @@ FBuild::FBuild( const FBuildOptions & options )
     FLog::SetShowProgress( m_Options.m_ShowProgress );
     FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
 
+    if ( options.m_Profile )
+    {
+        FNEW( BuildProfiler );
+    }
+
     Function::Create();
 
     NetworkStartupHelper::SetMainShutdownFlag( &s_AbortBuild );
@@ -119,6 +125,11 @@ FBuild::~FBuild()
     }
 
     LightCache::ClearCachedFiles();
+
+    if ( BuildProfiler::IsValid() )
+    {
+        FDELETE( &BuildProfiler::Get() );
+    }
 }
 
 // Initialize
@@ -126,6 +137,7 @@ FBuild::~FBuild()
 bool FBuild::Initialize( const char * nodeGraphDBFile )
 {
     PROFILE_FUNCTION;
+    BuildProfilerScope buildProfileScope( "Initialize" );
 
     // handle working dir
     if ( !FileIO::SetCurrentDir( m_Options.GetWorkingDir() ) )
@@ -293,9 +305,10 @@ bool FBuild::Build( const Array< AString > & targets )
 //------------------------------------------------------------------------------
 bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 {
-    ASSERT( nodeGraphDBFile != nullptr );
-
     PROFILE_FUNCTION;
+    BuildProfilerScope buildProfileScope( "SaveDB" );
+
+    ASSERT( nodeGraphDBFile != nullptr );
 
     FLOG_VERBOSE( "Saving DepGraph '%s'", nodeGraphDBFile );
 
@@ -408,83 +421,96 @@ bool FBuild::Build( Node * nodeToBuild )
         WorkerThread::CreateThreadLocalTmpDir();
     }
 
+    if ( BuildProfiler::IsValid() )
+    {
+        BuildProfiler::Get().StartMetricsGathering();
+    }
+
     bool stopping( false );
 
     // keep doing build passes until completed/failed
-    for ( ;; )
     {
-        // process completed jobs
+        BuildProfilerScope buildProfileScope( "Build" );
+        for ( ;; )
+        {
+            // process completed jobs
+            m_JobQueue->FinalizeCompletedJobs( *m_DependencyGraph );
+
+            if ( !stopping )
+            {
+                // do a sweep of the graph to create more jobs
+                m_DependencyGraph->DoBuildPass( nodeToBuild );
+            }
+
+            if ( m_Options.m_NumWorkerThreads == 0 )
+            {
+                // no local threads - do build directly
+                WorkerThread::Update();
+            }
+
+            const bool complete = ( nodeToBuild->GetState() == Node::UP_TO_DATE ) ||
+                                  ( nodeToBuild->GetState() == Node::FAILED );
+
+            if ( AtomicLoadRelaxed( &s_StopBuild ) || complete )
+            {
+                if ( stopping == false )
+                {
+                    // free the network distribution system (if there is one)
+                    FDELETE m_Client;
+                    m_Client = nullptr;
+
+                    // wait for workers to exit.  Can still be building even though we've failed:
+                    //  - only 1 failed node propagating up to root while others are not yet complete
+                    //  - aborted build, so workers can be incomplete
+                    m_JobQueue->SignalStopWorkers();
+                    stopping = true;
+                    if ( m_Options.m_FastCancel )
+                    {
+                    // Notify the system that the main process has been killed and that it can kill its process.
+                        AtomicStoreRelaxed( &s_AbortBuild, true );
+                    }
+                }
+            }
+
+            if ( !stopping )
+            {
+                if ( m_Options.m_WrapperMode == FBuildOptions::WRAPPER_MODE_FINAL_PROCESS )
+                {
+                    SystemMutex wrapperMutex( m_Options.GetMainProcessMutexName().Get() );
+                    if ( wrapperMutex.TryLock() )
+                    {
+                        // parent process has terminated
+                        AbortBuild();
+                    }
+                }
+            }
+
+            // completely stopped?
+            if ( stopping && m_JobQueue->HaveWorkersStopped() )
+            {
+                break;
+            }
+
+            // Wait until more work to process or time has elapsed
+            m_JobQueue->MainThreadWait( 500 );
+
+            // update progress
+            UpdateBuildStatus( nodeToBuild );
+        }
+
+        // wrap up/free any jobs that come from the last build pass
         m_JobQueue->FinalizeCompletedJobs( *m_DependencyGraph );
 
-        if ( !stopping )
-        {
-            // do a sweep of the graph to create more jobs
-            m_DependencyGraph->DoBuildPass( nodeToBuild );
-        }
+        FDELETE m_JobQueue;
+        m_JobQueue = nullptr;
 
-        if ( m_Options.m_NumWorkerThreads == 0 )
-        {
-            // no local threads - do build directly
-            WorkerThread::Update();
-        }
-
-        const bool complete = ( nodeToBuild->GetState() == Node::UP_TO_DATE ) ||
-                              ( nodeToBuild->GetState() == Node::FAILED );
-
-        if ( AtomicLoadRelaxed( &s_StopBuild ) || complete )
-        {
-            if ( stopping == false )
-            {
-                // free the network distribution system (if there is one)
-                FDELETE m_Client;
-                m_Client = nullptr;
-
-                // wait for workers to exit.  Can still be building even though we've failed:
-                //  - only 1 failed node propagating up to root while others are not yet complete
-                //  - aborted build, so workers can be incomplete
-                m_JobQueue->SignalStopWorkers();
-                stopping = true;
-                if ( m_Options.m_FastCancel )
-                {
-                    // Notify the system that the main process has been killed and that it can kill its process.
-                    AtomicStoreRelaxed( &s_AbortBuild, true );
-                }
-            }
-        }
-
-        if ( !stopping )
-        {
-            if ( m_Options.m_WrapperMode == FBuildOptions::WRAPPER_MODE_FINAL_PROCESS )
-            {
-                SystemMutex wrapperMutex( m_Options.GetMainProcessMutexName().Get() );
-                if ( wrapperMutex.TryLock() )
-                {
-                    // parent process has terminated
-                    AbortBuild();
-                }
-            }
-        }
-
-        // completely stopped?
-        if ( stopping && m_JobQueue->HaveWorkersStopped() )
-        {
-            break;
-        }
-
-        // Wait until more work to process or time has elapsed
-        m_JobQueue->MainThreadWait( 500 );
-
-        // update progress
-        UpdateBuildStatus( nodeToBuild );
+        FLog::StopBuild();
     }
 
-    // wrap up/free any jobs that come from the last build pass
-    m_JobQueue->FinalizeCompletedJobs( *m_DependencyGraph );
-
-    FDELETE m_JobQueue;
-    m_JobQueue = nullptr;
-
-    FLog::StopBuild();
+    if ( BuildProfiler::IsValid() )
+    {
+        BuildProfiler::Get().StopMetricsGathering();
+    }
 
     // even if the build has failed, we can still save the graph.
     // This is desireable because:

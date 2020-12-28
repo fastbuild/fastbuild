@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 
 #include "Core/Time/Timer.h"
 #include "Core/FileIO/FileIO.h"
@@ -705,6 +706,8 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             }
             PROFILE_SECTION( profilingTag );
         #endif
+
+        BuildProfilerScope profileScope( job, WorkerThread::GetThreadIndex(), node->GetTypeName() );
         result = node->DoBuild( job );
     }
 
