@@ -237,43 +237,55 @@ void Client::CommunicateJobAvailability()
 {
     PROFILE_FUNCTION;
 
-    // too soon since last status update?
-    if ( m_StatusUpdateTimer.GetElapsed() < CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS )
-    {
-        return;
-    }
-
-    m_StatusUpdateTimer.Start(); // reset time
+    // We send updates periodically as a baseline, but other events can result
+    // us sending extra update messages
+    const bool timerExpired = ( m_StatusUpdateTimer.GetElapsed() >= CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS );
 
     // has status changed since we last sent it?
     uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
     Protocol::MsgStatus msg( numJobsAvailable );
 
+    // Update each server so it knows how many jobs we have available now
     MutexHolder mh( m_ServerListMutex );
-    if ( m_ServerList.IsEmpty() )
+    for ( ServerState & ss : m_ServerList )
     {
-        return; // no servers to communicate with
+        // Do we have a connection?
+        MutexHolder ssMH( ss.m_Mutex );
+        const ConnectionInfo * connection = AtomicLoadRelaxed( &ss.m_Connection );
+        if ( connection == nullptr )
+        {
+            continue; // no connection
+        }
+
+        // Update the worker periodically (but only if the state has changed)
+        bool sendAvailabilityToWorker = timerExpired && ( ss.m_NumJobsAvailable != numJobsAvailable );
+
+        // Update worker when jobs become available if there were no jobs available,
+        // even if the periodic update timer has not expired. This creates more traffic,
+        // but significantly reduces job scheduling latency when:
+        //  - a) A build starts, if workers connect before he first jobs become available.
+        // OR
+        //  - b) During builds, after any period of worker starvation (having zero jobs available
+        //       and jobs then becoming available)
+        //
+        // In both cases, we avoid upto CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS of latency
+        if ( numJobsAvailable && ( ss.m_NumJobsAvailable == 0 ) )
+        {
+            sendAvailabilityToWorker = true;
+        }
+
+        if ( sendAvailabilityToWorker )
+        {
+            PROFILE_SECTION( "UpdateJobAvailability" );
+            SendMessageInternal( connection, msg );
+            ss.m_NumJobsAvailable = numJobsAvailable;
+        }
     }
 
-    // update each server to know how many jobs we have now
-    ServerState * it = m_ServerList.Begin();
-    const ServerState * const end = m_ServerList.End();
-    while ( it != end )
+    // Restart periodic update timer if needed
+    if ( timerExpired )
     {
-        if ( AtomicLoadRelaxed( &it->m_Connection ) )
-        {
-            MutexHolder ssMH( it->m_Mutex );
-            if ( const ConnectionInfo * connection = AtomicLoadRelaxed( &it->m_Connection ) )
-            {
-                if ( it->m_NumJobsAvailable != numJobsAvailable )
-                {
-                    PROFILE_SECTION( "UpdateJobAvailability" );
-                    SendMessageInternal( connection, msg );
-                    it->m_NumJobsAvailable = numJobsAvailable;
-                }
-            }
-        }
-        ++it;
+        m_StatusUpdateTimer.Start();
     }
 }
 
@@ -425,6 +437,12 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     ss->m_Jobs.Append( job ); // Track in-flight job
 
+    // Reset the Available Jobs count for this worker. This ensures that we send
+    // another status update message to communicate new jobs becoming available.
+    // Without this, we might return to the same count as before requesting the
+    // current job, resuling in a missed update message.
+    ss->m_NumJobsAvailable = 0;
+
     // if tool is explicity specified, get the id of the tool manifest
     const Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
     const ToolManifest & manifest = n->CastTo< CompilerNode >()->GetManifest();
@@ -450,6 +468,11 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobResult *, const void * payload, size_t payloadSize )
 {
     PROFILE_SECTION( "MsgJobResult" );
+
+    // Take note of the current time. We'll consider the job to have completed at this time.
+    // Doing it as soon as possible makes it more accurate, as work below can take a non-trivial
+    // amount of time. (For example OnReturnRemoteJob when cancelling the local job in a race)
+    const int64_t receivedResultEndTime = Timer::GetNow();
 
     // find server
     ServerState * ss = (ServerState *)connection->GetUserData();
@@ -496,13 +519,12 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     {
         // Record information about worker
         const uint32_t workerId = static_cast<uint32_t>( ss - m_ServerList.Begin() );
-        const int64_t now = Timer::GetNow();
-        const int64_t start = now - (int64_t)( ( (double)buildTime / 1000 ) * (double)Timer::GetFrequency() );
+        const int64_t start = receivedResultEndTime - (int64_t)( ( (double)buildTime / 1000 ) * (double)Timer::GetFrequency() );
         BuildProfiler::Get().RecordRemote( workerId,
                                            ss->m_RemoteName,
                                            remoteThreadId,
                                            start,
-                                           now,
+                                           receivedResultEndTime,
                                            job ? "Compile" : "Compile (Race Lost)",
                                            job ? job->GetNode()->GetName().Get() : "Unavailable" );
 
