@@ -478,7 +478,7 @@ bool NodeGraph::LoadNode( IOStream & stream )
     m_NextNodeIndex = nodeIndex;
 
     // load specifics (create node)
-    Node * n = Node::Load( *this, stream );
+    const Node * const n = Node::Load( *this, stream );
     if ( n == nullptr )
     {
         return false;
@@ -487,14 +487,6 @@ bool NodeGraph::LoadNode( IOStream & stream )
     // sanity check node index was correctly restored
     ASSERT( m_AllNodes[ nodeIndex ] == n );
     ASSERT( n->GetIndex() == nodeIndex );
-
-    // load build time
-    uint32_t lastTimeToBuild;
-    if ( stream.Read( lastTimeToBuild ) == false )
-    {
-        return false;
-    }
-    n->SetLastBuildTime( lastTimeToBuild );
 
     return true;
 }
@@ -605,10 +597,6 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
 
     // save node specific data
     Node::Save( stream, node );
-
-    // save build time
-    uint32_t lastBuildTime = node->GetLastBuildTime();
-    stream.Write( lastBuildTime );
 
     savedNodeFlags[ nodeIndex ] = true; // mark as saved
 }

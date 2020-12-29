@@ -159,8 +159,6 @@ public:
     static Node *   LoadRemote( IOStream & stream );
     static void     SaveRemote( IOStream & stream, const Node * node );
 
-    bool Deserialize( NodeGraph & nodeGraph, IOStream & stream );
-
     static bool EnsurePathExistsForFile( const AString & name );
     static bool DoPreBuildFileDeletion( const AString & fileName );
 

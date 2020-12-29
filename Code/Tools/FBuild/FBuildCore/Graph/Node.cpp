@@ -351,23 +351,13 @@ void Node::SetLastBuildTime( uint32_t ms )
 /*static*/ Node * Node::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
     // read type
-    uint32_t nodeType;
+    uint8_t nodeType;
     if ( stream.Read( nodeType ) == false )
     {
         return nullptr;
     }
 
     PROFILE_SECTION( Node::GetTypeName( (Type)nodeType ) );
-
-    // read stamp (but not for file nodes)
-    uint64_t stamp( 0 );
-    if ( nodeType != Node::FILE_NODE )
-    {
-        if ( stream.Read( stamp ) == false )
-        {
-            return nullptr;
-        }
-    }
 
     // Name of node
     AStackString<> name;
@@ -386,8 +376,31 @@ void Node::SetLastBuildTime( uint32_t ms )
         return n;
     }
 
+    // Read stamp
+    uint64_t stamp;
+    if ( stream.Read( stamp ) == false )
+    {
+        return nullptr;
+    }
+
+    // Build time
+    uint32_t lastTimeToBuild;
+    if ( stream.Read( lastTimeToBuild ) == false )
+    {
+        return nullptr;
+    }
+    n->SetLastBuildTime( lastTimeToBuild );    
+
+    // Dependencies
+    if ( ( n->m_PreBuildDependencies.Load( nodeGraph, stream ) == false ) ||
+         ( n->m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
+         ( n->m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
+    {
+        return nullptr;
+    }
+
     // Deserialize properties
-    if ( n->Deserialize( nodeGraph, stream ) == false )
+    if ( Deserialize( stream, n, *n->GetReflectionInfoV() ) == false )
     {
         return nullptr;
     }
@@ -412,15 +425,8 @@ void Node::SetLastBuildTime( uint32_t ms )
     ASSERT( node );
 
     // save type
-    uint32_t nodeType = (uint32_t)node->GetType();
+    uint8_t nodeType = node->GetType();
     stream.Write( nodeType );
-
-    // save stamp (but not for file nodes)
-    if ( nodeType != Node::FILE_NODE )
-    {
-        uint64_t stamp = node->GetStamp();
-        stream.Write( stamp );
-    }
 
     // Save Name
     stream.Write( node->m_Name );
@@ -429,11 +435,23 @@ void Node::SetLastBuildTime( uint32_t ms )
         node->MarkAsSaved();
     #endif
 
+    // FileNodes don't need most things serialized:
+    // - they have no dependencies (they are leaf nodes)
+    // - they take sub 1ms to check, so don't need their build time saved
+    // - their stamp is obtained every build, so doesn't need saving
     if ( nodeType == Node::FILE_NODE )
     {
         return;
     }
 
+    // Stamp
+    const uint64_t stamp = node->GetStamp();
+    stream.Write( stamp );
+
+    // Build time
+    const uint32_t lastBuildTime = node->GetLastBuildTime();
+    stream.Write( lastBuildTime );
+    
     // Deps
     node->m_PreBuildDependencies.Save( stream );
     node->m_StaticDependencies.Save( stream );
@@ -593,27 +611,6 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
     }
     ASSERT( false ); // Unsupported type
-}
-
-// Deserialize
-//------------------------------------------------------------------------------
-bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
-{
-    ASSERT( m_PreBuildDependencies.IsEmpty() );
-    ASSERT( m_StaticDependencies.IsEmpty() );
-    ASSERT( m_DynamicDependencies.IsEmpty() );
-
-    // Deps
-    if ( ( m_PreBuildDependencies.Load( nodeGraph, stream ) == false ) ||
-         ( m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
-         ( m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
-    {
-        return false;
-    }
-
-    // Properties
-    const ReflectionInfo * const ri = GetReflectionInfoV();
-    return Deserialize( stream, this, *ri );
 }
 
 // Deserialize
