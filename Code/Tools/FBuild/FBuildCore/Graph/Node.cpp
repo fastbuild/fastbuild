@@ -596,14 +596,14 @@ void Node::SetLastBuildTime( uint32_t ms )
                     const void * structBase = propertyS.GetStructInArray( base, (size_t)i );
                     Serialize( stream, structBase, *propertyS.GetStructReflectionInfo() );
                 }
-                return;
             }
             else
             {
                 const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();
                 const void * structBase = propertyS.GetStructBase( base );
-                return Serialize( stream, structBase, *structRI );
+                Serialize( stream, structBase, *structRI );
             }
+            return;
         }
         default:
         {
