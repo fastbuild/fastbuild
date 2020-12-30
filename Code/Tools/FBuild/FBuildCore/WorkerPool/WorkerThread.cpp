@@ -119,11 +119,9 @@ void WorkerThread::WaitForStop()
 
     #if defined( PROFILING_ENABLED )
         AStackString<> threadName;
-        threadName.Format( "%s_%u", s_WorkerThreadThreadIndex > 1000 ? "RemoteWorkerThread" : "WorkerThread", s_WorkerThreadThreadIndex );
+        threadName.Format( "%s_%02u", s_WorkerThreadThreadIndex > 1000 ? "RemoteWorkerThread" : "WorkerThread", s_WorkerThreadThreadIndex );
         PROFILE_SET_THREAD_NAME( threadName.Get() );
     #endif
-
-    CreateThreadLocalTmpDir();
 
     wt->Main();
     return 0;
@@ -134,6 +132,8 @@ void WorkerThread::WaitForStop()
 /*virtual*/ void WorkerThread::Main()
 {
     PROFILE_SECTION( "WorkerThread" );
+
+    CreateThreadLocalTmpDir();
 
     for (;;)
     {
@@ -277,6 +277,8 @@ void WorkerThread::WaitForStop()
 //------------------------------------------------------------------------------
 /*static*/ void WorkerThread::CreateThreadLocalTmpDir()
 {
+    PROFILE_FUNCTION;
+
     // create isolated subdir
     AStackString<> tmpFileName;
     CreateTempFilePath( ".tmp", tmpFileName );
