@@ -118,6 +118,11 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
     m_NumLocalJobsActive( 0 ),
     m_DistributableJobs_Available( 1024, true ),
     m_DistributableJobs_InProgress( 1024, true ),
+    #if defined( __WINDOWS__ )
+        m_MainThreadSemaphore( 1 ), // On Windows, take advantage of signalling limit
+    #else
+        m_MainThreadSemaphore(),
+    #endif
     m_CompletedJobs( 1024, true ),
     m_CompletedJobsFailed( 1024, true ),
     m_CompletedJobs2( 1024, true ),
@@ -252,6 +257,7 @@ void JobQueue::FlushJobBatch()
         return;
     }
 
+    // Make the jobs available
     m_LocalJobs_Available.QueueJobs( m_LocalJobs_Staging );
     m_WorkerThreadSemaphore.Signal( (uint32_t)m_LocalJobs_Staging.GetSize() );
     m_LocalJobs_Staging.Clear();
