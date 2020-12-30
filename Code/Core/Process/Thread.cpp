@@ -338,4 +338,15 @@ public:
     }
 #endif
 
+
+// SetContinuousThreadExecutionMode
+//------------------------------------------------------------------------------
+/*static*/ void Thread::SetContinuousThreadExecutionMode()
+{
+ #if defined( __WINDOWS__ )
+    SetThreadExecutionState(ES_CONTINUOUS);
+ #endif
+
+}
+
 //------------------------------------------------------------------------------

@@ -49,6 +49,8 @@ public:
 
     static void SetThreadName( const char * name );
 
+    static void SetContinuousThreadExecutionMode();
+
 private:
     static ThreadId s_MainThreadId;
 };
