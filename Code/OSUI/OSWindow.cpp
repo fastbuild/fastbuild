@@ -123,7 +123,6 @@ OSWindow::OSWindow( void * hInstance )
     : m_Handle( nullptr )
     #if defined( __WINDOWS__ )
         , m_HInstance( hInstance )
-        , m_RunMessagePump( true )
     #endif
     , m_ChildWidgets( 0, true )
 {
@@ -264,23 +263,27 @@ void OSWindow::SetMinimized( bool minimized )
 void OSWindow::StartMessagePump()
 {
     #if defined( __WINDOWS__ )
-        MSG msg;
-        while ( m_RunMessagePump )
+        for ( ;; )
         {
-            // any messages pending?
-            if ( PeekMessage( &msg, nullptr, 0, 0, PM_NOREMOVE ) )
+            // Wait for a messsage
+            MSG msg;
+            const BOOL bRet = GetMessage( &msg, nullptr, 0, 0 );
+
+            // According to MSDN, this "boolean" can contain -1 on error. It seems
+            // an error could only occur due to a program bug (like passing an invalid
+            // handle) and not during any normal operation.
+            // See: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessage
+            ASSERT( bRet != -1 ); (void)bRet;
+
+            // Check for our custom "Stop" message
+            if ( msg.message == OSUI_WM_STOPMSGPUMP )
             {
-                // message available, process it
-                VERIFY( GetMessage( &msg, nullptr, 0, 0 ) != 0 );
-                TranslateMessage( &msg );
-                DispatchMessage( &msg );
-                continue; // immediately handle any new messages
+                break;
             }
-            else
-            {
-                // no message right now - prevent CPU thrashing by having a sleep
-                Sleep( 100 );
-            }
+
+            // Allow our message pump to do the work, whether it's WM_QUIT (0 bRet) or not (non-zero bRet)
+            TranslateMessage( &msg );
+            DispatchMessage( &msg ); 
         }
     #elif defined( __OSX__ )
         // This call blocks until messaged by StopMessagePump
@@ -294,7 +297,7 @@ void OSWindow::StopMessagePump()
 {
     // Signal to StartMessagePump that is should exit
     #if defined( __WINDOWS__ )
-        m_RunMessagePump = false;
+        PostMessage( (HWND)m_Handle, OSUI_WM_STOPMSGPUMP, 0, 0 );
     #elif defined( __OSX__ )
         WindowOSX_StopMessageLoop();
     #endif

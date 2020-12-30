@@ -19,6 +19,7 @@ class OSWindow;
 #if defined( __WINDOWS__ )
     // Windows user messages
     #define OSUI_WM_TRAYICON ( WM_USER + 1 )
+    #define OSUI_WM_STOPMSGPUMP ( WM_USER + 2 )
 #endif
 
 // OSWindow
@@ -62,7 +63,6 @@ protected:
     void * m_Handle;
     #if defined( __WINDOWS__ )
         void * m_HInstance;
-        volatile bool m_RunMessagePump;
     #endif
     Array< OSWidget * > m_ChildWidgets;
 };

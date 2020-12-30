@@ -108,6 +108,8 @@ Worker::~Worker()
 //------------------------------------------------------------------------------
 int32_t Worker::Work()
 {
+    PROFILE_FUNCTION;
+
     // Open GUI or setup console
     if ( InConsoleMode() )
     {
@@ -150,6 +152,8 @@ int32_t Worker::Work()
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Worker::WorkThreadWrapper( void * userData )
 {
+    PROFILE_SET_THREAD_NAME( "WorkerThread" );
+
     Worker * worker = reinterpret_cast<Worker *>( userData );
     return worker->WorkThread();
 }
@@ -158,6 +162,8 @@ int32_t Worker::Work()
 //------------------------------------------------------------------------------
 uint32_t Worker::WorkThread()
 {
+    PROFILE_FUNCTION;
+
     // Initial status message
     StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
 
@@ -305,6 +311,8 @@ bool Worker::HasEnoughMemory()
 //------------------------------------------------------------------------------
 void Worker::UpdateAvailability()
 {
+    PROFILE_FUNCTION;
+
     // Check disk space
     const bool hasEnoughDiskSpace = HasEnoughDiskSpace();
     const bool hasEnoughMemory = HasEnoughMemory();
@@ -362,6 +370,8 @@ void Worker::UpdateAvailability()
 //------------------------------------------------------------------------------
 void Worker::UpdateUI()
 {
+    PROFILE_FUNCTION;
+
     // throttle UI updates
     if ( m_UIUpdateTimer.GetElapsed() < 0.25f )
     {
@@ -428,6 +438,8 @@ void Worker::UpdateUI()
 //------------------------------------------------------------------------------
 void Worker::CheckForExeUpdate()
 {
+    PROFILE_FUNCTION;
+
     // if a restart is pending, can we restart yet?
     if ( m_RestartNeeded )
     {

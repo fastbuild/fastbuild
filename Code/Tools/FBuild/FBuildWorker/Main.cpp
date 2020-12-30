@@ -17,6 +17,7 @@
 #include "Core/Process/Process.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -31,7 +32,7 @@ SystemMutex g_OneProcessMutex( "Global\\FBuildWorker" );
 
 // Functions
 //------------------------------------------------------------------------------
-int MainCommon( const AString & args );
+int Main( const AString & args );
 #if defined( __WINDOWS__ )
     int LaunchSubProcess( const AString & args );
 #endif
@@ -45,7 +46,9 @@ int MainCommon( const AString & args );
                         int /*nCmdShow*/ )
     {
         AStackString<> args( lpCmdLine );
-        return MainCommon( args );
+        const int32_t result = Main( args );
+        PROFILE_SYNCHRONIZE
+        return result;
     }
     PRAGMA_DISABLE_POP_MSVC
 #else
@@ -60,16 +63,20 @@ int MainCommon( const AString & args );
             }
             args += argv[ i ];
         }
-        return MainCommon( args );
+        const int32_t result = Main( args );
+        PROFILE_SYNCHRONIZE
+        return result;
     }
 #endif
 
 #include <stdio.h>
 
-// MainCommon
+// Main
 //------------------------------------------------------------------------------
-int MainCommon( const AString & args )
+int Main( const AString & args )
 {
+    PROFILE_FUNCTION;
+
     // don't buffer output
     VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
     VERIFY( setvbuf( stderr, nullptr, _IONBF, 0 ) == 0 );

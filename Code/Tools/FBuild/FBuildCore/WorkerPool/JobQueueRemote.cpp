@@ -68,8 +68,13 @@ void JobQueueRemote::SignalStopWorkers()
     for ( size_t i=0; i<numWorkerThreads; ++i )
     {
         m_Workers[ i ]->Stop();
-        WakeWorkers();
     }
+
+    // Signal threads (both active and idle)
+    // (We don't know which threads are in any given state, so we signal
+    // the worst case for both states)
+    m_WorkerThreadSemaphore.Signal( static_cast<uint32_t>(numWorkerThreads) );
+    m_WorkerThreadSleepSemaphore.Signal( static_cast<uint32_t>(numWorkerThreads) );
 }
 
 // HaveWorkersStopped
@@ -111,17 +116,18 @@ void JobQueueRemote::WakeMainThread()
 
 // WorkerThreadWait
 //------------------------------------------------------------------------------
-void JobQueueRemote::WorkerThreadWait( uint32_t timeoutMS )
+void JobQueueRemote::WorkerThreadWait()
 {
     PROFILE_SECTION( "WorkerThreadWait" );
-    m_WorkerThreadSemaphore.Wait( timeoutMS );
+    m_WorkerThreadSemaphore.Wait( 1000 );
 }
 
-// WakeWorkers
+// WorkerThreadSleep
 //------------------------------------------------------------------------------
-void JobQueueRemote::WakeWorkers()
+void JobQueueRemote::WorkerThreadSleep()
 {
-    m_WorkerThreadSemaphore.Signal();
+    PROFILE_SECTION( "WorkerThreadSleep" );
+    m_WorkerThreadSleepSemaphore.Wait( 1000 );
 }
 
 // QueueJob (Main Thread)
@@ -133,7 +139,8 @@ void JobQueueRemote::QueueJob( Job * job )
         m_PendingJobs.Append( job );
     }
 
-    WakeWorkers();
+    // Wake a single non-idle worker thread
+    m_WorkerThreadSemaphore.Signal( 1 );
 }
 
 // GetCompletedJob
@@ -218,7 +225,7 @@ void JobQueueRemote::CancelJobsWithUserData( void * userData )
 //------------------------------------------------------------------------------
 Job * JobQueueRemote::GetJobToProcess()
 {
-    WorkerThreadWait( 100 );
+    WorkerThreadWait();
 
     MutexHolder m( m_PendingJobsMutex );
     if ( m_PendingJobs.IsEmpty() )

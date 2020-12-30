@@ -42,7 +42,7 @@ WorkerThreadRemote::~WorkerThreadRemote()
     {
         if ( IsEnabled() == false )
         {
-            Thread::Sleep( 500 );
+            JobQueueRemote::Get().WorkerThreadSleep();
             continue; // after sleep, check exit condition
         }
 
