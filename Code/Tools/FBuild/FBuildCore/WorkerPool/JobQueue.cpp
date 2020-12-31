@@ -275,6 +275,14 @@ void JobQueue::QueueDistributableJob( Job * job )
 
         m_DistributableJobs_Available.Append( job );
 
+        // Jobs that have been preprocsssed and are ready to be distributed are
+        // added here. The order of completion of preprocessing doesn't correlate
+        // with the remining cost of compilation (and is often the reverse).
+        // We re-sort the distributable jobs when adding new ones to ensure the
+        // most expensive ones are at the end of the list and will be distributed first.
+        JobCostSorter sorter;
+        m_DistributableJobs_Available.Sort( sorter );
+
         job->SetDistributionState( Job::DIST_AVAILABLE );
     }
 
@@ -295,9 +303,10 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote )
         return nullptr;
     }
 
-    // building jobs in the order they are queued
-    Job * job = m_DistributableJobs_Available[ 0 ];
-    m_DistributableJobs_Available.PopFront();
+    // Jobs are sorted from least to most expensive, so we consume
+    // from the end of the list.
+    Job * job = m_DistributableJobs_Available.Top();
+    m_DistributableJobs_Available.Pop();
 
     ASSERT( job->GetDistributionState() == Job::DIST_AVAILABLE );
 
