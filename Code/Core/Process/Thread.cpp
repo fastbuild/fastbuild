@@ -339,12 +339,12 @@ public:
 #endif
 
 
-// SetContinuousThreadExecutionMode
+// PreventSleep
 //------------------------------------------------------------------------------
-/*static*/ void Thread::SetContinuousThreadExecutionMode()
+/*static*/ void Thread::PreventSleep()
 {
  #if defined( __WINDOWS__ )
-    SetThreadExecutionState(ES_CONTINUOUS);
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED);
  #endif
 
 }

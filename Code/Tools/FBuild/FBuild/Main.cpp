@@ -106,8 +106,8 @@ int Main( int argc, char * argv[] )
         VERIFY( SetPriorityClass( GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS ) );
     #endif
 
-    // Prevent sleep when fbuild is running.
-    Thread::SetContinuousThreadExecutionMode();
+    // Prevent sleep when fbuild.exe is running.
+    Thread::PreventSleep();
 
     // don't buffer output
     VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );

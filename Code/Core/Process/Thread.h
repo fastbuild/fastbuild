@@ -49,7 +49,7 @@ public:
 
     static void SetThreadName( const char * name );
 
-    static void SetContinuousThreadExecutionMode();
+    static void PreventSleep();
 
 private:
     static ThreadId s_MainThreadId;
