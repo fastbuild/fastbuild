@@ -84,6 +84,10 @@
     <td>Enable detailed logging for distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#dot">-dot[full]</a></td>
+    <td>Generate an fbuild.gv DOT file for known dependencies.</td>
+  </tr>
+  <tr>
     <td><a href="#fixuperrorpaths">-fixuperrorpaths</a></td>
     <td>Reformat GCC/SNC/Clang error messages in Visual Studio format.</td>
   </tr>
@@ -348,6 +352,20 @@ be reproduced in the debugger.</p>
 <p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
 </div>
 
+    <div class='newsitemheader' id="dot">-dot[full]</div>
+    <div class='newsitembody'>
+<p>Generate an fbuild.gv DOT file for known dependencies which can be visualized in various third party tools
+such as <a href="https://graphviz.org/">Graphviz</a>.</p>
+<p>Example:</p>
+<div class='code'>fbuild.exe -dot Game-x86-Debug</div>
+<p>If no target is specified, "all" is used.</p>
+<p>By default, all leaf FileNodes (typically source files) are pruned from the graph. A full graph can be emitted
+by using <b>-dotfull</b>.</p>
+<p><b>NOTE:</b> The dependencies shown will reflect the state as of the last completed build.
+i.e. dependencies that would be discovered during the next build will not be shown.</p>
+<p><b>NOTE:</b> Large graphs may not be handled well by some visualizers.</p>
+</div>
+
     <div class='newsitemheader' id="fixuperrorpaths">-fixuperrorpaths</div>
     <div class='newsitembody'>
 <p>Enables re-formatting of warnings, errors and notes for GCC/SNC & Clang to Visual Studio format. Additionally, relative paths are expanded to full paths. This allows these errors to be double-clickable inside Visual Studio.</p>
@@ -517,7 +535,7 @@ to see the complete output.</p>
 <p>Example:</p>
 <div class='code'>fbuild.exe -showdeps Game-x86-Debug</div>
 <p>If no target is specified, "all" is used.</p>
-<p><b>NOTE:</b> The dependencies  shown will refelect the state as of the last completed build.
+<p><b>NOTE:</b> The dependencies shown will reflect the state as of the last completed build.
 i.e. dependencies that would be discovered during the next build will not be shown.</p>
 <p></p>
 </div>

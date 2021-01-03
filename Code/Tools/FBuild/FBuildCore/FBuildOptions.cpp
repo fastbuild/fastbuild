@@ -226,6 +226,18 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowBuildReason = true;
                 continue;
             }
+            else if ( thisArg == "-dot" )
+            {
+                m_GenerateDotGraph = true;
+                m_GenerateDotGraphFull = false;
+                continue;
+            }
+            else if ( thisArg == "-dotfull" )
+            {
+                m_GenerateDotGraph = true;
+                m_GenerateDotGraphFull = true;
+                continue;
+            }
             else if ( thisArg == "-fastcancel" )
             {
                 // This is on by default now
@@ -580,6 +592,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -debug            (Windows) Break at startup, to attach debugger.\n"
             " -dist             Allow distributed compilation.\n"
             " -distverbose      Print detailed info for distributed compilation.\n"
+            " -dot[full]        Emit known dependency tree info for specified targets to an\n"
+            "                   fbuild.gv file in DOT format.\n"
             " -fixuperrorpaths  Reformat error paths to be Visual Studio friendly.\n"
             " -forceremote      Force distributable jobs to only be built remotely.\n"
             " -help             Show this help.\n"

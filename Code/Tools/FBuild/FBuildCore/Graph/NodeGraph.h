@@ -96,6 +96,7 @@ public:
     LoadResult Load( IOStream & stream, const char * nodeGraphDBFile );
     void Save( IOStream & stream, const char * nodeGraphDBFile ) const;
     void SerializeToText( const Dependencies & dependencies, AString & outBuffer ) const;
+    void SerializeToDotFormat( const Dependencies & deps, const bool fullGraph, AString & outBuffer ) const;
 
     // access existing nodes
     Node * FindNode( const AString & nodeName ) const;
@@ -183,6 +184,18 @@ private:
     bool LoadNode( IOStream & stream );
     static void SerializeToText( Node * node, uint32_t depth, AString & outBuffer );
     static void SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer );
+    static void SerializeToDot( Node * node,
+                                const bool fullGraph,
+                                AString & outBuffer );
+    static void SerializeToDot( const char * dependencyType,
+                                const char * style,
+                                const Node * node,
+                                const Dependencies & dependencies,
+                                const bool fullGraph,
+                                AString & outBuffer );
+    static void SerializeToDot( const Dependencies & dependencies,
+                                const bool fullGraph,
+                                AString & outBuffer );
 
     // DB Migration
     void Migrate( const NodeGraph & oldNodeGraph );

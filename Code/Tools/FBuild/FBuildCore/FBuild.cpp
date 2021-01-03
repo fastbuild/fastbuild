@@ -786,6 +786,38 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
     return true;
 }
 
+// GenerateDotGraph
+//------------------------------------------------------------------------------
+bool FBuild::GenerateDotGraph( const Array< AString > & targets, const bool fullGraph ) const
+{
+    // Get the nodes for the targets, or leave empty to get everything
+    Dependencies deps;
+    if ( targets.IsEmpty() == false )
+    {
+        if ( !GetTargets( targets, deps ) )
+        {
+            return false; // GetTargets will have emitted an error
+        }
+    }
+
+    const char * const dotFileName = "fbuild.gv";
+    OUTPUT( "Saving DOT graph file to '%s'\n", dotFileName );
+
+    // Generate
+    AString buffer( 10 * 1024 * 1024 );    
+    m_DependencyGraph->SerializeToDotFormat( deps, fullGraph, buffer );
+
+    // Write to disk
+    FileStream f;
+    if ( f.Open( dotFileName, FileStream::WRITE_ONLY ) &&
+         ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() ) )
+    {
+        return true;
+    }
+    FLOG_ERROR( "Failed to DOT file '%s'\n", dotFileName );
+    return false;
+}
+
 // GenerateCompilationDatabase
 //------------------------------------------------------------------------------
 bool FBuild::GenerateCompilationDatabase( const Array< AString > & targets ) const

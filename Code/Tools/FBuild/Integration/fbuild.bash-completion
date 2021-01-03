@@ -17,6 +17,8 @@ _fbuild() {
 		-continueafterdbmove
 		-dist
 		-distverbose
+		-dot
+		-dotfull
 		-fixuperrorpaths
 		-forceremote
 		-help
