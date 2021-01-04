@@ -57,6 +57,8 @@ Client::Client( const Array< AString > & workerList,
 //------------------------------------------------------------------------------
 Client::~Client()
 {
+    PROFILE_FUNCTION;
+
     SetShuttingDown();
 
     AtomicStoreRelaxed( &m_ShouldExit, true );

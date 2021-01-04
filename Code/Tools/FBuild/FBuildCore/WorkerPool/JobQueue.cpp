@@ -148,6 +148,8 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
 //------------------------------------------------------------------------------
 JobQueue::~JobQueue()
 {
+    PROFILE_FUNCTION;
+
     // signal all workers to stop - ok if this has already been done
     SignalStopWorkers();
 

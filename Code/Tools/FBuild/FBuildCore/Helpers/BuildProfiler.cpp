@@ -14,6 +14,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
 #if defined( __WINDOWS__ )
@@ -33,6 +34,8 @@ BuildProfiler::~BuildProfiler() = default;
 //------------------------------------------------------------------------------
 void BuildProfiler::StartMetricsGathering()
 {
+    PROFILE_FUNCTION;
+
     ASSERT( m_Thread == INVALID_THREAD_HANDLE );
     m_ThreadExit = false;
     m_Thread = Thread::CreateThread( MetricsThreadWrapper, "BuildProfileMetrics" );
@@ -42,6 +45,8 @@ void BuildProfiler::StartMetricsGathering()
 //------------------------------------------------------------------------------
 /*static*/ void BuildProfiler::StopMetricsGathering()
 {
+    PROFILE_FUNCTION;
+
     ASSERT( m_Thread != INVALID_THREAD_HANDLE );
     m_ThreadExit = true;
     m_ThreadSignalSemaphore.Signal();
