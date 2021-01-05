@@ -58,6 +58,7 @@ public:
     uint64_t                        m_ContentHash;
     Array< Include >                m_Includes;
     Array< const IncludeDefine * >  m_IncludeDefines;
+    Array< uint64_t >               m_NonIncludeDefines;
 
     inline bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
     inline bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
@@ -484,7 +485,8 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char * & pos 
     IncludeType includeType;
     if ( ParseIncludeString( pos, include, includeType ) == false )
     {
-        // Not an include - this isn't an error. We just don't care about this macro
+        // Not an include. We only care that this exists (not what it resolves to)
+        file.m_NonIncludeDefines.Append( xxHash::Calc64( macroName ) );
         return true;
     }
 
@@ -617,7 +619,6 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
             // which one is correct)
             // NOTE: Array can be extended/can move while being iterated,
             // so iterate by index only to original size
-            bool found = false;
             const size_t originalSize = m_IncludeDefines.GetSize();
             for ( size_t i = 0; i < originalSize; ++i )
             {
@@ -625,16 +626,45 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
                 if ( def->m_Macro == include )
                 {
                     ProcessInclude( def->m_Include, def->m_Type );
-                    found = true;
+                    return;
                 }
             }
-            // If the macro was not seen at all then we've encountered something
-            // we don't know how to handle
-            if ( found == false )
+
+            // The macro was not defined as a valid include path
+            // Is it defined at all?
+            const uint64_t hash = xxHash::Calc64( include );
+            bool foundNonIncludeDefine = false;
+            for ( const IncludedFile * includedFile : m_AllIncludedFiles )
             {
-                AddError( nullptr, nullptr, "Could not resovle macro '%s'.",
-                                            include.Get() );
+                if ( includedFile->m_NonIncludeDefines.Find( hash ) != nullptr )
+                {
+                    foundNonIncludeDefine = true;
+                    break;
+                }
             }
+
+            // If we didn't find the macro at all, we can assume that the include
+            // is probably some variant of this:
+            //
+            // #if THING
+            //     #include THING
+            // #endif
+            //
+            // This means we can safely ignore this include as either:
+            // a) The include is not used (guarded as above)
+            // OR
+            // b) The file is invalid and won't compile anyway
+            //
+            if ( foundNonIncludeDefine == false )
+            {
+                return;
+            }
+
+            // We found the macro, but since it's not an include path, this means
+            // it is some complex structure, possibly referencing other macros
+            // that we currently don't support.
+            AddError( nullptr, nullptr, "Could not resolve macro '%s'.",
+                                        include.Get() );
             return;
         }
 

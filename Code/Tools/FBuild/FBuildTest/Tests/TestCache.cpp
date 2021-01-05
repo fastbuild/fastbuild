@@ -30,6 +30,9 @@ private:
     void LightCache_IncludeUsingMacro() const;
     void LightCache_IncludeUsingMacro2() const;
     void LightCache_IncludeUsingMacro3() const;
+    void LightCache_IncludeUsingUndefinedMacros1() const;
+    void LightCache_IncludeUsingUndefinedMacros2() const;
+    void LightCache_IncludeUsingUndefinedMacros3() const;
     void LightCache_IncludeHierarchy() const;
     void LightCache_CyclicInclude() const;
     void LightCache_ImportDirective() const;
@@ -45,6 +48,10 @@ private:
 
     // Helpers
     void CheckForDependencies( const FBuildForTest & fBuild, const char * files[], size_t numFiles ) const;
+    void LightCache_IncludeUsingUndefinedMacros( const char * consfigFile,
+                                                 bool expectedBuildResult,
+                                                 bool expectedLightCacheUsage,
+                                                 const char * lightCacheError ) const;
 
     TestCache & operator = ( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
 };
@@ -60,6 +67,9 @@ REGISTER_TESTS_BEGIN( TestCache )
         REGISTER_TEST( LightCache_IncludeUsingMacro )
         REGISTER_TEST( LightCache_IncludeUsingMacro2 )
         REGISTER_TEST( LightCache_IncludeUsingMacro3 )
+        REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros1 )
+        REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros2 )
+        REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros3 )
         REGISTER_TEST( LightCache_IncludeHierarchy )
         REGISTER_TEST( LightCache_CyclicInclude )
         REGISTER_TEST( LightCache_ImportDirective )
@@ -551,6 +561,93 @@ void TestCache::LightCache_IncludeUsingMacro3() const
         TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
+    }
+}
+
+// LightCache_IncludeUsingUndefinedMacros1
+//------------------------------------------------------------------------------
+void TestCache::LightCache_IncludeUsingUndefinedMacros1() const
+{
+    // An include using a macro which is not defined, but guarded so unused
+    //
+    // #ifdef MACRO_WHICH_IS_NOT_DEFINED
+    //     #include MACRO_WHICH_IS_NOT_DEFINED
+    // #endif
+    //
+    LightCache_IncludeUsingUndefinedMacros( "1/fbuild.bff",
+                                            true,       // Build passes, since macro is not used
+                                            true,       // LightCache can be used since include is ignored
+                                            nullptr );  // No error
+}
+
+// LightCache_IncludeUsingUndefinedMacros2
+//------------------------------------------------------------------------------
+void TestCache::LightCache_IncludeUsingUndefinedMacros2() const
+{
+    // An include using a macro which is not defined, but is used
+    //
+    // #include MACRO_WHICH_IS_NOT_DEFINED
+    //
+    LightCache_IncludeUsingUndefinedMacros( "2/fbuild.bff",
+                                            false,  // Overall build fails due to invalid defines
+                                            true,   // LightCache could be used
+                                            nullptr );  // No LightCache error
+}
+
+// LightCache_IncludeUsingUndefinedMacros3
+//------------------------------------------------------------------------------
+void TestCache::LightCache_IncludeUsingUndefinedMacros3() const
+{
+    // An include using a macro which is defined, but is not a direct include
+    // We don't support that, but we must detect and disable the LightCache to
+    // ensure builds are correct.
+    //
+    // #define COMPLEX_MACRO( arg ) arg
+    // #include COMPLEX_MACRO( "file.h" )
+    //
+    // This
+    LightCache_IncludeUsingUndefinedMacros( "3/fbuild.bff",
+                                            true,   // Overall build works as code is valid
+                                            false,  // LightCache cannot be used (falls back to normal cache)
+                                            "Could not resolve macro 'COMPLEX_MACRO'" ); // Expected error
+}
+
+// LightCache_IncludeUsingUndefinedMacros
+//------------------------------------------------------------------------------
+void TestCache::LightCache_IncludeUsingUndefinedMacros( const char * configFile,
+                                                        bool expectedBuildResult,
+                                                        bool lightCacheCompatible,
+                                                        const char * lightCacheError ) const
+{
+    // Options
+    FBuildTestOptions options;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile.Format( "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingUndefinedMacros/%s", configFile );
+    options.m_NumWorkerThreads = 1; // Single thread
+    options.m_UseCacheRead = false;
+    options.m_UseCacheWrite = true;
+
+    // Initialize and Build
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) == expectedBuildResult );
+
+    // Check LightCache compatibility
+    // (can be compatible even if compilation fails)
+    if ( lightCacheCompatible )
+    {
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == 1 );
+    }
+    else
+    {
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == 0 );
+        TEST_ASSERT( GetRecordedOutput().Find( "LightCache cannot be used" ) );
+    }
+
+    // Check for expected LightCache error
+    if ( lightCacheError )
+    {
+        TEST_ASSERT( GetRecordedOutput().Find( lightCacheError ) );
     }
 }
 
