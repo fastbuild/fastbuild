@@ -561,7 +561,7 @@ void LinkerNode::GetInputFiles( const AString & token, Args & fullArgs ) const
     }
 
     const char * foundB = token.Find( "%1[1]" );
-    if ( foundA )
+    if ( foundB )
     {
         AStackString<> pre( token.Get(), foundB );
         AStackString<> post( foundB + 5, token.GetEnd() );
