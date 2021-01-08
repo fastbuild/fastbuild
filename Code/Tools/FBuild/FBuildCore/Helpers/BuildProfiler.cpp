@@ -127,7 +127,9 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
 
     // - Local Processing
-    buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"%s %s\"}},", options.m_ProgramName.Get(), options.GetArgs().Get() );
+    AStackString<> args( options.GetArgs() );
+    args.Replace( "\\", "\\\\" ); // Escape slashes for JSON
+    buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"%s %s\"}},", options.m_ProgramName.Get(), args.Get() );
     buffer += "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"Phase\"}},";
     const uint32_t numThreads = options.m_NumWorkerThreads;
     for ( uint32_t i = 1; i <= numThreads; ++i )
@@ -163,7 +165,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
         if ( event.m_TargetName )
         {
             nameBuffer = event.m_TargetName;
-            nameBuffer.Replace( "\\", "\\\\" );
+            nameBuffer.Replace( "\\", "\\\\" ); // Escape slashes for JSON
             buffer.AppendFormat( ",\"args\":{\"name\":\"%s\"}", nameBuffer.Get());
         }
 
