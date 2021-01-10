@@ -125,20 +125,52 @@ void TestCompiler::BuildCompiler_Implicit() const
     uint64_t toolIdA;
     uint64_t toolIdB;
     uint64_t toolIdC;
+    AStackString<> compilerNodeName;
 
-    // Build
+    // Implicit Definition
     {
         FBuildTestOptions options;
         options.m_ForceCleanBuild = true;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
-        options.m_ShowSummary = true; // TODO: REMOVE
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Build a file genereated by a Compiler that we compiled
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
-        // Save DB for use by NoRebuild test
+        // Save DB for use by next test
+        TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+
+        // Ensure node was implicitly created
+        Array< const Node * > compilerNodes;
+        fBuild.GetNodesOfType( Node::COMPILER_NODE, compilerNodes );
+        TEST_ASSERT( compilerNodes.GetSize() == 1 );
+        compilerNodeName = compilerNodes[ 0 ]->GetName();
+
+        // Check stats
+        // - Since we have no object files, the implicitly created Compiler node
+        //   will not be built
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 0,     0,      Node::COMPILER_NODE );
+    }
+
+    // Build
+    {
+        FBuildTestOptions options;
+        options.m_ForceCleanBuild = true;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Build the compiler so we can test it's behavior
+        TEST_ASSERT( fBuild.Build( compilerNodeName ) );
+
+        // Ensure node was implicitly created
+        Array< const Node * > compilerNodes;
+        fBuild.GetNodesOfType( Node::COMPILER_NODE, compilerNodes );
+        TEST_ASSERT( compilerNodes.GetSize() == 1 );
+
+        // Save DB for use by next test
         TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
         // Check stats
@@ -157,7 +189,7 @@ void TestCompiler::BuildCompiler_Implicit() const
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
         // Build a file genereated by a Compiler that we compiled
-        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.Build( compilerNodeName ) );
 
         // Save DB for use by NoRebuild test
         TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
@@ -179,7 +211,7 @@ void TestCompiler::BuildCompiler_Implicit() const
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
         // Build a file genereated by a Compiler that we compiled
-        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.Build( compilerNodeName ) );
 
         // Save DB for use by NoRebuild test
         TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
