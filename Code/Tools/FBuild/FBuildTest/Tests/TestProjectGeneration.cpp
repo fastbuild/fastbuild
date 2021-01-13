@@ -482,7 +482,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
                 }
             }
 
-            TEST_ASSERT( includes.GetSize() == 32 );
+            TEST_ASSERT( includes.GetSize() == 40 );
             TEST_ASSERT( includes[  0 ] == "Intellisense\\Include\\Path" );
             TEST_ASSERT( includes[  1 ] == "Intellisense\\Include\\Space\\Path" );
             TEST_ASSERT( includes[  2 ] == "Intellisense\\Include\\Slash\\Path" );
@@ -515,6 +515,14 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( includes[ 29 ] == "Intellisense\\QuoteInclude\\Space\\Path" );
             TEST_ASSERT( includes[ 30 ] == "Intellisense\\QuoteInclude\\Quoted\\Path" );
             TEST_ASSERT( includes[ 31 ] == "Intellisense\\QuoteInclude\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 32 ] == "Intellisense\\MSVCExternalInclude\\Path" );
+            TEST_ASSERT( includes[ 33 ] == "Intellisense\\MSVCExternalInclude\\Space\\Path" );
+            TEST_ASSERT( includes[ 34 ] == "Intellisense\\MSVCExternalInclude\\Slash\\Path" );
+            TEST_ASSERT( includes[ 35 ] == "Intellisense\\MSVCExternalInclude\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[ 36 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Path" );
+            TEST_ASSERT( includes[ 37 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 38 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Slash\\Path" );
+            TEST_ASSERT( includes[ 39 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Slash\\Space\\Path" );
 
             includesOk = true;
         }
@@ -614,7 +622,7 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
         TEST_ASSERT( definesOk[ i ] );
     }
 
-    TEST_ASSERT( includes.GetSize() == 32 );
+    TEST_ASSERT( includes.GetSize() == 40 );
     TEST_ASSERT( includes[  0 ] == "Intellisense/Include/Path" );
     TEST_ASSERT( includes[  1 ] == "Intellisense/Include/Space/Path" );
     TEST_ASSERT( includes[  2 ] == "Intellisense/Include/Slash/Path" );
@@ -647,6 +655,14 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     TEST_ASSERT( includes[ 29 ] == "Intellisense/QuoteInclude/Space/Path" );
     TEST_ASSERT( includes[ 30 ] == "Intellisense/QuoteInclude/Quoted/Path" );
     TEST_ASSERT( includes[ 31 ] == "Intellisense/QuoteInclude/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 32 ] == "Intellisense/MSVCExternalInclude/Path" );
+    TEST_ASSERT( includes[ 33 ] == "Intellisense/MSVCExternalInclude/Space/Path" );
+    TEST_ASSERT( includes[ 34 ] == "Intellisense/MSVCExternalInclude/Slash/Path" );
+    TEST_ASSERT( includes[ 35 ] == "Intellisense/MSVCExternalInclude/Slash/Space/Path" );
+    TEST_ASSERT( includes[ 36 ] == "Intellisense/MSVCExternalInclude/Quoted/Path" );
+    TEST_ASSERT( includes[ 37 ] == "Intellisense/MSVCExternalInclude/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 38 ] == "Intellisense/MSVCExternalInclude/Quoted/Slash/Path" );
+    TEST_ASSERT( includes[ 39 ] == "Intellisense/MSVCExternalInclude/Quoted/Slash/Space/Path" );
 }
 
 // VCXProj_DefaultConfigs
