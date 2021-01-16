@@ -255,9 +255,10 @@ ObjectNode::~ObjectNode()
 
     // we may be using deoptimized options, but they are always
     // the "normal" args when remote compiling
-    bool useDeoptimization = job->IsLocal() && ShouldUseDeoptimization();
-    bool stealingRemoteJob = job->IsLocal(); // are we stealing a remote job?
-    return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+    const bool useDeoptimization = job->IsLocal() && ShouldUseDeoptimization();
+    const bool stealingRemoteJob = job->IsLocal(); // are we stealing a remote job?
+    const bool isFollowingLightCacheMiss = false;
+    return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, isFollowingLightCacheMiss );
 }
 
 // Finalize
@@ -436,7 +437,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
                 // so we directly compile from source as one-pass compilation is faster
                 const bool stealingRemoteJob = false; // never queued
                 const bool racingRemoteJob = false; // never queued
-                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+                const bool isFollowingLightCacheMiss = true;
+                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, isFollowingLightCacheMiss );
             }
 
             // Fall through to generate preprocessed output for distribution....
@@ -500,9 +502,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     }
 
     // can't do the work remotely, so do it right now
-    bool stealingRemoteJob = false; // never queued
-    bool racingRemoteJob = false;
-    Node::BuildResult result = DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+    const bool stealingRemoteJob = false; // never queued
+    const bool racingRemoteJob = false;
+    const bool isFollowingLightCacheMiss = false;
+    const Node::BuildResult result = DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, isFollowingLightCacheMiss );
     if ( result != Node::NODE_RESULT_OK )
     {
         return result;
@@ -513,7 +516,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
 // DoBuildWithPreProcessor2
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob )
+Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob, bool isFollowingLightCacheMiss )
 {
     job->GetBuildProfilerScope()->SetStepName( racingRemoteJob ? "Compile (Race)" : "Compile" );
 
@@ -614,7 +617,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     const bool verbose = FLog::ShowVerbose();
     const bool showCommands = ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines );
     const bool isRemote = ( job->IsLocal() == false );
-    if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
+    if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote || isFollowingLightCacheMiss )
     {
         // show that we are locally consuming a remote job
         EmitCompilationMessage( fullArgs, useDeoptimization, stealingRemoteJob, racingRemoteJob, false, isRemote );

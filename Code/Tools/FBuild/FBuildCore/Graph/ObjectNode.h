@@ -109,7 +109,11 @@ private:
 
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
     BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
-    BuildResult DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob );
+    BuildResult DoBuildWithPreProcessor2( Job * job,
+                                          bool useDeoptimization,
+                                          bool stealingRemoteJob,
+                                          bool racingRemoteJob,
+                                          bool isFollowingLightCacheMiss );
     BuildResult DoBuild_QtRCC( Job * job );
     BuildResult DoBuildOther( Job * job, bool useDeoptimization );
 
