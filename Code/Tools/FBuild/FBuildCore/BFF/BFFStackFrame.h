@@ -63,7 +63,7 @@ public:
     static const BFFVariable * GetVarAny( const AString & nameOnly );
 
     // get all variables at this stack level only
-    const Array< const BFFVariable * > & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ); }
+    const Array< const BFFVariable * > & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ) }
     Array<BFFVariable *> & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only

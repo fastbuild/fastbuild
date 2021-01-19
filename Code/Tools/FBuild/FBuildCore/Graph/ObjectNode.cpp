@@ -15,6 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
 #include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
@@ -186,6 +187,10 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuild( Job * job )
 {
+    // Set a sensible catch-all default name for compilation. This will be modified
+    // for various cases
+    job->GetBuildProfilerScope()->SetStepName( "Compile" );
+
     // Delete previous file(s) if doing a clean build
     if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
@@ -214,7 +219,7 @@ ObjectNode::~ObjectNode()
     bool useCache = ShouldUseCache();
     bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
     bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
-    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) || GetFlag( FLAG_ORBIS_WAVE_PSSLC ) );
+    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( FLAG_CLANG_CL ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) || GetFlag( FLAG_ORBIS_WAVE_PSSLC ) );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -229,7 +234,7 @@ ObjectNode::~ObjectNode()
         return DoBuildWithPreProcessor( job, useDeoptimization, useCache, useSimpleDist );
     }
 
-    if ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CLANG_CL ) )
+    if ( GetFlag( FLAG_MSVC ) )
     {
         return DoBuildMSCL_NoCache( job, useDeoptimization );
     }
@@ -246,11 +251,14 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuild2( Job * job, bool racingRemoteJob = false )
 {
+    job->GetBuildProfilerScope()->SetStepName( racingRemoteJob ? "Compile (Race)" : "Compile" );
+
     // we may be using deoptimized options, but they are always
     // the "normal" args when remote compiling
-    bool useDeoptimization = job->IsLocal() && ShouldUseDeoptimization();
-    bool stealingRemoteJob = job->IsLocal(); // are we stealing a remote job?
-    return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+    const bool useDeoptimization = job->IsLocal() && ShouldUseDeoptimization();
+    const bool stealingRemoteJob = job->IsLocal(); // are we stealing a remote job?
+    const bool isFollowingLightCacheMiss = false;
+    return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, isFollowingLightCacheMiss );
 }
 
 // Finalize
@@ -379,6 +387,8 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist )
 {
+    job->GetBuildProfilerScope()->SetStepName( "Preprocess" );
+
     Args fullArgs;
     const bool showIncludes( false );
     const bool useSourceMapping( true );
@@ -427,7 +437,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
                 // so we directly compile from source as one-pass compilation is faster
                 const bool stealingRemoteJob = false; // never queued
                 const bool racingRemoteJob = false; // never queued
-                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+                const bool isFollowingLightCacheMiss = true;
+                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, isFollowingLightCacheMiss );
             }
 
             // Fall through to generate preprocessed output for distribution....
@@ -457,7 +468,9 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     }
 
     // Do Clang unity fixup if needed
-    if ( GetFlag( FLAG_UNITY ) && IsClang() && GetCompiler()->IsClangUnityFixupEnabled() )
+    if ( GetFlag( FLAG_UNITY ) &&
+         ( IsClang() || IsClangCl() ) &&
+         GetCompiler()->IsClangUnityFixupEnabled() )
     {
         DoClangUnityFixup( job );
     }
@@ -489,9 +502,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     }
 
     // can't do the work remotely, so do it right now
-    bool stealingRemoteJob = false; // never queued
-    bool racingRemoteJob = false;
-    Node::BuildResult result = DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+    const bool stealingRemoteJob = false; // never queued
+    const bool racingRemoteJob = false;
+    const bool isFollowingLightCacheMiss = false;
+    const Node::BuildResult result = DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, isFollowingLightCacheMiss );
     if ( result != Node::NODE_RESULT_OK )
     {
         return result;
@@ -502,8 +516,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
 // DoBuildWithPreProcessor2
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob )
+Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob, bool isFollowingLightCacheMiss )
 {
+    job->GetBuildProfilerScope()->SetStepName( racingRemoteJob ? "Compile (Race)" : "Compile" );
+
     // should never use preprocessor if using CLR
     ASSERT( GetFlag( FLAG_USING_CLR ) == false );
 
@@ -601,7 +617,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     const bool verbose = FLog::ShowVerbose();
     const bool showCommands = ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines );
     const bool isRemote = ( job->IsLocal() == false );
-    if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
+    if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote || isFollowingLightCacheMiss )
     {
         // show that we are locally consuming a remote job
         EmitCompilationMessage( fullArgs, useDeoptimization, stealingRemoteJob, racingRemoteJob, false, isRemote );
@@ -623,6 +639,13 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 
     if ( result == false )
     {
+        // If the failure is forced due to a local cancellation, mark up the profiler
+        // state so we can see that
+        if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+        {
+            job->GetBuildProfilerScope()->SetStepName( "Compile (Race Lost)" );
+        }
+
         return NODE_RESULT_FAILED; // BuildFinalOutput will have emitted error
     }
 
@@ -752,13 +775,17 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
 
     {
         CIncludeParser parser;
-        bool result = ( output && outputSize ) ? parser.ParseMSCL_Output( output, outputSize )
-                                               : false;
 
-        if ( result == false )
+        // It's possible to have no output (Clang CL) in which case the file
+        // includes nothing
+        if ( output && outputSize )
         {
-            FLOG_ERROR( "Failed to process includes for '%s'", GetName().Get() );
-            return false;
+            const bool result = parser.ParseMSCL_Output( output, outputSize );
+            if ( result == false )
+            {
+                FLOG_ERROR( "Failed to process includes for '%s'", GetName().Get() );
+                return false;
+            }
         }
 
         // record that we have a list of includes
@@ -858,8 +885,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     uint32_t flags = 0;
 
     // set flags known from the context the args will be used in
-    flags |= ( creatingPCH  ? ObjectNode::FLAG_CREATING_PCH : 0 );
-    flags |= ( usingPCH     ? ObjectNode::FLAG_USING_PCH : 0 );
+    flags |= ( creatingPCH  ? (uint32_t)ObjectNode::FLAG_CREATING_PCH : 0 );
+    flags |= ( usingPCH     ? (uint32_t)ObjectNode::FLAG_USING_PCH : 0 );
 
     const bool isDistributableCompiler = compilerNode->CanBeDistributed();
 
@@ -881,6 +908,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC:flags |= FLAG_ORBIS_WAVE_PSSLC; break;
         case CompilerNode::CompilerFamily::CSHARP:          ASSERT( false );                break; // Guarded in ObjectListNode::Initialize
     }
+
+    // Source mappings are not currently forwarded so can only compiled locally
+    const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
 
     // Check MS compiler options
     if ( flags & ( ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL ) )
@@ -940,12 +970,14 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         // 3) pch files can't be built from preprocessed output (disabled acceleration), so can't be distributed
         // 4) user only wants preprocessor step executed
         // 5) Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
+        // 6) Source mappings are not currently forwarded so can only compiled locally
         if ( !usingCLR && !usingPreprocessorOnly )
         {
             if ( isDistributableCompiler &&
                  !usingWinRT &&
                  !( flags & ObjectNode::FLAG_CREATING_PCH ) &&
-                 !( flags & ObjectNode::FLAG_STATIC_ANALYSIS_MSVC ) )
+                 !( flags & ObjectNode::FLAG_STATIC_ANALYSIS_MSVC ) &&
+                 !hasSourceMapping )
             {
                 flags |= ObjectNode::FLAG_CAN_BE_DISTRIBUTED;
             }
@@ -1011,7 +1043,6 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         // creation of the PCH must be done locally to generate a usable PCH
         // Objective C/C++ cannot be distributed
         // Source mappings are not currently forwarded so can only compiled locally
-        const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
         if ( !creatingPCH && !objectiveC && !hasSourceMapping )
         {
             if ( isDistributableCompiler )
@@ -1197,7 +1228,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         return job->GetCacheName();
     }
 
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
@@ -1256,7 +1287,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         return false;
     }
 
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     const AString & cacheFileName = GetCacheName(job);
 
@@ -1362,6 +1393,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             m_PCHCacheKey = pchKey;
         }
 
+        job->GetBuildProfilerScope()->SetStepName( "Cache Hit" );
+
         return true;
     }
 
@@ -1386,7 +1419,7 @@ void ObjectNode::WriteToCache( Job * job )
         return;
     }
 
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     const AString & cacheFileName = GetCacheName(job);
     ASSERT(!cacheFileName.IsEmpty());
@@ -1609,7 +1642,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
 //------------------------------------------------------------------------------
 bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile ) const
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     Array< AString > tokens( 1024, true );
 
@@ -2045,7 +2078,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 
     if ( useSourceMapping && job->IsLocal() )
     {
-        if ( isClang || isGCC )
+        if ( isClang || isClangCl || isGCC )
         {
             const AString& workingDir = FBuild::Get().GetOptions().GetWorkingDir();
             const AString& mapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
@@ -2057,7 +2090,12 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // the DWARF debugging information but also in the __FILE__ and related predefined macros, but
                 // -ffile-prefix-map is only supported starting with GCC 8 and Clang 10. The -fdebug-prefix-map
                 // option is available starting with Clang 3.8 and all modern GCC versions.
-                tmp.Format(" \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), mapping.Get());
+                if ( isClangCl )
+                {
+                    // When clang is operating in "CL mode", it seems to need the -Xclang prefix for the command
+                    tmp = " -Xclang ";
+                }
+                tmp.AppendFormat(" \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), mapping.Get());
                 fullArgs += tmp;
             }
         }
@@ -2482,6 +2520,26 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
                 }
             }
         }
+
+        // Special case for clang static analysis which doesn't write any
+        // output file to disk. In that case, we write the static analysis
+        // results as the output. This avoids a "file missing despite success"
+        // error
+        if ( ch.GetResult() == 0 )
+        {
+            if ( IsClang() || IsClangCl() )
+            {
+                if ( FileIO::FileExists( GetName().Get() ) == false )
+                {
+                    FileStream f;
+                    if ( ( f.Open( GetName().Get(), FileStream::WRITE_ONLY ) == false ) ||
+                         ( f.WriteBuffer( ch.GetErr().Get(), ch.GetErr().GetLength() ) != ch.GetErr().GetLength() ) )
+                    {
+                        FLOG_ERROR( "Error %s writing analysis results: %s", LAST_ERROR_STR, GetName().Get() );
+                    }
+                }
+            }
+        }
     }
 
     return true;
@@ -2752,14 +2810,6 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     #endif
 }
 
-// HandleWarningsClangCl
-//------------------------------------------------------------------------------
-void ObjectNode::HandleWarningsClangCl( Job * job, const AString & name, const AString & data )
-{
-    constexpr const char * clangClWarningString = " warning:";
-    return HandleWarnings( job, name, data, clangClWarningString );
-}
-
 // ShouldUseDeoptimization
 //------------------------------------------------------------------------------
 bool ObjectNode::ShouldUseDeoptimization() const
@@ -2933,7 +2983,7 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     //
 
     // Sanity checks
-    ASSERT( IsClang() ); // Only necessary for Clang
+    ASSERT( IsClang() || IsClangCl() ); // Only necessary for Clang
     ASSERT( GetFlag( FLAG_UNITY ) ); // Only makes sense to for Unity
     ASSERT( job->IsDataCompressed() == false ); // Can't fixup compressed data
     ASSERT( job->IsLocal() ); // Assuming we're doing this on the local machine (using FBuild singleton lower)

@@ -81,7 +81,7 @@ public:
     void Erase( T * const iter );
     inline void EraseIndex( size_t index ) { Erase( m_Begin + index ); }
     template < class ... ARGS >
-    void EmplaceBack( ARGS && ... args );
+    T & EmplaceBack( ARGS && ... args );
 
     Array & operator = ( const Array< T > & other );
     Array & operator = ( Array< T > && other );
@@ -548,7 +548,7 @@ void Array< T >::Erase( T * const iter )
 //------------------------------------------------------------------------------
 template < class T >
 template < class ... ARGS >
-void Array< T >::EmplaceBack( ARGS && ... args )
+T & Array< T >::EmplaceBack( ARGS && ... args )
 {
     if ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) )
     {
@@ -557,6 +557,7 @@ void Array< T >::EmplaceBack( ARGS && ... args )
     T * pos = m_Begin + m_Size;
     INPLACE_NEW ( pos ) T( Forward( ARGS, args ) ... );
     m_Size++;
+    return *pos;
 }
 
 // operator =

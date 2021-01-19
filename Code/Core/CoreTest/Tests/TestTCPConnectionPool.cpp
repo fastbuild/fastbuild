@@ -57,7 +57,7 @@ private:
 // Helper Macros
 //------------------------------------------------------------------------------
 #define WAIT_UNTIL_WITH_TIMEOUT( cond )             \
-    {                                               \
+    do {                                            \
         Timer t;                                    \
         t.Start();                                  \
         while ( ( cond ) == false )                 \
@@ -65,7 +65,7 @@ private:
             Thread::Sleep( 1 );                     \
             TEST_ASSERT( t.GetElapsed() < 30.0f );  \
         }                                           \
-    }
+    } while( false )
 
 // Register Tests
 //------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     class TestServer : public TCPConnectionPool
     {
     public:
-        ~TestServer() { ShutdownAllConnections(); }
+        virtual ~TestServer() override { ShutdownAllConnections(); }
         virtual void OnReceive( const ConnectionInfo *, void * data, uint32_t size, bool & ) override
         {
             TEST_ASSERT( size == m_DataSize );
@@ -272,7 +272,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     class SlowServer : public TCPConnectionPool
     {
     public:
-        ~SlowServer() { ShutdownAllConnections(); }
+        virtual ~SlowServer() override { ShutdownAllConnections(); }
         virtual void OnReceive( const ConnectionInfo *, void *, uint32_t, bool & ) override
         {
             Thread::Sleep( 200 );
@@ -311,7 +311,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 }
 /*static*/ uint32_t TestTestTCPConnectionPool::TestConnectionStuckDuringSend_ThreadFunc( void * userData )
 {
-    PROFILE_SET_THREAD_NAME( "ConnectionStuckSend" )
+    PROFILE_SET_THREAD_NAME( "ConnectionStuckSend" );
 
     const ConnectionInfo * ci = (const ConnectionInfo *)userData;
     TCPConnectionPool & client = ci->GetTCPConnectionPool();

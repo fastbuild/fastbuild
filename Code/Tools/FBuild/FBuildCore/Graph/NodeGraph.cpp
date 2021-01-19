@@ -95,7 +95,7 @@ NodeGraph::~NodeGraph()
                                                const char * nodeGraphDBFile,
                                                bool forceMigration )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     ASSERT( bffFile ); // must be supplied (or left as default)
     ASSERT( nodeGraphDBFile ); // must be supplied (or left as default)
@@ -478,7 +478,7 @@ bool NodeGraph::LoadNode( IOStream & stream )
     m_NextNodeIndex = nodeIndex;
 
     // load specifics (create node)
-    Node * n = Node::Load( *this, stream );
+    const Node * const n = Node::Load( *this, stream );
     if ( n == nullptr )
     {
         return false;
@@ -487,14 +487,6 @@ bool NodeGraph::LoadNode( IOStream & stream )
     // sanity check node index was correctly restored
     ASSERT( m_AllNodes[ nodeIndex ] == n );
     ASSERT( n->GetIndex() == nodeIndex );
-
-    // load build time
-    uint32_t lastTimeToBuild;
-    if ( stream.Read( lastTimeToBuild ) == false )
-    {
-        return false;
-    }
-    n->SetLastBuildTime( lastTimeToBuild );
 
     return true;
 }
@@ -606,10 +598,6 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     // save node specific data
     Node::Save( stream, node );
 
-    // save build time
-    uint32_t lastBuildTime = node->GetLastBuildTime();
-    stream.Write( lastBuildTime );
-
     savedNodeFlags[ nodeIndex ] = true; // mark as saved
 }
 
@@ -687,6 +675,141 @@ void NodeGraph::SerializeToText( const Dependencies & deps, AString & outBuffer 
     {
         Node * n = it->GetNode();
         SerializeToText( n, depth + 1, outBuffer );
+    }
+}
+
+// SerializeToDotFormat
+//------------------------------------------------------------------------------
+void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
+                                      const bool fullGraph,
+                                      AString & outBuffer ) const
+{
+    s_BuildPassTag++; // Used to mark nodes as we sweep to visit each node only once
+
+    // Header of DOT format
+    outBuffer += "digraph G\n";
+    outBuffer += "{\n";
+    outBuffer += "\trankdir=LR\n";
+    outBuffer += "\tnode [shape=record;style=filled]\n";
+
+    if ( deps.IsEmpty() == false )
+    {
+        // Emit subset of graph for specified targets
+        for ( const Dependency & dep : deps )
+        {
+            SerializeToDot( dep.GetNode(), fullGraph, outBuffer );
+        }
+    }
+    else
+    {
+        // Emit entire graph
+        for ( Node * node : m_AllNodes )
+        {
+            SerializeToDot( node, fullGraph, outBuffer );
+        }
+    }
+
+    // Footer of DOT format
+    outBuffer += "}\n";
+}
+
+// SerializeToDot
+//------------------------------------------------------------------------------
+/*static*/ void NodeGraph::SerializeToDot( Node * node,
+                                                 const bool fullGraph,
+                                                 AString & outBuffer )
+{
+    // Early out for nodes we've already visited
+    if ( node->GetBuildPassTag() == s_BuildPassTag )
+    {
+        return;
+    }
+    node->SetBuildPassTag( s_BuildPassTag ); // Mark as visited
+
+    // If outputting a reduced graph, prune out any leaf FileNodes.
+    // (i.e. files that exist outside of the build - typically source code files)
+    const bool isLeafFileNode = ( node->GetType() == Node::FILE_NODE );
+    if ( isLeafFileNode && ( fullGraph == false ) )
+    {
+        return; // Strip this node
+    }
+
+    // Name of this node
+    AStackString<> name( node->GetName() );
+    name.Replace( "\\", "\\\\" ); // Escape slashes in this name
+    outBuffer.AppendFormat( "\n\t\"%s\" %s // %s\n",
+                            name.Get(),
+                            isLeafFileNode ? "[style=none]" : "",
+                            node->GetTypeName() );
+
+    // Dependencies
+    SerializeToDot( "PreBuild", "[style=dashed]", node, node->GetPreBuildDependencies(), fullGraph, outBuffer );
+    SerializeToDot( "Static", nullptr, node, node->GetStaticDependencies(), fullGraph, outBuffer );
+    SerializeToDot( "Dynamic", "[color=gray]", node, node->GetDynamicDependencies(), fullGraph, outBuffer );
+
+    // Recurse into Dependencies
+    SerializeToDot( node->GetPreBuildDependencies(), fullGraph, outBuffer );
+    SerializeToDot( node->GetStaticDependencies(), fullGraph, outBuffer );
+    SerializeToDot( node->GetDynamicDependencies(), fullGraph, outBuffer );
+}
+
+// SerializeToDot
+//------------------------------------------------------------------------------
+/*static*/ void NodeGraph::SerializeToDot( const char * dependencyType,
+                                                 const char * style,
+                                                 const Node * node,
+                                                 const Dependencies & dependencies,
+                                                 const bool fullGraph,
+                                                 AString & outBuffer )
+{
+    if ( dependencies.IsEmpty() )
+    {
+        return;
+    }
+
+    // Escape slashes in this name
+    AStackString<> left( node->GetName() );
+    left.Replace( "\\", "\\\\" );
+
+    // All the dependencies
+    for ( const Dependency & dep : dependencies )
+    {
+        // If outputting a reduced graph, prune out links to leaf FileNodes.
+        // (i.e. files that exist outside of the build - typically source code files)
+        if ( ( fullGraph == false ) && ( dep.GetNode()->GetType() == Node::FILE_NODE ) )
+        {
+            continue;
+        }
+
+        // Write the graph edge
+        AStackString<> right( dep.GetNode()->GetName() );
+        right.Replace( "\\", "\\\\" );
+        outBuffer.AppendFormat( "\t\t/*%-8s*/ \"%s\" -> \"%s\"",
+                                dependencyType,
+                                left.Get(),
+                                right.Get() );
+
+        // Append the optional style
+        if ( style )
+        {
+            outBuffer += ' ';
+            outBuffer += style;
+        }
+
+        // Temrinate the line
+        outBuffer += '\n';
+    }
+}
+
+// SerializeToDot
+//------------------------------------------------------------------------------
+/*static*/ void NodeGraph::SerializeToDot( const Dependencies & dependencies,
+                                                 const bool fullGraph,
+                                                 AString & outBuffer )
+{
+    for ( const Dependency & dep : dependencies )
+    {
+        SerializeToDot( dep.GetNode(), fullGraph, outBuffer );
     }
 }
 
@@ -1079,7 +1202,7 @@ void NodeGraph::AddNode( Node * node )
 //------------------------------------------------------------------------------
 void NodeGraph::DoBuildPass( Node * nodeToBuild )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     s_BuildPassTag++;
 
@@ -1770,7 +1893,7 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
 //------------------------------------------------------------------------------
 void NodeGraph::Migrate( const NodeGraph & oldNodeGraph )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     s_BuildPassTag++;
 

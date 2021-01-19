@@ -131,7 +131,7 @@ uint64_t MemoryStream::GetFileSize() const
 void MemoryStream::GrowToAccomodate( uint64_t bytesToAccomodate )
 {
     // grow by at least MinGrowth
-    size_t newCapacity = ( m_MaxEnd - m_Begin ) + Math::Max<size_t>( (size_t)bytesToAccomodate, m_MinGrowth );
+    size_t newCapacity = (size_t)( m_MaxEnd - m_Begin ) + Math::Max<size_t>( (size_t)bytesToAccomodate, m_MinGrowth );
     char * oldBegin = m_Begin;
     char * oldEnd = m_End;
     m_Begin = (char *)ALLOC( newCapacity );

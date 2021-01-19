@@ -1,0 +1,15 @@
+//
+// LightCache handles unused includes using macros
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+#include "..\..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCache/LightCache_IncludeUsingUndefinedMacros/3/file.cpp' }
+    .CompilerOutputPath = '$Out$/Test/Cache/LightCache_IncludeUsingUndefinedMacros/3/'
+}

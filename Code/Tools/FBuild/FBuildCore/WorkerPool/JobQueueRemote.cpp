@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 #include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
 
 // Core
@@ -36,7 +37,7 @@ JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
     {
         // identify each worker with an id starting from 1
         // (the "main" thread is considered 0)
-        uint32_t threadIndex = ( i + 1001 );
+        const uint16_t threadIndex = static_cast<uint16_t>( i + 1001 );
         WorkerThread * wt = FNEW( WorkerThreadRemote( threadIndex ) );
         wt->Init();
         m_Workers.Append( wt );
@@ -67,8 +68,13 @@ void JobQueueRemote::SignalStopWorkers()
     for ( size_t i=0; i<numWorkerThreads; ++i )
     {
         m_Workers[ i ]->Stop();
-        WakeWorkers();
     }
+
+    // Signal threads (both active and idle)
+    // (We don't know which threads are in any given state, so we signal
+    // the worst case for both states)
+    m_WorkerThreadSemaphore.Signal( static_cast<uint32_t>(numWorkerThreads) );
+    m_WorkerThreadSleepSemaphore.Signal( static_cast<uint32_t>(numWorkerThreads) );
 }
 
 // HaveWorkersStopped
@@ -97,7 +103,7 @@ void JobQueueRemote::GetWorkerStatus( size_t index, AString & hostName, AString 
 //------------------------------------------------------------------------------
 void JobQueueRemote::MainThreadWait( uint32_t timeoutMS )
 {
-    PROFILE_SECTION( "MainThreadWait" )
+    PROFILE_SECTION( "MainThreadWait" );
     m_MainThreadSemaphore.Wait( timeoutMS );
 }
 
@@ -110,17 +116,18 @@ void JobQueueRemote::WakeMainThread()
 
 // WorkerThreadWait
 //------------------------------------------------------------------------------
-void JobQueueRemote::WorkerThreadWait( uint32_t timeoutMS )
+void JobQueueRemote::WorkerThreadWait()
 {
-    PROFILE_SECTION( "WorkerThreadWait" )
-    m_WorkerThreadSemaphore.Wait( timeoutMS );
+    PROFILE_SECTION( "WorkerThreadWait" );
+    m_WorkerThreadSemaphore.Wait( 1000 );
 }
 
-// WakeWorkers
+// WorkerThreadSleep
 //------------------------------------------------------------------------------
-void JobQueueRemote::WakeWorkers()
+void JobQueueRemote::WorkerThreadSleep()
 {
-    m_WorkerThreadSemaphore.Signal();
+    PROFILE_SECTION( "WorkerThreadSleep" );
+    m_WorkerThreadSleepSemaphore.Wait( 1000 );
 }
 
 // QueueJob (Main Thread)
@@ -132,7 +139,8 @@ void JobQueueRemote::QueueJob( Job * job )
         m_PendingJobs.Append( job );
     }
 
-    WakeWorkers();
+    // Wake a single non-idle worker thread
+    m_WorkerThreadSemaphore.Signal( 1 );
 }
 
 // GetCompletedJob
@@ -217,7 +225,7 @@ void JobQueueRemote::CancelJobsWithUserData( void * userData )
 //------------------------------------------------------------------------------
 Job * JobQueueRemote::GetJobToProcess()
 {
-    WorkerThreadWait( 100 );
+    WorkerThreadWait();
 
     MutexHolder m( m_PendingJobsMutex );
     if ( m_PendingJobs.IsEmpty() )
@@ -274,6 +282,8 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 //------------------------------------------------------------------------------
 /*static*/ Node::BuildResult JobQueueRemote::DoBuild( Job * job, bool racingRemoteJob )
 {
+    BuildProfilerScope profileScope( job, WorkerThread::GetThreadIndex(), job->GetNode()->GetTypeName() );
+
     Timer timer; // track how long the item takes
 
     ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();

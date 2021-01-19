@@ -27,7 +27,7 @@
     // GlobalData
     //------------------------------------------------------------------------------
     class LeakDumper { public: ~LeakDumper() { MemTracker::DumpAllocations(); } };
-    #if defined( __WINDOWS__ )
+    #if defined( __WINDOWS__ ) && !defined( __clang__ )
         static LeakDumper g_LeakDumper;
     #else
         static LeakDumper g_LeakDumper __attribute__((init_priority(101)));
@@ -48,7 +48,6 @@
     THREAD_LOCAL uint32_t       g_MemTrackerDisabledOnThisThread( 0 );
 
     // Defines
-    #define ALLOCATION_MINIMUM_ALIGN    ( 0x4 )         // assume at least 4 byte alignment
     #define ALLOCATION_HASH_SHIFT       ( 0x2 )         // shift off lower bits
     #define ALLOCATION_HASH_SIZE        ( 0x100000 )    // one megabyte
     #define ALLOCATION_HASH_MASK        ( 0x0FFFFF )    // mask off upper bits

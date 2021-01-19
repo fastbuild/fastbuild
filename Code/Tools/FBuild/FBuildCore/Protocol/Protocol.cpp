@@ -44,7 +44,7 @@
 
 // IMessage
 //------------------------------------------------------------------------------
-Protocol::IMessage::IMessage( Protocol::MessageType msgType, uint32_t msgSize, bool hasPayload )
+Protocol::IMessage::IMessage( Protocol::MessageType msgType, uint8_t msgSize, bool hasPayload )
     : m_MsgType( msgType )
     , m_MsgSize( msgSize )
     , m_HasPayload( hasPayload )

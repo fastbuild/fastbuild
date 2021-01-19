@@ -13,7 +13,7 @@
 
 // FBuildOptions
 //------------------------------------------------------------------------------
-struct FBuildOptions
+class FBuildOptions
 {
 public:
     FBuildOptions();
@@ -52,11 +52,13 @@ public:
     // Build Behaviour
     bool        m_ForceCleanBuild                   = false;
     bool        m_StopOnFirstError                  = true;
-    bool        m_FastCancel                        = false;
+    bool        m_FastCancel                        = true;
     bool        m_WaitMode                          = false;
     bool        m_DisplayTargetList                 = false;
     bool        m_ShowHiddenTargets                 = false;
     bool        m_DisplayDependencyDB               = false;
+    bool        m_GenerateDotGraph                  = false;
+    bool        m_GenerateDotGraphFull              = false;
     bool        m_GenerateCompilationDatabase       = false;
     bool        m_NoUnity                           = false;
 
@@ -89,6 +91,7 @@ public:
     bool        m_NoSummaryOnError                  = false;
     bool        m_GenerateReport                    = false;
     bool        m_EnableMonitor                     = false;
+    bool        m_Profile                           = false;
 
     // DB loading/saving
     bool        m_SaveDBOnCompletion                = false;

@@ -39,7 +39,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 
 
-    enum Flags
+    enum Flags : uint32_t
     {
         FLAG_CAN_BE_CACHED      =   0x01,
         FLAG_CAN_BE_DISTRIBUTED =   0x02,
@@ -109,7 +109,11 @@ private:
 
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
     BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
-    BuildResult DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob );
+    BuildResult DoBuildWithPreProcessor2( Job * job,
+                                          bool useDeoptimization,
+                                          bool stealingRemoteJob,
+                                          bool racingRemoteJob,
+                                          bool isFollowingLightCacheMiss );
     BuildResult DoBuild_QtRCC( Job * job );
     BuildResult DoBuildOther( Job * job, bool useDeoptimization );
 
@@ -147,7 +151,6 @@ private:
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
-    static void HandleWarningsClangCl( Job * job, const AString & name, const AString & data );
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;

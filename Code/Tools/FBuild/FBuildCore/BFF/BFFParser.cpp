@@ -7,12 +7,13 @@
 #include "BFFKeywords.h"
 #include "BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFFile.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenizer.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // Core
@@ -40,7 +41,8 @@ BFFParser::~BFFParser() = default;
 //------------------------------------------------------------------------------
 bool BFFParser::ParseFromFile( const char * fileName )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
+    BuildProfilerScope buildProfileScope( "ParseBFF" );
 
     // Tokenize file
     if ( m_Tokenizer.TokenizeFromFile( AStackString<>( fileName ) ) == false )
@@ -65,7 +67,7 @@ bool BFFParser::ParseFromFile( const char * fileName )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseFromString( const char * fileName, const char * fileContents )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // Tokenize string
     if ( m_Tokenizer.TokenizeFromString( AStackString<>( fileName ), AStackString<>( fileContents ) ) == false )
@@ -929,7 +931,6 @@ bool BFFParser::StoreVariableString( const AString & name,
             return false;
         }
     }
-    return false;
 }
 
 // StoreVariableArray

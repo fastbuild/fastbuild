@@ -803,8 +803,8 @@ void XCodeProjectGenerator::WriteString( uint32_t indentDepth,
    
     // Empty strings and strings with spaces are quoted
     const char quoteString = ShouldQuoteString( value );
-    const char * formatString = quoteString ? "%s%s = \"%s\";\n"
-                                            : "%s%s = %s;\n";
+    const char * const formatString = quoteString ? "%s%s = \"%s\";\n"
+                                                  : "%s%s = %s;\n";
     Write( formatString, tabs.Get(), propertyName, value.Get() );
 }
 
@@ -836,8 +836,8 @@ void XCodeProjectGenerator::WriteArray( uint32_t indentDepth,
     {
         // Empty strings and strings with spaces are quoted
         const char quoteString = ShouldQuoteString( value );
-        const char * formatString = quoteString ? "%s\t\"%s\",\n"
-                                                : "%s\t%s,\n";
+        const char * const formatString = quoteString ? "%s\t\"%s\",\n"
+                                                      : "%s\t%s,\n";
         Write( formatString, tabs.Get(), value.Get() );
     }
     Write( "%s);\n", tabs.Get() );

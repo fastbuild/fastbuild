@@ -18,7 +18,7 @@
 //------------------------------------------------------------------------------
 #pragma warning(push, 0)  
 #include <WinSock2.h> // WinSock2.h must be first
-#include <ws2tcpip.h>
+#include <WS2tcpip.h>
 #include <Windows.h>
 #pragma warning(pop)
 

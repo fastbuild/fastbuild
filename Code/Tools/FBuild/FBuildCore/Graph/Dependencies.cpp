@@ -43,15 +43,14 @@ void Dependencies::Save( IOStream & stream ) const
 //------------------------------------------------------------------------------
 bool Dependencies::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
+    ASSERT( IsEmpty() );
+
     uint32_t numDeps;
     if ( stream.Read( numDeps ) == false )
     {
         return false;
     }
-    if ( GetCapacity() < GetSize() + numDeps )
-    {
-        SetCapacity( GetSize() + numDeps );
-    }
+    SetCapacity( numDeps );
     for ( uint32_t i=0; i<numDeps; ++i )
     {
         // Read node index

@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 
 #include "Core/Time/Timer.h"
 #include "Core/FileIO/FileIO.h"
@@ -117,13 +118,18 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
     m_NumLocalJobsActive( 0 ),
     m_DistributableJobs_Available( 1024, true ),
     m_DistributableJobs_InProgress( 1024, true ),
+    #if defined( __WINDOWS__ )
+        m_MainThreadSemaphore( 1 ), // On Windows, take advantage of signalling limit
+    #else
+        m_MainThreadSemaphore(),
+    #endif
     m_CompletedJobs( 1024, true ),
     m_CompletedJobsFailed( 1024, true ),
     m_CompletedJobs2( 1024, true ),
     m_CompletedJobsFailed2( 1024, true ),
     m_Workers( numWorkerThreads, false )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     WorkerThread::InitTmpDir();
 
@@ -131,7 +137,7 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
     {
         // identify each worker with an id starting from 1
         // (the "main" thread is considered 0)
-        uint32_t threadIndex = ( i + 1 );
+        const uint16_t threadIndex = static_cast<uint16_t>( i + 1 );
         WorkerThread * wt = FNEW( WorkerThread( threadIndex ) );
         wt->Init();
         m_Workers.Append( wt );
@@ -142,6 +148,8 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
 //------------------------------------------------------------------------------
 JobQueue::~JobQueue()
 {
+    PROFILE_FUNCTION;
+
     // signal all workers to stop - ok if this has already been done
     SignalStopWorkers();
 
@@ -251,6 +259,7 @@ void JobQueue::FlushJobBatch()
         return;
     }
 
+    // Make the jobs available
     m_LocalJobs_Available.QueueJobs( m_LocalJobs_Staging );
     m_WorkerThreadSemaphore.Signal( (uint32_t)m_LocalJobs_Staging.GetSize() );
     m_LocalJobs_Staging.Clear();
@@ -267,6 +276,14 @@ void JobQueue::QueueDistributableJob( Job * job )
         MutexHolder m( m_DistributedJobsMutex );
 
         m_DistributableJobs_Available.Append( job );
+
+        // Jobs that have been preprocsssed and are ready to be distributed are
+        // added here. The order of completion of preprocessing doesn't correlate
+        // with the remining cost of compilation (and is often the reverse).
+        // We re-sort the distributable jobs when adding new ones to ensure the
+        // most expensive ones are at the end of the list and will be distributed first.
+        JobCostSorter sorter;
+        m_DistributableJobs_Available.Sort( sorter );
 
         job->SetDistributionState( Job::DIST_AVAILABLE );
     }
@@ -288,9 +305,10 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote )
         return nullptr;
     }
 
-    // building jobs in the order they are queued
-    Job * job = m_DistributableJobs_Available[ 0 ];
-    m_DistributableJobs_Available.PopFront();
+    // Jobs are sorted from least to most expensive, so we consume
+    // from the end of the list.
+    Job * job = m_DistributableJobs_Available.Top();
+    m_DistributableJobs_Available.Pop();
 
     ASSERT( job->GetDistributionState() == Job::DIST_AVAILABLE );
 
@@ -450,7 +468,7 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job )
 //------------------------------------------------------------------------------
 void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     {
         MutexHolder m( m_CompletedJobsMutex );
@@ -545,7 +563,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
 //------------------------------------------------------------------------------
 void JobQueue::MainThreadWait( uint32_t maxWaitMS )
 {
-    PROFILE_SECTION( "MainThreadWait" )
+    PROFILE_SECTION( "MainThreadWait" );
     m_MainThreadSemaphore.Wait( maxWaitMS );
 }
 
@@ -705,6 +723,8 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             }
             PROFILE_SECTION( profilingTag );
         #endif
+
+        BuildProfilerScope profileScope( job, WorkerThread::GetThreadIndex(), node->GetTypeName() );
         result = node->DoBuild( job );
     }
 

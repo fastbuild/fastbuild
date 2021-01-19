@@ -54,7 +54,7 @@ class Node : public Struct
     }
 
 public:
-    enum Type
+    enum Type : uint8_t
     {
         PROXY_NODE          = 0,
         COPY_FILE_NODE      = 1,
@@ -84,13 +84,13 @@ public:
         NUM_NODE_TYPES      // leave this last
     };
 
-    enum ControlFlag
+    enum ControlFlag : uint8_t
     {
         FLAG_NONE                   = 0x00,
         FLAG_ALWAYS_BUILD           = 0x01, // DoBuild is always performed (for e.g. directory listings)
     };
 
-    enum StatsFlag
+    enum StatsFlag : uint16_t
     {
         STATS_PROCESSED     = 0x01, // node was processed during the build
         STATS_BUILT         = 0x02, // node needed building, and was built
@@ -113,7 +113,7 @@ public:
         NODE_RESULT_OK_CACHE            // retrieved from the cache
     };
 
-    enum State
+    enum State : uint8_t
     {
         NOT_PROCESSED,      // no work done (either not part of this build, or waiting on static dependencies )
         PRE_DEPS_READY,     // pre-build deps processed
@@ -124,7 +124,7 @@ public:
         UP_TO_DATE,         // built, or confirmed as not needing building
     };
 
-    explicit Node( const AString & name, Type type, uint32_t controlFlags );
+    explicit Node( const AString & name, Type type, uint8_t controlFlags );
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
@@ -158,8 +158,6 @@ public:
 
     static Node *   LoadRemote( IOStream & stream );
     static void     SaveRemote( IOStream & stream, const Node * node );
-
-    bool Deserialize( NodeGraph & nodeGraph, IOStream & stream );
 
     static bool EnsurePathExistsForFile( const AString & name );
     static bool DoPreBuildFileDeletion( const AString & fileName );
@@ -210,7 +208,7 @@ protected:
 
     virtual void SaveRemote( IOStream & stream ) const;
 
-    inline uint32_t GetControlFlags() const { return m_ControlFlags; }
+    inline uint8_t GetControlFlags() const { return m_ControlFlags; }
 
     inline void SetState( State state ) { m_State = state; }
 
@@ -249,32 +247,34 @@ protected:
 
     void RecordStampFromBuiltFile();
 
-    AString m_Name;
-
-    State m_State;
-    mutable uint32_t m_BuildPassTag; // prevent multiple recursions into the same node
-    uint32_t        m_ControlFlags;
-    mutable uint32_t        m_StatsFlags;
-    uint64_t        m_Stamp;
-    uint32_t        m_RecursiveCost;
-    Type m_Type;
-    Node *          m_Next; // node map linked list pointer
-    uint32_t        m_NameCRC;
-    uint32_t m_LastBuildTimeMs; // time it took to do last known full build of this node
-    uint32_t m_ProcessingTime;  // time spent on this node
-    uint32_t m_CachingTime;  // time spent caching this node
-    mutable uint32_t m_ProgressAccumulator;
-    uint32_t        m_Index;
-    bool            m_Hidden;
-
-    Dependencies m_PreBuildDependencies;
-    Dependencies m_StaticDependencies;
-    Dependencies m_DynamicDependencies;
-
+    // Members are ordered to minimize wasted bytes due to padding.
+    // Most frequently accessed members are favored for placement in the first cache line.
+    AString             m_Name;                     // Full name. **Set by constructor**
+    State               m_State = NOT_PROCESSED;    // State in the current build
+    Type                m_Type;                     // Node type. **Set by constructor**
+    mutable uint16_t    m_StatsFlags = 0;           // Stats recorded in the current build
+    mutable uint32_t    m_BuildPassTag = 0;         // Prevent multiple recursions into the same node during a single sweep
+    uint64_t            m_Stamp = 0;                // "Stamp" representing this node for dependency comparissons
+    uint8_t             m_ControlFlags;             // Control build behavior special cases - Set by constructor
+    bool                m_Hidden = false;           // Hidden from -showtargets?
     #if defined( DEBUG )
-        mutable bool    m_IsSaved = false; // Help catch serialization errors
+        mutable bool    m_IsSaved = false;          // Help catch serialization errors
     #endif
+    // Note: Unused byte here
+    uint32_t            m_RecursiveCost = 0;        // Recursive cost used during task ordering
+    Node *              m_Next = nullptr;           // Node map in-place linked list pointer
+    uint32_t            m_NameCRC;                  // Hash of mName. **Set by constructor**
+    uint32_t            m_LastBuildTimeMs = 0;      // Time it took to do last known full build of this node
+    uint32_t            m_ProcessingTime = 0;       // Time spent on this node during this build
+    uint32_t            m_CachingTime = 0;          // Time spent caching this node
+    mutable uint32_t    m_ProgressAccumulator = 0;  // Used to estimate build progress percentage
+    uint32_t            m_Index = INVALID_NODE_INDEX;   // Index into flat array of all nodes
 
+    Dependencies        m_PreBuildDependencies;
+    Dependencies        m_StaticDependencies;
+    Dependencies        m_DynamicDependencies;
+
+    // Static Data
     static const char * const s_NodeTypeNames[];
 };
 

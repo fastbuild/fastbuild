@@ -121,22 +121,11 @@ REFLECT_END( Node )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Node::Node( const AString & name, Type type, uint32_t controlFlags )
-    : m_State( NOT_PROCESSED )
-    , m_BuildPassTag( 0 )
-    , m_ControlFlags( controlFlags )
-    , m_StatsFlags( 0 )
-    , m_Stamp( 0 )
-    , m_RecursiveCost( 0 )
-    , m_Type( type )
-    , m_Next( nullptr )
-    , m_LastBuildTimeMs( 0 )
-    , m_ProcessingTime( 0 )
-    , m_CachingTime( 0 )
-    , m_ProgressAccumulator( 0 )
-    , m_Index( INVALID_NODE_INDEX )
-    , m_Hidden( false )
+Node::Node( const AString & name, Type type, uint8_t controlFlags )
 {
+    m_Type = type;
+    m_ControlFlags = controlFlags;
+
     SetName( name );
 
     // Compile time check to ensure name vector is in sync
@@ -362,23 +351,13 @@ void Node::SetLastBuildTime( uint32_t ms )
 /*static*/ Node * Node::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
     // read type
-    uint32_t nodeType;
+    uint8_t nodeType;
     if ( stream.Read( nodeType ) == false )
     {
         return nullptr;
     }
 
-    PROFILE_SECTION(Node::GetTypeName((Type)nodeType));
-
-    // read stamp (but not for file nodes)
-    uint64_t stamp( 0 );
-    if ( nodeType != Node::FILE_NODE )
-    {
-        if ( stream.Read( stamp ) == false )
-        {
-            return nullptr;
-        }
-    }
+    PROFILE_SECTION( Node::GetTypeName( (Type)nodeType ) );
 
     // Name of node
     AStackString<> name;
@@ -397,8 +376,31 @@ void Node::SetLastBuildTime( uint32_t ms )
         return n;
     }
 
+    // Read stamp
+    uint64_t stamp;
+    if ( stream.Read( stamp ) == false )
+    {
+        return nullptr;
+    }
+
+    // Build time
+    uint32_t lastTimeToBuild;
+    if ( stream.Read( lastTimeToBuild ) == false )
+    {
+        return nullptr;
+    }
+    n->SetLastBuildTime( lastTimeToBuild );    
+
+    // Dependencies
+    if ( ( n->m_PreBuildDependencies.Load( nodeGraph, stream ) == false ) ||
+         ( n->m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
+         ( n->m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
+    {
+        return nullptr;
+    }
+
     // Deserialize properties
-    if ( n->Deserialize( nodeGraph, stream ) == false )
+    if ( Deserialize( stream, n, *n->GetReflectionInfoV() ) == false )
     {
         return nullptr;
     }
@@ -423,15 +425,8 @@ void Node::SetLastBuildTime( uint32_t ms )
     ASSERT( node );
 
     // save type
-    uint32_t nodeType = (uint32_t)node->GetType();
+    uint8_t nodeType = node->GetType();
     stream.Write( nodeType );
-
-    // save stamp (but not for file nodes)
-    if ( nodeType != Node::FILE_NODE )
-    {
-        uint64_t stamp = node->GetStamp();
-        stream.Write( stamp );
-    }
 
     // Save Name
     stream.Write( node->m_Name );
@@ -440,11 +435,23 @@ void Node::SetLastBuildTime( uint32_t ms )
         node->MarkAsSaved();
     #endif
 
+    // FileNodes don't need most things serialized:
+    // - they have no dependencies (they are leaf nodes)
+    // - they take sub 1ms to check, so don't need their build time saved
+    // - their stamp is obtained every build, so doesn't need saving
     if ( nodeType == Node::FILE_NODE )
     {
         return;
     }
 
+    // Stamp
+    const uint64_t stamp = node->GetStamp();
+    stream.Write( stamp );
+
+    // Build time
+    const uint32_t lastBuildTime = node->GetLastBuildTime();
+    stream.Write( lastBuildTime );
+    
     // Deps
     node->m_PreBuildDependencies.Save( stream );
     node->m_StaticDependencies.Save( stream );
@@ -589,14 +596,14 @@ void Node::SetLastBuildTime( uint32_t ms )
                     const void * structBase = propertyS.GetStructInArray( base, (size_t)i );
                     Serialize( stream, structBase, *propertyS.GetStructReflectionInfo() );
                 }
-                return;
             }
             else
             {
                 const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();
                 const void * structBase = propertyS.GetStructBase( base );
-                return Serialize( stream, structBase, *structRI );
+                Serialize( stream, structBase, *structRI );
             }
+            return;
         }
         default:
         {
@@ -604,27 +611,6 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
     }
     ASSERT( false ); // Unsupported type
-}
-
-// Deserialize
-//------------------------------------------------------------------------------
-bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
-{
-    ASSERT( m_PreBuildDependencies.IsEmpty() );
-    ASSERT( m_StaticDependencies.IsEmpty() );
-    ASSERT( m_DynamicDependencies.IsEmpty() );
-
-    // Deps
-    if ( ( m_PreBuildDependencies.Load( nodeGraph, stream ) == false ) ||
-         ( m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
-         ( m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
-    {
-        return false;
-    }
-
-    // Properties
-    const ReflectionInfo * const ri = GetReflectionInfoV();
-    return Deserialize( stream, this, *ri );
 }
 
 // Deserialize
@@ -887,6 +873,7 @@ void Node::ReplaceDummyName( const AString & newName )
     // Clang/GCC Style
     // Convert:
     //     Core/Mem/Mem.h:23:1: warning: some warning text
+    //     .\Tools/FBuild/FBuildCore/Graph/Node.h(294,24): warning: some warning text
     // To:
     //     <path>\Core\Mem\Mem.h(23,1): warning: some warning text
     //
@@ -945,6 +932,21 @@ void Node::ReplaceDummyName( const AString & newName )
 /*static*/ void Node::FixupPathForVSIntegration_GCC( AString & line, const char * tag )
 {
     AStackString<> beforeTag( line.Get(), tag );
+
+    // is the error position in (x,y) style? (As opposed to :x:y: style)
+    const bool commaStyle = ( ( beforeTag.Find( ':' ) == nullptr ) && beforeTag.Find( ',' ) );
+    if ( commaStyle )
+    {
+        // Convert brace style to : style
+        const uint32_t count = beforeTag.Replace( '(', ':' ) +
+                               beforeTag.Replace( ',', ':' ) +
+                               beforeTag.Replace( ')', ':' );
+        if ( count != 3 )
+        {
+            return; // Unexpected format
+        }
+    }
+
     Array< AString > tokens;
     beforeTag.Tokenize( tokens, ':' );
     const size_t numTokens = tokens.GetSize();
@@ -956,8 +958,10 @@ void Node::ReplaceDummyName( const AString & newName )
     // are last two tokens numbers?
     int row, column;
     PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
     if ( ( sscanf( tokens[ numTokens - 1 ].Get(), "%i", &column ) != 1 ) || // TODO:C Consider using sscanf_s
          ( sscanf( tokens[ numTokens - 2 ].Get(), "%i", &row ) != 1 ) ) // TODO:C Consider using sscanf_s
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
     PRAGMA_DISABLE_POP_MSVC // 4996
     {
         return; // failed to extract numbers where we expected them
@@ -1062,7 +1066,6 @@ void Node::ReplaceDummyName( const AString & newName )
     //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
     AStackString<> buffer;
     buffer.Format( "%s(%s,1): %s %s: ", fileName.Get(), warningLine, problemType, warningNum );
-    buffer.Replace( '/', '\\' );
 
     // add rest of warning
     for ( size_t i=7; i < tokens.GetSize(); ++i )

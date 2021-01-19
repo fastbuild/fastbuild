@@ -18,7 +18,7 @@ class OSMenu : public OSWidget
 {
 public:
     explicit OSMenu( OSWindow * parentWindow );
-    ~OSMenu();
+    virtual ~OSMenu() override;
 
     void Init();
 

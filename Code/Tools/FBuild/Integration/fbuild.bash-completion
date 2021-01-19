@@ -17,18 +17,21 @@ _fbuild() {
 		-continueafterdbmove
 		-dist
 		-distverbose
-		-fastcancel
+		-dot
+		-dotfull
 		-fixuperrorpaths
 		-forceremote
 		-help
 		-ide
 		-j
 		-monitor
+		-nofastcancel
 		-nolocalrace
 		-noprogress
 		-nostoponerror
 		-nosummaryonerror
 		-nounity
+		-profile
 		-progress
 		-quiet
 		-report

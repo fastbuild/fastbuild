@@ -76,7 +76,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileExists( const char * fileName )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 #if defined( __WINDOWS__ )
     // see if we can get attributes
     DWORD attributes = GetFileAttributes( fileName );
@@ -127,7 +127,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileDelete( const char * fileName )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 #if defined( __WINDOWS__ )
     BOOL result = DeleteFile( fileName );
     if ( result == FALSE )
@@ -175,7 +175,7 @@
             }
 
             // try to remove read-only flag on dst file
-            dwAttrs = ( dwAttrs & ~FILE_ATTRIBUTE_READONLY );
+            dwAttrs = ( dwAttrs & (uint32_t)(~FILE_ATTRIBUTE_READONLY) );
             if ( FALSE == SetFileAttributes( dstFileName, dwAttrs ) )
             {
                 return false; // failed to remove read-only flag
@@ -760,7 +760,7 @@
 
         // determine the new attributes
         DWORD dwNewAttrs = ( readOnly ) ? ( dwAttrs | FILE_ATTRIBUTE_READONLY )
-                                        : ( dwAttrs & ~FILE_ATTRIBUTE_READONLY );
+                                        : ( dwAttrs & (uint32_t)(~FILE_ATTRIBUTE_READONLY) );
 
         // nothing to do if they are the same
         if ( dwNewAttrs == dwAttrs )
@@ -1449,7 +1449,7 @@
         DWORD valueSize = sizeof(DWORD);
         const LONG result = ::RegQueryValueEx( key,
                                                 "LongPathsEnabled",
-                                                0,
+                                                nullptr,
                                                 nullptr,
                                                 reinterpret_cast<LPBYTE>( &value ),
                                                 &valueSize );

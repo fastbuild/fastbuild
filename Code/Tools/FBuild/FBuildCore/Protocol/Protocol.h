@@ -29,13 +29,13 @@ class TCPConnectionPool;
 namespace Protocol
 {
     enum : uint16_t { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
-    enum { PROTOCOL_VERSION = 21 };
+    enum { PROTOCOL_VERSION = 22 };
 
     enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
 
     // Identifiers for all unique messages
     //------------------------------------------------------------------------------
-    enum MessageType
+    enum MessageType : uint8_t
     {
         MSG_CONNECTION          = 1, // Server <- Client : Initial handshake
         MSG_STATUS              = 2, // Server <- Client : Update status (work available)
@@ -77,15 +77,15 @@ namespace Protocol
         inline bool         HasPayload() const { return m_HasPayload; }
 
     protected:
-        IMessage( MessageType msgType, uint32_t msgSize, bool hasPayload );
+        IMessage( MessageType msgType, uint8_t msgSize, bool hasPayload );
 
         // properties common to all messages
         MessageType     m_MsgType;
-        uint32_t        m_MsgSize;
+        uint8_t         m_MsgSize;
         bool            m_HasPayload;
-        char            m_Padding1[ 3 ];
+        char            m_Padding1[ 1 ];
     };
-    static_assert( sizeof( IMessage ) == 9 + 3/*padding*/, "Message base class has incorrect size" );
+    static_assert( sizeof( IMessage ) == 3 + 1/*padding*/, "Message base class has incorrect size" );
 
     // MsgConnection
     //------------------------------------------------------------------------------

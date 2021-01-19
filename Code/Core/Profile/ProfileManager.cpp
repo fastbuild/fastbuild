@@ -38,19 +38,27 @@ struct ProfileEvent
 //------------------------------------------------------------------------------
 void FormatU64( uint64_t value, char * outBuffer )
 {
-    char tmp[ 24 ]; // 20 bytes needed for max U64 value: 18,446,744,073,709,551,615
-    char * pos = tmp;
-    while ( value )
+    if ( value == 0 )
     {
-        *pos = ( '0' + (uint8_t)( value % 10 ) );
-        ++pos;
-        value /= 10;
-    }
-    while ( pos > tmp )
-    {
-        --pos;
-        *outBuffer = *pos;
+        *outBuffer = '0';
         ++outBuffer;
+    }
+    else
+    {
+        char tmp[ 24 ]; // 20 bytes needed for max U64 value: 18,446,744,073,709,551,615
+        char * pos = tmp;
+        while ( value )
+        {
+            *pos = ( '0' + (char)( value % 10 ) );
+            ++pos;
+            value /= 10;
+        }
+        while ( pos > tmp )
+        {
+            --pos;
+            *outBuffer = *pos;
+            ++outBuffer;
+        }
     }
     *outBuffer = 0;
 }
@@ -208,7 +216,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 //------------------------------------------------------------------------------
 /*static*/ void ProfileManager::Synchronize()
 {
-    PROFILE_SECTION( "ProfileManager::Synchronize" )
+    PROFILE_SECTION( "ProfileManager::Synchronize" );
     SynchronizeNoTag();
 }
 
@@ -234,7 +242,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     // write all the events we have
     const ProfileEventInfo * const end = infos.End();
     AStackString< 8192 > buffer;
-    const double freqMul = ( Timer::GetFrequencyInvFloatMS() * 1000.0 );
+    const double freqMul = ( (double)Timer::GetFrequencyInvFloatMS() * 1000.0 );
     if ( g_ProfileEventLog.IsOpen() )
     {
         for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )

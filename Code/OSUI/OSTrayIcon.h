@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h" // TODO: Remove need for this
-    #include <Shellapi.h> // TODO: Remove need for this
+    #include <shellapi.h> // TODO: Remove need for this
 #endif
 
 // Forward Declarations

@@ -1,15 +1,13 @@
 // Windows
 //------------------------------------------------------------------------------
 
-// Windows SDK version is chosen automatically depending on the Visual Studio version
-// 2015 and newer uses Windows 10 SDK
+// The Windows 10 SDK is used regardless of which OS version is being targetted
 #define USING_WINDOWS10_SDK
 
 // Activate
 //------------------------------------------------------------------------------
 #if USING_WINDOWS10_SDK
     #include "Windows10SDK.bff"
-    .WindowsSDK_X64             = .Windows10_SDK_X64
     Alias( 'ResourceCompiler' ) { .Targets = 'ResourceCompiler-Windows10' }
 #endif
 

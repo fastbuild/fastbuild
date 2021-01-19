@@ -44,7 +44,7 @@ const AString & CompilationDatabase::Generate( const NodeGraph & nodeGraph, Depe
     visited.SetSize( numNodes );
     memset( visited.Begin(), 0, numNodes );
 
-    VisitNodes( dependencies, visited );
+    VisitNodes( nodeGraph, dependencies, visited );
 
     // Remove last comma
     for ( uint32_t i = m_Output.GetLength() - 1; i != 0; --i )
@@ -69,7 +69,9 @@ const AString & CompilationDatabase::Generate( const NodeGraph & nodeGraph, Depe
 
 // VisitNodes
 //------------------------------------------------------------------------------
-void CompilationDatabase::VisitNodes( const Dependencies & dependencies, Array< bool > & visited )
+void CompilationDatabase::VisitNodes( const NodeGraph & nodeGraph,
+                                      const Dependencies & dependencies,
+                                      Array< bool > & visited )
 {
     for ( const Dependency & dep : dependencies )
     {
@@ -84,9 +86,9 @@ void CompilationDatabase::VisitNodes( const Dependencies & dependencies, Array< 
         }
         visited[ nodeIndex ] = true;
 
-        VisitNodes( node->GetPreBuildDependencies(), visited );
-        VisitNodes( node->GetStaticDependencies(), visited );
-        VisitNodes( node->GetDynamicDependencies(), visited );
+        VisitNodes( nodeGraph, node->GetPreBuildDependencies(), visited );
+        VisitNodes( nodeGraph, node->GetStaticDependencies(), visited );
+        VisitNodes( nodeGraph, node->GetDynamicDependencies(), visited );
 
         switch ( node->GetType() )
         {
@@ -98,12 +100,12 @@ void CompilationDatabase::VisitNodes( const Dependencies & dependencies, Array< 
             }
             case Node::OBJECT_LIST_NODE:
             {
-                HandleObjectListNode( node->CastTo< ObjectListNode >() );
+                HandleObjectListNode( nodeGraph, node->CastTo< ObjectListNode >() );
                 break;
             }
             case Node::LIBRARY_NODE:
             {
-                HandleObjectListNode( node->CastTo< LibraryNode >() );
+                HandleObjectListNode( nodeGraph, node->CastTo< LibraryNode >() );
                 break;
             }
             default: break;
@@ -113,16 +115,19 @@ void CompilationDatabase::VisitNodes( const Dependencies & dependencies, Array< 
 
 // HandleObjectListNode
 //------------------------------------------------------------------------------
-void CompilationDatabase::HandleObjectListNode( ObjectListNode * node )
+void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, ObjectListNode * node )
 {
     ObjectListContext ctx;
     ctx.m_DB = this;
     ctx.m_ObjectListNode = node;
 
-    const CompilerNode * compiler = node->GetCompiler();
-    const bool isMSVC = ( compiler->GetCompilerFamily() == CompilerNode::MSVC );
+    const AString & compilerName = node->GetCompiler();
+    const Node * compilerNode = nodeGraph.FindNode( compilerName );
+    const bool isMSVC = compilerNode &&
+                        ( compilerNode->GetType() == Node::COMPILER_NODE ) &&
+                        ( compilerNode->CastTo< CompilerNode >()->GetCompilerFamily() == CompilerNode::MSVC );
 
-    ctx.m_CompilerEscaped = compiler->GetExecutable();
+    ctx.m_CompilerEscaped = compilerName;
     JSONEscape( ctx.m_CompilerEscaped );
 
     // Prepare arguments: tokenize, remove problematic arguments, remove extra quoting and escape.

@@ -30,7 +30,7 @@ public:
     #else
         static        UnitTestManager & Get();
     #endif
-    static inline bool                  IsValid() { return ( s_Instance != 0 ); }
+    static inline bool IsValid() { return ( s_Instance != nullptr ); }
 
     // tests register (using the test declaration macros) via this interface
     static void RegisterTestGroup( UnitTest * testGroup );
@@ -48,15 +48,14 @@ private:
     Timer       m_Timer;
 
     enum : uint32_t { MAX_TESTS = 1024 };
-    struct TestInfo
+    class TestInfo
     {
-        TestInfo() :m_TestGroup( nullptr ), m_TestName( nullptr ), m_Passed( false ), m_MemoryLeaks( false ), m_TimeTaken( 0.0f ) {}
-
-        UnitTest *      m_TestGroup;
-        const char *    m_TestName;
-        bool            m_Passed;
-        bool            m_MemoryLeaks;
-        float           m_TimeTaken;
+    public:
+        UnitTest *      m_TestGroup = nullptr;
+        const char *    m_TestName = nullptr;
+        bool            m_Passed = false;
+        bool            m_MemoryLeaks = false;
+        float           m_TimeTaken = 0.0f;
     };
     static uint32_t     s_NumTests;
     static TestInfo     s_TestInfos[ MAX_TESTS ];

@@ -86,7 +86,9 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
     // Extract primary version as an int
     uint32_t shortVersionInt = 0;
     PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
     VERIFY( sscanf( shortVersion.Get(), "%u", &shortVersionInt ) == 1 );
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
     PRAGMA_DISABLE_POP_MSVC // 4996
 
     // header

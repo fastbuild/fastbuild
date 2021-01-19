@@ -34,7 +34,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <psapi.h>
+    #include <Psapi.h>
 #endif
 #include <stdio.h>
 
@@ -108,13 +108,17 @@ Worker::~Worker()
 //------------------------------------------------------------------------------
 int32_t Worker::Work()
 {
+    PROFILE_FUNCTION;
+
     // Open GUI or setup console
     if ( InConsoleMode() )
     {
         #if __WINDOWS__
             VERIFY( ::AllocConsole() );
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'freopen' is deprecated: This function or variable may be unsafe...
             VERIFY( freopen( "CONOUT$", "w", stdout ) ); // TODO:C consider using freopen_s
+            PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
             PRAGMA_DISABLE_POP_MSVC // 4996
         #endif
 
@@ -148,6 +152,8 @@ int32_t Worker::Work()
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Worker::WorkThreadWrapper( void * userData )
 {
+    PROFILE_SET_THREAD_NAME( "WorkerThread" );
+
     Worker * worker = reinterpret_cast<Worker *>( userData );
     return worker->WorkThread();
 }
@@ -156,6 +162,8 @@ int32_t Worker::Work()
 //------------------------------------------------------------------------------
 uint32_t Worker::WorkThread()
 {
+    PROFILE_FUNCTION;
+
     // Initial status message
     StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
 
@@ -237,9 +245,9 @@ bool Worker::HasEnoughDiskSpace()
 
         static constexpr uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
 
-        unsigned __int64 freeBytesAvailable = 0;
-        unsigned __int64 totalNumberOfBytes = 0;
-        unsigned __int64 totalNumberOfFreeBytes = 0;
+        uint64_t freeBytesAvailable = 0;
+        uint64_t totalNumberOfBytes = 0;
+        uint64_t totalNumberOfFreeBytes = 0;
 
         // Check available disk space of temp path
         AStackString<> tmpPath;
@@ -303,6 +311,8 @@ bool Worker::HasEnoughMemory()
 //------------------------------------------------------------------------------
 void Worker::UpdateAvailability()
 {
+    PROFILE_FUNCTION;
+
     // Check disk space
     const bool hasEnoughDiskSpace = HasEnoughDiskSpace();
     const bool hasEnoughMemory = HasEnoughMemory();
@@ -360,6 +370,8 @@ void Worker::UpdateAvailability()
 //------------------------------------------------------------------------------
 void Worker::UpdateUI()
 {
+    PROFILE_FUNCTION;
+
     // throttle UI updates
     if ( m_UIUpdateTimer.GetElapsed() < 0.25f )
     {
@@ -426,6 +438,8 @@ void Worker::UpdateUI()
 //------------------------------------------------------------------------------
 void Worker::CheckForExeUpdate()
 {
+    PROFILE_FUNCTION;
+
     // if a restart is pending, can we restart yet?
     if ( m_RestartNeeded )
     {

@@ -47,7 +47,7 @@ private:
 			Vspte_CleanUp();
 			::FreeLibrary(_hVSProjTypeExtractor);
 			//
-			_hVSProjTypeExtractor = NULL;
+			_hVSProjTypeExtractor = nullptr;
 			_Vspte_GetProjData = nullptr;
 			_Vspte_CleanUp = nullptr;
 			_Vspte_DeallocateProjDataCfgArray = nullptr;
@@ -55,20 +55,15 @@ private:
 	}
 	void Load()
 	{
-		try {
-			if (!_hVSProjTypeExtractor)
-			{
-				_hVSProjTypeExtractor = ::LoadLibrary("VSProjTypeExtractor");
-				if (_hVSProjTypeExtractor)
-				{
-					_Vspte_GetProjData = reinterpret_cast<Type_GetProjData>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_GetProjData"));
-					_Vspte_CleanUp = reinterpret_cast<Type_CleanUp>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_CleanUp"));
-					_Vspte_DeallocateProjDataCfgArray = reinterpret_cast<Type_DeallocateProjDataCfgArray>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_DeallocateProjDataCfgArray"));
-				}
-			}
-		}
-		catch (...)
+		if (!_hVSProjTypeExtractor)
 		{
+			_hVSProjTypeExtractor = ::LoadLibrary("VSProjTypeExtractor");
+			if (_hVSProjTypeExtractor)
+			{
+				_Vspte_GetProjData = reinterpret_cast<Type_GetProjData>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_GetProjData"));
+				_Vspte_CleanUp = reinterpret_cast<Type_CleanUp>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_CleanUp"));
+				_Vspte_DeallocateProjDataCfgArray = reinterpret_cast<Type_DeallocateProjDataCfgArray>(::GetProcAddress(_hVSProjTypeExtractor, "Vspte_DeallocateProjDataCfgArray"));
+			}
 		}
 	}
 	void Vspte_CleanUp()
@@ -82,7 +77,7 @@ private:
 	Type_GetProjData _Vspte_GetProjData = nullptr;
 	Type_CleanUp _Vspte_CleanUp = nullptr;
 	Type_DeallocateProjDataCfgArray _Vspte_DeallocateProjDataCfgArray = nullptr;
-	HMODULE _hVSProjTypeExtractor = NULL;
+	HMODULE _hVSProjTypeExtractor = nullptr;
 
 
 public:
@@ -97,11 +92,11 @@ public:
 
 	/** @brief  Queries if VSProjTypeExtractor.dll was successfully loaded
 
-		Helpful for avoiding to call @Vspte_GetProjData, @Vspte_DeallocateProjDataCfgArray or @Vspte_CleanUp without effect
+		Helpful for avoiding to call Vspte_GetProjData, Vspte_DeallocateProjDataCfgArray or Vspte_CleanUp without effect
 	*/
 	bool IsLoaded()
 	{
-		return _hVSProjTypeExtractor != NULL && _Vspte_GetProjData != nullptr && _Vspte_CleanUp != nullptr && _Vspte_DeallocateProjDataCfgArray != nullptr;
+		return _hVSProjTypeExtractor != nullptr && _Vspte_GetProjData != nullptr && _Vspte_CleanUp != nullptr && _Vspte_DeallocateProjDataCfgArray != nullptr;
 	}
 
 	/** @brief  Retrieves basic project data from an existing project
@@ -124,9 +119,9 @@ public:
 		}
 	}
 
-	/** @brief  Deallocates the configurations / platforms array of an ExtractedProjData instance already used in a call to @Vspte_GetProjData
+	/** @brief  Deallocates the configurations / platforms array of an ExtractedProjData instance already used in a call to Vspte_GetProjData
 
-		After a call to @Vspte_GetProjData and copying the data you're interested in from the ExtractedProjData object, you should call this
+		After a call to Vspte_GetProjData and copying the data you're interested in from the ExtractedProjData object, you should call this
 		in order to deallocate the configurations / platforms array with the correct runtime
 	*/
 	void Vspte_DeallocateProjDataCfgArray(ExtractedProjData* pProjData)

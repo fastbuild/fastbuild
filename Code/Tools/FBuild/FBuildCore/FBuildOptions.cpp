@@ -134,8 +134,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 const int sizeIndex = ( i + 1 );
                 PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
                 if ( ( sizeIndex >= argc ) ||
                      ( sscanf( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 ) // TODO:C Consider using sscanf_s
+                PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
                 PRAGMA_DISABLE_POP_MSVC // 4996
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <sizeMiB> for '-cachetrim' argument\n" );
@@ -158,9 +160,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 const int sizeIndex = ( i + 1 );
                 PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
                 if ( ( sizeIndex >= argc ) ||
                      ( sscanf( argv[ sizeIndex ], "%i", &m_CacheCompressionLevel ) != 1 ) || // TODO:C Consider using sscanf_s
                      ( ( m_CacheCompressionLevel < -128 ) || ( m_CacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
+                PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
                 PRAGMA_DISABLE_POP_MSVC // 4996
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <level> for '-cachecompressionlevel' argument\n" );
@@ -222,9 +226,22 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowBuildReason = true;
                 continue;
             }
+            else if ( thisArg == "-dot" )
+            {
+                m_GenerateDotGraph = true;
+                m_GenerateDotGraphFull = false;
+                continue;
+            }
+            else if ( thisArg == "-dotfull" )
+            {
+                m_GenerateDotGraph = true;
+                m_GenerateDotGraphFull = true;
+                continue;
+            }
             else if ( thisArg == "-fastcancel" )
             {
-                m_FastCancel = true;
+                // This is on by default now
+                OUTPUT( "FBuild: Warning: -fastcancel is deprecated. (\"fastcancel\" is on by default)\n" );
                 continue;
             }
             else if ( thisArg == "-fixuperrorpaths" )
@@ -255,8 +272,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 continue;
             }
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
             else if ( thisArg.BeginsWith( "-j" ) &&
                       sscanf( thisArg.Get(), "-j%u", &m_NumWorkerThreads ) == 1 ) // TODO:C Consider using sscanf_s
+            PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
             PRAGMA_DISABLE_POP_MSVC // 4996
             {
                 // only accept within sensible range
@@ -270,15 +289,14 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_EnableMonitor = true;
                 continue;
             }
+            else if ( thisArg == "-nofastcancel" )
+            {
+                m_FastCancel = false;
+                continue;
+            }
             else if (thisArg == "-nolocalrace")
             {
                 m_AllowLocalRace = false;
-                continue;
-            }
-            else if ( thisArg == "-nooutputbuffering" )
-            {
-                // this doesn't do anything any more
-                OUTPUT( "FBuild: Warning: -nooutputbuffering is deprecated.\n" );
                 continue;
             }
             else if ( thisArg == "-noprogress" )
@@ -301,6 +319,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-nounity" )
             {
                 m_NoUnity = true;
+                continue;
+            }
+            else if ( thisArg == "-profile" )
+            {
+                m_Profile = true;
                 continue;
             }
             else if ( thisArg == "-progress" )
@@ -569,7 +592,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -debug            (Windows) Break at startup, to attach debugger.\n"
             " -dist             Allow distributed compilation.\n"
             " -distverbose      Print detailed info for distributed compilation.\n"
-            " -fastcancel       (Experimental) Fast cancellation on build failure.\n"
+            " -dot[full]        Emit known dependency tree info for specified targets to an\n"
+            "                   fbuild.gv file in DOT format.\n"
             " -fixuperrorpaths  Reformat error paths to be Visual Studio friendly.\n"
             " -forceremote      Force distributable jobs to only be built remotely.\n"
             " -help             Show this help.\n"
@@ -579,11 +603,13 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -j<x>             Explicitly set LOCAL worker thread count X, instead of\n"
             "                   default of hardware thread count.\n"
             " -monitor          Emit a machine-readable file while building.\n"
+            " -nofastcancel     Disable aborting other tasks as soon any task fails.\n"
             " -nolocalrace      Disable local race of remotely started jobs.\n"
             " -noprogress       Don't show the progress bar while building.\n"
             " -nounity          (Experimental) Build files individually, ignoring Unity.\n"
             " -nostoponerror    On error, favor building as much as possible.\n"
             " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"
+            " -profile          Output an fbuild_profiling.json describing the build.\n"
             " -progress         Show build progress bar even if stdout is redirected.\n"
             " -quiet            Don't show build output.\n"
             " -report           Ouput report.html at build end. (Increases build time)\n"
@@ -616,7 +642,7 @@ void FBuildOptions::DisplayVersion() const
         #define VERSION_CONFIG ""
     #endif
     OUTPUT( "FASTBuild " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
-            "Copyright 2012-2020 Franta Fulin - https://www.fastbuild.org\n" );
+            "Copyright 2012-2021 Franta Fulin - https://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }
 

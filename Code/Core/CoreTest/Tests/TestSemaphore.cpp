@@ -19,6 +19,9 @@ private:
     void CreateDestroy() const;
     void WaitForSignal() const;
     void WaitTimeout() const;
+    #if defined( __WINDOWS__ )
+        void MaxCount() const;
+    #endif
 
     // Internal helpers
     static uint32_t WaitForSignal_Thread( void * userData );
@@ -30,6 +33,9 @@ REGISTER_TESTS_BEGIN( TestSemaphore )
     REGISTER_TEST( CreateDestroy )
     REGISTER_TEST( WaitForSignal )
     REGISTER_TEST( WaitTimeout )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( MaxCount )
+    #endif
 REGISTER_TESTS_END
 
 // CreateDestroy
@@ -66,10 +72,7 @@ void TestSemaphore::WaitForSignal() const
 /*static*/ uint32_t TestSemaphore::WaitForSignal_Thread( void * userData )
 {
     Semaphore * s = static_cast< Semaphore * >( userData );
-    for ( size_t i = 0; i < 100; ++i )
-    {
-        s->Signal();
-    }
+    s->Signal( 100 );
     return 0;
 }
 
@@ -80,10 +83,51 @@ void TestSemaphore::WaitTimeout() const
     Timer t;
 
     Semaphore s;
-    s.Wait( 50 ); // wait 50ms
+
+    // Check for signalled
+    {
+        s.Signal();
+        const bool signalled = s.Wait( 1 ); // Wait 1ms
+        TEST_ASSERT( signalled == true ); // Should be signalled (should not time out)
+    }
+
+    // Check for timeout
+    {
+        const bool signalled = s.Wait( 1 ); // Wait 1ms
+        TEST_ASSERT( signalled == false ); // Should not be signalled (should time out)
+    }
 
     // ensure some sensible time has elapsed
-    ASSERT( t.GetElapsed() > 0.025f ); // 25ms (allow wide margin of error)
+    ASSERT( t.GetElapsed() > 0.001f ); // 1ms (allow wide margin of error)
 }
+
+// MaxCount
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    void TestSemaphore::MaxCount() const
+    {
+        // Only Windows supports a signall count limit for Semaphores
+        
+        // Create sempahore with a max count
+        Semaphore s( 1 );
+
+        // Signal with individual calls
+        {
+            // Signal more than the max count
+            s.Signal(); // This should signal
+            s.Signal(); // This should gracefully fail
+            TEST_ASSERT( s.Wait( 1 ) == true );    // First wait should see signalled state
+            TEST_ASSERT( s.Wait( 1 ) == false );   // Second wait should time out
+        }
+
+        // Signal with single call
+        {
+            // Signal more than the max count
+            s.Signal( 2 ); // This should signal once
+            TEST_ASSERT( s.Wait( 1 ) == true );    // First wait should see signalled state
+            TEST_ASSERT( s.Wait( 1 ) == false );   // Second wait should time out
+        }
+    }
+#endif
 
 //------------------------------------------------------------------------------

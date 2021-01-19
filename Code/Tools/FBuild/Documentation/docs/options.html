@@ -84,8 +84,8 @@
     <td>Enable detailed logging for distributed compilation.</td>
   </tr>
   <tr>
-    <td><a href="#fastcancel">-fastcancel</a></td>
-    <td>[Experimental] Active fast cancellation on build failure.</td>
+    <td><a href="#dot">-dot[full]</a></td>
+    <td>Generate an fbuild.gv DOT file for known dependencies.</td>
   </tr>
   <tr>
     <td><a href="#fixuperrorpaths">-fixuperrorpaths</a></td>
@@ -112,6 +112,10 @@
     <td>Output a machine readable file for use by 3rd party tools.</td>
   </tr>
   <tr>
+    <td><a href="#nofastcancel">-nofastcancel</a></td>
+    <td>Disable aborting other tasks as soon any task fails.</td>
+  </tr>
+  <tr>
     <td><a href="#nolocalrace">-nolocalrace</a></td>
     <td>Disable local race of remotely started jobs.</td>
   </tr>
@@ -130,6 +134,10 @@
   <tr>
     <td><a href="#nounity">-nounity</a></td>
     <td>[Experimental] Individually build all files normally built in Unity.</td>
+  </tr>
+  <tr>
+    <td><a href="#profile">-profile</a></td>
+    <td>Output a Chrome tracing format fbuild_profile.json describing the build.</td>
   </tr>
   <tr>
     <td><a href="#progress">-progress</a></td>
@@ -344,11 +352,18 @@ be reproduced in the debugger.</p>
 <p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
 </div>
 
-    <div class='newsitemheader' id="fastcancel">-fastcancel</div>
+    <div class='newsitemheader' id="dot">-dot[full]</div>
     <div class='newsitembody'>
-<p><b>[Experimental]</b> Activate fast cancellation on build failure.</p>
-<p>Normally, when a build fails, FASTBuild will stop spawning new tasks, but will allow any other concurrently running processes to complete. In some cases, these tasks can
-take a long time to complete. When activated, the -fastcancel option will allow FASTBuild to instead terminate those concurrent jobs.</p>
+<p>Generate an fbuild.gv DOT file for known dependencies which can be visualized in various third party tools
+such as <a href="https://graphviz.org/">Graphviz</a>.</p>
+<p>Example:</p>
+<div class='code'>fbuild.exe -dot Game-x86-Debug</div>
+<p>If no target is specified, "all" is used.</p>
+<p>By default, all leaf FileNodes (typically source files) are pruned from the graph. A full graph can be emitted
+by using <b>-dotfull</b>.</p>
+<p><b>NOTE:</b> The dependencies shown will reflect the state as of the last completed build.
+i.e. dependencies that would be discovered during the next build will not be shown.</p>
+<p><b>NOTE:</b> Large graphs may not be handled well by some visualizers.</p>
 </div>
 
     <div class='newsitemheader' id="fixuperrorpaths">-fixuperrorpaths</div>
@@ -416,6 +431,14 @@ of FASTBuild to distribute work efficiently.</p>
 can be monitored by 3rd party applications to provide enhanced visualization of the build state.</p>
 </div>
 
+              <div class='newsitemheader' id="nofastcancel">-nofastcancel</div>
+    <div class='newsitembody'>
+<p>Disable aborting other tasks as soon any task fails.</p>
+<p>Normally, when a task fails, any tasks running on other threads are aborted (external processes are terminated), allowing
+builds with errors to fail quickly. If this behavior is undesirable, it can be disabled with -nofastcancel. If "fastcancel" is
+disabled, any already started tasks will be allowed to complete.</p>
+</div>
+
               <div class='newsitemheader' id="nolocalrace">-nolocalrace</div>
     <div class='newsitembody'>
 <p>Disable local race of remotely started jobs. This can be useful for debugging.</p>
@@ -449,6 +472,14 @@ useful if you want to see as many errors as possible in your compilation output.
 <p><b>[Experimental]</b> Individually build all files normally in Unity.</p>
 <p>NOTE: When alternating between specifying -nounity and not, libraries may not relink when they should. The resulting
 executables are valid, but may contain the previous unity objects instead of the loose objects</p>
+</div>
+
+    <div class='newsitemheader' id="profile">-profile</div>
+    <div class='newsitembody'>
+<p>Output a Chrome tracing format fbuild_profile.json describing the build.</p>
+<p>When "build profiling" is activing, scheduling information for items (local and remote) is recorded to an fbuild_profile.json file.
+This file is written at the very end of the build, and can be viewed in Chrome's profiling viewer (chrome://tracing).</p>
+<p>NOTE: This may have a small impact on build performance.</p>
 </div>
 
     <div class='newsitemheader' id="progress">-progress</div>
@@ -504,7 +535,7 @@ to see the complete output.</p>
 <p>Example:</p>
 <div class='code'>fbuild.exe -showdeps Game-x86-Debug</div>
 <p>If no target is specified, "all" is used.</p>
-<p><b>NOTE:</b> The dependencies  shown will refelect the state as of the last completed build.
+<p><b>NOTE:</b> The dependencies shown will reflect the state as of the last completed build.
 i.e. dependencies that would be discovered during the next build will not be shown.</p>
 <p></p>
 </div>
@@ -645,6 +676,6 @@ than this amount it will not accept work.</p>
 </div>
 
 
-    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2021 Franta Fulin</div></div></div>
 </body>
 </html>

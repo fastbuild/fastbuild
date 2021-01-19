@@ -97,10 +97,6 @@ typedef signed int          int32_t;
     #endif
 #endif
 
-#if defined( __WINDOWS__ ) && defined( __clang__ )
-    #define __w64
-#endif
-
 // Versions of Visual Studio prior to 2017 don't manage noexcept properly
 #if defined( _MSC_VER ) && ( _MSC_VER < 1910 ) && !defined( __clang__ )
     #define NOEXCEPT

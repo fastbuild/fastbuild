@@ -11,8 +11,8 @@
 // MemTracker
 //------------------------------------------------------------------------------
 #if !defined( MEMTRACKER_ENABLED )
-    #define MEMTRACKER_ALLOC( ptr, size, file, line )
-    #define MEMTRACKER_FREE( ptr )
+    #define MEMTRACKER_ALLOC( ptr, size, file, line ) (void)0
+    #define MEMTRACKER_FREE( ptr ) (void)0
     #define MEMTRACKER_DUMP_ALLOCATIONS
     #define MEMTRACKER_DISABLE_THREAD
     #define MEMTRACKER_ENABLE_THREAD
@@ -28,8 +28,8 @@
 
     // Macros
     //------------------------------------------------------------------------------
-    #define MEMTRACKER_ALLOC( ptr, size, file, line )   MemTracker::Alloc( ptr, size, file, line );
-    #define MEMTRACKER_FREE( ptr )                      MemTracker::Free( ptr );
+    #define MEMTRACKER_ALLOC( ptr, size, file, line )   MemTracker::Alloc( ptr, size, file, line )
+    #define MEMTRACKER_FREE( ptr )                      MemTracker::Free( ptr )
     #define MEMTRACKER_DUMP_ALLOCATIONS                 MemTracker::DumpAllocations();
     #define MEMTRACKER_DISABLE_THREAD                   MemTracker::DisableOnThread();
     #define MEMTRACKER_ENABLE_THREAD                    MemTracker::EnableOnThread();

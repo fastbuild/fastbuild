@@ -247,11 +247,11 @@ This results in very unintuitive compile errors.</p>
 <div id='compiler' class='newsitemheader'>Examples</div>
     <div class='newsitembody'>
 
-<b>MSVC - 2019 (v16.5.1)</b>
+<b>MSVC - 2019 (v16.8.3)</b>
 <div class='code'>// VisualStudio 2019 x64 Compiler
-.VS2017_BasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\2017\Community'
-.VS2017_Version          = '14.16.27023'
-Compiler( 'Compiler-VS2017-x64' )
+.VS2019_BasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio\2019\2019\Community'
+.VS2019_Version          = '14.28.29333'
+Compiler( 'Compiler-VS2019-x64' )
 {
     .Root       = '$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$/bin/Hostx64/x64'
     .Executable = '$Root$/cl.exe'
@@ -265,6 +265,7 @@ Compiler( 'Compiler-VS2017-x64' )
                     '$Root$/mspdbsrv.exe'
                     '$Root$/mspft140.dll'
                     '$Root$/msvcp140.dll'
+                    '$Root$/msvcp140_atomic_wait.dll' // Required circa 16.8.3 (14.28.29333)
                     '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
                     '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
@@ -413,6 +414,6 @@ Compiler( 'Compiler-x64Intel' )
 	unforeseen problems with this feature. This toggle is expected to be removed in v1.01.</p>
 </div>
 
-    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2021 Franta Fulin</div></div></div>
 </body>
 </html>

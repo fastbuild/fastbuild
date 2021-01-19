@@ -35,7 +35,7 @@ public:
             uint16_t port,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
-    ~Client();
+    virtual ~Client() override;
 
 private:
     virtual void OnDisconnected( const ConnectionInfo * connection ) override;

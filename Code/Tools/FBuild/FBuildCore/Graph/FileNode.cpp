@@ -16,7 +16,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
+FileNode::FileNode( const AString & fileName, uint8_t controlFlags )
     : Node( fileName, Node::FILE_NODE, controlFlags )
 {
     ASSERT( fileName.EndsWith( "\\" ) == false );
@@ -56,6 +56,14 @@ void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const AStrin
 {
     constexpr const char * msvcWarningString = ": warning ";  // string is ok even in non-English
     return HandleWarnings( job, name, data, msvcWarningString );
+}
+
+// HandleWarningsClangCl
+//------------------------------------------------------------------------------
+void FileNode::HandleWarningsClangCl( Job * job, const AString & name, const AString & data )
+{
+    constexpr const char * clangWarningString = " warning:";
+    return HandleWarnings( job, name, data, clangWarningString );
 }
 
 // HandleWarnings

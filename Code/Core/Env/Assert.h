@@ -9,14 +9,14 @@
 // Defines
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #define BREAK_IN_DEBUGGER __debugbreak();
+    #define BREAK_IN_DEBUGGER __debugbreak()
 #elif defined( __APPLE__ )
-    #define BREAK_IN_DEBUGGER __builtin_trap();
+    #define BREAK_IN_DEBUGGER __builtin_trap()
 #elif defined( __LINUX__ )
     #if defined( __X64__ )
         #define BREAK_IN_DEBUGGER __asm__ __volatile__("int $3")
     #else
-        #define BREAK_IN_DEBUGGER __builtin_trap();
+        #define BREAK_IN_DEBUGGER __builtin_trap()
     #endif
 #else
     #error Unknown platform
@@ -43,6 +43,7 @@ bool IsDebuggerAttached();
     #define ASSERT( expression )                                                \
         do {                                                                    \
         PRAGMA_DISABLE_PUSH_MSVC(4127)                                          \
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )               \
             if ( !( expression ) )                                              \
             {                                                                   \
                 if ( AssertHandler::Failure( #expression, __FILE__, __LINE__ ) )\
@@ -52,12 +53,14 @@ bool IsDebuggerAttached();
                 NO_RETURN                                                       \
             }                                                                   \
         } while ( false )                                                       \
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS                                        \
         PRAGMA_DISABLE_POP_MSVC
 
     // standard assertion macro with message
     #define ASSERTM( expression, ... )                                          \
         do {                                                                    \
         PRAGMA_DISABLE_PUSH_MSVC(4127)                                          \
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )               \
             if ( !( expression ) )                                              \
             {                                                                   \
                 if ( AssertHandler::FailureM( #expression, __FILE__, __LINE__, __VA_ARGS__ ) )\
@@ -67,6 +70,7 @@ bool IsDebuggerAttached();
                 NO_RETURN                                                       \
             }                                                                   \
         } while ( false )                                                       \
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS                                        \
         PRAGMA_DISABLE_POP_MSVC
 
     // assert result of code, but still execute code when asserts are disabled

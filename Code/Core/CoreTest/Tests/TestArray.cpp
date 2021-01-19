@@ -1312,7 +1312,7 @@ void TestArray::EmplaceBack() const
     {
         // Emplace one item
         Array<int32_t> array;
-        array.EmplaceBack( 1 );
+        TEST_ASSERT( array.EmplaceBack( 1 ) == 1 );
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
         TEST_ASSERT( array.GetSize() == 1 );
@@ -1322,9 +1322,9 @@ void TestArray::EmplaceBack() const
     {
         // Emplace several items
         Array<int32_t> array;
-        array.EmplaceBack( 1 );
-        array.EmplaceBack( 2 );
-        array.EmplaceBack( 3 );
+        TEST_ASSERT( array.EmplaceBack( 1 ) == 1 );
+        TEST_ASSERT( array.EmplaceBack( 2 ) == 2 );
+        TEST_ASSERT( array.EmplaceBack( 3 ) == 3 );
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
         TEST_ASSERT( array.GetSize() == 3 );
@@ -1340,7 +1340,7 @@ void TestArray::EmplaceBack() const
 
         TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
 
-        array.EmplaceBack( "string1" );
+        TEST_ASSERT( array.EmplaceBack( "string1" ) == "string1" );
 
         TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 ) // Check expected amount of allocs occurred
 
@@ -1356,7 +1356,7 @@ void TestArray::EmplaceBack() const
 
         TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
 
-        array.EmplaceBack( Move( AString( "string1" ) ) );
+        TEST_ASSERT( array.EmplaceBack( Move( AString( "string1" ) ) ) == "string1" );
 
         TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 ) // Check expected amount of allocs occurred
 
@@ -1372,9 +1372,9 @@ void TestArray::EmplaceBack() const
 
         TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
 
-        array.EmplaceBack( "string1" );
-        array.EmplaceBack( "string2" );
-        array.EmplaceBack( "string3" );
+        TEST_ASSERT( array.EmplaceBack( "string1" ) == "string1" );
+        TEST_ASSERT( array.EmplaceBack( "string2" ) == "string2" );
+        TEST_ASSERT( array.EmplaceBack( "string3" ) == "string3" );
 
         TEST_EXPECT_ALLOCATION_EVENTS( s1, 3 ) // Check expected amount of allocs occurred
 

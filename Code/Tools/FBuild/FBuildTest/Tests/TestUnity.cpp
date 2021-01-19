@@ -728,9 +728,9 @@ void TestUnity::SortFiles() const
     class Helper : public UnityNode
     {
     public:
-        ~Helper()
+        virtual ~Helper() override
         {
-            for ( FileIO::FileInfo * info : m_FileInfos )
+            for ( FileIO::FileInfo * info : m_HelperFileInfos )
             {
                 FDELETE info;
             }
@@ -744,39 +744,39 @@ void TestUnity::SortFiles() const
             #if defined( __WINDOWS__ )
                 info->m_Name.Replace( '/', '\\' ); // Allow test to specify unix style slashes
             #endif
-            m_FileInfos.Append( info );
+            m_HelperFileInfos.Append( info );
 
             // Add entry
-            m_Files.EmplaceBack( info, nullptr );
+            m_HelperFiles.EmplaceBack( info, nullptr );
         }
 
         void Sort()
         {
-            m_Files.Sort();
+            m_HelperFiles.Sort();
             #if defined( __WINDOWS__ )
-                for ( FileIO::FileInfo * info : m_FileInfos )
+                for ( FileIO::FileInfo * info : m_HelperFileInfos )
                 {
                     info->m_Name.Replace( '\\', '/' ); // Allow test to specify unix style slashes
                 }
             #endif
         }
 
-        const AString & operator[] ( size_t index ) const { return m_Files[ index ].GetName(); }
+        const AString & operator[] ( size_t index ) const { return m_HelperFiles[ index ].GetName(); }
 
-        Array< UnityNode::UnityFileAndOrigin >  m_Files;
-        Array< FileIO::FileInfo * >             m_FileInfos;
+        Array< UnityNode::UnityFileAndOrigin >  m_HelperFiles;
+        Array< FileIO::FileInfo * >             m_HelperFileInfos;
     };
 
     // Helper marcos to reduce boilerplate code
     #define SORT( ... )                                                         \
-    {                                                                           \
+    do {                                                                           \
         const char * inputs[] = { __VA_ARGS__ };                                \
         Helper h;                                                               \
         for ( const char * input : inputs )                                     \
         {                                                                       \
             h.AddFile( input );                                                 \
         }                                                                       \
-        h.Sort();
+        h.Sort()
 
     #define TEST( ... )                                                         \
         const char * outputs[] = { __VA_ARGS__ };                               \
@@ -784,59 +784,59 @@ void TestUnity::SortFiles() const
         {                                                                       \
             TEST_ASSERTM( h[ i ] == outputs[ i ], "Mismatch @ index %u: %s != %s", (uint32_t)i, h[ i ].Get(), outputs[ i ] ); \
         }                                                                       \
-    }
+    } while( false )
 
     // Basic sanity check
-    SORT( "a.cpp", "b.cpp" )
-    TEST( "a.cpp", "b.cpp" )
+    SORT( "a.cpp", "b.cpp" );
+    TEST( "a.cpp", "b.cpp" );
 
-    SORT( "b.cpp", "a.cpp" )
-    TEST( "a.cpp", "b.cpp" )
+    SORT( "b.cpp", "a.cpp" );
+    TEST( "a.cpp", "b.cpp" );
 
     // Case is ignored at the file level
-    SORT( "a.cpp", "B.cpp" )
-    TEST( "a.cpp", "B.cpp" )
+    SORT( "a.cpp", "B.cpp" );
+    TEST( "a.cpp", "B.cpp" );
 
-    SORT( "b.cpp", "A.cpp" )
-    TEST( "A.cpp", "b.cpp" )
+    SORT( "b.cpp", "A.cpp" );
+    TEST( "A.cpp", "b.cpp" );
 
     // Files in same dir
-    SORT( "a/B.cpp", "a/a.cpp" )
-    TEST( "a/a.cpp", "a/B.cpp" )
+    SORT( "a/B.cpp", "a/a.cpp" );
+    TEST( "a/a.cpp", "a/B.cpp" );
 
-    SORT( "a/b.cpp", "a/A.cpp" )
-    TEST( "a/A.cpp", "a/b.cpp" )
+    SORT( "a/b.cpp", "a/A.cpp" );
+    TEST( "a/A.cpp", "a/b.cpp" );
 
     // Files in different dirs of same length
-    SORT( "b/a.cpp", "a/a.cpp" )
-    TEST( "a/a.cpp", "b/a.cpp" )
+    SORT( "b/a.cpp", "a/a.cpp" );
+    TEST( "a/a.cpp", "b/a.cpp" );
 
-    SORT( "B/a.cpp", "a/a.cpp" )
-    TEST( "a/a.cpp", "B/a.cpp" )
+    SORT( "B/a.cpp", "a/a.cpp" );
+    TEST( "a/a.cpp", "B/a.cpp" );
 
     // Subdirs come after dirs
-    SORT( "a/a.cpp",    "z.cpp" )
-    TEST( "z.cpp",      "a/a.cpp" )
+    SORT( "a/a.cpp",    "z.cpp" );
+    TEST( "z.cpp",      "a/a.cpp" );
 
-    SORT( "A/A.cpp",    "z.cpp" )
-    TEST( "z.cpp",      "A/A.cpp" )
+    SORT( "A/A.cpp",    "z.cpp" );
+    TEST( "z.cpp",      "A/A.cpp" );
 
-    SORT( "Z/A.cpp",    "a.cpp" )
-    TEST( "a.cpp",      "Z/A.cpp" )
+    SORT( "Z/A.cpp",    "a.cpp" );
+    TEST( "a.cpp",      "Z/A.cpp" );
 
-    SORT( "a.cpp", "bbb/a.cpp", "c.cpp" )
-    TEST( "a.cpp", "c.cpp",     "bbb/a.cpp" )
+    SORT( "a.cpp", "bbb/a.cpp", "c.cpp" );
+    TEST( "a.cpp", "c.cpp",     "bbb/a.cpp" );
 
     // subdirs that match filename come after all files
-    SORT( "a.cpp/a.cpp",    "a.cpp",    "b.cpp" )
-    TEST( "a.cpp",          "b.cpp",    "a.cpp/a.cpp" )
+    SORT( "a.cpp/a.cpp",    "a.cpp",    "b.cpp" );
+    TEST( "a.cpp",          "b.cpp",    "a.cpp/a.cpp" );
 
-    SORT( "aaa", "aba/a",   "aba" )
-    TEST( "aaa", "aba",     "aba/a" )
+    SORT( "aaa", "aba/a",   "aba" );
+    TEST( "aaa", "aba",     "aba/a" );
 
     // subdirs that are partial matches
-    SORT( "aa/a",   "a/a" )
-    TEST( "a/a",    "aa/a" )
+    SORT( "aa/a",   "a/a" );
+    TEST( "a/a",    "aa/a" );
 
     // differing depths
     SORT( "Folder/SubDir/a.cpp",    "Folder/z.cpp" );

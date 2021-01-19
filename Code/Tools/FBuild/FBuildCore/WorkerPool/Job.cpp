@@ -50,6 +50,8 @@ Job::~Job()
     {
         FDELETE m_Node;
     }
+
+    ASSERT( m_BuildProfilerScope == nullptr ); // If set, must be unhooked
 }
 
 // Cancel
@@ -149,7 +151,7 @@ void Job::SetMessages( const Array< AString > & messages )
 //------------------------------------------------------------------------------
 void Job::Serialize( IOStream & stream )
 {
-    PROFILE_FUNCTION
+    PROFILE_FUNCTION;
 
     // write jobid
     stream.Write( m_JobId );
@@ -242,6 +244,16 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
 /*static*/ uint64_t Job::GetTotalLocalDataMemoryUsage()
 {
     return (uint64_t)AtomicLoadRelaxed( &s_TotalLocalDataMemoryUsage );
+}
+
+// SetBuildProfilerScope
+//------------------------------------------------------------------------------
+void Job::SetBuildProfilerScope( BuildProfilerScope * scope )
+{
+    // Only valid to have one scope at a time for a given Job
+    ASSERT( ( m_BuildProfilerScope == nullptr ) || ( scope == nullptr ) );
+
+    m_BuildProfilerScope = scope;
 }
 
 //------------------------------------------------------------------------------
