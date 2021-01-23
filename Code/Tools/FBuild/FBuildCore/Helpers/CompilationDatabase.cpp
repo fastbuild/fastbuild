@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
 
 // Core
 #include "Core/Strings/AStackString.h"
@@ -26,7 +27,7 @@ CompilationDatabase::CompilationDatabase()
 : m_Output( 4 * 1024 * 1024 )
 {
     m_DirectoryEscaped = FBuild::Get().GetWorkingDir();
-    JSONEscape( m_DirectoryEscaped );
+    JSON::Escape( m_DirectoryEscaped );
 }
 
 // DESTRUCTOR
@@ -128,7 +129,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
                         ( compilerNode->CastTo< CompilerNode >()->GetCompilerFamily() == CompilerNode::MSVC );
 
     ctx.m_CompilerEscaped = compilerName;
-    JSONEscape( ctx.m_CompilerEscaped );
+    JSON::Escape( ctx.m_CompilerEscaped );
 
     // Prepare arguments: tokenize, remove problematic arguments, remove extra quoting and escape.
     node->GetCompilerOptions().Tokenize( ctx.m_ArgumentsEscaped );
@@ -144,7 +145,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
             continue;
         }
         Unquote( argument );
-        JSONEscape( argument );
+        JSON::Escape( argument );
     }
 
     node->EnumerateInputFiles( &CompilationDatabase::HandleInputFile, &ctx );
@@ -164,11 +165,11 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
 {
     AStackString<> inputFileEscaped;
     inputFileEscaped = inputFile;
-    JSONEscape( inputFileEscaped );
+    JSON::Escape( inputFileEscaped );
 
     AStackString<> outputFileEscaped;
     ctx->m_ObjectListNode->GetObjectFileName( inputFile, baseDir, outputFileEscaped );
-    JSONEscape( outputFileEscaped );
+    JSON::Escape( outputFileEscaped );
 
     m_Output += "  {\n    \"directory\": \"";
     m_Output += m_DirectoryEscaped;
@@ -216,54 +217,6 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
         m_Output += "\"";
     }
     m_Output += "]\n  },\n";
-}
-
-
-// JSONEscape
-//------------------------------------------------------------------------------
-/*static*/ void CompilationDatabase::JSONEscape( AString & string )
-{
-    // Build result in a temporary buffer
-    AStackString< 8192 > temp;
-
-    const char * end = string.GetEnd();
-    for ( const char * pos = string.Get(); pos != end; ++pos )
-    {
-        const char c = *pos;
-
-        // congrol character?
-        if ( c <= 0x1F )
-        {
-            // escape with backslash if possible
-            if ( c == '\b' ) { temp += "\\b"; continue; }
-            if ( c == '\t' ) { temp += "\\t"; continue; }
-            if ( c == '\n' ) { temp += "\\n"; continue; }
-            if ( c == '\f' ) { temp += "\\f"; continue; }
-            if ( c == '\r' ) { temp += "\\r"; continue; }
-
-            // escape with codepoint
-            temp.AppendFormat( "\\u%04X", c );
-            continue;
-        }
-        else if ( c == '\"' )
-        {
-            // escape quotes
-            temp += "\\\"";
-            continue;
-        }
-        else if ( c == '\\' )
-        {
-            // escape backslashes
-            temp += "\\\\";
-            continue;
-        }
-
-        // char does not need escpaing
-        temp += c;
-    }
-
-    // store final result
-    string = temp;
 }
 
 // Unquote

@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CompilationDatabase.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
 
 // Core
 #include "Core/FileIO/PathUtils.h"
@@ -48,7 +49,7 @@ REGISTER_TESTS_END
 class CompilationDatabaseTestWrapper : public CompilationDatabase
 {
 public:
-    static void JSONEscape( AString & string ) { CompilationDatabase::JSONEscape( string ); }
+    static void JSONEscape( AString & string ) { JSON::Escape( string ); }
     static void Unquote( AString & string )    { CompilationDatabase::Unquote( string ); }
 };
 

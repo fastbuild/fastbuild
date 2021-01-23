@@ -8,6 +8,7 @@
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
@@ -128,8 +129,10 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
 
     // - Local Processing
     AStackString<> args( options.GetArgs() );
-    args.Replace( "\\", "\\\\" ); // Escape slashes for JSON
-    buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"%s %s\"}},", options.m_ProgramName.Get(), args.Get() );
+    JSON::Escape( args );
+    AStackString<> programName( options.m_ProgramName );
+    JSON::Escape( programName );
+    buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"%s %s\"}},", programName.Get(), args.Get() );
     buffer += "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"Phase\"}},";
     const uint32_t numThreads = options.m_NumWorkerThreads;
     for ( uint32_t i = 1; i <= numThreads; ++i )
@@ -165,7 +168,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
         if ( event.m_TargetName )
         {
             nameBuffer = event.m_TargetName;
-            nameBuffer.Replace( "\\", "\\\\" ); // Escape slashes for JSON
+            JSON::Escape( nameBuffer );
             buffer.AppendFormat( ",\"args\":{\"name\":\"%s\"}", nameBuffer.Get());
         }
 
