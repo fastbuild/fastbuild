@@ -12,8 +12,6 @@
 #include "Core/Math/Conversions.h"
 #include "Core/Mem/Mem.h"
 
-#include <initializer_list>
-
 // Array
 //------------------------------------------------------------------------------
 template < class T >
@@ -22,10 +20,9 @@ class Array
 public:
     explicit Array();
     explicit Array( const Array< T > & other );
-    explicit Array( Array< T > && other );
+    Array( Array< T > && other );
     explicit Array( const T * otherBegin, const T * otherEnd );
     explicit Array( size_t initialCapacity, bool resizeable = false );
-    explicit Array( std::initializer_list<T> elements );
     ~Array();
 
     void Destruct();
@@ -209,24 +206,6 @@ Array< T >::Array( size_t initialCapacity, bool resizeable )
     #else
         (void)resizeable;
     #endif
-}
-
-// CONSTRUCTOR
-//------------------------------------------------------------------------------
-template < class T >
-Array< T >::Array( std::initializer_list<T> elements )
-{
-#if defined( ASSERTS_ENABLED )
-    m_Resizeable = true; // allow initial allocation
-#endif
-    m_Begin = Allocate( elements.size() );
-    m_Size = 0;
-    m_CapacityAndFlags = (uint32_t)elements.size();
-
-    for ( const T & e : elements )
-    {
-        Append( e );
-    }
 }
 
 // DESTRUCTOR
@@ -764,5 +743,53 @@ private:
     alignas(__alignof(T)) uint8_t m_Storage[ RESERVED * sizeof( T ) ];
     PRAGMA_DISABLE_POP_MSVC // 4324
 };
+
+// PopulateArray
+//------------------------------------------------------------------------------
+template< class T >
+void PopulateArray( Array<T> & /* array */ )
+{
+    // Terminator.
+}
+
+// PopulateArray
+//------------------------------------------------------------------------------
+template <class T, class ... Types>
+void PopulateArray( Array<T> & array, T && head, Types && ... tail )
+{
+    array.Append( head );
+    PopulateArray<T>( array, tail ... );
+}
+
+// PopulateArray
+//------------------------------------------------------------------------------
+template <class T, class ... Types>
+void PopulateArray( Array<T> & array, const T & head, const Types & ... tail )
+{
+    array.Append( head );
+    PopulateArray<T>( array, tail ... );
+}
+
+// MakeArray
+//------------------------------------------------------------------------------
+template <class T, class ... Types>
+Array<T> MakeArray( T && head, Types && ... tail )
+{
+    // We don't use StackArray here because the `array` is going to be 'moved' outside.
+    Array<T> array ( 1 + sizeof...( Types ) );
+    PopulateArray<T>( array, head, tail ... );
+    return array;
+}
+
+// MakeArray
+//------------------------------------------------------------------------------
+template <class T, class ... Types>
+Array<T> MakeArray( const T & head, const Types & ... tail )
+{
+    // We don't use StackArray here because the `array` is going to be 'moved' outside.
+    Array<T> array ( 1 + sizeof...( Types ) );
+    PopulateArray<T>( array, head, tail ... );
+    return array;
+}
 
 //------------------------------------------------------------------------------

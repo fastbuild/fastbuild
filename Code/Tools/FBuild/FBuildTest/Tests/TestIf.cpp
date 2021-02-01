@@ -43,6 +43,7 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( IfNotSetFunctionFalse )
     REGISTER_TEST( IfFunctionBool )
     REGISTER_TEST( IfFunctionInt )
+    REGISTER_TEST( IfFunctionSet )
     REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( IfFunctionBracket )
     REGISTER_TEST( UsageError_ExtraTokensAfterExpression )
@@ -144,15 +145,9 @@ void TestIf::IfFunctionBool() const
     TEST_EXP_FALSE( ".Bool = true", ".Bool != .Bool" );
 
     // Compound Exps
-    TEST_EXP_TRUE(R"(
-        .True = true
-        .False = false
-    )", ".True && true || .False" );
+    TEST_EXP_TRUE(".True = true\n .False = false", ".True && true || .False" );
 
-    TEST_EXP_TRUE( R"(
-        .True = true
-        .False = false
-    )", "true && .True && true || !false || .False" );
+    TEST_EXP_TRUE(".True = true\n .False = false", "true && .True && true || !false || .False" );
 
     // Legacy
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_boolean.bff" );
@@ -206,10 +201,9 @@ void TestIf::IfFunctionInt() const
 
 
     // Vars vs Vars
-#define VARS R"(
-    .IntA = 7
-    .IntB = 100
-)"
+#define VARS \
+    ".IntA = 7\n" \
+    ".IntB = 100\n"
 
     // Equality
     TEST_EXP_FALSE( VARS, ".IntA == .IntB" );
@@ -265,12 +259,11 @@ void TestIf::IfFunctionStringCompare() const
     TEST_EXP_TRUE( ".String = '2'", "'1' <= .String" );
 
 
-#define VARS R"(
-    // Check string
-    .String = 'Hello'
-    .OtherStringA = 'Hello'
-    .OtherStringB = 'Goodbye'
-)"
+#define VARS \
+    ".String = 'Hello'\n" \
+    ".OtherStringA = 'Hello'\n" \
+    ".OtherStringB = 'Goodbye'\n"
+
     // Strings match
     TEST_EXP_TRUE( VARS, ".String == .OtherStringA" );
     TEST_EXP_FALSE( VARS, ".String != .OtherStringA" );
@@ -282,10 +275,9 @@ void TestIf::IfFunctionStringCompare() const
 #undef VARS
 
     // String compare
-#define VARS R"(
-    .StringA = 'AAA'
-    .StringB = 'BBB'
-)"
+#define VARS \
+    ".StringA = 'AAA'\n" \
+    ".StringB = 'BBB'\n"
 
     TEST_EXP_FALSE( VARS, ".StringA > .StringB" );
     TEST_EXP_FALSE( VARS, ".StringA >= .StringB" );
@@ -304,12 +296,11 @@ void TestIf::IfFunctionStringCompare() const
 //------------------------------------------------------------------------------
 void TestIf::IfFunctionSet() const
 {
-#define VARS R"(
-    .D = 'd'
-    .A = {'a'}
-    .AD = {'a', 'd'}
-    .ABC = {'a', 'b', 'c'}
-)"
+#define VARS \
+    ".D = 'd'\n" \
+    ".A = {'a'}\n" \
+    ".AD = {'a', 'd'}\n" \
+    ".ABC = {'a', 'b', 'c'}\n"
 
     TEST_EXP_TRUE( VARS, ".D in .AD" );
     TEST_EXP_TRUE( VARS, ".D not in .ABC" );
@@ -342,12 +333,11 @@ void TestIf::IfFunctionBracket() const
     TEST_EXP_TRUE( "", "('String' == 'Hello') || (1 == 1)" );
     TEST_EXP_TRUE( "", "true && (false || true) || ((1 == 2) && ('abc' != 'def'))" );
 
-#define VARS R"(
-    .D = 'd'
-    .A = {'a'}
-    .AD = {'a', 'd'}
-    .ABC = {'a', 'b', 'c'}
-)"
+#define VARS \
+    ".D = 'd'\n" \
+    ".A = {'a'}\n" \
+    ".AD = {'a', 'd'}\n" \
+    ".ABC = {'a', 'b', 'c'}\n"
 
     TEST_EXP_TRUE( VARS, "(.A in .AD)" );
     TEST_EXP_TRUE( VARS, "(.D in .AD)" );
@@ -358,7 +348,8 @@ void TestIf::IfFunctionBracket() const
 #undef VARS
 }
 
-#undef TEST_EXP_OK
+#undef TEST_EXP_TRUE
+#undef TEST_EXP_FALSE
 #undef TEST_EXP_FAIL
 
 // UsageError_ExtraTokensAfterExpression

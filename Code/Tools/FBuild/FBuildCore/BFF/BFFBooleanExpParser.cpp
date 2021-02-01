@@ -46,7 +46,7 @@ static const BFFVariable * GetVar( const Function * function, const BFFToken * t
         return nullptr;
     }
 
-    AString varName;
+    AStackString<> varName;
     bool varParentScope = false;
     if ( BFFParser::ParseVariableName( token, varName, varParentScope ) == false )
     {
@@ -242,13 +242,12 @@ protected:
     const Function * m_Function;
 };
 
-static const Array<Operator> BoolOperators
-{
+static const Array<Operator> BoolOperators = MakeArray(
     Operator::OP_EQUAL,
     Operator::OP_NOT_EQUAL,
     Operator::OP_AND,
-    Operator::OP_OR,
-};
+    Operator::OP_OR
+);
 
 // OperandOf<T>
 // ------------------------------------------------------------
@@ -309,15 +308,14 @@ static bool CompareBools( const Function * function, bool lhs, bool rhs, const B
     return true;
 }
 
-static const Array<Operator> IntOperators
-{
+static const Array<Operator> IntOperators = MakeArray(
     Operator::OP_EQUAL,
     Operator::OP_NOT_EQUAL,
     Operator::OP_LESS_THAN,
     Operator::OP_LESS_THAN_OR_EQUAL,
     Operator::OP_GREATER_THAN,
-    Operator::OP_GREATER_THAN_OR_EQUAL,
-};
+    Operator::OP_GREATER_THAN_OR_EQUAL
+);
 
 // CompareInts
 //------------------------------------------------------------------------------
@@ -349,8 +347,7 @@ static bool CompareInts( const Function * function, int32_t lhs, int32_t rhs, co
     return true;
 }
 
-static const Array<Operator> StringOperators
-{
+static const Array<Operator> StringOperators = MakeArray(
     Operator::OP_EQUAL,
     Operator::OP_NOT_EQUAL,
     Operator::OP_LESS_THAN,
@@ -358,8 +355,8 @@ static const Array<Operator> StringOperators
     Operator::OP_GREATER_THAN,
     Operator::OP_GREATER_THAN_OR_EQUAL,
     Operator::OP_IN,
-    Operator::OP_NOT_IN,
-};
+    Operator::OP_NOT_IN
+);
 
 // CompareStrings
 //------------------------------------------------------------------------------
@@ -847,7 +844,7 @@ Forms:
 static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bool endsOnCloseBracket, bool & expResult )
 {
     const BFFToken * const token = iter.GetCurrent();
-    ASSERT( token != nullptr ); // TODO: add a new error for "Unexpected end of expression".
+
     switch ( token->GetType() )
     {
     case BFFTokenType::Variable:       // .Var or ^Var
