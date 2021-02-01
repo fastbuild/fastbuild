@@ -37,8 +37,8 @@
             Print( '-----------------------------------------------------------------------' )
             Print( '- Unable to auto-detect VS2019 - please specify installation manually -' )
             Print( '-----------------------------------------------------------------------' )
-            .VS2019_BasePath        = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC"    // <-- Set path here
-            .VS2019_Version         = "14.28.29333" // <-- Set version here
+            .VS2019_BasePath        = .Set_Path_Here    // <-- Set path here
+            .VS2019_Version         = .Set_Version_Here // <-- Set version here
         #endif
     #endif
 #endif
