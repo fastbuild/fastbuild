@@ -208,7 +208,7 @@ public:
     const BFFToken & GetToken() const { return m_Token; }
     bool IsValid() const { return m_Valid; }
 
-    template <typename T>
+    template < typename T >
     bool Is() const
     {
         ASSERT( m_Valid );
@@ -216,7 +216,7 @@ public:
     }
 
     // A handy method for checking and setting error.
-    template <typename T>
+    template < typename T >
     bool Ensure() const
     {
         if ( Is<T>() )
@@ -228,7 +228,7 @@ public:
         return false;
     }
 
-    template <typename T>
+    template < typename T >
     typename T::ReturnType GetValue() const
     {
         ASSERT( Is<T>() );
@@ -251,7 +251,7 @@ static const Array<Operator> BoolOperators = MakeArray(
 
 // OperandOf<T>
 // ------------------------------------------------------------
-template <typename T>
+template < typename T >
 class OperandOf : public Operand
 {
 public:
@@ -299,7 +299,7 @@ static bool CompareBools( const Function * function, bool lhs, bool rhs, const B
     case Operator::OP_GREATER_THAN_OR_EQUAL:
     case Operator::OP_IN:
     case Operator::OP_NOT_IN:
-        Error::Error_1255_UnexpectedOperator( opToken, function );
+        Error::Error_1070_UnexpectedOperator( opToken, function );
         return false;
     case Operator::OP_UNKNOWN:
         ASSERT( false );
@@ -337,7 +337,7 @@ static bool CompareInts( const Function * function, int32_t lhs, int32_t rhs, co
     case Operator::OP_NOT_IN:
     case Operator::OP_AND:
     case Operator::OP_OR:
-        Error::Error_1255_UnexpectedOperator( opToken, function );
+        Error::Error_1070_UnexpectedOperator( opToken, function );
         return false;
 
     case Operator::OP_UNKNOWN:
@@ -380,7 +380,7 @@ static bool CompareStrings( const Function * function, const AString & lhs, cons
         return false;
     case Operator::OP_AND:
     case Operator::OP_OR:
-        Error::Error_1255_UnexpectedOperator( opToken, function );
+        Error::Error_1070_UnexpectedOperator( opToken, function );
         return false;
 
     case Operator::OP_UNKNOWN:
@@ -421,7 +421,7 @@ static bool ExpectExpEnd( const Function * function, BFFTokenRange & iter, bool 
     }
     else
     {
-        Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
+        Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
     }
     return false;
 }
@@ -504,7 +504,7 @@ static bool ParseOperator( const Function * function, BFFTokenRange & iter, Oper
 
     if ( ( supportedOps != nullptr ) && ( supportedOps->Find( op ) == nullptr ) )
     {
-        Error::Error_1255_UnexpectedOperator( iter.GetCurrent(), function );
+        Error::Error_1070_UnexpectedOperator( iter.GetCurrent(), function );
         return false;
     }
 
@@ -566,7 +566,7 @@ static bool ParseStringArrayInArray( const Function * function, const OperandOf<
     }
     if ( ( op != Operator::OP_IN ) && ( op != Operator::OP_NOT_IN ) )
     {
-        Error::Error_1255_UnexpectedOperator( opToken, function );
+        Error::Error_1070_UnexpectedOperator( opToken, function );
         return false;
     }
 
@@ -633,7 +633,7 @@ static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange &
         break;
     }
 
-    Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
+    Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
     return false;
 }
 
@@ -650,7 +650,7 @@ static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & ite
 {
     if ( !iter->IsOperator( "!" ) )
     {
-        Error::Error_1255_UnexpectedOperator( iter.GetCurrent(), function );
+        Error::Error_1070_UnexpectedOperator( iter.GetCurrent(), function );
         return false;
     }
 
@@ -711,7 +711,7 @@ static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFToken
         }
         break;
     default:
-        Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
+        Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
         return false;
     }
     return CompareBools( function, lhs, rhs, opToken, op, expResult );
@@ -788,7 +788,7 @@ static bool ParseStringComparisonExp( const Function * function, const OperandOf
         return CompareStrings( function, lhs.GetValue(), rhs.GetValue(), opToken, op, expResult );
     }
     default:
-        Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
+        Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
         return false;
     }
 }
@@ -801,13 +801,6 @@ Forms:
 ------------------------------------------------------------------------------ */
 static bool ParseSubBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
 {
-    ASSERT( iter->GetType() == BFFTokenType::RoundBracket );
-
-    if ( iter->IsRoundBracket( ')' ) )
-    {
-        Error::Error_1061_MissingOpenBracket( iter.GetCurrent(), function );
-        return false;
-    }
     ASSERT( iter->IsRoundBracket( '(' ) );
     iter++;
 
@@ -898,7 +891,7 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
             // TODO: Update the following error.
             // Error::Error_1008_VariableOfWrongType was one of the options but we expected multiple types here,
             // where the 1008 function accept a single expected type.
-            Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
+            Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
             return false;
         }
 
@@ -941,7 +934,7 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
         break;
     }
 
-    Error::Error_1256_UnexpectedToken( iter.GetCurrent(), function );
+    Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
     return false;
 }
 
