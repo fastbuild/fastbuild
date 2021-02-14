@@ -93,17 +93,19 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         {
             m_Args += ' ';
         }
-        m_Args += thisArg;
 
         // Don't validate args for WSL forwarding
         if ( m_WrapperMode == WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX )
         {
+            m_Args += thisArg;
             continue;
         }
 
         // options start with a '-'
         if ( thisArg.BeginsWith( '-' ) )
         {
+            m_Args += thisArg;
+
             if ( thisArg == "-continueafterdbmove" )
             {
                 m_ContinueAfterDBMove = true;
@@ -424,6 +426,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         }
         else
         {
+            m_Args += '"'; // surround with quotes to avoid problems with spaces in target name
+            m_Args += thisArg;
+            m_Args += '"';
+
             // assume target
             m_Targets.Append( thisArg );
         }
