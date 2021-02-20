@@ -13,7 +13,7 @@ be found here: http://fastbuild.org
 
 | Branch | Status | Purpose |
 | :----- | :----- | :----- |
-| master | [![Build Status](https://travis-ci.com/fastbuild/fastbuild.svg?branch=master)](https://travis-ci.com/fastbuild/fastbuild) | Stable branch containing snapshot of latest release |
+| main   | [![Build Status](https://travis-ci.com/fastbuild/fastbuild.svg?branch=master)](https://travis-ci.com/fastbuild/fastbuild) | Stable branch containing snapshot of latest release |
 | dev    | [![Build Status](https://travis-ci.com/fastbuild/fastbuild.svg?branch=dev)](https://travis-ci.com/fastbuild/fastbuild) | Development branch for integration of pull requests |
 
 ## Contribution Guidelines
