@@ -32,6 +32,7 @@ private:
     void ModTimeChangeBackwards() const;
     void CacheUsingRelativePaths() const;
     void SourceMapping() const;
+    void ClangExplicitLanguageType() const;
 };
 
 // Register Tests
@@ -43,6 +44,7 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( ModTimeChangeBackwards )
     REGISTER_TEST( CacheUsingRelativePaths )
     REGISTER_TEST( SourceMapping )
+    REGISTER_TEST( ClangExplicitLanguageType )
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -479,6 +481,23 @@ void TestObject::SourceMapping() const
 
         TEST_ASSERT( buffer.Find( "/fastbuild-test-mapping" ) );
     }
+}
+
+// ClangExplicitLanguageType
+//------------------------------------------------------------------------------
+void TestObject::ClangExplicitLanguageType() const
+{
+    // Ensure explicitly set language args ("-x c++" etc) are replaced with the
+    // correct equivalent for preprocessed code ("-x c++-cpp-output" etc)
+
+    // Init
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangExplicitLanguageType/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Compile
+    TEST_ASSERT( fBuild.Build( "ClangExplicitLanguageType" ) );
 }
 
 //------------------------------------------------------------------------------

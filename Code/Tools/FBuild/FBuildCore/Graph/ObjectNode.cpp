@@ -1592,6 +1592,11 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         }
         return true; // found
     }
+    if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) && ( token.GetLength() > 2 ) )
+    {
+        const AStackString<> unquoted( ( token.Get() + 1 ), ( token.GetEnd() - 1 ) );
+        return StripTokenWithArg( tokenToCheckFor, unquoted, index );
+    }
     return false; // not found
 }
 
@@ -1796,6 +1801,36 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 if ( StripTokenWithArg( "-isysroot", token, i ) )
                 {
                     continue; // skip this token in both cases
+                }
+
+                // To avoid preprocesing code a second time we need to update
+                // arguments of -x option to use the "cpp-output" variant.
+                // We must do this inplace because the argument order matters in this case.
+                if ( ( token == "-x" ) && ( ( i + 1 ) < numTokens ) )
+                {
+                    // Save the "-x" token
+                    fullArgs += token;
+                    fullArgs.AddDelimiter();
+
+                    // Change the argument to its "cpp-output" variant.
+                    const AString & language = tokens[ ++i ];
+                    if ( language == "c" )
+                    {
+                        fullArgs += "cpp-output";
+                    }
+                    else if ( ( language == "c++" ) ||
+                              ( language == "objective-c" ) ||
+                              ( language == "objective-c++" ) )
+                    {
+                        fullArgs += language;
+                        fullArgs += "-cpp-output";
+                    }
+                    else
+                    {
+                        fullArgs += language;
+                    }
+                    fullArgs.AddDelimiter();
+                    continue;
                 }
             }
             if ( isGCC || isClang || isVBCC || isOrbisWavePsslc )
