@@ -412,6 +412,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractIncludePaths( const AString & compilerArgs,
                                                            Array< AString > & outIncludes,
+                                                           Array< AString > & outForceIncludes,
                                                            bool escapeQuotes )
 {
     // Different options add paths to the different groups which are then searched in the order of their priority.
@@ -433,6 +434,15 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     {
         const bool keepFullOption = false;
         ExtractIntellisenseOptions( compilerArgs, group, outIncludes, escapeQuotes, keepFullOption );
+    }
+
+    // Check for forced includes
+    {
+        StackArray< AString, 2 > forceIncludeOptions;
+        forceIncludeOptions.EmplaceBack( "/FI" );
+        forceIncludeOptions.EmplaceBack( "-FI" );
+        const bool keepFullOption = false;
+        ExtractIntellisenseOptions( compilerArgs, forceIncludeOptions, outForceIncludes, escapeQuotes, keepFullOption );
     }
 }
 

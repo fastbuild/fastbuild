@@ -272,8 +272,10 @@ bool LightCache::Hash( ObjectNode * node,
 {
     PROFILE_FUNCTION;
 
+    StackArray<AString> forceIncludes;
     ProjectGeneratorBase::ExtractIncludePaths( compilerArgs,
                                                m_IncludePaths,
+                                               forceIncludes,
                                                false ); // escapeQuotes
 
     // Ensure all includes are slash terminated
@@ -284,6 +286,12 @@ bool LightCache::Hash( ObjectNode * node,
             continue;
         }
         includePath += NATIVE_SLASH;
+    }
+
+    // Handle forced includes
+    for ( AString & forceInclude : forceIncludes )
+    {
+        ProcessInclude( forceInclude, IncludeType::QUOTE );
     }
 
     const AString & rootFileName = node->GetSourceFile()->GetName();

@@ -693,7 +693,8 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             // User Include Paths
             {
                 Array< AString > includePaths;
-                ProjectGeneratorBase::ExtractIncludePaths( oln->GetCompilerOptions(), includePaths, true );
+                Array< AString > forceIncludePaths; // TODO:C Is there a place in XCode projects to put this?
+                ProjectGeneratorBase::ExtractIncludePaths( oln->GetCompilerOptions(), includePaths, forceIncludePaths, true );
                 for ( AString & include : includePaths )
                 {
                     AStackString<> fullIncludePath;
