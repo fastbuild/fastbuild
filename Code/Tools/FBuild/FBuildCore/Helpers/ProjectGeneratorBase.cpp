@@ -416,8 +416,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 {
     // Different options add paths to the different groups which are then searched in the order of their priority.
     // So we need to do multiple passes over arguments to get a list of paths in the correct order.
-    StackArray< StackArray< AString, 2 >, 5 > prefixes;
-    prefixes.SetSize( 5 );
+    StackArray< StackArray< AString, 2 >, 6 > prefixes;
+    prefixes.SetSize( 6 );
     prefixes[ 0 ].EmplaceBack( "/I" );
     prefixes[ 0 ].EmplaceBack( "-I" );
     prefixes[ 1 ].EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
@@ -426,6 +426,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     prefixes[ 2 ].EmplaceBack( "-imsvc" );
     prefixes[ 3 ].EmplaceBack( "-idirafter" );
     prefixes[ 4 ].EmplaceBack( "-iquote" );
+    prefixes[ 5 ].EmplaceBack( "/external:I" );
+    prefixes[ 5 ].EmplaceBack( "-external:I" );
 
     for ( const StackArray<AString, 2> & group : prefixes )
     {
