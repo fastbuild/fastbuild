@@ -247,7 +247,7 @@ void TestLinker::LibrariesOnCommandLine() const
 //------------------------------------------------------------------------------
 void TestLinker::IncrementalLinking_MSVC() const
 {
-    #if ( _MSC_VER > 1900 ) // VS2015 link with /VERBOSE doesn't emit output we can use
+    #if defined( _MSC_VER ) && ( _MSC_VER > 1900 ) // VS2015 link with /VERBOSE doesn't emit output we can use
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestLinker/IncrementalLinking_MSVC/fbuild.bff";
         options.m_ShowCommandOutput = true; // Show linker output so we can check analyze /VERBOSE outptut

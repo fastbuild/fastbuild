@@ -90,7 +90,7 @@ Compiler( 'Compiler-Clang11-NonCL' )
                                     // Enable warnings
                                     + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                                     + ' -Wextra'
-                                    + ' -Wshadow'
+                                    + ' -Weverything'
 
                                     // No RTTI
                                     + ' /GR-'
@@ -141,7 +141,7 @@ Compiler( 'Compiler-Clang11-NonCL' )
                                     // Enable warnings
                                     + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                                     + ' -Wextra'
-                                    + ' -Wshadow'
+                                    + ' -Weverything'
 
                                     // No RTTI
                                     + ' -fno-rtti'

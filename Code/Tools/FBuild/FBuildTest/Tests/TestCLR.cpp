@@ -182,7 +182,7 @@ void TestCLR::TestParallelBuild_NoBuild() const
 void TestCLR::TestCLRToCPPBridge() const
 {
     // TODO:B FIX this test for VS2015 & VS2017
-    #if ( _MSC_VER < 1900 )
+    #if defined( _MSC_VER ) && ( _MSC_VER < 1900 )
         FBuildTestOptions options;
         options.m_ForceCleanBuild = true;
 

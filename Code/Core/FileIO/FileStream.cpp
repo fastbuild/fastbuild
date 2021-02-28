@@ -245,7 +245,7 @@ bool FileStream::IsOpen() const
         uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesWrittenNow = 0;
         if ( FALSE == WriteFile( (HANDLE)m_Handle,                              // _In_         HANDLE hFile,
-                                 (char *)buffer + (size_t)totalBytesWritten,    // _In_         LPCVOID lpBuffer,
+                                 (const char *)buffer + (size_t)totalBytesWritten,    // _In_         LPCVOID lpBuffer,
                                  tryToWriteNow,                                 // _In_         DWORD nNumberOfBytesToWrite,
                                  (LPDWORD)&bytesWrittenNow,                     // _Out_opt_    LPDWORD lpNumberOfBytesWritten,
                                  nullptr ) )                                    // _Inout_opt_  LPOVERLAPPED lpOverlapped
