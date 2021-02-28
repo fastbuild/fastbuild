@@ -122,13 +122,28 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
     ctx.m_DB = this;
     ctx.m_ObjectListNode = node;
 
-    const AString & compilerName = node->GetCompiler();
-    const Node * compilerNode = nodeGraph.FindNode( compilerName );
+    const Node * compilerNode = nodeGraph.FindNode( node->GetCompiler() );
+
+    // Check for MSVC
     const bool isMSVC = compilerNode &&
                         ( compilerNode->GetType() == Node::COMPILER_NODE ) &&
                         ( compilerNode->CastTo< CompilerNode >()->GetCompilerFamily() == CompilerNode::MSVC );
 
-    ctx.m_CompilerEscaped = compilerName;
+    // Get the compiler executable name
+    if ( compilerNode )
+    {
+        if ( compilerNode->GetType() == Node::COMPILER_NODE )
+        {
+            // Use the name of the executable when dealing with an actual CompilerNode
+            ctx.m_CompilerEscaped = compilerNode->CastTo< CompilerNode >()->GetExecutable();
+        }
+        else
+        {
+            // For other ndoes, fallback to the name of the node
+            ctx.m_CompilerEscaped = compilerNode->GetName();
+        }
+    }
+
     JSON::Escape( ctx.m_CompilerEscaped );
 
     // Prepare arguments: tokenize, remove problematic arguments, remove extra quoting and escape.

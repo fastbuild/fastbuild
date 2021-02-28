@@ -9,7 +9,11 @@
 .OutDir = '$StandardOutputBase$/Test/CompilationDatabase'
 
 // Use fake compiler to make checking of the result easier
-.Compiler = '$TestRoot$/Data/TestCompilationDatabase/clang'
+Compiler( 'FakeClang')
+{
+    .Executable = '$TestRoot$/Data/TestCompilationDatabase/clang.exe'
+}
+.Compiler = 'FakeClang'
 
 // Use constant output extension to make checking of the result easier
 .CompilerOutputExtension = '.result'
