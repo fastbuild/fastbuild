@@ -1875,10 +1875,23 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                         StripTokenWithArg_MSVC( "I", token, i );
 
                         // Add full path include
+                        AStackString<> value;
+                        value += job->GetRemoteSourceRoot();
+                        value += '\\';
+                        value += includePath;
+
+                        AStackString<> cleanValue;
+                        NodeGraph::CleanPath(value, cleanValue, false);
+
+                        // Remove trailing backslashes as they escape quotes
+                        // causing a variety of confusing link errors
+                        while (cleanValue.EndsWith('\\'))
+                        {
+                            cleanValue.Trim(0, 1);
+                        }
+
                         fullArgs.Append( token.Get(), (size_t)( start - token.Get() ) );
-                        fullArgs += job->GetRemoteSourceRoot();
-                        fullArgs += '\\';
-                        fullArgs += includePath;
+                        fullArgs += cleanValue;
                         fullArgs.Append( end, (size_t)( token.GetEnd() - end ) );
                         fullArgs.AddDelimiter();
 
@@ -1939,6 +1952,40 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             if ( StripToken( "-fdiagnostics-color", token, true ) ||
                  StripToken( "-fno-diagnostics-color", token ) )
             {
+                continue;
+            }
+        }
+
+        // always do clean the include paths
+        if (isClang || isMSVC || isClangCl)
+        {
+            if ((isClang && token.BeginsWith("-I")) ||
+                ((isMSVC || isClangCl) && IsStartOfCompilerArg_MSVC(token, "I")))
+            {
+                // Get include path part
+                const char * start = token.Get() + 2; // Skip /I or -I
+                const char * end = token.GetEnd();
+
+                // strip quotes if present
+                AStackString<> value;
+                Args::StripQuotes(start, end, value);
+
+                AStackString<> cleanValue;
+                NodeGraph::CleanPath(value, cleanValue, false);
+
+                // Remove trailing backslashes as they escape quotes
+                // causing a variety of confusing link errors
+                while (cleanValue.EndsWith('\\'))
+                {
+                    cleanValue.Trim(0, 1);
+                }
+
+                fullArgs += token[0]; // reuse whichever prefix, / or -
+                fullArgs += "I\"";
+                fullArgs += cleanValue.IsEmpty() ? "." : cleanValue.Get();
+                fullArgs += '\"';
+                fullArgs.AddDelimiter();
+
                 continue;
             }
         }
