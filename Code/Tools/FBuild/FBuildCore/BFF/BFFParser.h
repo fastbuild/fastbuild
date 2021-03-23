@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
+#include "Tools/FBuild/FBuildCore/BFF/LinkerNodeFileExistsCache.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFToken.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenizer.h"
 
@@ -90,6 +91,7 @@ private:
     AString m_CurrentBFFDir;
 
     BFFTokenizer m_Tokenizer;
+    LinkerNodeFileExistsCache m_LinkerNodeFileExistsCache;
 
     BFFParser & operator = (const BFFParser &) = delete;
 };

@@ -6,6 +6,7 @@
 #include "FBuildTest.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/LinkerNodeFileExistsCache.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/Dependencies.h"
 #include "Tools/FBuild/FBuildCore/Graph/LinkerNode.h"
@@ -125,6 +126,7 @@ void TestLinker::LibrariesOnCommandLine() const
     FBuild fBuild;
     NodeGraph nodeGraph;
     const BFFToken * iter = nullptr;
+    LinkerNodeFileExistsCache cache; // We're bypassing normal parsing so we have to manually create this
 
     // MSVC: 2 libraries
     {

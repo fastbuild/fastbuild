@@ -6,6 +6,7 @@
 #include "LinkerNode.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/BFF/LinkerNodeFileExistsCache.h"
 #include "Tools/FBuild/FBuildCore/Error.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
@@ -1375,7 +1376,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     }
 
     // see if the file exists on disk at this location
-    if ( FileIO::FileExists( potentialNodeNameClean.Get() ) )
+    if ( LinkerNodeFileExistsCache::Get().FileExists( potentialNodeNameClean ) )
     {
         node = nodeGraph.CreateFileNode( potentialNodeNameClean );
         libs.EmplaceBack( node );
