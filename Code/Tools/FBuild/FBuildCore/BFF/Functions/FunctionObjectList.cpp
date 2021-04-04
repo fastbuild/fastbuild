@@ -48,7 +48,7 @@ FunctionObjectList::FunctionObjectList()
 
 // CheckCompilerOptions
 //------------------------------------------------------------------------------
-bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AString & compilerOptions, const uint32_t objFlags ) const
+bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AString & compilerOptions, const ObjectNode::CompilerFlags objFlags ) const
 {
     bool hasInputToken = false;
     bool hasOutputToken = false;
@@ -68,7 +68,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AStr
         }
         else
         {
-            if ( objFlags & ( ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL ) )
+            if ( objFlags.IsMSVC() || objFlags.IsClangCl() )
             {
                 if ( ( token == "/c" ) || ( token == "-c" ) )
                 {
@@ -97,7 +97,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AStr
     }
 
     // check /c or -c
-    if ( objFlags & ( ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL ) )
+    if ( objFlags.IsMSVC() || objFlags.IsClangCl() )
     {
         if ( hasCompileToken == false )
         {
@@ -105,7 +105,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AStr
             return false;
         }
     }
-    else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_VBCC ) )
+    else if ( objFlags.IsSNC() || objFlags.IsGCC() || objFlags.IsVBCC() )
     {
         if ( hasCompileToken == false )
         {
@@ -185,7 +185,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Create( const BFFToken * iter,
 //------------------------------------------------------------------------------
 bool FunctionObjectList::CheckMSVCPCHFlags_Use( const BFFToken * iter,
                                                 const AString & compilerOptions,
-                                                uint32_t objFlags ) const
+                                                ObjectNode::CompilerFlags objFlags ) const
 {
     // Check Compiler Options
     bool foundYuInCompilerOptions = false;
@@ -217,7 +217,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Use( const BFFToken * iter,
         return false;
     }
 
-    if ( objFlags & ObjectNode::FLAG_CREATING_PCH )
+    if ( objFlags.IsCreatingPCH() )
     {
         // must not specify use of precompiled header (must use the PCH specific options)
         Error::Error_1303_PCHCreateOptionOnlyAllowedOnPCH( iter, this, "Yc", "CompilerOptions" );
