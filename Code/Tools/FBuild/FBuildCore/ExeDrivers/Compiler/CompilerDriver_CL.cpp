@@ -29,7 +29,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
 /*virtual*/ bool CompilerDriver_CL::ProcessArg_PreprocessorOnly( const AString & token,
                                                                  size_t & index,
                                                                  const AString & /*nextToken*/,
-                                                                 Args & outFullArgs )
+                                                                 Args & outFullArgs ) const
 {
     // Strip /ZW
     if ( StripToken_MSVC( "ZW", token ) )
@@ -65,7 +65,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
 /*virtual*/ bool CompilerDriver_CL::ProcessArg_CompilePreprocessed( const AString & token,
                                                                     size_t & index,
                                                                     const AString & /*nextToken*/,
-                                                                    Args & outFullArgs )
+                                                                    Args & outFullArgs ) const
 {
     // Can't use the precompiled header when compiling the preprocessed output
     // as this would prevent cacheing.
@@ -141,8 +141,8 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
 // ProcessArg_Common
 //------------------------------------------------------------------------------
 /*virtual*/ bool CompilerDriver_CL::ProcessArg_Common( const AString & token,
-                                                       size_t & index,
-                                                       Args & outFullArgs )
+                                                       size_t & /*index*/,
+                                                       Args & outFullArgs ) const
 {
     // FASTBuild handles the multiprocessor scheduling
     if ( StripToken_MSVC( "MP", token, true ) ) // true = strip '/MP' and starts with '/MP'
@@ -173,6 +173,15 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
         return true;
     }
 
+    return false;
+}
+
+// ProcessArg_BuildTimeSubstitution
+//------------------------------------------------------------------------------
+/*virtual*/ bool CompilerDriver_CL::ProcessArg_BuildTimeSubstitution( const AString & token,
+                                                                      size_t & index,
+                                                                      Args & outFullArgs ) const
+{
     // %3 -> PrecompiledHeader Obj
     {
         const char * const found = token.Find( "%3" );
@@ -202,12 +211,12 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
         }
     }
 
-    return CompilerDriverBase::ProcessArg_Common( token, index, outFullArgs );
+    return CompilerDriverBase::ProcessArg_BuildTimeSubstitution( token, index, outFullArgs );
 }
 
 // AddAdditionalArgs_Preprocessor
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_CL::AddAdditionalArgs_Preprocessor( Args & outFullArgs )
+/*virtual*/ void CompilerDriver_CL::AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const
 {
     // This attempt to define the missing _PREFAST_ macro results in strange
     // inconsistencies when compiling with /analyze
@@ -231,7 +240,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
 
 // AddAdditionalArgs_Common
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_CL::AddAdditionalArgs_Common( Args & outFullArgs )
+/*virtual*/ void CompilerDriver_CL::AddAdditionalArgs_Common( Args & outFullArgs ) const
 {
     // Remote compilation writes to a temp pdb
     if ( ( m_IsLocal == false ) &&

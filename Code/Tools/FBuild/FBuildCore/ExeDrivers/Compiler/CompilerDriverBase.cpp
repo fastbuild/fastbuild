@@ -38,7 +38,7 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
 /*virtual*/ bool CompilerDriverBase::ProcessArg_PreprocessorOnly( const AString & /*token*/,
                                                                   size_t & /*index*/,
                                                                   const AString & /*nextToken*/,
-                                                                  Args & /*outFullArgs*/ )
+                                                                  Args & /*outFullArgs*/ ) const
 {
     return false;
 }
@@ -48,16 +48,26 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
 /*virtual*/ bool CompilerDriverBase::ProcessArg_CompilePreprocessed( const AString & /*token*/,
                                                                      size_t & /*index*/,
                                                                      const AString & /*nextToken*/,
-                                                                     Args & /*outFullArgs*/ )
+                                                                     Args & /*outFullArgs*/ ) const
 {
     return false;
 }
 
 // ProcessArg_Common
 //------------------------------------------------------------------------------
-/*virtual*/ bool CompilerDriverBase::ProcessArg_Common( const AString & token, size_t & /*index*/, Args & outFullArgs )
+/*virtual*/ bool CompilerDriverBase::ProcessArg_Common( const AString & /*token*/,
+                                                        size_t & /*index*/,
+                                                        Args & /*outFullArgs*/ ) const
 {
+    return false;
+}
 
+// ProcessArg_BuildTimeSubstitution
+//------------------------------------------------------------------------------
+/*virtual*/ bool CompilerDriverBase::ProcessArg_BuildTimeSubstitution( const AString & token,
+                                                                       size_t & /*index*/,
+                                                                       Args & outFullArgs ) const
+{
     // %1 -> InputFile
     {
         const char * const found = token.Find( "%1" );
@@ -114,19 +124,21 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
 
 // AddAdditionalArgs_Preprocessor
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriverBase::AddAdditionalArgs_Preprocessor( Args & /*outFullArgs*/ )
+/*virtual*/ void CompilerDriverBase::AddAdditionalArgs_Preprocessor( Args & /*outFullArgs*/ ) const
 {
 }
 
 // AddAdditionalArgs_Common
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriverBase::AddAdditionalArgs_Common( Args & /*outFullArgs*/ )
+/*virtual*/ void CompilerDriverBase::AddAdditionalArgs_Common( Args & /*outFullArgs*/ ) const
 {
 }
 
 // StripTokenWithArg
 //------------------------------------------------------------------------------
-/*static*/ bool CompilerDriverBase::StripTokenWithArg( const char * tokenToCheckFor, const AString & token, size_t & index )
+/*static*/ bool CompilerDriverBase::StripTokenWithArg( const char * tokenToCheckFor,
+                                                       const AString & token,
+                                                       size_t & index )
 {
     if ( token.BeginsWith( tokenToCheckFor ) )
     {
@@ -146,7 +158,9 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
 
 // StripToken
 //------------------------------------------------------------------------------
-/*static*/ bool CompilerDriverBase::StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith )
+/*static*/ bool CompilerDriverBase::StripToken( const char * tokenToCheckFor,
+                                                const AString & token,
+                                                bool allowStartsWith )
 {
     if ( allowStartsWith )
     {

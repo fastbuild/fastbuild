@@ -21,7 +21,7 @@ CompilerDriver_CUDA::~CompilerDriver_CUDA() = default;
 /*virtual*/ bool CompilerDriver_CUDA::ProcessArg_PreprocessorOnly( const AString & token,
                                                                   size_t & index,
                                                                   const AString & /*nextToken*/,
-                                                                  Args & /*outFullArgs*/ )
+                                                                  Args & /*outFullArgs*/ ) const
 {
     // Remove output arg
     if ( StripTokenWithArg( "-o", token, index ) )
@@ -40,7 +40,7 @@ CompilerDriver_CUDA::~CompilerDriver_CUDA() = default;
 
 // AddAdditionalArgs_Preprocessor
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_CUDA::AddAdditionalArgs_Preprocessor( Args & outFullArgs )
+/*virtual*/ void CompilerDriver_CUDA::AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const
 {
     outFullArgs += "-E"; // run pre-processor only
 }

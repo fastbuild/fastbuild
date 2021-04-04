@@ -186,10 +186,6 @@ private:
         PASS_COMPILE,
         PASS_PREP_FOR_SIMPLE_DISTRIBUTION,
     };
-    static bool StripTokenWithArg( const char * tokenToCheckFor, const AString & token, size_t & index );
-    static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index );
-    static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
-    static bool StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
     bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
     bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;

@@ -28,7 +28,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
 /*virtual*/ bool CompilerDriver_GCCClang::ProcessArg_PreprocessorOnly( const AString & token,
                                                                        size_t & index,
                                                                        const AString & /*nextToken*/,
-                                                                       Args & /*outFullArgs*/ )
+                                                                       Args & /*outFullArgs*/ ) const
 {
     // The pch can only be utilized when doing a direct compilation
     //  - Can't be used to generate the preprocessed output
@@ -71,7 +71,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
 /*virtual*/ bool CompilerDriver_GCCClang::ProcessArg_CompilePreprocessed( const AString & token,
                                                                           size_t & index,
                                                                           const AString & nextToken,
-                                                                          Args & outFullArgs )
+                                                                          Args & outFullArgs ) const
 {
     if ( m_IsClang )
     {
@@ -143,7 +143,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ bool CompilerDriver_GCCClang::ProcessArg_Common( const AString & token,
                                                              size_t & index,
-                                                             Args & outFullArgs )
+                                                             Args & outFullArgs ) const
 {
     // Strip -fdiagnostics-color options because we are going to override them
     if ( m_ForceColoredDiagnostics )
@@ -160,7 +160,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
 
 // AddAdditionalArgs_Preprocessor
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_GCCClang::AddAdditionalArgs_Preprocessor( Args & outFullArgs )
+/*virtual*/ void CompilerDriver_GCCClang::AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const
 {
     outFullArgs += "-E"; // run pre-processor only
 
@@ -183,7 +183,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
 
 // AddAdditionalArgs_Common
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_GCCClang::AddAdditionalArgs_Common( Args & outFullArgs )
+/*virtual*/ void CompilerDriver_GCCClang::AddAdditionalArgs_Common( Args & outFullArgs ) const
 {
     if ( m_ForceColoredDiagnostics )
     {

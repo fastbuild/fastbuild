@@ -1597,69 +1597,6 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     FLOG_OUTPUT( output );
 }
 
-// StripTokenWithArg
-//------------------------------------------------------------------------------
-/*static*/ bool ObjectNode::StripTokenWithArg( const char * tokenToCheckFor, const AString & token, size_t & index )
-{
-    if ( token.BeginsWith( tokenToCheckFor ) )
-    {
-        if ( token == tokenToCheckFor )
-        {
-            ++index; // skip additional next token
-        }
-        return true; // found
-    }
-    if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) && ( token.GetLength() > 2 ) )
-    {
-        const AStackString<> unquoted( ( token.Get() + 1 ), ( token.GetEnd() - 1 ) );
-        return StripTokenWithArg( tokenToCheckFor, unquoted, index );
-    }
-    return false; // not found
-}
-
-// StripTokenWithArg_MSVC
-//------------------------------------------------------------------------------
-/*static*/ bool ObjectNode::StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index )
-{
-    if ( IsStartOfCompilerArg_MSVC( token, tokenToCheckFor ) )
-    {
-        if ( IsCompilerArg_MSVC( token, tokenToCheckFor ) )
-        {
-            ++index; // skip additional next token
-        }
-        return true; // found
-    }
-    return false; // not found
-}
-// StripToken
-//------------------------------------------------------------------------------
-/*static*/ bool ObjectNode::StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith )
-{
-    if ( allowStartsWith )
-    {
-        return token.BeginsWith( tokenToCheckFor );
-    }
-    else
-    {
-        return ( token == tokenToCheckFor );
-    }
-}
-
-// StripToken_MSVC
-//------------------------------------------------------------------------------
-/*static*/ bool ObjectNode::StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith )
-{
-    if ( allowStartsWith )
-    {
-        return IsStartOfCompilerArg_MSVC( token, tokenToCheckFor );
-    }
-    else
-    {
-        return IsCompilerArg_MSVC( token, tokenToCheckFor );
-    }
-}
-
-
 // BuildArgs
 //------------------------------------------------------------------------------
 bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile ) const
@@ -1739,6 +1676,12 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 
         // Handle general args adjustment
         if ( driver->ProcessArg_Common( token, i, fullArgs ) )
+        {
+            continue;
+        }
+
+        // Handle build-time substitutions
+        if ( driver->ProcessArg_BuildTimeSubstitution( token, i, fullArgs ) )
         {
             continue;
         }

@@ -21,7 +21,7 @@ CompilerDriver_SNC::~CompilerDriver_SNC() = default;
 /*virtual*/ bool CompilerDriver_SNC::ProcessArg_PreprocessorOnly( const AString & token,
                                                                   size_t & index,
                                                                   const AString & /*nextToken*/,
-                                                                  Args & /*outFullArgs*/ )
+                                                                  Args & /*outFullArgs*/ ) const
 {
     // Remove output arg
     if ( StripTokenWithArg( "-o", token, index ) )
@@ -40,7 +40,7 @@ CompilerDriver_SNC::~CompilerDriver_SNC() = default;
 
 // AddAdditionalArgs_Preprocessor
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_SNC::AddAdditionalArgs_Preprocessor( Args & outFullArgs )
+/*virtual*/ void CompilerDriver_SNC::AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const
 {
     outFullArgs += "-E"; // run pre-processor only
 }

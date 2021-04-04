@@ -32,17 +32,34 @@ public:
     void SetOverrideSourceFile( const AString & overrideSourceFile ) { m_OverrideSourceFile= overrideSourceFile; }
 
     // Manipulate args if needed for various compilation modes
-    virtual bool ProcessArg_PreprocessorOnly( const AString & token, size_t & index, const AString & nextToken, Args & outFullArgs );
-    virtual bool ProcessArg_CompilePreprocessed( const AString & token, size_t & index, const AString & nextToken, Args & outFullArgs );
-    virtual bool ProcessArg_Common( const AString & token, size_t & index, Args & outFullArgs );
+    virtual bool ProcessArg_PreprocessorOnly( const AString & token,
+                                              size_t & index,
+                                              const AString & nextToken,
+                                              Args & outFullArgs ) const;
+    virtual bool ProcessArg_CompilePreprocessed( const AString & token,
+                                                 size_t & index,
+                                                 const AString & nextToken,
+                                                 Args & outFullArgs ) const;
+    virtual bool ProcessArg_Common( const AString & token,
+                                    size_t & index,
+                                    Args & outFullArgs ) const;
+
+    // Inject build-time substitutions (%1 etc)
+    virtual bool ProcessArg_BuildTimeSubstitution( const AString & token,
+                                                   size_t & index,
+                                                   Args & outFullArgs ) const;
 
     // Add additional args
-    virtual void AddAdditionalArgs_Preprocessor( Args & outFullArgs );
-    virtual void AddAdditionalArgs_Common( Args & outFullArgs );
+    virtual void AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const;
+    virtual void AddAdditionalArgs_Common( Args & outFullArgs ) const;
 
 protected:
-    static bool StripTokenWithArg( const char * tokenToCheckFor, const AString & token, size_t & index );
-    static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
+    static bool StripTokenWithArg( const char * tokenToCheckFor,
+                                   const AString & token,
+                                   size_t & index );
+    static bool StripToken( const char * tokenToCheckFor,
+                            const AString & token,
+                            bool allowStartsWith = false );
 
     const ObjectNode *  m_ObjectNode                = nullptr;
     bool                m_IsLocal                   = true;

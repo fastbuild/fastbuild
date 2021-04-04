@@ -21,7 +21,7 @@ CompilerDriver_QtRCC::~CompilerDriver_QtRCC() = default;
 /*virtual*/ bool CompilerDriver_QtRCC::ProcessArg_PreprocessorOnly( const AString & token,
                                                                     size_t & index,
                                                                     const AString & /*nextToken*/,
-                                                                    Args & /*outFullArgs*/ )
+                                                                    Args & /*outFullArgs*/ ) const
 {
     // remove --output (or alias -o) so dependency list goes to stdout
     if ( StripTokenWithArg( "--output", token, index ) ||
@@ -33,36 +33,11 @@ CompilerDriver_QtRCC::~CompilerDriver_QtRCC() = default;
     return false;
 }
 
-// ProcessArg_CompilePreprocessed
-//------------------------------------------------------------------------------
-/*virtual*/ bool CompilerDriver_QtRCC::ProcessArg_CompilePreprocessed( const AString & /*token*/,
-                                                                       size_t & /*index*/,
-                                                                       const AString & /*nextToken*/,
-                                                                       Args & /*outFullArgs*/ )
-{
-    return false;
-}
-
-// ProcessArg_Common
-//------------------------------------------------------------------------------
-/*virtual*/ bool CompilerDriver_QtRCC::ProcessArg_Common( const AString & token,
-                                                             size_t & index,
-                                                             Args & outFullArgs )
-{
-    return CompilerDriverBase::ProcessArg_Common( token, index, outFullArgs );
-}
-
 // AddAdditionalArgs_Preprocessor
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_QtRCC::AddAdditionalArgs_Preprocessor( Args & outFullArgs )
+/*virtual*/ void CompilerDriver_QtRCC::AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const
 {
     outFullArgs += " --list"; // List used resources
-}
-
-// AddAdditionalArgs_Common
-//------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_QtRCC::AddAdditionalArgs_Common( Args & /*outFullArgs*/ )
-{
 }
 
 //------------------------------------------------------------------------------

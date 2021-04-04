@@ -21,7 +21,7 @@ CompilerDriver_OrbisWavePSSLC::~CompilerDriver_OrbisWavePSSLC() = default;
 /*virtual*/ bool CompilerDriver_OrbisWavePSSLC::ProcessArg_PreprocessorOnly( const AString & token,
                                                                              size_t & index,
                                                                              const AString & /*nextToken*/,
-                                                                             Args & /*outFullArgs*/ )
+                                                                             Args & /*outFullArgs*/ ) const
 {
     // Remove output arg
     if ( StripTokenWithArg( "-o", token, index ) )
@@ -43,7 +43,7 @@ CompilerDriver_OrbisWavePSSLC::~CompilerDriver_OrbisWavePSSLC() = default;
 /*virtual*/ bool CompilerDriver_OrbisWavePSSLC::ProcessArg_CompilePreprocessed( const AString & token,
                                                                           size_t & index,
                                                                           const AString & /*nextToken*/,
-                                                                          Args & /*outFullArgs*/ )
+                                                                          Args & /*outFullArgs*/ ) const
 {
     // Remove forced includes so they aren't forced twice
     if ( StripTokenWithArg( "-include", token, index ) )
@@ -54,26 +54,11 @@ CompilerDriver_OrbisWavePSSLC::~CompilerDriver_OrbisWavePSSLC() = default;
     return false;
 }
 
-// ProcessArg_Common
-//------------------------------------------------------------------------------
-/*virtual*/ bool CompilerDriver_OrbisWavePSSLC::ProcessArg_Common( const AString & token,
-                                                                   size_t & index,
-                                                                   Args & outFullArgs )
-{
-    return CompilerDriverBase::ProcessArg_Common( token, index, outFullArgs );
-}
-
 // AddAdditionalArgs_Preprocessor
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_OrbisWavePSSLC::AddAdditionalArgs_Preprocessor( Args & outFullArgs )
+/*virtual*/ void CompilerDriver_OrbisWavePSSLC::AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const
 {
     outFullArgs += "-E"; // run pre-processor only
-}
-
-// AddAdditionalArgs_Common
-//------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_OrbisWavePSSLC::AddAdditionalArgs_Common( Args & /*outFullArgs*/ )
-{
 }
 
 //------------------------------------------------------------------------------
