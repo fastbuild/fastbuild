@@ -43,6 +43,7 @@ CompilerDriver_OrbisWavePSSLC::~CompilerDriver_OrbisWavePSSLC() = default;
 /*virtual*/ bool CompilerDriver_OrbisWavePSSLC::ProcessArg_CompilePreprocessed( const AString & token,
                                                                           size_t & index,
                                                                           const AString & /*nextToken*/,
+                                                                          bool /*isLocal*/,
                                                                           Args & /*outFullArgs*/ ) const
 {
     // Remove forced includes so they aren't forced twice

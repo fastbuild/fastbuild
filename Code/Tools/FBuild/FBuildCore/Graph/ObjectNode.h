@@ -8,12 +8,14 @@
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Assert.h"
 #include "Core/Process/Process.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
+class CompilerDriverBase;
 class ConstMemoryStream;
 class Function;
 class NodeGraph;
@@ -202,6 +204,10 @@ private:
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
     void DoClangUnityFixup( Job * job ) const;
+
+    void CreateDriver( ObjectNode::CompilerFlags flags,
+                       const AString & remoteSourceRoot,
+                       UniquePtr<CompilerDriverBase, DeleteDeletor> & outDriver ) const;
 
     friend class FunctionObjectList;
 

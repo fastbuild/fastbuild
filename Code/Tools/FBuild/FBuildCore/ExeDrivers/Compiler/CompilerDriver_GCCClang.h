@@ -29,13 +29,15 @@ public:
     virtual bool ProcessArg_CompilePreprocessed( const AString & token,
                                                  size_t & index,
                                                  const AString & nextToken,
+                                                 bool isLocal,
                                                  Args & outFullArgs ) const override;
     virtual bool ProcessArg_Common( const AString & token,
                                     size_t & index,
                                     Args & outFullArgs ) const override;
 
     virtual void AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const override;
-    virtual void AddAdditionalArgs_Common( Args & outFullArgs ) const override;
+    virtual void AddAdditionalArgs_Common( bool isLocal,
+                                           Args & outFullArgs ) const override;
 
 protected:
     bool m_IsClang = false;

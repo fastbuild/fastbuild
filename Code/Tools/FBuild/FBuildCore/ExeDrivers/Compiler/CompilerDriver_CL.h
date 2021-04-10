@@ -26,6 +26,7 @@ protected:
     virtual bool ProcessArg_CompilePreprocessed( const AString & token,
                                                  size_t & index,
                                                  const AString & nextToken,
+                                                 bool isLocal,
                                                  Args & outFullArgs ) const override;
     virtual bool ProcessArg_Common( const AString & token,
                                     size_t & index,
@@ -38,7 +39,8 @@ protected:
 
     // Add additional args
     virtual void AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const override;
-    virtual void AddAdditionalArgs_Common( Args & outFullArgs ) const override;
+    virtual void AddAdditionalArgs_Common( bool isLocal,
+                                           Args & outFullArgs ) const override;
 
     static bool IsCompilerArg_MSVC( const AString & token, const char * arg );
     static bool IsStartOfCompilerArg_MSVC( const AString & token, const char * arg );

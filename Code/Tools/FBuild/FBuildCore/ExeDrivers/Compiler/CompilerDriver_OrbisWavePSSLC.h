@@ -24,6 +24,7 @@ public:
     virtual bool ProcessArg_CompilePreprocessed( const AString & token,
                                                  size_t & index,
                                                  const AString & nextToken,
+                                                 bool isLocal,
                                                  Args & outFullArgs ) const override;
 
     virtual void AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const override;

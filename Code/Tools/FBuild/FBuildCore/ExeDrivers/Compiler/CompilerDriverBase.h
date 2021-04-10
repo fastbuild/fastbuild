@@ -23,7 +23,6 @@ public:
     virtual ~CompilerDriverBase();
 
     void Init( const ObjectNode * objectNode,
-               bool isLocal,
                const AString & remoteSourceRoot );
 
     void SetForceColoredDiagnostics( bool forceColoredDiagnostics ) { m_ForceColoredDiagnostics = forceColoredDiagnostics; }
@@ -39,6 +38,7 @@ public:
     virtual bool ProcessArg_CompilePreprocessed( const AString & token,
                                                  size_t & index,
                                                  const AString & nextToken,
+                                                 bool isLocal,
                                                  Args & outFullArgs ) const;
     virtual bool ProcessArg_Common( const AString & token,
                                     size_t & index,
@@ -51,7 +51,15 @@ public:
 
     // Add additional args
     virtual void AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const;
-    virtual void AddAdditionalArgs_Common( Args & outFullArgs ) const;
+    virtual void AddAdditionalArgs_Common( bool isLocal,
+                                           Args & outFullArgs ) const;
+
+    // Locally modify args before passing to remote worker
+    virtual bool ProcessArg_PreparePreprocessedForRemote( const AString & token,
+                                                          size_t index,
+                                                          const AString & nextToken,
+                                                          Args & outFullArgs ) const;
+    virtual void AddAdditionalArgs_PreparePreprocessedForRemote( Args & outFullArgs );
 
 protected:
     static bool StripTokenWithArg( const char * tokenToCheckFor,
@@ -62,7 +70,6 @@ protected:
                             bool allowStartsWith = false );
 
     const ObjectNode *  m_ObjectNode                = nullptr;
-    bool                m_IsLocal                   = true;
     bool                m_ForceColoredDiagnostics   = false;
     AString             m_SourceMapping;
     AString             m_RelativeBasePath;

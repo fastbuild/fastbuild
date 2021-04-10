@@ -65,6 +65,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
 /*virtual*/ bool CompilerDriver_CL::ProcessArg_CompilePreprocessed( const AString & token,
                                                                     size_t & index,
                                                                     const AString & /*nextToken*/,
+                                                                    bool isLocal,
                                                                     Args & outFullArgs ) const
 {
     // Can't use the precompiled header when compiling the preprocessed output
@@ -79,7 +80,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     }
 
     // Remote compilation writes to a temp pdb
-    if ( m_IsLocal == false )
+    if ( isLocal == false )
     {
         if ( StripTokenWithArg_MSVC( "Fd", token, index ) )
         {
@@ -94,7 +95,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     // we expand relative includes as they would be on the host (so the remote machine's
     // working dir is not used, which might be longer, causing this overflow an internal
     // limit of cl.exe)
-    if ( ( m_IsLocal == false ) && IsStartOfCompilerArg_MSVC( token, "I" ) )
+    if ( ( isLocal == false ) && IsStartOfCompilerArg_MSVC( token, "I" ) )
     {
         // Get include path part
         const char * start = token.Get() + 2; // Skip /I or -I
@@ -240,10 +241,10 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
 
 // AddAdditionalArgs_Common
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_CL::AddAdditionalArgs_Common( Args & outFullArgs ) const
+/*virtual*/ void CompilerDriver_CL::AddAdditionalArgs_Common( bool isLocal, Args & outFullArgs ) const
 {
     // Remote compilation writes to a temp pdb
-    if ( ( m_IsLocal == false ) &&
+    if ( ( isLocal == false ) &&
          ( m_ObjectNode->IsUsingPDB() ) )
     {
         AStackString<> pdbName;
@@ -254,7 +255,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     // Add args for source mapping
     if ( m_IsClangCL )
     {
-        if ( ( m_SourceMapping.IsEmpty() == false ) && m_IsLocal )
+        if ( ( m_SourceMapping.IsEmpty() == false ) && isLocal )
         {
             const AString& workingDir = FBuild::Get().GetOptions().GetWorkingDir();
             AStackString<> tmp;

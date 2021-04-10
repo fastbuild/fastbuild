@@ -1160,8 +1160,36 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     // TODO:B would be nice to make ShouldUseDeoptimization cache the result for this build
     // instead of opening the file again.
-    const AString & args = ShouldUseDeoptimization() ? m_CompilerOptionsDeoptimized : m_CompilerOptions;
-    stream.Write( args );
+    const AString & compilerOptions = ShouldUseDeoptimization() ? m_CompilerOptionsDeoptimized : m_CompilerOptions;
+
+    // Prepare args for remote worker
+    UniquePtr<CompilerDriverBase, DeleteDeletor> driver;
+    CreateDriver( m_CompilerFlags, AString::GetEmpty(), driver );
+    Array< AString > tokens( 1024, true );
+    compilerOptions.Tokenize( tokens );
+    Args fullArgs;
+
+    // Adjust args for as needed for the given compiler
+    const size_t numTokens = tokens.GetSize();
+    for ( size_t i = 0; i < numTokens; ++i )
+    {
+        // current token
+        const AString & token = tokens[ i ];
+        const AString & nextToken = ( i < ( numTokens - 1 ) ) ? tokens[ i + 1 ] : AString::GetEmpty();
+
+        // Handle compiling preprocessed output args adjustment
+        if ( driver->ProcessArg_PreparePreprocessedForRemote( token, i, nextToken, fullArgs ) )
+        {
+            continue;
+        }
+
+        // untouched token
+        fullArgs += token;
+        fullArgs.AddDelimiter();
+    }
+    driver->AddAdditionalArgs_PreparePreprocessedForRemote( fullArgs );
+
+    stream.Write( fullArgs.GetRawArgs() );
 }
 
 // GetCompiler
@@ -1636,18 +1664,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     const bool forceColoredDiagnostics = ( flags.IsDiagnosticsColorAuto() && ( Env::IsStdOutRedirected() == false ) );
 
     UniquePtr<CompilerDriverBase, DeleteDeletor> driver;
-    if      ( flags.IsMSVC() || flags.IsClangCl() ) { driver = FNEW( CompilerDriver_CL( flags.IsClangCl() ) ); }
-    else if ( flags.IsClang() || flags.IsGCC() )    { driver = FNEW( CompilerDriver_GCCClang( flags.IsClang() ) ); }
-    else if ( flags.IsVBCC() )                      { driver = FNEW( CompilerDriver_VBCC() ); }
-    else if ( flags.IsQtRCC() )                     { driver = FNEW( CompilerDriver_QtRCC() ); }
-    else if ( flags.IsOrbisWavePSSLC() )            { driver = FNEW( CompilerDriver_OrbisWavePSSLC() ); }
-    else if ( flags.IsSNC() )                       { driver = FNEW( CompilerDriver_SNC() ); }
-    else if ( flags.IsCUDANVCC() )                  { driver = FNEW( CompilerDriver_CUDA() ); }
-    else if ( flags.IsCodeWarriorWii() )            { driver = FNEW( CompilerDriver_CodeWarriorWii() ); }
-    else if ( flags.IsGreenHillsWiiU() )            { driver = FNEW( CompilerDriver_GreenHillsWiiU() ); }
-    else                                            { driver = FNEW( CompilerDriver_Generic() ); }
-
-    driver->Init( this, job->IsLocal(), job->GetRemoteSourceRoot() );
+    CreateDriver( flags, job->GetRemoteSourceRoot(), driver );
 
     driver->SetOverrideSourceFile( overrideSrcFile );
     driver->SetRelativeBasePath( basePath );
@@ -1669,7 +1686,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         }
 
         // Handle compiling preprocessed output args adjustment
-        if ( ( pass == PASS_COMPILE_PREPROCESSED ) && driver->ProcessArg_CompilePreprocessed( token, i, nextToken, fullArgs ) )
+        if ( ( pass == PASS_COMPILE_PREPROCESSED ) && driver->ProcessArg_CompilePreprocessed( token, i, nextToken, job->IsLocal(), fullArgs ) )
         {
             continue;
         }
@@ -1696,7 +1713,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     {
         driver->AddAdditionalArgs_Preprocessor( fullArgs );
     }
-    driver->AddAdditionalArgs_Common( fullArgs );
+    driver->AddAdditionalArgs_Common( job->IsLocal(), fullArgs );
 
     if ( showIncludes )
     {
@@ -2679,6 +2696,26 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
         ASSERT( *pos == '2' );
         *pos = ' ';
     }
+}
+
+// CreateDriver
+//------------------------------------------------------------------------------
+void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
+                               const AString & remoteSourceRoot,
+                               UniquePtr<CompilerDriverBase, DeleteDeletor> & outDriver ) const
+{
+    if      ( flags.IsMSVC() || flags.IsClangCl() ) { outDriver = FNEW( CompilerDriver_CL( flags.IsClangCl() ) ); }
+    else if ( flags.IsClang() || flags.IsGCC() )    { outDriver = FNEW( CompilerDriver_GCCClang( flags.IsClang() ) ); }
+    else if ( flags.IsVBCC() )                      { outDriver = FNEW( CompilerDriver_VBCC() ); }
+    else if ( flags.IsQtRCC() )                     { outDriver = FNEW( CompilerDriver_QtRCC() ); }
+    else if ( flags.IsOrbisWavePSSLC() )            { outDriver = FNEW( CompilerDriver_OrbisWavePSSLC() ); }
+    else if ( flags.IsSNC() )                       { outDriver = FNEW( CompilerDriver_SNC() ); }
+    else if ( flags.IsCUDANVCC() )                  { outDriver = FNEW( CompilerDriver_CUDA() ); }
+    else if ( flags.IsCodeWarriorWii() )            { outDriver = FNEW( CompilerDriver_CodeWarriorWii() ); }
+    else if ( flags.IsGreenHillsWiiU() )            { outDriver = FNEW( CompilerDriver_GreenHillsWiiU() ); }
+    else                                            { outDriver = FNEW( CompilerDriver_Generic() ); }
+
+    outDriver->Init( this, remoteSourceRoot );
 }
 
 //------------------------------------------------------------------------------

@@ -26,11 +26,9 @@ CompilerDriverBase::~CompilerDriverBase() = default;
 // Init
 //------------------------------------------------------------------------------
 void CompilerDriverBase::Init( const ObjectNode * objectNode,
-                               bool isLocal,
                                const AString & remoteSourceRoot )
 {
     m_ObjectNode= objectNode;
-    m_IsLocal = isLocal;
     m_RemoteSourceRoot = remoteSourceRoot;
 }
 
@@ -48,6 +46,7 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
 /*virtual*/ bool CompilerDriverBase::ProcessArg_CompilePreprocessed( const AString & /*token*/,
                                                                      size_t & /*index*/,
                                                                      const AString & /*nextToken*/,
+                                                                     bool /*isLocal*/,
                                                                      Args & /*outFullArgs*/ ) const
 {
     return false;
@@ -130,7 +129,8 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
 
 // AddAdditionalArgs_Common
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriverBase::AddAdditionalArgs_Common( Args & /*outFullArgs*/ ) const
+/*virtual*/ void CompilerDriverBase::AddAdditionalArgs_Common( bool /*isLocal*/,
+                                                               Args & /*outFullArgs*/ ) const
 {
 }
 
@@ -170,6 +170,22 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
     {
         return ( token == tokenToCheckFor );
     }
+}
+
+// ProcessArg_PreparePreprocessedForRemote
+//------------------------------------------------------------------------------
+/*virtual*/ bool CompilerDriverBase::ProcessArg_PreparePreprocessedForRemote( const AString & /*token*/,
+                                                                              size_t /*index*/,
+                                                                              const AString & /*nextToken*/,
+                                                                              Args & /*outFullArgs*/ ) const
+{
+    return false;
+}
+
+// AddAdditionalArgs_PreparePreprocessedForRemote
+//------------------------------------------------------------------------------
+/*virtual*/ void CompilerDriverBase::AddAdditionalArgs_PreparePreprocessedForRemote( Args & /*outFullArgs*/ )
+{
 }
 
 //------------------------------------------------------------------------------

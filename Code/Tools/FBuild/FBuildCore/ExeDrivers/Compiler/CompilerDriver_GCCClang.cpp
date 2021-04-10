@@ -71,6 +71,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
 /*virtual*/ bool CompilerDriver_GCCClang::ProcessArg_CompilePreprocessed( const AString & token,
                                                                           size_t & index,
                                                                           const AString & nextToken,
+                                                                          bool /*isLocal*/,
                                                                           Args & outFullArgs ) const
 {
     if ( m_IsClang )
@@ -183,7 +184,8 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
 
 // AddAdditionalArgs_Common
 //------------------------------------------------------------------------------
-/*virtual*/ void CompilerDriver_GCCClang::AddAdditionalArgs_Common( Args & outFullArgs ) const
+/*virtual*/ void CompilerDriver_GCCClang::AddAdditionalArgs_Common( bool isLocal,
+                                                                    Args & outFullArgs ) const
 {
     if ( m_ForceColoredDiagnostics )
     {
@@ -191,7 +193,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
     }
 
     // Add args for source mapping
-    if ( ( m_SourceMapping.IsEmpty() == false ) && m_IsLocal )
+    if ( ( m_SourceMapping.IsEmpty() == false ) && isLocal )
     {
         const AString& workingDir = FBuild::Get().GetOptions().GetWorkingDir();
         AStackString<> tmp;
