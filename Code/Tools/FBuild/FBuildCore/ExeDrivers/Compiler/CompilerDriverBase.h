@@ -56,7 +56,7 @@ public:
 
     // Locally modify args before passing to remote worker
     virtual bool ProcessArg_PreparePreprocessedForRemote( const AString & token,
-                                                          size_t index,
+                                                          size_t & index,
                                                           const AString & nextToken,
                                                           Args & outFullArgs ) const;
     virtual void AddAdditionalArgs_PreparePreprocessedForRemote( Args & outFullArgs );

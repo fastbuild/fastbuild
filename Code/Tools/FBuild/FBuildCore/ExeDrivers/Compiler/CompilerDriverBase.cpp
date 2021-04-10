@@ -175,7 +175,7 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
 // ProcessArg_PreparePreprocessedForRemote
 //------------------------------------------------------------------------------
 /*virtual*/ bool CompilerDriverBase::ProcessArg_PreparePreprocessedForRemote( const AString & /*token*/,
-                                                                              size_t /*index*/,
+                                                                              size_t & /*index*/,
                                                                               const AString & /*nextToken*/,
                                                                               Args & /*outFullArgs*/ ) const
 {

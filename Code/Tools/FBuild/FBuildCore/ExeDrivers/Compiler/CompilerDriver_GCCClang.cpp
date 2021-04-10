@@ -92,34 +92,9 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
         return true;
     }
 
-    // To avoid preprocesing code a second time we need to update
-    // arguments of -x option to use the "cpp-output" variant.
-    // We must do this inplace because the argument order matters in this case.
-    if ( ( token == "-x" ) && ( nextToken.IsEmpty() == false ) )
+    // Handle -x language option update
+    if ( ProcessArg_XLanguageOption( token, index, nextToken, outFullArgs ) )
     {
-        // Save the "-x" token
-        outFullArgs += token;
-        outFullArgs.AddDelimiter();
-
-        // Change the argument to its "cpp-output" variant.
-        const AString & language = nextToken;
-        ++index; // consume extra arg
-        if ( language == "c" )
-        {
-            outFullArgs += "cpp-output";
-        }
-        else if ( ( language == "c++" ) ||
-                  ( language == "objective-c" ) ||
-                  ( language == "objective-c++" ) )
-        {
-            outFullArgs += language;
-            outFullArgs += "-cpp-output";
-        }
-        else
-        {
-            outFullArgs += language;
-        }
-        outFullArgs.AddDelimiter();
         return true;
     }
 
@@ -204,6 +179,63 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
         tmp.Format(" \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), m_SourceMapping.Get());
         outFullArgs += tmp;
     }
+}
+
+// ProcessArg_PreparePreprocessedForRemote
+//------------------------------------------------------------------------------
+/*virtual*/ bool CompilerDriver_GCCClang::ProcessArg_PreparePreprocessedForRemote( const AString & token,
+                                                                                   size_t & index,
+                                                                                   const AString & nextToken,
+                                                                                   Args & outFullArgs ) const
+{
+    // Handle -x language option update
+    if ( ProcessArg_XLanguageOption( token, index, nextToken, outFullArgs ) )
+    {
+        return true;
+    }
+
+    return false;
+}
+
+// ProcessArg_XLanguageOption
+//------------------------------------------------------------------------------
+bool CompilerDriver_GCCClang::ProcessArg_XLanguageOption( const AString & token,
+                                                          size_t & index,
+                                                          const AString & nextToken,
+                                                          Args & outFullArgs ) const
+{
+    // To avoid preprocesing code a second time we need to update
+    // arguments of -x option to use the "cpp-output" variant.
+    // We must do this inplace because the argument order matters in this case.
+    if ( ( token == "-x" ) && ( nextToken.IsEmpty() == false ) )
+    {
+        // Save the "-x" token
+        outFullArgs += token;
+        outFullArgs.AddDelimiter();
+
+        // Change the argument to its "cpp-output" variant.
+        const AString & language = nextToken;
+        ++index; // consume extra arg
+        if ( language == "c" )
+        {
+            outFullArgs += "cpp-output";
+        }
+        else if ( ( language == "c++" ) ||
+                  ( language == "objective-c" ) ||
+                  ( language == "objective-c++" ) )
+        {
+            outFullArgs += language;
+            outFullArgs += "-cpp-output";
+        }
+        else
+        {
+            outFullArgs += language;
+        }
+        outFullArgs.AddDelimiter();
+        return true;
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------
