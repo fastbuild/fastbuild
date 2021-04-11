@@ -51,6 +51,8 @@ protected:
                                      size_t & index,
                                      const AString & nextToken,
                                      Args & outFullArgs ) const;
+    bool ProcessArg_DependencyOption( const AString & token,
+                                      size_t & index ) const;
 
     bool m_IsClang = false;
 };

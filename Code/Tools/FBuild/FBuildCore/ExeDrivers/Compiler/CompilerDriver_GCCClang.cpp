@@ -71,7 +71,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
 /*virtual*/ bool CompilerDriver_GCCClang::ProcessArg_CompilePreprocessed( const AString & token,
                                                                           size_t & index,
                                                                           const AString & nextToken,
-                                                                          bool /*isLocal*/,
+                                                                          bool isLocal,
                                                                           Args & outFullArgs ) const
 {
     if ( m_IsClang )
@@ -96,6 +96,15 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
     if ( ProcessArg_XLanguageOption( token, index, nextToken, outFullArgs ) )
     {
         return true;
+    }
+
+    // Handle dependency output args (-MD etc)
+    if ( isLocal )
+    {
+        if ( ProcessArg_DependencyOption( token, index ) )
+        {
+            return true;
+        }
     }
 
     // The pch can only be utilized when doing a direct compilation
@@ -194,6 +203,12 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
         return true;
     }
 
+    // Handle dependency output args (-MD etc)
+    if ( ProcessArg_DependencyOption( token, index ) )
+    {
+        return true;
+    }
+
     return false;
 }
 
@@ -232,6 +247,32 @@ bool CompilerDriver_GCCClang::ProcessArg_XLanguageOption( const AString & token,
             outFullArgs += language;
         }
         outFullArgs.AddDelimiter();
+        return true;
+    }
+
+    return false;
+}
+
+// ProcessArg_DependencyOption
+//------------------------------------------------------------------------------
+bool CompilerDriver_GCCClang::ProcessArg_DependencyOption( const AString & token,
+                                                           size_t & index ) const
+{
+    // Some integrations (like Unreal) rely on their own parsing of "makefile"
+    // style dependency output. This is fine to generate locally as part of
+    // preprocessing, but must be removed when compiling preprocessed output.
+    // This prevents two type of failures:
+    // a) If the -x langauge arg is used, and we update it to reflect that we're
+    //    compiling already pre-processed outptu, options will be reported as unused
+    //    [-Wunused-command-line-argument]
+    // b) When compiling remotely, the directories specified may not exist (and we
+    //    wouldn't return the output anyway)
+    if ( StripToken( "-MD", token ) )
+    {
+        return true;
+    }
+    if ( StripTokenWithArg( "-MF", token, index ) )
+    {
         return true;
     }
 
