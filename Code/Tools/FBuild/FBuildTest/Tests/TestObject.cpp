@@ -493,15 +493,41 @@ void TestObject::ClangExplicitLanguageType() const
 {
     // Ensure explicitly set language args ("-x c++" etc) are replaced with the
     // correct equivalent for preprocessed code ("-x c++-cpp-output" etc)
+    const char* const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangExplicitLanguageType/fbuild.bff";
 
-    // Init
-    FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangExplicitLanguageType/fbuild.bff";
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize() );
+    // Local
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
-    // Compile
-    TEST_ASSERT( fBuild.Build( "ClangExplicitLanguageType" ) );
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ClangExplicitLanguageType" ) );
+    }
+
+    // Distributed
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Force remote
+        options.m_AllowDistributed = true;
+        options.m_NoLocalConsumptionOfRemoteJobs = true;
+        options.m_AllowLocalRace = false;
+        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+
+        // start a client to emulate the other end
+        Server s( 1 );
+        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ClangExplicitLanguageType" ) );
+    }
 }
 
 // ClangDependencyArgs

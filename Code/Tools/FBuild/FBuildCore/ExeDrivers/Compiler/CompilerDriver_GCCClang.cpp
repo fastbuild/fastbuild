@@ -93,9 +93,12 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
     }
 
     // Handle -x language option update
-    if ( ProcessArg_XLanguageOption( token, index, nextToken, outFullArgs ) )
+    if ( isLocal )
     {
-        return true;
+        if ( ProcessArg_XLanguageOption( token, index, nextToken, outFullArgs ) )
+        {
+            return true;
+        }
     }
 
     // Handle dependency output args (-MD etc)
