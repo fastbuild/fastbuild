@@ -177,37 +177,85 @@ Function::~Function() = default;
                                           const BFFTokenRange & bodyRange ) const
 {
     m_AliasForFunction.Clear();
-    if ( AcceptsHeader() && ( headerRange.IsEmpty() == false ) )
+    if ( AcceptsHeader() )
     {
-        // Check for exactly one string
-        const BFFToken * headerArgsIter = headerRange.GetCurrent();
-        if ( headerArgsIter->IsString() )
+        // Was a header provided?
+        if ( headerRange.IsEmpty() )
         {
-            // Ensure string is not empty
-            if ( headerArgsIter->GetValueString().IsEmpty() )
+            // No. Is it required?
+            if ( NeedsHeader() )
             {
-                Error::Error_1003_EmptyStringNotAllowedInHeader( headerArgsIter, this );
+                // Yes - report error
+                Error::Error_1001_MissingStringStartToken( headerRange.GetCurrent(), this );
                 return false;
             }
+        }
+        else
+        {
+            // Header provided - parse it
 
-            // Store alias name for use in Commit
-            if ( BFFParser::PerformVariableSubstitutions( headerArgsIter, m_AliasForFunction ) == false )
+            // Check for exactly one string
+            const BFFToken * headerArgsIter = headerRange.GetCurrent();
+            if ( headerArgsIter->IsString() )
             {
-                return false; // substitution will have emitted an error
-            }
-        }
-        else if ( NeedsHeader() )
-        {
-            Error::Error_1001_MissingStringStartToken( headerArgsIter, this );
-            return false;
-        }
-        ++headerArgsIter;
+                // Ensure string is not empty
+                if ( headerArgsIter->GetValueString().IsEmpty() )
+                {
+                    Error::Error_1003_EmptyStringNotAllowedInHeader( headerArgsIter, this );
+                    return false;
+                }
 
-        // make sure there are no extraneous tokens
-        if ( headerArgsIter != headerRange.GetEnd() )
-        {
-            Error::Error_1002_MatchingClosingTokenNotFound( headerArgsIter, this, BFFParser::BFF_FUNCTION_ARGS_CLOSE );
-            return false;
+                // Store alias name for use in Commit
+                if ( BFFParser::PerformVariableSubstitutions( headerArgsIter, m_AliasForFunction ) == false )
+                {
+                    return false; // substitution will have emitted an error
+                }
+                ++headerArgsIter;
+            }
+            else if ( headerArgsIter->IsVariable() )
+            {
+                // a variable, possibly with substitutions
+                AStackString<> srcVarName;
+                bool srcParentScope;
+                if ( BFFParser::ParseVariableName( headerArgsIter, srcVarName, srcParentScope ) == false )
+                {
+                    return false; // ParseVariableName will have emitted an error
+                }
+
+                // Determine stack frame to use for Src var
+                BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();
+                if ( srcParentScope )
+                {
+                    srcVarName[ 0 ] = BFFParser::BFF_DECLARE_VAR_INTERNAL;
+                    srcFrame = BFFStackFrame::GetCurrent()->GetParent();
+                }
+
+                // get the variable
+                const BFFVariable * varSrc = srcFrame ? srcFrame->GetVariableRecurse( srcVarName ) : nullptr;
+                if ( varSrc == nullptr )
+                {
+                    Error::Error_1009_UnknownVariable( headerArgsIter, nullptr, srcVarName );
+                    return false;
+                }
+
+                // Ensure string is not empty
+                if ( varSrc->GetString().IsEmpty() )
+                {
+                    Error::Error_1003_EmptyStringNotAllowedInHeader( headerArgsIter, this );
+                    return false;
+                }
+
+                // Store alias name for use in Commit
+                m_AliasForFunction = varSrc->GetString();
+                ++headerArgsIter;
+            }
+
+            // make sure there are no extraneous tokens
+            if ( headerArgsIter != headerRange.GetEnd() )
+            {
+                Error::Error_1002_MatchingClosingTokenNotFound( headerArgsIter, this, BFFParser::BFF_FUNCTION_ARGS_CLOSE );
+                return false;
+            }
         }
     }
 
