@@ -1,0 +1,39 @@
+//
+// Test detection of CLR use
+//
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // Activate standard settings
+
+// Common
+//.CompilerOptions        + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
+.CompilerOutputPath     = "$Out$/Test/TestCLR/CLRDetection/"
+.CompilerInputFiles     = "Tools/FBuild/FBuildTest/Data/TestCLR/CLRDetection/file.cpp"
+
+// Base clr command
+ObjectList( 'clr' )
+{
+    .CompilerOptions    + ' /clr'
+                        + ' /Zc:twoPhase-'
+    .CompilerOutputPath = "$Out$/Test/TestCLR/CLRDetection/clr/"
+}
+
+// With options
+ObjectList( 'clr-netcore' )
+{
+    .CompilerOptions    + ' /clr:netcore'
+                        + ' /Zc:twoPhase-'
+//                        + ' /AI"$VCPackagesPath$"'
+//                        + ' /AI"$WindowsDK_WinRTAssemblyPath$"'
+    .CompilerOutputPath = "$Out$/Test/TestCLR/CLRDetection/clr-netcore/"
+}
+
+
+// Alias for use by test
+Alias( 'all' )
+{
+    .Targets    = {
+                    'clr'
+                    'clr-netcore'
+                  }
+}

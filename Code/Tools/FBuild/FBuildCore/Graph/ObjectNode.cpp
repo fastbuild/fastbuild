@@ -953,7 +953,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                     flags.Set( CompilerFlags::FLAG_USING_PDB );
                 }
             }
-            else if ( IsCompilerArg_MSVC( token, "clr" ) )
+            else if ( IsStartOfCompilerArg_MSVC( token, "clr" ) )
             {
                 usingCLR = true;
                 flags.Set( CompilerFlags::FLAG_USING_CLR );

@@ -111,6 +111,7 @@ public:
     static bool IsStartOfCompilerArg_MSVC( const AString & token, const char * arg );
 
     bool IsCacheable() const                { return m_CompilerFlags.IsCacheable(); }
+    bool IsDistributable() const            { return m_CompilerFlags.IsDistributable(); }
     bool IsUsingPCH() const                 { return m_CompilerFlags.IsUsingPCH(); }
     bool IsCreatingPCH() const              { return m_CompilerFlags.IsCreatingPCH(); }
     bool IsClang() const                    { return m_CompilerFlags.IsClang(); }
