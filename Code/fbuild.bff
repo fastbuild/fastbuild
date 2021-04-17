@@ -42,10 +42,6 @@ Settings
         // - Only in Debug as this impacts performance (inlining)
         // - Only when not building from tests (FASTBuild building itself)
         .UnityInputIsolateWritableFiles = true
-        // Also not when building on CI (which build from git)
-        #if CI_BUILD
-            .UnityInputIsolateWritableFiles = false
-        #endif
     #endif
 ]
 .Analyze_Config =
@@ -372,13 +368,11 @@ Settings
 #include "OSUI/OSUI.bff"
 
 // FBuild
+#include "Tools\FBuild\BFFFuzzer\BFFFuzzer.bff"
 #include "Tools\FBuild\FBuildCore\FBuildCore.bff"
 #include "Tools\FBuild\FBuild\FBuild.bff"
 #include "Tools\FBuild\FBuildWorker\FBuildWorker.bff"
 #include "Tools\FBuild\FBuildTest\FBuildTest.bff"
-#if !CI_BUILD
-    #include "Tools\FBuild\BFFFuzzer\BFFFuzzer.bff"
-#endif
 
 // Aliases : All-$Platform$-$Config$
 //------------------------------------------------------------------------------
