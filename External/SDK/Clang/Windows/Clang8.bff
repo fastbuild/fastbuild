@@ -2,10 +2,6 @@
 //------------------------------------------------------------------------------
 .Clang8_BasePath     = '$_CURRENT_BFF_DIR_$/8.0.0'
 
-#if CI_BUILD
-    .Clang8_BasePath = 'C:\Program Files\LLVM'
-#endif
-
 // Compiler
 //------------------------------------------------------------------------------
 Compiler( 'Compiler-Clang8' )

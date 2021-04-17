@@ -4,14 +4,9 @@
 
 // Select desired Visual Studio version
 //------------------------------------------------------------------------------
-#if CI_BUILD
-    // Travis CI comes with 2017 installed
-    #define USING_VS2017
-#else
-    //#define USING_VS2015
-    //#define USING_VS2017
-    #define USING_VS2019
-#endif
+//#define USING_VS2015
+//#define USING_VS2017
+#define USING_VS2019
 
 // Activate
 //------------------------------------------------------------------------------

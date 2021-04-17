@@ -29,7 +29,6 @@ files = []
 get_files_recurse(os.path.join("..", "Code"), files)
 get_files_recurse(os.path.join("..", "External"), files)
 get_files_recurse(os.path.join("..", "Scripts"), files)
-files.append(os.path.join("..", ".travis.yml"))
 files.append(os.path.join("..", "pull_request_template.md"))
 
 print('Copying...')
