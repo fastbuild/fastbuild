@@ -222,6 +222,18 @@ bool CompilerDriver_GCCClang::ProcessArg_XLanguageOption( const AString & token,
                                                           const AString & nextToken,
                                                           Args & outFullArgs ) const
 {
+    // Skip fixup if not enabled.
+    //
+    // Older versions of Clang (prior to v10) ignore -D directives on the command
+    // line if "*-cpp-output" is set, causing compilation to fail when -frewrite-includes
+    // is used (the default). We don't know what version of Clang we are using, so the user
+    // has to opt-in to this language arg update behavior change to ensure backwards compatibility.
+    //
+    if ( m_ObjectNode->GetCompiler()->IsClangGCCUpdateXLanguageArgEnabled() == false )
+    {
+        return false;
+    }
+
     // To avoid preprocesing code a second time we need to update
     // arguments of -x option to use the "cpp-output" variant.
     // We must do this inplace because the argument order matters in this case.

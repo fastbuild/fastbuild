@@ -58,6 +58,7 @@ CachePathMountPoint
 CachePluginDLL
 CachePluginDLLConfig
 ClangFixupUnity_Disable
+ClangGCCUpdateXLanguageArg
 ClangRewriteIncludes
 Compiler
 CompilerFamily
