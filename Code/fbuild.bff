@@ -368,11 +368,11 @@ Settings
 #include "OSUI/OSUI.bff"
 
 // FBuild
-#include "Tools\FBuild\BFFFuzzer\BFFFuzzer.bff"
 #include "Tools\FBuild\FBuildCore\FBuildCore.bff"
 #include "Tools\FBuild\FBuild\FBuild.bff"
 #include "Tools\FBuild\FBuildWorker\FBuildWorker.bff"
 #include "Tools\FBuild\FBuildTest\FBuildTest.bff"
+#include "Tools\FBuild\BFFFuzzer\BFFFuzzer.bff"
 
 // Aliases : All-$Platform$-$Config$
 //------------------------------------------------------------------------------
