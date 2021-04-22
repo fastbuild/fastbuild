@@ -77,6 +77,7 @@ REFLECT_STRUCT_BEGIN( VSProjectConfig, VSProjectConfigBase, MetaNone() )
 REFLECT_END( VSProjectConfig )
 
 REFLECT_STRUCT_BEGIN_BASE( VSProjectFileType )
+    REFLECT(        m_Tool,                         "Tool",                         MetaNone() )
     REFLECT(        m_FileType,                     "FileType",                     MetaNone() )
     REFLECT(        m_Pattern,                      "Pattern",                      MetaNone() )
 REFLECT_END( VSProjectFileType )

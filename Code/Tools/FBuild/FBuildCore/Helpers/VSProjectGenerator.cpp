@@ -133,25 +133,31 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         {
             const AString & fileName = filePathPair.m_ProjectRelativePath;
 
+            const char * tool = nullptr;
             const char * fileType = nullptr;
             const VSProjectFileType * const end = fileTypes.End();
             for ( const VSProjectFileType * it=fileTypes.Begin(); it!=end; ++it )
             {
                 if ( AString::MatchI( it->m_Pattern.Get(), fileName.Get() ) )
                 {
+                    tool = it->m_Tool.Get();
                     fileType = it->m_FileType.Get();
                     break;
                 }
             }
+            if ( !tool )
+            {
+                tool = "CustomBuild";
+            }
             if ( fileType )
             {
-                WriteF( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
+                WriteF( "    <%s Include=\"%s\">\n", tool, fileName.Get() );
                 WriteF( "        <FileType>%s</FileType>\n", fileType );
-                Write( "    </CustomBuild>\n" );
+                WriteF( "    </%s>\n", tool );
             }
             else
             {
-                WriteF( "    <CustomBuild Include=\"%s\" />\n", fileName.Get() );
+                WriteF( "    <%s Include=\"%s\" />\n", tool, fileName.Get() );
             }
         }
         Write("  </ItemGroup>\n" );

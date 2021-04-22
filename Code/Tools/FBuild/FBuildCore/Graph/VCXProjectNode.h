@@ -91,6 +91,7 @@ class VSProjectFileType : public Struct
 {
     REFLECT_STRUCT_DECLARE( VSProjectFileType )
 public:
+    AString             m_Tool;     // e.g. "Natvis"
     AString             m_FileType; // e.g. "CppForm"
     AString             m_Pattern;  // e.g. "Code\Forms\*.h" (can be full filename also)
 };
