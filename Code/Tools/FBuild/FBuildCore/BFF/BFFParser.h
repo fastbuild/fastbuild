@@ -16,6 +16,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BFFFile;
 class BFFTokenRange;
 class BFFUserFunction;
 class FileStream;
@@ -80,7 +81,7 @@ private:
     bool StoreVariableToVariable( const AString & dstName, const BFFToken * rhsToken, const BFFToken * operatorToken, BFFStackFrame * dstFrame );
 
     void CreateBuiltInVariables();
-    void SetBuiltInVariable_CurrentBFFDir( const char * fileName );
+    void SetBuiltInVariable_CurrentBFFDir( const BFFFile & file );
     BFFUserFunction * GetUserFunction( const AString & name );
 
     NodeGraph & m_NodeGraph;
@@ -88,7 +89,7 @@ private:
     BFFStackFrame m_BaseStackFrame;
 
     // CurrentBFFDir related
-    AString m_CurrentBFFDir;
+    const BFFFile * m_CurrentBFFFile = nullptr;
 
     BFFTokenizer m_Tokenizer;
     LinkerNodeFileExistsCache m_LinkerNodeFileExistsCache;
