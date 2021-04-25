@@ -458,6 +458,21 @@
     FormatError( iter, 1060u, function, "Can't modify frozen variable '%s'", var->GetName().Get() );
 }
 
+// Error_1070_UnexpectedOperator
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1070_UnexpectedOperator( const BFFToken* iter,
+    const Function* function )
+{
+    FormatError( iter, 1070u, function, "Unexpected operator '%s'.", iter->GetValueString().Get() );
+}
+
+// Error_1071_UnexpectedToken
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1071_UnexpectedToken( const BFFToken * iter, const Function * function )
+{
+    FormatError( iter, 1071u, function, "Unexpected token '%s'.", iter->GetValueString().Get() );
+}
+
 // Error_1100_AlreadyDefined
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1100_AlreadyDefined( const BFFToken * iter,
