@@ -27,22 +27,22 @@
 <h1>1070 - Unexpected operator '%s'.</h1>
     <div class='newsitemheader'>Description</div>
     <div class='newsitembody'>
-An attempt was made to apply an operator to an unsupported operand in the header of function If.
+An operator incompatiblw with the supplies operands was encountered in an If() statement.
     </div>
 <div class='newsitemheader'>Example</div>
     <div class='newsitembody'>
 Config:
-<div class='code'>If (true >= false)
+<div class='code'>If( true >= false )
 {
 }</div>
 Output:
 <div class='output'>C:\Test\fbuild.bff(1,10): FASTBuild Error #1255 - If() - Unexpected operator '>='.
-If (true >= false)
+If( true >= false )
          ^
          \--here
 </div>
 Fix:
-<div class='code'>If (true == false)
+<div class='code'>If( true == false )
 {
 }</div>
 <div class='footer'>&copy; 2012-2021 Franta Fulin</div></div></div>

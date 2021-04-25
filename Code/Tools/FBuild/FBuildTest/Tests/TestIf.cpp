@@ -51,9 +51,9 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( UsageError_UnsupportedOperation )
 REGISTER_TESTS_END
 
-#define TEST_EXP_TRUE( vars, exp )        TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Success')\n}", "Success") );
-#define TEST_EXP_FALSE( vars, exp )       TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Failure')\n}", nullptr, "Failure") );
-#define TEST_EXP_FAIL( vars, exp, error ) TEST_ASSERT( ParseFromString( false, vars "\nIf ( " exp " )\n{\n}", error ) );
+#define TEST_EXP_TRUE( vars, exp )        TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Success')\n}", "Success") )
+#define TEST_EXP_FALSE( vars, exp )       TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Failure')\n}", nullptr, "Failure") )
+#define TEST_EXP_FAIL( vars, exp, error ) TEST_ASSERT( ParseFromString( false, vars "\nIf ( " exp " )\n{\n}", error ) )
 
 // IfFunctionTrue
 //------------------------------------------------------------------------------
@@ -145,9 +145,9 @@ void TestIf::IfFunctionBool() const
     TEST_EXP_FALSE( ".Bool = true", ".Bool != .Bool" );
 
     // Compound Exps
-    TEST_EXP_TRUE(".True = true\n .False = false", ".True && true || .False" );
+    TEST_EXP_TRUE( ".True = true\n .False = false", ".True && true || .False" );
 
-    TEST_EXP_TRUE(".True = true\n .False = false", "true && .True && true || !false || .False" );
+    TEST_EXP_TRUE( ".True = true\n .False = false", "true && .True && true || !false || .False" );
 
     // Legacy
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_boolean.bff" );
@@ -174,7 +174,6 @@ void TestIf::IfFunctionInt() const
     TEST_EXP_TRUE( "", "2 > 1" );
     TEST_EXP_TRUE( "", "2 >= 1" );
     TEST_EXP_FALSE( "", "2 >= 3" );
-    
 
     // Vars vs Literals
     // Equality
@@ -198,7 +197,6 @@ void TestIf::IfFunctionInt() const
     TEST_EXP_TRUE( ".Int = 2", "3 >= .Int" );
     TEST_EXP_TRUE( ".Int = 2", "2 >= .Int" );
     TEST_EXP_FALSE( ".Int = 2", "1 >= .Int" );
-
 
     // Vars vs Vars
 #define VARS \
@@ -239,7 +237,6 @@ void TestIf::IfFunctionStringCompare() const
     TEST_EXP_TRUE( "", "'2' < '3'" );
     TEST_EXP_TRUE( "", "'2' <= '3'" );
 
-
     // Vars vs Literals
     TEST_EXP_TRUE( ".String = '2'", ".String == '2'" );
     TEST_EXP_TRUE( ".String = '2'", ".String != '1'" );
@@ -257,7 +254,6 @@ void TestIf::IfFunctionStringCompare() const
 
     TEST_EXP_TRUE( ".String = '2'", "'1' < .String" );
     TEST_EXP_TRUE( ".String = '2'", "'1' <= .String" );
-
 
 #define VARS \
     ".String = 'Hello'\n" \

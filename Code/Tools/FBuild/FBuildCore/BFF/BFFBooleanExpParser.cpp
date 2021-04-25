@@ -6,18 +6,26 @@
 #include "BFFBooleanExpParser.h"
 
 #include "Tools/FBuild/FBuildCore/Error.h"
-#include <Tools/FBuild/FBuildCore/BFF/BFFKeywords.h>
-#include <Tools/FBuild/FBuildCore/BFF/BFFParser.h>
-#include <Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h>
-#include <Tools/FBuild/FBuildCore/BFF/BFFVariable.h>
+#include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
 
 #include "Core/Strings/AStackString.h"
 
-// Operator
-// Including keyword `in` and `not in`
+namespace
+{
+
+// Forward Declarations
 //------------------------------------------------------------------------------
-enum class Operator
+static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bool endsOnCloseBracket, bool & expResult );
+static bool ParseSubBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult );
+static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult );
+
+// BoolOperator
+//------------------------------------------------------------------------------
+enum class BoolOperator
 {
     OP_UNKNOWN,
 
@@ -33,7 +41,6 @@ enum class Operator
 
     OP_AND,
     OP_OR,
-    // OP_XOR, not supported yet.
 };
 
 // GetVar
@@ -55,7 +62,7 @@ static const BFFVariable * GetVar( const Function * function, const BFFToken * t
 
     const BFFVariable * var = nullptr;
     const BFFStackFrame * varFrame = (varParentScope) ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
-        : nullptr;
+                                                      : nullptr;
     if ( false == varParentScope )
     {
         var = BFFStackFrame::GetVar( varName, nullptr );
@@ -80,7 +87,7 @@ struct Bool
     typedef bool Type;
     typedef bool ReturnType;
     typedef bool & OutParamType;
-    static const BFFVariable::VarType VarType = BFFVariable::VAR_BOOL;
+    static const BFFVariable::VarType VarType = BFFVariable::VarType::VAR_BOOL;
 };
 
 // Number
@@ -90,7 +97,7 @@ struct Number
     typedef int32_t Type;
     typedef int32_t ReturnType;
     typedef int32_t & OutParamType;
-    static const BFFVariable::VarType VarType = BFFVariable::VAR_INT;
+    static const BFFVariable::VarType VarType = BFFVariable::VarType::VAR_INT;
 };
 
 // String
@@ -100,7 +107,7 @@ struct String
     typedef AString Type;
     typedef const AString & ReturnType;
     typedef AString & OutParamType;
-    static const BFFVariable::VarType VarType = BFFVariable::VAR_STRING;
+    static const BFFVariable::VarType VarType = BFFVariable::VarType::VAR_STRING;
 };
 
 // ArrayOfString
@@ -110,7 +117,7 @@ struct ArrayOfString
     typedef Array<AString> Type;
     typedef const Array<AString> & ReturnType;
     typedef Array<AString> & OutParamType;
-    static const BFFVariable::VarType VarType = BFFVariable::VAR_ARRAY_OF_STRINGS;
+    //static const BFFVariable::VarType VarType = BFFVariable::VarType::VAR_ARRAY_OF_STRINGS;
 };
 
 // Is
@@ -205,8 +212,9 @@ public:
     Operand & operator = ( const Operand & ) = delete;
     Operand & operator = ( Operand && ) = delete;
 
-    const BFFToken & GetToken() const { return m_Token; }
-    bool IsValid() const { return m_Valid; }
+    #if defined(ASSERTS_ENABLED)
+        bool IsValid() const { return m_Valid; }
+    #endif
 
     template < typename T >
     bool Is() const
@@ -242,12 +250,13 @@ protected:
     const Function * m_Function;
 };
 
-static const Array<Operator> BoolOperators = MakeArray(
-    Operator::OP_EQUAL,
-    Operator::OP_NOT_EQUAL,
-    Operator::OP_AND,
-    Operator::OP_OR
-);
+static const BoolOperator sBoolOperators[] =
+{
+    BoolOperator::OP_EQUAL,
+    BoolOperator::OP_NOT_EQUAL,
+    BoolOperator::OP_AND,
+    BoolOperator::OP_OR
+};
 
 // OperandOf<T>
 // ------------------------------------------------------------
@@ -261,7 +270,6 @@ public:
         if( !Is<T>() )
         {
             m_Valid = false;
-            return;
         }
     }
     explicit OperandOf( const Operand & operand )
@@ -280,112 +288,124 @@ public:
 
 // CompareBools
 //------------------------------------------------------------------------------
-static bool CompareBools( const Function * function, bool lhs, bool rhs, const BFFToken * opToken, Operator op, bool & result )
+static bool CompareBools( const Function * function, bool lhs, bool rhs, const BFFToken * opToken, BoolOperator op, bool & result )
 {
-
     switch ( op )
     {
+        // Supported
+        case BoolOperator::OP_EQUAL:        result = ( lhs == rhs ); break;
+        case BoolOperator::OP_NOT_EQUAL:    result = ( lhs != rhs ); break;
+        case BoolOperator::OP_AND:          result = ( lhs && rhs ); break;
+        case BoolOperator::OP_OR:           result = ( lhs || rhs ); break;
 
-    // Supported
-    case Operator::OP_EQUAL:                    result = (lhs == rhs); break;
-    case Operator::OP_NOT_EQUAL:                result = (lhs != rhs); break;
-    case Operator::OP_AND:                      result = (lhs && rhs); break;
-    case Operator::OP_OR:                       result = (lhs || rhs); break;
-
-    // Unsupported
-    case Operator::OP_LESS_THAN:
-    case Operator::OP_LESS_THAN_OR_EQUAL:
-    case Operator::OP_GREATER_THAN:
-    case Operator::OP_GREATER_THAN_OR_EQUAL:
-    case Operator::OP_IN:
-    case Operator::OP_NOT_IN:
-        Error::Error_1070_UnexpectedOperator( opToken, function );
-        return false;
-    case Operator::OP_UNKNOWN:
-        ASSERT( false );
-        return false;
+        // Unsupported
+        case BoolOperator::OP_LESS_THAN:
+        case BoolOperator::OP_LESS_THAN_OR_EQUAL:
+        case BoolOperator::OP_GREATER_THAN:
+        case BoolOperator::OP_GREATER_THAN_OR_EQUAL:
+        case BoolOperator::OP_IN:
+        case BoolOperator::OP_NOT_IN:
+        {
+            Error::Error_1070_UnexpectedOperator( opToken, function );
+            return false;
+        }
+        case BoolOperator::OP_UNKNOWN:
+        {
+            ASSERT( false );
+            return false;
+        }
     }
     return true;
 }
 
-static const Array<Operator> IntOperators = MakeArray(
-    Operator::OP_EQUAL,
-    Operator::OP_NOT_EQUAL,
-    Operator::OP_LESS_THAN,
-    Operator::OP_LESS_THAN_OR_EQUAL,
-    Operator::OP_GREATER_THAN,
-    Operator::OP_GREATER_THAN_OR_EQUAL
-);
+static const BoolOperator sIntOperators[] =
+{
+    BoolOperator::OP_EQUAL,
+    BoolOperator::OP_NOT_EQUAL,
+    BoolOperator::OP_LESS_THAN,
+    BoolOperator::OP_LESS_THAN_OR_EQUAL,
+    BoolOperator::OP_GREATER_THAN,
+    BoolOperator::OP_GREATER_THAN_OR_EQUAL
+};
 
 // CompareInts
 //------------------------------------------------------------------------------
-static bool CompareInts( const Function * function, int32_t lhs, int32_t rhs, const BFFToken * opToken, const Operator op, bool & result )
+static bool CompareInts( const Function * function, int32_t lhs, int32_t rhs, const BFFToken * opToken, const BoolOperator op, bool & result )
 {
 
     switch ( op )
     {
         // Supported
-    case Operator::OP_EQUAL:                    result = (lhs == rhs); break;
-    case Operator::OP_NOT_EQUAL:                result = (lhs != rhs); break;
-    case Operator::OP_LESS_THAN:                result = (lhs < rhs); break;
-    case Operator::OP_LESS_THAN_OR_EQUAL:       result = (lhs < rhs) || (lhs == rhs); break;
-    case Operator::OP_GREATER_THAN:             result = (lhs > rhs); break;
-    case Operator::OP_GREATER_THAN_OR_EQUAL:    result = (lhs > rhs) || (lhs == rhs); break;
+        case BoolOperator::OP_EQUAL:                    result = ( lhs == rhs ); break;
+        case BoolOperator::OP_NOT_EQUAL:                result = ( lhs != rhs ); break;
+        case BoolOperator::OP_LESS_THAN:                result = ( lhs < rhs ); break;
+        case BoolOperator::OP_LESS_THAN_OR_EQUAL:       result = ( lhs < rhs ) || ( lhs == rhs ); break;
+        case BoolOperator::OP_GREATER_THAN:             result = ( lhs > rhs ); break;
+        case BoolOperator::OP_GREATER_THAN_OR_EQUAL:    result = ( lhs > rhs ) || ( lhs == rhs ); break;
 
         // Logic error
-    case Operator::OP_IN:
-    case Operator::OP_NOT_IN:
-    case Operator::OP_AND:
-    case Operator::OP_OR:
-        Error::Error_1070_UnexpectedOperator( opToken, function );
-        return false;
-
-    case Operator::OP_UNKNOWN:
-        ASSERT( false );
-        return false;
+        case BoolOperator::OP_IN:
+        case BoolOperator::OP_NOT_IN:
+        case BoolOperator::OP_AND:
+        case BoolOperator::OP_OR:
+        {
+            Error::Error_1070_UnexpectedOperator( opToken, function );
+            return false;
+        }
+        case BoolOperator::OP_UNKNOWN:
+        {
+            ASSERT( false );
+            return false;
+        }
     }
     return true;
 }
 
-static const Array<Operator> StringOperators = MakeArray(
-    Operator::OP_EQUAL,
-    Operator::OP_NOT_EQUAL,
-    Operator::OP_LESS_THAN,
-    Operator::OP_LESS_THAN_OR_EQUAL,
-    Operator::OP_GREATER_THAN,
-    Operator::OP_GREATER_THAN_OR_EQUAL,
-    Operator::OP_IN,
-    Operator::OP_NOT_IN
-);
+static const BoolOperator sStringOperators[]
+{
+    BoolOperator::OP_EQUAL,
+    BoolOperator::OP_NOT_EQUAL,
+    BoolOperator::OP_LESS_THAN,
+    BoolOperator::OP_LESS_THAN_OR_EQUAL,
+    BoolOperator::OP_GREATER_THAN,
+    BoolOperator::OP_GREATER_THAN_OR_EQUAL,
+    BoolOperator::OP_IN,
+    BoolOperator::OP_NOT_IN
+};
 
 // CompareStrings
 //------------------------------------------------------------------------------
-static bool CompareStrings( const Function * function, const AString & lhs, const AString & rhs, const BFFToken * opToken, const Operator op, bool & result )
+static bool CompareStrings( const Function * function, const AString & lhs, const AString & rhs, const BFFToken * opToken, const BoolOperator op, bool & result )
 {
 
     switch ( op )
     {
         // Supported
-    case Operator::OP_EQUAL:                    result = (lhs == rhs); break;
-    case Operator::OP_NOT_EQUAL:                result = (lhs != rhs); break;
-    case Operator::OP_LESS_THAN:                result = (lhs < rhs); break;
-    case Operator::OP_LESS_THAN_OR_EQUAL:       result = (lhs < rhs) || (lhs == rhs); break;
-    case Operator::OP_GREATER_THAN:             result = (lhs > rhs); break;
-    case Operator::OP_GREATER_THAN_OR_EQUAL:    result = (lhs > rhs) || (lhs == rhs); break;
+        case BoolOperator::OP_EQUAL:                    result = ( lhs == rhs ); break;
+        case BoolOperator::OP_NOT_EQUAL:                result = ( lhs != rhs ); break;
+        case BoolOperator::OP_LESS_THAN:                result = ( lhs < rhs ); break;
+        case BoolOperator::OP_LESS_THAN_OR_EQUAL:       result = ( lhs < rhs ) || ( lhs == rhs ); break;
+        case BoolOperator::OP_GREATER_THAN:             result = ( lhs > rhs ); break;
+        case BoolOperator::OP_GREATER_THAN_OR_EQUAL:    result = ( lhs > rhs ) || ( lhs == rhs ); break;
 
         // Logic error
-    case Operator::OP_IN:
-    case Operator::OP_NOT_IN:
-        ASSERT( false ); // Should be hanlded in another function.
-        return false;
-    case Operator::OP_AND:
-    case Operator::OP_OR:
-        Error::Error_1070_UnexpectedOperator( opToken, function );
-        return false;
-
-    case Operator::OP_UNKNOWN:
-        ASSERT( false );
-        return false;
+        case BoolOperator::OP_IN:
+        case BoolOperator::OP_NOT_IN:
+        {
+            ASSERT( false ); // Should be hanlded in another function.
+            return false;
+        }
+        case BoolOperator::OP_AND:
+        case BoolOperator::OP_OR:
+        {
+            Error::Error_1070_UnexpectedOperator( opToken, function );
+            return false;
+        }
+        case BoolOperator::OP_UNKNOWN:
+        {
+            ASSERT( false );
+            return false;
+        }
     }
     return true;
 }
@@ -395,7 +415,7 @@ static bool CompareStrings( const Function * function, const AString & lhs, cons
 //         ^end
 // (.a == .b) || (.c == .d)
 //          ^end of sub exp
-// iter is expected pointing to its own end or a close round bracket if `endsOnCloseBracket` is true.
+// iter is expected pointing to its own end or a close round bracket if 'endsOnCloseBracket' is true.
 //------------------------------------------------------------------------------
 static bool IsExpEnd( BFFTokenRange & iter, bool endsOnCloseBracket )
 {
@@ -426,26 +446,23 @@ static bool ExpectExpEnd( const Function * function, BFFTokenRange & iter, bool 
     return false;
 }
 
-// Forward Declarations
-//------------------------------------------------------------------------------
-static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bool endsOnCloseBracket, bool & expResult );
-static bool ParseSubBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult );
-static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult );
-
-
 // ParseOperator
 // iter is expected pointing to the operator.
 // consumes 1 or 2 tokens (2 for "not in").
 //------------------------------------------------------------------------------
-static bool ParseOperator( const Function * function, BFFTokenRange & iter, Operator & op, const Array<Operator> * supportedOps = nullptr )
+static bool ParseOperator( const Function * function,
+                           BFFTokenRange & iter,
+                           BoolOperator & op,
+                           const BoolOperator * supportedOps = nullptr,
+                           const size_t numSupportedOps = 0 )
 {
     // Determine operator for more complex expression
-    op = Operator::OP_UNKNOWN;
+    op = BoolOperator::OP_UNKNOWN;
 
     // in
     if ( iter->IsKeyword( BFF_KEYWORD_IN ) )
     {
-        op = Operator::OP_IN;
+        op = BoolOperator::OP_IN;
     }
     // not in
     else if ( iter->IsKeyword( BFF_KEYWORD_NOT ) )
@@ -453,79 +470,92 @@ static bool ParseOperator( const Function * function, BFFTokenRange & iter, Oper
         iter++; // Consume additional keyword
         if ( iter->IsKeyword( BFF_KEYWORD_IN ) )
         {
-            op = Operator::OP_NOT_IN;
+            op = BoolOperator::OP_NOT_IN;
         }
     }
     // ==
     else if ( iter->IsOperator( "==" ) )
     {
-        op = Operator::OP_EQUAL;
+        op = BoolOperator::OP_EQUAL;
     }
     // !=
     else if ( iter->IsOperator( "!=" ) )
     {
-        op = Operator::OP_NOT_EQUAL;
+        op = BoolOperator::OP_NOT_EQUAL;
     }
     // <=
     else if ( iter->IsOperator( "<=" ) )
     {
-        op = Operator::OP_LESS_THAN_OR_EQUAL;
+        op = BoolOperator::OP_LESS_THAN_OR_EQUAL;
     }
     // <  (must be checked after <=)
     else if ( iter->IsOperator( "<" ) )
     {
-        op = Operator::OP_LESS_THAN;
+        op = BoolOperator::OP_LESS_THAN;
     }
     // >=
     else if ( iter->IsOperator( ">=" ) )
     {
-        op = Operator::OP_GREATER_THAN_OR_EQUAL;
+        op = BoolOperator::OP_GREATER_THAN_OR_EQUAL;
     }
     // >  (must be checked after >=)
     else if ( iter->IsOperator( ">" ) )
     {
-        op = Operator::OP_GREATER_THAN;
+        op = BoolOperator::OP_GREATER_THAN;
     }
     else if ( iter->IsOperator( "&&" ) )
     {
-        op = Operator::OP_AND;
+        op = BoolOperator::OP_AND;
     }
     else if ( iter->IsOperator( "||" ) )
     {
-        op = Operator::OP_OR;
+        op = BoolOperator::OP_OR;
     }
 
     // Handle unrecognized operator
-    if ( op == Operator::OP_UNKNOWN )
+    if ( op == BoolOperator::OP_UNKNOWN )
     {
         Error::Error_1042_UnknownOperator( iter.GetCurrent(), iter->GetValueString() );
         return false;
     }
 
-    if ( ( supportedOps != nullptr ) && ( supportedOps->Find( op ) == nullptr ) )
+    if ( supportedOps != nullptr )
     {
-        Error::Error_1070_UnexpectedOperator( iter.GetCurrent(), function );
-        return false;
+        ASSERT( numSupportedOps > 0 );
+        bool found = false;
+        for ( size_t i = 0; i < numSupportedOps; ++i )
+        {
+            if ( supportedOps[ i ] == op )
+            {
+                found = true;
+                break;
+            }
+        }
+        if ( !found )
+        {
+            Error::Error_1070_UnexpectedOperator( iter.GetCurrent(), function );
+            return false;
+        }
     }
 
     iter++; // consume keyword or operator
     return true;
 }
 
-/* ParseStringInArray
-Forms:
-    bool-exp =
-             | string-exp in string-set
-             | string-exp not in string-set
-    string-exp = string-literal | string-variable
-    string-set = string-set-variable
-
-iter is expected pointing to the rhs.
------------------------------------------------------------------------------- */
-static bool ParseStringInArray( const Function * function, const OperandOf<String> & lhs, Operator op, BFFTokenRange & iter, bool & expResult )
+// ParseStringInArray
+// Forms:
+//    bool-exp =
+//             | string-exp in string-set
+//             | string-exp not in string-set
+//    string-exp = string-literal | string-variable
+//    string-set = string-set-variable
+//
+// iter is expected pointing to the rhs.
+//------------------------------------------------------------------------------
+static bool ParseStringInArray( const Function * function, const OperandOf<String> & lhs, BoolOperator op, BFFTokenRange & iter, bool & expResult )
 {
     ASSERT( lhs.IsValid() );
-    ASSERT( ( op == Operator::OP_IN ) || ( op == Operator::OP_NOT_IN ) );
+    ASSERT( ( op == BoolOperator::OP_IN ) || ( op == BoolOperator::OP_NOT_IN ) );
 
     const BFFToken * rhsToken = iter.GetCurrent();
     iter++;
@@ -536,7 +566,7 @@ static bool ParseStringInArray( const Function * function, const OperandOf<Strin
     const AString & lhsValue = lhs.GetValue();
     bool conditionSuccess = ( rhsArray.Find( lhsValue ) != nullptr );
 
-    if ( op == Operator::OP_NOT_IN )
+    if ( op == BoolOperator::OP_NOT_IN )
     {
         conditionSuccess = !conditionSuccess;
     }
@@ -545,26 +575,26 @@ static bool ParseStringInArray( const Function * function, const OperandOf<Strin
     return true;
 }
 
-/* ParseStringArrayInArray
-Forms:
-    bool-exp =
-             | string-set in string-set
-             | string-set not in string-set
-    string-set = string-set-variable
-
-iter is expected pointing to the operator.
------------------------------------------------------------------------------- */
+// ParseStringArrayInArray
+// Forms:
+//    bool-exp =
+//             | string-set in string-set
+//             | string-set not in string-set
+//    string-set = string-set-variable
+//
+// iter is expected pointing to the operator.
+//------------------------------------------------------------------------------
 static bool ParseStringArrayInArray( const Function * function, const OperandOf<ArrayOfString> & lhs, BFFTokenRange & iter, bool & expResult )
 {
     ASSERT( lhs.IsValid() );
 
     const BFFToken * opToken = iter.GetCurrent();
-    Operator op = Operator::OP_UNKNOWN;
+    BoolOperator op = BoolOperator::OP_UNKNOWN;
     if ( !ParseOperator( function, iter, op ) )
     {
         return false;
     }
-    if ( ( op != Operator::OP_IN ) && ( op != Operator::OP_NOT_IN ) )
+    if ( ( op != BoolOperator::OP_IN ) && ( op != BoolOperator::OP_NOT_IN ) )
     {
         Error::Error_1070_UnexpectedOperator( opToken, function );
         return false;
@@ -590,7 +620,7 @@ static bool ParseStringArrayInArray( const Function * function, const OperandOf<
         }
     }
 
-    if ( op == Operator::OP_NOT_IN )
+    if ( op == BoolOperator::OP_NOT_IN )
     {
         conditionSuccess = !conditionSuccess;
     }
@@ -599,53 +629,59 @@ static bool ParseStringArrayInArray( const Function * function, const OperandOf<
     return true;
 }
 
-/* ParseUnaryBooleanOperand
-Forms:
-    bool-exp = true | false
-             | (bool-exp)
-             | bool-variable
-             | ! bool-exp
-
-`iter` is expected pointing to the operand.
------------------------------------------------------------------------------- */
+// ParseUnaryBooleanOperand
+// Forms:
+//    bool-exp = true | false
+//             | (bool-exp)
+//             | bool-variable
+//             | ! bool-exp
+//
+// 'iter' is expected pointing to the operand.
+//------------------------------------------------------------------------------
 static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange & iter, bool & expResult )
 {
     switch ( iter.GetCurrent()->GetType() )
     {
-    case BFFTokenType::Boolean:        // true or false
-    case BFFTokenType::Variable:       // .Var or ^Var
-    {
-        OperandOf<Bool> operand( *iter.GetCurrent(), function );
-
-        if ( !operand.EnsureValid() )
+        case BFFTokenType::Boolean:        // true or false
+        case BFFTokenType::Variable:       // .Var or ^Var
         {
-            return false;
+            OperandOf<Bool> operand( *iter.GetCurrent(), function );
+
+            if ( !operand.EnsureValid() )
+            {
+                return false;
+            }
+            expResult = operand.GetValue();
+            iter++;
+            return true;
         }
-        expResult = operand.GetValue();
-        iter++;
-        return true;
-    }
-    case BFFTokenType::Operator:       // = += > ! == etc
-        return ParseUnaryBooleanExp( function, iter, expResult );
-    case BFFTokenType::RoundBracket:   // ( or )
-        return ParseSubBooleanExp( function, iter, expResult );
-    default:
-        break;
+        case BFFTokenType::Operator:       // = += > ! == etc
+        {
+            return ParseUnaryBooleanExp( function, iter, expResult );
+        }
+        case BFFTokenType::RoundBracket:   // ( or )
+        {
+            return ParseSubBooleanExp( function, iter, expResult );
+        }
+        default:
+        {
+            break;
+        }
     }
 
     Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
     return false;
 }
 
-/* ParseUnaryBooleanExp
-Forms:
-    bool-exp = true | false
-             | (bool-exp)
-             | bool-variable
-             | ! bool-exp
-
-`iter` is expected pointing to the operator.
------------------------------------------------------------------------------- */
+// ParseUnaryBooleanExp
+// Forms:
+//    bool-exp = true | false
+//             | (bool-exp)
+//             | bool-variable
+//             | ! bool-exp
+//
+// 'iter' is expected pointing to the operator.
+//------------------------------------------------------------------------------
 static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
 {
     if ( !iter->IsOperator( "!" ) )
@@ -664,21 +700,21 @@ static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & ite
     return true;
 }
 
-/* ParseBinaryBooleanExp
-Forms:
-    bool-exp = true | false
-             | (bool-exp)
-             | bool-variable
-             | ! bool-exp
-             | bool-exp ==/!=/&&/|| bool-exp
-
-iter is expected pointing to the operator.
------------------------------------------------------------------------------- */
+// ParseBinaryBooleanExp
+// Forms:
+//    bool-exp = true | false
+//             | (bool-exp)
+//             | bool-variable
+//             | ! bool-exp
+//             | bool-exp ==/!=/&&/|| bool-exp
+//
+// iter is expected pointing to the operator.
+//------------------------------------------------------------------------------
 static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFTokenRange & iter, bool & expResult )
 {
     const BFFToken * opToken = iter.GetCurrent();
-    Operator op = Operator::OP_UNKNOWN;
-    if ( !ParseOperator( function, iter, op, &BoolOperators ) )
+    BoolOperator op = BoolOperator::OP_UNKNOWN;
+    if ( !ParseOperator( function, iter, op, sBoolOperators, ARRAY_SIZE(sBoolOperators) ) )
     {
         return false;
     }
@@ -686,52 +722,58 @@ static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFToken
     bool rhs;
     switch ( iter.GetCurrent()->GetType() )
     {
-    case BFFTokenType::Boolean:         // true, false
-    case BFFTokenType::Variable:       // .Var or ^Var
-    {
-        OperandOf<Bool> rhsOperand( *iter.GetCurrent(), function );
-        if ( !rhsOperand.EnsureValid() )
+        case BFFTokenType::Boolean:         // true, false
+        case BFFTokenType::Variable:       // .Var or ^Var
         {
+            OperandOf<Bool> rhsOperand( *iter.GetCurrent(), function );
+            if ( !rhsOperand.EnsureValid() )
+            {
+                return false;
+            }
+            iter++; // Consume the current token.
+            rhs = rhsOperand.GetValue();
+            break;
+        }
+        case BFFTokenType::Operator:
+        {
+            if ( !ParseUnaryBooleanExp( function, iter, rhs ) )
+            {
+                return false;
+            }
+            break;
+        }
+        case BFFTokenType::RoundBracket:
+        {
+            if ( !ParseSubBooleanExp( function, iter, rhs ) )
+            {
+                return false;
+            }
+            break;
+        }
+        default:
+        {
+            Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
             return false;
         }
-        iter++; // Consume the current token.
-        rhs = rhsOperand.GetValue();
-        break;
-    }
-    case BFFTokenType::Operator:
-        if ( !ParseUnaryBooleanExp( function, iter, rhs ) )
-        {
-            return false;
-        }
-        break;
-    case BFFTokenType::RoundBracket:
-        if ( !ParseSubBooleanExp( function, iter, rhs ) )
-        {
-            return false;
-        }
-        break;
-    default:
-        Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
-        return false;
     }
     return CompareBools( function, lhs, rhs, opToken, op, expResult );
 }
 
-/* ParseIntComparisonExp
-Forms:
-    bool-exp = 
-             | number-exp ==/!=/>/>=/</<= number-exp
-    number-exp = number-literal | number-variable
-
-iter is expected pointing to the operator.
------------------------------------------------------------------------------- */
+// ParseIntComparisonExp
+// Forms:
+//    bool-exp = 
+//             | number-exp ==/!=/>/>=/</<= number-exp
+//    number-exp = number-literal | number-variable
+//
+// iter is expected pointing to the operator.
+//------------------------------------------------------------------------------
 static bool ParseIntComparisonExp( const Function * function, const OperandOf<Number> & lhs, BFFTokenRange & iter, bool & expResult )
 {
     ASSERT( lhs.IsValid() );
 
     const BFFToken * opToken = iter.GetCurrent();
-    Operator op = Operator::OP_UNKNOWN;
-    if ( !ParseOperator( function, iter, op, &IntOperators ) )
+    BoolOperator op = BoolOperator::OP_UNKNOWN;
+    if ( !ParseOperator( function, iter, op, sIntOperators, ARRAY_SIZE( sIntOperators ) ) )
     {
         return false;
     }
@@ -746,24 +788,24 @@ static bool ParseIntComparisonExp( const Function * function, const OperandOf<Nu
     return CompareInts( function, lhs.GetValue(), rhs.GetValue(), opToken, op, expResult );
 }
 
-/* ParseStringComparisonExp
-Forms:
-    bool-exp = 
-             | string-exp ==/!= string-exp
-             | string-exp in string-set
-             | string-exp not in string-set
-    string-exp = string-literal | string-variable
-    string-set = string-set-variable
-
-iter is expected pointing to the operator.
------------------------------------------------------------------------------- */
+// ParseStringComparisonExp
+// Forms:
+//    bool-exp = 
+//             | string-exp ==/!= string-exp
+//             | string-exp in string-set
+//             | string-exp not in string-set
+//    string-exp = string-literal | string-variable
+//    string-set = string-set-variable
+//
+// iter is expected pointing to the operator.
+//------------------------------------------------------------------------------
 static bool ParseStringComparisonExp( const Function * function, const OperandOf<String> & lhs, BFFTokenRange & iter, bool & expResult )
 {
     ASSERT( lhs.IsValid() );
 
     const BFFToken * opToken = iter.GetCurrent();
-    Operator op = Operator::OP_UNKNOWN;
-    if ( !ParseOperator( function, iter, op, &StringOperators ) )
+    BoolOperator op = BoolOperator::OP_UNKNOWN;
+    if ( !ParseOperator( function, iter, op, sStringOperators, ARRAY_SIZE( sStringOperators ) ) )
     {
         return false;
     }
@@ -771,34 +813,36 @@ static bool ParseStringComparisonExp( const Function * function, const OperandOf
     // TODO: Support literal string arrays.
     switch ( iter.GetCurrent()->GetType() )
     {
-    case BFFTokenType::String:         // "Hello"
-    case BFFTokenType::Variable:       // .Var or ^Var
-    {
-        if ( ( op == Operator::OP_IN ) || ( op == Operator::OP_NOT_IN ) )
+        case BFFTokenType::String:         // "Hello"
+        case BFFTokenType::Variable:       // .Var or ^Var
         {
-            return ParseStringInArray( function, lhs, op, iter, expResult );
-        }
+            if ( ( op == BoolOperator::OP_IN ) || ( op == BoolOperator::OP_NOT_IN ) )
+            {
+                return ParseStringInArray( function, lhs, op, iter, expResult );
+            }
 
-        OperandOf<String> rhs(*iter.GetCurrent(), function);
-        if ( !rhs.EnsureValid() )
+            OperandOf<String> rhs(*iter.GetCurrent(), function);
+            if ( !rhs.EnsureValid() )
+            {
+                return false;
+            }
+            iter++;
+            return CompareStrings( function, lhs.GetValue(), rhs.GetValue(), opToken, op, expResult );
+        }
+        default:
         {
+            Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
             return false;
         }
-        iter++;
-        return CompareStrings( function, lhs.GetValue(), rhs.GetValue(), opToken, op, expResult );
-    }
-    default:
-        Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
-        return false;
     }
 }
 
-/* ParseSubBooleanExp
-Forms:
-    bool-exp = (bool-exp)
-
-`iter` is expected pointing to the opening round bracket.
------------------------------------------------------------------------------- */
+// ParseSubBooleanExp
+// Forms:
+//    bool-exp = (bool-exp)
+//
+// 'iter' is expected pointing to the opening round bracket.
+//------------------------------------------------------------------------------
 static bool ParseSubBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
 {
     ASSERT( iter->IsRoundBracket( '(' ) );
@@ -817,41 +861,93 @@ static bool ParseSubBooleanExp( const Function * function, BFFTokenRange & iter,
     return true;
 }
 
-/* ParseBooleanExp
-Forms:
-    bool-exp = true | false
-             | (bool-exp)
-             | bool-variable
-             | ! bool-exp
-             | bool-exp ==/!=/&&/|| bool-exp
-             | number-exp ==/!=/>/>=/</<= number-exp
-             | string-exp ==/!= string-exp
-             | string-exp in string-set
-             | string-exp not in string-set
-             | string-set in string-set
-             | string-set not in string-set
-    number-exp = number-literal | number-variable
-    string-exp = string-literal | string-variable
-    string-set = string-set-variable
------------------------------------------------------------------------------- */
+// ParseBooleanExp
+// Forms:
+//    bool-exp = true | false
+//             | (bool-exp)
+//             | bool-variable
+//             | ! bool-exp
+//             | bool-exp ==/!=/&&/|| bool-exp
+//             | number-exp ==/!=/>/>=/</<= number-exp
+//             | string-exp ==/!= string-exp
+//             | string-exp in string-set
+//             | string-exp not in string-set
+//             | string-set in string-set
+//             | string-set not in string-set
+//    number-exp = number-literal | number-variable
+//    string-exp = string-literal | string-variable
+//    string-set = string-set-variable
+//------------------------------------------------------------------------------
 static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bool endsOnCloseBracket, bool & expResult )
 {
     const BFFToken * const token = iter.GetCurrent();
 
     switch ( token->GetType() )
     {
-    case BFFTokenType::Variable:       // .Var or ^Var
-    case BFFTokenType::Boolean:        // true or false
-    case BFFTokenType::Number:         // 12, 56, -102 etc
-    case BFFTokenType::String:         // "Hello"
-    {
-        Operand operand( *token, function );
-        iter++;
-        if ( operand.Is<Bool>() )
+        case BFFTokenType::Variable:       // .Var or ^Var
+        case BFFTokenType::Boolean:        // true or false
+        case BFFTokenType::Number:         // 12, 56, -102 etc
+        case BFFTokenType::String:         // "Hello"
         {
-            // Form: bool-value = bool-literal | bool-variable
-            // Expect: bool-value [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
-            expResult = operand.GetValue<Bool>();
+            Operand operand( *token, function );
+            iter++;
+            if ( operand.Is<Bool>() )
+            {
+                // Form: bool-value = bool-literal | bool-variable
+                // Expect: bool-value [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
+                expResult = operand.GetValue<Bool>();
+                while ( !IsExpEnd( iter, endsOnCloseBracket ) )
+                {
+                    if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            else if ( operand.Is<Number>() )
+            {
+                // Form: number-value = number-literal | number-variable
+                // Expect: number-value, number-value <op> number-value
+                if ( !ParseIntComparisonExp( function, OperandOf<Number>( operand ), iter, expResult ) )
+                {
+                    return false;
+                }
+            }
+            else if ( operand.Is<String>() )
+            {
+                // Form: string-value = string-literal | string-variable
+                // Expect: string-value, string-value <op> string-value
+                if ( !ParseStringComparisonExp( function, OperandOf<String>( operand ), iter, expResult ) )
+                {
+                    return false;
+                }
+            }
+            else if ( operand.Is<ArrayOfString>() )
+            {
+                // Expect: array-of-string-variable [not] in array-of-string-variable
+                if ( !ParseStringArrayInArray( function, OperandOf<ArrayOfString>( operand ), iter, expResult ) )
+                {
+                    return false;
+                }
+            }
+            else {
+                // TODO: Update the following error.
+                // Error::Error_1008_VariableOfWrongType was one of the options but we expected multiple types here,
+                // where the 1008 function accept a single expected type.
+                Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
+                return false;
+            }
+
+            return ExpectExpEnd( function, iter, endsOnCloseBracket );
+        }
+        case BFFTokenType::Operator:       // = += > ! == etc
+        {
+            // Expect: !bool-exp [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
+            if ( !ParseUnaryBooleanExp( function, iter, expResult ) )
+            {
+                return false;
+            }
             while ( !IsExpEnd( iter, endsOnCloseBracket ) )
             {
                 if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
@@ -861,89 +957,41 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
             }
             return true;
         }
-        else if ( operand.Is<Number>() )
+        case BFFTokenType::RoundBracket:   // ( or )
         {
-            // Form: number-value = number-literal | number-variable
-            // Expect: number-value, number-value <op> number-value
-            if ( !ParseIntComparisonExp( function, OperandOf<Number>( operand ), iter, expResult ) )
+            // Expect: (bool-exp) [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
+            if ( !ParseSubBooleanExp( function, iter, expResult ) )
             {
                 return false;
             }
-        }
-        else if ( operand.Is<String>() )
-        {
-            // Form: string-value = string-literal | string-variable
-            // Expect: string-value, string-value <op> string-value
-            if ( !ParseStringComparisonExp( function, OperandOf<String>( operand ), iter, expResult ) )
-            {
-                return false;
-            }
-        }
-        else if ( operand.Is<ArrayOfString>() )
-        {
-            // Expect: array-of-string-variable [not] in array-of-string-variable
-            if ( !ParseStringArrayInArray( function, OperandOf<ArrayOfString>( operand ), iter, expResult ) )
-            {
-                return false;
-            }
-        }
-        else {
-            // TODO: Update the following error.
-            // Error::Error_1008_VariableOfWrongType was one of the options but we expected multiple types here,
-            // where the 1008 function accept a single expected type.
-            Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
-            return false;
-        }
 
-        return ExpectExpEnd( function, iter, endsOnCloseBracket );
-    }
-    case BFFTokenType::Operator:       // = += > ! == etc
-    {
-        // Expect: !bool-exp [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
-        if ( !ParseUnaryBooleanExp( function, iter, expResult ) )
-        {
-            return false;
-        }
-        while ( !IsExpEnd( iter, endsOnCloseBracket ) )
-        {
-            if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
+            while ( !IsExpEnd( iter, true ) )
             {
-                return false;
+                if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
+                {
+                    return false;
+                }
             }
+            return true;
         }
-        return true;
-    }
-    case BFFTokenType::RoundBracket:   // ( or )
-    {
-        // Expect: (bool-exp) [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
-        if ( !ParseSubBooleanExp( function, iter, expResult ) )
+        default:
         {
-            return false;
+            break;
         }
-
-        while ( !IsExpEnd( iter, true ) )
-        {
-            if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    default:
-        break;
     }
 
     Error::Error_1071_UnexpectedToken( iter.GetCurrent(), function );
     return false;
 }
 
+}
+
 // Parse
 //------------------------------------------------------------------------------
 /*static*/ bool BFFBooleanExpParser::Parse( const Function * function, const BFFTokenRange & range, bool & expResult )
 {
-    // The `iter` will be used across all the functions calls without copying.
     BFFTokenRange iter( range );
-
     return ParseBooleanExp( function, iter, false, expResult );
 }
+
+//------------------------------------------------------------------------------

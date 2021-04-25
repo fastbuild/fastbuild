@@ -118,6 +118,8 @@ typedef signed int          int32_t;
     #define FORMAT_STRING( fmt, args )
 #endif
 
+#define ARRAY_SIZE( array ) ( sizeof( array ) / sizeof( array[0] ) )
+
 // Warning disabling
 //------------------------------------------------------------------------------
 #if defined( WIN32 ) || defined( WIN64 )

@@ -6,14 +6,8 @@
 #include "FunctionIf.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFBooleanExpParser.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Core/Strings/AStackString.h"
-
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
