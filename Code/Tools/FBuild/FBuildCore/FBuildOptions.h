@@ -70,6 +70,9 @@ public:
     uint32_t    m_CacheTrim                         = 0;
     int32_t     m_CacheCompressionLevel             = -1; // See Compresssor.h
 
+    // Worker Connection Limit
+    int         m_workerlimit                       = 15; 
+
     // Distributed Compilation
     bool        m_AllowDistributed                  = false;
     bool        m_DistVerbose                       = false;
