@@ -172,7 +172,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                     return OPTIONS_ERROR;
                 }
                 i++; // skip extra arg we've consumed
-                
+
                 // add to args we might pass to subprocess
                 m_Args += ' ';
                 m_Args += argv[ sizeIndex ];
@@ -604,6 +604,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -cacheinfo        Output cache statistics.\n"
             " -cachetrim <size> Trim the cache to the given size in MiB.\n"
             " -cacheverbose     Emit details about cache interactions.\n"
+            " -m_WorkerLimit <number_worker>\n"
             " -clean            Force a clean build.\n"
             " -compdb           Generate JSON compilation database for targets.\n"
             " -config <path>    Explicitly specify the config file to use.\n"

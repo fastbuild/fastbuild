@@ -50,10 +50,14 @@
   <tr>
     <td><a href="#cachetrim">-cachetrim [sizeMiB]</a></td>
     <td>Reduce the size of the cache.</td>
-  </tr>  
+  </tr>
   <tr>
     <td><a href="#cacheverbose">-cacheverbose</a></td>
     <td>Provide additional information about cache interactions.</td>
+  </tr>
+  <tr>
+    <td><a href="#workerlimit ">-workerlimit [number]</a></td>
+    <td>Modify the number worker limit. (Default 15)</td>
   </tr>
   <tr>
     <td><a href="#clean">-clean</a></td>
@@ -154,7 +158,7 @@
   <tr>
     <td><a href="#showcmdoutput">-showcmdoutput</a></td>
     <td>Show output of external processes.</td>
-  </tr>  
+  </tr>
   <tr>
     <td><a href="#showcmds">-showcmds</a></td>
     <td>Show command lines used to launch external processes.</td>
@@ -190,7 +194,7 @@
   <tr>
     <td><a href="#wait">-wait</a></td>
     <td>Wait for a previous build to complete before starting.</td>
-  </tr>  
+  </tr>
   <tr>
     <td><a href="#why">-why</a></td>
     <td>For each item that builds, show the trigger reason.</td>
@@ -313,6 +317,11 @@ until under the requested size. (See the related <a href='#cacheinfo'>-cacheinfo
 information and performance metrics. This can be used to assist troubleshooting.</p>
 </div>
 
+    <div class='newsitemheader' id="workerlimit">-workerlimit [number]</div>
+        <div class='newsitembody'>
+    <p> Modify the number worker limit. This will take full advantage of its productivity if we have more workers. Default value if don't have this parameter is 15.</p>
+    </div>
+
     <div class='newsitemheader' id="clean">-clean</div>
     <div class='newsitembody'>
 <p>Force a clean build.  The build configuration file is re-parsed and all existing dependency information is discarded.  A build is performed as if building for the first time with no built files present.</p>
@@ -415,10 +424,10 @@ only be used in very specific situations.</b></p>
 <p>FASTBuild will normally determine the optimal number of local threads to use by detecting the number of hardware
 cores present on the host. The -j option allows you to override this.</p>
 <p>Positive values for x can be used to set the number of tasks which can be performed locally in parallel. This can be used
-to limit CPU usage on a machine that needs to perform other work while compilation is in progress.  Values greater than the 
+to limit CPU usage on a machine that needs to perform other work while compilation is in progress.  Values greater than the
 number of physical processors are also accepted, but will almost always result in degraded performance.</p>
-<p>A value of 0 for x indicates that no additional threads should be spawned, and build graph processing and compilation 
-should occur on the same thread.  This can be useful for build process debugging, especially when combined with the 
+<p>A value of 0 for x indicates that no additional threads should be spawned, and build graph processing and compilation
+should occur on the same thread.  This can be useful for build process debugging, especially when combined with the
 '-verbose' option.</p>
 <p>This option has no direct bearing on distributed compilation, but modifying local parallelism will reduce the ability
 of FASTBuild to distribute work efficiently.</p>
@@ -583,10 +592,10 @@ those which have the .Hidden property set.</p>
 <p>Queue build after an already running build completes.</p>
 <p>Only one instance of FASTBuild can run at a time within the same root working directory. If you launch another FASTBuild while
 one is already running, the error "Another FASTBuild is already running." will be emitted.</p>
-<p>If you wish to build multiple targets, you should specify them together on the command line.  
+<p>If you wish to build multiple targets, you should specify them together on the command line.
 This allows for parallelization across both targets.</p>
-<p>Alternatively, the -wait command line arg allows you to queue the second build, so instead of failing, it will start 
-after the first build completes.  This will be slower than if both targets were invoked together 
+<p>Alternatively, the -wait command line arg allows you to queue the second build, so instead of failing, it will start
+after the first build completes.  This will be slower than if both targets were invoked together
 on the original command line.</p>
 </div>
 
