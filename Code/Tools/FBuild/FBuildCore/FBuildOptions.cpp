@@ -172,7 +172,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                     return OPTIONS_ERROR;
                 }
                 i++; // skip extra arg we've consumed
-
+                
                 // add to args we might pass to subprocess
                 m_Args += ' ';
                 m_Args += argv[ sizeIndex ];
