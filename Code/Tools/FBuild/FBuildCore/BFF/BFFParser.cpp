@@ -102,7 +102,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
     while ( iter.IsAtEnd() == false )
     {
         // Handle updating current bff path variable
-        SetBuiltInVariable_CurrentBFFDir( iter->GetSourceFileName().Get() );
+        SetBuiltInVariable_CurrentBFFDir( iter->GetSourceFile() );
 
         const BFFToken * token = iter.GetCurrent();
 
@@ -1687,26 +1687,23 @@ void BFFParser::CreateBuiltInVariables()
 
 // SetBuiltInVariable_CurrentBFFDir
 //------------------------------------------------------------------------------
-void BFFParser::SetBuiltInVariable_CurrentBFFDir( const char * fileName )
+void BFFParser::SetBuiltInVariable_CurrentBFFDir( const BFFFile & file )
 {
+    // Early out if file has not changed.
+    if ( m_CurrentBFFFile == &file )
+    {
+        return;
+    }
+    m_CurrentBFFFile = &file;
+
     // Handle special case in tests
     if ( FBuild::IsValid() == false )
     {
         return;
     }
 
-    // Early out if file has not changed.
-    // - Note that this is the path without processing below so we can avoid
-    //   doing that work if the path has not changed (i.e. the value stored here
-    //   is not the same as the contents of the variable)
-    if ( m_CurrentBFFDir == fileName )
-    {
-        return;
-    }
-    m_CurrentBFFDir = fileName;
-
     // Get absolute path to bff
-    AStackString<> fullPath( fileName );
+    AStackString<> fullPath( file.GetFileName() );
     NodeGraph::CleanPath( fullPath );
 
     // Get path to bff relative to working dir
