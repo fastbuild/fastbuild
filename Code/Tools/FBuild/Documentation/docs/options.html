@@ -56,6 +56,10 @@
     <td>Provide additional information about cache interactions.</td>
   </tr>
   <tr>
+    <td><a href="#workerlimit ">-workerlimit [number_worker]</a></td>
+    <td>Modify the number worker limit. (Default 15)</td>
+  </tr>  
+  <tr>
     <td><a href="#clean">-clean</a></td>
     <td>Force a clean build.</td>
   </tr>
@@ -312,6 +316,11 @@ until under the requested size. (See the related <a href='#cacheinfo'>-cacheinfo
 <p>Provide additional information about cache interactions, including cache keys, explicit hit/miss/store
 information and performance metrics. This can be used to assist troubleshooting.</p>
 </div>
+
+    <div class='newsitemheader' id="workerlimit">-workerlimit [number_worker]</div>
+        <div class='newsitembody'>
+    <p> Modify the number worker limit. This will take full advantage of its productivity if we have more workers. Default value if don't have this parameter is 15.</p>
+    </div>
 
     <div class='newsitemheader' id="clean">-clean</div>
     <div class='newsitembody'>

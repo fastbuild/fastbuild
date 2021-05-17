@@ -39,7 +39,7 @@ REFLECT_END( SettingsNode )
 //------------------------------------------------------------------------------
 SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
-, m_WorkerConnectionLimit( 15 )
+, m_WorkerConnectionLimit( FBuild::Get().GetOptions().m_workerlimit )
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
 , m_DisableDBMigration( false )
 {

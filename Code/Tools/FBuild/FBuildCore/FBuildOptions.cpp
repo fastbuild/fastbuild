@@ -178,6 +178,26 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += argv[ sizeIndex ];
                 continue;
             }
+            else if (thisArg == "-workerlimit")
+            {
+                const int sizeIndex = (i + 1);
+                PRAGMA_DISABLE_PUSH_MSVC(4996) // This function or variable may be unsafe...
+                PRAGMA_DISABLE_PUSH_CLANG_WINDOWS("-Wdeprecated-declarations") // 'sscanf' is deprecated: This function or variable may be unsafe...
+                if ((sizeIndex >= argc) ||
+                     (sscanf(argv[sizeIndex], "%i", &m_workerlimit) != 1))
+                PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
+                PRAGMA_DISABLE_POP_MSVC // 4996
+                {
+                    OUTPUT("FBuild: Error: Missing or bad <worker> for '-workerlimit' argument\n");
+                    OUTPUT("Try \"%s -help\"\n", programName.Get());
+                    return OPTIONS_ERROR;
+                }
+                i++; // skip extra arg we've consumed
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += argv[sizeIndex];
+                continue;
+            }
             else if ( thisArg == "-clean" )
             {
                 m_ForceCleanBuild = true;
@@ -584,6 +604,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -cacheinfo        Output cache statistics.\n"
             " -cachetrim <size> Trim the cache to the given size in MiB.\n"
             " -cacheverbose     Emit details about cache interactions.\n"
+            " -m_WorkerLimit <number_worker>\n"
             " -clean            Force a clean build.\n"
             " -compdb           Generate JSON compilation database for targets.\n"
             " -config <path>    Explicitly specify the config file to use.\n"
