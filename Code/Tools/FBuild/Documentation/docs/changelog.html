@@ -28,6 +28,45 @@
 
 
 <div class='newsitemheader'>
+    v1.05&nbsp;<font color='#bbbbbb'>(22nd-May-2021)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Changed how command lines are processed internally to greatly reduce the need for distributed protocol bumps in future versions</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li><a href="options.html#profile">-profile</a> emits correctly escaped JSON</li>
+        <li>Clang explicit language args (-x) are updated for FASTBuild's second compilation pass (Thanks to dummyunit)</li>
+        <li>Various args are correctly handled (for example removing -I with clang after preprocessing) when quoted with "</li>
+        <li>LightCache works correctly when MSVC /FI option is used</li>
+        <li>Compilation database includes correct executable path in json</li>
+        <li>Fix several problems with function headers for aliases using variables. e.g. Copy( .Var ) or Copy( ."$Var$" )</li>
+        <li>-MD and -MF args are stripped from second pass, avoiding problems they can cause (Thanks to Nick Edwards)</li>
+        <li>CLR use is detected when using /clr with args (such as /clr:netcore)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Caching</li>
+        <ul>
+            <li>Add LightCache support for MSVC /external:I paths (Thanks to Javier Blazquez)</li>
+        </ul>
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>If() supports complex compound expressions and literals (Thanks to Logan Zhou)</li>
+            <li>BFF parsing speed greatly improved for projects with many executable or dll configurations</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li>Visual Studio project generation automatically populates FI (NMakeForcedIncludes) properties</li>
+            <li>Add Intellisense support for MSVC /external:I paths (Thanks to Javier Blazquez)</li>
+        </ul>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.04&nbsp;<font color='#bbbbbb'>(18th-Jan-2021)</font>
 </div>
 <div class='newsitembody'>
