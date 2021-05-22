@@ -49,6 +49,7 @@ public:
     static const ObjectListNode * FindTargetForIntellisenseInfo( const Dependencies & deps );
     static void ExtractIncludePaths( const AString & compilerArgs,
                                      Array< AString > & outIncludes,
+                                     Array< AString > & outForceIncludes,
                                      bool escapeQuotes );
     static void ExtractDefines( const AString & compilerArgs,
                                 Array< AString > & outDefines,

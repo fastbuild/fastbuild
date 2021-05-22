@@ -1,0 +1,22 @@
+//
+// Test injected includes
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerOptions    + ' /I$TestRoot$/Data/TestCache/LightCache_ForceInclude/'
+                        + ' /FIheader1.h'
+                        + ' -FIheader2.h'
+                        + ' /FI header3.h'
+                        + ' /FI "header4.h"'
+                        + ' "/FIheader5.h"'
+
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCache/LightCache_ForceInclude/file.cpp' }
+    .CompilerOutputPath = '$Out$/Test/Cache/LightCache_ForceInclude/'
+}

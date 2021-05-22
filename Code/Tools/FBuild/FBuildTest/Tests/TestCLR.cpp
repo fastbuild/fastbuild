@@ -8,6 +8,7 @@
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
@@ -25,6 +26,7 @@ private:
     const char * GetTestDBFileName() const { return "../tmp/Test/CLR/test.fdb"; }
 
     // Tests
+    void CLRDetection() const;
     void Test() const;
     void Test_NoBuild() const;
     void TestCache() const;
@@ -38,6 +40,7 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestCLR )
+    REGISTER_TEST( CLRDetection )
     REGISTER_TEST( Test )           // clean build, populate cache
     REGISTER_TEST( Test_NoBuild )   // check nothing rebuilds
     REGISTER_TEST( TestCache )      // clean build, read from cache
@@ -63,6 +66,42 @@ FBuildStats TestCLR::Build( FBuildTestOptions options, bool useDB, const char * 
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetTestDBFileName() ) );
 
     return fBuild.GetStats();
+}
+
+// CLRDetection
+//------------------------------------------------------------------------------
+void TestCLR::CLRDetection() const
+{
+    // CLR code cannot be distributed or cached. Check the compiler args to determine
+    // if CLR is used.
+
+    // Init
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCLR/CLRDetection/fbuild.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Build (so ObjectNodes are created)
+    // (we don't care if the build actually passed or not)
+    fBuild.Build( "all" );
+
+    // Get ObjectNodes
+    StackArray<const Node *> nodes;
+    fBuild.GetNodesOfType( Node::OBJECT_NODE, nodes );
+    TEST_ASSERT( nodes.GetSize() == 2 );
+
+    // Check flags
+    for ( const Node * node : nodes )
+    {
+        // Ensure CLR was detected
+        TEST_ASSERT( node->CastTo< ObjectNode >()->IsUsingCLR() );
+
+        // Ensure distribution is disabled
+        TEST_ASSERT( node->CastTo< ObjectNode >()->IsDistributable() == false );
+
+        // Ensure caching is disabled
+        TEST_ASSERT( node->CastTo< ObjectNode >()->IsCacheable() == false );
+    }
 }
 
 // Test
@@ -182,7 +221,7 @@ void TestCLR::TestParallelBuild_NoBuild() const
 void TestCLR::TestCLRToCPPBridge() const
 {
     // TODO:B FIX this test for VS2015 & VS2017
-    #if ( _MSC_VER < 1900 )
+    #if defined( _MSC_VER ) && ( _MSC_VER < 1900 )
         FBuildTestOptions options;
         options.m_ForceCleanBuild = true;
 

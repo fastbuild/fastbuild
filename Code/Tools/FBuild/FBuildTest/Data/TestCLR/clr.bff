@@ -5,6 +5,8 @@
 Using( .StandardEnvironment )
 Settings {} // Activate standard settings
 
+.CompilerInputPathRecurse = false
+
 Library( "CLR-Target" )
 {
     .CompilerOptions    + ' /clr'

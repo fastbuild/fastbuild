@@ -131,7 +131,7 @@ bool Compressor::Decompress( const void * data )
     if ( header->m_CompressionType == 0 )
     {
         m_Result = ALLOC( header->m_UncompressedSize );
-        memcpy( m_Result, (char *)data + sizeof( Header ), header->m_UncompressedSize );
+        memcpy( m_Result, (const char *)data + sizeof( Header ), header->m_UncompressedSize );
         m_ResultSize = header->m_UncompressedSize;
         return true;
     }

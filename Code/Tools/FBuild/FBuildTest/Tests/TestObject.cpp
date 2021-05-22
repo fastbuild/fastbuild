@@ -10,6 +10,8 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
+#include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -32,6 +34,8 @@ private:
     void ModTimeChangeBackwards() const;
     void CacheUsingRelativePaths() const;
     void SourceMapping() const;
+    void ClangExplicitLanguageType() const;
+    void ClangDependencyArgs() const;
 };
 
 // Register Tests
@@ -43,6 +47,8 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( ModTimeChangeBackwards )
     REGISTER_TEST( CacheUsingRelativePaths )
     REGISTER_TEST( SourceMapping )
+    REGISTER_TEST( ClangExplicitLanguageType )
+    REGISTER_TEST( ClangDependencyArgs )
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -478,6 +484,94 @@ void TestObject::SourceMapping() const
         }
 
         TEST_ASSERT( buffer.Find( "/fastbuild-test-mapping" ) );
+    }
+}
+
+// ClangExplicitLanguageType
+//------------------------------------------------------------------------------
+void TestObject::ClangExplicitLanguageType() const
+{
+    // Ensure explicitly set language args ("-x c++" etc) are replaced with the
+    // correct equivalent for preprocessed code ("-x c++-cpp-output" etc)
+    const char* const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangExplicitLanguageType/fbuild.bff";
+
+    // Local
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ClangExplicitLanguageType" ) );
+    }
+
+    // Distributed
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Force remote
+        options.m_AllowDistributed = true;
+        options.m_NoLocalConsumptionOfRemoteJobs = true;
+        options.m_AllowLocalRace = false;
+        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+
+        // start a client to emulate the other end
+        Server s( 1 );
+        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ClangExplicitLanguageType" ) );
+    }
+}
+
+// ClangDependencyArgs
+//------------------------------------------------------------------------------
+void TestObject::ClangDependencyArgs() const
+{
+    // Ensure explicitly depedency options are removed from the second pass of
+    // compilation. Some integrations (like Unreal) use these commands and process
+    // the output.
+    const char* const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangDependencyArgs/fbuild.bff";
+
+    // Local
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ClangDependencyArgs" ) );
+    }
+
+    // Distributed
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+
+        // Force remote
+        options.m_AllowDistributed = true;
+        options.m_NoLocalConsumptionOfRemoteJobs = true;
+        options.m_AllowLocalRace = false;
+        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+
+        // start a client to emulate the other end
+        Server s( 1 );
+        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ClangDependencyArgs" ) );
     }
 }
 

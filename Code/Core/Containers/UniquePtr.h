@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Env/Assert.h"
 #include "Core/Mem/Mem.h"
 
 // FreeDeletor - free using FREE
@@ -36,6 +37,8 @@ public:
     // access the pointer
     inline       T * Get()       { return m_Pointer; }
     inline const T * Get() const { return m_Pointer; }
+    inline T *          operator ->()       { ASSERT( m_Pointer ); return m_Pointer; }
+    inline const T *    operator ->() const { ASSERT( m_Pointer ); return m_Pointer; }
 
     // acquire a new pointer
     inline void operator = ( T * newPtr ) { DELETOR::Delete( m_Pointer ); m_Pointer = newPtr; }

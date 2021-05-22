@@ -36,6 +36,7 @@ private:
     void LightCache_IncludeHierarchy() const;
     void LightCache_CyclicInclude() const;
     void LightCache_ImportDirective() const;
+    void LightCache_ForceInclude() const;
 
     // MSVC Static Analysis tests
     const char* const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -47,7 +48,7 @@ private:
     void Analyze_MSVC_WarningsOnly_ReadFromDist() const;
 
     // Helpers
-    void CheckForDependencies( const FBuildForTest & fBuild, const char * files[], size_t numFiles ) const;
+    void CheckForDependencies( const FBuildForTest & fBuild, const char * const files[], size_t numFiles ) const;
     void LightCache_IncludeUsingUndefinedMacros( const char * consfigFile,
                                                  bool expectedBuildResult,
                                                  bool expectedLightCacheUsage,
@@ -73,6 +74,7 @@ REGISTER_TESTS_BEGIN( TestCache )
         REGISTER_TEST( LightCache_IncludeHierarchy )
         REGISTER_TEST( LightCache_CyclicInclude )
         REGISTER_TEST( LightCache_ImportDirective )
+        REGISTER_TEST( LightCache_ForceInclude )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
 
@@ -820,6 +822,30 @@ void TestCache::LightCache_ImportDirective() const
     TEST_ASSERT( GetRecordedOutput().Find( "#import is unsupported." ) );
 }
 
+// LightCache_ForceInclude
+//------------------------------------------------------------------------------
+void TestCache::LightCache_ForceInclude() const
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_ForceInclude/fbuild.bff";
+
+    const char * const expectedFiles[] = { "file.cpp", "header1.h", "header2.h", "header3.h", "header4.h", "header5.h" };
+
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+    // Ensure cache was used in LightCache mode
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumCacheStores == 1 );
+    TEST_ASSERT( objStats.m_NumLightCache == 1 );
+
+    CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
+}
+
 // Analyze_MSVC_WarningsOnly_Write
 //------------------------------------------------------------------------------
 void TestCache::Analyze_MSVC_WarningsOnly_Write() const
@@ -847,7 +873,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
     // file2.cpp
-    #if _MSC_VER >= 1910 // From VS2017 or later
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
         TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
     #endif
 
@@ -857,7 +883,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    #if _MSC_VER >= 1910 // From VS2017 or later
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
 }
@@ -891,7 +917,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Read() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    #if _MSC_VER >= 1910 // From VS2017 or later
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
 }
@@ -932,7 +958,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
     // file2.cpp
-    #if _MSC_VER >= 1910 // From VS2017 or later
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
         TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
     #endif
 
@@ -942,7 +968,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    #if _MSC_VER >= 1910 // From VS2017 or later
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
 }
@@ -985,14 +1011,14 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    #if _MSC_VER >= 1910 // From VS2017 or later
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
 }
 
 // CheckForDependencies
 //------------------------------------------------------------------------------
-void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char * files[], size_t numFiles ) const
+void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char * const files[], size_t numFiles ) const
 {
     Array< const Node * > nodes;
     fBuild.GetNodesOfType( Node::FILE_NODE, nodes );

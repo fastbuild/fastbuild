@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Error Reference</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>1071 - Unexpected token '%s'.</h1>
+    <div class='newsitemheader'>Description</div>
+    <div class='newsitembody'>
+An unexpected token was encounered while partsing an If() header.
+This error is a fallback for when a more specific error is unavailable.
+    </div>
+<div class='newsitemheader'>Example</div>
+    <div class='newsitembody'>
+Config:
+<div class='code'>If( !100 )
+{
+}</div>
+Output:
+<div class='output'>C:\test\fbuild.bff(1,6): FASTBuild Error #1256 - If() - Unexpected token '100'.
+If( !100 )
+     ^
+     \--here
+</div>
+Fix:
+<div class='code'>If( !false )
+{
+}</div>
+<div class='footer'>&copy; 2012-2021 Franta Fulin</div></div></div>
+</body>
+</html>

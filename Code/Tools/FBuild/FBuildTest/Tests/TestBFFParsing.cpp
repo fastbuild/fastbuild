@@ -80,6 +80,7 @@ private:
     void Functions() const;
     void ErrorRowAndColumn() const;
     void ForEach() const;
+    void FunctionHeaders() const;
 };
 
 // Register Tests
@@ -143,6 +144,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Functions )
     REGISTER_TEST( ErrorRowAndColumn )
     REGISTER_TEST( ForEach )
+    REGISTER_TEST( FunctionHeaders )
 REGISTER_TESTS_END
 
 // Empty
@@ -1008,6 +1010,86 @@ void TestBFFParsing::ForEach() const
                    "ForEach( .A in .Array1,"
                    "         .B in .Array2 )"
                    "{}" );
+}
+
+// FunctionHeaders
+//------------------------------------------------------------------------------
+void TestBFFParsing::FunctionHeaders() const
+{
+    // Ensure errors are reported for various types of malformed headers.
+    // - Variable not declared
+    TEST_PARSE_FAIL( "Copy( .Name )\n"
+                     "{\n"
+                     "    .Source = 'src1'\n"
+                     "    .Dest = 'dst1'\n"
+                     "}\n",     "Error #1009 - Unknown variable '.Name'." );
+    // - Empty string
+    TEST_PARSE_FAIL( "Copy( '' )\n"
+                     "{\n"
+                     "    .Source = 'src1'\n"
+                     "    .Dest = 'dst1'\n"
+                     "}\n",     "Error #1003 - Copy() - Empty string not allowed in Function header." );
+    // - Missing required header
+    TEST_PARSE_FAIL( "Alias()\n"
+                     "{\n"
+                     "    .Targets = ''\n"
+                     "}\n",     "Error #1023 - Alias() - Function requires a header." );
+    // - Variable substitution duplicate
+    TEST_PARSE_FAIL( ".Name = 'X'\n"
+                     "Copy( .Name )\n"
+                     "{\n"
+                     "    .Source = 'src1'\n"
+                     "    .Dest = 'dst1'\n"
+                     "}\n"
+                     "Copy( .Name )\n" // <-- Duplicate
+                     "{\n"
+                     "    .Source = 'src2'\n"
+                     "    .Dest = 'dst2'\n"
+                     "}\n",     "#1100 - Copy() - Target 'X' already defined." );
+    // - Unexpexted function header
+    TEST_PARSE_FAIL( "Settings( 'Bad' )\n"
+                     "{}",      "#1021 - Settings() - Unexpected Function header." );
+    TEST_PARSE_FAIL( ".Name= 'X'\n"
+                     "Settings( .Name )\n"
+                     "{}",      "#1021 - Settings() - Unexpected Function header." );
+    TEST_PARSE_FAIL( "Settings( .Name )\n"
+                     "{}",      "#1021 - Settings() - Unexpected Function header." );
+    TEST_PARSE_FAIL( "Settings( '' )\n"
+                     "{}",      "#1021 - Settings() - Unexpected Function header." );
+    TEST_PARSE_FAIL( "Settings()\n"
+                     "{}",      "#1021 - Settings() - Unexpected Function header." );
+
+    // - Optional header missing is ok
+    TEST_PARSE_OK( "Copy()\n"
+                   "{\n"
+                   "    .Source = 'src1'\n"
+                   "    .Dest = 'dst1'\n"
+                   "}\n" );
+
+    // Variable substitutions used in header. We can infer that the substitution
+    // worked as it results in an error as the target is already defined.
+    // - Direct use of variable
+    TEST_PARSE_FAIL( ".Compiler = 'fake-clang'\n"
+                     ".CompilerOptions = '%1 -o %2'\n"
+                     ".Name = 'X'\n"
+                     "ObjectList( .Name ) {}\n"
+                     "ObjectList( .Name ) {}\n",
+                                "Error #1100 - ObjectList() - Target 'X' already defined." );
+    // - Dynamic construction of variable name
+    TEST_PARSE_FAIL( ".Compiler = 'fake-clang'\n"
+                     ".CompilerOptions = '%1 -o %2'\n"
+                     ".Name = 'X'\n"
+                     ".Var = 'Name'"
+                     "ObjectList( .'$Var$' ) {}\n"
+                     "ObjectList( .'$Var$' ) {}\n",
+                                "Error #1100 - ObjectList() - Target 'X' already defined." );
+    // Valid case
+    TEST_PARSE_OK( ".Compiler = 'fake-clang'\n"
+                   ".CompilerOptions = '%1 -o %2'\n"
+                   ".Name = 'X'\n"
+                   "ObjectList( .Name ) {}\n"
+                   ".Name = 'Y'\n"
+                   "ObjectList( .Name ) {}\n" );
 }
 
 //------------------------------------------------------------------------------

@@ -135,7 +135,7 @@ void OSListView::SetItemText( uint32_t index, uint32_t subItemIndex, const char 
         item.iItem = (int32_t)index;
 
         // host name
-        item.pszText = (LPSTR)text;
+        item.pszText = (LPSTR)const_cast<char *>(text);
         item.iSubItem = (int32_t)subItemIndex;
         SendMessage( (HWND)m_Handle, LVM_SETITEM, (WPARAM)0, (LPARAM)&item );
     #elif defined( __OSX__ )

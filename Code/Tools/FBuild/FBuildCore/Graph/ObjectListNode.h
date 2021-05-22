@@ -5,6 +5,11 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Node.h"
+
+// FBuild
+#include <Tools/FBuild/FBuildCore/Graph/ObjectNode.h>
+
+// Core
 #include "Core/Containers/Array.h"
 
 // Forward Declarations
@@ -13,7 +18,6 @@ class Args;
 class CompilerNode;
 class Function;
 class NodeGraph;
-class ObjectNode;
 
 // ObjectListNode
 //------------------------------------------------------------------------------
@@ -57,8 +61,8 @@ protected:
     ObjectNode * CreateObjectNode( NodeGraph & nodeGraph,
                                    const BFFToken * iter,
                                    const Function * function,
-                                   const uint32_t flags,
-                                   const uint32_t preprocessorFlags,
+                                   const ObjectNode::CompilerFlags flags,
+                                   const ObjectNode::CompilerFlags preprocessorFlags,
                                    const AString & compilerOptions,
                                    const AString & compilerOptionsDeoptimized,
                                    const AString & preprocessor,
@@ -107,8 +111,8 @@ protected:
     AString             m_ExtraASMPath;
     uint32_t            m_ObjectListInputStartIndex         = 0;
     uint32_t            m_ObjectListInputEndIndex           = 0;
-    uint32_t            m_ObjFlags                          = 0;
-    uint32_t            m_ObjFlagsPreprocessor              = 0;
+    ObjectNode::CompilerFlags   m_CompilerFlags;
+    ObjectNode::CompilerFlags   m_PreprocessorFlags;
 };
 
 //------------------------------------------------------------------------------

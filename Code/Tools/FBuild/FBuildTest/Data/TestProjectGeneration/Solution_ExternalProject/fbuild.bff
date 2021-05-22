@@ -52,10 +52,10 @@ VSSolution( 'ExternalProjectSolution' )
 {
     .SolutionProjects               = { 'Proj1', 'Proj2', 'ExternalDummyProject_3' }
 
-    // only uncomment this if you have VSProjTypeExtractor / Visual Studio with C# support available (which is not likely the case on Travis CI)
+    // only uncomment this if you have VSProjTypeExtractor / Visual Studio with C# support available (which is not likely the case on CI)
     ;.SolutionProjects               + { 'External', 'ExternalMissingBraces' }
     
-    // only uncomment this if you have VSProjTypeExtractor / Visual Studio with Python support available (which is not likely the case on Travis CI)
+    // only uncomment this if you have VSProjTypeExtractor / Visual Studio with Python support available (which is not likely the case on CI)
     ;.SolutionProjects               + { 'ExternalDummyProject_2' }
 
     .SolutionX64Debug               = [ .Platform = 'x64'   .Config = 'Debug' ]

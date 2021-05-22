@@ -45,6 +45,7 @@ distribution, caching and more.
   .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsupported "compilers" (default: false)
   .CustomEnvironmentVariables   // (optional) Environment variables to set on remote host
   .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
+  .ClangGCCUpdateXLanguageArg   // (optional) Update -x language arg for second pass of compilation (default: false)
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
   .Environment                  // (optional) Environment variables to use for local build
   .AllowResponseFile            // (optional) Allow response files to be used if not auto-detected (default: false)
@@ -205,6 +206,15 @@ Compiler( 'Test' )
     .ClangRewriteIncludes to false as follows:</p>
 	<div class='code'>.ClangRewriteIncludes = false</div>
     
+    <p><hr></p>
+    
+    <p><b>.ClangGCCUpdateXLanguageArg</b> - Bool - (Optional)</p>
+    <p>FASTBuild uses the -E preprocessor option combined with -frewrite-includes when preprocessing source with Clang to
+    preserve debug information. If the -x language arg is specified explicitly by the user on the command line (for example "-x c++"),
+    this is only correct for the first pass.</p>
+    <p>FASTBuild can update this arg ("-x c++" -> "-x c++-cpp-output" for example) but older versions of Clang (prior to 10) will ignore
+    define (-D) options on the command line when this is set, breaking compilation when -frewrite-includes is used).</p>
+    <p>To maintain backwards compatibility, this option is disabled by default and must be explicitly enabled if desired.</p>
     <p><hr></p>
     
 	<p><b>.VS2012EnumBugFix</b> - Bool - (Optional)</p>

@@ -147,17 +147,17 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
         ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
     #endif
 
+        void* ptr;
+
     // Alloc
     if ( s_ThreadSafeAllocs )
     {
-        bucket.m_Mutex.Lock();
+        MutexHolder mh(bucket.m_Mutex);
+        ptr = bucket.Alloc();
     }
-
-    void * ptr = bucket.Alloc();
-
-    if ( s_ThreadSafeAllocs )
+    else
     {
-        bucket.m_Mutex.Unlock();
+        ptr = bucket.Alloc();
     }
 
     // Debug fill

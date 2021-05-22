@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CompilationDatabase.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
 
 // Core
 #include "Core/FileIO/PathUtils.h"
@@ -48,7 +49,7 @@ REGISTER_TESTS_END
 class CompilationDatabaseTestWrapper : public CompilationDatabase
 {
 public:
-    static void JSONEscape( AString & string ) { CompilationDatabase::JSONEscape( string ); }
+    static void JSONEscape( AString & string ) { JSON::Escape( string ); }
     static void Unquote( AString & string )    { CompilationDatabase::Unquote( string ); }
 };
 
@@ -109,7 +110,7 @@ void TestCompilationDatabase::TestObjectListInputFile() const
         "    \"directory\": \"{WORKDIR}\",\n"
         "    \"file\": \"{TESTDIR}file.cpp\",\n"
         "    \"output\": \"{OUTDIR}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
+        "    \"arguments\": [\"{TESTDIR}clang.exe\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
         "  }\n"
         "]\n"
     );
@@ -125,7 +126,7 @@ void TestCompilationDatabase::TestObjectListInputPath() const
         "    \"directory\": \"{WORKDIR}\",\n"
         "    \"file\": \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\",\n"
         "    \"output\": \"{OUTDIR}subdir{SLASH}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
+        "    \"arguments\": [\"{TESTDIR}clang.exe\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
         "  }\n"
         "]\n"
     );
@@ -141,7 +142,7 @@ void TestCompilationDatabase::TestUnityInputFile() const
         "    \"directory\": \"{WORKDIR}\",\n"
         "    \"file\": \"{TESTDIR}file.cpp\",\n"
         "    \"output\": \"{OUTDIR}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
+        "    \"arguments\": [\"{TESTDIR}clang.exe\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
         "  }\n"
         "]\n"
     );
@@ -157,7 +158,7 @@ void TestCompilationDatabase::TestUnityInputPath() const
         "    \"directory\": \"{WORKDIR}\",\n"
         "    \"file\": \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\",\n"
         "    \"output\": \"{OUTDIR}subdir{SLASH}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
+        "    \"arguments\": [\"{TESTDIR}clang.exe\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
         "  }\n"
         "]\n"
     );

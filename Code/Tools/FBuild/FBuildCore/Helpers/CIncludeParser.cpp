@@ -345,7 +345,7 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         }
         pos++;
 
-        // only add an include if the preprocessor included it (indicated by the `1` flag
+        // only add an include if the preprocessor included it (indicated by the '1' flag
         // https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
         // or if it is coming from -fms-extention which doesn't have flags
         if ( strncmp( pos, " 1", 2 ) == 0 || !hasFlags )

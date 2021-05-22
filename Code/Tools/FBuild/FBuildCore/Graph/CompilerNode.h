@@ -37,6 +37,7 @@ public:
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
     inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
+    inline bool IsClangGCCUpdateXLanguageArgEnabled() const { return m_ClangGCCUpdateXLanguageArg; }
     inline bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }
 
     enum CompilerFamily : uint8_t
@@ -76,6 +77,7 @@ private:
     bool                    m_ForceResponseFile;
     bool                    m_VS2012EnumBugFix;
     bool                    m_ClangRewriteIncludes;
+    bool                    m_ClangGCCUpdateXLanguageArg;
     bool                    m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
     AString                 m_ExecutableRootPath;
     AString                 m_CompilerFamilyString;

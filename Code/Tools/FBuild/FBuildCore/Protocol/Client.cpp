@@ -610,21 +610,21 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
         if ( objectNode->IsMSVC())
         {
-            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+            if ( objectNode->IsWarningsAsErrorsMSVC() == false )
             {
                 FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer );
             }
         }
         else if ( objectNode->IsClangCl() )
         {
-            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+            if ( objectNode->IsWarningsAsErrorsMSVC() == false )
             {
                 FileNode::HandleWarningsClangCl( job, objectNode->GetName(), msgBuffer );
             }
         }
         else if ( objectNode->IsClang() || objectNode->IsGCC() )
         {
-            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+            if ( objectNode->IsWarningsAsErrorsClangGCC() == false )
             {
                 FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer );
             }

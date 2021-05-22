@@ -83,7 +83,8 @@
                                         - ' -Werror'
                                         - ' -Wfatal-errors'
                                         - ' -Wextra'
-                                        - ' -Wshadow'                                                                                    
+                                        - ' -Wshadow'
+                                        - ' -Weverything'
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/External/$ProjectName$/'

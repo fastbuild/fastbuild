@@ -24,7 +24,7 @@ VSSolution( 'ExternalWrongDataProjectSolution' )
 {
     .SolutionProjects               = { 'Proj1w', 'Proj2w' }
 
-	// this will always fail, even if you have VSProjTypeExtractor / Visual Studio with WiX toolset support available (which is not likely the case on Travis CI)
+	// this will always fail, even if you have VSProjTypeExtractor / Visual Studio with WiX toolset support available (which is not likely the case on CI)
 	// and should do so, that's what this test validates
 	.SolutionProjects               + { 'ExternalDummyProject_3' }
 	
