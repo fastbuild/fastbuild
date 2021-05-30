@@ -1,5 +1,6 @@
 // Windows
 //------------------------------------------------------------------------------
+#if __WINDOWS__
 
 // The Windows 10 SDK is used regardless of which OS version is being targetted
 #define USING_WINDOWS10_SDK
@@ -12,3 +13,4 @@
 #endif
 
 //------------------------------------------------------------------------------
+#endif
