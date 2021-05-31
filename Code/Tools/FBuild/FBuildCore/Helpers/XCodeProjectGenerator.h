@@ -66,6 +66,7 @@ private:
                      const Array<AString> & values );
     void EscapeArgument( const AString & arg,
                          AString & outEscapedArgument ) const;
+    static void ProcessFileName( const AString & fileName, AString & outFileName );
 
     // Additional Input Data
     AString             m_ProjectName;
