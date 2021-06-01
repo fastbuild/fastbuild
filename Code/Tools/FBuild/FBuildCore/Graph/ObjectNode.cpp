@@ -2052,6 +2052,23 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
             return NODE_RESULT_FAILED;
         }
     }
+    {
+        // add UTF8-BOM to source files
+        const char * lastDot = fileName.FindLast( '.' );
+        if ( ( lastDot != nullptr ) && ( lastDot[1] != '\0' ) )
+        {
+            AStackString<> extension( lastDot + 1 );
+            if ( ( extension == "cpp" ) || ( extension == "cc" ) || ( extension == "cxx" ) || ( extension == "c++" || extension == "cp" || extension == "CPP" || extension == "C" || extension == "inc" ) )
+            {
+                unsigned char c1 = 0xEF;
+                unsigned char c2 = 0xBB;
+                unsigned char c3 = 0xBF;
+                tmpFile.WriteBuffer(&c1, 1);
+                tmpFile.WriteBuffer(&c2, 1);
+                tmpFile.WriteBuffer(&c3, 1);
+            }
+        }
+    }
     if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
     {
         job->Error( "Failed to write to temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
