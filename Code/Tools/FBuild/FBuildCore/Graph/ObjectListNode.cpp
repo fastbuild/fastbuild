@@ -193,7 +193,7 @@ ObjectListNode::ObjectListNode()
         if ( usingPCH )
         {
             // Check for correct PCH usage options
-            if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClang() )
+            if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClangCl() )
             {
                 if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Use( iter, m_CompilerOptions, m_CompilerFlags ) == false )
                 {

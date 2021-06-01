@@ -1,6 +1,7 @@
 # FASTBuild
 *.exe
 *.fdb
+*.fdb.corrupt
 *.log
 *.opensdf
 *.pdb

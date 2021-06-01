@@ -160,6 +160,12 @@ public:
     static int32_t StrNCmp( const char * a, const char * b, size_t num );
     static int32_t StrNCmpI( const char * a, const char * b, size_t num );
 
+    // range iteration
+    char * begin()              { return m_Contents; }
+    char * end()                { return m_Contents + m_Length; }
+    const char * begin() const  { return m_Contents; }
+    const char * end() const    { return m_Contents + m_Length; }
+
 protected:
     enum : uint32_t { MEM_MUST_BE_FREED_FLAG    = 0x00000001 };
     enum : uint32_t { RESERVED_MASK             = 0xFFFFFFFE };
