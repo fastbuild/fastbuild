@@ -48,6 +48,7 @@ private:
     void LinkMultiple_InputFiles() const;
     void SortFiles() const;
     void CacheUsingRelativePaths() const;
+    void NoUnityCommandLineOption() const;
 };
 
 // Register Tests
@@ -71,6 +72,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( LinkMultiple_InputFiles )
     REGISTER_TEST( SortFiles )
     REGISTER_TEST( CacheUsingRelativePaths )
+    REGISTER_TEST( NoUnityCommandLineOption )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -434,7 +436,6 @@ void TestUnity::ClangStaticAnalysis() const
     //
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/fbuild.bff";
-    //options.m_NoUnity = true;
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) ); // Success, regardless of warnings
@@ -453,7 +454,6 @@ void TestUnity::ClangStaticAnalysis_InjectHeader() const
     //
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/fbuild.bff";
-    //options.m_NoUnity = true;
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile-InjectHeader" ) ); // Success, regardless of warnings
@@ -956,6 +956,113 @@ void TestUnity::CacheUsingRelativePaths() const
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
     }
 
+}
+
+// NoUnityCommandLineOption
+//------------------------------------------------------------------------------
+void TestUnity::NoUnityCommandLineOption() const
+{
+    //
+    // Ensure toggling -nounity results in expected rebuilding
+    //
+    const char * const dbFile = "../tmp/Test/Unity/NoUnityCommandLineOption/fbuild.fdb";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/NoUnityCommandLineOption/fbuild.bff";
+
+    // Build normally
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+    }
+
+    // Switch on -nounity
+    options.m_NoUnity = true;
+    options.m_ShowBuildReason = true;
+
+    // Build again
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Ensure rebuild was caused by specific build reason
+        TEST_ASSERT( GetRecordedOutput().Find( "(-nounity was added)" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+    }
+
+    // Remove -nounity
+    options.m_NoUnity = false;
+
+    // Build again
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Ensure rebuild was caused by specific build reason
+        TEST_ASSERT( GetRecordedOutput().Find( "(-nounity was removed)" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
+        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+    }
+
+    // Switch on -nounity again
+    options.m_NoUnity = true;
+
+    // Build again
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Ensure rebuild was caused by specific build reason
+        TEST_ASSERT( AString( GetRecordedOutput() ).Replace( "(-nounity was added)", "" ) == 2 );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 2,     0,      Node::OBJECT_NODE ); // NOTE: Isolated object files can be re-used
+        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+    }
+
+    // Remove -nounity again
+    options.m_NoUnity = false;
+
+    // Build again
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Ensure rebuild was caused by specific build reason
+        TEST_ASSERT( AString( GetRecordedOutput() ).Replace( "(-nounity was removed)", "" ) == 2 );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
+        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+    }
 }
 
 //------------------------------------------------------------------------------

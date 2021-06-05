@@ -267,6 +267,15 @@ UnityNode::~UnityNode()
         }
     }
 
+    // Check if nounity has been toggled
+    const bool noUnity = FBuild::Get().GetOptions().m_NoUnity;
+    const bool wasNoUnity = ((m_Stamp & 1) == 1); // LSB contains nounity flag status
+    if (noUnity != wasNoUnity)
+    {
+        FLOG_BUILD_REASON( "Need to build '%s' (-nounity was %s)\n", GetName().Get(), noUnity ? "added" : "removed" );
+        return true;
+    }
+
     return Node::DetermineNeedToBuild( deps );
 }
 
@@ -386,7 +395,7 @@ UnityNode::~UnityNode()
             filesInThisUnity.Append( files[index ] );
 
             // files which are modified (writable) can optionally be excluded from the unity
-            bool isolate = noUnity;
+            bool isolate = false;
             if ( m_IsolateWritableFiles )
             {
                 // is the file writable?
@@ -421,7 +430,7 @@ UnityNode::~UnityNode()
         for ( const UnityFileAndOrigin * file = filesInThisUnity.Begin(); file != end; ++file )
         {
             // files which are modified can optionally be excluded from the unity
-            bool isolateThisFile = noUnity;
+            bool isolateThisFile = false;
             if ( ( m_MaxIsolatedFiles == 0 ) || ( numIsolated <= m_MaxIsolatedFiles ) )
             {
                 // is the file writable?
@@ -436,6 +445,12 @@ UnityNode::~UnityNode()
                 // disable compilation of this file (comment it out)
                 m_IsolatedFiles.EmplaceBack( file->GetName(), file->GetDirListOrigin() );
                 numFilesActuallyIsolatedInThisUnity++;
+            }
+            else if ( noUnity )
+            {
+                // No unity makes us build all files individually
+                // We still generate the unity.cpp the same way to avoid changing it unnecessarily
+                m_IsolatedFiles.EmplaceBack( file->GetName(), file->GetDirListOrigin() );
             }
 
             // Get relative file path
@@ -463,10 +478,7 @@ UnityNode::~UnityNode()
             // write include
             if ( isolateThisFile )
             {
-                output += "//"; // TODO:C Do this only for "real" isolation (not -nounity)
-                                // (this would reduce rebuilds, but currently doensn't work
-                                //  because the generated unity.cpp changing is critical
-                                //  to triggering the rebuild when switching -nounity on/off)
+                output += "//"; // Not for -nounity to reduce rebuilds
             }
             output += "#include \"";
             if ( m_UseRelativePaths_Experimental )
@@ -491,7 +503,9 @@ UnityNode::~UnityNode()
         }
 
         // only keep track of non-empty unity files (to avoid link errors with empty objects)
-        if ( filesInThisUnity.GetSize() != numFilesActuallyIsolatedInThisUnity )
+        // additionally, if -nounity is in use we also don't want to link these objects
+        if (( filesInThisUnity.GetSize() != numFilesActuallyIsolatedInThisUnity ) &&
+            ( noUnity == false ))
         {
             m_UnityFileNames.Append( unityName );
         }
@@ -567,6 +581,16 @@ UnityNode::~UnityNode()
     // Calculate final hash to represent generation of Unity files
     ASSERT( stamps.GetSize() == m_NumUnityFilesToCreate );
     m_Stamp = xxHash::Calc64( &stamps[ 0 ], stamps.GetSize() * sizeof( uint64_t ) );
+
+    // Track "nounity" status in the lest significant bit
+    if (noUnity)
+    {
+        m_Stamp = ( m_Stamp | 1 ); // Set LSB
+    }
+    else
+    {
+        m_Stamp = ( m_Stamp & ~uint64_t(1) ); // Clear LSB
+    }
 
     // cleanup extra FileInfo structures
     for ( FileIO::FileInfo * info : m_FilesInfo )

@@ -1,0 +1,28 @@
+//
+// Test behavior of -nounity command line option
+//
+#include "..\..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+.OutputPath = '$Out$/Test/Unity/NoUnityCommandLineOption/'
+
+// Isolate Writable Files
+Unity( 'Unity' )
+{
+    .UnityInputFiles                = {
+                                        'Tools/FBuild/FBuildTest/Data/TestUnity/NoUnityCommandLineOption/a.cpp'
+                                        'Tools/FBuild/FBuildTest/Data/TestUnity/NoUnityCommandLineOption/b.cpp'
+                                      }
+    .UnityOutputPath                = '$OutputPath$/Output/'
+}
+
+Library( 'NoUnityCommandLineOption' )
+{
+    .CompilerInputUnity             = 'Unity'
+    .CompilerOutputPath             = '$OutputPath$/Output/'
+
+    .LibrarianOutput                = '$OutputPath$/Output/library.lib'
+}
