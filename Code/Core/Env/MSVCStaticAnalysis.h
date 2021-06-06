@@ -11,8 +11,10 @@
 
     // printf style function
     #define MSVC_SAL_PRINTF _In_z_ _Printf_format_string_
+    #define MSVC_SAL_SCANF _Scanf_s_format_string_
 #else
     #define MSVC_SAL_PRINTF
+    #define MSVC_SAL_SCANF
 #endif
 
 //------------------------------------------------------------------------------

@@ -88,8 +88,13 @@ public:
 
     inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 
+    // Format
     AString & Format( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
     AString & VFormat( const char * fmtString, va_list arg );
+
+    // ScanF
+    int32_t         ScanF( MSVC_SAL_SCANF const char * fmtString, ... ) SCAN_STRING( 2, 3 );
+    static int32_t  ScanF( const char * buffer, MSVC_SAL_SCANF const char * fmtString, ... ) SCAN_STRING( 2, 3 );
 
     void Tokenize( Array< AString > & tokens, char splitChar = ' ' ) const;
 

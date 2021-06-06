@@ -275,6 +275,36 @@ loop:
     return *this;
 }
 
+// ScanF
+//------------------------------------------------------------------------------
+int32_t AString::ScanF( MSVC_SAL_SCANF const char * fmtString, ... )
+{
+    va_list args;
+    va_start( args, fmtString );
+    #if defined( __WINDOWS__ )
+        const int32_t result = vsscanf_s( m_Contents, fmtString, args );
+    #else
+        const int32_t result = vsscanf( m_Contents, fmtString, args );
+    #endif
+    va_end( args );
+    return result;
+}
+
+// ScanF
+//------------------------------------------------------------------------------
+/*static*/ int32_t AString::ScanF( const char * buffer, MSVC_SAL_SCANF const char * fmtString, ... )
+{
+    va_list args;
+    va_start( args, fmtString );
+    #if defined( __WINDOWS__ )
+        const int32_t result = vsscanf_s( buffer, fmtString, args );
+    #else
+        const int32_t result = vsscanf( buffer, fmtString, args );
+    #endif
+    va_end( args );
+    return result;
+}
+
 // Tokenize
 //------------------------------------------------------------------------------
 void AString::Tokenize( Array< AString > & tokens, char splitChar ) const

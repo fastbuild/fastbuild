@@ -114,8 +114,10 @@ typedef signed int          int32_t;
 
 #if defined( __GNUC__ ) || defined( __clang__ ) // GCC or Clang
     #define FORMAT_STRING( fmt, args ) __attribute__((format(printf, fmt, args)))
+    #define SCAN_STRING( fmt, args ) __attribute__((format(scanf, fmt, args)))
 #else
     #define FORMAT_STRING( fmt, args )
+    #define SCAN_STRING( fmt, args )
 #endif
 
 #define ARRAY_SIZE( array ) ( sizeof( array ) / sizeof( array[0] ) )
