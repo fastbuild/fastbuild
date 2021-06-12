@@ -1353,33 +1353,22 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         {
             pchKey = xxHash::Calc64( cacheData, cacheDataSize );
         }
-
+        
         const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
 
+        MultiBuffer buffer( cacheData, cacheDataSize );
+
         // do decompression
-        Compressor c;
-        if ( c.IsValidData( cacheData, cacheDataSize ) == false )
+        if ( buffer.Decompress() == false )
         {
-            FLOG_WARN( "Cache returned invalid data (header)\n"
+            FLOG_WARN( "Cache returned invalid data\n"
                        " - File: '%s'\n"
                        " - Key : %s\n",
                        m_Name.Get(), cacheFileName.Get() );
             return false;
         }
-        if ( c.Decompress( cacheData ) == false )
-        {
-            FLOG_WARN( "Cache returned invalid data (payload)\n"
-                       " - File: '%s'\n"
-                       " - Key : %s\n",
-                       m_Name.Get(), cacheFileName.Get() );
-            return false;
-        }
-        const void * data = c.GetResult();
-        const size_t dataSize = c.GetResultSize();
-
+        const size_t uncompressedDataSize = buffer.GetDataSize();
         const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
-
-        MultiBuffer buffer( data, dataSize );
 
         Array< AString > fileNames( 4, false );
         fileNames.Append( m_Name );
@@ -1425,7 +1414,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, uncompressedDataSize, cacheFileName.Get() );
             }
             FLOG_OUTPUT( output );
         }
@@ -1484,10 +1473,9 @@ void ObjectNode::WriteToCache( Job * job )
     {
         // try to compress
         const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
-        Compressor c;
-        c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize(), FBuild::Get().GetOptions().m_CacheCompressionLevel );
-        const void * data = c.GetResult();
-        const size_t dataSize = c.GetResultSize();
+        buffer.Compress( FBuild::Get().GetOptions().m_CacheCompressionLevel );
+        const void * data = buffer.GetData();
+        const size_t dataSize = buffer.GetDataSize();
         const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
         const uint32_t startPublish( stopCompress );
