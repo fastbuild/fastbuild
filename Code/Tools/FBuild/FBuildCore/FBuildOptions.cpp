@@ -156,14 +156,16 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-cachecompressionlevel" )
             {
                 const int sizeIndex = ( i + 1 );
+                int32_t cacheCompressionLevel;
                 if ( ( sizeIndex >= argc ) ||
-                     ( AString::ScanF( argv[ sizeIndex ], "%i", &m_CacheCompressionLevel ) != 1 ) ||
-                     ( ( m_CacheCompressionLevel < -128 ) || ( m_CacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
+                     ( AString::ScanF( argv[ sizeIndex ], "%i", &cacheCompressionLevel ) != 1 ) ||
+                     ( ( cacheCompressionLevel < -128 ) || ( cacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <level> for '-cachecompressionlevel' argument\n" );
                     OUTPUT( "Try \"%s -help\"\n", programName.Get() );
                     return OPTIONS_ERROR;
                 }
+                m_CacheCompressionLevel = static_cast< int16_t >( cacheCompressionLevel );
                 i++; // skip extra arg we've consumed
                 
                 // add to args we might pass to subprocess
