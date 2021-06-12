@@ -55,7 +55,7 @@ public:
     };
 
     // Check if an item exists in the map
-    [[nodiscard]] KeyValue *    Find( const KEY & key );
+    NODISCARD KeyValue *    Find( const KEY & key );
 
     // Add items to the map
     KeyValue &    Insert( const KEY & key, const VALUE & value );
