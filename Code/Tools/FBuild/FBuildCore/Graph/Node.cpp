@@ -957,8 +957,8 @@ void Node::ReplaceDummyName( const AString & newName )
 
     // are last two tokens numbers?
     int row, column;
-    if ( ( tokens[ numTokens - 1 ].ScanF( "%i", &column ) != 1 ) ||
-         ( tokens[ numTokens - 2 ].ScanF( "%i", &row ) != 1 ) )
+    if ( ( tokens[ numTokens - 1 ].Scan( "%i", &column ) != 1 ) ||
+         ( tokens[ numTokens - 2 ].Scan( "%i", &row ) != 1 ) )
     {
         return; // failed to extract numbers where we expected them
     }

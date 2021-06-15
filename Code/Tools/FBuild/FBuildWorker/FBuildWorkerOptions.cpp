@@ -65,7 +65,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         {
             int32_t numCPUs = (int32_t)Env::GetNumProcessors();
             int32_t num( 0 );
-            if ( AString::ScanF( token.Get() + 6, "%i", &num ) == 1 )
+            if ( AString::ScanS( token.Get() + 6, "%i", &num ) == 1 )
             {
                 if ( token.EndsWith( '%' ) )
                 {
@@ -118,7 +118,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             else if ( token.BeginsWith( "-minfreememory=" ) )
             {
                 uint32_t num( 0 );
-                if ( AString::ScanF( token.Get() + 15, "%u", &num ) == 1 )
+                if ( AString::ScanS( token.Get() + 15, "%u", &num ) == 1 )
                 {
                     m_MinimumFreeMemoryMiB = num;
                 }

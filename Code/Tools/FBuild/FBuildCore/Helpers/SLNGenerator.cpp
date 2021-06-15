@@ -85,7 +85,7 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 
     // Extract primary version as an int
     uint32_t shortVersionInt = 0;
-    VERIFY( shortVersion.ScanF( "%u", &shortVersionInt ) == 1 );
+    VERIFY( shortVersion.Scan( "%u", &shortVersionInt ) == 1 );
 
     // header
     Write( "Microsoft Visual Studio Solution File, Format Version 12.00\r\n" );

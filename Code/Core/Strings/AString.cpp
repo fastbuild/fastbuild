@@ -275,32 +275,24 @@ loop:
     return *this;
 }
 
-// ScanF
+// Scan
 //------------------------------------------------------------------------------
-int32_t AString::ScanF( MSVC_SAL_SCANF const char * fmtString, ... )
+int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... )
 {
     va_list args;
     va_start( args, fmtString );
-    #if defined( __WINDOWS__ )
-        const int32_t result = vsscanf_s( m_Contents, fmtString, args );
-    #else
-        const int32_t result = vsscanf( m_Contents, fmtString, args );
-    #endif
+    const int32_t result = vsscanf( m_Contents, fmtString, args );
     va_end( args );
     return result;
 }
 
-// ScanF
+// ScanS
 //------------------------------------------------------------------------------
-/*static*/ int32_t AString::ScanF( const char * buffer, MSVC_SAL_SCANF const char * fmtString, ... )
+/*static*/ int32_t AString::ScanS( const char * buffer, MSVC_SAL_SCANF const char * fmtString, ... )
 {
     va_list args;
     va_start( args, fmtString );
-    #if defined( __WINDOWS__ )
-        const int32_t result = vsscanf_s( buffer, fmtString, args );
-    #else
-        const int32_t result = vsscanf( buffer, fmtString, args );
-    #endif
+    const int32_t result = vsscanf( buffer, fmtString, args );
     va_end( args );
     return result;
 }

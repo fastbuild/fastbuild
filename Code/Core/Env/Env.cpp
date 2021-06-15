@@ -47,7 +47,7 @@
         AStackString< 32 > var;
         if ( GetEnvVariable( "NUMBER_OF_PROCESSORS", var ) )
         {
-            if ( var.ScanF( "%u", &numProcessors ) != 1 )
+            if ( var.Scan( "%u", &numProcessors ) != 1 )
             {
                 numProcessors = 1;
             }

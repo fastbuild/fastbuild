@@ -135,7 +135,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 const int sizeIndex = ( i + 1 );
                 if ( ( sizeIndex >= argc ) ||
-                     ( AString::ScanF( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 )
+                     ( AString::ScanS( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 )
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <sizeMiB> for '-cachetrim' argument\n" );
                     OUTPUT( "Try \"%s -help\"\n", programName.Get() );
@@ -158,7 +158,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 const int sizeIndex = ( i + 1 );
                 int32_t cacheCompressionLevel;
                 if ( ( sizeIndex >= argc ) ||
-                     ( AString::ScanF( argv[ sizeIndex ], "%i", &cacheCompressionLevel ) != 1 ) ||
+                     ( AString::ScanS( argv[ sizeIndex ], "%i", &cacheCompressionLevel ) != 1 ) ||
                      ( ( cacheCompressionLevel < -128 ) || ( cacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <level> for '-cachecompressionlevel' argument\n" );
@@ -267,7 +267,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 continue;
             }
             else if ( thisArg.BeginsWith( "-j" ) &&
-                      ( thisArg.ScanF( "-j%u", &m_NumWorkerThreads ) == 1 ) )
+                      ( thisArg.Scan( "-j%u", &m_NumWorkerThreads ) == 1 ) )
             {
                 // only accept within sensible range
                 if ( m_NumWorkerThreads <= 256 )

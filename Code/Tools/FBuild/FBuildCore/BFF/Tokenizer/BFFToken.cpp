@@ -23,7 +23,7 @@ BFFToken::BFFToken( const BFFFile & file,
 {
     if ( type == BFFTokenType::Number )
     {
-        VERIFY( m_String.ScanF( "%i", &m_Integer ) == 1 );
+        VERIFY( m_String.Scan( "%i", &m_Integer ) == 1 );
     }
 }
 
