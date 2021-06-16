@@ -672,7 +672,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool useCache = ShouldUseCache();
         if ( m_Stamp && useCache )
         {
-            WriteToCache( job );
+            WriteToCache_FromDisk( job );
         }
     }
 
@@ -1444,9 +1444,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
     return false;
 }
 
-// WriteToCache
+// WriteToCache_FromDisk
 //------------------------------------------------------------------------------
-void ObjectNode::WriteToCache( Job * job )
+void ObjectNode::WriteToCache_FromDisk( Job * job )
 {
     if (FBuild::Get().GetOptions().m_UseCacheWrite == false)
     {
@@ -1455,70 +1455,116 @@ void ObjectNode::WriteToCache( Job * job )
 
     PROFILE_FUNCTION;
 
-    const AString & cacheFileName = GetCacheName(job);
-    ASSERT(!cacheFileName.IsEmpty());
-
-    Timer t;
-
-    ICache * cache = FBuild::Get().GetCache();
-    ASSERT( cache );
-
+    // Get list of files
     Array< AString > fileNames( 4, false );
     fileNames.Append( m_Name );
-
     GetExtraCacheFilePaths( job, fileNames );
 
+    // Load files
     MultiBuffer buffer;
-    if ( buffer.CreateFromFiles( fileNames ) )
+    if ( buffer.CreateFromFiles( fileNames ) == false )
     {
-        // try to compress
-        const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
-        buffer.Compress( FBuild::Get().GetOptions().m_CacheCompressionLevel );
-        const void * data = buffer.GetData();
-        const size_t dataSize = buffer.GetDataSize();
-        const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
-
-        const uint32_t startPublish( stopCompress );
-        if ( cache->Publish( cacheFileName, data, dataSize ) )
+        // Output
+        if ( FBuild::Get().GetOptions().m_CacheVerbose )
         {
-            // cache store complete
-            const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
-
-            SetStatFlag( Node::STATS_CACHE_STORE );
-
-            // Dependent objects need to know the PCH key to be able to pull from the cache
-            if ( IsCreatingPCH() && IsMSVC() )
-            {
-                m_PCHCacheKey = xxHash::Calc64( data, dataSize );
-            }
-
-            const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
-            AddCachingTime( cachingTime );
-
-            // Output
-            if ( FBuild::Get().GetOptions().m_CacheVerbose )
-            {
-                AStackString<> output;
-                output.Format( "Obj: %s\n"
-                                " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
-                                GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
-                if ( m_PCHCacheKey != 0 )
-                {
-                    output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
-                }
-                FLOG_OUTPUT( output );
-            }
-
-            return;
+            FLOG_OUTPUT( "Obj: %s\n"
+                            " - Cache Store Fail: '%s' (local IO problem)\n",
+                            GetName().Get(), GetCacheName( job ).Get() );
         }
+        return;
     }
 
-    // Output
-    if ( FBuild::Get().GetOptions().m_CacheVerbose )
+    WriteToCache_FromUncompressedData( job,
+                                       buffer.GetData(),
+                                       buffer.GetDataSize() );
+}
+
+// WriteToCache_FromUncompressedData
+//------------------------------------------------------------------------------
+void ObjectNode::WriteToCache_FromUncompressedData( Job * job,
+                                                    const void * uncompressedData,
+                                                    uint64_t uncompressedDataSize )
+{
+    if ( FBuild::Get().GetOptions().m_UseCacheWrite == false )
     {
-        FLOG_OUTPUT( "Obj: %s\n"
-                     " - Cache Store Fail: %u ms '%s'\n",
-                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        return;
+    }
+
+    // Compress
+    Timer t;
+    const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
+    Compressor c;
+    c.Compress(uncompressedData, uncompressedDataSize, FBuild::Get().GetOptions().m_CacheCompressionLevel );
+    const uint32_t compressionTime = ( (uint32_t)t.GetElapsedMS() - startCompress );
+
+    WriteToCache_FromCompressedData( job,
+                                     c.GetResult(),
+                                     static_cast<uint64_t>( c.GetResultSize() ),
+                                     compressionTime );
+}
+
+// WriteToCache_FromCompressedData
+//------------------------------------------------------------------------------
+void ObjectNode::WriteToCache_FromCompressedData( Job * job,
+                                                  const void * compressedData,
+                                                  uint64_t compressedDataSize,
+                                                  uint32_t compressionTimeMS )
+{
+    if ( FBuild::Get().GetOptions().m_UseCacheWrite == false )
+    {
+        return;
+    }
+
+    // Ensure data is compressed
+    ASSERT( Compressor::IsValidData( compressedData, compressedDataSize ) );
+
+    const AString & cacheFileName = GetCacheName(job);
+
+    // Commit to cache
+    Timer t;
+    const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
+    if ( FBuild::Get().GetCache()->Publish( cacheFileName, compressedData, compressedDataSize ) )
+    {
+        // cache store complete
+        const uint32_t publishTime = ( (uint32_t)t.GetElapsedMS() - startPublish );
+
+        SetStatFlag( Node::STATS_CACHE_STORE );
+
+        // Dependent objects need to know the PCH key to be able to pull from the cache
+        if ( IsCreatingPCH() && IsMSVC() )
+        {
+            m_PCHCacheKey = xxHash::Calc64( compressedData, compressedDataSize );
+        }
+
+        const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
+        AddCachingTime( cachingTime );
+
+        // Output
+        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        {
+            const uint64_t uncompressedDataSize = Compressor::GetUncompressedSize( compressedData, compressedDataSize );
+            AStackString<> output;
+            output.Format( "Obj: %s\n"
+                           " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %" PRIu64 " - Uncompressed: %" PRIu64 ") '%s'\n",
+                           GetName().Get(), cachingTime, publishTime, compressionTimeMS, compressedDataSize, uncompressedDataSize, cacheFileName.Get() );
+            if ( m_PCHCacheKey != 0 )
+            {
+                output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
+            }
+            FLOG_OUTPUT( output );
+        }
+    }
+    else
+    {
+        // Cache store failed
+
+        // Output
+        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        {
+            FLOG_OUTPUT( "Obj: %s\n"
+                         " - Cache Store Fail: %u ms '%s'\n",
+                         GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        }
     }
 }
 

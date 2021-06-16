@@ -19,6 +19,7 @@ namespace Protocol
 {
     class IMessage;
     class MsgJobResult;
+    class MsgJobResultCompressed;
     class MsgRequestJob;
     class MsgRequestManifest;
     class MsgRequestFile;
@@ -43,8 +44,11 @@ private:
 
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestJob * msg );
     void Process( const ConnectionInfo * connection, const Protocol::MsgJobResult *, const void * payload, size_t payloadSize );
+    void Process( const ConnectionInfo * connection, const Protocol::MsgJobResultCompressed * msg, const void * payload, size_t payloadSize );
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestManifest * msg );
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestFile * msg );
+
+    void ProcessJobResultCommon( const ConnectionInfo * connection, bool isCompressed, const void * payload, size_t payloadSize );
 
     const ToolManifest * FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const;
     bool WriteFileToDisk( const AString& fileName, const MultiBuffer & multiBuffer, size_t index ) const;

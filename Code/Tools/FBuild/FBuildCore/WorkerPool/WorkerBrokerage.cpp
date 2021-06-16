@@ -53,7 +53,7 @@ void WorkerBrokerage::InitBrokerage()
     }
 
     // brokerage path includes version to reduce unnecessary comms attempts
-    uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
+    const uint32_t protocolVersion = Protocol::PROTOCOL_VERSION_MAJOR;
 
     // root folder
     AStackString<> brokeragePath;

@@ -289,7 +289,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
 void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConnection * msg )
 {
     // check for valid/supported protocol version
-    if ( msg->GetProtocolVersion() != Protocol::PROTOCOL_VERSION )
+    if ( msg->GetProtocolVersion() != Protocol::PROTOCOL_VERSION_MAJOR )
     {
         AStackString<> remoteAddr;
         TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
@@ -354,6 +354,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
 
     Job * job = FNEW( Job( ms ) );
     job->SetUserData( cs );
+    job->SetResultCompressionLevel( msg->GetResultCompressionLevel() );
 
     //
     const uint64_t toolId = msg->GetToolId();
@@ -646,8 +647,18 @@ void Server::FinalizeCompletedJobs()
             ASSERT( cs->m_NumJobsActive );
             cs->m_NumJobsActive--;
 
-            Protocol::MsgJobResult msg;
-            msg.Send( cs->m_Connection, ms );
+            if ( job->GetResultCompressionLevel() == 0 )
+            {
+                // Uncompressed
+                Protocol::MsgJobResult msg;
+                msg.Send( cs->m_Connection, ms );
+            }
+            else
+            {
+                // Compressed
+                Protocol::MsgJobResultCompressed msg;
+                msg.Send( cs->m_Connection, ms );
+            }
         }
         else
         {

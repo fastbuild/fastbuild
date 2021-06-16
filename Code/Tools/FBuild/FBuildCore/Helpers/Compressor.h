@@ -14,7 +14,8 @@ public:
     explicit Compressor();
     ~Compressor();
 
-    bool IsValidData( const void * data, size_t dataSize ) const;
+    static bool     IsValidData( const void * data, size_t dataSize );
+    static uint32_t GetUncompressedSize( const void * data, size_t dataSize );
 
     // compressionLevel:
     //   < 0 : use LZ4, with values directly mapping to "acceleration level"

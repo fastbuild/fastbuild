@@ -414,11 +414,11 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     const bool includePDB = node->IsUsingPDB();
     const bool usingStaticAnalysis = node->IsUsingStaticAnalysisMSVC();
 
-    // Detemine list of files to send
+    // Determine list of files to send
 
     // 1. Object file
     //---------------
-    Array< AString > fileNames( 3, false );
+    StackArray< AString > fileNames;
     fileNames.Append( node->GetName() );
 
     // 2. PDB file (optional)
@@ -445,6 +445,13 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     {
         job->Error( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
         FLOG_ERROR( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
+    }
+
+    // Compress result
+    const int32_t compressionLevel = job->GetResultCompressionLevel();
+    if ( compressionLevel != 0 )
+    {
+        mb.Compress( compressionLevel );
     }
 
     // transfer data to job

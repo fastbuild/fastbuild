@@ -73,6 +73,9 @@ public:
     void                SetRemoteThreadIndex( uint16_t threadIndex )    { m_RemoteThreadIndex = threadIndex; }
     uint16_t            GetRemoteThreadIndex() const                    { return m_RemoteThreadIndex; }
 
+    void                SetResultCompressionLevel( int16_t compressionLevel )   { m_ResultCompressionLevel = compressionLevel; }
+    int16_t             GetResultCompressionLevel() const                       { return m_ResultCompressionLevel; }
+
     enum DistributionState : uint8_t
     {
         DIST_NONE                           = 0, // All non-distributable jobs
@@ -115,6 +118,7 @@ private:
     AString             m_CacheName;
     BuildProfilerScope * m_BuildProfilerScope = nullptr;    // Additional context when profiling a build
     ToolManifest *      m_ToolManifest      = nullptr;
+    int16_t             m_ResultCompressionLevel = 0; // Compression level of returned results
 
     Array< AString >    m_Messages;
 

@@ -373,6 +373,12 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
             Process( connection, msg, payload, payloadSize );
             break;
         }
+        case Protocol::MSG_JOB_RESULT_COMPRESSED:
+        {
+            const Protocol::MsgJobResultCompressed * msg = static_cast< const Protocol::MsgJobResultCompressed * >( imsg );
+            Process( connection, msg, payload, payloadSize );
+            break;
+        }
         case Protocol::MSG_REQUEST_MANIFEST:
         {
             const Protocol::MsgRequestManifest * msg = static_cast< const Protocol::MsgRequestManifest * >( imsg );
@@ -458,19 +464,54 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     }
     FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
+    // Determine compression level we'd like the Server to use for returning the results
+    int16_t resultCompressionLevel = -1; // Default compression level
+    if ( FBuild::IsValid() )
+    {
+        // If we will write the results to the cache, and this node is cacheable
+        // then we want to respect higher cache compression levels if set
+        const int16_t cacheCompressionLevel = FBuild::Get().GetOptions().m_CacheCompressionLevel;
+        if ( ( cacheCompressionLevel != 0 ) && 
+             ( FBuild::Get().GetOptions().m_UseCacheWrite ) && 
+             ( job->GetNode()->CastTo< ObjectNode >()->ShouldUseCache() ) )
+        {
+            resultCompressionLevel = Math::Max( resultCompressionLevel, cacheCompressionLevel );
+        }
+    }
+    
+    // Take note of the results compression level so we know to expect
+    // compressed results
+    job->SetResultCompressionLevel( resultCompressionLevel );
+
     {
         PROFILE_SECTION( "SendJob" );
-        Protocol::MsgJob msg( toolId );
+        Protocol::MsgJob msg( toolId, resultCompressionLevel );
         SendMessageInternal( connection, msg, stream );
     }
 }
 
 // Process( MsgJobResult )
 //------------------------------------------------------------------------------
-void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobResult *, const void * payload, size_t payloadSize )
+void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobResult * /*msg*/, const void * payload, size_t payloadSize )
 {
     PROFILE_SECTION( "MsgJobResult" );
+    const bool compressed = false;
+    ProcessJobResultCommon( connection, compressed, payload, payloadSize );
+}
 
+// Process( MsgJobResultCompressed )
+//------------------------------------------------------------------------------
+void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobResultCompressed * /*msg*/, const void * payload, size_t payloadSize )
+{
+    PROFILE_SECTION( "MsgJobResultCompressed" );
+    const bool compressed = true;
+    ProcessJobResultCommon( connection, compressed, payload, payloadSize );
+}
+
+// ProcessJobResultCommon
+//------------------------------------------------------------------------------
+void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isCompressed, const void * payload, size_t payloadSize )
+{
     // Take note of the current time. We'll consider the job to have completed at this time.
     // Doing it as soon as possible makes it more accurate, as work below can take a non-trivial
     // amount of time. (For example OnReturnRemoteJob when cancelling the local job in a race)
@@ -547,9 +588,36 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     if ( result == true )
     {
         // built ok - serialize to disc
-        MultiBuffer mb( data, dataSize );
-
+        
         ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+
+        // Store to cache if needed
+        const bool writeToCache = FBuild::Get().GetOptions().m_UseCacheWrite &&
+                                  objectNode->ShouldUseCache();
+        if ( writeToCache )
+        {
+            if ( isCompressed )
+            {
+                // Write already compressed result to cache
+                objectNode->WriteToCache_FromCompressedData( job,
+                                                             data,
+                                                             dataSize,
+                                                             0 ); // compression time is remote and unknown
+            }
+            else
+            {
+                // Compress and write result to cache
+                objectNode->WriteToCache_FromUncompressedData( job, data, dataSize );
+            }
+        }
+
+        // Decompress if needed
+        MultiBuffer mb( data, dataSize );
+        if ( isCompressed )
+        {
+            mb.Decompress();
+        }
+
         const AString & nodeName = objectNode->GetName();
         if ( Node::EnsurePathExistsForFile( nodeName ) == false )
         {
@@ -590,13 +658,6 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                 objectNode->SetLastBuildTime( buildTime );
                 objectNode->SetStatFlag(Node::STATS_BUILT);
                 objectNode->SetStatFlag(Node::STATS_BUILT_REMOTE);
-
-                // commit to cache?
-                if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
-                        objectNode->ShouldUseCache() )
-                {
-                    objectNode->WriteToCache( job );
-                }
             }
             else
             {

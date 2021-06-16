@@ -172,11 +172,11 @@ bool MultiBuffer::Decompress()
     ASSERT( m_ReadStream ); // Data needs to be populated
 
     // Decompress
-    Compressor c;
-    if ( c.IsValidData( m_ReadStream->GetData(), m_ReadStream->GetSize() ) == false )
+    if ( Compressor::IsValidData( m_ReadStream->GetData(), m_ReadStream->GetSize() ) == false )
     {
         return false;
     }
+    Compressor c;
     if ( c.Decompress( m_ReadStream->GetData() ) == false )
     {
         return false;
