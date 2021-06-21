@@ -50,6 +50,7 @@ public:
     // main thread calls these
     void AddJobToBatch( Node * node );  // Add new job to the staging queue
     void FlushJobBatch();               // Sort and flush the staging queue
+    bool HasJobsToFlush() const { return ( m_LocalJobs_Staging.IsEmpty() == false ); }
     void FinalizeCompletedJobs( NodeGraph & nodeGraph );
     void MainThreadWait( uint32_t maxWaitMS );
 

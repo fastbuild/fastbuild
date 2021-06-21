@@ -159,6 +159,11 @@ private:
                                           uint32_t & nodesBuiltTime,
                                           uint32_t & totalNodeTime );
 
+    static bool CheckForCyclicDependencies( const Node * node );
+    static bool CheckForCyclicDependenciesRecurse( const Node * node, Array< const Node * > & dependencyStack );
+    static bool CheckForCyclicDependenciesRecurse( const Dependencies & dependencies,
+                                                   Array< const Node * > & dependencyStack );
+
     Node * FindNodeInternal( const AString & fullPath ) const;
 
     struct NodeWithDistance

@@ -1246,6 +1246,12 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
         }
     }
 
+    // Check for cyclice dependencies discoverable only at runtime
+    if ( CheckForCyclicDependencies( nodeToBuild ) )
+    {
+        FBuild::AbortBuild();
+    }
+
     // Make available all the jobs we discovered in this pass
     JobQueue::Get().FlushJobBatch();
 }
@@ -1786,6 +1792,122 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
     {
         UpdateBuildStatusRecurse( i->GetNode(), nodesBuiltTime, totalNodeTime );
     }
+}
+
+// CheckForCyclicDependencies
+//------------------------------------------------------------------------------
+/*static*/ bool NodeGraph::CheckForCyclicDependencies( const Node * node )
+{
+    //
+    // Some cyclic dependency problems can only be detected at build time.
+    // This check can be non-trivially expensive with a large dependency graph
+    // so we want to avoid the check unless absolutely necessary.
+    // Since a cyclic dependency would cause the build to get stuck, we can
+    // run the check only in cases where there are no jobs available, no jobs
+    // in flight and no jobs about to be added from the last sweep.
+    //
+    // Some of these things depend on timing, so this check could conceivably run
+    // when not stuck, but it will never falsly detect a cyclic dependency.
+    // 
+    
+    // Early out if the root node is being processed
+    if ( node->GetState() >= Node::State::BUILDING )
+    {
+        return false;
+    }
+
+    // Early out if we've discovered new jobs to queue in the last graph sweep
+    if ( JobQueue::Get().HasJobsToFlush() )
+    {
+        return false;
+    }
+
+    // Early out if there are active jobs in progress
+    uint32_t numJobs = 0;
+    uint32_t numJobsActive = 0;
+    uint32_t numJobsDist = 0;
+    uint32_t numJobsDistActive = 0;
+    JobQueue::Get().GetJobStats( numJobs, numJobsActive, numJobsDist, numJobsDistActive );
+    if ( ( numJobs > 0 ) ||
+         ( numJobsActive > 0 ) ||
+         ( numJobsDist > 0 ) || 
+         ( numJobsDistActive > 0 ) )
+    {
+        return false;
+    }
+
+    PROFILE_FUNCTION;
+
+    s_BuildPassTag++;
+    StackArray< const Node * > dependencyStack;
+    return CheckForCyclicDependenciesRecurse( node, dependencyStack );
+}
+
+// CheckForCyclicDependenciesRecurse
+//------------------------------------------------------------------------------
+/*static*/ bool NodeGraph::CheckForCyclicDependenciesRecurse( const Node * node, Array< const Node * > & dependencyStack )
+{
+    // If dependencies are satisfied, there can't be any circular dependencies
+    // below this node
+    if ( node->GetState() >= Node::State::BUILDING )
+    {
+        return false;
+    }
+
+    // Check if we've recursed into ourselves
+    if ( dependencyStack.Find( node ) )
+    {
+        AStackString<> buffer( "Error: Cyclic dependency detected. Dependency chain:\n" );
+        for ( const Node * nodeInStack : dependencyStack )
+        {
+            // Exclude the proxy node that can sometimes appear at the root
+            if ( nodeInStack->GetType() != Node::PROXY_NODE )
+            {
+                buffer.AppendFormat( " - %s%s\n", nodeInStack->GetName().Get(), ( nodeInStack == node ) ? " <--- HERE" : "" );
+            }
+        }
+        FLOG_ERROR( "%s - %s <--- HERE\n", buffer.Get(), node->GetName().Get() );
+        return true;
+    }
+
+    // Don't check this node again in the same sweep
+    const uint32_t buildPassTag = s_BuildPassTag;
+    if ( node->GetBuildPassTag() == buildPassTag )
+    {
+        return false;
+    }
+    node->SetBuildPassTag( buildPassTag );
+
+    // Add self to stack
+    dependencyStack.Append( node );
+
+    // Recurse
+    if ( CheckForCyclicDependenciesRecurse( node->GetPreBuildDependencies(), dependencyStack ) ||
+         CheckForCyclicDependenciesRecurse( node->GetStaticDependencies(), dependencyStack ) ||
+         CheckForCyclicDependenciesRecurse( node->GetDynamicDependencies(), dependencyStack ) )
+    {
+        return true;
+    }
+
+    // Remove self from stack
+    dependencyStack.Pop();
+
+    return false;
+}
+
+// UpdateBuildStatusRecurse
+//------------------------------------------------------------------------------
+/*static*/ bool NodeGraph::CheckForCyclicDependenciesRecurse( const Dependencies & dependencies,
+                                                                Array< const Node * > & dependencyStack )
+{
+    for ( const Dependency & dep : dependencies )
+    {
+        if ( CheckForCyclicDependenciesRecurse( dep.GetNode(), dependencyStack ) )
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 // ReadHeaderAndUsedFiles
