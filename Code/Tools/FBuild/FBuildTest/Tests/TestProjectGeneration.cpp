@@ -609,7 +609,15 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
                 // Check that we separated path from the option name correctly.
                 TEST_ASSERT( ( pathStartPos == token.Get() ) || ( pathStartPos[ -1 ] == '/' ) );
 
-                const char * pathEndPos = token.GetEnd() - ( token.EndsWith( ',' ) ? 1 : 0 );
+                const char * pathEndPos = token.GetEnd();
+                if ( pathEndPos[ -1 ] == ',' )
+                {
+                    --pathEndPos;
+                }
+                if ( pathEndPos[ -1 ] == '"' )
+                {
+                    --pathEndPos;
+                }
                 includes.EmplaceBack( pathStartPos, pathEndPos );
             }
             continue;
