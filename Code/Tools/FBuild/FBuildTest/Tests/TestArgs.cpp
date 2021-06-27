@@ -124,8 +124,8 @@ void TestArgs::Check( ArgsResponseFileMode mode,
 
     if ( longArgs )
     {
-        // Add ~320 KiB of command line args ( 32 * 10 * 1024 )
-        for ( size_t i = 0; i < 10 * 1024; ++i )
+        // Add ~3200 KiB of command line args ( 32 * 100 * 1024 )
+        for ( size_t i = 0; i < 100 * 1024; ++i )
         {
             args += "123456789012345678901234567890X"; // 31 chars
             args.AddDelimiter();
