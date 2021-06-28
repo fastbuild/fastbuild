@@ -162,7 +162,8 @@ void MultiBuffer::Compress( int32_t compressionLevel )
     c.Compress( m_WriteStream->GetData(), m_WriteStream->GetSize(), compressionLevel );
 
     // Transfer compressed results
-    m_WriteStream->Replace( c.ReleaseResult(), c.GetResultSize() );
+    const size_t compressedSize = c.GetResultSize();
+    m_WriteStream->Replace( c.ReleaseResult(), compressedSize );
 }
 
 // Decompress
@@ -183,7 +184,8 @@ bool MultiBuffer::Decompress()
     }
 
     // Transfer decompressed results
-    m_ReadStream->Replace( c.ReleaseResult(), c.GetResultSize(), true ); // true = own data
+    const size_t decompressedSize = c.GetResultSize();
+    m_ReadStream->Replace( c.ReleaseResult(), decompressedSize, true ); // true = own data
     return true;
 }
 
