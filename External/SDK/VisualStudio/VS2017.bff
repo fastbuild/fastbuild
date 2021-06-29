@@ -85,6 +85,7 @@ Compiler( 'Compiler-VS2017-x64' )
 
     // Paths
     .VSIncludePaths                 = ' -I"$VS2017_ToolchainPath$/include/"'
+    .VSIncludePaths_ClangCl         = ' /imsvc "$VS2017_ToolchainPath$/include/"'
     .VSLibPaths                     = ' /LIBPATH:"$VS2017_ToolchainPath$/lib/x64"'
     .VCPackagesPath                 = '$VS2017_BasePath$/../Common7/IDE/VC/vcpackages'
 
