@@ -78,7 +78,7 @@ private:
 class NodeGraph
 {
 public:
-    explicit NodeGraph();
+    explicit NodeGraph( unsigned nodeMapHashBits = 16 );
     ~NodeGraph();
 
     static NodeGraph * Initialize( const char * bffFile, const char * nodeGraphDBFile, bool forceMigration );
@@ -211,8 +211,8 @@ private:
     static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property );
     static bool DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB );
 
-    enum { NODEMAP_TABLE_SIZE = 65536 };
     Node **         m_NodeMap;
+    uint32_t        m_NodeMapMaxKey; // Always equals to some power of 2 minus 1, can be used as mask.
     Array< Node * > m_AllNodes;
     uint32_t        m_NextNodeIndex;
 

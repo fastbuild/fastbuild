@@ -45,6 +45,7 @@ public:
                       const Array< const BFFToken * > & args,
                       const BFFTokenRange & tokenRange );
     BFFUserFunction * FindFunction( const AString & name ) const;
+    void Clear();
 
 private:
     Array< BFFUserFunction * > m_Functions;
