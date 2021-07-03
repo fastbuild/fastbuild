@@ -10,16 +10,12 @@ Currently there are build configurations only for Linux, although it can be buil
     To run MSan build all code has to be instrumented with MemorySanitizer, this means that we have to build special versions of libFuzzer and libc++ compiled with MemorySanitizer.
 
 ### (optional) Building libFuzzer
-*   Get libFuzzer source code, either from official repository:
+This should be needed only if Clang 5 or older is used, as starting from Clang 6 libFuzzer is integrated into Clang via `-fsanitize=fuzzer` flag.
+*   Get libFuzzer source code:
     ```bash
-    svn co https://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer/ fuzzer
-    cd fuzzer
-    ```
-    or from release tarball:
-    ```bash
-    wget http://releases.llvm.org/5.0.0/llvm-5.0.0.src.tar.xz
-    tar xJf llvm-5.0.0.src.tar.xz llvm-5.0.0.src/lib/Fuzzer
-    cd llvm-5.0.0.src/lib/Fuzzer
+    wget https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/compiler-rt-12.0.0.src.tar.xz
+    tar xJf compiler-rt-12.0.0.src.tar.xz compiler-rt-12.0.0.src/lib/fuzzer
+    cd compiler-rt-12.0.0.src/lib/fuzzer
     ```
 *   Build libFuzzer: `./build.sh`
 *   Copy resulting library to some place known to the linker (e.g. `/usr/local/lib`):
@@ -28,22 +24,17 @@ Currently there are build configurations only for Linux, although it can be buil
     ```
 
 ### (optional) Building libc++ with MemorySanitizer
-*   Get libc++ source code corresponding to already installed version, either from the release tarball:
+*   Get libc++ source code corresponding to already installed version (example for version 12.0.0):
     ```bash
-    wget http://releases.llvm.org/5.0.0/libcxx-5.0.0.src.tar.xz
-    tar xJf libcxx-5.0.0.src.tar.xz
-    cd libcxx-5.0.0.src
+    wget https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/llvm-project-12.0.0.src.tar.xz
+    tar xJf llvm-project-12.0.0.src.tar.xz
+    cd cd llvm-project-12.0.0.src/libcxx
     ```
-    or from official repository:
-    ```bash
-    svn co https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_500/final/ libcxx
-    cd libcxx
-    ```
-*   Build minimal version of libc++ (no tests, documentation, etc.)
+*   Build minimal version of libc++ (static library, no tests, no documentation, etc.)
     ```bash
     mkdir build && cd build
-    cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DLIBCXX_USE_COMPILER_RT=ON -DLIBCXX_CXX_ABI=libcxxabi -DLIBCXX_CXX_ABI_INCLUDE_PATHS=/usr/include/c++/v1 -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=NO -DLIBCXX_INCLUDE_BENCHMARKS=NO -DLIBCXX_INCLUDE_TESTS=NO -DLIBCXX_INCLUDE_DOCS=NO
-    make -j4
+    cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DLIBCXX_USE_COMPILER_RT=ON -DLIBCXX_CXX_ABI=libcxxabi -DLIBCXX_CXX_ABI_INCLUDE_PATHS=/usr/include/c++/v1 -DLIBCXX_ENABLE_SHARED=NO -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=NO -DLIBCXX_INCLUDE_BENCHMARKS=NO -DLIBCXX_INCLUDE_TESTS=NO -DLIBCXX_INCLUDE_DOCS=NO
+    make -j$(nproc)
     ```
 *   Copy resulting library to `External/MSan/` subdirectory in the FASTBuild repo:
     ```bash
@@ -84,7 +75,7 @@ Then we can run it on that directory:
 ```
 Generally it is better to do fuzzing with ASan build because it runs faster, and later retest corpus on MSan build:
 ```bash
-../../../../tmp/x64ClangLinux-MSan/Tools/FBuild/BFFFuzzer/bfffuzzer corpus/*
+../../../../tmp/x64ClangLinux-MSan/Tools/FBuild/BFFFuzzer/bfffuzzer -runs=0 corpus
 ```
 
 ### Creating a seed corpus
@@ -112,6 +103,16 @@ libFuzzer can try to reduce the size of an input that triggers a crash:
 bfffuzzer -minimize_crash=1 -max_total_time=60 crash-input
 ```
 Results for all steps of this process will be stored in files `minimized-from-*`.
+
+### Removing slow test cases
+After some time fuzzing starts to produce various inputs that are very slow to parse:
+* deeply nested `ForEach` loops,
+* exponentially growing strings or arrays (`.S='hello' .S+.S+.S+.S+.S`).
+They don't provide much benefit in terms of code coverage but greatly reduce the speed of fuzzing.
+They can be removed from the corpus like that:
+```bash
+find corpus -type f -exec bfffuzzer {} + 2>&1 | awk '/^Executed [^ ]* in ([0-9])* ms$/ { if ($4 > 20) print $2 }' | xargs rm -v
+```
 
 ### Generating coverage information for corpus
 It is easy to get code coverage for existing corpus from the SanitizerCoverage which is used by libFuzzer to guide mutations:

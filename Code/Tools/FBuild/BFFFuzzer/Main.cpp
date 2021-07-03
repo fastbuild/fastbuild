@@ -18,12 +18,28 @@ bool AlwaysFalse( const char * )
     return false;
 }
 
+class FBuildForFuzzing : public FBuild
+{
+public:
+    void ResetState()
+    {
+        FREE( m_EnvironmentString );
+        m_EnvironmentString = nullptr;
+        m_EnvironmentStringSize = 0;
+        m_LibEnvVar.Clear();
+
+        m_ImportedEnvironmentVars.Clear();
+        m_FileExistsInfo = BFFFileExists();
+        m_UserFunctions.Clear();
+    }
+};
+
 class FuzzerEnvironment
 {
 public:
     FuzzerEnvironment()
-        : m_fbuild( GetOptions() )
     {
+        // Disable all output from FASTBuild as it would mess up messages displayed by libFuzzer.
         Tracing::AddCallbackOutput( AlwaysFalse );
     }
     ~FuzzerEnvironment()
@@ -31,16 +47,7 @@ public:
         Tracing::RemoveCallbackOutput( AlwaysFalse );
     }
 
-private:
-    static FBuildOptions GetOptions()
-    {
-        FBuildOptions options;
-        options.m_ShowPrintStatements = false; // disable output from Print function TODO:C Why is this needed?
-        options.m_ShowErrors = false; // disable error messages
-        return options;
-    }
-
-    FBuild m_fbuild;
+    FBuildForFuzzing fbuild;
 };
 
 extern "C" int LLVMFuzzerTestOneInput( const uint8_t * data, size_t size )
@@ -52,7 +59,11 @@ extern "C" int LLVMFuzzerTestOneInput( const uint8_t * data, size_t size )
     memcpy( str.Get(), data, size );
     str.Get()[ size ] = 0;
 
-    NodeGraph ng;
+    // We don't want to recreate FBuild each time as this is expensive operation.
+    // But we need to reset some of its state so it wont leak between different runs.
+    env.fbuild.ResetState();
+
+    NodeGraph ng( 8 ); // Use smaller hash table to speed up fuzzing.
     BFFParser p( ng );
     p.ParseFromString( "fuzz.bff", str.Get() );
 
