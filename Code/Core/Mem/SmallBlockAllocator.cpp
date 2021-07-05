@@ -12,9 +12,7 @@
 #include "Core/Mem/MemPoolBlock.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
-#if defined( DEBUG )
-    #include "Core/Process/Thread.h"
-#endif
+#include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -32,7 +30,7 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ bool                                 SmallBlockAllocator::s_ThreadSafeAllocs( true );
-#if defined( DEBUG )
+#if defined( ASSERTS_ENABLED )
     /*static*/ uint64_t                         SmallBlockAllocator::s_ThreadSafeAllocsDebugOwnerThread( 0 );
 #endif
 /*static*/ void *                               SmallBlockAllocator::s_BucketMemoryStart( MEM_BUCKETS_NOT_INITIALIZED );
@@ -143,9 +141,7 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
     }
 
     // Sanity check that we're being used safely
-    #if defined( DEBUG )
-        ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
-    #endif
+    ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
 
         void* ptr;
 
@@ -195,9 +191,7 @@ bool SmallBlockAllocator::Free( void * ptr )
     #endif
 
     // Sanity check that we're being used safely
-    #if defined( DEBUG )
-        ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
-    #endif
+    ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
 
     // Free it
     if ( s_ThreadSafeAllocs )
@@ -226,7 +220,7 @@ bool SmallBlockAllocator::Free( void * ptr )
         ASSERT( s_ThreadSafeAllocsDebugOwnerThread == 0 );
 
         // Store the new owner thread for further safety checks
-        #if defined( DEBUG )
+        #if defined( ASSERTS_ENABLED )
             s_ThreadSafeAllocsDebugOwnerThread = (uint64_t)Thread::GetCurrentThreadId();
         #endif
     }
@@ -237,7 +231,7 @@ bool SmallBlockAllocator::Free( void * ptr )
         ASSERT( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() );
 
         // Store the new owner thread for further safety checks
-        #if defined( DEBUG )
+        #if defined( ASSERTS_ENABLED )
             s_ThreadSafeAllocsDebugOwnerThread = 0;
         #endif
     }
