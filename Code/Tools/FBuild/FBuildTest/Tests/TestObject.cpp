@@ -512,14 +512,15 @@ void TestObject::ClangExplicitLanguageType() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
 
         // Force remote
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
         options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
         // start a client to emulate the other end
         Server s( 1 );
@@ -563,12 +564,12 @@ void TestObject::ClangDependencyArgs() const
         options.m_AllowLocalRace = false;
         options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
         // start a client to emulate the other end
         Server s( 1 );
         s.Listen( Protocol::PROTOCOL_TEST_PORT );
-
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
         TEST_ASSERT( fBuild.Build( "ClangDependencyArgs" ) );
