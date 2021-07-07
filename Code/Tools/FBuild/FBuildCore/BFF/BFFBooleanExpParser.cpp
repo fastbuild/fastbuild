@@ -117,7 +117,7 @@ struct ArrayOfString
     typedef Array<AString> Type;
     typedef const Array<AString> & ReturnType;
     typedef Array<AString> & OutParamType;
-    //static const BFFVariable::VarType VarType = BFFVariable::VarType::VAR_ARRAY_OF_STRINGS;
+    static const BFFVariable::VarType VarType = BFFVariable::VarType::VAR_ARRAY_OF_STRINGS;
 };
 
 // Is
@@ -212,28 +212,13 @@ public:
     Operand & operator = ( const Operand & ) = delete;
     Operand & operator = ( Operand && ) = delete;
 
-    #if defined(ASSERTS_ENABLED)
-        bool IsValid() const { return m_Valid; }
-    #endif
+    bool IsValid() const { return m_Valid; }
 
     template < typename T >
     bool Is() const
     {
         ASSERT( m_Valid );
         return m_Valid && ( ::Is<T>( &m_Token ) || ::Is<T>( m_Var ) );
-    }
-
-    // A handy method for checking and setting error.
-    template < typename T >
-    bool Ensure() const
-    {
-        if ( Is<T>() )
-        {
-            return true;
-        }
-
-        Error::Error_1050_PropertyMustBeOfType( &m_Token, m_Function, m_Var->GetName().Get(), m_Var->GetType(), T::VarType );
-        return false;
     }
 
     template < typename T >
@@ -267,8 +252,25 @@ public:
     explicit OperandOf( const BFFToken & token, const Function * function )
         : Operand( token, function )
     {
-        if( !Is<T>() )
+        if ( !m_Valid )
         {
+            return; // Operand constructor emitted an error
+        }
+        if ( !Is< T >() )
+        {
+            if ( m_Var != nullptr )
+            {
+                Error::Error_1050_PropertyMustBeOfType( &m_Token, m_Function, m_Var->GetName().Get(), m_Var->GetType(), T::VarType );
+            }
+            else
+            {
+                const BFFVariable::VarType tokenVarType =
+                    m_Token.IsBooelan() ? BFFVariable::VarType::VAR_BOOL :
+                    m_Token.IsNumber() ? BFFVariable::VarType::VAR_INT :
+                    m_Token.IsString() ? BFFVariable::VarType::VAR_STRING :
+                    BFFVariable::VarType::VAR_ANY;
+                Error::Error_1050_PropertyMustBeOfType( &m_Token, m_Function, "<literal>", tokenVarType, T::VarType );
+            }
             m_Valid = false;
         }
     }
@@ -282,7 +284,6 @@ public:
     OperandOf & operator = ( const OperandOf & ) = delete;
     OperandOf & operator = ( OperandOf && ) = delete;
 
-    bool EnsureValid() const { return Ensure<T>(); }
     typename T::ReturnType GetValue() const { return Operand::GetValue<T>(); }
 };
 
@@ -561,6 +562,11 @@ static bool ParseStringInArray( const Function * function, const OperandOf<Strin
     iter++;
 
     OperandOf<ArrayOfString> rhs( *rhsToken, function );
+    if ( !rhs.IsValid() )
+    {
+        return false;
+    }
+
     const Array< AString > & rhsArray = rhs.GetValue();
 
     const AString & lhsValue = lhs.GetValue();
@@ -604,6 +610,10 @@ static bool ParseStringArrayInArray( const Function * function, const OperandOf<
     iter++;
 
     const OperandOf<ArrayOfString> rhs( *rhsToken, function );
+    if ( !rhs.IsValid() )
+    {
+        return false;
+    }
 
     bool conditionSuccess = false;
 
@@ -646,8 +656,7 @@ static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange &
         case BFFTokenType::Variable:       // .Var or ^Var
         {
             OperandOf<Bool> operand( *iter.GetCurrent(), function );
-
-            if ( !operand.EnsureValid() )
+            if ( !operand.IsValid() )
             {
                 return false;
             }
@@ -726,7 +735,7 @@ static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFToken
         case BFFTokenType::Variable:       // .Var or ^Var
         {
             OperandOf<Bool> rhsOperand( *iter.GetCurrent(), function );
-            if ( !rhsOperand.EnsureValid() )
+            if ( !rhsOperand.IsValid() )
             {
                 return false;
             }
@@ -780,7 +789,7 @@ static bool ParseIntComparisonExp( const Function * function, const OperandOf<Nu
 
     // TODO: Support literal int arrays.
     OperandOf<Number> rhs( *iter.GetCurrent(), function );
-    if ( !rhs.EnsureValid() )
+    if ( !rhs.IsValid() )
     {
         return false;
     }
@@ -822,7 +831,7 @@ static bool ParseStringComparisonExp( const Function * function, const OperandOf
             }
 
             OperandOf<String> rhs(*iter.GetCurrent(), function);
-            if ( !rhs.EnsureValid() )
+            if ( !rhs.IsValid() )
             {
                 return false;
             }
