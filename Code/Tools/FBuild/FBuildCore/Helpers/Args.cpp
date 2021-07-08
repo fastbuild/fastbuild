@@ -171,7 +171,7 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, Args
     }
 
     // Create new args referencing response file
-    m_ResponseFileArgs = "@\"";
+    m_ResponseFileArgs = "\"@";
     m_ResponseFileArgs += m_ResponseFile.GetResponseFilePath();
     m_ResponseFileArgs += "\"";
 
