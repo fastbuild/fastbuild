@@ -531,6 +531,8 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( token.Find( "-std:c++17" ) );
             TEST_ASSERT( token.Find( "/std:c++14" ) );
             TEST_ASSERT( token.Find( "/std:latest" ) );
+            TEST_ASSERT( token.Find( "/wd1000" ) );
+            TEST_ASSERT( token.Find( "-wd2000" ) );
             additionalOptionsOk = true;
         }
     }
