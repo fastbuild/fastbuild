@@ -52,4 +52,14 @@ BFFUserFunction * BFFUserFunctions::FindFunction( const AString & name ) const
     return found ? *found : nullptr;
 }
 
+// Clear
+//------------------------------------------------------------------------------
+void BFFUserFunctions::Clear()
+{
+    for ( BFFUserFunction * func : m_Functions )
+    {
+        FDELETE( func );
+    }
+    m_Functions.Clear();
+}
 //------------------------------------------------------------------------------
