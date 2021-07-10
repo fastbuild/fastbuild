@@ -85,6 +85,7 @@ Compiler( 'Compiler-VS2019-x64' )
 
     // Paths
     .VSIncludePaths                 = ' -I"$VS2019_ToolchainPath$/include/"'
+    .VSIncludePaths_ClangCl         = ' /imsvc "$VS2019_ToolchainPath$/include/"'
     .VSLibPaths                     = ' /LIBPATH:"$VS2019_ToolchainPath$/lib/x64"'
     .VCPackagesPath                 = '$VS2019_BasePath$/../Common7/IDE/VC/vcpackages'
 
