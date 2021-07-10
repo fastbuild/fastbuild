@@ -148,6 +148,9 @@ typename UnorderedMap< KEY, VALUE >::KeyValue & UnorderedMap< KEY, VALUE >::Inse
     if ( m_Buckets == nullptr )
     {
         m_Buckets = FNEW( KeyValue *[ kTableSize ]() ); // NOTE: zero initialized
+        #if defined( __WINDOWS__ )
+            __assume( m_Buckets ); // VS2015: Work around false-positive for static analysis
+        #endif
     }
 
     // Hash the key
