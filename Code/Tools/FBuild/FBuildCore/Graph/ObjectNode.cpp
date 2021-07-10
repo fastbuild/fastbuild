@@ -788,6 +788,12 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
     Timer t;
 
     {
+        if (CIncludeParser::DetectMS_ShowIncludesMarker( GetCompiler()->GetExecutable() ) == false )
+        {
+            FLOG_ERROR("Unable to detect /showincludes marker for current language");
+            return false;
+        }
+
         CIncludeParser parser;
 
         // It's possible to have no output (Clang CL) in which case the file
