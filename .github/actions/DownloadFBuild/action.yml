@@ -1,0 +1,24 @@
+name: Download FASTBuild
+description: Downloads the FBuild binary, stores it in a temporary directory and exports full path to in FBUILD_PATH environment variable.
+
+inputs:
+  version:
+    description: Version to download
+    required: false
+    default: 1.05
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      working-directory: ${{ runner.temp }}
+      run: |
+        case "${{ runner.os }}" in
+          Linux)   FN="FASTBuild-Linux-x64-v${{ inputs.version }}.zip"   FBUILD=fbuild ;;
+          macOS)   FN="FASTBuild-OSX-x64-v${{ inputs.version }}.zip"     FBUILD=FBuild ;;
+          Windows) FN="FASTBuild-Windows-x64-v${{ inputs.version }}.zip" FBUILD=FBuild.exe ;;
+        esac
+        curl -fL "https://fastbuild.org/downloads/v${{ inputs.version }}/${FN}" -o "${FN}"
+        unzip "${FN}" ${FBUILD}
+        chmod +x ${FBUILD}
+        echo "FBUILD_PATH=${RUNNER_TEMP}/${FBUILD}" >> "${GITHUB_ENV}"

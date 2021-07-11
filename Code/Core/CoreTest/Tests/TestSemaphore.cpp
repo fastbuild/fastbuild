@@ -93,12 +93,12 @@ void TestSemaphore::WaitTimeout() const
 
     // Check for timeout
     {
-        const bool signalled = s.Wait( 1 ); // Wait 1ms
+        const bool signalled = s.Wait( 50 ); // Wait 50ms
         TEST_ASSERT( signalled == false ); // Should not be signalled (should time out)
     }
 
     // ensure some sensible time has elapsed
-    ASSERT( t.GetElapsed() > 0.001f ); // 1ms (allow wide margin of error)
+    TEST_ASSERT( t.GetElapsed() > 0.025f ); // 25ms (allow wide margin of error)
 }
 
 // MaxCount

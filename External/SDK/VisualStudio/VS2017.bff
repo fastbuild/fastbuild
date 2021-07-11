@@ -8,6 +8,7 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //  4) Part of a BuildTools installation
+//  5) Part of a Visual Studio 2019 installation (used by GitHub Actions)
 //
 #if file_exists( "2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe" )
     //
@@ -40,11 +41,21 @@
                 .VS2017_Version         = '14.16.27023'
             #else
                 //
-                // Failed
+                // Use Visual Studio 2019 Enterprise installation (used by GitHub Actions)
                 //
-                Error( 'Unable to auto-detect VS2017 - please specify installation manually ' )
-                .VS2017_BasePath        = .Set_Path_Here    // <-- Set path here
-                .VS2017_Version         = .Set_Version_Here // <-- Set version here
+                #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe" )
+                    .VS2017_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC'
+                    .VS2017_Version         = '14.16.27023'
+                #else
+                    //
+                    // Failed
+                    //
+                    Print( '-----------------------------------------------------------------------' )
+                    Print( '- Unable to auto-detect VS2017 - please specify installation manually -' )
+                    Print( '-----------------------------------------------------------------------' )
+                    .VS2017_BasePath        = .Set_Path_Here    // <-- Set path here
+                    .VS2017_Version         = .Set_Version_Here // <-- Set version here
+                #endif
             #endif
         #endif
     #endif
@@ -85,6 +96,7 @@ Compiler( 'Compiler-VS2017-x64' )
 
     // Paths
     .VSIncludePaths                 = ' -I"$VS2017_ToolchainPath$/include/"'
+    .VSIncludePaths_ClangCl         = ' /imsvc "$VS2017_ToolchainPath$/include/"'
     .VSLibPaths                     = ' /LIBPATH:"$VS2017_ToolchainPath$/lib/x64"'
     .VCPackagesPath                 = '$VS2017_BasePath$/../Common7/IDE/VC/vcpackages'
 

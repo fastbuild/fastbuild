@@ -3,7 +3,7 @@
 
 // Select desired GCC version
 //------------------------------------------------------------------------------
-#if __LINUX__
+#if __LINUX__ && !CI_BUILD
     //#define USING_GCC_4
     //#define USING_GCC_7
     #define USING_GCC_9
@@ -12,6 +12,9 @@
 // Activate
 //------------------------------------------------------------------------------
 #if __LINUX__
+    #if CI_BUILD
+        #include "Linux/GCC_CI.bff"
+    #endif
     #if USING_GCC_4
         #include "Linux/GCC4.bff"
     #endif
