@@ -133,7 +133,6 @@ Compiler( 'Compiler-Clang9-NonCL' )
 
                                     // Include paths
                                     + ' "-I./"'
-                                    + .VSIncludePaths_ClangCl
 
                                     // x64
                                     + ' -m64'
