@@ -35,14 +35,23 @@
             .VS2019_MSC_VER         = '1929'
         #else
             //
-            // Failed
+            // Use Visual Studio 2019 Enterprise installation (used by GitHub Actions)
             //
-            Print( '-----------------------------------------------------------------------' )
-            Print( '- Unable to auto-detect VS2019 - please specify installation manually -' )
-            Print( '-----------------------------------------------------------------------' )
-            .VS2019_BasePath        = .Set_Path_Here    // <-- Set path here
-            .VS2019_Version         = .Set_Version_Here // <-- Set version here
-            .VS2019_MSC_VER         = .Set_MSC_VER_Here // <-- Set MSC_VER here
+            #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.29.30037/bin/Hostx64/x64/cl.exe" )
+                .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC'
+                .VS2019_Version         = '14.29.30037'
+                .VS2019_MSC_VER         = '1929'
+            #else
+                //
+                // Failed
+                //
+                Print( '-----------------------------------------------------------------------' )
+                Print( '- Unable to auto-detect VS2019 - please specify installation manually -' )
+                Print( '-----------------------------------------------------------------------' )
+                .VS2019_BasePath        = .Set_Path_Here    // <-- Set path here
+                .VS2019_Version         = .Set_Version_Here // <-- Set version here
+                .VS2019_MSC_VER         = .Set_MSC_VER_Here // <-- Set MSC_VER here
+            #endif
         #endif
     #endif
 #endif
