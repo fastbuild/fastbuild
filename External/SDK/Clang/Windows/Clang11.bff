@@ -1,6 +1,9 @@
 // Clang 11.x.x
 //------------------------------------------------------------------------------
 .Clang11_BasePath     = '$_CURRENT_BFF_DIR_$/11.0.0'
+#if CI_BUILD
+    .Clang11_BasePath = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64'
+#endif
 
 // Compiler
 //------------------------------------------------------------------------------
