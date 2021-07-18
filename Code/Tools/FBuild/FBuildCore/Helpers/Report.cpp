@@ -324,6 +324,12 @@ void Report::CreateOverview( const FBuildStats & stats )
     float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
     Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
 
+    // Remote CPU Time
+    float totalRemoteCPUInSeconds = (float)( (double)stats.m_TotalRemoteCPUTimeMS / (double)1000 );
+    stats.FormatTime( totalRemoteCPUInSeconds, buffer );
+    float remoteRatio = ( totalRemoteCPUInSeconds / totalBuildTime );
+    Write( "<tr><td>Remote CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)remoteRatio );
+
     // version info
     Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
 
