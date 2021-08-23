@@ -436,6 +436,13 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
     pos += 7;
     SkipWhitespace( pos );
 
+    // Skip comment block
+    if ((*pos == '/') && (pos[1] == '*'))
+    {
+        SkipCommentBlock(pos);
+        SkipWhitespace(pos);
+    }
+
     // Get include string
     AStackString<> include;
     if ( ( *pos == '"' ) || ( *pos == '<' ) )
