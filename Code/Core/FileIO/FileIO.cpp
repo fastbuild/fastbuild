@@ -673,9 +673,13 @@
 {
     #if defined( __WINDOWS__ )
         // open the file
-        // TOOD:B Check these args
-        HANDLE hFile = CreateFile( fileName.Get(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr,
-                                   OPEN_EXISTING, 0, nullptr);
+        HANDLE hFile = CreateFile( fileName.Get(),
+                                   FILE_WRITE_ATTRIBUTES,
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                   nullptr,
+                                   OPEN_EXISTING,
+                                   0,
+                                   nullptr);
         if ( hFile == INVALID_HANDLE_VALUE )
         {
             return false;
