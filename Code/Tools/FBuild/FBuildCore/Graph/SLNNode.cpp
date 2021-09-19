@@ -20,6 +20,7 @@
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -296,6 +297,9 @@ SLNNode::~SLNNode() = default;
     {
         return NODE_RESULT_FAILED; // Save will have emitted an error
     }
+
+    // Record stamp representing the contents of the files
+    m_Stamp = xxHash::Calc64( sln );
 
     return NODE_RESULT_OK;
 }
