@@ -159,9 +159,19 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     // Handle auto-detect
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
     {
-        // Normalize slashes to make logic consistent on all platforms
-        AStackString<> compiler( GetExecutable() );
-        compiler.Replace( '/', '\\' );
+        const AString& executable = GetExecutable();
+
+        // Find the last slash or backslash in the executable path
+        const char * lastSlash = executable.FindLast( NATIVE_SLASH );
+        if ( const char * lastOtherSlash = executable.FindLast( OTHER_SLASH, nullptr, lastSlash ) )
+        {
+            lastSlash = lastOtherSlash;
+        }
+
+        // Strip everything up to and including the last slash in the path to retrieve the filename
+        const char * executableBase = lastSlash ? lastSlash + 1 : executable.Get();
+        AStackString<> compiler( executableBase, executable.GetEnd() );
+
         AStackString<> compilerWithoutVersion( compiler.Get() );
         if ( const char * last = compiler.FindLast( '-' ) )
         {
@@ -169,10 +179,10 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
         }
 
         // MSVC
-        if ( compiler.EndsWithI( "\\cl.exe" ) ||
-             compiler.EndsWithI( "\\cl" ) ||
-             compiler.EndsWithI( "\\icl.exe" ) ||
-             compiler.EndsWithI( "\\icl" ) )
+        if ( compiler.EqualsI( "cl.exe" ) ||
+             compiler.EqualsI( "cl" ) ||
+             compiler.EqualsI( "icl.exe" ) ||
+             compiler.EqualsI( "icl" ) )
         {
             m_CompilerFamilyEnum = MSVC;
             return true;
@@ -215,34 +225,34 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
         }
 
         // SNC
-        if ( compiler.EndsWithI( "\\ps3ppusnc.exe" ) ||
-             compiler.EndsWithI( "\\ps3ppusnc" ) )
+        if ( compiler.EqualsI( "ps3ppusnc.exe" ) ||
+             compiler.EqualsI( "ps3ppusnc" ) )
         {
             m_CompilerFamilyEnum = SNC;
             return true;
         }
 
         // CodeWarrior Wii
-        if ( compiler.EndsWithI( "\\mwcceppc.exe" ) ||
-             compiler.EndsWithI( "\\mwcceppc" ) )
+        if ( compiler.EqualsI( "mwcceppc.exe" ) ||
+             compiler.EqualsI( "mwcceppc" ) )
         {
             m_CompilerFamilyEnum = CODEWARRIOR_WII;
             return true;
         }
 
         // Greenhills WiiU
-        if ( compiler.EndsWithI( "\\cxppc.exe" ) ||
-             compiler.EndsWithI( "\\cxppc" ) ||
-             compiler.EndsWithI( "\\ccppc.exe" ) ||
-             compiler.EndsWithI( "\\ccppc" ) )
+        if ( compiler.EqualsI( "cxppc.exe" ) ||
+             compiler.EqualsI( "cxppc" ) ||
+             compiler.EqualsI( "ccppc.exe" ) ||
+             compiler.EqualsI( "ccppc" ) )
         {
             m_CompilerFamilyEnum = GREENHILLS_WIIU;
             return true;
         }
 
         // CUDA
-        if ( compiler.EndsWithI( "\\nvcc.exe" ) ||
-             compiler.EndsWithI( "\\nvcc" ) )
+        if ( compiler.EqualsI( "nvcc.exe" ) ||
+             compiler.EqualsI( "nvcc" ) )
         {
             m_CompilerFamilyEnum = CUDA_NVCC;
             return true;
