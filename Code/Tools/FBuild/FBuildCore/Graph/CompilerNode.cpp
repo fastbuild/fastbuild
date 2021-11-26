@@ -281,7 +281,7 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
         }
 
         // Auto-detect failed
-        Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
+        Error::Error_1500_CompilerDetectionFailed( iter, function, GetExecutable() );
         return false;
     }
 
