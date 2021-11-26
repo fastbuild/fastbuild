@@ -182,9 +182,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
         if ( compiler.EndsWithI( "clang++.exe" ) ||
              compiler.EndsWithI( "clang++.cmd" ) ||
              compiler.EndsWithI( "clang++" ) ||
+             compilerWithoutVersion.EndsWithI( "clang++" ) ||
              compiler.EndsWithI( "clang.exe" ) ||
              compiler.EndsWithI( "clang.cmd" ) ||
-             compiler.EndsWithI( "clang" ) )
+             compiler.EndsWithI( "clang" ) ||
+             compilerWithoutVersion.EndsWithI( "clang" ) )
         {
             m_CompilerFamilyEnum = CLANG;
             return true;
