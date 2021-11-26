@@ -28,6 +28,7 @@ private:
     void CompilerExecutableAsDependency() const;
     void CompilerExecutableAsDependency_NoRebuild() const;
     void MultipleImplicitCompilers() const;
+    void CompilerFamilyDetection() const;
 
     uint64_t GetToolId( const FBuildForTest & fBuild ) const;
 };
@@ -44,6 +45,7 @@ REGISTER_TESTS_BEGIN( TestCompiler )
     REGISTER_TEST( CompilerExecutableAsDependency )
     REGISTER_TEST( CompilerExecutableAsDependency_NoRebuild )
     REGISTER_TEST( MultipleImplicitCompilers )
+    REGISTER_TEST( CompilerFamilyDetection )
 REGISTER_TESTS_END
 
 // BuildCompiler_Explicit
@@ -304,6 +306,80 @@ void TestCompiler::CompilerExecutableAsDependency_NoRebuild() const
 void TestCompiler::MultipleImplicitCompilers() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/multipleimplicitcompilers.bff" );
+}
+
+// CompilerFamilyDetection
+//------------------------------------------------------------------------------
+void TestCompiler::CompilerFamilyDetection() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/compilerfamilydetection.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( ) );
+
+    Array<const Node *> nodes;
+    fBuild.GetNodesOfType( Node::COMPILER_NODE, nodes );
+
+    // Check all the compiler nodes and make sure their compiler family matches what we expected
+    // them to detect as, based on their node name
+    for ( const Node * node : nodes )
+    {
+        const AString & nodeName = node->GetName();
+
+        CompilerNode::CompilerFamily expectedCompilerFamily = CompilerNode::CUSTOM;
+        if ( nodeName.BeginsWithI( "MSVC" ) )
+        {
+            expectedCompilerFamily = CompilerNode::MSVC;
+        }
+        else if ( nodeName.BeginsWithI( "CLANG" ) )
+        {
+            expectedCompilerFamily = CompilerNode::CLANG;
+        }
+        else if ( nodeName.BeginsWithI( "GCC" ) )
+        {
+            expectedCompilerFamily = CompilerNode::GCC;
+        }
+        else if ( nodeName.BeginsWithI( "SNC" ) )
+        {
+            expectedCompilerFamily = CompilerNode::SNC;
+        }
+        else if ( nodeName.BeginsWithI( "CODEWARRIOR_WII" ) )
+        {
+            expectedCompilerFamily = CompilerNode::CODEWARRIOR_WII;
+        }
+        else if ( nodeName.BeginsWithI( "GREENHILLS_WIIU" ) )
+        {
+            expectedCompilerFamily = CompilerNode::GREENHILLS_WIIU;
+        }
+        else if ( nodeName.BeginsWithI( "CUDA_NVCC" ) )
+        {
+            expectedCompilerFamily = CompilerNode::CUDA_NVCC;
+        }
+        else if ( nodeName.BeginsWithI( "QT_RCC" ) )
+        {
+            expectedCompilerFamily = CompilerNode::QT_RCC;
+        }
+        else if ( nodeName.BeginsWithI( "VBCC" ) )
+        {
+            expectedCompilerFamily = CompilerNode::VBCC;
+        }
+        else if ( nodeName.BeginsWithI( "ORBIS_WAVE_PSSLC" ) )
+        {
+            expectedCompilerFamily = CompilerNode::ORBIS_WAVE_PSSLC;
+        }
+        else if ( nodeName.BeginsWithI( "CSHARP" ) )
+        {
+            expectedCompilerFamily = CompilerNode::CSHARP;
+        }
+        else if ( nodeName.BeginsWithI( "CLANG_CL" ) )
+        {
+            expectedCompilerFamily = CompilerNode::CLANG_CL;
+        }
+
+        TEST_ASSERTM( expectedCompilerFamily != CompilerNode::CUSTOM, "Compiler Node Name did not start with known family: %s", nodeName.Get() );
+        CompilerNode::CompilerFamily actualCompilerFamily = node->CastTo< CompilerNode >()->GetCompilerFamily();
+        TEST_ASSERTM( actualCompilerFamily == expectedCompilerFamily, "Expected compiler family %u, but detection picked %u", expectedCompilerFamily, actualCompilerFamily );
+    }
 }
 
 // GetToolId
