@@ -212,7 +212,6 @@ Compiler( 'Compiler-VS2019-x64' )
                                     + ' /wd26438' // Avoid 'goto' (es.76).
                                     + ' /wd26451' // Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
                                     + ' /wd26460' // The reference argument '%s' for function '%s' can be marked as const (con.3).
-                                    + ' /wd26471' // Don't use reinterpret_cast. A cast from void* can use static_cast (type.1).
                                     + ' /wd26474' // Don't cast between pointer types when the conversion could be implicit (type.1).
                                     + ' /wd26475' // Do not use function style C-casts (es.49).
                                     + ' /wd26476' // Expression/symbol '%s' uses a naked union '%s' with multiple type pointers: Use variant instead (type.7).
