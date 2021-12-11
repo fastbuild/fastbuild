@@ -149,7 +149,8 @@ void TestIf::IfFunctionBool() const
 
     TEST_EXP_TRUE( ".True = true\n .False = false", "true && .True && true || !false || .False" );
 
-    // Non-existent variable
+    // Non-existent variables
+    TEST_EXP_FAIL( "", ".A == 'String'", "Unknown variable '.A'");
     TEST_EXP_FAIL( ".Bool = true", ".Bool == .A", "Unknown variable '.A'" );
 
     // Incorrect RHS operand type

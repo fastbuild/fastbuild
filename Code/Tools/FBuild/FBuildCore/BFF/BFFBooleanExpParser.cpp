@@ -899,6 +899,10 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
         case BFFTokenType::String:         // "Hello"
         {
             Operand operand( *token, function );
+            if ( operand.IsValid() == false )
+            {
+                return false; // Operand constructor will have emitted error
+            }
             iter++;
             if ( operand.Is<Bool>() )
             {
