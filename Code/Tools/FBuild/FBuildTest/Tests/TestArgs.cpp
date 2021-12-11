@@ -29,6 +29,7 @@ private:
     void ResponseFile_IfNeeded_Long() const;
     void ResponseFile_Always_Short() const;
     void ResponseFile_Always_Long() const;
+    void ResponseFile_CommandLineQuoting() const;
 
     // Helpers
     void Check( ArgsResponseFileMode mode,
@@ -52,6 +53,7 @@ REGISTER_TESTS_BEGIN( TestArgs )
     REGISTER_TEST( ResponseFile_IfNeeded_Long )
     REGISTER_TEST( ResponseFile_Always_Short )
     REGISTER_TEST( ResponseFile_Always_Long )
+    REGISTER_TEST( ResponseFile_CommandLineQuoting )
 REGISTER_TESTS_END
 
 // Unused
@@ -107,6 +109,18 @@ void TestArgs::ResponseFile_Always_Long() const
 {
     //     Mode                             LongArgs    Success     UseResponseFile
     Check( ArgsResponseFileMode::ALWAYS,    true,       true,       true );
+}
+
+// ResponseFile_CommandLineQuoting
+//------------------------------------------------------------------------------
+void TestArgs::ResponseFile_CommandLineQuoting() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/fbuild.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "ResponseFilePath" ) );
 }
 
 // Check
