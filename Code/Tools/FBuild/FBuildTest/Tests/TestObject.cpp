@@ -50,7 +50,9 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( SourceMapping )
     REGISTER_TEST( ClangExplicitLanguageType )
     REGISTER_TEST( ClangDependencyArgs )
-    REGISTER_TEST( CLDependencyArgs )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( CLDependencyArgs )
+    #endif
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
