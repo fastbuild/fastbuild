@@ -2383,10 +2383,12 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 return;
             }
 
-            // Windows temp directories can have problems failing to open temp files
-            // resulting in 'C1083: Cannot open compiler intermediate file:'
-            // It uses the same C1083 error as a mising include C1083, but since we flatten
-            // includes on the host this should never occur remotely other than in this context.
+            // If the compiler can fail with C1083 on the remote host for at least the following
+            // reasons:
+            //     a) Failed to create a temp file (C1083: Cannot open compiler intermediate file)
+            //          - This was seen when the tmp dir was full (tmp file creation failed)
+            //     b) Failed to write an extra output file (C1083: Cannot open compiler generated file)
+            //          - This was seen when using /sourceDependencies and the output folder didn't exist
             if ( stdOut.Find( "C1083" ) )
             {
                 job->OnSystemError();

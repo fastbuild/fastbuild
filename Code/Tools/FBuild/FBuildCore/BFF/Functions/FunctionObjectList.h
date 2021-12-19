@@ -39,7 +39,10 @@ protected:
                                    ObjectNode::CompilerFlags objFlags ) const;
 
     friend class TestObjectList;
-    static void GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath );
+    static void GetExtraOutputPaths( const AString & args,
+                                     AString & outPDBPath, 
+                                     AString & outASMPath,
+                                     AString & outSourceDependenciesPath );
     static void GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path );
 };
 
