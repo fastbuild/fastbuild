@@ -414,7 +414,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     if ( useCache && GetCompiler()->GetUseLightCache() )
     {
         LightCache lc;
-        if ( lc.Hash( this, fullArgs.GetFinalArgs(), m_LightCacheKey, m_Includes ) == false )
+        if ( lc.Hash( this, fullArgs.GetFinalArgs(), m_LightCacheKey, m_Includes, GetCompiler()->GetUseRelativePaths() ) == false )
         {
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
@@ -1353,7 +1353,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         {
             pchKey = xxHash::Calc64( cacheData, cacheDataSize );
         }
-        
+
         const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
 
         MultiBuffer buffer( cacheData, cacheDataSize );
@@ -2458,7 +2458,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
     }
 
-    #if !defined( __WINDOWS__) 
+    #if !defined( __WINDOWS__)
         (void)stdOut; // No checks use stdOut outside of Windows right now
     #endif
 }

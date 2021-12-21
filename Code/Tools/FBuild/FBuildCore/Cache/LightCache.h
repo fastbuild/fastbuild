@@ -31,7 +31,8 @@ public:
     bool Hash( ObjectNode * node,                // Object to be compiled
                const AString & compilerArgs,     // Args to extract include paths from
                uint64_t & outSourceHash,         // Resulting hash of source code
-               Array< AString > & outIncludes ); // Discovered dependencies
+               Array< AString > & outIncludes,   // Discovered dependencies
+               bool useRelativePaths );
 
     // Get text description of problem(s) if Hash() fails
     const AString & GetErrors() const { return m_Errors; }
@@ -47,10 +48,10 @@ protected:
     void                    SkipCommentBlock( const char * & pos );
     bool                    ParseIncludeString( const char * & pos, AString & outIncludePath, IncludeType & outIncludeType );
     bool                    ParseMacroName( const char * & pos, AString & outMacroName );
-    void                    ProcessInclude( const AString & include, IncludeType type );
+    void                    ProcessInclude( const AString & include, IncludeType type, bool useRelativePaths );
     const IncludedFile *    ProcessIncludeFromFullPath( const AString & include, bool & outCyclic );
-    const IncludedFile *    ProcessIncludeFromIncludeStack( const AString & include, bool & outCyclic );
-    const IncludedFile *    ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic );
+    const IncludedFile *    ProcessIncludeFromIncludeStack( const AString & include, bool & outCyclic, bool useRelativePaths );
+    const IncludedFile *    ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic, bool useRelativePaths );
     const IncludedFile *    FileExists( const AString & fileName );
 
     void                    AddError( IncludedFile * file,

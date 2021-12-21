@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 // Core
 #include "Core/Env/ErrorFormat.h"
@@ -268,7 +269,8 @@ LightCache::~LightCache() = default;
 bool LightCache::Hash( ObjectNode * node,
                        const AString & compilerArgs,
                        uint64_t & outSourceHash,
-                       Array< AString > & outIncludes )
+                       Array< AString > & outIncludes,
+                       bool useRelativePaths )
 {
     PROFILE_FUNCTION;
 
@@ -291,11 +293,11 @@ bool LightCache::Hash( ObjectNode * node,
     // Handle forced includes
     for ( AString & forceInclude : forceIncludes )
     {
-        ProcessInclude( forceInclude, IncludeType::QUOTE );
+        ProcessInclude( forceInclude, IncludeType::QUOTE, useRelativePaths );
     }
 
     const AString & rootFileName = node->GetSourceFile()->GetName();
-    ProcessInclude( rootFileName, IncludeType::QUOTE );
+    ProcessInclude( rootFileName, IncludeType::QUOTE, useRelativePaths );
 
     // Handle missing root file
     if ( m_AllIncludedFiles.IsEmpty() )
@@ -591,7 +593,7 @@ bool LightCache::ParseMacroName( const char * & pos, AString & outMacroName )
         c = *pos;
         if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||
                 ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
-                ( ( c >= '0' ) && ( c <= '9' ) ) || 
+                ( ( c >= '0' ) && ( c <= '9' ) ) ||
                 ( c == '_' ) )
         {
             ++pos;
@@ -606,7 +608,7 @@ bool LightCache::ParseMacroName( const char * & pos, AString & outMacroName )
 
 // ProcessInclude
 //------------------------------------------------------------------------------
-void LightCache::ProcessInclude( const AString & include, IncludeType type )
+void LightCache::ProcessInclude( const AString & include, IncludeType type, bool useRelativePaths )
 {
     bool cyclic = false;
     const IncludedFile * file = nullptr;
@@ -614,7 +616,18 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
     // Handle full paths
     if ( PathUtils::IsFullPath( include ) )
     {
-        file = ProcessIncludeFromFullPath( include, cyclic );
+        if ( useRelativePaths )
+        {
+            AStackString<> relInclude ( include );
+            const AString & workingDir = FBuild::Get().GetWorkingDir();
+            PathUtils::GetRelativePath( workingDir, include, relInclude );
+            NodeGraph::CleanPath( relInclude, !useRelativePaths );
+            file = ProcessIncludeFromFullPath( relInclude, cyclic );
+        }
+        else
+        {
+            file = ProcessIncludeFromFullPath( include, cyclic );
+        }
     }
     else
     {
@@ -633,7 +646,7 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
                 const IncludeDefine * def = m_IncludeDefines[ i ];
                 if ( def->m_Macro == include )
                 {
-                    ProcessInclude( def->m_Include, def->m_Type );
+                    ProcessInclude( def->m_Include, def->m_Type, useRelativePaths );
                     return;
                 }
             }
@@ -683,7 +696,7 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
             // #include <file.h>
 
             // 1. Along the path that's specified by each /I compiler option.
-            file = ProcessIncludeFromIncludePath( include, cyclic );
+            file = ProcessIncludeFromIncludePath( include, cyclic, useRelativePaths );
 
             // 2. When compiling occurs on the command line, along the paths that are specified by the INCLUDE environment variable.
             //if ( file == nullptr )
@@ -697,12 +710,12 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
 
             // 1. In the same directory as the file that contains the #include statement.
             // 2. In the directories of the currently opened include files, in the reverse order in which they were opened. The search begins in the directory of the parent include file and continues upward through the directories of any grandparent include files.
-            file = ProcessIncludeFromIncludeStack( include, cyclic );
+            file = ProcessIncludeFromIncludeStack( include, cyclic, useRelativePaths );
 
             // 3. Along the path that's specified by each /I compiler option.
             if ( file == nullptr )
             {
-                file = ProcessIncludeFromIncludePath( include, cyclic );
+                file = ProcessIncludeFromIncludePath( include, cyclic, useRelativePaths );
             }
 
             // 4. Along the paths that are specified by the INCLUDE environment variable.
@@ -743,7 +756,7 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
     m_IncludeStack.Append( file );
     for ( const IncludedFile::Include & inc : file->m_Includes )
     {
-        ProcessInclude( inc.m_Include, inc.m_Type );
+        ProcessInclude( inc.m_Include, inc.m_Type, useRelativePaths );
     }
     m_IncludeStack.Pop();
 }
@@ -769,7 +782,7 @@ const IncludedFile * LightCache::ProcessIncludeFromFullPath( const AString & inc
 
 // ProcessIncludeFromIncludeStack
 //------------------------------------------------------------------------------
-const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString & include, bool & outCyclic )
+const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString & include, bool & outCyclic, bool useRelativePaths )
 {
     outCyclic = false;
 
@@ -787,7 +800,7 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString &
 
         possibleIncludePath += include;
 
-        NodeGraph::CleanPath( possibleIncludePath );
+        NodeGraph::CleanPath( possibleIncludePath, !useRelativePaths );
 
         // Handle cyclic includes
         const IncludedFile * const * found = m_IncludeStack.FindDeref( possibleIncludePath );
@@ -813,7 +826,7 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString &
 
 // ProcessIncludeFromIncludePath
 //------------------------------------------------------------------------------
-const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic )
+const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic, bool useRelativePaths )
 {
     outCyclic = false;
 
@@ -823,7 +836,7 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & 
         possibleIncludePath = includePath;
         possibleIncludePath += include;
 
-        NodeGraph::CleanPath( possibleIncludePath );
+        NodeGraph::CleanPath( possibleIncludePath, !useRelativePaths );
 
         // Handle cyclic includes
         if ( m_IncludeStack.FindDeref( possibleIncludePath ) )
@@ -859,7 +872,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         if ( location )
         {
             m_IncludeDefines.Append( location->m_IncludeDefines );
-            
+
             return location; // File previously handled so we can re-use the result
         }
     }
