@@ -175,6 +175,18 @@ void TestLinker::LibrariesOnCommandLine() const
         }
     #endif
 
+    // MSVC: relative path
+    {
+        const bool isMSVC = true;
+        AStackString<> args( "./Tools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine/dummy1.lib" );
+
+        Dependencies foundLibraries;
+        LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
+
+        TEST_ASSERT( foundLibraries.GetSize() == 1 );
+        TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "dummy1.lib" ) );
+    }
+
     // MSVC: libs missing
     {
         const bool isMSVC = true;

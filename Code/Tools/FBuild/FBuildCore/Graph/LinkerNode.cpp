@@ -1271,8 +1271,8 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     {
         bool found = false;
 
-        // is the file a full path?
-        if ( ( itL->GetLength() > 2 ) && ( (*itL)[ 1 ] == ':' ) )
+        // is the file a full or relative path?
+        if ( PathUtils::IsFullPath( *itL ) || ( itL->Find( NATIVE_SLASH ) != nullptr ) || ( itL->Find( OTHER_SLASH ) != nullptr ) )
         {
             // check file exists in current location
             if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, AString::GetEmpty(), *itL, found ) )
