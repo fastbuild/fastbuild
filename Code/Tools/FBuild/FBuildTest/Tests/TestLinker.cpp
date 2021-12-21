@@ -59,6 +59,26 @@ void TestLinker::ArgHelpers() const
         TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) );
     }
 
+    // Test -l:
+    {
+        AStackString<> token( "-l:libFullName.a" );
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "l" ) );
+
+        // test that the optional argument is filled correctly when passed
+        bool foundLeadingQuote;
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "l", &foundLeadingQuote ) && !foundLeadingQuote );
+    }
+
+    // Test quoted
+    {
+        AStackString<> token( "\"-l:libFullName.a\"" );
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "l" ) );
+
+        // test that the optional argument is filled correctly when passed
+        bool foundLeadingQuote;
+        TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "l", &foundLeadingQuote ) && foundLeadingQuote );
+    }
+
     // Check case sensitive is respected
     {
         AStackString<> token( "-l" );

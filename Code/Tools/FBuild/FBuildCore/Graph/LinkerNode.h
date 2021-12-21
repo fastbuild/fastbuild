@@ -43,7 +43,7 @@ public:
     static bool IsLinkerArg_MSVC( const AString & token, const char * arg );
     static bool IsStartOfLinkerArg_MSVC( const AString & token, const char * arg );
 
-    static bool IsStartOfLinkerArg( const AString & token, const char * arg );
+    static bool IsStartOfLinkerArg( const AString & token, const char * arg, bool * foundLeadingQuote = nullptr );
 
 protected:
     friend class TestLinker;
