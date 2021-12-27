@@ -541,7 +541,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
             }
 
             // Local race, won locally
-            ASSERT( distState == Job::DIST_RACING );
+            ASSERTM( distState == Job::DIST_RACING, "got: %u", distState );
             job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
 
             // We can't delete the job yet, because it's still in use by the remote
