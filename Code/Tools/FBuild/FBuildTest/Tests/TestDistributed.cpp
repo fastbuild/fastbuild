@@ -232,7 +232,7 @@ void TestDistributed::RemoteRaceSystemFailure()
 
     // Timing differences between runs means that either:
     // a) The race is won locally
-    // b) The race is won remotly (with the system failure)
+    // b) The race is won remotely (with the system failure)
     // 
     // Build should complete in either case
     TEST_ASSERT( fBuild.Build( "RemoteRaceSystemFailure" ) );
