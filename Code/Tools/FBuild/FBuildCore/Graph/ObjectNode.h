@@ -156,6 +156,11 @@ public:
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
 
+#if defined( DEBUG )
+    // Fake system failure for tests
+    static void SetFakeSystemFailure( bool enabled ) { sFakeSystemFailure = enabled; }
+#endif
+
 private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
@@ -278,6 +283,11 @@ private:
     // Not serialized
     Array< AString >    m_Includes;
     bool                m_Remote                            = false;
+
+#if defined( DEBUG )
+    // Fake system failure for tests
+    static bool sFakeSystemFailure;
+#endif
 };
 
 //------------------------------------------------------------------------------

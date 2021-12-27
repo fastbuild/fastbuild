@@ -68,7 +68,9 @@ public:
     void Deserialize( IOStream & stream );
 
     void                GetMessagesForLog( AString & buffer ) const;
+    static void         GetMessagesForLog( const Array< AString > & messages, AString & buffer );
     void                GetMessagesForMonitorLog( AString & buffer ) const;
+    static void         GetMessagesForMonitorLog( const Array< AString > & messages, AString & outBuffer );
 
     void                SetRemoteThreadIndex( uint16_t threadIndex )    { m_RemoteThreadIndex = threadIndex; }
     uint16_t            GetRemoteThreadIndex() const                    { return m_RemoteThreadIndex; }

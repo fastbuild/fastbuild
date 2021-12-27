@@ -6,6 +6,7 @@
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
@@ -33,6 +34,9 @@ private:
     void RegressionTest_RemoteCrashOnErrorFormatting();
     void TestLocalRace();
     void RemoteRaceWinRemote();
+    #if defined( DEBUG )
+        void RemoteRaceSystemFailure();
+    #endif
     void AnonymousNamespaces();
     void ErrorsAreCorrectlyReported_MSVC() const;
     void ErrorsAreCorrectlyReported_Clang() const;
@@ -59,6 +63,9 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( RegressionTest_RemoteCrashOnErrorFormatting )
     REGISTER_TEST( TestLocalRace )
     REGISTER_TEST( RemoteRaceWinRemote )
+    #if defined( DEBUG )
+        REGISTER_TEST( RemoteRaceSystemFailure )
+    #endif
     REGISTER_TEST( AnonymousNamespaces )
     REGISTER_TEST( ShutdownMemoryLeak )
     #if defined( __WINDOWS__ )
@@ -194,6 +201,43 @@ void TestDistributed::RemoteRaceWinRemote()
 
     TEST_ASSERT( fBuild.Build( "RemoteRaceWinRemote" ) );
 }
+
+// RemoteRaceSystemFailure
+//------------------------------------------------------------------------------
+#if defined( DEBUG )
+void TestDistributed::RemoteRaceSystemFailure()
+{
+    // NOTE: Test only available in DEBUG due to SetFakeSystemFailure
+
+    // Check that a remote race that is won remotely is correctly handled
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceSystemFailure/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_NoLocalConsumptionOfRemoteJobs = true;
+    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+    options.m_DistVerbose = true;
+    FBuild fBuild( options );
+
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
+    // Force a system failure when compiling remotely
+    ObjectNode::SetFakeSystemFailure( true );
+
+    // Timing differences between runs means that either:
+    // a) The race is won locally
+    // b) The race is won remotly (with the system failure)
+    // 
+    // Build should complete in either case
+    TEST_ASSERT( fBuild.Build( "RemoteRaceSystemFailure" ) );
+}
+#endif
 
 // AnonymousNamespaces
 //------------------------------------------------------------------------------

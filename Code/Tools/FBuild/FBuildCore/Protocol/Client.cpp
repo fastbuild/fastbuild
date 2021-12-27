@@ -556,7 +556,57 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
 
     // Has the job been cancelled in the interim?
     // (Due to a Race by the main thread for example)
-    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
+    bool raceLost = false;
+    bool raceWon = false;
+    const Node* node = nullptr;
+    uint32_t jobSystemErrorCount = 0;
+    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId,
+                                                   systemError,
+                                                   raceLost, // Set by OnReturnRemoteJob
+                                                   raceWon, // Set by OnReturnRemoteJob
+                                                   node, // Set by OnReturnRemoteJob
+                                                   jobSystemErrorCount ); // Set by OnReturnRemoteJob
+
+    // Prepare failure output if needed
+    AStackString< 8192 > failureOutput;
+    if ( result == false )
+    {
+        failureOutput.Format( "PROBLEM: %s\n", node->GetName().Get() );
+        for ( const AString & message : messages )
+        {
+            failureOutput += message;
+        }
+    }
+
+    // For system failures, mark worker so no more jobs are scheduled to it
+    if ( systemError )
+    {
+        ss->m_Denylisted = true;
+
+        // -distverbose message
+        const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
+        const AString & workerName = m_WorkerList[ workerIndex ];
+        DIST_INFO( "Remote System Failure!\n"
+                    " - Deny listed Worker: %s\n"
+                    " - Node              : %s\n"
+                    " - Job Error Count   : %u / %u\n"
+                    " - Details           :\n"
+                    "%s",
+                    workerName.Get(),
+                    node->GetName().Get(),
+                    jobSystemErrorCount, SYSTEM_ERROR_ATTEMPT_COUNT,
+                    failureOutput.Get() );
+    }
+
+    // Create a human-readable string representing the remote work
+    AStackString<> resultStr;
+    if ( BuildProfiler::IsValid() || m_DetailedLogging )
+    {
+        if ( systemError )      { resultStr += " (System Failure)"; }
+        else if ( !result )     { resultStr += " (Failure)"; }
+        if ( raceWon )          { resultStr += " (Race Won)"; }
+        else if ( raceLost )    { resultStr += " (Race Lost)"; }
+    }
 
     if ( BuildProfiler::IsValid() )
     {
@@ -568,20 +618,35 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                                            remoteThreadId,
                                            start,
                                            receivedResultEndTime,
-                                           job ? "Compile" : "Compile (Race Lost)",
-                                           job ? job->GetNode()->GetName().Get() : "Unavailable" );
-
+                                           AStackString<>().Format( "Compile%s", resultStr.Get() ).Get(),
+                                           node->GetName().Get());
     }
 
+    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
+                                          node->GetName().Get(),
+                                          resultStr.Get() );
+
+    if ( FLog::IsMonitorEnabled() )
+    {
+        AStackString<> msgBuffer;
+        Job::GetMessagesForMonitorLog( messages, msgBuffer );
+
+        FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
+                      result ? "SUCCESS" : "ERROR",
+                      ss->m_RemoteName.Get(),
+                      node->GetName().Get(),
+                      msgBuffer.Get() );
+    }
+
+    // Should remote job be discarded?
+    // Can happen in cases such as:
+    //   a) local job won a race
+    //   b) local race started and remote job was a system failure
     if ( job == nullptr )
     {
         // don't save result as we were cancelled
         return;
     }
-
-    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
-                                          job->GetNode()->GetName().Get(),
-                                          job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
 
     job->SetMessages( messages );
 
@@ -589,7 +654,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     {
         // built ok - serialize to disc
         
-        ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+        ObjectNode * objectNode = node->CastTo< ObjectNode >();
 
         // Store to cache if needed
         const bool writeToCache = FBuild::Get().GetOptions().m_UseCacheWrite &&
@@ -661,7 +726,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
             }
             else
             {
-                objectNode->GetStatFlag( Node::STATS_FAILED );
+                objectNode->SetStatFlag( Node::STATS_FAILED );
             }
         }
 
@@ -693,43 +758,13 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     }
     else
     {
-        ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
-
-        // failed - build list of errors
-        const AString & nodeName = job->GetNode()->GetName();
-        AStackString< 8192 > failureOutput;
-        failureOutput.Format( "PROBLEM: %s\n", nodeName.Get() );
-        for ( const AString * it = messages.Begin(); it != messages.End(); ++it )
-        {
-            failureOutput += *it;
-        }
+        ((FileNode *)node)->SetStatFlag( Node::STATS_FAILED );
 
         // was it a system error?
         if ( systemError )
         {
-            // deny list misbehaving worker
-            ss->m_Denylisted = true;
-
-            // take note of failure of job
-            job->OnSystemError();
-
-            // debugging message
-            const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
-            const AString & workerName = m_WorkerList[ workerIndex ];
-            DIST_INFO( "Remote System Failure!\n"
-                       " - Deny listed Worker: %s\n"
-                       " - Node              : %s\n"
-                       " - Job Error Count   : %u / %u\n"
-                       " - Details           :\n"
-                       "%s",
-                       workerName.Get(),
-                       job->GetNode()->GetName().Get(),
-                       job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT,
-                       failureOutput.Get()
-                      );
-
             // should we retry on another worker?
-            if ( job->GetSystemErrorCount() < SYSTEM_ERROR_ATTEMPT_COUNT )
+            if ( jobSystemErrorCount < SYSTEM_ERROR_ATTEMPT_COUNT )
             {
                 // re-queue job which will be re-attempted on another worker
                 JobQueue::Get().ReturnUnfinishedDistributableJob( job );
@@ -738,28 +773,14 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
 
             // failed too many times on different workers, add info about this to
             // error output
-            AStackString<> tmp;
-            tmp.Format( "FBuild: Error: Task failed on %u different workers\n", (uint32_t)SYSTEM_ERROR_ATTEMPT_COUNT );
             if ( failureOutput.EndsWith( '\n' ) == false )
             {
                 failureOutput += '\n';
             }
-            failureOutput += tmp;
+            failureOutput.AppendFormat( "FBuild: Error: Task failed on %u different workers\n", (uint32_t)SYSTEM_ERROR_ATTEMPT_COUNT );
         }
 
         Node::DumpOutput( nullptr, failureOutput, nullptr );
-    }
-
-    if ( FLog::IsMonitorEnabled() )
-    {
-        AStackString<> msgBuffer;
-        job->GetMessagesForMonitorLog( msgBuffer );
-
-        FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
-                      result ? "SUCCESS" : "ERROR",
-                      ss->m_RemoteName.Get(),
-                      job->GetNode()->GetName().Get(),
-                      msgBuffer.Get() );
     }
 
     JobQueue::Get().FinishedProcessingJob( job, result, true ); // remote job

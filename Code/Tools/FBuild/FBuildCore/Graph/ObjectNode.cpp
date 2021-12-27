@@ -57,6 +57,12 @@
     #include <sys/time.h>
 #endif
 
+// Static Data
+//------------------------------------------------------------------------------
+#if defined( DEBUG )
+    /*static*/ bool ObjectNode::sFakeSystemFailure = false;
+#endif
+
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
@@ -2258,6 +2264,18 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out, m_Err );
+
+#if defined( DEBUG )
+    // Fake system failure for tests
+    if ( sFakeSystemFailure && ( job->IsLocal() == false ) )
+    {
+        ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
+        sFakeSystemFailure = false; // Only fail once
+        m_Result = 1;
+        job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
+        job->OnSystemError();
+    }
+#endif
 
     if ( m_HandleOutput )
     {
