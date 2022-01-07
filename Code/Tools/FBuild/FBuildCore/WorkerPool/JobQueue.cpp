@@ -349,7 +349,12 @@ Job * JobQueue::GetDistributableJobToRace()
 
 // OnReturnRemoteJob
 //------------------------------------------------------------------------------
-Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
+Job * JobQueue::OnReturnRemoteJob( uint32_t jobId,
+                                   bool systemError,
+                                   bool & outRaceLost,
+                                   bool & outRaceWon,
+                                   const Node * & outNode,
+                                   uint32_t & outJobSystemErrorCount )
 {
     MutexHolder m( m_DistributedJobsMutex );
     Job * * jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
@@ -357,8 +362,30 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
     {
         Job * job = *jobIt;
 
+        // Give caller access to the node and other job info since we
+        // may not return the job
+        outNode = job->GetNode();
+        outRaceLost = false; // Will be updated below if needed
+        outRaceWon = false; // Will be updated below if needed
+        outJobSystemErrorCount = job->GetSystemErrorCount(); // Will be updated below if needed
+
         // What state is the job in?
         const Job::DistributionState distState = job->GetDistributionState();
+
+        // Handle system error special cases
+        if ( systemError )
+        {
+            // Increment system error count
+            job->OnSystemError();
+            ++outJobSystemErrorCount;
+
+            // If we're racing, then switch to local only mode
+            if ( distState == Job::DIST_RACING )
+            {
+                job->SetDistributionState( Job::DIST_BUILDING_LOCALLY );
+                return nullptr;
+            }
+        }
 
         // Standard remote build?
         if ( distState == Job::DIST_BUILDING_REMOTELY )
@@ -370,6 +397,7 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
         // Did a local race complete this already?
         if ( distState == Job::DIST_RACE_WON_LOCALLY )
         {
+            outRaceLost = true;
             m_DistributableJobs_InProgress.Erase( jobIt );
             FDELETE job;
             return nullptr;
@@ -378,9 +406,10 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
         // Are we still locally racing?
         if ( distState == Job::DIST_RACING )
         {
-            // Try to cancel the local job
+            // Remote job win, so try to cancel the local job
             job->Cancel();
             job->SetDistributionState( Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL );
+            outRaceWon = true;
 
             // Wait for cancellation
             {
@@ -512,7 +541,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
             }
 
             // Local race, won locally
-            ASSERT( distState == Job::DIST_RACING );
+            ASSERTM( distState == Job::DIST_RACING, "got: %u", distState );
             job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
 
             // We can't delete the job yet, because it's still in use by the remote

@@ -109,6 +109,7 @@ protected:
     #endif
     AString             m_ExtraPDBPath;
     AString             m_ExtraASMPath;
+    AString             m_ExtraSourceDependenciesPath;
     uint32_t            m_ObjectListInputStartIndex         = 0;
     uint32_t            m_ObjectListInputEndIndex           = 0;
     ObjectNode::CompilerFlags   m_CompilerFlags;

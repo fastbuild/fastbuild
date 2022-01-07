@@ -270,6 +270,29 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     }
 }
 
+
+// ProcessArg_PreparePreprocessedForRemote
+//------------------------------------------------------------------------------
+/*virtual*/ bool CompilerDriver_CL::ProcessArg_PreparePreprocessedForRemote( const AString & token,
+                                                                             size_t & index,
+                                                                             const AString & /*nextToken*/,
+                                                                             Args & /*outFullArgs*/) const
+{
+    // Remove "/sourceDependencies <arg>"
+    if ( IsCompilerArg_MSVC( token, "sourceDependencies" ) )
+    {
+        ++index; // Skip next arg which specifies the mode for '/sourceDependencies'
+        return true;
+    }
+    // Remove "/sourceDependencies<arg>"
+    if ( IsStartOfCompilerArg_MSVC( token, "sourceDependencies" ) )
+    {
+        return true;
+    }
+
+    return false;
+}
+
 // IsCompilerArg_MSVC
 //------------------------------------------------------------------------------
 /*static*/ bool CompilerDriver_CL::IsCompilerArg_MSVC( const AString & token, const char * arg )
