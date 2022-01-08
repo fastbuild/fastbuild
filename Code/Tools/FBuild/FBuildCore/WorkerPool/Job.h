@@ -35,7 +35,7 @@ public:
     inline const AString & GetCacheName() const { return m_CacheName; }
 
     inline const volatile bool * GetAbortFlagPointer() const { return &m_Abort; }
-    void Cancel();
+    void CancelDueToRemoteRaceWin();
 
     // associate some data with this object, and destroy it when freed
     void    OwnData( void * data, size_t size, bool compressed = false );

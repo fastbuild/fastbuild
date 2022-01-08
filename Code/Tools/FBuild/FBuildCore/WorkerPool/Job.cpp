@@ -56,10 +56,17 @@ Job::~Job()
 
 // Cancel
 //------------------------------------------------------------------------------
-void Job::Cancel()
+void Job::CancelDueToRemoteRaceWin()
 {
     ASSERT( m_IsLocal ); // Cancellation should only occur locally
     ASSERT( m_Abort == false ); // Job must be not already be cancelled
+
+    // TODO:B ASSERT that this thread holds the JobQueue::m_DistributedJobsMutex lock
+    ASSERT( m_DistributionState == Job::DIST_RACING ); // Should only be called while racing
+    m_DistributionState = Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL;
+
+    // Abort flag must be set last so Job sees new m_DistributionState on tear down
+    // so it doesn't report an error
     AtomicStoreRelaxed( &m_Abort, true );
 }
 

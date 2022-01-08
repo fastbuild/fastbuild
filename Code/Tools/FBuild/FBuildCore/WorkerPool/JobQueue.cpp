@@ -407,8 +407,7 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId,
         if ( distState == Job::DIST_RACING )
         {
             // Remote job win, so try to cancel the local job
-            job->Cancel();
-            job->SetDistributionState( Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL );
+            job->CancelDueToRemoteRaceWin(); // NOTE: Must be after SetDistributionState so cancellation knows remote race was won
             outRaceWon = true;
 
             // Wait for cancellation
@@ -536,6 +535,19 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
                  ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
                  ( distState == Job::DIST_RACE_WON_REMOTELY ) )
             {
+                FDELETE job;
+                continue;
+            }
+
+            // If racing and the remote job is returned, it attempts a cancellation.
+            // While waiting for cancellation, it's possible for the local job to have completed
+            // and be ready to be finialized in this function. If we get here in that state,
+            // the remote job is waiting on cancellation and we can unblock it and free the job.
+            if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+            {
+                // Remove the job from the in progress queue. The remote result
+                // which is waiting on the cancellation will know the job has been handled.
+                VERIFY( m_DistributableJobs_InProgress.FindAndErase( job ) );
                 FDELETE job;
                 continue;
             }
