@@ -1,0 +1,3 @@
+// Same as the normal cache test, but with relative paths enabled
+#define ENABLE_RELATIVE_PATHS // Shared compiler config will check this
+#include "cache.bff"

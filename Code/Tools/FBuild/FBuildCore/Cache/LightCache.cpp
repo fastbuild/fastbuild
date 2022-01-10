@@ -798,14 +798,20 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString &
     const int32_t stackSize = (int32_t)m_IncludeStack.GetSize();
     for ( int32_t i = ( stackSize - 1 ); i >= 0; --i )
     {
+        // may be a relative path
         AStackString<> possibleIncludePath( m_IncludeStack[ (size_t)i ]->m_FileName );
         const char * lastFwdSlash = possibleIncludePath.FindLast( '/' );
         const char * lastBackSlash = possibleIncludePath.FindLast( '\\' );
         const char * lastSlash = ( lastFwdSlash > lastBackSlash ) ? lastFwdSlash : lastBackSlash;
-        ASSERT( lastSlash ); // it's a full path, so it must have a slash
-
-        // truncate to slash (keep slash)
-        possibleIncludePath.SetLength( (uint32_t)( lastSlash - possibleIncludePath.Get() ) + 1 );
+        if( lastSlash )
+        {
+            // truncate to slash (keep slash)
+            possibleIncludePath.SetLength( (uint32_t)( lastSlash - possibleIncludePath.Get() ) + 1 );
+        }
+        else
+        {
+            possibleIncludePath += "/";
+        }
 
         possibleIncludePath += include;
 

@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 
 // Core
+#include "Core/FileIO/FileIO.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
@@ -38,6 +39,7 @@ private:
     void LightCache_ImportDirective() const;
     void LightCache_ForceInclude() const;
     void LightCache_SourceDependencies() const;
+    void LightCache_ReadWrite_Workspace() const;
 
     // MSVC Static Analysis tests
     const char* const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -77,6 +79,7 @@ REGISTER_TESTS_BEGIN( TestCache )
         REGISTER_TEST( LightCache_ImportDirective )
         REGISTER_TEST( LightCache_ForceInclude )
         REGISTER_TEST( LightCache_SourceDependencies )
+        REGISTER_TEST( LightCache_ReadWrite_Workspace )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
 
@@ -872,6 +875,127 @@ void TestCache::LightCache_SourceDependencies() const
 
     // Check for expected error in output (from -cacheverbose)
     TEST_ASSERT( GetRecordedOutput().Find( "LightCache is incompatible with -sourceDependencies" ) );
+}
+
+// LightCache_ReadWrite_Workspace
+//------------------------------------------------------------------------------
+void TestCache::LightCache_ReadWrite_Workspace() const
+{
+    // Source files
+    const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_ReadWrite_Workspace";
+    const char * files[] =
+    {
+        "a.cpp",
+        "b.cpp",
+        "cache.bff",
+        "relcache.bff",
+        "incPath/nested/fromIncPath.h",
+        "incPath/nested/neighbor.h",
+    };
+
+    // Dest paths
+    const char * dstPaths[] =
+    {
+        "../tmp/Test/Cache/LightCache_ReadWrite_Workspace/abs/A",
+        "../tmp/Test/Cache/LightCache_ReadWrite_Workspace/abs/B",
+        "../tmp/Test/Cache/LightCache_ReadWrite_Workspace/rel/A",
+        "../tmp/Test/Cache/LightCache_ReadWrite_Workspace/rel/B",
+    };
+
+    // Copy file structure to both destinations
+    for ( const char * dstPath : dstPaths )
+    {
+        for ( const char * file : files )
+        {
+            AStackString<> src, dst;
+            src.Format( "%s/%s", srcPath, file );
+            dst.Format( "%s/%s", dstPath, file );
+            TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
+            TEST_ASSERT( FileIO::FileCopy( src.Get(), dst.Get() ) );
+        }
+    }
+
+    // Use "normal" absolute caching.
+    // Build in path A, writing to the cache
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "cache.bff";
+        options.m_UseCacheWrite = true;
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Cache/LightCache_ReadWrite_Workspace/abs/A";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 2 );
+    }
+
+    // Build in path B, reading from the cache
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "cache.bff";
+        options.m_UseCacheRead = true;
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Cache/LightCache_ReadWrite_Workspace/abs/B";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        // absolute paths should mean we get no cache hits
+        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 0 );
+    }
+
+    // Use relative path caching.
+    // Build in path A, writing to the cache
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "relcache.bff";
+        options.m_UseCacheWrite = true;
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Cache/LightCache_ReadWrite_Workspace/rel/A";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 2 );
+    }
+
+    // Build in path B, reading from the cache
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "relcache.bff";
+        options.m_UseCacheRead = true;
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Cache/LightCache_ReadWrite_Workspace/rel/B";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 2 );
+    }
 }
 
 // Analyze_MSVC_WarningsOnly_Write

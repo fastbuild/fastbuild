@@ -1,0 +1,20 @@
+//
+// Test cache
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+#include "..\..\..\..\..\..\Code\Tools\FBuild\FBuildTest\Data\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerInputFiles =
+    {
+        'a.cpp'
+        'b.cpp'
+    }
+    .CompilerOutputPath = 'out/'
+    .CompilerOptions + ' -IincPath'
+    .PreprocessorOptions = .CompilerOptions
+}
