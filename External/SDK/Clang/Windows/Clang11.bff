@@ -43,8 +43,10 @@ Compiler( 'Compiler-Clang11' )
 {
     .Root                           = '$Clang11_BasePath$'
     .ExtraFiles                     = {
+                                        '$Root$/bin/concrt140.dll'
                                         '$Root$/bin/msvcp140.dll'
                                         '$Root$/bin/vcruntime140.dll'
+                                        '$Root$/bin/vcruntime140_1.dll'
                                       }
     .Executable                     = '$Root$\bin\clang-cl.exe'
 
