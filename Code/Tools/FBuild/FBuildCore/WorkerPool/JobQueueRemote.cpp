@@ -282,7 +282,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 //------------------------------------------------------------------------------
 /*static*/ Node::BuildResult JobQueueRemote::DoBuild( Job * job, bool racingRemoteJob )
 {
-    BuildProfilerScope profileScope( job, WorkerThread::GetThreadIndex(), job->GetNode()->GetTypeName() );
+    BuildProfilerScope profileScope( *job, WorkerThread::GetThreadIndex(), job->GetNode()->GetTypeName() );
 
     Timer timer; // track how long the item takes
 

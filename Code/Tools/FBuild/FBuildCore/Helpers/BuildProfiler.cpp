@@ -261,8 +261,10 @@ void BuildProfiler::MetricsUpdate()
 //------------------------------------------------------------------------------
 BuildProfilerScope::BuildProfilerScope( const char * stepName )
 {
+    m_Active = BuildProfiler::IsValid();
+
     // Only record info if the BuildProfiler is active
-    if ( BuildProfiler::IsValid() )
+    if ( m_Active )
     {
         m_ThreadId = 0;
         m_StepName = stepName;
@@ -276,23 +278,23 @@ BuildProfilerScope::BuildProfilerScope( const char * stepName )
 
 // CONSTRUCTOR (BuildProfilerScope)
 //------------------------------------------------------------------------------
-BuildProfilerScope::BuildProfilerScope( Job * job, uint32_t threadId, const char * stepName )
+BuildProfilerScope::BuildProfilerScope( Job & job, uint32_t threadId, const char * stepName )
 {
+    m_Active = ( BuildProfiler::IsValid() &&
+                 job.IsLocal() ); // When testing, remote jobs can occur in the same process
+
     // Only record info if the BuildProfiler is active
-    if ( BuildProfiler::IsValid() )
+    if ( m_Active )
     {
         m_ThreadId = threadId;
         m_StepName = stepName;
-        m_TargetName = job->GetNode()->GetName().Get();
+        m_TargetName = job.GetNode()->GetName().Get();
         m_StartTime = Timer::GetNow();
     }
 
     // Hook into associated job
-    m_Job = job;
-    if ( m_Job )
-    {
-        m_Job->SetBuildProfilerScope( this );
-    }
+    m_Job = &job;
+    m_Job->SetBuildProfilerScope( this );
 }
 
 // DESTRUCTOR (BuildProfilerScope)
@@ -300,7 +302,7 @@ BuildProfilerScope::BuildProfilerScope( Job * job, uint32_t threadId, const char
 BuildProfilerScope::~BuildProfilerScope()
 {
     // Commit profiling info
-    if ( BuildProfiler::IsValid() )
+    if ( m_Active )
     {
         BuildProfiler::Get().RecordLocal( m_ThreadId, m_StartTime, Timer::GetNow(), m_StepName, m_TargetName );
     }

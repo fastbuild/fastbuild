@@ -765,7 +765,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             PROFILE_SECTION( profilingTag );
         #endif
 
-        BuildProfilerScope profileScope( job, WorkerThread::GetThreadIndex(), node->GetTypeName() );
+        BuildProfilerScope profileScope( *job, WorkerThread::GetThreadIndex(), node->GetTypeName() );
         result = node->DoBuild( job );
     }
 

@@ -112,7 +112,7 @@ public:
     BuildProfilerScope( const char * type );
 
     // A local "worker" thread task
-    BuildProfilerScope( Job * job, uint32_t threadId, const char * type );
+    BuildProfilerScope( Job & job, uint32_t threadId, const char * type );
     ~BuildProfilerScope();
 
     void SetStepName( const char * stepName ) { m_StepName = stepName; }
@@ -120,6 +120,7 @@ public:
 protected:
     BuildProfilerScope& operator = ( BuildProfilerScope & other ) = delete;
 
+    bool            m_Active;
     uint32_t        m_ThreadId;
     const char *    m_StepName;
     const char *    m_TargetName;
