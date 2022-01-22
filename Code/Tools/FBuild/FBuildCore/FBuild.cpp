@@ -372,7 +372,7 @@ void FBuild::SaveDependencyGraph( IOStream & stream, const char* nodeGraphDBFile
 
 // Build
 //------------------------------------------------------------------------------
-bool FBuild::Build( Node * nodeToBuild )
+/*virtual*/ bool FBuild::Build( Node * nodeToBuild )
 {
     ASSERT( nodeToBuild );
 

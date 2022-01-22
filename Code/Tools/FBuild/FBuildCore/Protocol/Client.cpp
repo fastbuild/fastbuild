@@ -598,18 +598,24 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                     failureOutput.Get() );
     }
 
-    // Create a human-readable string representing the remote work
-    AStackString<> resultStr;
-    if ( BuildProfiler::IsValid() || m_DetailedLogging )
-    {
-        if ( systemError )      { resultStr += " (System Failure)"; }
-        else if ( !result )     { resultStr += " (Failure)"; }
-        if ( raceWon )          { resultStr += " (Race Won)"; }
-        else if ( raceLost )    { resultStr += " (Race Lost)"; }
-    }
-
+    // Handle build profiling output
     if ( BuildProfiler::IsValid() )
     {
+        // Chose description. NOTE: String lifetime must extend past BuildProfiler destruction
+        const char* resultStr = "Compile";
+        if ( systemError )
+        {
+            if ( raceWon )       { resultStr = "Compile (System Failure) (Race Won)"; }
+            else if ( raceLost ) { resultStr = "Compile (System Failure) (Race Lost)"; }
+            else                 { resultStr = "Compile (System Failure)"; }
+        }
+        else if ( !result )
+        {
+            if ( raceWon )       { resultStr = "Compile (Failure) (Race Won)"; }
+            else if ( raceLost ) { resultStr = "Compile (Failure) (Race Lost)"; }
+            else                 { resultStr = "Compile (Failure)"; }
+        }
+
         // Record information about worker
         const uint32_t workerId = static_cast<uint32_t>( ss - m_ServerList.Begin() );
         const int64_t start = receivedResultEndTime - (int64_t)( ( (double)buildTime / 1000 ) * (double)Timer::GetFrequency() );
@@ -618,13 +624,30 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                                            remoteThreadId,
                                            start,
                                            receivedResultEndTime,
-                                           AStackString<>().Format( "Compile%s", resultStr.Get() ).Get(),
+                                           resultStr,
                                            node->GetName().Get());
     }
 
-    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
-                                          node->GetName().Get(),
-                                          resultStr.Get() );
+    // Handle verbose logging
+    if ( m_DetailedLogging )
+    {
+        const char* resultStr = "";
+        if ( systemError )
+        {
+            if ( raceWon )       { resultStr = " (System Failure) (Race Won)"; }
+            else if ( raceLost ) { resultStr = " (System Failure) (Race Lost)"; }
+            else                 { resultStr = " (System Failure)"; }
+        }
+        else if ( !result )
+        {
+            if ( raceWon )       { resultStr = " (Failure) (Race Won)"; }
+            else if ( raceLost ) { resultStr = " (Failure) (Race Lost)"; }
+            else                 { resultStr = " (Failure)"; }
+        }
+        DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
+                                              node->GetName().Get(),
+                                              resultStr );
+    }
 
     if ( FLog::IsMonitorEnabled() )
     {

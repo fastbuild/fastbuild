@@ -33,7 +33,7 @@ class FBuild : public Singleton< FBuild >
 {
 public:
     explicit FBuild( const FBuildOptions & options = FBuildOptions() );
-    ~FBuild();
+    virtual ~FBuild();
 
     // initialize the dependency graph, using the BFF config file
     // OR a previously saved NodeGraph DB (if available/matching the BFF)
@@ -43,7 +43,7 @@ public:
     bool Build( const char * target );
     bool Build( const AString & target );
     bool Build( const Array< AString > & targets );
-    bool Build( Node * nodeToBuild );
+    virtual bool Build( Node * nodeToBuild ); // Virtual to allow for testing
 
     // after a build we can store progress/parsed rules for next time
     bool SaveDependencyGraph( const char * nodeGraphDBFile ) const;

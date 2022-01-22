@@ -93,6 +93,9 @@ public:
     const Node * GetNode( const char * nodeName ) const;
 
     void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;
+
+    using FBuild::Build;
+    virtual bool Build( Node * nodeToBuild ) override;
 };
 
 //------------------------------------------------------------------------------
