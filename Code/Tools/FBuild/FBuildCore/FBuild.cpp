@@ -906,4 +906,11 @@ bool FBuild::CacheTrim() const
     return false;
 }
 
+// GetNumWorkerConnections
+//------------------------------------------------------------------------------
+uint32_t FBuild::GetNumWorkerConnections() const
+{
+    return (uint32_t)( m_Client ? m_Client->GetNumConnections() : 0 );
+}
+
 //------------------------------------------------------------------------------

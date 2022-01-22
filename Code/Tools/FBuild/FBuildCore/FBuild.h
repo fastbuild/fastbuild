@@ -110,6 +110,8 @@ public:
     bool CacheOutputInfo() const;
     bool CacheTrim() const;
 
+    uint32_t GetNumWorkerConnections() const;
+
 protected:
     bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
 

@@ -6,6 +6,7 @@
 #include "BuildProfiler.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
@@ -126,6 +127,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     // Section headings
     // - Global metrics
     buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
+    buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-3,\"tid\":0,\"args\":{\"name\":\"Network Usage\"}},";
 
     // - Local Processing
     AStackString<> args( options.GetArgs() );
@@ -189,6 +191,14 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
                                  (uint64_t)( (double)metrics.m_Time * freqMul ),
                                  metrics.m_JobMemoryMiB );
         }
+
+        // Network Connections (if using distributed compilation)
+        if ( metrics.m_NumConnections > 0 )
+        {
+            buffer.AppendFormat( "{\"name\":\"Connections\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-3,\"args\":{\"Num\":%u}},",
+                                    (uint64_t)( (double)metrics.m_Time * freqMul ),
+                                    metrics.m_NumConnections );
+        }
     }
 
     // Open output file and write the majority of the profiling info
@@ -244,6 +254,9 @@ void BuildProfiler::MetricsUpdate()
 
         // Memory used by distributed jobs
         metrics.m_JobMemoryMiB = (uint32_t)( Job::GetTotalLocalDataMemoryUsage() / ( 1024 * 1024 ) );
+
+        // Network connections
+        metrics.m_NumConnections = (uint16_t)FBuild::Get().GetNumWorkerConnections();
 
         // Exit if we're finished. We check the exit condition here to ensure
         // we always do one final metrics gathering operation before exiting
