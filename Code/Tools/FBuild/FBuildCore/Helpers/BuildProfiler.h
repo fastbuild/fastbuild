@@ -83,7 +83,7 @@ protected:
     public:
         int64_t             m_Time = 0;
         uint32_t            m_TotalMemoryMiB = 0;
-        uint32_t            m_DistributedMemoryMiB = 0;
+        uint32_t            m_JobMemoryMiB = 0;
     };
 
     // Track information about workers which performed useful work

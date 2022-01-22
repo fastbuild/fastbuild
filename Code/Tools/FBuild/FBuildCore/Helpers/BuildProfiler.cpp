@@ -44,7 +44,7 @@ void BuildProfiler::StartMetricsGathering()
 
 // StopMetricsGathering
 //------------------------------------------------------------------------------
-/*static*/ void BuildProfiler::StopMetricsGathering()
+void BuildProfiler::StopMetricsGathering()
 {
     PROFILE_FUNCTION;
 
@@ -179,15 +179,15 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     for ( const Metrics & metrics : m_Metrics )
     {
         // Total Memory
-        buffer.AppendFormat( "{\"name\":\"Total Mem\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
+        buffer.AppendFormat( "{\"name\":\"Total (MiB)\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
                              (uint64_t)( (double)metrics.m_Time * freqMul ),
                              metrics.m_TotalMemoryMiB );
-        // Distributed Memory
-        if ( metrics.m_DistributedMemoryMiB > 0 )
+        // Job Memory
+        if ( metrics.m_JobMemoryMiB > 0 )
         {
-            buffer.AppendFormat( "{\"name\":\"Distributed Mem\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
+            buffer.AppendFormat( "{\"name\":\"Job (MiB)\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
                                  (uint64_t)( (double)metrics.m_Time * freqMul ),
-                                 metrics.m_DistributedMemoryMiB );
+                                 metrics.m_JobMemoryMiB );
         }
     }
 
@@ -243,7 +243,7 @@ void BuildProfiler::MetricsUpdate()
 #endif
 
         // Memory used by distributed jobs
-        metrics.m_DistributedMemoryMiB = (uint32_t)( Job::GetTotalLocalDataMemoryUsage() / ( 1024 * 1024 ) );
+        metrics.m_JobMemoryMiB = (uint32_t)( Job::GetTotalLocalDataMemoryUsage() / ( 1024 * 1024 ) );
 
         // Exit if we're finished. We check the exit condition here to ensure
         // we always do one final metrics gathering operation before exiting

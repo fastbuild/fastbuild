@@ -601,19 +601,22 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     // Handle build profiling output
     if ( BuildProfiler::IsValid() )
     {
-        // Chose description. NOTE: String lifetime must extend past BuildProfiler destruction
+        // Chose description.
+        // NOTE:
+        // * String lifetime must extend past BuildProfiler destruction
+        // * String contents feeds into color selection for profiling json
         const char* resultStr = "Compile";
         if ( systemError )
         {
-            if ( raceWon )       { resultStr = "Compile (System Failure) (Race Won)"; }
-            else if ( raceLost ) { resultStr = "Compile (System Failure) (Race Lost)"; }
-            else                 { resultStr = "Compile (System Failure)"; }
+            if ( raceWon )       { resultStr = "(System Failure) (Race Won) Compile"; }
+            else if ( raceLost ) { resultStr = "(System Failure) (Race Lost) Compile"; }
+            else                 { resultStr = "(System Failure) Compile"; }
         }
         else if ( !result )
         {
-            if ( raceWon )       { resultStr = "Compile (Failure) (Race Won)"; }
-            else if ( raceLost ) { resultStr = "Compile (Failure) (Race Lost)"; }
-            else                 { resultStr = "Compile (Failure)"; }
+            if ( raceWon )       { resultStr = "(Failure) (Race Won) Compile"; }
+            else if ( raceLost ) { resultStr = "(Failure) (Race Lost) Compile"; }
+            else                 { resultStr = "(Failure) Compile"; }
         }
 
         // Record information about worker
