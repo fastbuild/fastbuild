@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -264,11 +265,29 @@ ObjectListNode::ObjectListNode()
         }
         if ( n->GetType() != Node::UNITY_NODE )
         {
-            // TODO:B We should support aliases
-            Error::Error_1102_UnexpectedType( iter, function, "CompilerInputUnity", unity, n->GetType(), Node::UNITY_NODE );
-            return false;
+            if ( n->GetType() == Node::ALIAS_NODE )
+            {
+                // handle all targets in alias
+                const AliasNode * an = n->CastTo< AliasNode >();
+                const Dependencies & aliasNodeList = an->GetAliasedNodes();
+                const Dependencies::Iter end = aliasNodeList.End();
+                for ( Dependencies::Iter it = aliasNodeList.Begin();
+                    it != end;
+                    ++it )
+                {
+                    compilerInputUnity.EmplaceBack( it->GetNode() );
+                }
+            }
+            else
+            {
+                Error::Error_1102_UnexpectedType( iter, function, "CompilerInputUnity", unity, n->GetType(), Node::UNITY_NODE );
+                return false;
+            }
         }
-        compilerInputUnity.EmplaceBack( n );
+        else
+        {
+            compilerInputUnity.EmplaceBack( n );
+        }
     }
 
     // .CompilerInputPath
