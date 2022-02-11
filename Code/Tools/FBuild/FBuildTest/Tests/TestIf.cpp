@@ -25,6 +25,7 @@ private:
     void IfFunctionStringCompare() const;
     void IfFunctionSet() const;
     void IfFunctionBracket() const;
+    void IfArrayNotEmpty() const;
     void UsageError_ExtraTokensAfterExpression() const;
     void UsageError_UnsupportedTypeForIn() const;
     void UsageError_UnsupportedOperation() const;
@@ -46,6 +47,7 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( IfFunctionSet )
     REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( IfFunctionBracket )
+    REGISTER_TEST( IfArrayNotEmpty )
     REGISTER_TEST( UsageError_ExtraTokensAfterExpression )
     REGISTER_TEST( UsageError_UnsupportedTypeForIn )
     REGISTER_TEST( UsageError_UnsupportedOperation )
@@ -393,9 +395,24 @@ void TestIf::IfFunctionBracket() const
 #undef VARS
 }
 
-#undef TEST_EXP_TRUE
-#undef TEST_EXP_FALSE
-#undef TEST_EXP_FAIL
+void TestIf::IfArrayNotEmpty() const
+{
+#define VARS \
+    ".Struct = [.Value = 1]\n" \
+    ".NonEmptyStruct = {.Struct}\n" \
+    ".NonEmptyString = {'a', 'd'}\n" \
+    ".Empty = {}\n" \
+
+    TEST_EXP_TRUE( VARS, "(.NonEmptyStruct)" );
+    TEST_EXP_TRUE( VARS, "(.NonEmptyString)" );
+    TEST_EXP_TRUE( VARS, "!(.Empty)" );
+    TEST_EXP_FALSE( VARS, "(.Empty)" );
+    TEST_EXP_FALSE( VARS, "!(.NonEmptyStruct)" );
+    TEST_EXP_FALSE( VARS, "!(.NonEmptyString)" );
+
+#undef VARS
+}
+
 
 // UsageError_ExtraTokensAfterExpression
 //------------------------------------------------------------------------------
@@ -403,6 +420,8 @@ void TestIf::UsageError_ExtraTokensAfterExpression() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_extratokensafterexpression.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Unexpected token 'and'" ) );
+
+    TEST_EXP_FAIL( ".Struct = [.Var = 1]\n.Array = {.Struct}\n", ".Struct in .Array", "Error #1071" );
 }
 
 // UsageError_UnsupportedTypeForIn
@@ -419,6 +438,11 @@ void TestIf::UsageError_UnsupportedOperation() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedoperation.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Unexpected operator '>='" ) );
+
+    TEST_EXP_FAIL( ".Struct = [.Var = 1]\n.Array = {.Struct}\n.OtherArray = {.Struct}", ".Array in .OtherArray", "Error #1070" );
 }
 
+#undef TEST_EXP_TRUE
+#undef TEST_EXP_FALSE
+#undef TEST_EXP_FAIL
 //------------------------------------------------------------------------------

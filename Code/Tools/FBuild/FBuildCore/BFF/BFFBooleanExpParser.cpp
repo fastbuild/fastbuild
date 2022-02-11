@@ -120,6 +120,16 @@ struct ArrayOfString
     static const BFFVariable::VarType VarType = BFFVariable::VarType::VAR_ARRAY_OF_STRINGS;
 };
 
+// ArrayOfStruct
+// ---------------------------------------------------------------
+struct ArrayOfStruct
+{
+    typedef Array<const BFFVariable *> Type;
+    typedef const Array<const BFFVariable *> & ReturnType;
+    typedef Array<const BFFVariable *> & OutParamType;
+    static const BFFVariable::VarType VarType = BFFVariable::VarType::VAR_ARRAY_OF_STRUCTS;
+};
+
 // Is
 // Normalized type checkers.
 // ---------------------------------------------------------------
@@ -139,6 +149,9 @@ template <>
 constexpr bool Is<ArrayOfString, BFFToken>( const BFFToken * /*token*/ ) { return false; } // No token represents an array of String.
 
 template <>
+constexpr bool Is<ArrayOfStruct, BFFToken>( const BFFToken * /*token*/ ) { return false; } // No token represents an array of String.
+
+template <>
 bool Is<Bool, BFFVariable>( const BFFVariable * var ) { return ( var != nullptr ) && var->IsBool(); }
 
 template <>
@@ -149,6 +162,9 @@ bool Is<String, BFFVariable>( const BFFVariable * var ) { return ( var != nullpt
 
 template <>
 bool Is<ArrayOfString, BFFVariable>( const BFFVariable * var ) { return ( var != nullptr ) && var->IsArrayOfStrings(); }
+
+template <>
+bool Is<ArrayOfStruct, BFFVariable>( const BFFVariable * var ) { return ( var != nullptr ) && var->IsArrayOfStructs(); }
 
 // Get
 // Normalized value getters.
@@ -174,6 +190,14 @@ ArrayOfString::ReturnType Get<ArrayOfString, BFFToken>( const BFFToken & /*token
 }
 
 template <>
+ArrayOfStruct::ReturnType Get<ArrayOfStruct, BFFToken>( const BFFToken & /*token*/ )
+{
+    ASSERT( false ); // It should not be here, or something went wrong.
+    static Array<const BFFVariable *> s_Empty;
+    return s_Empty;
+}
+
+template <>
 Bool::ReturnType Get<Bool, BFFVariable>( const BFFVariable & var ) { ASSERT( var.IsBool() ); return var.GetBool(); }
 
 template <>
@@ -184,6 +208,9 @@ String::ReturnType Get<String, BFFVariable>( const BFFVariable & var ) { ASSERT(
 
 template <>
 ArrayOfString::ReturnType Get<ArrayOfString, BFFVariable>( const BFFVariable & var ) { ASSERT( var.IsArrayOfStrings() ); return var.GetArrayOfStrings(); }
+
+template <>
+ArrayOfStruct::ReturnType Get<ArrayOfStruct, BFFVariable>( const BFFVariable & var ) { ASSERT( var.IsArrayOfStructs() ); return var.GetArrayOfStructs(); }
 
 // Operand
 // Since GetVar is a slightly heavy op, cache it.
@@ -581,25 +608,30 @@ static bool ParseStringInArray( const Function * function, const OperandOf<Strin
     return true;
 }
 
-// ParseStringArrayInArray
+// ParseStringArrayExp
 // Forms:
 //    bool-exp =
 //             | string-set in string-set
 //             | string-set not in string-set
+//             | string-set
 //    string-set = string-set-variable
 //
 // iter is expected pointing to the operator.
 //------------------------------------------------------------------------------
-static bool ParseStringArrayInArray( const Function * function, const OperandOf<ArrayOfString> & lhs, BFFTokenRange & iter, bool & expResult )
+static bool ParseStringArrayExp( const Function * function, const OperandOf<ArrayOfString> & lhs, BFFTokenRange & iter, bool & expResult )
 {
     ASSERT( lhs.IsValid() );
 
     const BFFToken * opToken = iter.GetCurrent();
     BoolOperator op = BoolOperator::OP_UNKNOWN;
+
+    // If there is no other operator, this is a `string-set` expression, checking to see if the value is empty
     if ( !ParseOperator( function, iter, op ) )
     {
-        return false;
+        expResult = !lhs.GetValue().IsEmpty();
+        return true;
     }
+
     if ( ( op != BoolOperator::OP_IN ) && ( op != BoolOperator::OP_NOT_IN ) )
     {
         Error::Error_1070_UnexpectedOperator( opToken, function );
@@ -639,12 +671,38 @@ static bool ParseStringArrayInArray( const Function * function, const OperandOf<
     return true;
 }
 
+// ParseStructArrayExp
+// Forms:
+//    bool-exp = struct-set-variable
+//
+// iter is expected pointing to the operator.
+//------------------------------------------------------------------------------
+static bool ParseStructArrayExp( const Function * function, const OperandOf<ArrayOfStruct> & lhs, BFFTokenRange & iter, bool & expResult )
+{
+    ASSERT( lhs.IsValid() );
+
+    const BFFToken * opToken = iter.GetCurrent();
+    BoolOperator op = BoolOperator::OP_UNKNOWN;
+
+    // No operators are supported on `struct-set-variable` conditional expressions
+    if ( ParseOperator( function, iter, op ) )
+    {
+        Error::Error_1070_UnexpectedOperator( opToken, function );
+        return false;
+    }
+    
+    expResult = !lhs.GetValue().IsEmpty();
+    return true;
+}
+
 // ParseUnaryBooleanOperand
 // Forms:
 //    bool-exp = true | false
 //             | (bool-exp)
 //             | bool-variable
 //             | ! bool-exp
+//             | bool-variable
+
 //
 // 'iter' is expected pointing to the operand.
 //------------------------------------------------------------------------------
@@ -655,12 +713,24 @@ static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange &
         case BFFTokenType::Boolean:        // true or false
         case BFFTokenType::Variable:       // .Var or ^Var
         {
-            OperandOf<Bool> operand( *iter.GetCurrent(), function );
-            if ( !operand.IsValid() )
+            Operand operand( *iter.GetCurrent(), function );
+            if ( operand.Is<Bool>() )
+            {
+                expResult = operand.GetValue<Bool>();
+            }
+            else if ( operand.Is<ArrayOfString>() )
+            {
+                expResult = !operand.GetValue<ArrayOfString>().IsEmpty();
+            }
+            else if ( operand.Is<ArrayOfStruct>() )
+            {
+                expResult = !operand.GetValue<ArrayOfStruct>().IsEmpty();
+            }
+            else
             {
                 return false;
             }
-            expResult = operand.GetValue();
+
             iter++;
             return true;
         }
@@ -938,8 +1008,16 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
             }
             else if ( operand.Is<ArrayOfString>() )
             {
-                // Expect: array-of-string-variable [not] in array-of-string-variable
-                if ( !ParseStringArrayInArray( function, OperandOf<ArrayOfString>( operand ), iter, expResult ) )
+                // Expect: array-of-string-variable [not] in array-of-string-variable | array-of-string-variable
+                if ( !ParseStringArrayExp( function, OperandOf<ArrayOfString>( operand ), iter, expResult ) )
+                {
+                    return false;
+                }
+            }
+            else if ( operand.Is<ArrayOfStruct>() )
+            {
+                // Expect: array-of-struct-variable
+                if ( !ParseStructArrayExp( function, OperandOf<ArrayOfStruct>( operand ), iter, expResult ) )
                 {
                     return false;
                 }
