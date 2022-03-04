@@ -136,6 +136,20 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
         return true;
     }
 
+    // Remove "/sourceDependencies <arg>" since we've already generated the source dependencies
+    // during preprocessing, and generating it again would be wrong (since the dependencies of
+    // the preprocessed file are not the same).
+    if (IsCompilerArg_MSVC(token, "sourceDependencies"))
+    {
+        ++index; // Skip next arg which specifies the mode for '/sourceDependencies'
+        return true;
+	}
+    // Remove "/sourceDependencies<arg>"
+    if (IsStartOfCompilerArg_MSVC(token, "sourceDependencies"))
+    {
+        return true;
+    }
+    
     return false;
 }
 
