@@ -252,7 +252,28 @@
         return false;
     }
 
-    ssize_t bytesCopied = sendfile( dest, source, 0, stat_source.st_size );
+    ssize_t bytesCopied = 0;
+    ssize_t offset = 0;
+
+    while ( offset < stat_source.st_size )
+    {
+        ssize_t count = 0;
+        ssize_t remaining = stat_source.st_size - offset;
+        if ( remaining > SSIZE_MAX )
+        {
+            count = SSIZE_MAX;
+        }
+        else
+        {
+            count = remaining;
+        }
+        ssize_t sent = sendfile( dest, source, &offset, count );
+        if ( sent == 0 || sent == -1 )
+        {
+            break;
+        }
+        bytesCopied += sent;
+    }
 
     close( source );
     close( dest );
