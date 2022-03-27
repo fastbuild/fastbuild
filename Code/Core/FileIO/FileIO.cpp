@@ -10,6 +10,7 @@
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
+#include "Core/Math/Conversions.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -257,20 +258,14 @@
 
     while ( offset < stat_source.st_size )
     {
-        ssize_t count = 0;
-        ssize_t remaining = stat_source.st_size - offset;
-        if ( remaining > SSIZE_MAX )
+        // sendfile has an arbitrary limit of 0x7ffff000 on all systems (even if 64bit)
+        const ssize_t remaining = stat_source.st_size - offset;
+        const ssize_t count = Math::Min<ssize_t>( remaining, 0x7ffff000 );
+
+        const ssize_t sent = sendfile( dest, source, &offset, count );
+        if ( sent <= 0 )
         {
-            count = SSIZE_MAX;
-        }
-        else
-        {
-            count = remaining;
-        }
-        ssize_t sent = sendfile( dest, source, &offset, count );
-        if ( sent == 0 || sent == -1 )
-        {
-            break;
+            break; // Copy failed (incomplete)
         }
         bytesCopied += sent;
     }
