@@ -328,8 +328,6 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
 {
     keepMemory = true; // we'll take care of freeing the memory
 
-    MutexHolder mh( m_ServerListMutex );
-
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
 
