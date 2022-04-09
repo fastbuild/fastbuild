@@ -606,8 +606,10 @@ void TestObject::CLDependencyArgs() const
         // Compile
         TEST_ASSERT( fBuild.Build( "CLDependencyArgs" ) );
 
-        // Make sure output file was created in the sub directory
-        EnsureFileExists( sourceDependenciesFile );
+        // Make sure the deps file exists and is correct (including creation of subdir)
+        AString depsFileContents;
+        LoadFileContentsAsString( sourceDependenciesFile, depsFileContents );
+        TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
     }
 
     // Cleanup between tests
@@ -636,8 +638,43 @@ void TestObject::CLDependencyArgs() const
         // Compile
         TEST_ASSERT( fBuild.Build( "CLDependencyArgs" ) );
 
-        // Make sure output file was created in the sub directory
-        EnsureFileExists( sourceDependenciesFile );
+        // Make sure the deps file exists and is correct
+        //  - has reference to original .cpp file
+        //  - is ignored remotely (arg is stripped by CL driver from second pass)
+        AString depsFileContents;
+        LoadFileContentsAsString( sourceDependenciesFile, depsFileContents );
+        TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
+    }
+
+    // Cleanup between tests
+    EnsureFileDoesNotExist( sourceDependenciesFile );
+    EnsureDirDoesNotExist( sourceDependenciesPath );
+
+    // Distributed - Race
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+
+        // Force remote
+        options.m_AllowDistributed = true;
+        options.m_NoLocalConsumptionOfRemoteJobs = false;
+        options.m_AllowLocalRace = true;
+        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "CLDependencyArgs" ) );
+
+        // Make sure the deps file exists and is correct
+        //  - has reference to original .cpp file
+        //  - is not overwritten by second pass operating on preprocessed output
+        //    (i.e. arg is stripped correctly by CL driver from second pass)
+        AString depsFileContents;
+        LoadFileContentsAsString( sourceDependenciesFile, depsFileContents );
+        TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
     }
 }
 
