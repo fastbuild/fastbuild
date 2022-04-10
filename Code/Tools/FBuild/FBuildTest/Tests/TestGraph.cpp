@@ -55,6 +55,7 @@ private:
     void BFFDirtied() const;
     void DBVersionChanged() const;
     void FixupErrorPaths() const;
+    void CyclicDependency() const;
 };
 
 // Register Tests
@@ -75,6 +76,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( BFFDirtied )
     REGISTER_TEST( DBVersionChanged )
     REGISTER_TEST( FixupErrorPaths )
+    REGISTER_TEST( CyclicDependency )
 REGISTER_TESTS_END
 
 // NodeTestHelper
@@ -920,6 +922,51 @@ void TestGraph::FixupErrorPaths() const
     TEST_FIXUP( "warning 55 in line 23 of \"Core/Mem/Mem.h\": some warning text" );
 
     #undef TEST_FIXUP
+}
+
+// CyclicDependency
+//------------------------------------------------------------------------------
+void TestGraph::CyclicDependency() const
+{
+    // Statically defined cyclice dependencies are detected at BFF parse time,
+    // but additional ones can be created at build time, so have to be detected
+    // at build time.
+    //
+    // This test runs a build step that outputs an output into its own source
+    // directory the first time it has been run, so that the second time it is
+    // run there is a cyclic dependency.
+
+    const char * const bffFile = "Tools/FBuild/FBuildTest/Data/TestGraph/CyclicDependency/fbuild.bff";
+    const char * const dbFile = "../tmp/Test/Graph/CyclicDependency/fbuild.db";
+
+    FBuildTestOptions options;
+    options.m_ConfigFile = bffFile;
+
+    // Delete the file if this test has been run before, so that the test is consistent
+    FileIO::FileDelete( "../tmp/Test/Graph/CyclicDependency/file.x" );
+
+    // First run
+    {
+        // Initialization is ok because the problem occurs at build time
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() == true );
+
+        // First build passes, but outputs data into the source dir that is a problem next time
+        TEST_ASSERT( fBuild.Build( "all" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+    }
+
+    // Second run
+    {
+        // Initialize
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
+
+        // Second build detects the bad dependency created by the first invocation
+        // and fails
+        TEST_ASSERT( fBuild.Build( "all" ) == false );
+        TEST_ASSERT( GetRecordedOutput().Find( "Error: Cyclic dependency detected" ) );
+    }
 }
 
 //------------------------------------------------------------------------------

@@ -154,7 +154,7 @@ int32_t Worker::Work()
 {
     PROFILE_SET_THREAD_NAME( "WorkerThread" );
 
-    Worker * worker = reinterpret_cast<Worker *>( userData );
+    Worker * worker = static_cast<Worker *>( userData );
     return worker->WorkThread();
 }
 

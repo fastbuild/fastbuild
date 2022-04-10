@@ -957,12 +957,8 @@ void Node::ReplaceDummyName( const AString & newName )
 
     // are last two tokens numbers?
     int row, column;
-    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
-    if ( ( sscanf( tokens[ numTokens - 1 ].Get(), "%i", &column ) != 1 ) || // TODO:C Consider using sscanf_s
-         ( sscanf( tokens[ numTokens - 2 ].Get(), "%i", &row ) != 1 ) ) // TODO:C Consider using sscanf_s
-    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
-    PRAGMA_DISABLE_POP_MSVC // 4996
+    if ( ( tokens[ numTokens - 1 ].Scan( "%i", &column ) != 1 ) ||
+         ( tokens[ numTokens - 2 ].Scan( "%i", &row ) != 1 ) )
     {
         return; // failed to extract numbers where we expected them
     }

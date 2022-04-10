@@ -35,6 +35,7 @@
             "Manifest",
             "RequestFile",
             "File",
+            "JobResultCompressed",
         };
         static_assert( ( sizeof( msgNames ) / sizeof(const char *) ) == Protocol::NUM_MESSAGES, "msgNames item count doesn't match NUM_MESSAGES" );
 
@@ -101,9 +102,10 @@ bool Protocol::IMessage::Broadcast( TCPConnectionPool * pool ) const
 //------------------------------------------------------------------------------
 Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )
     : Protocol::IMessage( Protocol::MSG_CONNECTION, sizeof( MsgConnection ), false )
-    , m_ProtocolVersion( PROTOCOL_VERSION )
+    , m_ProtocolVersion( PROTOCOL_VERSION_MAJOR )
     , m_NumJobsAvailable( numJobsAvailable )
     , m_Platform(Env::GetPlatform())
+    , m_ProtocolVersionMinor( PROTOCOL_VERSION_MINOR )
 {
     memset( m_Padding2, 0, sizeof( m_Padding2 ) );
     memset( m_HostName, 0, sizeof( m_HostName ) );
@@ -137,8 +139,9 @@ Protocol::MsgNoJobAvailable::MsgNoJobAvailable()
 
 // MsgJob
 //------------------------------------------------------------------------------
-Protocol::MsgJob::MsgJob( uint64_t toolId )
+Protocol::MsgJob::MsgJob( uint64_t toolId, int16_t resultCompressionLevel )
     : Protocol::IMessage( Protocol::MSG_JOB, sizeof( MsgJob ), true )
+    , m_ResultCompressionLevel( resultCompressionLevel )
     , m_ToolId( toolId )
 {
     memset( m_Padding2, 0, sizeof( m_Padding2 ) );
@@ -149,6 +152,13 @@ Protocol::MsgJob::MsgJob( uint64_t toolId )
 //------------------------------------------------------------------------------
 Protocol::MsgJobResult::MsgJobResult()
     : Protocol::IMessage( Protocol::MSG_JOB_RESULT, sizeof( MsgJobResult ), true )
+{
+}
+
+// MsgJobResultCompressed
+//------------------------------------------------------------------------------
+Protocol::MsgJobResultCompressed::MsgJobResultCompressed()
+    : Protocol::IMessage( Protocol::MSG_JOB_RESULT_COMPRESSED, sizeof( MsgJobResult ), true )
 {
 }
 

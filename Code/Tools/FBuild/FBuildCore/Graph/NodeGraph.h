@@ -59,7 +59,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 160 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 161 };
 
     bool IsValid() const
     {
@@ -158,6 +158,11 @@ private:
     static void UpdateBuildStatusRecurse( const Dependencies & dependencies,
                                           uint32_t & nodesBuiltTime,
                                           uint32_t & totalNodeTime );
+
+    static bool CheckForCyclicDependencies( const Node * node );
+    static bool CheckForCyclicDependenciesRecurse( const Node * node, Array< const Node * > & dependencyStack );
+    static bool CheckForCyclicDependenciesRecurse( const Dependencies & dependencies,
+                                                   Array< const Node * > & dependencyStack );
 
     Node * FindNodeInternal( const AString & fullPath ) const;
 

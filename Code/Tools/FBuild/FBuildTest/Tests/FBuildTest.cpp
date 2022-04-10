@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -275,6 +276,7 @@ FBuildTestOptions::FBuildTestOptions()
 {
     // Override defaults
     m_ShowSummary = true; // required to generate stats for node count checks
+    m_Profile = true; // Ensure "-profile" option is exercised
 
     // Ensure any distributed compilation tests use the test port
     m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
@@ -338,6 +340,22 @@ void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString & ou
     Dependencies deps( 1, false );
     deps.EmplaceBack( node );
     m_DependencyGraph->SerializeToText( deps, outBuffer );
+}
+
+// Build
+//------------------------------------------------------------------------------
+/*virtual*/ bool FBuildForTest::Build( Node * nodeToBuild )
+{
+    // Perform build as normal
+    const bool result = FBuild::Build( nodeToBuild );
+
+    // Output -profile info if enabled
+    if ( m_Options.m_Profile )
+    {
+        VERIFY( BuildProfiler::Get().SaveJSON( m_Options, "fbuild_profile.json" ) );
+    }
+
+    return result;
 }
 
 //------------------------------------------------------------------------------

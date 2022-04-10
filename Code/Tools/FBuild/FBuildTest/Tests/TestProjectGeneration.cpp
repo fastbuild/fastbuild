@@ -199,7 +199,7 @@ void TestProjectGeneration::TestFunction() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -210,6 +210,23 @@ void TestProjectGeneration::TestFunction() const
     // do build
     TEST_ASSERT( fBuild.Build( "TestSln" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
+
+    // Ensure node has a non-zero stamp. Although the node is ALWAYS_BUILD it should still
+    // have a valid stamp for downstream dependencies to consume
+    {
+        // Solution
+        Array< const Node * > nodes;
+        fBuild.GetNodesOfType( Node::SLN_NODE, nodes );
+        TEST_ASSERT( nodes.GetSize() == 1 );
+        TEST_ASSERT( nodes[ 0 ]->GetStamp() != 0 );
+    }
+    {
+        // VCXProj
+        Array< const Node * > nodes;
+        fBuild.GetNodesOfType( Node::VCXPROJECT_NODE, nodes );
+        TEST_ASSERT( nodes.GetSize() == 1 );
+        TEST_ASSERT( nodes[ 0 ]->GetStamp() != 0 );
+    }
 
     EnsureFileExists( project );
     EnsureFileExists( solution );
@@ -531,6 +548,8 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( token.Find( "-std:c++17" ) );
             TEST_ASSERT( token.Find( "/std:c++14" ) );
             TEST_ASSERT( token.Find( "/std:latest" ) );
+            TEST_ASSERT( token.Find( "/wd1000" ) );
+            TEST_ASSERT( token.Find( "-wd2000" ) );
             additionalOptionsOk = true;
         }
     }
@@ -609,7 +628,15 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
                 // Check that we separated path from the option name correctly.
                 TEST_ASSERT( ( pathStartPos == token.Get() ) || ( pathStartPos[ -1 ] == '/' ) );
 
-                const char * pathEndPos = token.GetEnd() - ( token.EndsWith( ',' ) ? 1 : 0 );
+                const char * pathEndPos = token.GetEnd();
+                if ( pathEndPos[ -1 ] == ',' )
+                {
+                    --pathEndPos;
+                }
+                if ( pathEndPos[ -1 ] == '"' )
+                {
+                    --pathEndPos;
+                }
                 includes.EmplaceBack( pathStartPos, pathEndPos );
             }
             continue;
@@ -1369,7 +1396,7 @@ void TestProjectGeneration::XCode() const
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/xcodeproject.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete files from previous builds
@@ -1377,6 +1404,16 @@ void TestProjectGeneration::XCode() const
 
     // do build
     TEST_ASSERT( fBuild.Build( "XCodeProj" ) );
+
+    // Ensure node has a non-zero stamp. Although the node is ALWAYS_BUILD it should still
+    // have a valid stamp for downstream dependencies to consume
+    {
+        // XCode Project
+        Array< const Node * > nodes;
+        fBuild.GetNodesOfType( Node::XCODEPROJECT_NODE, nodes );
+        TEST_ASSERT( nodes.GetSize() == 1 );
+        TEST_ASSERT( nodes[ 0 ]->GetStamp() != 0 );
+    }
 
     // Check stats
     //               Seen,  Built,  Type

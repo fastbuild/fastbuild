@@ -1,10 +1,36 @@
 // Windows 10 SDK
 //------------------------------------------------------------------------------
-
-// Root Paths
-//------------------------------------------------------------------------------
-.Windows10_SDKBasePath          = '$_CURRENT_BFF_DIR_$/10'
-.Windows10_SDKVersion           = '10.0.17763.0'
+//
+// Detect Windows 10 SDK
+//
+// We search in the following locations, in order of preference:
+//  1) Vendorized in External (side by side with this bff)
+//  2) Part of a Windows 10 installation (Program Files)
+//
+#if file_exists( "10\bin\10.0.19041.0\x64\RC.exe" )
+    //
+    // Use vendorized toolchain
+    //
+    .Windows10_SDKBasePath        = '$_CURRENT_BFF_DIR_$\10'
+    .Windows10_SDKVersion         = '10.0.19041.0'
+#else
+    //
+    // Use Windows10SDK installation
+    //
+    #if file_exists( "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\RC.exe" )
+        .Windows10_SDKBasePath        = 'C:\Program Files (x86)\Windows Kits\10'
+        .Windows10_SDKVersion         = '10.0.19041.0'
+    #else
+        //
+        // Failed
+        //
+        Print( '-----------------------------------------------------------------------' )
+        Print( '- Unable to auto-detect Windows10SDK - please specify installation manually -' )
+        Print( '-----------------------------------------------------------------------' )
+        .Windows10_SDKBasePath        = .Set_Path_Here    // <-- Set path here
+        .Windows10_SDKVersion         = .Set_Version_Here // <-- Set version here
+    #endif
+#endif
 
 // Defines
 //------------------------------------------------------------------------------

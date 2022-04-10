@@ -869,6 +869,10 @@ void TestBFFParsing::BuiltInVariables() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::CyclicDependency() const
 {
+    // Check that the detection of cyclic dependencies is working
+    // This can only detect static cyclic dependencies - i.e. those defined
+    // in the BFF file. Dynamically discovered cyclic dependencies are
+    // detected at build time and tested elsewhere.
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/cyclic_dependency.bff";
     FBuild fBuild( options );

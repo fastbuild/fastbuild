@@ -547,12 +547,12 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     ASSERT( f.GetSyncState() == ToolManifestFile::SYNCHRONIZING );
 
     // do decompression
-    Compressor c;
-    if ( c.IsValidData( data, dataSize ) == false )
+    if ( Compressor::IsValidData( data, dataSize ) == false )
     {
         FLOG_WARN( "Invalid data received for fileId %u", fileId );
         return false;
     }
+    Compressor c;
     VERIFY( c.Decompress( data ) );
     const void * uncompressedData = c.GetResult();
     const size_t uncompressedDataSize = c.GetResultSize();

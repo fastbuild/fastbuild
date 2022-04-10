@@ -372,7 +372,7 @@ void FBuild::SaveDependencyGraph( IOStream & stream, const char* nodeGraphDBFile
 
 // Build
 //------------------------------------------------------------------------------
-bool FBuild::Build( Node * nodeToBuild )
+/*virtual*/ bool FBuild::Build( Node * nodeToBuild )
 {
     ASSERT( nodeToBuild );
 
@@ -904,6 +904,13 @@ bool FBuild::CacheTrim() const
 
     OUTPUT( "- Cache not configured\n" );
     return false;
+}
+
+// GetNumWorkerConnections
+//------------------------------------------------------------------------------
+uint32_t FBuild::GetNumWorkerConnections() const
+{
+    return (uint32_t)( m_Client ? m_Client->GetNumConnections() : 0 );
 }
 
 //------------------------------------------------------------------------------

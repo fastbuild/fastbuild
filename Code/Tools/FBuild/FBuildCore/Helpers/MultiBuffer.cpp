@@ -5,6 +5,9 @@
 //------------------------------------------------------------------------------
 #include "MultiBuffer.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
+
 // Core
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
@@ -145,6 +148,44 @@ bool MultiBuffer::ExtractFile( size_t index, const AString& fileName ) const
         return false;
     }
 
+    return true;
+}
+
+// Compress
+//------------------------------------------------------------------------------
+void MultiBuffer::Compress( int32_t compressionLevel )
+{
+    ASSERT( m_WriteStream ); // Data needs to be populated
+
+    // Compress the data
+    Compressor c;
+    c.Compress( m_WriteStream->GetData(), m_WriteStream->GetSize(), compressionLevel );
+
+    // Transfer compressed results
+    const size_t compressedSize = c.GetResultSize();
+    m_WriteStream->Replace( c.ReleaseResult(), compressedSize );
+}
+
+// Decompress
+//------------------------------------------------------------------------------
+bool MultiBuffer::Decompress()
+{
+    ASSERT( m_ReadStream ); // Data needs to be populated
+
+    // Decompress
+    if ( Compressor::IsValidData( m_ReadStream->GetData(), m_ReadStream->GetSize() ) == false )
+    {
+        return false;
+    }
+    Compressor c;
+    if ( c.Decompress( m_ReadStream->GetData() ) == false )
+    {
+        return false;
+    }
+
+    // Transfer decompressed results
+    const size_t decompressedSize = c.GetResultSize();
+    m_ReadStream->Replace( c.ReleaseResult(), decompressedSize, true ); // true = own data
     return true;
 }
 

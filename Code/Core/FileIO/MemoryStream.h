@@ -21,6 +21,7 @@ public:
     inline size_t       GetSize() const { return (size_t)( m_End - m_Begin ); }
     void                Reset();
     void *              Release();
+    void                Replace( void * memory, size_t size );
 
     uint64_t            WriteBuffer( IOStream & stream, uint64_t bytesToWrite );
 

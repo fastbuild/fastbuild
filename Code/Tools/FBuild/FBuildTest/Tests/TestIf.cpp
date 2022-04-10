@@ -149,6 +149,19 @@ void TestIf::IfFunctionBool() const
 
     TEST_EXP_TRUE( ".True = true\n .False = false", "true && .True && true || !false || .False" );
 
+    // Non-existent variables
+    TEST_EXP_FAIL( "", ".A == 'String'", "Unknown variable '.A'");
+    TEST_EXP_FAIL( ".Bool = true", ".Bool == .A", "Unknown variable '.A'" );
+
+    // Incorrect RHS operand type
+    TEST_EXP_FAIL( ".Bool = true\n .A = 1234", ".Bool == .A", "Property '.A' must be of type <Bool> (found <Int>)" );
+    TEST_EXP_FAIL( ".Bool = true\n .A = 'xy'", ".Bool == .A", "Property '.A' must be of type <Bool> (found <String>)" );
+    TEST_EXP_FAIL( ".Bool = true\n .A = {''}", ".Bool == .A", "Property '.A' must be of type <Bool> (found <ArrayOfStrings>)" );
+    TEST_EXP_FAIL( ".Bool = true\n .S = []\n .A = {.S}", ".Bool == .A", "Property '.A' must be of type <Bool> (found <ArrayOfStructs>)" );
+    // TODO: Currently produces error #1071 "Unexpected token" instead of #1050
+    TEST_EXP_FAIL( ".Bool = true", ".Bool == 12", "Error #1071" );
+    TEST_EXP_FAIL( ".Bool = true", ".Bool == ''", "Error #1071" );
+
     // Legacy
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_boolean.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
@@ -217,6 +230,17 @@ void TestIf::IfFunctionInt() const
 
 #undef VARS
 
+    // Non-existent variable
+    TEST_EXP_FAIL( ".Int = 1", ".Int == .A", "Unknown variable '.A'" );
+
+    // Incorrect RHS operand type
+    TEST_EXP_FAIL( ".Int = 1\n .A = true", ".Int == .A", "Property '.A' must be of type <Int> (found <Bool>)" );
+    TEST_EXP_FAIL( ".Int = 1\n .A = 'xy'", ".Int == .A", "Property '.A' must be of type <Int> (found <String>)" );
+    TEST_EXP_FAIL( ".Int = 1\n .A = {''}", ".Int == .A", "Property '.A' must be of type <Int> (found <ArrayOfStrings>)" );
+    TEST_EXP_FAIL( ".Int = 1\n .S = []\n .A = {.S}", ".Int == .A", "Property '.A' must be of type <Int> (found <ArrayOfStructs>)" );
+    TEST_EXP_FAIL( ".Int = 1", ".Int == true", "Property '<literal>' must be of type <Int> (found <Bool>)" );
+    TEST_EXP_FAIL( ".Int = 1", ".Int == 'xy'", "Property '<literal>' must be of type <Int> (found <String>)" );
+
     // Legacy
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_int.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
@@ -282,6 +306,18 @@ void TestIf::IfFunctionStringCompare() const
 
 #undef VARS
 
+    // Non-existent variable
+    TEST_EXP_FAIL( ".String = ''", ".String == .A", "Unknown variable '.A'" );
+
+    // Incorrect RHS operand type
+    TEST_EXP_FAIL( ".String = ''\n .A = true", ".String == .A", "Property '.A' must be of type <String> (found <Bool>)" );
+    TEST_EXP_FAIL( ".String = ''\n .A = 1234", ".String == .A", "Property '.A' must be of type <String> (found <Int>)" );
+    TEST_EXP_FAIL( ".String = ''\n .A = {''}", ".String == .A", "Property '.A' must be of type <String> (found <ArrayOfStrings>)" );
+    TEST_EXP_FAIL( ".String = ''\n .S = []\n .A = {.S}", ".String == .A", "Property '.A' must be of type <String> (found <ArrayOfStructs>)" );
+    // TODO: Currently produces error #1071 "Unexpected token" instead of #1050
+    TEST_EXP_FAIL( ".String = ''", ".String == true", "Error #1071" );
+    TEST_EXP_FAIL( ".String = ''", ".String == 1234", "Error #1071" );
+
     // Legacy
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_stringcompare.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
@@ -304,6 +340,19 @@ void TestIf::IfFunctionSet() const
     TEST_EXP_FALSE( VARS, ".D in .ABC" );
 
 #undef VARS
+
+    // Non-existent variable
+    TEST_EXP_FAIL( ".String = ''", ".String in .A", "Unknown variable '.A'" );
+
+    // Incorrect RHS operand type
+    TEST_EXP_FAIL( ".String = ''\n .A = true", ".String in .A", "Property '.A' must be of type <ArrayOfStrings> (found <Bool>)" );
+    TEST_EXP_FAIL( ".String = ''\n .A = 1234", ".String in .A", "Property '.A' must be of type <ArrayOfStrings> (found <Int>)" );
+    TEST_EXP_FAIL( ".String = ''\n .A = 'xy'", ".String in .A", "Property '.A' must be of type <ArrayOfStrings> (found <String>)" );
+    TEST_EXP_FAIL( ".String = ''\n .S = []\n .A = {.S}", ".String in .A", "Property '.A' must be of type <ArrayOfStrings> (found <ArrayOfStructs>)" );
+    // TODO: Currently produces error #1071 "Unexpected token" instead of #1050
+    TEST_EXP_FAIL( ".String = ''", ".String in true", "Error #1071" );
+    TEST_EXP_FAIL( ".String = ''", ".String in 1234", "Error #1071" );
+    TEST_EXP_FAIL( ".String = ''", ".String in 'xy'", "Property '<literal>' must be of type <ArrayOfStrings> (found <String>)" );
 }
 
 void TestIf::IfFunctionBracket() const

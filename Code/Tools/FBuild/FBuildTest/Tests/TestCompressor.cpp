@@ -206,24 +206,24 @@ void TestCompressor::TestHeaderValidity() const
     uint32_t * data = (uint32_t *)buffer.Get();
 
     // uncompressed buffer of 0 length is valid
-    TEST_ASSERT( c.IsValidData( buffer.Get(), 12 ) );
+    TEST_ASSERT( Compressor::IsValidData( buffer.Get(), 12 ) );
 
     // compressed buffer of 0 length is valid
     data[ 0 ] = 1;
-    TEST_ASSERT( c.IsValidData( buffer.Get(), 12 ) );
+    TEST_ASSERT( Compressor::IsValidData( buffer.Get(), 12 ) );
 
     // compressed data
     data[ 1 ] = 32; // uncompressed
     data[ 2 ] = 8;  // compressed
-    TEST_ASSERT( c.IsValidData( buffer.Get(), 20 ) );
+    TEST_ASSERT( Compressor::IsValidData( buffer.Get(), 20 ) );
 
     // INVALID data - data too small
-    TEST_ASSERT( c.IsValidData( buffer.Get(), 4 ) == false );
+    TEST_ASSERT( Compressor::IsValidData( buffer.Get(), 4 ) == false );
 
     // INVALID data - compressed bigger than uncompressed
     data[ 1 ] = 8;  // uncompressed
     data[ 2 ] = 32; // compressed
-    TEST_ASSERT( c.IsValidData( buffer.Get(), 44 ) == false );
+    TEST_ASSERT( Compressor::IsValidData( buffer.Get(), 44 ) == false );
 }
 
 //------------------------------------------------------------------------------

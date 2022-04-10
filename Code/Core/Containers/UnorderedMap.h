@@ -55,7 +55,7 @@ public:
     };
 
     // Check if an item exists in the map
-    [[nodiscard]] KeyValue *    Find( const KEY & key );
+    NODISCARD KeyValue *    Find( const KEY & key );
 
     // Add items to the map
     KeyValue &    Insert( const KEY & key, const VALUE & value );
@@ -148,6 +148,9 @@ typename UnorderedMap< KEY, VALUE >::KeyValue & UnorderedMap< KEY, VALUE >::Inse
     if ( m_Buckets == nullptr )
     {
         m_Buckets = FNEW( KeyValue *[ kTableSize ]() ); // NOTE: zero initialized
+        #if defined( __WINDOWS__ )
+            __assume( m_Buckets ); // VS2015: Work around false-positive for static analysis
+        #endif
     }
 
     // Hash the key

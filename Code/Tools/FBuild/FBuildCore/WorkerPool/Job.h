@@ -35,7 +35,7 @@ public:
     inline const AString & GetCacheName() const { return m_CacheName; }
 
     inline const volatile bool * GetAbortFlagPointer() const { return &m_Abort; }
-    void Cancel();
+    void CancelDueToRemoteRaceWin();
 
     // associate some data with this object, and destroy it when freed
     void    OwnData( void * data, size_t size, bool compressed = false );
@@ -68,10 +68,15 @@ public:
     void Deserialize( IOStream & stream );
 
     void                GetMessagesForLog( AString & buffer ) const;
+    static void         GetMessagesForLog( const Array< AString > & messages, AString & buffer );
     void                GetMessagesForMonitorLog( AString & buffer ) const;
+    static void         GetMessagesForMonitorLog( const Array< AString > & messages, AString & outBuffer );
 
     void                SetRemoteThreadIndex( uint16_t threadIndex )    { m_RemoteThreadIndex = threadIndex; }
     uint16_t            GetRemoteThreadIndex() const                    { return m_RemoteThreadIndex; }
+
+    void                SetResultCompressionLevel( int16_t compressionLevel )   { m_ResultCompressionLevel = compressionLevel; }
+    int16_t             GetResultCompressionLevel() const                       { return m_ResultCompressionLevel; }
 
     enum DistributionState : uint8_t
     {
@@ -115,6 +120,7 @@ private:
     AString             m_CacheName;
     BuildProfilerScope * m_BuildProfilerScope = nullptr;    // Additional context when profiling a build
     ToolManifest *      m_ToolManifest      = nullptr;
+    int16_t             m_ResultCompressionLevel = 0; // Compression level of returned results
 
     Array< AString >    m_Messages;
 

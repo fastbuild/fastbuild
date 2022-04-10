@@ -330,24 +330,36 @@ void XCodeProjectGenerator::WriteFiles()
     for ( const File * file : m_Files )
     {
         // Get just the filename part from the full path
-        const char * shortName = file->m_FileName.Get();
+        const AString & shortName = file->m_FileName;
 
         // work out file type based on extension
         // TODO: What is the definitive list of these?
         const char * lastKnownFileType = "sourcecode.cpp.cpp";
         const char * fileEncoding = " fileEncoding = 4;";
-        if ( file->m_FileName.EndsWithI( ".h" ) )
+        if ( shortName.EndsWithI( ".h" ) )
         {
             lastKnownFileType = "sourcecode.c.h";
         }
-        else if ( file->m_FileName.EndsWithI( ".xcodeproj" ))
+        else if ( shortName.EndsWithI( ".xcodeproj" ))
         {
             lastKnownFileType = "\"wrapper.pb-project\"";
             fileEncoding = "";
         }
 
+        const AString & fullPath = file->m_FullPath;
+
+        AStackString<> processedShortName;
+        AStackString<> processedFullPath;
+        ProcessFileName( shortName, processedShortName );
+        ProcessFileName( fullPath, processedFullPath );
+
         Write( "\t\t1111111111111111%08u /* %s */ = {isa = PBXFileReference;%s lastKnownFileType = %s; name = %s; path = %s; sourceTree = \"<group>\"; };\n",
-                    file->m_SortedIndex, shortName, fileEncoding, lastKnownFileType, shortName, file->m_FullPath.Get() );
+               file->m_SortedIndex,
+               shortName.Get(), // NOTE: Not quoted or escaped
+               fileEncoding,
+               lastKnownFileType,
+               processedShortName.Get(),
+               processedFullPath.Get() );
     }
     Write( "/* End PBXFileReference section */\n" );
 }
@@ -861,8 +873,62 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
             default:
             {
                 outEscapedArgument += c;
+                break;
             }
         }
+    }
+}
+
+// ProcessFileName
+//------------------------------------------------------------------------------
+/*static*/ void XCodeProjectGenerator::ProcessFileName( const AString & fileName,
+                                                        AString & outFileName )
+{
+    // Filenames are quoted when certain characters are present. Additionally,
+    // certain characters are escaped.
+    // The rules for this appear to be different to other strings.
+
+    bool needsQuotes = false;
+    for ( char c : fileName )
+    {
+        // These characters are not escaped and don't require the string be quoted
+        if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||
+             ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
+             ( ( c >= '0' ) && ( c <= '9' ) ) ||
+             ( c == '$' ) ||
+             ( c == '_' ) ||
+             ( c == '.' ) ||
+             ( c == '/' ) )
+        {
+            outFileName += c;
+            continue;
+        }
+
+        // Some characters must be escaped
+        if ( ( c == '\\' ) || ( c == '"' ) )
+        {
+            // Escape
+            outFileName += '\\';
+            outFileName += c;
+
+            // When there is an escaped character, the string is quoted
+            needsQuotes = true;
+            continue;
+        }
+
+        // All other characters require the string be quoted, but are not escaped
+        needsQuotes = true;
+        outFileName += c;
+    }
+
+    // Surround with quotes if needed
+    if ( needsQuotes )
+    {
+        AStackString<> tmp;
+        tmp += '\"';
+        tmp += outFileName;
+        tmp += '\"';
+        outFileName = tmp;
     }
 }
 

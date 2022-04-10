@@ -29,7 +29,10 @@ class TCPConnectionPool;
 namespace Protocol
 {
     enum : uint16_t { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
-    enum { PROTOCOL_VERSION = 22 };
+
+    // Protocol Version
+    enum : uint32_t { PROTOCOL_VERSION_MAJOR = 22 };    // Changes here make workers incompatible
+    enum : uint8_t  { PROTOCOL_VERSION_MINOR = 1 };     // Changes must be forwards and backwards compatible
 
     enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
 
@@ -44,13 +47,15 @@ namespace Protocol
         MSG_NO_JOB_AVAILABLE    = 4, // Server <- Client : Respond that no jobs are available
         MSG_JOB                 = 5, // Server <- Client : Respond with a job to do
 
-        MSG_JOB_RESULT          = 6, // Server -> Client : Return completed job
+        MSG_JOB_RESULT          = 6, // Server -> Client : Return completed job (uncompressed)
 
         MSG_REQUEST_MANIFEST    = 7, // Server -> Client : Ask client for the manifest of tools required for a job
         MSG_MANIFEST            = 8, // Server <- Client : Respond with manifest details
 
         MSG_REQUEST_FILE        = 9, // Server -> Client : Ask client for a file
         MSG_FILE                = 10,// Server <- Client : Send a requested file
+
+        MSG_JOB_RESULT_COMPRESSED   = 11, // Server -> Client : Return completed job (compressed)
 
         NUM_MESSAGES            // leave last
     };
@@ -98,11 +103,13 @@ namespace Protocol
         inline uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
         inline uint8_t  GetPlatform() const { return m_Platform; }
         const char * GetHostName() const { return m_HostName; }
+        uint8_t         GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
     private:
         uint32_t        m_ProtocolVersion;
         uint32_t        m_NumJobsAvailable;
         uint8_t         m_Platform;
-        uint8_t         m_Padding2[3];
+        uint8_t         m_ProtocolVersionMinor;
+        uint8_t         m_Padding2[2];
         char            m_HostName[ 64 ];
     };
     static_assert( sizeof( MsgConnection ) == sizeof( IMessage ) + 76, "MsgConnection message has incorrect size" );
@@ -143,11 +150,13 @@ namespace Protocol
     class MsgJob : public IMessage
     {
     public:
-        explicit MsgJob( uint64_t toolId );
+        explicit MsgJob( uint64_t toolId, int16_t resultCompressionLevel );
 
         inline uint64_t GetToolId() const { return m_ToolId; }
+        int16_t         GetResultCompressionLevel() const { return m_ResultCompressionLevel; }
     private:
-        char     m_Padding2[ 4 ];
+        int16_t     m_ResultCompressionLevel;
+        char        m_Padding2[ 2 ];
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgJob ) == sizeof( IMessage ) + 4/*alignment*/ + 8, "MsgJob message has incorrect size" );
@@ -160,6 +169,15 @@ namespace Protocol
         MsgJobResult();
     };
     static_assert( sizeof( MsgJobResult ) == sizeof( IMessage ), "MsgJobResult message has incorrect size" );
+
+    // MsgJobResultCompressed
+    //------------------------------------------------------------------------------
+    class MsgJobResultCompressed : public IMessage
+    {
+    public:
+        MsgJobResultCompressed();
+    };
+    static_assert( sizeof( MsgJobResultCompressed ) == sizeof( IMessage ), "MsgJobResultCompressed message has incorrect size" );
 
     // MsgRequestManifest
     //------------------------------------------------------------------------------

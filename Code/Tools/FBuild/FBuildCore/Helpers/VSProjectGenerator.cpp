@@ -293,11 +293,20 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         {
             WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
 
-            WritePGItem( "NMakeBuildCommandLine",           cIt->m_ProjectBuildCommand );
-            WritePGItem( "NMakeReBuildCommandLine",         cIt->m_ProjectRebuildCommand );
-            WritePGItem( "NMakeCleanCommandLine",           cIt->m_ProjectCleanCommand );
-            WritePGItem( "NMakeOutput",                     cIt->m_Output );
+            if ( cIt->m_Keyword == "Linux" )
+            {
+                WritePGItem( "BuildCommandLine",                cIt->m_ProjectBuildCommand );
+                WritePGItem( "ReBuildCommandLine",              cIt->m_ProjectRebuildCommand );
+                WritePGItem( "CleanCommandLine",                cIt->m_ProjectCleanCommand );
+            }
+            else
+            {
+                WritePGItem( "NMakeBuildCommandLine",           cIt->m_ProjectBuildCommand );
+                WritePGItem( "NMakeReBuildCommandLine",         cIt->m_ProjectRebuildCommand );
+                WritePGItem( "NMakeCleanCommandLine",           cIt->m_ProjectCleanCommand );
+            }
 
+            WritePGItem( "NMakeOutput",                     cIt->m_Output );
             const ObjectListNode * oln = nullptr;
             if ( cIt->m_PreprocessorDefinitions.IsEmpty() || cIt->m_IncludeSearchPath.IsEmpty() )
             {

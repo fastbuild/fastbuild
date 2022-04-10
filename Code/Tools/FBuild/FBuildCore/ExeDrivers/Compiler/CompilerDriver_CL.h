@@ -42,6 +42,12 @@ protected:
     virtual void AddAdditionalArgs_Common( bool isLocal,
                                            Args & outFullArgs ) const override;
 
+    // Locally modify args before passing to remote worker
+    virtual bool ProcessArg_PreparePreprocessedForRemote( const AString & token,
+                                                          size_t & index,
+                                                          const AString & nextToken,
+                                                          Args & outFullArgs ) const override;
+
     static bool IsCompilerArg_MSVC( const AString & token, const char * arg );
     static bool IsStartOfCompilerArg_MSVC( const AString & token, const char * arg );
     static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor,

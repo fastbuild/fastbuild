@@ -55,6 +55,19 @@ void * MemoryStream::Release()
     return mem;
 }
 
+// Replace
+//------------------------------------------------------------------------------
+void MemoryStream::Replace( void * memory, size_t size )
+{
+    // Free existing memory if we have any
+    FREE( m_Begin );
+
+    // Own new memory
+    m_Begin = static_cast<char *>(memory);
+    m_End = m_Begin + size;
+    m_MaxEnd = m_End;
+}
+
 // WriteBuffer
 //------------------------------------------------------------------------------
 uint64_t MemoryStream::WriteBuffer( IOStream & stream, uint64_t bytesToWrite )

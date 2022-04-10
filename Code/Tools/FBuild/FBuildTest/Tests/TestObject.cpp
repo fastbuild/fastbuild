@@ -36,6 +36,7 @@ private:
     void SourceMapping() const;
     void ClangExplicitLanguageType() const;
     void ClangDependencyArgs() const;
+    void CLDependencyArgs() const;
 };
 
 // Register Tests
@@ -49,6 +50,9 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( SourceMapping )
     REGISTER_TEST( ClangExplicitLanguageType )
     REGISTER_TEST( ClangDependencyArgs )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( CLDependencyArgs )
+    #endif
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -512,14 +516,15 @@ void TestObject::ClangExplicitLanguageType() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
 
         // Force remote
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
         options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
         // start a client to emulate the other end
         Server s( 1 );
@@ -563,15 +568,113 @@ void TestObject::ClangDependencyArgs() const
         options.m_AllowLocalRace = false;
         options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
         // start a client to emulate the other end
         Server s( 1 );
         s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ClangDependencyArgs" ) );
+    }
+}
+
+// CLDependencyArgs
+//------------------------------------------------------------------------------
+void TestObject::CLDependencyArgs() const
+{
+    // Ensure explicit dependency options are removed from the second pass of
+    // compilation. Some integrations (like Unreal) use these commands and process
+    // the output.
+    const char * const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/CLDependencyArgs/fbuild.bff";
+    const char * const sourceDependenciesFile = "../tmp/Test/Object/CLDependencyArgs/SubDir/file.cpp.json";
+    const char * const sourceDependenciesPath = "../tmp/Test/Object/CLDependencyArgs/SubDir/";
+
+    // Cleanup from old test runs
+    EnsureFileDoesNotExist( sourceDependenciesFile );
+    EnsureDirDoesNotExist( sourceDependenciesPath );
+
+    // Local
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+        FBuild fBuild(options);
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "CLDependencyArgs" ) );
+
+        // Make sure the deps file exists and is correct (including creation of subdir)
+        AString depsFileContents;
+        LoadFileContentsAsString( sourceDependenciesFile, depsFileContents );
+        TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
+    }
+
+    // Cleanup between tests
+    EnsureFileDoesNotExist( sourceDependenciesFile );
+    EnsureDirDoesNotExist( sourceDependenciesPath );
+
+    // Distributed
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+
+        // Force remote
+        options.m_AllowDistributed = true;
+        options.m_NoLocalConsumptionOfRemoteJobs = true;
+        options.m_AllowLocalRace = false;
+        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // start a client to emulate the other end
+        Server s( 1 );
+        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "CLDependencyArgs" ) );
+
+        // Make sure the deps file exists and is correct
+        //  - has reference to original .cpp file
+        //  - is ignored remotely (arg is stripped by CL driver from second pass)
+        AString depsFileContents;
+        LoadFileContentsAsString( sourceDependenciesFile, depsFileContents );
+        TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
+    }
+
+    // Cleanup between tests
+    EnsureFileDoesNotExist( sourceDependenciesFile );
+    EnsureDirDoesNotExist( sourceDependenciesPath );
+
+    // Distributed - Race
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = configFile;
+
+        // Force remote
+        options.m_AllowDistributed = true;
+        options.m_NoLocalConsumptionOfRemoteJobs = false;
+        options.m_AllowLocalRace = true;
+        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( "ClangDependencyArgs" ) );
+        TEST_ASSERT( fBuild.Build( "CLDependencyArgs" ) );
+
+        // Make sure the deps file exists and is correct
+        //  - has reference to original .cpp file
+        //  - is not overwritten by second pass operating on preprocessed output
+        //    (i.e. arg is stripped correctly by CL driver from second pass)
+        AString depsFileContents;
+        LoadFileContentsAsString( sourceDependenciesFile, depsFileContents );
+        TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
     }
 }
 

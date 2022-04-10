@@ -57,6 +57,12 @@
     #include <sys/time.h>
 #endif
 
+// Static Data
+//------------------------------------------------------------------------------
+#if defined( DEBUG )
+    /*static*/ bool ObjectNode::sFakeSystemFailure = false;
+#endif
+
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
@@ -672,7 +678,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool useCache = ShouldUseCache();
         if ( m_Stamp && useCache )
         {
-            WriteToCache( job );
+            WriteToCache_FromDisk( job );
         }
     }
 
@@ -1353,33 +1359,22 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         {
             pchKey = xxHash::Calc64( cacheData, cacheDataSize );
         }
-
+        
         const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
 
+        MultiBuffer buffer( cacheData, cacheDataSize );
+
         // do decompression
-        Compressor c;
-        if ( c.IsValidData( cacheData, cacheDataSize ) == false )
+        if ( buffer.Decompress() == false )
         {
-            FLOG_WARN( "Cache returned invalid data (header)\n"
+            FLOG_WARN( "Cache returned invalid data\n"
                        " - File: '%s'\n"
                        " - Key : %s\n",
                        m_Name.Get(), cacheFileName.Get() );
             return false;
         }
-        if ( c.Decompress( cacheData ) == false )
-        {
-            FLOG_WARN( "Cache returned invalid data (payload)\n"
-                       " - File: '%s'\n"
-                       " - Key : %s\n",
-                       m_Name.Get(), cacheFileName.Get() );
-            return false;
-        }
-        const void * data = c.GetResult();
-        const size_t dataSize = c.GetResultSize();
-
+        const size_t uncompressedDataSize = buffer.GetDataSize();
         const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
-
-        MultiBuffer buffer( data, dataSize );
 
         Array< AString > fileNames( 4, false );
         fileNames.Append( m_Name );
@@ -1425,7 +1420,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, uncompressedDataSize, cacheFileName.Get() );
             }
             FLOG_OUTPUT( output );
         }
@@ -1455,9 +1450,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
     return false;
 }
 
-// WriteToCache
+// WriteToCache_FromDisk
 //------------------------------------------------------------------------------
-void ObjectNode::WriteToCache( Job * job )
+void ObjectNode::WriteToCache_FromDisk( Job * job )
 {
     if (FBuild::Get().GetOptions().m_UseCacheWrite == false)
     {
@@ -1466,71 +1461,116 @@ void ObjectNode::WriteToCache( Job * job )
 
     PROFILE_FUNCTION;
 
-    const AString & cacheFileName = GetCacheName(job);
-    ASSERT(!cacheFileName.IsEmpty());
-
-    Timer t;
-
-    ICache * cache = FBuild::Get().GetCache();
-    ASSERT( cache );
-
+    // Get list of files
     Array< AString > fileNames( 4, false );
     fileNames.Append( m_Name );
-
     GetExtraCacheFilePaths( job, fileNames );
 
+    // Load files
     MultiBuffer buffer;
-    if ( buffer.CreateFromFiles( fileNames ) )
+    if ( buffer.CreateFromFiles( fileNames ) == false )
     {
-        // try to compress
-        const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
-        Compressor c;
-        c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize(), FBuild::Get().GetOptions().m_CacheCompressionLevel );
-        const void * data = c.GetResult();
-        const size_t dataSize = c.GetResultSize();
-        const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
-
-        const uint32_t startPublish( stopCompress );
-        if ( cache->Publish( cacheFileName, data, dataSize ) )
+        // Output
+        if ( FBuild::Get().GetOptions().m_CacheVerbose )
         {
-            // cache store complete
-            const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
-
-            SetStatFlag( Node::STATS_CACHE_STORE );
-
-            // Dependent objects need to know the PCH key to be able to pull from the cache
-            if ( IsCreatingPCH() && IsMSVC() )
-            {
-                m_PCHCacheKey = xxHash::Calc64( data, dataSize );
-            }
-
-            const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
-            AddCachingTime( cachingTime );
-
-            // Output
-            if ( FBuild::Get().GetOptions().m_CacheVerbose )
-            {
-                AStackString<> output;
-                output.Format( "Obj: %s\n"
-                                " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
-                                GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
-                if ( m_PCHCacheKey != 0 )
-                {
-                    output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
-                }
-                FLOG_OUTPUT( output );
-            }
-
-            return;
+            FLOG_OUTPUT( "Obj: %s\n"
+                            " - Cache Store Fail: '%s' (local IO problem)\n",
+                            GetName().Get(), GetCacheName( job ).Get() );
         }
+        return;
     }
 
-    // Output
-    if ( FBuild::Get().GetOptions().m_CacheVerbose )
+    WriteToCache_FromUncompressedData( job,
+                                       buffer.GetData(),
+                                       buffer.GetDataSize() );
+}
+
+// WriteToCache_FromUncompressedData
+//------------------------------------------------------------------------------
+void ObjectNode::WriteToCache_FromUncompressedData( Job * job,
+                                                    const void * uncompressedData,
+                                                    uint64_t uncompressedDataSize )
+{
+    if ( FBuild::Get().GetOptions().m_UseCacheWrite == false )
     {
-        FLOG_OUTPUT( "Obj: %s\n"
-                     " - Cache Store Fail: %u ms '%s'\n",
-                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        return;
+    }
+
+    // Compress
+    Timer t;
+    const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
+    Compressor c;
+    c.Compress(uncompressedData, uncompressedDataSize, FBuild::Get().GetOptions().m_CacheCompressionLevel );
+    const uint32_t compressionTime = ( (uint32_t)t.GetElapsedMS() - startCompress );
+
+    WriteToCache_FromCompressedData( job,
+                                     c.GetResult(),
+                                     static_cast<uint64_t>( c.GetResultSize() ),
+                                     compressionTime );
+}
+
+// WriteToCache_FromCompressedData
+//------------------------------------------------------------------------------
+void ObjectNode::WriteToCache_FromCompressedData( Job * job,
+                                                  const void * compressedData,
+                                                  uint64_t compressedDataSize,
+                                                  uint32_t compressionTimeMS )
+{
+    if ( FBuild::Get().GetOptions().m_UseCacheWrite == false )
+    {
+        return;
+    }
+
+    // Ensure data is compressed
+    ASSERT( Compressor::IsValidData( compressedData, compressedDataSize ) );
+
+    const AString & cacheFileName = GetCacheName(job);
+
+    // Commit to cache
+    Timer t;
+    const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
+    if ( FBuild::Get().GetCache()->Publish( cacheFileName, compressedData, compressedDataSize ) )
+    {
+        // cache store complete
+        const uint32_t publishTime = ( (uint32_t)t.GetElapsedMS() - startPublish );
+
+        SetStatFlag( Node::STATS_CACHE_STORE );
+
+        // Dependent objects need to know the PCH key to be able to pull from the cache
+        if ( IsCreatingPCH() && IsMSVC() )
+        {
+            m_PCHCacheKey = xxHash::Calc64( compressedData, compressedDataSize );
+        }
+
+        const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
+        AddCachingTime( cachingTime );
+
+        // Output
+        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        {
+            const uint64_t uncompressedDataSize = Compressor::GetUncompressedSize( compressedData, compressedDataSize );
+            AStackString<> output;
+            output.Format( "Obj: %s\n"
+                           " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %" PRIu64 " - Uncompressed: %" PRIu64 ") '%s'\n",
+                           GetName().Get(), cachingTime, publishTime, compressionTimeMS, compressedDataSize, uncompressedDataSize, cacheFileName.Get() );
+            if ( m_PCHCacheKey != 0 )
+            {
+                output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
+            }
+            FLOG_OUTPUT( output );
+        }
+    }
+    else
+    {
+        // Cache store failed
+
+        // Output
+        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        {
+            FLOG_OUTPUT( "Obj: %s\n"
+                         " - Cache Store Fail: %u ms '%s'\n",
+                         GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        }
     }
 }
 
@@ -2225,6 +2265,18 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out, m_Err );
 
+#if defined( DEBUG )
+    // Fake system failure for tests
+    if ( sFakeSystemFailure && ( job->IsLocal() == false ) )
+    {
+        ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
+        sFakeSystemFailure = false; // Only fail once
+        m_Result = 1;
+        job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
+        job->OnSystemError();
+    }
+#endif
+
     if ( m_HandleOutput )
     {
         if ( job->IsLocal() && FBuild::Get().GetOptions().m_ShowCommandOutput )
@@ -2349,10 +2401,12 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 return;
             }
 
-            // Windows temp directories can have problems failing to open temp files
-            // resulting in 'C1083: Cannot open compiler intermediate file:'
-            // It uses the same C1083 error as a mising include C1083, but since we flatten
-            // includes on the host this should never occur remotely other than in this context.
+            // If the compiler can fail with C1083 on the remote host for at least the following
+            // reasons:
+            //     a) Failed to create a temp file (C1083: Cannot open compiler intermediate file)
+            //          - This was seen when the tmp dir was full (tmp file creation failed)
+            //     b) Failed to write an extra output file (C1083: Cannot open compiler generated file)
+            //          - This was seen when using /sourceDependencies and the output folder didn't exist
             if ( stdOut.Find( "C1083" ) )
             {
                 job->OnSystemError();

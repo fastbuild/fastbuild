@@ -1,6 +1,41 @@
 // Clang 11.x.x
 //------------------------------------------------------------------------------
-.Clang11_BasePath     = '$_CURRENT_BFF_DIR_$/11.0.0'
+//
+// Detect Clang
+//
+// We search in the following locations, in order of preference:
+//  1) Vendorized in External (side by side with this bff)
+//  2) Part of a Visual Studio installation (Program Files)
+//  3) Default install location
+//
+#if file_exists( "$_CURRENT_BFF_DIR_$/11.0.0/bin/clang-cl.exe" )
+    // Vendorized
+    .Clang11_BasePath   = '$_CURRENT_BFF_DIR_$/11.0.0'
+    .Clang11_Version    = '11.0.0'
+#else
+    #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64/bin/clang-cl.exe" )
+        // Installed with VS2019
+        .Clang11_BasePath = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64'
+        .Clang11_Version    = '11.x.x'
+    #else
+        #if file_exists( "C:/Program Files/LLVM/bin/clang-cl.exe" )
+            // Default Install
+            .Clang11_BasePath = 'C:/Program Files/LLVM'
+            .Clang11_Version    = '11.x.x'
+        #else
+            //
+            // Failed
+            //
+            Print( '----------------------------------------------------------------------' )
+            Print( '- Unable to auto-detect Clang - please specify installation manually -' )
+            Print( '----------------------------------------------------------------------' )
+            .Clang11_BasePath = .Set_Path_Here    // <-- Set path here
+        #endif
+    #endif
+#endif
+
+// Print details of used version. TODO:C Move to Clang.bff
+Print( 'Using Clang $Clang11_Version$ from $Clang11_BasePath$' )
 
 // Compiler
 //------------------------------------------------------------------------------
@@ -8,8 +43,10 @@ Compiler( 'Compiler-Clang11' )
 {
     .Root                           = '$Clang11_BasePath$'
     .ExtraFiles                     = {
+                                        '$Root$/bin/concrt140.dll'
                                         '$Root$/bin/msvcp140.dll'
                                         '$Root$/bin/vcruntime140.dll'
+                                        '$Root$/bin/vcruntime140_1.dll'
                                       }
     .Executable                     = '$Root$\bin\clang-cl.exe'
 
@@ -80,6 +117,7 @@ Compiler( 'Compiler-Clang11-NonCL' )
 
                                     // Include paths
                                     + ' -I"./"'
+                                    + .VSIncludePaths_ClangCl
 
                                     // x64
                                     + ' -m64'

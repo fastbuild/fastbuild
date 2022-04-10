@@ -18,6 +18,7 @@ class Args;
 class CompilerDriverBase;
 class ConstMemoryStream;
 class Function;
+class MultiBuffer;
 class NodeGraph;
 class NodeProxy;
 class ObjectNode;
@@ -155,6 +156,11 @@ public:
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
 
+#if defined( DEBUG )
+    // Fake system failure for tests
+    static void SetFakeSystemFailure( bool enabled ) { sFakeSystemFailure = enabled; }
+#endif
+
 private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
@@ -177,7 +183,14 @@ private:
 
     const AString & GetCacheName( Job * job ) const;
     bool RetrieveFromCache( Job * job );
-    void WriteToCache( Job * job );
+    void WriteToCache_FromDisk( Job * job );
+    void WriteToCache_FromUncompressedData( Job * job,
+                                            const void * uncompressedData,
+                                            uint64_t uncompressedDataSize );
+    void WriteToCache_FromCompressedData( Job * job,
+                                          const void * compressedData,
+                                          uint64_t compressedDataSize,
+                                          uint32_t compressionTimeMS );
     void GetExtraCacheFilePaths( const Job * job, Array< AString > & outFileNames ) const;
 
     void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
@@ -270,6 +283,11 @@ private:
     // Not serialized
     Array< AString >    m_Includes;
     bool                m_Remote                            = false;
+
+#if defined( DEBUG )
+    // Fake system failure for tests
+    static bool sFakeSystemFailure;
+#endif
 };
 
 //------------------------------------------------------------------------------

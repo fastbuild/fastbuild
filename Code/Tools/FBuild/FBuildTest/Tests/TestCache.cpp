@@ -37,6 +37,7 @@ private:
     void LightCache_CyclicInclude() const;
     void LightCache_ImportDirective() const;
     void LightCache_ForceInclude() const;
+    void LightCache_SourceDependencies() const;
 
     // MSVC Static Analysis tests
     const char* const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -75,6 +76,7 @@ REGISTER_TESTS_BEGIN( TestCache )
         REGISTER_TEST( LightCache_CyclicInclude )
         REGISTER_TEST( LightCache_ImportDirective )
         REGISTER_TEST( LightCache_ForceInclude )
+        REGISTER_TEST( LightCache_SourceDependencies )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
 
@@ -844,6 +846,32 @@ void TestCache::LightCache_ForceInclude() const
     TEST_ASSERT( objStats.m_NumLightCache == 1 );
 
     CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
+}
+
+// LightCache_SourceDependencies
+//------------------------------------------------------------------------------
+void TestCache::LightCache_SourceDependencies() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheWrite = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_SourceDependencies/fbuild.bff";
+
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+    // Ensure cache we fell back to normal caching
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumCacheStores == 1 );
+
+    // Ensure we detected that we could not use the LightCache
+    TEST_ASSERT( objStats.m_NumLightCache == 0 );
+
+    // Check for expected error in output (from -cacheverbose)
+    TEST_ASSERT( GetRecordedOutput().Find( "LightCache is incompatible with -sourceDependencies" ) );
 }
 
 // Analyze_MSVC_WarningsOnly_Write

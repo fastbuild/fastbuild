@@ -23,6 +23,14 @@ class TCPConnectionPool;
     typedef int TCPSocket;
 #endif
 
+// Constants
+//------------------------------------------------------------------------------
+namespace 
+{
+    static const uint32_t kDefaultConnectionTimeoutMS   = ( 2 * 1000 );
+    static const uint32_t kDefaultSendTimeoutMS         = ( 10 * 60 * 1000 );
+}
+
 // ConnectionInfo - one connection in the pool
 //------------------------------------------------------------------------------
 class ConnectionInfo
@@ -67,8 +75,14 @@ public:
     // manage connections
     bool Listen( uint16_t port );
     void StopListening();
-    const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
-    const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( const AString & host,
+                                    uint16_t port,
+                                    uint32_t timeout = kDefaultConnectionTimeoutMS,
+                                    void * userData = nullptr );
+    const ConnectionInfo * Connect( uint32_t hostIP,
+                                    uint16_t port,
+                                    uint32_t timeout = kDefaultConnectionTimeoutMS,
+                                    void * userData = nullptr );
     void Disconnect( const ConnectionInfo * ci );
     void SetShuttingDown();
 
@@ -76,8 +90,16 @@ public:
     size_t GetNumConnections() const;
 
     // transmit data
-    bool Send( const ConnectionInfo * connection, const void * data, size_t size, uint32_t timeoutMS = 30000 );
-    bool Send( const ConnectionInfo * connection, const void * data, size_t size, const void * payloadData, size_t payloadSize, uint32_t timeoutMS = 30000 );
+    bool Send( const ConnectionInfo * connection,
+               const void * data,
+               size_t size,
+               uint32_t timeoutMS = kDefaultSendTimeoutMS );
+    bool Send( const ConnectionInfo * connection,
+               const void * data,
+               size_t size,
+               const void * payloadData,
+               size_t payloadSize,
+               uint32_t timeoutMS = kDefaultSendTimeoutMS );
     bool Broadcast( const void * data, size_t size );
 
     static void GetAddressAsString( uint32_t addr, AString & address );

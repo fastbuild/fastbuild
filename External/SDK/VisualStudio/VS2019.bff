@@ -8,12 +8,13 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //
-#if file_exists( "2019/Community/VC/Tools/MSVC/14.28.29333/bin/Hostx64/x64/cl.exe" )
+#if file_exists( "2019/Community/VC/Tools/MSVC/14.29.30037/bin/Hostx64/x64/cl.exe" )
     //
     // Use vendorized toolchain
     //
     .VS2019_BasePath        = '$_CURRENT_BFF_DIR_$/2019/Community/VC'
-    .VS2019_Version         = '14.28.29333'
+    .VS2019_Version         = '14.29.30037'
+    .VS2019_MSC_VER         = '1929'
 #else
     //
     // Use environment variable if available (VS Command Prompt)
@@ -23,22 +24,48 @@
         #import VCToolsVersion
         .VS2019_BasePath        = .VCINSTALLDIR
         .VS2019_Version         = .VCToolsVersion
+        .VS2019_MSC_VER         = '1929' // NOTE: This cannot be detected and may be incorrect
     #else
         //
         // Use Visual Studio installation
         //
-        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.28.29333/bin/Hostx64/x64/cl.exe" )
+        #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe" )
+            // v16.11.6 or v16.11.7
             .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC'
-            .VS2019_Version         = '14.28.29333'
+            .VS2019_Version         = '14.29.30133'
+            .VS2019_MSC_VER         = '1929'
         #else
-            //
-            // Failed
-            //
-            Print( '-----------------------------------------------------------------------' )
-            Print( '- Unable to auto-detect VS2019 - please specify installation manually -' )
-            Print( '-----------------------------------------------------------------------' )
-            .VS2019_BasePath        = .Set_Path_Here    // <-- Set path here
-            .VS2019_Version         = .Set_Version_Here // <-- Set version here
+            #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30037/bin/Hostx64/x64/cl.exe" )
+                .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC'
+                .VS2019_Version         = '14.29.30037'
+                .VS2019_MSC_VER         = '1929'
+            #else
+                //
+                // Use Visual Studio 2019 Enterprise installation (used by GitHub Actions)
+                //
+                #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe" )
+                    // v16.11.6 or v16.11.7
+                    .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC'
+                    .VS2019_Version         = '14.29.30133'
+                    .VS2019_MSC_VER         = '1929'
+                #else
+                    #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.29.30037/bin/Hostx64/x64/cl.exe" )
+                        .VS2019_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC'
+                        .VS2019_Version         = '14.29.30037'
+                        .VS2019_MSC_VER         = '1929'
+                    #else
+                        //
+                        // Failed
+                        //
+                        Print( '-----------------------------------------------------------------------' )
+                        Print( '- Unable to auto-detect VS2019 - please specify installation manually -' )
+                        Print( '-----------------------------------------------------------------------' )
+                        .VS2019_BasePath        = .Set_Path_Here    // <-- Set path here
+                        .VS2019_Version         = .Set_Version_Here // <-- Set version here
+                        .VS2019_MSC_VER         = .Set_MSC_VER_Here // <-- Set MSC_VER here
+                    #endif
+                #endif
+            #endif
         #endif
     #endif
 #endif
@@ -81,6 +108,7 @@ Compiler( 'Compiler-VS2019-x64' )
 
     // Paths
     .VSIncludePaths                 = ' -I"$VS2019_ToolchainPath$/include/"'
+    .VSIncludePaths_ClangCl         = ' /imsvc "$VS2019_ToolchainPath$/include/"'
     .VSLibPaths                     = ' /LIBPATH:"$VS2019_ToolchainPath$/lib/x64"'
     .VCPackagesPath                 = '$VS2019_BasePath$/../Common7/IDE/VC/vcpackages'
 
@@ -155,7 +183,6 @@ Compiler( 'Compiler-VS2019-x64' )
 
 // _MSC_VER
 //------------------------------------------------------------------------------
-.VS2019_MSC_VER                     = '1928'
 
 // VisualStudioSettings
 //------------------------------------------------------------------------------
@@ -185,7 +212,6 @@ Compiler( 'Compiler-VS2019-x64' )
                                     + ' /wd26438' // Avoid 'goto' (es.76).
                                     + ' /wd26451' // Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
                                     + ' /wd26460' // The reference argument '%s' for function '%s' can be marked as const (con.3).
-                                    + ' /wd26471' // Don't use reinterpret_cast. A cast from void* can use static_cast (type.1).
                                     + ' /wd26474' // Don't cast between pointer types when the conversion could be implicit (type.1).
                                     + ' /wd26475' // Do not use function style C-casts (es.49).
                                     + ' /wd26476' // Expression/symbol '%s' uses a naked union '%s' with multiple type pointers: Use variant instead (type.7).
@@ -212,7 +238,9 @@ Compiler( 'Compiler-VS2019-x64' )
                                     + ' /wd26446' // Prefer to use gsl::at() instead of unchecked subscript operator (bounds.4).
                                     + ' /wd26447' // The function is declared 'noexcept' but calls function '%s' which may throw exceptions (f.6).
                                     + ' /wd26455' // Default constructor may not throw. Declare it 'noexcept' (f.6).
+                                    + ' /wd26457' // (void) should not be used to ignore return values, use 'std::ignore =' instead (es.48).
                                     + ' /wd26461' // The pointer argument '%s' for function '%s' can be marked as a pointer to const (con.3).
+                                    + ' /wd26467' // Converting from floating point to unsigned integral types results in non-portable code if the double/float has a negative value. Use gsl::narrow_cast or gsl::narrow instead to guard against undefined behavior and potential data loss (es.46).
                                     + ' /wd26472' // Don't use a static_cast for arithmetic conversions. Use brace initialization, gsl::narrow_cast or gsl::narrow (type.1).
                                     + ' /wd26473' // Don't cast between pointer types where the source type and the target type are the same (type.1).
                                     + ' /wd26481' // Don't use pointer arithmetic. Use span instead (bounds.1).

@@ -116,6 +116,9 @@ bool IsDebuggerAttached()
         }
         return true; // break execution
     #else
+        (void)message;
+        (void)file;
+        (void)line;
         return true; // break execution
     #endif
 }
@@ -142,6 +145,10 @@ bool IsDebuggerAttached()
 
         return Failure( buffer.Get(), file, line );
     #else
+        (void)message;
+        (void)file;
+        (void)line;
+        (void)fmtString;
         return true; // break execution
     #endif
 }

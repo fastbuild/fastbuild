@@ -53,6 +53,13 @@ typedef signed int          int32_t;
     #define THREAD_LOCAL __thread
 #endif
 
+// [[nodiscard]]
+#if defined( _MSC_VER ) && ( _MSC_VER < 1910 ) // Not supported prior to VS2017
+    #define NODISCARD
+#else
+    #define NODISCARD [[nodiscard]]
+#endif
+
 #if defined( __WINDOWS__ )
     #define NO_INLINE __declspec( noinline )
     #define FORCE_INLINE __forceinline
@@ -114,8 +121,10 @@ typedef signed int          int32_t;
 
 #if defined( __GNUC__ ) || defined( __clang__ ) // GCC or Clang
     #define FORMAT_STRING( fmt, args ) __attribute__((format(printf, fmt, args)))
+    #define SCAN_STRING( fmt, args ) __attribute__((format(scanf, fmt, args)))
 #else
     #define FORMAT_STRING( fmt, args )
+    #define SCAN_STRING( fmt, args )
 #endif
 
 #define ARRAY_SIZE( array ) ( sizeof( array ) / sizeof( array[0] ) )

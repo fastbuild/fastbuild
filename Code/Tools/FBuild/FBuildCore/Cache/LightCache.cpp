@@ -272,6 +272,15 @@ bool LightCache::Hash( ObjectNode * node,
 {
     PROFILE_FUNCTION;
 
+    // Check for incompatible args
+    if ( compilerArgs.Find( "-sourceDependencies" ) ||
+         compilerArgs.Find( "/sourceDependencies" ) )
+    {
+        AddError( nullptr, nullptr, "LightCache is incompatible with -sourceDependencies" );
+        outSourceHash = 0;
+        return false;
+    }
+
     StackArray<AString> forceIncludes;
     ProjectGeneratorBase::ExtractIncludePaths( compilerArgs,
                                                m_IncludePaths,

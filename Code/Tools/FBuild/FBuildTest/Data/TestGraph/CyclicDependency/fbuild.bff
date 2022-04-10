@@ -1,0 +1,23 @@
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+Exec( 'all' )
+{
+    // Inptu and output path are the same folder, which causes the problem
+    .ExecInputPath      = '$Out$/Test/Graph/CyclicDependency/'
+    .ExecOutput         = '$Out$/Test/Graph/CyclicDependency/file.x'
+
+    // Do something
+    #if __WINDOWS__
+        .ExecExecutable     = 'c:\Windows\System32\cmd.exe'
+        .ExecArguments      = '/c'
+    #else
+        .ExecExecutable     = '/bin/bash'
+        .ExecArguments      = '-c echo'
+    #endif
+    .ExecUseStdOutAsOutput  = true
+}

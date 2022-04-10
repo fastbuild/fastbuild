@@ -466,9 +466,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 /*static*/ void ProjectGeneratorBase::ExtractAdditionalOptions( const AString & compilerArgs,
                                                                 Array< AString > & outOptions )
 {
-    StackArray< AString, 2 > prefixes;
+    StackArray< AString, 4 > prefixes;
     prefixes.EmplaceBack( "-std" );
     prefixes.EmplaceBack( "/std" );
+    prefixes.EmplaceBack( "-wd" );
+    prefixes.EmplaceBack( "/wd" );
 
     // Extract the options
     const bool escapeQuotes = false;

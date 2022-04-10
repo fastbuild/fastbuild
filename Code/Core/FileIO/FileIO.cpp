@@ -10,6 +10,7 @@
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
+#include "Core/Math/Conversions.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -252,7 +253,22 @@
         return false;
     }
 
-    ssize_t bytesCopied = sendfile( dest, source, 0, stat_source.st_size );
+    ssize_t bytesCopied = 0;
+    ssize_t offset = 0;
+
+    while ( offset < stat_source.st_size )
+    {
+        // sendfile has an arbitrary limit of 0x7ffff000 on all systems (even if 64bit)
+        const ssize_t remaining = stat_source.st_size - offset;
+        const ssize_t count = Math::Min<ssize_t>( remaining, 0x7ffff000 );
+
+        const ssize_t sent = sendfile( dest, source, &offset, count );
+        if ( sent <= 0 )
+        {
+            break; // Copy failed (incomplete)
+        }
+        bytesCopied += sent;
+    }
 
     close( source );
     close( dest );
@@ -673,9 +689,13 @@
 {
     #if defined( __WINDOWS__ )
         // open the file
-        // TOOD:B Check these args
-        HANDLE hFile = CreateFile( fileName.Get(), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr,
-                                   OPEN_EXISTING, 0, nullptr);
+        HANDLE hFile = CreateFile( fileName.Get(),
+                                   FILE_WRITE_ATTRIBUTES,
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                   nullptr,
+                                   OPEN_EXISTING,
+                                   0,
+                                   nullptr);
         if ( hFile == INVALID_HANDLE_VALUE )
         {
             return false;

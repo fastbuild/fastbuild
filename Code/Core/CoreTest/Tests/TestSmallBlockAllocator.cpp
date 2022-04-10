@@ -238,7 +238,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestSmallBlockAllocator::ThreadFunction_System( void * userData )
 {
-    ThreadInfo & info = *( reinterpret_cast< ThreadInfo * >( userData ) );
+    ThreadInfo & info = *( static_cast< ThreadInfo * >( userData ) );
     info.m_TimeTaken = AllocateFromSystemAllocator( *info.m_AllocationSizes, info.m_RepeatCount );
     return 0;
 }
@@ -247,7 +247,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestSmallBlockAllocator::ThreadFunction_SmallBlock( void * userData )
 {
-    ThreadInfo & info = *( reinterpret_cast< ThreadInfo * >( userData ) );
+    ThreadInfo & info = *( static_cast< ThreadInfo * >( userData ) );
     info.m_TimeTaken = AllocateFromSmallBlockAllocator( *info.m_AllocationSizes, info.m_RepeatCount );
     return 0;
 }

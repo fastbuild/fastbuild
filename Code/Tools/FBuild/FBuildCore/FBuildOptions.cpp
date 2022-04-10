@@ -16,7 +16,6 @@
 #include "Core/Tracing/Tracing.h"
 
 // system
-#include <stdio.h> // for sscanf
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h" // for QueryDosDeviceA
 #endif
@@ -93,17 +92,19 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         {
             m_Args += ' ';
         }
-        m_Args += thisArg;
 
         // Don't validate args for WSL forwarding
         if ( m_WrapperMode == WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX )
         {
+            m_Args += thisArg;
             continue;
         }
 
         // options start with a '-'
         if ( thisArg.BeginsWith( '-' ) )
         {
+            m_Args += thisArg;
+
             if ( thisArg == "-continueafterdbmove" )
             {
                 m_ContinueAfterDBMove = true;
@@ -133,12 +134,8 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-cachetrim" )
             {
                 const int sizeIndex = ( i + 1 );
-                PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-                PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
                 if ( ( sizeIndex >= argc ) ||
-                     ( sscanf( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 ) // TODO:C Consider using sscanf_s
-                PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
-                PRAGMA_DISABLE_POP_MSVC // 4996
+                     ( AString::ScanS( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 )
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <sizeMiB> for '-cachetrim' argument\n" );
                     OUTPUT( "Try \"%s -help\"\n", programName.Get() );
@@ -159,18 +156,16 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-cachecompressionlevel" )
             {
                 const int sizeIndex = ( i + 1 );
-                PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-                PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
+                int32_t cacheCompressionLevel;
                 if ( ( sizeIndex >= argc ) ||
-                     ( sscanf( argv[ sizeIndex ], "%i", &m_CacheCompressionLevel ) != 1 ) || // TODO:C Consider using sscanf_s
-                     ( ( m_CacheCompressionLevel < -128 ) || ( m_CacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
-                PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
-                PRAGMA_DISABLE_POP_MSVC // 4996
+                     ( AString::ScanS( argv[ sizeIndex ], "%i", &cacheCompressionLevel ) != 1 ) ||
+                     ( ( cacheCompressionLevel < -128 ) || ( cacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <level> for '-cachecompressionlevel' argument\n" );
                     OUTPUT( "Try \"%s -help\"\n", programName.Get() );
                     return OPTIONS_ERROR;
                 }
+                m_CacheCompressionLevel = static_cast< int16_t >( cacheCompressionLevel );
                 i++; // skip extra arg we've consumed
                 
                 // add to args we might pass to subprocess
@@ -271,12 +266,8 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 #endif
                 continue;
             }
-            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'sscanf' is deprecated: This function or variable may be unsafe...
             else if ( thisArg.BeginsWith( "-j" ) &&
-                      sscanf( thisArg.Get(), "-j%u", &m_NumWorkerThreads ) == 1 ) // TODO:C Consider using sscanf_s
-            PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
-            PRAGMA_DISABLE_POP_MSVC // 4996
+                      ( thisArg.Scan( "-j%u", &m_NumWorkerThreads ) == 1 ) )
             {
                 // only accept within sensible range
                 if ( m_NumWorkerThreads <= 256 )
@@ -424,6 +415,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         }
         else
         {
+            m_Args += '"'; // surround with quotes to avoid problems with spaces in target name
+            m_Args += thisArg;
+            m_Args += '"';
+
             // assume target
             m_Targets.Append( thisArg );
         }
