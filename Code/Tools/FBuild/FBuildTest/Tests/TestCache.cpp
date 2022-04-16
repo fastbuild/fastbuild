@@ -902,7 +902,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
     // file2.cpp
     #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
-        TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
+        TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0'" ) );
     #endif
 
     // Check analysis file is present with expected errors

@@ -367,7 +367,7 @@ void TestLinker::LinkerType() const
     do { \
         const uint32_t flags = LinkerNode::DetermineLinkerTypeFlags( AStackString<>( "auto" ), \
                                                                      AStackString<>( exeName ) ); \
-        TEST_ASSERT( ( flags & expectedFlag ) == expectedFlag ); \
+        TEST_ASSERT( flags & expectedFlag ); \
     } while( false )
 
     TEST_LINKERTYPE( "link",        LinkerNode::LINK_FLAG_MSVC );

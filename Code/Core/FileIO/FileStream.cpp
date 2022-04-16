@@ -63,7 +63,7 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
         // access mode
         if ( ( fileMode & READ_ONLY ) != 0 )
         {
-            ASSERT( fileMode == READ_ONLY ); // no extra flags allowed
+            ASSERT( ( fileMode & READ_ONLY ) == fileMode ); // no extra flags allowed
             desiredAccess       |= GENERIC_READ;
             shareMode           |= FILE_SHARE_READ; // allow other readers
             creationDisposition |= OPEN_EXISTING;

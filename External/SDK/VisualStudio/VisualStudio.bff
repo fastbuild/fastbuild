@@ -7,6 +7,7 @@
 //#define USING_VS2015
 //#define USING_VS2017
 #define USING_VS2019
+//#define USING_VS2022
 
 // Activate
 //------------------------------------------------------------------------------
@@ -22,6 +23,10 @@
 #if USING_VS2019
     #include "VS2019.bff"
     .VisualStudioSettings = .VisualStudioSettings_VS2019
+#endif
+#if USING_VS2022
+    #include "VS2022.bff"
+    .VisualStudioSettings = .VisualStudioSettings_VS2022
 #endif
 Using( .VisualStudioSettings )
 Print( 'Using VS$VS_Version_HumanReadable$ (v$VS_Version$) from $VS_ToolchainPath$' )
