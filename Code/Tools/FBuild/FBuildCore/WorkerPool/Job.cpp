@@ -244,7 +244,7 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
     }
 
     // concat all messages
-    GetMessagesForLog( m_Messages, buffer );
+    GetMessagesForMonitorLog( m_Messages, buffer );
 }
 
 // GetMessagesForMonitorLog
