@@ -95,7 +95,7 @@ Compiler( 'Compiler-VS2022-x64' )
     .Platform                       = 'x64'
 
     // Paths
-    .VSIncludePaths                 = ' -I"$VS2022_ToolchainPath$/include/"'
+    .VSIncludePaths                 = ' /external:W0 /external:I"$VS2022_ToolchainPath$/include/"'
     .VSIncludePaths_ClangCl         = ' /imsvc "$VS2022_ToolchainPath$/include/"'
     .VSLibPaths                     = ' /LIBPATH:"$VS2022_ToolchainPath$/lib/x64"'
     .VCPackagesPath                 = '$VS2022_BasePath$/../Common7/IDE/VC/vcpackages'
@@ -114,20 +114,15 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /Wall'              // Enable all warnings (we'll disable those that are not useful)
                                     + ' /WX'                // Warnings as errors
 
-                                    // These warnings are useful, but fire in system headers (Windows SDK or MSVC CRT)
-                                    + ' /wd4668' // '%s' is not defined as a preprocessor macro, replacing with '0' for '#if/#elif'
-
                                     // These warnings are not useful
                                     + ' /wd4061' // enumerator '%s' in switch of enum '%s' is not explicitly handled by a case label
                                     + ' /wd4255' // '%s': no function prototype given: converting '()' to '(void)''
                                     + ' /wd4514' // '%s': unreferenced inline function has been removed
-                                    + ' /wd4571' // Informational: catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught
                                     + ' /wd4577' // 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed. Specify /EHsc
                                     + ' /wd4625' // '%s' : copy constructor was implicitly defined as deleted
                                     + ' /wd4710' // '%s': function not inlined
                                     + ' /wd4711' // function '%s' selected for automatic inline expansion
                                     + ' /wd4820' // '%s': '%u' bytes padding added after data member '%s'
-                                    + ' /wd5039' // '%s': pointer or reference to potentially throwing function passed to extern C function under -EHc. Undefined behavior may occur if this function throws an exception.
                                     + ' /wd5045' // Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
                                     + ' /wd5220' // '%s': a non-static data member with a volatile qualified type no longer implies that compiler generated copy/move constructors and copy/move assignment operators are not trivial
 
@@ -188,6 +183,7 @@ Compiler( 'Compiler-VS2022-x64' )
                                     // Enable and specify analysis engine
     .StaticAnalysisOptions          = ' /analyze'
                                     + ' /analyze:plugin"$VS2022_ToolchainPath$\bin\HostX64\x64\EspXEngine.dll"'
+                                    + ' /analyze:external-' // Disable ananlysis of external headers
 
                                     // To investigate: These warnings might be useful and should be checked
                                     + ' /wd6553'  // The annotation for function 'RegOpenKeyExA' on _Param_(3) does not apply to a value type.
