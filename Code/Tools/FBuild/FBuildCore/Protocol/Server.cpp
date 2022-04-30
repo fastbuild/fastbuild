@@ -55,10 +55,9 @@ Server::~Server()
 
     FDELETE m_JobQueueRemote;
 
-    const ToolManifest * const * end = m_Tools.End();
-    for ( ToolManifest ** it = m_Tools.Begin(); it != end; ++it )
+    for ( ToolManifest * tool : m_Tools )
     {
-        FDELETE *it;
+        FDELETE tool;
     }
 }
 
@@ -83,15 +82,13 @@ bool Server::IsSynchingTool( AString & statusStr ) const
 {
     MutexHolder manifestMH( m_ToolManifestsMutex ); // ensure we don't make redundant requests
 
-    const ToolManifest * const * end = m_Tools.End();
-    ToolManifest ** it = m_Tools.Begin();
-    while ( it != end )
+    for ( const ToolManifest * tool : m_Tools )
     {
-        if ( ( *it )->IsSynchronized() == false )
+        if ( tool->IsSynchronized() == false )
         {
             uint32_t synchDone;
             uint32_t synchTotal;
-            bool synching = ( *it )->GetSynchronizationStatus( synchDone, synchTotal );
+            const bool synching = tool->GetSynchronizationStatus( synchDone, synchTotal );
             if ( synching )
             {
                 statusStr.Format( "Synchronizing Compiler %2.1f / %2.1f MiB\n",
@@ -100,7 +97,6 @@ bool Server::IsSynchingTool( AString & statusStr ) const
                 return true;
             }
         }
-        ++it;
     }
 
     return false; // no toolchain is currently synching
@@ -134,12 +130,9 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     Array< ToolManifest * > cancelledManifests( 0, true );
     {
         MutexHolder manifestMH( m_ToolManifestsMutex );
-        const ToolManifest * const * end = m_Tools.End();
-        ToolManifest ** it = m_Tools.Begin();
-        while ( it != end )
+        for ( ToolManifest * tm : m_Tools )
         {
             // if synchronizing from connection that was just disconnected...
-            ToolManifest * tm = *it;
             if ( ( tm->IsSynchronized() == false ) &&
                  ( tm->GetUserData() == connection ) )
             {
@@ -148,30 +141,22 @@ bool Server::IsSynchingTool( AString & statusStr ) const
                 tm->SetUserData( nullptr );
                 cancelledManifests.Append( tm );
             }
-            ++it;
         }
     }
 
     // free the serverstate structure
     MutexHolder mh( m_ClientListMutex );
-    ClientState ** iter = m_ClientList.Find( cs );
-    ASSERT( iter );
-    m_ClientList.Erase( iter );
+    const bool found = m_ClientList.FindAndErase( cs );
+    ASSERT( found ); (void)found;
 
     // because we cancelled manifest syncrhonization, we need to check if other
     // connections are waiting for the same manifest
     {
-        ClientState ** it = m_ClientList.Begin();
-        const ClientState * const * end = m_ClientList.End();
-        for ( ; it != end; ++it )
+        for ( ClientState * otherCS : m_ClientList )
         {
-            ClientState * otherCS = *it;
-
             MutexHolder mh2( otherCS->m_Mutex );
-            const Job * const * jEnd = otherCS->m_WaitingJobs.End();
-            for ( Job ** jIt = otherCS->m_WaitingJobs.Begin(); jIt != jEnd; ++jIt )
+            for ( const Job * j : otherCS->m_WaitingJobs )
             {
-                const Job * j = *jIt;
                 ToolManifest * jMan = j->GetToolManifest();
                 if ( cancelledManifests.Find( jMan ) )
                 {
@@ -186,10 +171,9 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     FREE( (void *)( cs->m_CurrentMessage ) );
 
     // delete any jobs where we were waiting on Tool synchronization
-    const Job * const * end = cs->m_WaitingJobs.End();
-    for ( Job ** it=cs->m_WaitingJobs.Begin(); it!=end; ++it )
+    for ( Job * job : cs->m_WaitingJobs )
     {
-        delete *it;
+        delete job;
     }
 
     FDELETE cs;
@@ -473,11 +457,9 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
     #endif
 
     MutexHolder mhC( m_ClientListMutex );
-    const ClientState * const * end = m_ClientList.End();
-    for ( ClientState ** it = m_ClientList.Begin(); it!=end; ++it )
+    for ( ClientState * cs : m_ClientList )
     {
         // For each connected client...
-        ClientState * cs = *it;
         MutexHolder mh2( cs->m_Mutex );
 
         // .. check all jobs waiting for ToolManifests
@@ -553,12 +535,8 @@ void Server::FindNeedyClients()
     }
     ++availableJobs; // over request to parallelize building/network transfers
 
-    ClientState ** iter = m_ClientList.Begin();
-    const ClientState * const * end = m_ClientList.End();
-    for ( ; iter != end; ++iter )
+    for ( ClientState * cs : m_ClientList )
     {
-        ClientState * cs = *iter;
-
         MutexHolder mh2( cs->m_Mutex );
 
         // any jobs requested or in progress reduce the available count
@@ -581,11 +559,8 @@ void Server::FindNeedyClients()
     {
         bool anyJobsRequested = false;
 
-        iter = m_ClientList.Begin();
-        for ( ; iter != end; ++iter )
+        for ( ClientState * cs : m_ClientList )
         {
-            ClientState * cs = *iter;
-
             MutexHolder mh2( cs->m_Mutex );
 
             size_t reservedJobs = cs->m_NumJobsRequested;
