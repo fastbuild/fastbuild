@@ -73,6 +73,11 @@ NodeGraph::NodeGraph()
 {
     m_NodeMap = FNEW_ARRAY( Node *[NODEMAP_TABLE_SIZE] );
     memset( m_NodeMap, 0, sizeof( Node * ) * NODEMAP_TABLE_SIZE );
+
+    #if defined( DEBUG )
+        // Ensure debug flag doesn't linger between test runs
+        ASSERT( ObjectNode::GetFakeSystemFailure() == false );
+    #endif
 }
 
 // DESTRUCTOR

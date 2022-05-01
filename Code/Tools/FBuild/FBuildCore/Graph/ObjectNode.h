@@ -159,6 +159,7 @@ public:
 #if defined( DEBUG )
     // Fake system failure for tests
     static void SetFakeSystemFailure( bool enabled ) { sFakeSystemFailure = enabled; }
+    static bool GetFakeSystemFailure() { return sFakeSystemFailure; }
 #endif
 
 private:

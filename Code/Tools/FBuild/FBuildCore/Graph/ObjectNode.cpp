@@ -643,6 +643,18 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         EmitCompilationMessage( fullArgs, useDeoptimization, stealingRemoteJob, racingRemoteJob, false, isRemote );
     }
 
+    #if defined(DEBUG)
+        // If racing while inducing a remote failure, ensure the remote failure
+        // always wins.
+        if ( ObjectNode::GetFakeSystemFailure() && racingRemoteJob )
+        {
+            while ( job->GetDistributionState() == Job::DIST_RACING )
+            {
+                Thread::Sleep( 1 );
+            }
+        }
+    #endif
+
     bool result = BuildFinalOutput( job, fullArgs );
 
     // cleanup temp file

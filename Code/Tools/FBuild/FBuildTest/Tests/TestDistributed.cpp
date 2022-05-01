@@ -209,7 +209,8 @@ void TestDistributed::RemoteRaceSystemFailure()
 {
     // NOTE: Test only available in DEBUG due to SetFakeSystemFailure
 
-    // Check that a remote race that is won remotely is correctly handled
+    // Check that a remote race that is won remotely with a failure is
+    // correctly handled
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceSystemFailure/fbuild.bff";
     options.m_AllowDistributed = true;
@@ -230,12 +231,11 @@ void TestDistributed::RemoteRaceSystemFailure()
     // Force a system failure when compiling remotely
     ObjectNode::SetFakeSystemFailure( true );
 
-    // Timing differences between runs means that either:
-    // a) The race is won locally
-    // b) The race is won remotely (with the system failure)
-    // 
-    // Build should complete in either case
+    // Build
     TEST_ASSERT( fBuild.Build( "RemoteRaceSystemFailure" ) );
+
+    // Ensure the remote failure was induced correctly
+    TEST_ASSERT( GetRecordedOutput().Find( "Injecting system failure (sFakeSystemFailure)" ) );
 }
 #endif
 
