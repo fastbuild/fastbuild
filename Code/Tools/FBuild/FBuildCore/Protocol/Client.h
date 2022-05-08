@@ -12,6 +12,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class ConstMemoryStream;
 class Job;
 class MemoryStream;
 class MultiBuffer;
@@ -62,6 +63,7 @@ private:
     // More verbose name to avoid conflict with windows.h SendMessage
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
+    void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const ConstMemoryStream & memoryStream );
 
     Array< AString >    m_WorkerList;   // workers to connect to
     volatile bool       m_ShouldExit;   // signal from main thread

@@ -57,7 +57,7 @@ private:
     mutable void *          m_UserData;
 
 #ifdef DEBUG
-    mutable bool            m_InUse; // sanity check we aren't sending from multiple threads unsafely
+    mutable Thread::ThreadId m_SendSocketInUseThreadId; // sanity check we aren't sending from multiple threads unsafely
 #endif
 };
 

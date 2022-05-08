@@ -29,6 +29,7 @@ public:
     #else
         #error Unknown platform
     #endif
+    #define INVALID_THREAD_ID ( 0 )
 
     static ThreadId GetCurrentThreadId();
     static ThreadId GetMainThreadId() { return s_MainThreadId; }

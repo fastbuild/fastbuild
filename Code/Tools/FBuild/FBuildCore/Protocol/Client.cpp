@@ -322,6 +322,22 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
                 (uint32_t)memoryStream.GetSize() );
 }
 
+// SendMessageInternal
+//------------------------------------------------------------------------------
+void Client::SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const ConstMemoryStream & memoryStream )
+{
+    if ( msg.Send( connection, memoryStream ) )
+    {
+        return;
+    }
+
+    DIST_INFO( "Send Failed: %s (Type: %u, Size: %u, Payload: %u)\n",
+                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                (uint32_t)msg.GetType(),
+                msg.GetSize(),
+                (uint32_t)memoryStream.GetSize() );
+}
+
 // OnReceive
 //------------------------------------------------------------------------------
 /*virtual*/ void Client::OnReceive( const ConnectionInfo * connection, void * data, uint32_t size, bool & keepMemory )
@@ -834,7 +850,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     // Send manifest to worker
     Protocol::MsgManifest resultMsg( toolId );
-    resultMsg.Send( connection, ms );
+    MutexHolder mh( static_cast<ServerState *>(connection->GetUserData())->m_Mutex );
+    SendMessageInternal( connection, resultMsg, ms );
 }
 
 // Process ( MsgRequestFile )
@@ -870,7 +887,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     // Send file to worker
     Protocol::MsgFile resultMsg( toolId, fileId );
-    resultMsg.Send( connection, ms );
+    MutexHolder mh( static_cast<ServerState *>(connection->GetUserData())->m_Mutex );
+    SendMessageInternal( connection, resultMsg, ms );
 }
 
 // FindManifest

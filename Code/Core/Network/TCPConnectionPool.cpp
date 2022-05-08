@@ -137,7 +137,7 @@ ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
     , m_TCPConnectionPool( ownerPool )
     , m_UserData( nullptr )
     #ifdef DEBUG
-        , m_InUse( false )
+        , m_SendSocketInUseThreadId( INVALID_THREAD_ID )
     #endif
 {
     ASSERT( ownerPool );
@@ -572,8 +572,8 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     Timer timer;
 
 #ifdef DEBUG
-    ASSERT( connection->m_InUse == false );
-    connection->m_InUse = true;
+    ASSERT( connection->m_SendSocketInUseThreadId == INVALID_THREAD_ID );
+    connection->m_SendSocketInUseThreadId = Thread::GetCurrentThreadId();
 #endif
 
     ASSERT( connection->m_Socket != INVALID_SOCKET );
@@ -648,7 +648,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     }
 
     #ifdef DEBUG
-        connection->m_InUse = false;
+        connection->m_SendSocketInUseThreadId = INVALID_THREAD_ID;
     #endif
     return sendOK;
 }
