@@ -145,13 +145,14 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     }
 
     // free the serverstate structure
-    MutexHolder mh( m_ClientListMutex );
-    const bool found = m_ClientList.FindAndErase( cs );
-    ASSERT( found ); (void)found;
-
-    // because we cancelled manifest syncrhonization, we need to check if other
-    // connections are waiting for the same manifest
     {
+        // Remove from ClientList
+        MutexHolder mh( m_ClientListMutex );
+        const bool found = m_ClientList.FindAndErase( cs );
+        ASSERT( found ); (void)found;
+
+        // because we cancelled manifest syncrhonization, we need to check if other
+        // connections are waiting for the same manifest
         for ( ClientState * otherCS : m_ClientList )
         {
             MutexHolder mh2( otherCS->m_Mutex );
@@ -164,19 +165,19 @@ bool Server::IsSynchingTool( AString & statusStr ) const
                 }
             }
         }
+
+        // This is usually null here, but might need to be freed if
+        // we had the connection drop between message and payload
+        FREE( (void *)( cs->m_CurrentMessage ) );
+    
+        // delete any jobs where we were waiting on Tool synchronization
+        for ( Job * job : cs->m_WaitingJobs )
+        {
+            delete job;
+        }
+    
+        FDELETE cs;
     }
-
-    // This is usually null here, but might need to be freed if
-    // we had the connection drop between message and payload
-    FREE( (void *)( cs->m_CurrentMessage ) );
-
-    // delete any jobs where we were waiting on Tool synchronization
-    for ( Job * job : cs->m_WaitingJobs )
-    {
-        delete job;
-    }
-
-    FDELETE cs;
 }
 
 // OnReceive
@@ -328,55 +329,61 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgNoJo
 void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob * msg, const void * payload, size_t payloadSize )
 {
     ClientState * cs = (ClientState *)connection->GetUserData();
-    MutexHolder mh( cs->m_Mutex );
-    ASSERT( cs->m_NumJobsRequested > 0 );
-    cs->m_NumJobsRequested--;
-    cs->m_NumJobsActive++;
-
-    // deserialize job
-    ConstMemoryStream ms( payload, payloadSize );
-
-    Job * job = FNEW( Job( ms ) );
-    job->SetUserData( cs );
-    job->SetResultCompressionLevel( msg->GetResultCompressionLevel() );
-
-    //
-    const uint64_t toolId = msg->GetToolId();
-    ASSERT( toolId );
-
-    MutexHolder manifestMH( m_ToolManifestsMutex ); // ensure we don't make redundant requests
-
-    ToolManifest ** found = m_Tools.FindDeref( toolId );
-    ToolManifest * manifest = found ? *found : nullptr;
-    if ( manifest )
     {
-        job->SetToolManifest( manifest );
-        if ( manifest->IsSynchronized() )
+        MutexHolder mh( cs->m_Mutex );
+        ASSERT( cs->m_NumJobsRequested > 0 );
+        cs->m_NumJobsRequested--;
+        cs->m_NumJobsActive++;
+    
+        // deserialize job
+        ConstMemoryStream ms( payload, payloadSize );
+    
+        Job * job = FNEW( Job( ms ) );
+        job->SetUserData( cs );
+        job->SetResultCompressionLevel( msg->GetResultCompressionLevel() );
+    
+        // Get ToolId
+        const uint64_t toolId = msg->GetToolId();
+        ASSERT( toolId );
+
+
         {
-            // we have all the files - we can do the job
-            JobQueueRemote::Get().QueueJob( job );
-            return;
+            // Find or create the manifest
+            MutexHolder manifestMH( m_ToolManifestsMutex );
+
+            ToolManifest ** found = m_Tools.FindDeref( toolId );
+            ToolManifest * manifest = found ? *found : nullptr;
+            if ( manifest )
+            {
+                job->SetToolManifest( manifest );
+                if ( manifest->IsSynchronized() )
+                {
+                    // we have all the files - we can do the job
+                    JobQueueRemote::Get().QueueJob( job );
+                    return;
+                }
+
+                // missing some files - request them
+                RequestMissingFiles( connection, manifest );
+            }
+            else
+            {
+                // first time seeing this tool
+
+                // create manifest object
+                manifest = FNEW( ToolManifest( toolId ) );
+                job->SetToolManifest( manifest );
+                m_Tools.Append( manifest );
+
+                // request manifest of tool chain
+                Protocol::MsgRequestManifest reqMsg( toolId );
+                reqMsg.Send( connection );
+            }
+
+            // can't start job yet - put it on hold
+            cs->m_WaitingJobs.Append( job );
         }
-
-        // missing some files - request them
-        RequestMissingFiles( connection, manifest );
     }
-    else
-    {
-        // first time seeing this tool
-
-        // create manifest object
-        manifest = FNEW( ToolManifest( toolId ) );
-        job->SetToolManifest( manifest );
-        m_Tools.Append( manifest );
-
-        // request manifest of tool chain
-        Protocol::MsgRequestManifest reqMsg( toolId );
-        reqMsg.Send( connection );
-    }
-
-    // can't start job yet - put it on hold
-    cs->m_WaitingJobs.Append( job );
 }
 
 // Process( MsgManifest )
@@ -397,7 +404,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
         manifest->DeserializeFromRemote( ms );
     }
 
-    // manifest has checked local files, from previous sessions an may
+    // manifest has checked local files, from previous sessions and may
     // be synchronized
     if ( manifest->IsSynchronized() )
     {
@@ -456,27 +463,29 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
         bool atLeastOneJobStarted = false;
     #endif
 
-    MutexHolder mhC( m_ClientListMutex );
-    for ( ClientState * cs : m_ClientList )
     {
-        // For each connected client...
-        MutexHolder mh2( cs->m_Mutex );
-
-        // .. check all jobs waiting for ToolManifests
-        int32_t numJobs = (int32_t)cs->m_WaitingJobs.GetSize();
-        for ( int32_t i=( numJobs -1 ); i >= 0; --i )
+        MutexHolder mhC( m_ClientListMutex );
+        for ( ClientState * cs : m_ClientList )
         {
-            Job * job = cs->m_WaitingJobs[ (size_t)i ];
-            const ToolManifest * manifestForThisJob = job->GetToolManifest();
-            ASSERT( manifestForThisJob );
-            if ( manifestForThisJob == manifest )
+            // For each connected client...
+            MutexHolder mh2( cs->m_Mutex );
+
+            // .. check all jobs waiting for ToolManifests
+            int32_t numJobs = (int32_t)cs->m_WaitingJobs.GetSize();
+            for ( int32_t i=( numJobs -1 ); i >= 0; --i )
             {
-                cs->m_WaitingJobs.EraseIndex( (size_t)i );
-                JobQueueRemote::Get().QueueJob( job );
-                PROTOCOL_DEBUG( "Server: Job %x can now be started\n", job );
-                #ifdef ASSERTS_ENABLED
-                    atLeastOneJobStarted = true;
-                #endif
+                Job * job = cs->m_WaitingJobs[ (size_t)i ];
+                const ToolManifest * manifestForThisJob = job->GetToolManifest();
+                ASSERT( manifestForThisJob );
+                if ( manifestForThisJob == manifest )
+                {
+                    cs->m_WaitingJobs.EraseIndex( (size_t)i );
+                    JobQueueRemote::Get().QueueJob( job );
+                    PROTOCOL_DEBUG( "Server: Job %x can now be started\n", job );
+                    #ifdef ASSERTS_ENABLED
+                        atLeastOneJobStarted = true;
+                    #endif
+                }
             }
         }
     }
@@ -525,62 +534,64 @@ void Server::FindNeedyClients()
 
     PROFILE_FUNCTION;
 
-    MutexHolder mh( m_ClientListMutex );
-
-    // determine job availability
-    int availableJobs = (int)WorkerThreadRemote::GetNumCPUsToUse();
-    if ( availableJobs == 0 )
     {
-        return;
-    }
-    ++availableJobs; // over request to parallelize building/network transfers
+        MutexHolder mh( m_ClientListMutex );
 
-    for ( ClientState * cs : m_ClientList )
-    {
-        MutexHolder mh2( cs->m_Mutex );
-
-        // any jobs requested or in progress reduce the available count
-        int32_t reservedJobs = (int32_t)( cs->m_NumJobsRequested + cs->m_NumJobsActive );
-        availableJobs -= reservedJobs;
-        if ( availableJobs <= 0 )
+        // determine job availability
+        int availableJobs = (int)WorkerThreadRemote::GetNumCPUsToUse();
+        if ( availableJobs == 0 )
         {
             return;
         }
-    }
-
-    // we have some jobs available
-
-    // sort clients to find neediest first
-    m_ClientList.SortDeref();
-
-    Protocol::MsgRequestJob msg;
-
-    while ( availableJobs > 0 )
-    {
-        bool anyJobsRequested = false;
+        ++availableJobs; // over request to parallelize building/network transfers
 
         for ( ClientState * cs : m_ClientList )
         {
             MutexHolder mh2( cs->m_Mutex );
 
-            size_t reservedJobs = cs->m_NumJobsRequested;
-
-            if ( reservedJobs >= cs->m_NumJobsAvailable )
+            // any jobs requested or in progress reduce the available count
+            int32_t reservedJobs = (int32_t)( cs->m_NumJobsRequested + cs->m_NumJobsActive );
+            availableJobs -= reservedJobs;
+            if ( availableJobs <= 0 )
             {
-                continue; // we've maxed out the requests to this worker
+                return;
             }
-
-            // request job from this client
-            msg.Send( cs->m_Connection );
-            cs->m_NumJobsRequested++;
-            availableJobs--;
-            anyJobsRequested = true;
         }
 
-        // if we did a pass and couldn't request any more jobs, then bail out
-        if ( anyJobsRequested == false )
+        // we have some jobs available
+
+        // sort clients to find neediest first
+        m_ClientList.SortDeref();
+
+        Protocol::MsgRequestJob msg;
+
+        while ( availableJobs > 0 )
         {
-            break;
+            bool anyJobsRequested = false;
+
+            for ( ClientState * cs : m_ClientList )
+            {
+                MutexHolder mh2( cs->m_Mutex );
+
+                size_t reservedJobs = cs->m_NumJobsRequested;
+
+                if ( reservedJobs >= cs->m_NumJobsAvailable )
+                {
+                    continue; // we've maxed out the requests to this worker
+                }
+
+                // request job from this client
+                msg.Send( cs->m_Connection );
+                cs->m_NumJobsRequested++;
+                availableJobs--;
+                anyJobsRequested = true;
+            }
+
+            // if we did a pass and couldn't request any more jobs, then bail out
+            if ( anyJobsRequested == false )
+            {
+                break;
+            }
         }
     }
 }
@@ -597,48 +608,52 @@ void Server::FinalizeCompletedJobs()
         // get associated connection
         ClientState * cs = (ClientState *)job->GetUserData();
 
-        MutexHolder mh( m_ClientListMutex );
-
-        bool connectionStillActive = ( m_ClientList.Find( cs ) != nullptr );
-        if ( connectionStillActive )
         {
-            Node::State result = job->GetNode()->GetState();
-            ASSERT( ( result == Node::UP_TO_DATE ) || ( result == Node::FAILED ) );
+            MutexHolder mh( m_ClientListMutex );
 
-            MemoryStream ms;
-            ms.Write( job->GetJobId() );
-            ms.Write( job->GetNode()->GetName() );
-            ms.Write( result == Node::UP_TO_DATE );
-            ms.Write( job->GetSystemErrorCount() > 0 );
-            ms.Write( job->GetMessages() );
-            ms.Write( job->GetNode()->GetLastBuildTime() );
-            ms.Write( job->GetRemoteThreadIndex() ); // The thread used to build the job to assist with visualization
-
-            // write the data - build result for success, or output+errors for failure
-            ms.Write( (uint32_t)job->GetDataSize() );
-            ms.WriteBuffer( job->GetData(), job->GetDataSize() );
-
-            MutexHolder mh2( cs->m_Mutex );
-            ASSERT( cs->m_NumJobsActive );
-            cs->m_NumJobsActive--;
-
-            if ( job->GetResultCompressionLevel() == 0 )
+            bool connectionStillActive = ( m_ClientList.Find( cs ) != nullptr );
+            if ( connectionStillActive )
             {
-                // Uncompressed
-                Protocol::MsgJobResult msg;
-                msg.Send( cs->m_Connection, ms );
+                Node::State result = job->GetNode()->GetState();
+                ASSERT( ( result == Node::UP_TO_DATE ) || ( result == Node::FAILED ) );
+
+                MemoryStream ms;
+                ms.Write( job->GetJobId() );
+                ms.Write( job->GetNode()->GetName() );
+                ms.Write( result == Node::UP_TO_DATE );
+                ms.Write( job->GetSystemErrorCount() > 0 );
+                ms.Write( job->GetMessages() );
+                ms.Write( job->GetNode()->GetLastBuildTime() );
+                ms.Write( job->GetRemoteThreadIndex() ); // The thread used to build the job to assist with visualization
+
+                // write the data - build result for success, or output+errors for failure
+                ms.Write( (uint32_t)job->GetDataSize() );
+                ms.WriteBuffer( job->GetData(), job->GetDataSize() );
+
+                {
+                    MutexHolder mh2( cs->m_Mutex );
+                    ASSERT( cs->m_NumJobsActive );
+                    cs->m_NumJobsActive--;
+    
+                    if ( job->GetResultCompressionLevel() == 0 )
+                    {
+                        // Uncompressed
+                        Protocol::MsgJobResult msg;
+                        msg.Send( cs->m_Connection, ms );
+                    }
+                    else
+                    {
+                        // Compressed
+                        Protocol::MsgJobResultCompressed msg;
+                        msg.Send( cs->m_Connection, ms );
+                    }
+                }
             }
             else
             {
-                // Compressed
-                Protocol::MsgJobResultCompressed msg;
-                msg.Send( cs->m_Connection, ms );
+                // we might get here without finding the connection
+                // (if the connection was lost before we completed)
             }
-        }
-        else
-        {
-            // we might get here without finding the connection
-            // (if the connection was lost before we completed)
         }
 
         FDELETE job;
