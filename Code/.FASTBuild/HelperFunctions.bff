@@ -44,7 +44,7 @@ function CreateCommonAliases( .ProjectName )
     // Per-Config
     #if __WINDOWS__
         Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64Clang-Debug' } }
-        Alias( '$ProjectName$-Analyze' )         { .Targets = { '$ProjectName$-X64-Analyze' } }
+        Alias( '$ProjectName$-Analyze' )         { .Targets = { '$ProjectName$-X64-Analyze', '$ProjectName$-X64Clang-Analyze' } }
         Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X64-Profile', '$ProjectName$-X64Clang-Profile' } }
         Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64-Release', '$ProjectName$-X64Clang-Release' } }
     #endif
@@ -86,6 +86,51 @@ function CreateVCXProject_Lib( .Name
                                .Configs
                                .ExtraOptions )
 {
+    // For each Windows x64 config add a Windows Subsystem for Linux (WSL) equivalent
+    .WSLConfigs = {}
+    ForEach( .Config in .Configs )
+    {
+        .Ignore = false
+        .WSLConfig =
+        [
+            Using( .Config )
+
+            // Map x64 to Linux (ignoring any other configs like x64Clang)
+            If( .SolutionPlatform != 'x64' )
+            {
+                ^Ignore = true
+            }
+
+            .SolutionPlatform               = 'Linux'
+            .Config                         = '$SolutionPlatform$-$SolutionConfig$'
+
+            // Configure Linux project options to allow remote debugging to work
+            .DebuggerFlavor                 = 'LinuxDebugger'
+            .Keyword                        = 'Linux'
+            .ApplicationType                = 'Linux'
+            .ApplicationTypeRevision        = '1.0'
+            .TargetLinuxPlatform            = 'Generic'
+            .LinuxProjectType               = '{D51BCBC9-82E9-4017-911E-C93873C4EA2B}'
+            .RemoteDebuggerCommand          = '/mnt/c/p4/depot/tmp/x64^$(Configuration)/$Path$/$Name$'
+            .RemoteDebuggerWorkingDirectory = '/mnt/c/p4/depot/Code/$Path$'
+
+            // Set build target
+            .ProjectBuildCommand            = .ProjectBuildCommand
+            .ProjectRebuildCommand          = .ProjectRebuildCommand
+            // For the 'UpdateSolution' we still want that to work normally (not via WSL)
+            If( .Name != 'UpdateSolution' ) // TODO:C Find a better way to manage this special case
+            {
+                ^ProjectBuildCommand            = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -wsl C:\Windows\System32\wsl.exe --cd C:\p4\depot\Code /mnt/c/p4/depot/Code/fbuild-linux -ide -dist -monitor -cache ^$(ProjectName)-x64^$(Configuration)'
+                ^ProjectRebuildCommand          = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -wsl C:\Windows\System32\wsl.exe --cd C:\p4\depot\Code /mnt/c/p4/depot/Code/fbuild-linux -ide -dist -monitor -cache -clean ^$(ProjectName)-x64^$(Configuration)'
+            }
+        ]
+        If( .Ignore == false )
+        {
+            ^WSLConfigs + .WSLConfig
+        }
+    }
+    .Configs + .WSLConfigs
+
     VCXProject( '$Name$-proj' )
     {
         .ProjectConfigs             = .Configs
