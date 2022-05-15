@@ -1115,9 +1115,11 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
     // in some cases. For simplicity, we protect in all cases even
     // if we could avoid it as the mutex will not be heavily constested.
     MutexHolder mh( g_NodeEnvStringMutex );
-
-    // Caller owns thr memory
-    inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
+    if ( !inoutCachedEnvString )
+    {
+        // Caller owns the memory
+        inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
+    }
     return inoutCachedEnvString;
 }
 
