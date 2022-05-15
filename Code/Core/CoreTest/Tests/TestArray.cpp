@@ -1836,7 +1836,9 @@ void TestArray::MoveConstructorHelper() const
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
     // Source string should be empty
+    PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
     TEST_ASSERT( arrayA.IsEmpty() );
+    PRAGMA_DISABLE_POP_MSVC
 
     CheckConsistency( arrayA );
     CheckConsistency( arrayB );
@@ -1910,7 +1912,9 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
         // Source string should be empty
+        PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
         TEST_ASSERT( arrayA.IsEmpty() );
+        PRAGMA_DISABLE_POP_MSVC
 
         CheckConsistency( arrayA );
         CheckConsistency( arrayB );
@@ -1942,7 +1946,9 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
             arrayB = Move( (SRC_CAST&)( arrayA ) );
 
             // Source string should be empty
+            PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
             TEST_ASSERT( arrayA.IsEmpty() );
+            PRAGMA_DISABLE_POP_MSVC
 
             CheckConsistency( arrayA );
             CheckConsistency( arrayB );

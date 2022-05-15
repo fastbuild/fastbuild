@@ -260,7 +260,9 @@ void Array< T >::SetCapacity( size_t capacity )
     while ( src < endIter )
     {
         INPLACE_NEW ( dst ) T( Move( *src ) );
+        PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate/necessary
         src->~T();
+        PRAGMA_DISABLE_POP_MSVC
         src++;
         dst++;
     }

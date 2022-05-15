@@ -189,7 +189,6 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd6553'  // The annotation for function 'RegOpenKeyExA' on _Param_(3) does not apply to a value type.
                                     + ' /wd26400' // Do not assign the result of an allocation or a function call with an owner<T> return value to a raw pointer, use owner<T> instead (i.11).
                                     + ' /wd26401' // Do not delete a raw pointer that is not an owner<T> (i.11).
-                                    + ' /wd26408' // Avoid malloc() and free(), prefer the nothrow version of new with delete (r.10).
                                     + ' /wd26430' // Symbol '%s' is not tested for nullness on all paths (f.23).: Lines: ...
                                     + ' /wd26432' // If you define or delete any default operation in the type '%s', define or delete them all (c.21).
                                     + ' /wd26434' // Function '%s' hides a non-virtual function '%s' (c.128).
@@ -205,14 +204,12 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd26495' // Variable '%s' is uninitialized. Always initialize a member variable (type.6).
                                     + ' /wd26456' // Operator '%s' hides a non-virtual operator '%s' (c.128).
                                     + ' /wd26497' // The function '%s' could be marked constexpr if compile-time evaluation is desired (f.4).
-                                    + ' /wd26800' // Use of a moved from object: ''%s'' (lifetime.1).
                                     + ' /wd26812' // The enum type '%s' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
                                     + ' /wd26814' // The const variable '%s' can be computed at compile-time. Consider using constexpr (con.5).
 
                                     // These warnings are not useful. They either:
-                                    // a) Occur in Windows headers
-                                    // b) Are about things we want to do or have no viable alternative
-                                    // c) Are nonsensical, undesirable or impractical
+                                    // a) Are about things we want to do or have no viable alternative
+                                    // b) Are nonsensical, undesirable or impractical
                                     + ' /wd26402' // Return a scoped object instead of a heap-allocated if it has a move constructor (r.3).
                                     + ' /wd26409' // Avoid calling new and delete explicitly, use std::make_unique<T> instead (r.11).
                                     + ' /wd26426' // Global initializer calls a non-constexpr function '%s' (i.22).
@@ -220,7 +217,6 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd26435' // Function '%s' should specify exactly one of 'virtual', 'override', or 'final' (c.128).
                                     + ' /wd26439' // This kind of function may not throw. Declare it 'noexcept' (f.6).
                                     + ' /wd26440' // Function '%s' can be declared 'noexcept' (f.6).
-                                    + ' /wd26443' // Overriding destructor should not use explicit 'override' or 'virtual' specifiers (c.128).
                                     + ' /wd26446' // Prefer to use gsl::at() instead of unchecked subscript operator (bounds.4).
                                     + ' /wd26447' // The function is declared 'noexcept' but calls function '%s' which may throw exceptions (f.6).
                                     + ' /wd26455' // Default constructor may not throw. Declare it 'noexcept' (f.6).
@@ -228,7 +224,6 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd26461' // The pointer argument '%s' for function '%s' can be marked as a pointer to const (con.3).
                                     + ' /wd26467' // Converting from floating point to unsigned integral types results in non-portable code if the double/float has a negative value. Use gsl::narrow_cast or gsl::narrow instead to guard against undefined behavior and potential data loss (es.46).
                                     + ' /wd26472' // Don't use a static_cast for arithmetic conversions. Use brace initialization, gsl::narrow_cast or gsl::narrow (type.1).
-                                    + ' /wd26473' // Don't cast between pointer types where the source type and the target type are the same (type.1).
                                     + ' /wd26481' // Don't use pointer arithmetic. Use span instead (bounds.1).
                                     + ' /wd26482' // Only index into arrays using constant expressions (bounds.2).'
                                     + ' /wd26485' // Expression '%s': No array to pointer decay (bounds.3).
