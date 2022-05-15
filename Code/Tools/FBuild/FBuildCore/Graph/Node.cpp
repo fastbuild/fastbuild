@@ -1098,28 +1098,26 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
 /*static*/ const char * Node::GetEnvironmentString( const Array< AString > & envVars,
                                                     const char * & inoutCachedEnvString )
 {
-    // If we've previously built a custom env string, use it
-    if ( inoutCachedEnvString )
-    {
-        return inoutCachedEnvString;
-    }
-
     // Do we need a custom env string?
     if ( envVars.IsEmpty() )
     {
         // No - return build-wide environment
         return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
     }
-
+    
     // More than one caller could be retrieving the same env string
     // in some cases. For simplicity, we protect in all cases even
     // if we could avoid it as the mutex will not be heavily constested.
     MutexHolder mh( g_NodeEnvStringMutex );
-    if ( !inoutCachedEnvString )
+    
+    // If we've previously built a custom env string, use it
+    if ( inoutCachedEnvString )
     {
-        // Caller owns the memory
-        inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
+        return inoutCachedEnvString;
     }
+    
+    // Caller owns the memory
+    inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
     return inoutCachedEnvString;
 }
 
