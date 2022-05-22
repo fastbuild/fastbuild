@@ -168,11 +168,7 @@ NodeGraph::~NodeGraph()
             }
 
             // Migrate old DB info to new DB
-            const SettingsNode * settings = newNG->GetSettings();
-            if ( ( settings->GetDisableDBMigration() == false ) || forceMigration )
-            {
-                newNG->Migrate( *oldNG );
-            }
+            newNG->Migrate( *oldNG );
             FDELETE( oldNG );
 
             return newNG;
