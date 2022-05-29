@@ -188,6 +188,12 @@ Settings
     .X64ProfileConfig           = .X64BaseConfig
                                 + .Profile_Config
                                 + .Profile_Optimizations_MSVC
+    .X64ASanConfig              = .X64BaseConfig
+                                + .ASan_Config
+                                + .Release_Optimizations_MSVC
+    .X64TSanConfig              = .X64BaseConfig
+                                + .TSan_Config
+                                + .Release_Optimizations_MSVC
 #endif
 
 // X64 Clang
@@ -207,6 +213,12 @@ Settings
     .X64ClangProfileConfig      = .X64ClangBaseConfig
                                 + .Profile_Config
                                 + .Profile_Optimizations
+    .X64ClangASanConfig         = .X64ClangBaseConfig
+                                + .ASan_Config
+                                + .Release_Optimizations
+    .X64ClangTSanConfig         = .X64ClangBaseConfig
+                                + .TSan_Config
+                                + .Release_Optimizations
 #endif
 
 // Linux
@@ -317,17 +329,23 @@ Settings
     .Project_x64_Analyze      = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64'         .SolutionConfig = 'Analyze' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64_Profile      = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64'         .SolutionConfig = 'Profile' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64_Release      = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64'         .SolutionConfig = 'Release' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_x64_ASan         = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64'         .SolutionConfig = 'ASan'    .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_x64_TSan         = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64'         .SolutionConfig = 'TSan'    .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64Clang_Debug   = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'Debug'   .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64Clang_Analyze = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'Analyze' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64Clang_Profile = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'Profile' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64Clang_Release = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'Release' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_x64Clang_ASan    = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'ASan'    .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_x64Clang_TSan    = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'TSan'    .Config = '$SolutionPlatform$-$SolutionConfig$' ]
 #endif
 
 // Configurations
 //------------------------------------------------------------------------------
 #if __WINDOWS__
     .BuildConfigs               = { .X64DebugConfig, .X64AnalyzeConfig, .X64ProfileConfig, .X64ReleaseConfig
-                                    .X64ClangDebugConfig, .X64ClangAnalyzeConfig .X64ClangProfileConfig, .X64ClangReleaseConfig }
+                                    .X64ASanConfig, .X64TSanConfig
+                                    .X64ClangDebugConfig, .X64ClangAnalyzeConfig .X64ClangProfileConfig, .X64ClangReleaseConfig
+                                    .X64ClangASanConfig, .X64ClangTSanConfig }
 #endif
 #if __LINUX__
     .BuildConfigs               = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
@@ -346,10 +364,14 @@ Settings
 .Targets_x64_Analyze = {}
 .Targets_x64_Profile = {}
 .Targets_x64_Release = {}
+.Targets_x64_ASan = {}
+.Targets_x64_TSan = {}
 .Targets_x64Clang_Debug = {}
 .Targets_x64Clang_Analyze = {}
 .Targets_x64Clang_Profile = {}
 .Targets_x64Clang_Release = {}
+.Targets_x64Clang_ASan = {}
+.Targets_x64Clang_TSan = {}
 
 .Targets_x64Linux_Debug = {}
 .Targets_x64Linux_Profile = {}
@@ -410,8 +432,8 @@ Alias( 'Exes' )
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
 .Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX', 'ARMOSX' }
-.PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release' }
-.PlatformConfigs_x64Clang      = { 'Debug', 'Analyze', 'Profile', 'Release' }
+.PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
+.PlatformConfigs_x64Clang      = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release' }
 #if USING_CLANG_6
@@ -426,8 +448,17 @@ ForEach( .Platform in .Platforms )
         .Targets = {}
         ForEach( .Config in .'PlatformConfigs_$Platform$' )
         {
-            // TODO:B Ignore Windows x64Clang Analyze config (not working yet)
-            If( !( ( .Platform == 'x64Clang' ) && ( .Config == 'Analyze' ) ) )
+            // TODO:B Exclude windows configs that don't work yet
+            // x64Clang Analyze config - not working yet
+            // x64Clang ASan config - not working yet
+            // x64Clang TSan config - not working yet (not supported by Clang on Windows)
+            // x64 ASan config - not working yet
+            // x64 TSan config - not working yet (not supported by MSVC on Windows)
+            If( !( ( .Platform == 'x64Clang' ) && ( .Config == 'Analyze' ) ) &&
+                !( ( .Platform == 'x64Clang' ) && ( .Config == 'ASan' ) ) &&
+                !( ( .Platform == 'x64Clang' ) && ( .Config == 'TSan' ) ) &&
+                !( ( .Platform == 'x64' ) && ( .Config == 'ASan' ) ) &&
+                !( ( .Platform == 'x64' ) && ( .Config == 'TSan' ) ) )
             {
                 ^Targets + { 'All-$Platform$-$Config$' }
             }
