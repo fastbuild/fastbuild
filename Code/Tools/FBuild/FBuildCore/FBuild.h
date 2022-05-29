@@ -13,6 +13,7 @@
 
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
+#include "Core/Process/Mutex.h"
 #include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
 
@@ -122,6 +123,7 @@ protected:
 
     NodeGraph * m_DependencyGraph;
     JobQueue * m_JobQueue;
+    mutable Mutex m_ClientLifetimeMutex;
     Client * m_Client; // manage connections to worker servers
 
     AString m_DependencyGraphFile;

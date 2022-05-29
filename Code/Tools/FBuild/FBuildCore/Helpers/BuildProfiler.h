@@ -8,6 +8,7 @@
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/Types.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
@@ -100,7 +101,7 @@ protected:
     };
 
     Mutex                   m_Mutex;
-    volatile bool           m_ThreadExit = false;
+    Atomic<bool>            m_ThreadExit{ false };
     Semaphore               m_ThreadSignalSemaphore;
     Thread::ThreadHandle    m_Thread = INVALID_THREAD_HANDLE;
     Array<Event>            m_Events;
