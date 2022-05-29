@@ -571,7 +571,7 @@ Alias( 'All+Tests' )
             .WSLConfig =
             [
                 Using( .SolutionConfig )
-                .SolutionPlatform   = 'Linux'
+                .SolutionPlatform   = 'ClangLinux'
                 .Config             = '$SolutionPlatform$-$SolutionConfig$'
             ]
             ^SolutionConfigs        + .WSLConfig

@@ -966,16 +966,8 @@ void Node::ReplaceDummyName( const AString & newName )
     // rebuild fixed string
     AStackString<> fixed;
 
-    // convert path if needed
-    if ( tokens[ 0 ].GetLength() == 1 )
-    {
-        ASSERT( numTokens >= 4 ); // should have an extra token due to ':'
-        fixed = tokens[ 0 ]; // already a full path
-    }
-    else
-    {
-        NodeGraph::CleanPath( tokens[ 0 ], fixed );
-    }
+    // Normalize path
+    CleanPathForVSIntegration( tokens[ 0 ], fixed );
 
     // insert additional tokens
     for ( size_t i=1; i<( numTokens-2 ); ++i )
@@ -1009,9 +1001,12 @@ void Node::ReplaceDummyName( const AString & newName )
         return; // failed to find bracket where expected
     }
 
-    AStackString<> path( beforeTag.Get(), openBracket );
+    // rebuild fixed string
     AStackString<> fixed;
-    NodeGraph::CleanPath( path, fixed );
+
+    // Normalize path
+    AStackString<> path( beforeTag.Get(), openBracket );
+    CleanPathForVSIntegration( path, fixed );
 
     // add back row, column
     fixed += openBracket;
@@ -1057,19 +1052,53 @@ void Node::ReplaceDummyName( const AString & newName )
     {
         fileName.Trim( 1, 2 );
     }
-    NodeGraph::CleanPath( fileName );
+
+    // Rebuild fixed string
+    AStackString<> fixed;
+
+    // Normalize path
+    CleanPathForVSIntegration( fileName, fixed );
 
     //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
-    AStackString<> buffer;
-    buffer.Format( "%s(%s,1): %s %s: ", fileName.Get(), warningLine, problemType, warningNum );
+    fixed.AppendFormat( "(%s,1): %s %s: ", warningLine, problemType, warningNum );
 
     // add rest of warning
     for ( size_t i=7; i < tokens.GetSize(); ++i )
     {
-        buffer += tokens[ i ];
-        buffer += ' ';
+        fixed += tokens[ i ];
+        fixed += ' ';
     }
-    line = buffer;
+    line = fixed;
+}
+
+//------------------------------------------------------------------------------
+/*static*/ void Node::CleanPathForVSIntegration( const AString & path, AString & outFixedPath )
+{
+    // If the path passed in is a single token, then it is considered to
+    // be a drive letter (split by the : used as an error separator)
+    if ( path.GetLength() == 1 )
+    {
+        outFixedPath = path;
+        return;
+    }
+
+    // Is this a Linux path (under WSL for example)
+    if ( ( path.GetLength() >= 7 ) &&
+         path.BeginsWith( "/mnt/" ) &&
+         ( path[6] == '/' ) )
+    {
+        const char driveLetter = path[5];
+
+        // convert /mnt/X/... -> X:/...
+        outFixedPath.AppendFormat("%c:%s", driveLetter, ( path.Get() + 6 ) );
+
+        // convert to Windows-style slashes
+        outFixedPath.Replace( '/', '\\' );
+        return;
+    }
+
+    // Normalize path
+    NodeGraph::CleanPath( path, outFixedPath );
 }
 
 // InitializePreBuildDependencies
