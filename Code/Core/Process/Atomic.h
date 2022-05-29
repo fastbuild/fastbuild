@@ -361,3 +361,29 @@ inline void AtomicStoreRelease( volatile uint64_t * x, uint64_t value )
 }
 
 //------------------------------------------------------------------------------
+template <class T>
+class Atomic
+{
+public:
+    Atomic()
+        : m_Value( static_cast<T>( 0 ) )
+    {
+    }
+    explicit Atomic( T initValue )
+        : m_Value( initValue )
+    {
+    }
+
+    // Store/Load
+    void    Store( T newValue ) { AtomicStoreRelease( &m_Value, newValue ); }
+    T       Load() const        { return AtomicLoadAcquire( &m_Value ); }
+
+    // Increment
+    void    Increment()         { AtomicInc( &m_Value ); }
+    void    Decrement()         { AtomicDec( &m_Value ); }
+
+protected:
+    volatile T m_Value;
+};
+
+//------------------------------------------------------------------------------
