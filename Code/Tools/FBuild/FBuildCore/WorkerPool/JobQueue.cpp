@@ -74,7 +74,7 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     const bool wasEmpty = m_Jobs.IsEmpty();
 
     m_Jobs.Append( jobs );
-    AtomicAddU32( &m_Count, (int32_t)jobs.GetSize() );
+    AtomicAdd( &m_Count, (int32_t)jobs.GetSize() );
 
     if ( wasEmpty )
     {
@@ -104,7 +104,7 @@ Job * JobSubQueue::RemoveJob()
         return nullptr;
     }
 
-    VERIFY( AtomicDecU32( &m_Count ) != static_cast< uint32_t >( -1 ) );
+    VERIFY( AtomicDec( &m_Count ) != static_cast< uint32_t >( -1 ) );
 
     Job * job = m_Jobs.Top();
     m_Jobs.Pop();
@@ -289,7 +289,7 @@ void JobQueue::QueueDistributableJob( Job * job )
     }
 
     ASSERT( m_NumLocalJobsActive > 0 );
-    AtomicDecU32( &m_NumLocalJobsActive ); // job converts from active to pending remote
+    AtomicDec( &m_NumLocalJobsActive ); // job converts from active to pending remote
 
     m_WorkerThreadSemaphore.Signal();
 }
@@ -624,7 +624,7 @@ Job * JobQueue::GetJobToProcess()
     Job * job = m_LocalJobs_Available.RemoveJob();
     if ( job )
     {
-        AtomicIncU32( &m_NumLocalJobsActive );
+        AtomicInc( &m_NumLocalJobsActive );
         return job;
     }
 
@@ -692,7 +692,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     else
     {
         ASSERT( m_NumLocalJobsActive > 0 );
-        AtomicDecU32( &m_NumLocalJobsActive );
+        AtomicDec( &m_NumLocalJobsActive );
     }
 
     {

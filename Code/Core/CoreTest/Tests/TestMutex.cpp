@@ -94,7 +94,7 @@ void TestMutex::TestExclusivity() const
                                                    static_cast< void * >( &data ) );
 
     // arrive at barrier and wait
-    AtomicIncU32( &data.m_BarrierCounter );
+    AtomicInc( &data.m_BarrierCounter );
     while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
 
     // increment
@@ -121,7 +121,7 @@ void TestMutex::TestExclusivity() const
     TestExclusivityUserData & data = *( static_cast< TestExclusivityUserData * >( userData ) );
 
     // arrive at barrier and wait
-    AtomicIncU32( &data.m_BarrierCounter );
+    AtomicInc( &data.m_BarrierCounter );
     while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
 
     // increment

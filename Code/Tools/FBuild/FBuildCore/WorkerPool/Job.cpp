@@ -26,7 +26,7 @@ static uint32_t s_LastJobId( 0 );
 Job::Job( Node * node )
     : m_Node( node )
 {
-    m_JobId = AtomicIncU32( &s_LastJobId );
+    m_JobId = AtomicInc( &s_LastJobId );
 }
 
 // CONSTRUCTOR
@@ -86,7 +86,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
         if ( m_IsLocal )
         {
             ASSERT( s_TotalLocalDataMemoryUsage >= m_DataSize );
-            AtomicSub64( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
+            AtomicSub( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
         }
     }
 
@@ -98,7 +98,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
     // Update total memory use tracking
     if ( m_IsLocal )
     {
-        AtomicAdd64( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
+        AtomicAdd( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
     }
 }
 

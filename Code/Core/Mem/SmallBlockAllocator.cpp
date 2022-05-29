@@ -250,7 +250,7 @@ bool SmallBlockAllocator::Free( void * ptr )
     }
 
     // Grab the next page
-    const uint32_t pageIndex = AtomicIncU32( &SmallBlockAllocator::s_BucketNextFreePageIndex ) - 1;
+    const uint32_t pageIndex = AtomicInc( &SmallBlockAllocator::s_BucketNextFreePageIndex ) - 1;
 
     // Handle edge case where two or more threads try to allocate the last page simultaneously
     if ( pageIndex >= BUCKET_NUM_PAGES )

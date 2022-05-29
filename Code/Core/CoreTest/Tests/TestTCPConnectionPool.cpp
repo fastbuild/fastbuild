@@ -206,7 +206,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
         {
             TEST_ASSERT( size == m_DataSize );
             TEST_ASSERT( memcmp( data, m_ExpectedData, size ) == 0 );
-            AtomicAddU64( &m_ReceivedBytes, size );
+            AtomicAdd( &m_ReceivedBytes, size );
             m_DataReceviedSemaphore.Signal();
         }
         volatile uint64_t m_ReceivedBytes = 0;
