@@ -173,6 +173,26 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += argv[ sizeIndex ];
                 continue;
             }
+            else if (thisArg == "-distcompressionlevel")
+            {
+                const int sizeIndex = (i + 1);
+                int32_t distributionCompressionLevel;
+                if ((sizeIndex >= argc) ||
+                    (AString::ScanS(argv[sizeIndex], "%i", &distributionCompressionLevel) != 1) ||
+                    ((distributionCompressionLevel < -128) || (distributionCompressionLevel > 12))) // See Compressor for valid ranges
+                {
+                    OUTPUT("FBuild: Error: Missing or bad <level> for '-distcompressionlevel' argument\n");
+                    OUTPUT("Try \"%s -help\"\n", programName.Get());
+                    return OPTIONS_ERROR;
+                }
+                m_DistributionCompressionLevel = static_cast<int16_t>(distributionCompressionLevel);
+                i++; // skip extra arg we've consumed
+
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += argv[sizeIndex];
+                continue;
+            }
             else if ( thisArg == "-clean" )
             {
                 m_ForceCleanBuild = true;
