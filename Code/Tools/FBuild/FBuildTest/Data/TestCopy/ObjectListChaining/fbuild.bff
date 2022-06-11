@@ -28,6 +28,12 @@ CopyDir( 'CopyDir' )
     // Ensure ObjectList1 builds first, since we cannot define static dependencies on the output
     .PreBuildDependencies       = 'ObjectList'
 
+    #if __WINDOWS__
+        .SourcePathsPattern     = '*.obj'
+    #else
+        .SourcePathsPattern     = '*.o'
+    #endif
+
     .SourcePaths                = '$Out$/Test/Copy/ObjectListChaining/1/'
     .Dest                       = '$Out$/Test/Copy/ObjectListChaining/2/'
 }
