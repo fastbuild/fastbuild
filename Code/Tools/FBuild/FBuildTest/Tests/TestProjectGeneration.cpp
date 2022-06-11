@@ -170,20 +170,20 @@ void TestProjectGeneration::Test() const
 
     FBuild fBuild; // needed for NodeGraph::CleanPath
 
-    AStackString<> projectFile( "../../../../tmp/Test/ProjectGeneration/Core.vcxproj" );
+    AStackString<> projectFile( "../tmp/Test/ProjectGeneration/Core.vcxproj" );
     AStackString<> projectFileClean;
     NodeGraph::CleanPath( projectFile, projectFileClean );
 
     const AString & vcxproj = pg.GenerateVCXProj( projectFileClean, configs, fileTypes, projectImports );
     const AString & filters = pg.GenerateVCXProjFilters( projectFileClean );
 
-    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../../../../tmp/Test/ProjectGeneration/" ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../tmp/Test/ProjectGeneration/" ) ) );
 
     FileStream f;
     TEST_ASSERT( f.Open( projectFileClean.Get(), FileStream::WRITE_ONLY ) );
     TEST_ASSERT( f.Write( vcxproj.Get(), vcxproj.GetLength() ) == vcxproj.GetLength() );
     f.Close();
-    TEST_ASSERT( f.Open( "../../../../tmp/Test/ProjectGeneration/Core.vcxproj.filters", FileStream::WRITE_ONLY ) );
+    TEST_ASSERT( f.Open( "../tmp/Test/ProjectGeneration/Core.vcxproj.filters", FileStream::WRITE_ONLY ) );
     TEST_ASSERT( f.Write( filters.Get(), filters.GetLength() ) == filters.GetLength() );
 }
 

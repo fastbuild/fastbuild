@@ -31,10 +31,10 @@ private:
 
     void TestLinkWithCopy() const;
 
-    const char * GetSingleDLLDBFileName() const { return "../../../../tmp/Test/DLL/singledll.fdb"; }
-    const char * GetTwoDLLsDBFileName() const   { return "../../../../tmp/Test/DLL/twodlls.fdb"; }
-    const char * GetDLLWithPCHDBFileName() const { return "../../../../tmp/Test/DLL/dllwithpch.fdb"; }
-    const char * GetExeWithDLLDBFileName() const { return "../../../../tmp/Test/DLL/dllwithexe.fdb"; }
+    const char * GetSingleDLLDBFileName() const { return "../tmp/Test/DLL/singledll.fdb"; }
+    const char * GetTwoDLLsDBFileName() const   { return "../tmp/Test/DLL/twodlls.fdb"; }
+    const char * GetDLLWithPCHDBFileName() const { return "../tmp/Test/DLL/dllwithpch.fdb"; }
+    const char * GetExeWithDLLDBFileName() const { return "../tmp/Test/DLL/dllwithexe.fdb"; }
 };
 
 // Register Tests

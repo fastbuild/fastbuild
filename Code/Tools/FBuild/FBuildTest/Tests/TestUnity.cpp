@@ -25,9 +25,9 @@ private:
 
     // Helpers
     FBuildStats BuildGenerate( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetTestGenerateDBFileName() const { return "../../../../tmp/Test/Unity/generate.fdb"; }
+    const char * GetTestGenerateDBFileName() const { return "../tmp/Test/Unity/generate.fdb"; }
     FBuildStats BuildCompile( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetTestCompileDBFileName() const { return "../../../../tmp/Test/Unity/compile.fdb"; }
+    const char * GetTestCompileDBFileName() const { return "../tmp/Test/Unity/compile.fdb"; }
 
     // Tests
     void TestGenerate() const;
