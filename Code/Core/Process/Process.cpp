@@ -740,6 +740,7 @@ bool Process::ReadAllData( AString & outMem,
             // Expand buffer for new data in large chunks
             const uint32_t newBufferSize = ( buffer.GetReserved() + ( 16 * MEGABYTE ) );
             buffer.SetReserved( newBufferSize );
+            spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
         }
 
         // read the new data
