@@ -204,7 +204,7 @@ void TestDistributed::RemoteRaceWinRemote()
 
 // RemoteRaceSystemFailure
 //------------------------------------------------------------------------------
-#if defined( DEBUG )
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
 void TestDistributed::RemoteRaceSystemFailure()
 {
     // NOTE: Test only available in DEBUG due to SetFakeSystemFailure
@@ -229,7 +229,7 @@ void TestDistributed::RemoteRaceSystemFailure()
     s.Listen( Protocol::PROTOCOL_TEST_PORT );
 
     // Force a system failure when compiling remotely
-    ObjectNode::SetFakeSystemFailure( true );
+    ObjectNode::SetFakeSystemFailureForNextJob();
 
     // Build
     TEST_ASSERT( fBuild.Build( "RemoteRaceSystemFailure" ) );

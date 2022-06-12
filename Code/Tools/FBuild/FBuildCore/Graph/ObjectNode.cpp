@@ -59,8 +59,8 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-#if defined( DEBUG )
-    /*static*/ bool ObjectNode::sFakeSystemFailure = false;
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+    /*static*/ Atomic<uint32_t> ObjectNode::sFakeSystemFailureState( FakeSystemFailureState::DISABLED );
 #endif
 
 // Reflection
@@ -643,11 +643,14 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         EmitCompilationMessage( fullArgs, useDeoptimization, stealingRemoteJob, racingRemoteJob, false, isRemote );
     }
 
-    #if defined(DEBUG)
+    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
         // If racing while inducing a remote failure, ensure the remote failure
         // always wins.
-        if ( ObjectNode::GetFakeSystemFailure() && racingRemoteJob )
+        if ( racingRemoteJob && ( sFakeSystemFailureState.Load() > FakeSystemFailureState::DISABLED ) )
         {
+            // Notify the remote side we're ready for it to fail
+            // and wait for it to be returned
+            sFakeSystemFailureState.Store( RACING );
             while ( job->GetDistributionState() == Job::DIST_RACING )
             {
                 Thread::Sleep( 1 );
@@ -2277,17 +2280,26 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out, m_Err );
 
-#if defined( DEBUG )
-    // Fake system failure for tests
-    if ( sFakeSystemFailure && ( job->IsLocal() == false ) )
-    {
-        ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
-        sFakeSystemFailure = false; // Only fail once
-        m_Result = 1;
-        job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
-        job->OnSystemError();
-    }
-#endif
+    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+        // Fake system failure for tests
+        if ( ( job->IsLocal() == false ) && ( sFakeSystemFailureState.Load() > DISABLED ) )
+        {
+            // Wait until racing
+            while ( sFakeSystemFailureState.Load() != RACING )
+            {
+                Thread::Sleep( 1 );
+            }
+            
+            // Add fake failure
+            ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
+            m_Result = 1;
+            job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
+            job->OnSystemError();
+            
+            // Clear failure state
+            sFakeSystemFailureState.Store( DISABLED );
+        }
+    #endif
 
     if ( m_HandleOutput )
     {

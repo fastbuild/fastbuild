@@ -74,9 +74,9 @@ NodeGraph::NodeGraph()
     m_NodeMap = FNEW_ARRAY( Node *[NODEMAP_TABLE_SIZE] );
     memset( m_NodeMap, 0, sizeof( Node * ) * NODEMAP_TABLE_SIZE );
 
-    #if defined( DEBUG )
+    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
         // Ensure debug flag doesn't linger between test runs
-        ASSERT( ObjectNode::GetFakeSystemFailure() == false );
+        ASSERT( ObjectNode::GetFakeSystemFailureForNextJob() == false );
     #endif
 }
 

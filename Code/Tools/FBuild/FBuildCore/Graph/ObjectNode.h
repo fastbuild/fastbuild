@@ -10,6 +10,7 @@
 #include "Core/Containers/Array.h"
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Assert.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Process.h"
 
 // Forward Declarations
@@ -23,6 +24,13 @@ class NodeGraph;
 class NodeProxy;
 class ObjectNode;
 enum class ArgsResponseFileMode : uint32_t;
+
+// Defines
+//------------------------------------------------------------------------------
+#if defined( DEBUG )
+    // Enabled support for some test functionality
+    #define ENABLE_FAKE_SYSTEM_FAILURE
+#endif
 
 // ObjectNode
 //------------------------------------------------------------------------------
@@ -156,10 +164,16 @@ public:
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
 
-#if defined( DEBUG )
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
     // Fake system failure for tests
-    static void SetFakeSystemFailure( bool enabled ) { sFakeSystemFailure = enabled; }
-    static bool GetFakeSystemFailure() { return sFakeSystemFailure; }
+    enum FakeSystemFailureState : uint32_t
+    {
+        DISABLED,   // Feature not in use
+        ENABLED,    // Feature enabled
+        RACING,     // Racing
+    };
+    static void SetFakeSystemFailureForNextJob() { sFakeSystemFailureState.Store( static_cast<uint32_t>( FakeSystemFailureState::ENABLED ) ); }
+    static bool GetFakeSystemFailureForNextJob() { return ( sFakeSystemFailureState.Load() > DISABLED ); }
 #endif
 
 private:
@@ -285,9 +299,9 @@ private:
     Array< AString >    m_Includes;
     bool                m_Remote                            = false;
 
-#if defined( DEBUG )
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
     // Fake system failure for tests
-    static bool sFakeSystemFailure;
+    static Atomic<uint32_t> sFakeSystemFailureState;
 #endif
 };
 
