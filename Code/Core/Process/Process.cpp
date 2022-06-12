@@ -734,7 +734,7 @@ bool Process::ReadAllData( AString & outMem,
         }
 
         // how much space do we have left for reading into?
-        const uint32_t spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
+        uint32_t spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
         if ( spaceInBuffer == 0 )
         {
             // Expand buffer for new data in large chunks
