@@ -15,6 +15,7 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
+#include <stdarg.h>
 
 // Static
 //------------------------------------------------------------------------------
@@ -86,7 +87,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
         if ( m_IsLocal )
         {
             ASSERT( s_TotalLocalDataMemoryUsage >= m_DataSize );
-            AtomicSub( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
+            AtomicSub( &s_TotalLocalDataMemoryUsage, (int64_t)m_DataSize );
         }
     }
 
@@ -98,7 +99,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
     // Update total memory use tracking
     if ( m_IsLocal )
     {
-        AtomicAdd( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
+        AtomicAdd( &s_TotalLocalDataMemoryUsage, (int64_t)m_DataSize );
     }
 }
 

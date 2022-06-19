@@ -115,10 +115,6 @@ typedef signed int          int32_t;
     typedef long long LONGLONG;
 #endif
 
-#if defined( __LINUX__ ) || defined( __APPLE__ )
-    #define MemoryBarrier() __asm__ __volatile__("")
-#endif
-
 #if defined( __GNUC__ ) || defined( __clang__ ) // GCC or Clang
     #define FORMAT_STRING( fmt, args ) __attribute__((format(printf, fmt, args)))
     #define SCAN_STRING( fmt, args ) __attribute__((format(scanf, fmt, args)))

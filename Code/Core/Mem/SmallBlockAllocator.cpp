@@ -7,6 +7,9 @@
 
 // Core
 #include "Core/Env/Types.h"
+#if defined( __WINDOWS__ )
+    #include <Core/Env/WindowsHeader.h>
+#endif
 #include "Core/Math/Conversions.h"
 #include "Core/Mem/MemDebug.h"
 #include "Core/Mem/MemPoolBlock.h"

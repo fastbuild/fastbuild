@@ -206,7 +206,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
         {
             TEST_ASSERT( size == m_DataSize );
             TEST_ASSERT( memcmp( data, m_ExpectedData, size ) == 0 );
-            AtomicAdd( &m_ReceivedBytes, size );
+            AtomicAdd( &m_ReceivedBytes, (uint64_t)size );
             m_DataReceviedSemaphore.Signal();
         }
         volatile uint64_t m_ReceivedBytes = 0;
@@ -237,7 +237,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     size_t sendSize = 31;
     while ( sendSize <= maxSendSize )
     {
-        AtomicStoreRelaxed( &server.m_ReceivedBytes, 0 );
+        AtomicStoreRelaxed( &server.m_ReceivedBytes, (uint64_t) 0 );
         server.m_DataSize = sendSize;
 
         Timer timer;
