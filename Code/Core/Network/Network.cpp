@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/Network/NetworkStartupHelper.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AString.h"

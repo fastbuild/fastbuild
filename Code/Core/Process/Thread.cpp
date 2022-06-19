@@ -6,6 +6,7 @@
 #include "Thread.h"
 #include "Core/Env/Assert.h"
 #include "Core/Mem/Mem.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 
 // system
