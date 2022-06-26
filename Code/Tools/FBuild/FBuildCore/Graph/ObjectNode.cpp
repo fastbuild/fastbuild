@@ -510,7 +510,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     {
         // compress job data
         Compressor c;
-        c.Compress( job->GetData(), job->GetDataSize() );
+        c.Compress( job->GetData(), job->GetDataSize(), FBuild::Get().GetOptions().m_DistributionCompressionLevel );
         size_t compressedSize = c.GetResultSize();
         job->OwnData( c.ReleaseResult(), compressedSize, true );
 

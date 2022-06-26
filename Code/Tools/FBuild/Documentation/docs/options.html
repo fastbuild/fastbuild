@@ -80,6 +80,10 @@
     <td>Enable distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#distcompressionlevel">-distcompressionlevel [level]</a></td>
+    <td>Control compression level of jobs sent out for distribution. (Default -1)</td>
+  </tr>
+  <tr>
     <td><a href="#distverbose">-distverbose</a></td>
     <td>Enable detailed logging for distributed compilation.</td>
   </tr>
@@ -345,6 +349,15 @@ be reproduced in the debugger.</p>
     <div class='newsitemheader' id="dist">-dist</div>
     <div class='newsitembody'>
 <p>Enable distributed compilation. Requires some build configuration.</p>
+
+    <div class='newsitemheader' id="distcompressionlevel">-distcompressionlevel [level]</div>
+    <div class='newsitembody'>
+<p>Control compression level of jobs sent out for distribution. (Default -1)</p>
+<p>This can be used to increase the level of compression for jobs sent out for distribution, trading increased CPU time
+        in order to reduce network transfer. This can be useful in network bandwidth limited environments. Note that
+        this value does not affect the compression level of the responses sent back from workers.</p>
+<p>See option <a href="#cachecompressionlevel">-cachecompressionlevel</a> for more details on compression levels and
+        their performance.</p>
 </div>
 
     <div class='newsitemheader' id="distverbose">-distverbose</div>
