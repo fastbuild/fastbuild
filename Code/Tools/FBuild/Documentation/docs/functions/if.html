@@ -36,6 +36,7 @@ The following types of expressions are supported:
   <li>Boolean Values</li>
   <li>Comparisons</li>
   <li>Presence in ArrayOfStrings</li>
+  <li>Array is non-empty</li>
   <li>Compound boolean expressions of above three types</li>
 </ul>
 <b>NOTE:</b> Literal of ArrayOfStrings is not supported so far. 
@@ -177,6 +178,26 @@ Examples:
 </div>
 </div>
 
+
+<div class='newsitemheader'>Array is non-empty</div>
+<div class='newsitembody'>
+  <p>
+ArrayOfStrings or ArrayOfStructs variables can be checked to see if they are non-empty.
+</p>
+  <p>
+Examples:
+  </p>
+<div class='code'>If( .ArrayOfStructs )
+{
+// Evaluated if .ArrayOfStructs is non-empty
+}
+</div>
+<div class='code'>If( !.Bool && .ArrayOfStrings )
+{
+// Evaluated if .Bool is false and .ArrayOfStrings is non-empty
+}
+</div>
+</div>
 
 
     </div><div class='footer'>&copy; 2012-2022 Franta Fulin</div></div></div>
