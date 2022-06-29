@@ -420,6 +420,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     const ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
     const bool includePDB = node->IsUsingPDB();
     const bool usingStaticAnalysis = node->IsUsingStaticAnalysisMSVC();
+    const bool usingGcovCoverage = node->IsUsingGcovCoverage();
 
     // Determine list of files to send
 
@@ -444,6 +445,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         AStackString<> xmlFileName;
         node->GetNativeAnalysisXMLPath( xmlFileName );
         fileNames.Append( xmlFileName );
+    }
+
+    // 4. .gcno file (optional)
+    //--------------------------------------------
+    if ( usingGcovCoverage )
+    {
+        AStackString<> gcnoFileName;
+        node->GetGCNOPath( gcnoFileName );
+        fileNames.Append( gcnoFileName );
     }
 
     MultiBuffer mb;

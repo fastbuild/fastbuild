@@ -754,6 +754,14 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                 result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
             }
 
+            // 4. .gcno (optional)
+            if ( result && on->IsUsingGcovCoverage() )
+            {
+                AStackString<> gcnoFileName;
+                on->GetGCNOPath( gcnoFileName );
+                result = WriteFileToDisk( gcnoFileName, mb, fileIndex++ );
+            }
+
             if ( result )
             {
                 // record new file time

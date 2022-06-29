@@ -76,6 +76,7 @@ public:
         bool IsDiagnosticsColorAuto() const         { return ( ( m_Flags & FLAG_DIAGNOSTICS_COLOR_AUTO ) != 0 ); }
         bool IsWarningsAsErrorsClangGCC() const     { return ( ( m_Flags & FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) != 0 ); }
         bool IsClangCl() const                      { return ( ( m_Flags & FLAG_CLANG_CL ) != 0 ); }
+        bool IsUsingGcovCoverage() const            { return ( ( m_Flags & FLAG_GCOV_COVERAGE ) != 0 ); }
 
         enum Flag : uint32_t
         {
@@ -103,6 +104,7 @@ public:
             FLAG_DIAGNOSTICS_COLOR_AUTO         = 0x800000,
             FLAG_WARNINGS_AS_ERRORS_CLANGGCC    = 0x1000000,
             FLAG_CLANG_CL                       = 0x2000000,
+            FLAG_GCOV_COVERAGE                  = 0x4000000,
         };
 
         void Set( Flag flag )       { m_Flags |= flag; }
@@ -142,6 +144,7 @@ public:
     bool IsUsingStaticAnalysisMSVC() const  { return m_CompilerFlags.IsUsingStaticAnalysisMSVC(); }
     bool IsOrbisWavePSSLC() const           { return m_CompilerFlags.IsOrbisWavePSSLC(); }
     bool IsWarningsAsErrorsClangGCC() const { return m_CompilerFlags.IsWarningsAsErrorsClangGCC(); }
+    bool IsUsingGcovCoverage() const        { return m_CompilerFlags.IsUsingGcovCoverage(); }
 
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
@@ -156,6 +159,7 @@ public:
 
     void GetPDBName( AString & pdbName ) const;
     void GetNativeAnalysisXMLPath( AString& outXMLFileName ) const;
+    void GetGCNOPath( AString & gcnoFileName ) const;
 
     const char * GetObjExtension() const;
 
