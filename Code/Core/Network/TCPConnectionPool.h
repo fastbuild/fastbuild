@@ -8,6 +8,7 @@
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Types.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
@@ -52,7 +53,7 @@ private:
     TCPSocket               m_Socket;
     uint32_t                m_RemoteAddress;
     uint16_t                m_RemotePort;
-    volatile mutable bool   m_ThreadQuitNotification;
+    mutable Atomic<bool>    m_ThreadQuitNotification;
     TCPConnectionPool *     m_TCPConnectionPool; // back pointer to parent pool
     mutable void *          m_UserData;
 

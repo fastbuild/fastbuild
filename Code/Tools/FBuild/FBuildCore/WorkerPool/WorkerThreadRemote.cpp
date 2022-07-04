@@ -31,14 +31,14 @@ WorkerThreadRemote::WorkerThreadRemote( uint16_t threadIndex )
 //------------------------------------------------------------------------------
 WorkerThreadRemote::~WorkerThreadRemote()
 {
-    ASSERT( m_Exited );
+    ASSERT( m_Exited.Load() );
 }
 
 // Main
 //------------------------------------------------------------------------------
 /*virtual*/ void WorkerThreadRemote::Main()
 {
-    while ( AtomicLoadRelaxed( &m_ShouldExit ) == false )
+    while ( m_ShouldExit.Load() == false )
     {
         if ( IsEnabled() == false )
         {
@@ -74,7 +74,7 @@ WorkerThreadRemote::~WorkerThreadRemote()
         }
     }
 
-    AtomicStoreRelaxed( &m_Exited, true );
+    m_Exited.Store( true );
 
     m_MainThreadWaitForExit.Signal();
 }

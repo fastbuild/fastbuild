@@ -45,7 +45,7 @@ Server::Server( uint32_t numThreadsInJobQueue )
 //------------------------------------------------------------------------------
 Server::~Server()
 {
-    AtomicStoreRelaxed( &m_ShouldExit, true );
+    m_ShouldExit.Store( true );
     JobQueueRemote::Get().WakeMainThread();
     Thread::WaitForThread( m_Thread );
 
@@ -511,7 +511,7 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
 //------------------------------------------------------------------------------
 void Server::ThreadFunc()
 {
-    while ( AtomicLoadRelaxed( &m_ShouldExit ) == false )
+    while ( m_ShouldExit.Load() == false )
     {
         FinalizeCompletedJobs();
 
@@ -527,7 +527,7 @@ void Server::ThreadFunc()
 //------------------------------------------------------------------------------
 void Server::FindNeedyClients()
 {
-    if ( AtomicLoadRelaxed( &m_ShouldExit ) )
+    if ( m_ShouldExit.Load() )
     {
         return;
     }

@@ -53,7 +53,7 @@ void WorkerThread::Init()
 //------------------------------------------------------------------------------
 WorkerThread::~WorkerThread()
 {
-    ASSERT( AtomicLoadRelaxed( &m_Exited ) );
+    ASSERT( m_Exited.Load() );
 }
 
 // InitTmpDir
@@ -85,14 +85,14 @@ WorkerThread::~WorkerThread()
 //------------------------------------------------------------------------------
 void WorkerThread::Stop()
 {
-    AtomicStoreRelaxed( &m_ShouldExit, true );
+    m_ShouldExit.Store( true );
 }
 
 // HasExited
 //------------------------------------------------------------------------------
 bool WorkerThread::HasExited() const
 {
-    return AtomicLoadRelaxed( &m_Exited );
+    return m_Exited.Load();
 }
 
 // WaitForStop
@@ -140,7 +140,7 @@ void WorkerThread::WaitForStop()
         // Wait for work to become available (or quit signal)
         JobQueue::Get().WorkerThreadWait( 500 );
 
-        if ( AtomicLoadRelaxed( &m_ShouldExit ) || FBuild::GetStopBuild() )
+        if ( m_ShouldExit.Load() || FBuild::GetStopBuild() )
         {
             break;
         }
@@ -148,7 +148,7 @@ void WorkerThread::WaitForStop()
         Update();
     }
 
-    AtomicStoreRelaxed( &m_Exited, true );
+    m_Exited.Store( true );
 
     // wake up main thread
     if ( JobQueue::IsValid() ) // Unit Tests

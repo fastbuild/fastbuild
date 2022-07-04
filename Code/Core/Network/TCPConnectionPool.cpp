@@ -466,14 +466,14 @@ void TCPConnectionPool::Disconnect( const ConnectionInfo * ci )
 
     if ( ci == m_ListenConnection )
     {
-        AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
+        ci->m_ThreadQuitNotification.Store( true );
         return;
     }
 
     const ConnectionInfo * const * iter = m_Connections.Find( ci );
     if ( iter != nullptr )
     {
-        AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
+        ci->m_ThreadQuitNotification.Store( true );
         return;
     }
 
@@ -550,7 +550,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     ASSERT( connection );
 
     // closing connection, possibly from a previous failure
-    if ( AtomicLoadAcquire( &connection->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
+    if ( connection->m_ThreadQuitNotification.Load() || AtomicLoadRelaxed( &m_ShuttingDown ) )
     {
         return false;
     }
@@ -622,7 +622,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         {
             if ( WouldBlock() )
             {
-                if ( AtomicLoadAcquire( &connection->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
+                if ( connection->m_ThreadQuitNotification.Load() || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     sendOK = false;
                     break;
@@ -701,7 +701,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
         {
             if ( WouldBlock() )
             {
-                if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
+                if ( ci->m_ThreadQuitNotification.Load() || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     return false;
                 }
@@ -731,7 +731,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
         {
             if ( WouldBlock() )
             {
-                if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
+                if ( ci->m_ThreadQuitNotification.Load() || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     FreeBuffer( buffer );
                     return false;
@@ -900,7 +900,7 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
     m_ListenConnection->m_Socket = socket;
     m_ListenConnection->m_RemoteAddress = host;
     m_ListenConnection->m_RemotePort = port;
-    m_ListenConnection->m_ThreadQuitNotification = false;
+    m_ListenConnection->m_ThreadQuitNotification.Store( false );
 
     // Spawn thread to handle socket
     Thread::ThreadHandle h = Thread::CreateThread( &ListenThreadWrapperFunction,
@@ -933,7 +933,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
     struct sockaddr_in remoteAddrInfo;
     int remoteAddrInfoSize = sizeof( remoteAddrInfo );
 
-    while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
+    while ( ci->m_ThreadQuitNotification.Load() == false )
     {
         // timout for select() operations
         // (modified by select, so we must recreate it)
@@ -1024,7 +1024,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
     ci->m_Socket = socket;
     ci->m_RemoteAddress = host;
     ci->m_RemotePort = port;
-    ci->m_ThreadQuitNotification = false;
+    ci->m_ThreadQuitNotification.Store( false );
     ci->m_UserData = userData;
 
     #ifdef TCPCONNECTION_DEBUG
@@ -1069,7 +1069,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
     OnConnected( ci ); // Do callback
 
     // process socket events
-    while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
+    while ( ci->m_ThreadQuitNotification.Load() == false )
     {
         // timout for select() operations
         // (modified by select, so we must recreate it)
@@ -1098,7 +1098,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
             continue;
         }
 
-        if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) )
+        if ( ci->m_ThreadQuitNotification.Load() )
         {
             break; // don't bother reading any pending data if shutting down
         }

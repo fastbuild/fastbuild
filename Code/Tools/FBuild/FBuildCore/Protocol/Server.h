@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Network/TCPConnectionPool.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Time/Timer.h"
 
 // Forward Declarations
@@ -82,7 +83,7 @@ private:
 
     JobQueueRemote *        m_JobQueueRemote;
 
-    volatile bool           m_ShouldExit;   // signal from main thread
+    Atomic<bool>            m_ShouldExit;   // signal from main thread
     Thread::ThreadHandle    m_Thread;       // the thread to manage workload
     Mutex                   m_ClientListMutex;
     Array< ClientState * >  m_ClientList;

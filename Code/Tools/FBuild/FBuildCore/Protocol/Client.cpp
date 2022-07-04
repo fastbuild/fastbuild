@@ -61,7 +61,7 @@ Client::~Client()
 
     SetShuttingDown();
 
-    AtomicStoreRelaxed( &m_ShouldExit, true );
+    m_ShouldExit.Store( true );
     Thread::WaitForThread( m_Thread );
 
     ShutdownAllConnections();
@@ -123,19 +123,19 @@ void Client::ThreadFunc()
     for ( ;; )
     {
         LookForWorkers();
-        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
+        if ( m_ShouldExit.Load() )
         {
             break;
         }
 
         CommunicateJobAvailability();
-        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
+        if ( m_ShouldExit.Load() )
         {
             break;
         }
 
         Thread::Sleep( 1 );
-        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
+        if ( m_ShouldExit.Load() )
         {
             break;
         }

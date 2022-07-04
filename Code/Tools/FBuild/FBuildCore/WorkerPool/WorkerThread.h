@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 #include "Core/Strings/AStackString.h"
@@ -48,8 +49,8 @@ protected:
     virtual void Main();
 
     // signal to exit thread
-    volatile bool m_ShouldExit;
-    volatile bool m_Exited;
+    Atomic<bool>  m_ShouldExit;
+    Atomic<bool>  m_Exited;
     uint16_t      m_ThreadIndex;
     Semaphore     m_MainThreadWaitForExit; // Used by main thread to wait for exit of worker
 
