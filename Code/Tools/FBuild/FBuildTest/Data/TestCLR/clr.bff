@@ -41,7 +41,6 @@ ObjectList( 'BridgeTest-CPP' )
 {
     .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestCLR/exe.cxx'
     .CompilerOutputPath = '$Out$/Test/CLR/Bridge/'
-    .LibrarianOutput    = '$Out$/Test/CLR/Bridge/exe.lib'
 }
 
 Executable( 'BridgeTest-Exe' )

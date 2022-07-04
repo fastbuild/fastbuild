@@ -21,7 +21,6 @@
 .Var = ";"
 
 ; scope tokens in strings
-Settings
 {
     .A = "{{{{{"
     .B = '{{{{{'
