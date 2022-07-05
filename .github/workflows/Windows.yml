@@ -19,9 +19,6 @@ jobs:
           - cfg: Build
             vs: 2017
             os: windows-2019
-          - cfg: Build
-            vs: 2015
-            os: windows-2019
           - cfg: Analyze
             vs: 2019
             os: windows-2019
