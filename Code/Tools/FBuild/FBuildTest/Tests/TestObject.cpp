@@ -50,8 +50,8 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( SourceMapping )
     REGISTER_TEST( ClangExplicitLanguageType )
     REGISTER_TEST( ClangDependencyArgs )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( CLDependencyArgs )
+    #if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
+        REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
     #endif
 REGISTER_TESTS_END
 
