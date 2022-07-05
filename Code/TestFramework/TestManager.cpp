@@ -244,7 +244,7 @@ void TestManager::TestEnd()
         ProfileManager::Synchronize();
     #endif
 
-    float timeTaken = m_Timer.GetElapsed();
+    const float timeTaken = m_Timer.GetElapsed();
 
     info.m_TimeTaken = timeTaken;
 

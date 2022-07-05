@@ -300,7 +300,7 @@ void TestFileIO::FileTime() const
 
     // manually set time back
     TEST_ASSERT( FileIO::SetFileLastWriteTime( path, oldTime ) == true );
-    uint64_t timeNow = FileIO::GetFileLastWriteTime( path );
+    const uint64_t timeNow = FileIO::GetFileLastWriteTime( path );
     TEST_ASSERT( timeNow == oldTime );
 }
 

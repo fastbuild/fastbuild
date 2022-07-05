@@ -333,7 +333,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     else
     {
         // files differ in size?
-        size_t oldFileSize = (size_t)old.GetFileSize();
+        const size_t oldFileSize = (size_t)old.GetFileSize();
         if ( oldFileSize != content.GetLength() )
         {
             needToWrite = true;

@@ -212,7 +212,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
 
     // determine message type
     const Protocol::IMessage * imsg = cs->m_CurrentMessage;
-    Protocol::MessageType messageType = imsg->GetType();
+    const Protocol::MessageType messageType = imsg->GetType();
 
     PROTOCOL_DEBUG( "Client -> Server : %u (%s)\n", messageType, GetProtocolMessageDebugName( messageType ) );
 
@@ -376,7 +376,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                 m_Tools.Append( manifest );
 
                 // request manifest of tool chain
-                Protocol::MsgRequestManifest reqMsg( toolId );
+                const Protocol::MsgRequestManifest reqMsg( toolId );
                 reqMsg.Send( connection );
             }
 
@@ -471,7 +471,7 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
             MutexHolder mh2( cs->m_Mutex );
 
             // .. check all jobs waiting for ToolManifests
-            int32_t numJobs = (int32_t)cs->m_WaitingJobs.GetSize();
+            const int32_t numJobs = (int32_t)cs->m_WaitingJobs.GetSize();
             for ( int32_t i=( numJobs -1 ); i >= 0; --i )
             {
                 Job * job = cs->m_WaitingJobs[ (size_t)i ];
@@ -550,7 +550,7 @@ void Server::FindNeedyClients()
             MutexHolder mh2( cs->m_Mutex );
 
             // any jobs requested or in progress reduce the available count
-            int32_t reservedJobs = (int32_t)( cs->m_NumJobsRequested + cs->m_NumJobsActive );
+            const int32_t reservedJobs = (int32_t)( cs->m_NumJobsRequested + cs->m_NumJobsActive );
             availableJobs -= reservedJobs;
             if ( availableJobs <= 0 )
             {
@@ -563,7 +563,7 @@ void Server::FindNeedyClients()
         // sort clients to find neediest first
         m_ClientList.SortDeref();
 
-        Protocol::MsgRequestJob msg;
+        const Protocol::MsgRequestJob msg;
 
         while ( availableJobs > 0 )
         {
@@ -573,7 +573,7 @@ void Server::FindNeedyClients()
             {
                 MutexHolder mh2( cs->m_Mutex );
 
-                size_t reservedJobs = cs->m_NumJobsRequested;
+                const size_t reservedJobs = cs->m_NumJobsRequested;
 
                 if ( reservedJobs >= cs->m_NumJobsAvailable )
                 {
@@ -611,10 +611,10 @@ void Server::FinalizeCompletedJobs()
         {
             MutexHolder mh( m_ClientListMutex );
 
-            bool connectionStillActive = ( m_ClientList.Find( cs ) != nullptr );
+            const bool connectionStillActive = ( m_ClientList.Find( cs ) != nullptr );
             if ( connectionStillActive )
             {
-                Node::State result = job->GetNode()->GetState();
+                const Node::State result = job->GetNode()->GetState();
                 ASSERT( ( result == Node::UP_TO_DATE ) || ( result == Node::FAILED ) );
 
                 MemoryStream ms;
@@ -638,13 +638,13 @@ void Server::FinalizeCompletedJobs()
                     if ( job->GetResultCompressionLevel() == 0 )
                     {
                         // Uncompressed
-                        Protocol::MsgJobResult msg;
+                        const Protocol::MsgJobResult msg;
                         msg.Send( cs->m_Connection, ms );
                     }
                     else
                     {
                         // Compressed
-                        Protocol::MsgJobResultCompressed msg;
+                        const Protocol::MsgJobResultCompressed msg;
                         msg.Send( cs->m_Connection, ms );
                     }
                 }
@@ -695,7 +695,7 @@ void Server::RequestMissingFiles( const ConnectionInfo * connection, ToolManifes
         if ( f.GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED )
         {
             // request this file
-            Protocol::MsgRequestFile reqFileMsg( manifest->GetToolId(), (uint32_t)i );
+            const Protocol::MsgRequestFile reqFileMsg( manifest->GetToolId(), (uint32_t)i );
             reqFileMsg.Send( connection );
 
             // prevent it being requested again

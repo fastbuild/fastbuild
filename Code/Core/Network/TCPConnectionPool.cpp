@@ -217,7 +217,7 @@ bool TCPConnectionPool::Listen( uint16_t port )
     ASSERT( m_ListenConnection == nullptr );
 
     // create the socket
-    TCPSocket sockfd = CreateSocket();
+    const TCPSocket sockfd = CreateSocket();
     if ( sockfd == INVALID_SOCKET )
     {
         return false;
@@ -253,7 +253,7 @@ bool TCPConnectionPool::Listen( uint16_t port )
     }
 
     // spawn the handler thread
-    uint32_t loopback = 127 & ( 1 << 24 ); // 127.0.0.1
+    const uint32_t loopback = 127 & ( 1 << 24 ); // 127.0.0.1
     CreateListenThread( sockfd, loopback, port );
 
     // everything is ok - we are now listening, managing connections on the other thread
@@ -267,7 +267,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_
     ASSERT( !host.IsEmpty() );
 
     // get IP
-    uint32_t hostIP = Network::GetHostIPFromName( host, timeout );
+    const uint32_t hostIP = Network::GetHostIPFromName( host, timeout );
     if ( hostIP == 0 )
     {
         TCPDEBUG( "Failed to get address for '%s'\n", host.Get() );
@@ -283,7 +283,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
     PROFILE_FUNCTION;
 
     // create a socket
-    TCPSocket sockfd = CreateSocket();
+    const TCPSocket sockfd = CreateSocket();
     if ( sockfd == INVALID_SOCKET )
     {
         return nullptr; // outright failure?
@@ -319,7 +319,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         }
     }
 
-    Timer connectionTimer;
+    const Timer connectionTimer;
 
     // wait for connection
     for ( ;; )
@@ -344,7 +344,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         pollingTimeout.tv_usec = 10 * 1000;
 
         // check if the socket is ready
-        int selRet = Select( sockfd + 1, nullptr, &write, &err, &pollingTimeout );
+        const int selRet = Select( sockfd + 1, nullptr, &write, &err, &pollingTimeout );
         if ( selRet == SOCKET_ERROR )
         {
             // connection failed
@@ -504,7 +504,7 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
     SendBuffer buffers[ 2 ]; // size + data
 
     // size
-    uint32_t sizeData = (uint32_t)size;
+    const uint32_t sizeData = (uint32_t)size;
     buffers[ 0 ].size = sizeof( sizeData );
     buffers[ 0 ].data = &sizeData;
 
@@ -521,7 +521,7 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
     SendBuffer buffers[ 4 ]; // size + data + payloadSize + payloadData
 
     // size
-    uint32_t sizeData = (uint32_t)size;
+    const uint32_t sizeData = (uint32_t)size;
     buffers[ 0 ].size = sizeof( sizeData );
     buffers[ 0 ].data = &sizeData;
 
@@ -530,7 +530,7 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
     buffers[ 1 ].data = data;
 
     // payloadSize
-    uint32_t payloadSizeData = (uint32_t)payloadSize;
+    const uint32_t payloadSizeData = (uint32_t)payloadSize;
     buffers[ 2 ].size = sizeof( payloadSizeData );
     buffers[ 2 ].data = &payloadSizeData;
 
@@ -569,7 +569,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         totalBytes += buffers[ i ].size;
     }
 
-    Timer timer;
+    const Timer timer;
 
 #ifdef DEBUG
     ASSERT( connection->m_SendSocketInUseThreadId == INVALID_THREAD_ID );
@@ -613,7 +613,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         // Try send
         #if defined( __WINDOWS__ )
             uint32_t sent( 0 );
-            int result = WSASend( connection->m_Socket, sendBuffers, numSendBuffers, (LPDWORD)&sent, 0, nullptr, nullptr );
+            const int result = WSASend( connection->m_Socket, sendBuffers, numSendBuffers, (LPDWORD)&sent, 0, nullptr, nullptr );
             if ( result == SOCKET_ERROR )
         #else
             ssize_t sent = writev( connection->m_Socket, sendBuffers, numSendBuffers );
@@ -696,7 +696,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     uint32_t bytesToRead = 4;
     while ( bytesToRead > 0 )
     {
-        int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, (int32_t)bytesToRead, 0 );
+        const int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, (int32_t)bytesToRead, 0 );
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
@@ -822,7 +822,7 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
 {
     #if defined( __WINDOWS__ )
         // On Windows, the newSocket inherits WSA_FLAG_NO_HANDLE_INHERIT from socket
-        TCPSocket newSocket = accept( socket, address, addressSize );
+        const TCPSocket newSocket = accept( socket, address, addressSize );
 
         // TODO: Re-enable
         //DWORD flags;
@@ -859,7 +859,7 @@ TCPSocket TCPConnectionPool::CreateSocket() const
         // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
     #elif defined( __WINDOWS__ )
-        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+        const TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
 
         // TODO: Re-enable
         // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
@@ -956,7 +956,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         PRAGMA_DISABLE_POP_MSVC // 4548
 
         // peek
-        int num = Select( ci->m_Socket + 1, &set, nullptr, nullptr, &timeout );
+        const int num = Select( ci->m_Socket + 1, &set, nullptr, nullptr, &timeout );
         if ( num == 0 )
         {
             // timeout expired - loop again (checking quit notification)
@@ -966,7 +966,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         // new connection
 
         // get a socket for the new connection
-        TCPSocket newSocket = Accept( ci->m_Socket, (struct sockaddr *)&remoteAddrInfo, &remoteAddrInfoSize );
+        const TCPSocket newSocket = Accept( ci->m_Socket, (struct sockaddr *)&remoteAddrInfo, &remoteAddrInfoSize );
 
         // handle errors or socket shutdown
         if ( newSocket == INVALID_SOCKET )
@@ -1091,7 +1091,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         PRAGMA_DISABLE_POP_MSVC // C6319
         PRAGMA_DISABLE_POP_MSVC // 4548
 
-        int num = Select( ci->m_Socket + 1, &readSet, nullptr, nullptr, &timeout );
+        const int num = Select( ci->m_Socket + 1, &readSet, nullptr, nullptr, &timeout );
         if ( num == 0 )
         {
             // timeout expired - loop again (checking quit notification)
@@ -1150,7 +1150,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
 void TCPConnectionPool::AllowSocketReuse( TCPSocket socket ) const
 {
     static const int yes = 1;
-    int ret = setsockopt( socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof( yes ) );
+    const int ret = setsockopt( socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof( yes ) );
     if ( ret != 0 )
     {
         TCPDEBUG( "setsockopt(SO_REUSEADDR) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
@@ -1211,7 +1211,7 @@ void TCPConnectionPool::SetLargeBufferSizes( TCPSocket socket ) const
 
     // Receive Buffer
     {
-        int ret = setsockopt( socket, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
+        const int ret = setsockopt( socket, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
         if ( ret != 0 )
         {
             TCPDEBUG( "setsockopt(SO_RCVBUF) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
@@ -1220,7 +1220,7 @@ void TCPConnectionPool::SetLargeBufferSizes( TCPSocket socket ) const
 
     // Send Buffer
     {
-        int ret = setsockopt( socket, SOL_SOCKET, SO_SNDBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
+        const int ret = setsockopt( socket, SOL_SOCKET, SO_SNDBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
         if ( ret != 0 )
         {
             TCPDEBUG( "setsockopt(SO_SNDBUF) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );

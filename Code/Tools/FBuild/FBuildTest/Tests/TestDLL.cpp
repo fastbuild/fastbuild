@@ -313,7 +313,7 @@ void TestDLL::TestValidExeWithDLL() const
 
     Process p;
     TEST_ASSERT( p.Spawn( exe.Get(), nullptr, nullptr, nullptr ) );
-    int ret = p.WaitForExit();
+    const int ret = p.WaitForExit();
     TEST_ASSERT( ret == 99 );
 }
 

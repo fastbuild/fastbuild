@@ -80,7 +80,7 @@ void TestSemaphore::WaitForSignal() const
 //------------------------------------------------------------------------------
 void TestSemaphore::WaitTimeout() const
 {
-    Timer t;
+    const Timer t;
 
     Semaphore s;
 

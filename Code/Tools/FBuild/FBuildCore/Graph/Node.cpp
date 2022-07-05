@@ -165,7 +165,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 
     if ( IsAFile() )
     {
-        uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
+        const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
 
         if ( lastWriteTime == 0 )
         {
@@ -425,7 +425,7 @@ void Node::SetLastBuildTime( uint32_t ms )
     ASSERT( node );
 
     // save type
-    uint8_t nodeType = node->GetType();
+    const uint8_t nodeType = node->GetType();
     stream.Write( nodeType );
 
     // Save Name
@@ -488,7 +488,7 @@ void Node::SetLastBuildTime( uint32_t ms )
     ASSERT( node->GetType() == Node::OBJECT_NODE );
 
     // save type
-    uint32_t nodeType = (uint32_t)node->GetType();
+    const uint32_t nodeType = (uint32_t)node->GetType();
     stream.Write( nodeType );
 
     // save contents

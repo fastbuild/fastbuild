@@ -211,7 +211,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     else
     {
         // files differ in size?
-        size_t oldFileSize = (size_t)old.GetFileSize();
+        const size_t oldFileSize = (size_t)old.GetFileSize();
         if ( oldFileSize != content.GetLength() )
         {
             needToWrite = true;

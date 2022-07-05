@@ -193,7 +193,7 @@ void TestArray::Construct_OtherArray() const
 void TestArray::Construct_Range() const
 {
     {
-        uint32_t u32s[ 4 ] = { 1, 2, 3, 4 };
+        const uint32_t u32s[ 4 ] = { 1, 2, 3, 4 };
 
         Array<uint32_t> array( u32s, u32s + 4 );
         CheckConsistency( array );
@@ -400,7 +400,7 @@ void TestArray::RangeBasedForLoop() const
         array.Append( 1 );
         array.Append( 2 );
         uint32_t total = 0;
-        for ( uint32_t u : array ) // by value
+        for ( const uint32_t u : array ) // by value
         {
             total += u;
         }

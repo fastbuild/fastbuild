@@ -90,7 +90,7 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
         // Print info for eeach bucket
         for ( uint32_t i = 0; i < BUCKET_NUM_BUCKETS; ++i )
         {
-            MemBucket & bucket = s_Buckets[ i ];
+            const MemBucket & bucket = s_Buckets[ i ];
             const uint32_t numLive = bucket.m_NumActiveAllocations; //GetNumActiveAllocations();
             const uint32_t blockSize = bucket.m_BlockSize; //GetBlockSize();
             const uint32_t numPeak = bucket.m_PeakActiveAllocations;

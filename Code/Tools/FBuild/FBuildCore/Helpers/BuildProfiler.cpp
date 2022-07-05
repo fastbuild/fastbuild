@@ -156,7 +156,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     // Serialize events
     AStackString<> nameBuffer;
     const double freqMul = ( static_cast<double>( Timer::GetFrequencyInvFloatMS()) * 1000.0 );
-    for ( Event & event : m_Events )
+    for ( const Event & event : m_Events )
     {
         // Emit event with duration
         buffer.AppendFormat( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u",

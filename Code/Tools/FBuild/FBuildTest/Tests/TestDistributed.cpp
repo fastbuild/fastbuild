@@ -115,7 +115,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
         TEST_ASSERT( FileIO::FileExists( target ) == false );
     }
 
-    bool pass = fBuild.Build( target );
+    const bool pass = fBuild.Build( target );
     if ( !shouldFail )
     {
         TEST_ASSERT( pass );
@@ -401,11 +401,12 @@ void TestDistributed::ShutdownMemoryLeak() const
         static uint32_t AbortBuild( void * data )
         {
             // Wait until some distributed jobs are available
-            Timer t;
-            float timeout = 5.0f;
+            const Timer t;
             #if __has_feature( thread_sanitizer ) || defined( __SANITIZE_THREAD__ )
                 // Code under ThreadSanitizer runs several time slower than normal, so we need a larger timeout.
-                timeout = 30.0f;
+                const float timeout = 30.0f;
+            #else
+                const float timeout = 5.0f;
             #endif
             while ( t.GetElapsed() < timeout )
             {

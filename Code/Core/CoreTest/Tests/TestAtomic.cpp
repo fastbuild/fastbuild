@@ -112,7 +112,7 @@ private:
     template<typename T>
     void DoAtomicTestsForType()
     {
-        AtomicTestHelper<T> helper;
+        const AtomicTestHelper<T> helper;
     }
 
     // Boolean

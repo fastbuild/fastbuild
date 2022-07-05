@@ -81,7 +81,7 @@
 
             // ULONG maxLogicalProcessorsInThisGroup = KeQueryMaximumProcessorCountEx( NodeID );
             // Each NUMA Node has a maximum of 32 cores on 32-bit systems and 64 cores on 64-bit systems
-            size_t maxLogicalProcessorsInThisGroup = sizeof( size_t ) * 8; // ( NumBits = NumBytes * 8 )
+            const size_t maxLogicalProcessorsInThisGroup = sizeof( size_t ) * 8; // ( NumBits = NumBytes * 8 )
             uint32_t numProcessorsInThisGroup = 0;
 
             for ( size_t processorID = 0; processorID < maxLogicalProcessorsInThisGroup; ++processorID )

@@ -91,7 +91,7 @@ void TestExe::CheckValidExe() const
 {
     Process p;
     TEST_ASSERT( p.Spawn( "../tmp/Test/Exe/exe.exe", nullptr, nullptr, nullptr ) );
-    int ret = p.WaitForExit();
+    const int ret = p.WaitForExit();
     TEST_ASSERT( ret == 99 ); // verify expected ret code
 }
 

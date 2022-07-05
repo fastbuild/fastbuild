@@ -119,7 +119,7 @@ private:
 
     // Take a snapshot of the memory state
     #define TEST_MEMORY_SNAPSHOT( snapshot )                            \
-        TestMemorySnapshot snapshot
+        const TestMemorySnapshot snapshot
 
     // Check for expected or unexpected allocations since a snapshot
     #define TEST_EXPECT_ALLOCATION_EVENTS( snapshot, expected )         \

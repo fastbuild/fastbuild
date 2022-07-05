@@ -102,7 +102,7 @@ void TestMemPoolBlock::TestSpeed()
     // System Allocator
     {
         Array< void * > allocs( numAllocs, false );
-        Timer t1;
+        const Timer t1;
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
@@ -125,7 +125,7 @@ void TestMemPoolBlock::TestSpeed()
     // Alloc
     {
         Array< void * > allocs( numAllocs, false );
-        Timer t2;
+        const Timer t2;
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
@@ -144,7 +144,7 @@ void TestMemPoolBlock::TestSpeed()
     // MemPoolBlock
     {
         Array< void * > allocs( numAllocs, false );
-        Timer t3;
+        const Timer t3;
         {
             MemPoolBlock block( allocSize, 4 );
             for ( uint32_t i = 0; i < numAllocs; ++i )

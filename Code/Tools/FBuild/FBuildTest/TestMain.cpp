@@ -57,7 +57,7 @@ int main( int, char *[] )
 
     TestManager utm;
 
-    bool allPassed = utm.RunTests();
+    const bool allPassed = utm.RunTests();
 
     return allPassed ? 0 : -1;
 }

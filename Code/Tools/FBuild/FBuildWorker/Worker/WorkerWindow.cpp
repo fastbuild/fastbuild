@@ -73,7 +73,7 @@ WorkerWindow::WorkerWindow()
     m_ThreadList->AddColumn( "CPU", 0, 35 );
     m_ThreadList->AddColumn( "Host", 1, 100 );
     m_ThreadList->AddColumn( "Status", 2, 530 );
-    size_t numWorkers = JobQueueRemote::Get().GetNumWorkers();
+    const size_t numWorkers = JobQueueRemote::Get().GetNumWorkers();
     m_ThreadList->SetItemCount( (uint32_t)numWorkers );
     for ( size_t i = 0; i < numWorkers; ++i )
     {
@@ -130,11 +130,11 @@ WorkerWindow::WorkerWindow()
     m_ResourcesDropDown->Init( 498, 3, 150, 200 );
     {
         // add items
-        uint32_t numProcessors = Env::GetNumProcessors();
+        const uint32_t numProcessors = Env::GetNumProcessors();
         AStackString<> buffer;
         for ( uint32_t i = 0; i < numProcessors; ++i )
         {
-            float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
+            const float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
             buffer.Format( "%u CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
             m_ResourcesDropDown->AddItem( buffer.Get() );
         }

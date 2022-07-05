@@ -148,7 +148,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         1, 3, 6, 9, 12                              // LZ4 HC
     };
 
-    for ( int32_t compressionLevel : compressionLevels )
+    for ( const int32_t compressionLevel : compressionLevels )
     {
         // compress/decompress the data several times to get more stable throughput value
         const uint32_t numRepeats = 4; // Increase to get more consistent numbers
@@ -162,7 +162,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         {
             // Compress
             c = FNEW( Compressor );
-            Timer t;
+            const Timer t;
             c.Get()->Compress( data.Get(), dataSize, compressionLevel );
             compressedSize = c.Get()->GetResultSize();
             compressTimeTaken += (double)t.GetElapsedMS();
@@ -172,7 +172,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Decompress
-            Timer t2;
+            const Timer t2;
             Compressor d;
             TEST_ASSERT( d.Decompress( c.Get()->GetResult() ) );
             TEST_ASSERT( d.GetResultSize() == dataSize );

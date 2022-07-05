@@ -96,7 +96,7 @@ bool ResponseFile::CreateInternal( const AString & contents )
         }
     }
 
-    bool ok = ( m_File.Write( contents.Get(), contents.GetLength() ) == contents.GetLength() );
+    const bool ok = ( m_File.Write( contents.Get(), contents.GetLength() ) == contents.GetLength() );
     if ( !ok )
     {
         FLOG_ERROR( "Failed to write response file '%s'", m_ResponseFilePath.Get() );

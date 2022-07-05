@@ -92,7 +92,7 @@ TextFileNode::~TextFileNode() = default;
         FLOG_ERROR( "Could not open '%s' for writing", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
-    uint64_t nWritten = stream.WriteBuffer( textFileContents.Get(), textFileContents.GetLength() );
+    const uint64_t nWritten = stream.WriteBuffer( textFileContents.Get(), textFileContents.GetLength() );
     stream.Close();
 
     if ( nWritten != textFileContents.GetLength() )

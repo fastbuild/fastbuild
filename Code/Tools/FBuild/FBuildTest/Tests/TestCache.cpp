@@ -351,7 +351,7 @@ void TestCache::LightCache_IncludeUsingMacro() const
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro/fbuild.bff";
 
-    const char * expectedFiles[] = { "file.1.cpp", "file.1.h", "file.2.cpp", "file.2.h", "file.h" };
+    const char * const expectedFiles[] = { "file.1.cpp", "file.1.h", "file.2.cpp", "file.2.h", "file.h" };
 
     // Single thread
     options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
@@ -451,7 +451,7 @@ void TestCache::LightCache_IncludeUsingMacro2() const
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro2/fbuild.bff";
 
-    const char * expectedFiles[] = { "file.1.cpp", "file.2.cpp", "header1.h", "header2.h" };
+    const char * const expectedFiles[] = { "file.1.cpp", "file.2.cpp", "header1.h", "header2.h" };
 
     // Single thread
     options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
@@ -544,7 +544,7 @@ void TestCache::LightCache_IncludeUsingMacro3() const
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro3/fbuild.bff";
 
-    const char * expectedFiles[] = { "file.cpp", "header1.h", "header2.h" };
+    const char * const expectedFiles[] = { "file.cpp", "header1.h", "header2.h" };
 
     // Single thread
     options.m_NumWorkerThreads = 1;
@@ -676,7 +676,7 @@ void TestCache::LightCache_IncludeHierarchy() const
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeHierarchy/fbuild.bff";
 
-    const char * expectedFiles[] = { "Folder1/file.cpp", "Folder1/file.h", "Folder2/file.cpp", "Folder2/file.h", "common.h" };
+    const char * const expectedFiles[] = { "Folder1/file.cpp", "Folder1/file.h", "Folder2/file.cpp", "Folder2/file.h", "common.h" };
 
     // Write (single thread)
     {

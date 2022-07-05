@@ -128,7 +128,7 @@ void FBuildStats::OutputSummary() const
     {
         output += "--- Most Expensive ----------------------------------------------\n";
         output += "Time (s)  Name:\n";
-        size_t itemsToDisplay = Math::Min( m_NodesByTime.GetSize(), (size_t)20 );
+        const size_t itemsToDisplay = Math::Min( m_NodesByTime.GetSize(), (size_t)20 );
         for ( size_t i=0; i<itemsToDisplay; ++i )
         {
             const Node * n = m_NodesByTime[ i ];
@@ -195,13 +195,13 @@ void FBuildStats::OutputSummary() const
     FormatTime( m_TotalBuildTime, buffer );
     output += "Time:\n";
     output.AppendFormat( " - Real       : %s\n", buffer.Get() );
-    float totalLocalCPUInSeconds = (float)( (double)m_TotalLocalCPUTimeMS / (double)1000 );
-    float totalRemoteCPUInSeconds = (float)( (double)m_TotalRemoteCPUTimeMS / (double)1000 );
+    const float totalLocalCPUInSeconds = (float)( (double)m_TotalLocalCPUTimeMS / (double)1000 );
+    const float totalRemoteCPUInSeconds = (float)( (double)m_TotalRemoteCPUTimeMS / (double)1000 );
     FormatTime( totalLocalCPUInSeconds, buffer );
-    float localRatio = ( totalLocalCPUInSeconds / m_TotalBuildTime );
+    const float localRatio = ( totalLocalCPUInSeconds / m_TotalBuildTime );
     output.AppendFormat( " - Local CPU  : %s (%2.1f:1)\n", buffer.Get(), (double)localRatio );
     FormatTime( totalRemoteCPUInSeconds, buffer );
-    float remoteRatio = ( totalRemoteCPUInSeconds / m_TotalBuildTime );
+    const float remoteRatio = ( totalRemoteCPUInSeconds / m_TotalBuildTime );
     output.AppendFormat( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), (double)remoteRatio );
     output += "-----------------------------------------------------------------\n";
 
@@ -303,11 +303,11 @@ void FBuildStats::FormatTime( float timeInSeconds , AString & buffer ) const
 {
     buffer.Clear();
 
-    uint32_t days = (uint32_t)( timeInSeconds / ( 24.0f * 60.0f * 60.0f ) );
+    const uint32_t days = (uint32_t)( timeInSeconds / ( 24.0f * 60.0f * 60.0f ) );
     timeInSeconds -= ( (float)days * ( 24.0f * 60.0f * 60.0f ) );
-    uint32_t hours = (uint32_t)( timeInSeconds / ( 60.0f * 60.0f ) );
+    const uint32_t hours = (uint32_t)( timeInSeconds / ( 60.0f * 60.0f ) );
     timeInSeconds -= ( (float)hours * ( 60.0f * 60.0f ) );
-    uint32_t mins = (uint32_t)( timeInSeconds / 60.0f );
+    const uint32_t mins = (uint32_t)( timeInSeconds / 60.0f );
     timeInSeconds -= ( (float)mins * 60.0f );
 
     AStackString<> temp;

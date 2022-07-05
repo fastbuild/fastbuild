@@ -171,7 +171,7 @@ void WorkerThread::WaitForStop()
         ASSERT( job->GetNode()->GetState() == Node::BUILDING );
 
         // process the work
-        Node::BuildResult result = JobQueue::DoBuild( job );
+        const Node::BuildResult result = JobQueue::DoBuild( job );
 
         if ( result == Node::NODE_RESULT_FAILED )
         {
@@ -198,7 +198,7 @@ void WorkerThread::WaitForStop()
         if ( job != nullptr )
         {
             // process the work
-            Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
+            const Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
 
             if ( result == Node::NODE_RESULT_FAILED )
             {
@@ -218,7 +218,7 @@ void WorkerThread::WaitForStop()
         if ( job != nullptr )
         {
             // process the work
-            Node::BuildResult result = JobQueueRemote::DoBuild( job, true );
+            const Node::BuildResult result = JobQueueRemote::DoBuild( job, true );
 
             if ( result == Node::NODE_RESULT_FAILED )
             {

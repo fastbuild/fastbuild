@@ -54,7 +54,7 @@ void TestResources::BuildResource() const
     // spawn exe which does a runtime check that the resource is availble
     Process p;
     TEST_ASSERT( p.Spawn( "../tmp/Test/Resources/exe.exe", nullptr, nullptr, nullptr ) );
-    int ret = p.WaitForExit();
+    const int ret = p.WaitForExit();
     TEST_ASSERT( ret == 1 ); // verify expected ret code
 
     // Check stats

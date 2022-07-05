@@ -589,7 +589,7 @@ void TestGraph::TestDeepGraph() const
     }
 
     {
-        Timer t;
+        const Timer t;
 
         // no op build
         FBuild fBuild( options );
@@ -783,7 +783,7 @@ void TestGraph::BFFDirtied() const
 
     // Modify file, ensuring filetime has changed (different file systems have different resolutions)
     const uint64_t originalTime = FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) );
-    Timer t;
+    const Timer t;
     uint32_t sleepTimeMS = 2;
     for ( ;; )
     {
@@ -836,7 +836,7 @@ void TestGraph::BFFDirtied() const
 void TestGraph::DBVersionChanged() const
 {
     // Generate a fake old version headers
-    NodeGraphHeader header;
+    const NodeGraphHeader header;
     MemoryStream ms;
     ms.WriteBuffer( &header, sizeof( header ) );
 

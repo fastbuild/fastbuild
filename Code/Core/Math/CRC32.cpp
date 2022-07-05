@@ -113,7 +113,7 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
     for (; nqwords; nqwords--) {
         crc ^= *(const uint32_t*)buf;
         buf += sizeof(uint32_t);
-        UINT next = *(const uint32_t*)buf;
+        const UINT next = *(const uint32_t*)buf;
         buf += sizeof(uint32_t);
         crc =
             g_crc_slicing[7][(crc      ) & 0xFF] ^

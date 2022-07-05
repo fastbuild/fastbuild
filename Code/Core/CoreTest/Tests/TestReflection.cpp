@@ -200,14 +200,14 @@ void TestReflection::TestInheritence() const
 
     // Set property on class
     const ReflectionInfo * ri = obj.GetReflectionInfoV();
-    int bValue = 200;
+    const int bValue = 200;
     TEST_ASSERT( ri->SetProperty( &obj, "b", bValue ) );
     int bValueGet = 0;
     TEST_ASSERT( ri->GetProperty( &obj, "b", &bValueGet ) );
     TEST_ASSERT( bValue == bValueGet );
 
     // Set property on base class
-    int aValue = 100;
+    const int aValue = 100;
     TEST_ASSERT( ri->SetProperty( &obj, "a", aValue ) );
     int aValueGet = 0;
     TEST_ASSERT( ri->GetProperty( &obj, "a", &aValueGet ) );

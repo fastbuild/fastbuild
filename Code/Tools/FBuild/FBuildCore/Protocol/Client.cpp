@@ -178,7 +178,7 @@ void Client::LookForWorkers()
     // are many workers/clients - otherwise all clients will attempt to connect
     // to the same subset of workers
     Random r;
-    size_t startIndex = r.GetRandIndex( (uint32_t)numWorkers );
+    const size_t startIndex = r.GetRandIndex( (uint32_t)numWorkers );
 
     // find someone to connect to
     for ( size_t j=0; j<numWorkers; j++ )
@@ -224,7 +224,7 @@ void Client::LookForWorkers()
             ss.m_NumJobsAvailable = numJobsAvailable;
 
             // send connection msg
-            Protocol::MsgConnection msg( numJobsAvailable );
+            const Protocol::MsgConnection msg( numJobsAvailable );
             SendMessageInternal( ci, msg );
         }
 
@@ -244,8 +244,8 @@ void Client::CommunicateJobAvailability()
     const bool timerExpired = ( m_StatusUpdateTimer.GetElapsed() >= CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS );
 
     // has status changed since we last sent it?
-    uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
-    Protocol::MsgStatus msg( numJobsAvailable );
+    const uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
+    const Protocol::MsgStatus msg( numJobsAvailable );
 
     // Update each server so it knows how many jobs we have available now
     MutexHolder mh( m_ServerListMutex );
@@ -369,7 +369,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
 
     // determine message type
     const Protocol::IMessage * imsg = ss->m_CurrentMessage;
-    Protocol::MessageType messageType = imsg->GetType();
+    const Protocol::MessageType messageType = imsg->GetType();
 
     PROTOCOL_DEBUG( "Server -> Client : %u (%s)\n", messageType, GetProtocolMessageDebugName( messageType ) );
 
@@ -434,7 +434,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     if ( ss->m_Denylisted )
     {
         MutexHolder mh( ss->m_Mutex );
-        Protocol::MsgNoJobAvailable msg;
+        const Protocol::MsgNoJobAvailable msg;
         SendMessageInternal( connection, msg );
         return;
     }
@@ -446,7 +446,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
         // tell the client we don't have anything right now
         // (we completed or gave away the job already)
         MutexHolder mh( ss->m_Mutex );
-        Protocol::MsgNoJobAvailable msg;
+        const Protocol::MsgNoJobAvailable msg;
         SendMessageInternal( connection, msg );
         return;
     }
@@ -499,7 +499,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     {
         PROFILE_SECTION( "SendJob" );
-        Protocol::MsgJob msg( toolId, resultCompressionLevel );
+        const Protocol::MsgJob msg( toolId, resultCompressionLevel );
         SendMessageInternal( connection, msg, stream );
     }
 }
@@ -849,7 +849,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     manifest->SerializeForRemote( ms );
 
     // Send manifest to worker
-    Protocol::MsgManifest resultMsg( toolId );
+    const Protocol::MsgManifest resultMsg( toolId );
     MutexHolder mh( static_cast<ServerState *>(connection->GetUserData())->m_Mutex );
     SendMessageInternal( connection, resultMsg, ms );
 }
@@ -886,7 +886,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ConstMemoryStream ms( data, dataSize );
 
     // Send file to worker
-    Protocol::MsgFile resultMsg( toolId, fileId );
+    const Protocol::MsgFile resultMsg( toolId, fileId );
     MutexHolder mh( static_cast<ServerState *>(connection->GetUserData())->m_Mutex );
     SendMessageInternal( connection, resultMsg, ms );
 }

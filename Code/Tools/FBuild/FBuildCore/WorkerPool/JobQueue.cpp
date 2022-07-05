@@ -715,7 +715,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 //------------------------------------------------------------------------------
 /*static*/ Node::BuildResult JobQueue::DoBuild( Job * job )
 {
-    Timer timer; // track how long the item takes
+    const Timer timer; // track how long the item takes
 
     Node * node = job->GetNode();
 
@@ -769,7 +769,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         result = node->DoBuild( job );
     }
 
-    uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
+    const uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
     if ( result == Node::NODE_RESULT_OK )
     {

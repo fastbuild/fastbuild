@@ -170,7 +170,7 @@ public:
 {
     #if defined( __WINDOWS__ )
         bool timedOut = true; // default is true to catch cases when timedOut wasn't set by WaitForThread()
-        int32_t ret = WaitForThread( handle, INFINITE, timedOut );
+        const int32_t ret = WaitForThread( handle, INFINITE, timedOut );
 
         if ( timedOut )
         {
@@ -199,7 +199,7 @@ public:
 {
     #if defined( __WINDOWS__ )
         // wait for thread to finish
-        DWORD waitResult = WaitForSingleObject( handle, timeoutMS );
+        const DWORD waitResult = WaitForSingleObject( handle, timeoutMS );
 
         // timed out ?
         if ( waitResult == WAIT_TIMEOUT )

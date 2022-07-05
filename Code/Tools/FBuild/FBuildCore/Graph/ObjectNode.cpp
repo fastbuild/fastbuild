@@ -233,9 +233,9 @@ ObjectNode::~ObjectNode()
     // using deoptimization?
     bool useDeoptimization = ShouldUseDeoptimization();
 
-    bool useCache = ShouldUseCache();
-    bool useDist = m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
-    bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
+    const bool useCache = ShouldUseCache();
+    const bool useDist = m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+    const bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
     bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
     if ( GetDedicatedPreprocessor() )
     {
@@ -410,7 +410,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     const bool showIncludes( false );
     const bool useSourceMapping( true );
     const bool finalize( true );
-    Pass pass = useSimpleDist ? PASS_PREP_FOR_SIMPLE_DISTRIBUTION : PASS_PREPROCESSOR_ONLY;
+    const Pass pass = useSimpleDist ? PASS_PREP_FOR_SIMPLE_DISTRIBUTION : PASS_PREPROCESSOR_ONLY;
     if ( !BuildArgs( job, fullArgs, pass, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
@@ -511,7 +511,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         // compress job data
         Compressor c;
         c.Compress( job->GetData(), job->GetDataSize(), FBuild::Get().GetOptions().m_DistributionCompressionLevel );
-        size_t compressedSize = c.GetResultSize();
+        const size_t compressedSize = c.GetResultSize();
         job->OwnData( c.ReleaseResult(), compressedSize, true );
 
         // yes... re-queue for secondary build
@@ -658,7 +658,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
     #endif
 
-    bool result = BuildFinalOutput( job, fullArgs );
+    const bool result = BuildFinalOutput( job, fullArgs );
 
     // cleanup temp file
     if ( tmpFileName.IsEmpty() == false )
@@ -806,7 +806,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 //------------------------------------------------------------------------------
 bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
 {
-    Timer t;
+    const Timer t;
 
     {
         CIncludeParser parser;
@@ -839,7 +839,7 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
 //------------------------------------------------------------------------------
 bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 {
-    Timer t;
+    const Timer t;
 
     {
         const char * output = (char *)job->GetData();
@@ -869,8 +869,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         {
             msvcStyle = m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsCUDANVCC();
         }
-        bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
-                                : parser.ParseGCC_Preprocessed( output, outputSize );
+        const bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
+                                      : parser.ParseGCC_Preprocessed( output, outputSize );
         if ( result == false )
         {
             FLOG_ERROR( "Failed to process includes for '%s'", GetName().Get() );
@@ -1357,7 +1357,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
     const AString & cacheFileName = GetCacheName(job);
 
-    Timer t;
+    const Timer t;
 
     ICache * cache = FBuild::Get().GetCache();
     ASSERT( cache );
@@ -1512,7 +1512,7 @@ void ObjectNode::WriteToCache_FromUncompressedData( Job * job,
     }
 
     // Compress
-    Timer t;
+    const Timer t;
     const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
     Compressor c;
     c.Compress(uncompressedData, uncompressedDataSize, FBuild::Get().GetOptions().m_CacheCompressionLevel );
@@ -1542,7 +1542,7 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
     const AString & cacheFileName = GetCacheName(job);
 
     // Commit to cache
-    Timer t;
+    const Timer t;
     const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
     if ( FBuild::Get().GetCache()->Publish( cacheFileName, compressedData, compressedDataSize ) )
     {
@@ -1873,7 +1873,7 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
         FLOG_ERROR( "Error: opening file '%s' while loading source file for transport\n", fileName.Get() );
         return false;
     }
-    uint32_t contentSize = (uint32_t)fs.GetFileSize();
+    const uint32_t contentSize = (uint32_t)fs.GetFileSize();
     UniquePtr< void > mem( ALLOC( contentSize ) );
     if ( fs.Read( mem.Get(), contentSize ) != contentSize )
     {
@@ -1892,7 +1892,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
 {
     // We will trim the buffer
     const char* outputBuffer = data;
-    size_t outputBufferSize = dataSize;
+    const size_t outputBufferSize = dataSize;
     size_t newBufferSize = outputBufferSize;
     char * bufferCopy = nullptr;
 
@@ -2008,7 +2008,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     ASSERT( job->GetData() && job->GetDataSize() );
 
     const Node * sourceFile = GetSourceFile();
-    uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+    const uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
 
     FileStream tmpFile;
     AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );

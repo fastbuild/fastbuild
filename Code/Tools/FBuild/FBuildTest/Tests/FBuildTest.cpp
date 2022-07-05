@@ -125,7 +125,7 @@ void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
     FBuild fBuild;
     NodeGraph ng;
     BFFParser p( ng );
-    bool parseResult = p.ParseFromFile( fileName );
+    const bool parseResult = p.ParseFromFile( fileName );
     if ( expectFailure )
     {
         TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
@@ -220,10 +220,10 @@ void FBuildTest::CheckStatsNode( const FBuildStats & stats, size_t numSeen, size
 //------------------------------------------------------------------------------
 void FBuildTest::CheckStatsTotal( const FBuildStats & stats, size_t numSeen, size_t numBuilt ) const
 {
-    size_t actualNumSeen = stats.GetNodesProcessed();
+    const size_t actualNumSeen = stats.GetNodesProcessed();
     TEST_ASSERT( actualNumSeen == numSeen );
 
-    size_t actualNumBuilt = stats.GetNodesBuilt();
+    const size_t actualNumBuilt = stats.GetNodesBuilt();
     TEST_ASSERT( actualNumBuilt == numBuilt );
 }
 

@@ -570,7 +570,7 @@ bool Process::ReadAllData( AString & outMem,
                            AString & errMem,
                            uint32_t timeOutMS )
 {
-    Timer t;
+    const Timer t;
 
     #if defined( __LINUX__ )
         // Start with a short sleep interval to allow rapid termination of
@@ -612,7 +612,7 @@ bool Process::ReadAllData( AString & outMem,
         #if defined( __WINDOWS__ )
             if ( processExited == false )
             {
-                DWORD result = WaitForSingleObject( GetProcessInfo().hProcess, 15 );
+                const DWORD result = WaitForSingleObject( GetProcessInfo().hProcess, 15 );
                 if ( result == WAIT_TIMEOUT )
                 {
                     // Check if timeout is hit

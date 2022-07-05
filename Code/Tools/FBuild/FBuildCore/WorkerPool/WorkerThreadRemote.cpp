@@ -56,7 +56,7 @@ WorkerThreadRemote::~WorkerThreadRemote()
             }
 
             // process the work
-            Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
+            const Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
             ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_FAILED ) );
 
             {

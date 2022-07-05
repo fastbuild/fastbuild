@@ -243,7 +243,7 @@ void TestObject::ModTimeChangeBackwards() const
         oldModTime = FileIO::GetFileLastWriteTime( fileAFullPath );
 
         // Modify FileA time (jump through hoops to handle poor filetime granularity)
-        Timer timeout;
+        const Timer timeout;
         for ( ;; )
         {
             TEST_ASSERT( timeout.GetElapsed() < 30.0f );

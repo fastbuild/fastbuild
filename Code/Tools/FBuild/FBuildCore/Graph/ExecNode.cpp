@@ -183,10 +183,10 @@ ExecNode::~ExecNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    bool spawnOK = p.Spawn( GetExecutable()->GetName().Get(),
-                            fullArgs.Get(),
-                            workingDir,
-                            FBuild::Get().GetEnvironmentString() );
+    const bool spawnOK = p.Spawn( GetExecutable()->GetName().Get(),
+                                  fullArgs.Get(),
+                                  workingDir,
+                                  FBuild::Get().GetEnvironmentString() );
 
     if ( !spawnOK )
     {
@@ -205,7 +205,7 @@ ExecNode::~ExecNode() = default;
     p.ReadAllData( memOut, memErr );
 
     // Get result
-    int result = p.WaitForExit();
+    const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
         return NODE_RESULT_FAILED;

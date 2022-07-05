@@ -65,9 +65,9 @@ void TestSmallBlockAllocator::SingleThreaded() const
     Array< uint32_t > allocSizes( 0, true );
     GetRandomAllocSizes( numAllocs, allocSizes );
 
-    float time1 = AllocateFromSystemAllocator( allocSizes, repeatCount );
-    float time2 = AllocateFromSmallBlockAllocator( allocSizes, repeatCount );
-    float time3 = AllocateFromSmallBlockAllocator( allocSizes, repeatCount, false ); // Thread-safe = false
+    const float time1 = AllocateFromSystemAllocator( allocSizes, repeatCount );
+    const float time2 = AllocateFromSmallBlockAllocator( allocSizes, repeatCount );
+    const float time3 = AllocateFromSmallBlockAllocator( allocSizes, repeatCount, false ); // Thread-safe = false
 
     // output
     OUTPUT( "System (malloc)                            : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time1, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time1 ) );
@@ -169,7 +169,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
     const size_t numAllocs = allocSizes.GetSize();
 
     Array< void * > allocs( numAllocs, false );
-    Timer timer;
+    const Timer timer;
 
     for ( size_t r = 0; r < repeatCount; ++r )
     {
@@ -204,7 +204,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
     const size_t numAllocs = allocSizes.GetSize();
 
     Array< void * > allocs( numAllocs, false );
-    Timer timer;
+    const Timer timer;
 
     if ( threadSafe == false )
     {

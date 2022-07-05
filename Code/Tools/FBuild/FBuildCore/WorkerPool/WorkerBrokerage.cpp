@@ -162,7 +162,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
     Array< AString > results( 256, true );
     for( AString& root : m_BrokerageRoots )
     {
-        size_t filesBeforeSearch = results.GetSize();
+        const size_t filesBeforeSearch = results.GetSize();
         if ( !FileIO::GetFiles( root,
                                 AStackString<>( "*" ),
                                 false,
@@ -212,7 +212,7 @@ void WorkerBrokerage::SetAvailability( bool available )
     if ( available )
     {
         // Check the last update time to avoid too much File IO.
-        float elapsedTime = m_TimerLastUpdate.GetElapsed();
+        const float elapsedTime = m_TimerLastUpdate.GetElapsed();
         if ( elapsedTime >= sBrokerageAvailabilityUpdateTime )
         {
             // If settings have changed, (re)create the file 
@@ -233,7 +233,7 @@ void WorkerBrokerage::SetAvailability( bool available )
                 Network::GetDomainName( domainName );
 
                 // Resolve host name to ip address
-                uint32_t ip = Network::GetHostIPFromName( hostName );
+                const uint32_t ip = Network::GetHostIPFromName( hostName );
                 if ( ( ip != 0 ) && ( ip != 0x0100007f ) )
                 {
                     TCPConnectionPool::GetAddressAsString( ip, ipAddress );
