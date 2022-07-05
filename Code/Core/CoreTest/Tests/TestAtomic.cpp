@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
@@ -103,7 +103,7 @@ protected:
 
 // TestAtomic
 //------------------------------------------------------------------------------
-class TestAtomic : public UnitTest
+class TestAtomic : public TestGroup
 {
 private:
     DECLARE_TESTS

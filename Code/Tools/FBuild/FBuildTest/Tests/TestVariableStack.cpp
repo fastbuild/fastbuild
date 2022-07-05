@@ -3,7 +3,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
+
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 
@@ -11,7 +12,7 @@
 
 // TestVariableStack
 //------------------------------------------------------------------------------
-class TestVariableStack : public UnitTest
+class TestVariableStack : public TestGroup
 {
 private:
     DECLARE_TESTS

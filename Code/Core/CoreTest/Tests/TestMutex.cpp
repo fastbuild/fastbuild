@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Atomic.h"
@@ -12,7 +12,7 @@
 
 // TestMutex
 //------------------------------------------------------------------------------
-class TestMutex : public UnitTest
+class TestMutex : public TestGroup
 {
 private:
     DECLARE_TESTS

@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include <TestFramework/UnitTest.h>
+#include <TestFramework/TestGroup.h>
 
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
@@ -20,7 +20,7 @@
 
 // TestReflection
 //------------------------------------------------------------------------------
-class TestReflection : public UnitTest
+class TestReflection : public TestGroup
 {
 private:
     DECLARE_TESTS

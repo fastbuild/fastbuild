@@ -1,4 +1,4 @@
-// UnitTestManager
+// TestManager
 //------------------------------------------------------------------------------
 #pragma once
 
@@ -11,32 +11,32 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class UnitTest;
+class TestGroup;
 
-// UnitTestManager
+// TestManager
 //------------------------------------------------------------------------------
-class UnitTestManager
+class TestManager
 {
 public:
-    UnitTestManager();
-    ~UnitTestManager();
+    TestManager();
+    ~TestManager();
 
     // run all tests, or tests from a group
     bool RunTests( const char * testGroup = nullptr );
 
     // singleton behaviour
     #ifdef RELEASE
-        static inline UnitTestManager & Get() { return *s_Instance; }
+        static inline TestManager & Get() { return *s_Instance; }
     #else
-        static        UnitTestManager & Get();
+        static        TestManager & Get();
     #endif
     static inline bool IsValid() { return ( s_Instance != nullptr ); }
 
     // tests register (using the test declaration macros) via this interface
-    static void RegisterTestGroup( UnitTest * testGroup );
+    static void RegisterTestGroup( TestGroup * testGroup );
 
     // When tests are being executed, they are wrapped with these
-    void TestBegin( UnitTest * testGroup, const char * testName );
+    void TestBegin( TestGroup * testGroup, const char * testName );
     void TestEnd();
 
     // TEST_ASSERT uses this interface to notify of assertion failures
@@ -51,7 +51,7 @@ private:
     class TestInfo
     {
     public:
-        UnitTest *      m_TestGroup = nullptr;
+        TestGroup *     m_TestGroup = nullptr;
         const char *    m_TestName = nullptr;
         bool            m_Passed = false;
         bool            m_MemoryLeaks = false;
@@ -60,8 +60,8 @@ private:
     static uint32_t     s_NumTests;
     static TestInfo     s_TestInfos[ MAX_TESTS ];
 
-    static UnitTestManager * s_Instance;
-    static UnitTest * s_FirstTest;
+    static TestManager * s_Instance;
+    static TestGroup *  s_FirstTest;
 };
 
 //------------------------------------------------------------------------------

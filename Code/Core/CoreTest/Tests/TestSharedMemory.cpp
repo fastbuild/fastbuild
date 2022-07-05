@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include <Core/Env/Assert.h>
@@ -26,7 +26,7 @@
 
 // TestSharedMemory
 //------------------------------------------------------------------------------
-class TestSharedMemory : public UnitTest
+class TestSharedMemory : public TestGroup
 {
 private:
     DECLARE_TESTS

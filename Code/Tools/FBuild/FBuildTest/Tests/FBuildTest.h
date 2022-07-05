@@ -4,7 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
@@ -18,7 +18,7 @@ struct FBuildStats;
 
 // FBuildTest
 //------------------------------------------------------------------------------
-class FBuildTest : public UnitTest
+class FBuildTest : public TestGroup
 {
 protected:
     FBuildTest();

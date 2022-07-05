@@ -3,14 +3,14 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 // TestPathUtils
 //------------------------------------------------------------------------------
-class TestPathUtils : public UnitTest
+class TestPathUtils : public TestGroup
 {
 private:
     DECLARE_TESTS

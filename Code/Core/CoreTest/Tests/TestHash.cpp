@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
@@ -18,7 +18,7 @@
 
 // TestHash
 //------------------------------------------------------------------------------
-class TestHash : public UnitTest
+class TestHash : public TestGroup
 {
 private:
     DECLARE_TESTS

@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Math/Random.h"
@@ -18,7 +18,7 @@
 
 // TestSmallBlockAllocator
 //------------------------------------------------------------------------------
-class TestSmallBlockAllocator : public UnitTest
+class TestSmallBlockAllocator : public TestGroup
 {
 private:
     DECLARE_TESTS

@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
@@ -38,7 +38,7 @@
 #endif
 // TestTestTCPConnectionPool
 //------------------------------------------------------------------------------
-class TestTestTCPConnectionPool : public UnitTest
+class TestTestTCPConnectionPool : public TestGroup
 {
 private:
     DECLARE_TESTS

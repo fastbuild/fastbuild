@@ -3,14 +3,14 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
 
 // TestArray
 //------------------------------------------------------------------------------
-class TestArray : public UnitTest
+class TestArray : public TestGroup
 {
 private:
     DECLARE_TESTS

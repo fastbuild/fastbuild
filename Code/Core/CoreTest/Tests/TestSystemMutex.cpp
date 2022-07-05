@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Process/SystemMutex.h"
 #include "Core/Strings/AStackString.h"
@@ -14,7 +14,7 @@
 
 // TestMutex
 //------------------------------------------------------------------------------
-class TestSystemMutex : public UnitTest
+class TestSystemMutex : public TestGroup
 {
 private:
     DECLARE_TESTS

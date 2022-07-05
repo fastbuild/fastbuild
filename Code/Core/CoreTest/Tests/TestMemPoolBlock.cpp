@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Mem/Mem.h"
 #include "Core/Mem/MemPoolBlock.h"
@@ -15,7 +15,7 @@
 
 // TestMemPoolBlock
 //------------------------------------------------------------------------------
-class TestMemPoolBlock : public UnitTest
+class TestMemPoolBlock : public TestGroup
 {
 private:
     DECLARE_TESTS

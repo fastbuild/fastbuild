@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
@@ -14,7 +14,7 @@
 
 // TestAString
 //------------------------------------------------------------------------------
-class TestAString : public UnitTest
+class TestAString : public TestGroup
 {
 private:
     DECLARE_TESTS
