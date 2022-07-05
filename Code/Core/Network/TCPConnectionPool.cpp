@@ -1157,8 +1157,8 @@ void TCPConnectionPool::AllowSocketReuse( TCPSocket socket ) const
     }
     #if defined( __APPLE__ )
         // OS X changed the behavior or ADDR vs PORT, so we set both
-        ret = setsockopt( socket, SOL_SOCKET, SO_REUSEPORT, (const char *)&yes, sizeof( yes ) );
-        if ( ret != 0 )
+        const int ret2 = setsockopt( socket, SOL_SOCKET, SO_REUSEPORT, (const char *)&yes, sizeof( yes ) );
+        if ( ret2 != 0 )
         {
             TCPDEBUG( "setsockopt(SO_REUSEADDR) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
         }
