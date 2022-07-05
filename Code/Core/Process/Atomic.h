@@ -28,7 +28,7 @@
 // Pointers
 //------------------------------------------------------------------------------
 template < class T >
-inline T * AtomicLoadRelaxed( T * const volatile * x )
+[[nodiscard]] inline T * AtomicLoadRelaxed( T * const volatile * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_RELAXED );
@@ -39,7 +39,7 @@ inline T * AtomicLoadRelaxed( T * const volatile * x )
     #endif
 }
 template < class T >
-inline T * AtomicLoadAcquire( T * const volatile * x )
+[[nodiscard]] inline T * AtomicLoadAcquire( T * const volatile * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
@@ -150,7 +150,7 @@ inline void AtomicStoreRelease( T * volatile * x, T * value )
 // AtomicLoadRelaxed
 //------------------------------------------------------------------------------
 template<typename T>
-inline T AtomicLoadRelaxed( const volatile T * x )
+[[nodiscard]] inline T AtomicLoadRelaxed( const volatile T * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_RELAXED );
@@ -162,7 +162,7 @@ inline T AtomicLoadRelaxed( const volatile T * x )
 // AtomicLoadAcquire
 //------------------------------------------------------------------------------
 template<typename T>
-inline T AtomicLoadAcquire( const volatile T * x )
+[[nodiscard]] inline T AtomicLoadAcquire( const volatile T * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
@@ -213,16 +213,16 @@ public:
     }
 
     // Store/Load
-    void    Store( T newValue ) { AtomicStoreRelease( &m_Value, newValue ); }
-    T       Load() const        { return AtomicLoadAcquire( &m_Value ); }
+    void            Store( T newValue ) { AtomicStoreRelease( &m_Value, newValue ); }
+    [[nodiscard]] T Load() const        { return AtomicLoadAcquire( &m_Value ); }
 
     // Increment (returns result)
-    T       Increment()         { return AtomicInc( &m_Value ); }
-    T       Decrement()         { return AtomicDec( &m_Value ); }
+    T               Increment()         { return AtomicInc( &m_Value ); }
+    T               Decrement()         { return AtomicDec( &m_Value ); }
 
     // Add (returns result)
-    T       Add( T value )      { return AtomicAdd( &m_Value, value ); }
-    T       Sub( T value )      { return AtomicSub( &m_Value, value ); }
+    T               Add( T value )      { return AtomicAdd( &m_Value, value ); }
+    T               Sub( T value )      { return AtomicSub( &m_Value, value ); }
 
 protected:
     volatile T m_Value;

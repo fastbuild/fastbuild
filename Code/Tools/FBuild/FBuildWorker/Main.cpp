@@ -178,7 +178,7 @@ int Main( const AString & args )
         #if defined( __WINDOWS__ )
             p.DisableHandleRedirection(); // TODO:MAC TODO:LINUX is this needed?
         #endif
-        p.Spawn( exeNameCopy.Get(), argsCopy.Get(), nullptr, nullptr );
+        (void)p.Spawn( exeNameCopy.Get(), argsCopy.Get(), nullptr, nullptr );
         p.Detach();
 
         return 0;

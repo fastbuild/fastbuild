@@ -312,7 +312,7 @@ void TestDLL::TestValidExeWithDLL() const
     const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
 
     Process p;
-    p.Spawn( exe.Get(), nullptr, nullptr, nullptr );
+    TEST_ASSERT( p.Spawn( exe.Get(), nullptr, nullptr, nullptr ) );
     int ret = p.WaitForExit();
     TEST_ASSERT( ret == 99 );
 }

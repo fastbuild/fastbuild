@@ -29,8 +29,8 @@ public:
 
     void Destruct();
 
-    bool    IsEmpty() const { return ( m_Count == 0 ); }
-    size_t  GetSize() const { return m_Count; }
+    [[nodiscard]] bool          IsEmpty() const { return ( m_Count == 0 ); }
+    [[nodiscard]] size_t        GetSize() const { return m_Count; }
 
     UnorderedMap< KEY, VALUE > & operator = ( const UnorderedMap< KEY, VALUE > & other ) = delete;
     UnorderedMap< KEY, VALUE > & operator = ( UnorderedMap< KEY, VALUE > && other ) = delete;
@@ -58,7 +58,7 @@ public:
     [[nodiscard]] KeyValue *    Find( const KEY & key );
 
     // Add items to the map
-    KeyValue &    Insert( const KEY & key, const VALUE & value );
+    KeyValue &                  Insert( const KEY & key, const VALUE & value );
 
 protected:
     enum : uint32_t { kTableSizePower = 16 };
