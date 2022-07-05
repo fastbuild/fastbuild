@@ -183,7 +183,7 @@ Compiler( 'Compiler-VS2022-x64' )
                                     // Enable and specify analysis engine
     .StaticAnalysisOptions          = ' /analyze'
                                     + ' /analyze:plugin"$VS2022_ToolchainPath$\bin\HostX64\x64\EspXEngine.dll"'
-                                    + ' /analyze:external-' // Disable ananlysis of external headers
+                                    + ' /analyze:external-' // Disable analysis of external headers
 
                                     // To investigate: These warnings might be useful and should be checked
                                     + ' /wd6553'  // The annotation for function 'RegOpenKeyExA' on _Param_(3) does not apply to a value type.
@@ -196,11 +196,10 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd26438' // Avoid 'goto' (es.76).
                                     + ' /wd26451' // Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
                                     + ' /wd26460' // The reference argument '%s' for function '%s' can be marked as const (con.3).
-                                    + ' /wd26474' // Don't cast between pointer types when the conversion could be implicit (type.1).
                                     + ' /wd26475' // Do not use function style C-casts (es.49).
                                     + ' /wd26476' // Expression/symbol '%s' uses a naked union '%s' with multiple type pointers: Use variant instead (type.7).
                                     + ' /wd26491' // Don't use static_cast downcasts (type.2).
-                                    + ' /wd26494' // Variable 'uhighProduct' is uninitialized. Always initialize an object (type.5).
+                                    + ' /wd26494' // Variable '%s' is uninitialized. Always initialize an object (type.5).
                                     + ' /wd26495' // Variable '%s' is uninitialized. Always initialize a member variable (type.6).
                                     + ' /wd26456' // Operator '%s' hides a non-virtual operator '%s' (c.128).
                                     + ' /wd26497' // The function '%s' could be marked constexpr if compile-time evaluation is desired (f.4).
@@ -230,7 +229,6 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd26490' // Don't use reinterpret_cast (type.1).
                                     + ' /wd26492' // Don't use const_cast to cast away const or volatile (type.3).
                                     + ' /wd26493' // Don't use C-style casts (type.4).
-                                    + ' /wd26496' // The variable '%s' is assigned only once, mark it as const (con.4).
                                     + ' /wd26826' // Don't use C-style variable arguments (f.55).
 ]
 

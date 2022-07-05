@@ -54,7 +54,7 @@ public:
         Thread::ThreadHandle h = Thread::CreateThread( ThreadWrapper,
                                                        "AtomicTestHelper",
                                                        ( 64 * KILOBYTE ),
-                                                       static_cast< void * >( this ) );
+                                                       this );
 
         // Do works locally that mirrors the thread
         DoWork();

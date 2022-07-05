@@ -212,11 +212,10 @@ Compiler( 'Compiler-VS2019-x64' )
                                     + ' /wd26438' // Avoid 'goto' (es.76).
                                     + ' /wd26451' // Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
                                     + ' /wd26460' // The reference argument '%s' for function '%s' can be marked as const (con.3).
-                                    + ' /wd26474' // Don't cast between pointer types when the conversion could be implicit (type.1).
                                     + ' /wd26475' // Do not use function style C-casts (es.49).
                                     + ' /wd26476' // Expression/symbol '%s' uses a naked union '%s' with multiple type pointers: Use variant instead (type.7).
                                     + ' /wd26491' // Don't use static_cast downcasts (type.2).
-                                    + ' /wd26494' // Variable 'uhighProduct' is uninitialized. Always initialize an object (type.5).
+                                    + ' /wd26494' // Variable '%s' is uninitialized. Always initialize an object (type.5).
                                     + ' /wd26495' // Variable '%s' is uninitialized. Always initialize a member variable (type.6).
                                     + ' /wd26456' // Operator '%s' hides a non-virtual operator '%s' (c.128).
                                     + ' /wd26497' // The function '%s' could be marked constexpr if compile-time evaluation is desired (f.4).

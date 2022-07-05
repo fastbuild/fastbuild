@@ -72,12 +72,16 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
         ASSERT( m_DLL );
 
         // Try the unmangled name first
-        void * func = reinterpret_cast<void*>( ::GetProcAddress( (HMODULE)m_DLL, name ) );
+        PRAGMA_DISABLE_PUSH_CLANG("-Wmicrosoft-cast")
+        void * func = ::GetProcAddress( (HMODULE)m_DLL, name );
+        PRAGMA_DISABLE_POP_CLANG
 
         // If that fails, check for the mangled name for backwards compat with existing plugins
         if ( !func && mangledName )
         {
-            func = reinterpret_cast<void*>( ::GetProcAddress( (HMODULE)m_DLL, mangledName ) );
+            PRAGMA_DISABLE_PUSH_CLANG("-Wmicrosoft-cast")
+            func = ::GetProcAddress( (HMODULE)m_DLL, mangledName );
+            PRAGMA_DISABLE_POP_CLANG
         }
     #else
         (void)mangledName; // Only used on Windows for backwards copatibility

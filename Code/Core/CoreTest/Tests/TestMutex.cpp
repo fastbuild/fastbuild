@@ -91,7 +91,7 @@ void TestMutex::TestExclusivity() const
     Thread::ThreadHandle h = Thread::CreateThread( TestExclusivityThreadEntryFunction,
                                                    "TestExclusivity",
                                                    ( 64 * KILOBYTE ),
-                                                   static_cast< void * >( &data ) );
+                                                   &data );
 
     // arrive at barrier and wait
     AtomicInc( &data.m_BarrierCounter );
