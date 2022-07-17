@@ -327,16 +327,8 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         fd_set write, err;
         FD_ZERO( &write );
         FD_ZERO( &err );
-        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
-        PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunused-value" ) // expression result unused [-Wunused-value]
-        FD_SET( sockfd, &write );
-        FD_SET( sockfd, &err );
-        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wunused-value
-        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
-        PRAGMA_DISABLE_POP_MSVC // 6319
-        PRAGMA_DISABLE_POP_MSVC // 4548
+        FDSet( sockfd, &write );
+        FDSet( sockfd, &err );
 
         // check connection every 10ms
         timeval pollingTimeout;
@@ -890,6 +882,31 @@ TCPSocket TCPConnectionPool::CreateSocket() const
     return newSocket;
 }
 
+// FDSet
+//------------------------------------------------------------------------------
+void TCPConnectionPool::FDSet( TCPSocket fd, void * set ) const
+{
+    // The FD_SET macro generates many different warnigs, so we wrap it here
+    // to avoid duplicating these macros in multiple places
+    PRAGMA_DISABLE_PUSH_MSVC( 4388 ) // '==': signed/unsigned mismatch
+    PRAGMA_DISABLE_PUSH_MSVC( 4365 ) // conversion from 'int32_t' to 'SOCKET'
+    PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // expression before comma has no effect
+    PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // Use of the comma-operator in a tested expression
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunknown-warning-option" )
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunused-value" ) // expression result unused
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wreserved-identifier") // identifier '__i' is reserved because it starts with '__'
+    FD_SET( fd, static_cast<fd_set *>( set ) );
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS
+    PRAGMA_DISABLE_POP_MSVC
+    PRAGMA_DISABLE_POP_MSVC
+    PRAGMA_DISABLE_POP_MSVC
+    PRAGMA_DISABLE_POP_MSVC
+}
+
 // CreateListenThread
 //------------------------------------------------------------------------------
 void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port )
@@ -945,15 +962,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         // (modified by the select() function, so we must recreate it)
         fd_set set;
         FD_ZERO( &set );
-        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
-        PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunused-value" ) // expression result unused [-Wunused-value]
-        FD_SET( (uint32_t)ci->m_Socket, &set );
-        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wunused-value
-        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
-        PRAGMA_DISABLE_POP_MSVC // 6319
-        PRAGMA_DISABLE_POP_MSVC // 4548
+        FDSet( (uint32_t)ci->m_Socket, &set );
 
         // peek
         const int num = Select( ci->m_Socket + 1, &set, nullptr, nullptr, &timeout );
@@ -1081,15 +1090,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         // (modified by the select() function, so we must recreate it)
         fd_set readSet;
         FD_ZERO( &readSet );
-        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
-        PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunused-value" ) // expression result unused [-Wunused-value]
-        FD_SET( (uint32_t)ci->m_Socket, &readSet );
-        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wunused-value
-        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
-        PRAGMA_DISABLE_POP_MSVC // C6319
-        PRAGMA_DISABLE_POP_MSVC // 4548
+        FDSet( (uint32_t)ci->m_Socket, &readSet );
 
         const int num = Select( ci->m_Socket + 1, &readSet, nullptr, nullptr, &timeout );
         if ( num == 0 )

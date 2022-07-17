@@ -132,6 +132,7 @@ private:
                         struct sockaddr * address,
                         int * addressSize ) const;
     TCPSocket   CreateSocket() const;
+    void        FDSet( TCPSocket fd, void * set ) const;
 
     struct SendBuffer
     {
