@@ -8,7 +8,7 @@
 //  2) Part of a Visual Studio installation (Program Files)
 //  3) Default install location
 //
-#if file_exists( "$_CURRENT_BFF_DIR_$/11.0.0/bin/clang-cl.exe" )
+#if file_exists( "11.0.0/bin/clang-cl.exe" )
     // Vendorized
     .Clang11_BasePath   = '$_CURRENT_BFF_DIR_$/11.0.0'
     .Clang11_Version    = '11.0.0'
