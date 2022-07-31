@@ -28,6 +28,37 @@
 
 
 <div class='newsitemheader'>
+    v1.07&nbsp;<font color='#bbbbbb'>(31st-July-2022)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version has changed</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Prevent Client/Server network stream desync that can occur during ToolChain synchronization</li>
+        </ul>
+        <li>[Linux][OSX] Fix compiler output being truncated in some situations</li>
+        <li>Fix unsafe mutli-threaded access when using <a href="options.html#profile">-profile</a></li>
+        <li>Messages are correctly escaped in -monitor log (regression in v1.06)</li>
+        <li>Prevent leaking an environment variable string (Thanks to Lambert Clara)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Adds a <a href="options.html#distcompressionlevel">-distcompressionlevel</a> flag (Thanks to Mark De Ruyter)</li>
+        </ul>
+        <li>Settings() DisableDBMigration option has been removed. This feature has been stable for many versions</li>
+        <li><a href="options.html#fixuperrorpaths">-fixuperrorpaths</a> converts WSL paths to Windows paths</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.06&nbsp;<font color='#bbbbbb'>(10th-April-2022)</font>
 </div>
 <div class='newsitembody'>
