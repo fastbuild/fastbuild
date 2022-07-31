@@ -112,7 +112,8 @@
                 .LinkerOptions              + ' -framework Cocoa'
             #endif
             #if __LINUX__
-                .LinkerOptions              + ' -pthread -ldl -lrt'
+                .LinkerOptions              + ' -l:libpthread.so.0 -l:libdl.so.2 -l:librt.so.1'
+                                            + ' -Wl,--wrap=__libc_start_main'
 
                 .LinkerStampExe             = '/bin/bash'
                 .ExtractDebugInfo           = 'objcopy --only-keep-debug $LinkerOutput$ $LinkerOutput$.debug'

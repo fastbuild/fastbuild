@@ -69,7 +69,13 @@
                                             + ' /MANIFESTINPUT:%3'
             #endif
             #if __LINUX__
-                .LinkerOptions              + ' -pthread -ldl -lrt'
+                // In glibc 2.34 libpthread, libdl and librt were merged into libc.
+                // Unversioned symlinks for these shared libraries are no longer installed and instead dummy static libraries are provided.
+                // This means that now we can't link with these libraries in a usual way (-ldl, etc.), if we try we will instead link with dummy static libraries,
+                // and as a result our binary won't load on system with older glibc due to unresolved symbols.
+                // To ensure that we are linked to all needed libraries we now link directly to versioned shared library files.
+                .LinkerOptions              + ' -l:libpthread.so.0 -l:libdl.so.2 -l:librt.so.1'
+                                            + ' -Wl,--wrap=__libc_start_main'
 
                 .LinkerStampExe             = '/bin/bash'
                 .ExtractDebugInfo           = 'objcopy --only-keep-debug $LinkerOutput$ $LinkerOutput$.debug'
