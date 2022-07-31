@@ -179,10 +179,10 @@ const char * TestNode::GetEnvironmentString() const
     Process p( FBuild::Get().GetAbortBuildPointer() );
     const char * environmentString = GetEnvironmentString();
 
-    bool spawnOK = p.Spawn( GetTestExecutable()->GetName().Get(),
-                            m_TestArguments.Get(),
-                            workingDir,
-                            environmentString );
+    const bool spawnOK = p.Spawn( GetTestExecutable()->GetName().Get(),
+                                  m_TestArguments.Get(),
+                                  workingDir,
+                                  environmentString );
 
     if ( !spawnOK )
     {
@@ -198,10 +198,10 @@ const char * TestNode::GetEnvironmentString() const
     // capture all of the stdout and stderr
     AString memOut;
     AString memErr;
-    bool timedOut = !p.ReadAllData( memOut, memErr, m_TestTimeOut * 1000 );
+    const bool timedOut = !p.ReadAllData( memOut, memErr, m_TestTimeOut * 1000 );
 
     // Get result
-    int result = p.WaitForExit();
+    const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
         return NODE_RESULT_FAILED;

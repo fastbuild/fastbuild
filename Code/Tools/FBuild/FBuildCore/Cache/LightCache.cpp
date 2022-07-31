@@ -298,7 +298,7 @@ bool LightCache::Hash( ObjectNode * node,
     }
 
     // Handle forced includes
-    for ( AString & forceInclude : forceIncludes )
+    for ( const AString & forceInclude : forceIncludes )
     {
         ProcessInclude( forceInclude, IncludeType::QUOTE );
     }

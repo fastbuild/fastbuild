@@ -39,7 +39,7 @@ void BuildProfiler::StartMetricsGathering()
     PROFILE_FUNCTION;
 
     ASSERT( m_Thread == INVALID_THREAD_HANDLE );
-    m_ThreadExit = false;
+    m_ThreadExit.Store( false );
     m_Thread = Thread::CreateThread( MetricsThreadWrapper, "BuildProfileMetrics" );
 }
 
@@ -50,7 +50,7 @@ void BuildProfiler::StopMetricsGathering()
     PROFILE_FUNCTION;
 
     ASSERT( m_Thread != INVALID_THREAD_HANDLE );
-    m_ThreadExit = true;
+    m_ThreadExit.Store( true );
     m_ThreadSignalSemaphore.Signal();
     Thread::WaitForThread( m_Thread );
     Thread::CloseHandle( m_Thread );
@@ -156,7 +156,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     // Serialize events
     AStackString<> nameBuffer;
     const double freqMul = ( static_cast<double>( Timer::GetFrequencyInvFloatMS()) * 1000.0 );
-    for ( Event & event : m_Events )
+    for ( const Event & event : m_Events )
     {
         // Emit event with duration
         buffer.AppendFormat( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u",
@@ -260,7 +260,7 @@ void BuildProfiler::MetricsUpdate()
 
         // Exit if we're finished. We check the exit condition here to ensure
         // we always do one final metrics gathering operation before exiting
-        if ( m_ThreadExit )
+        if ( m_ThreadExit.Load() )
         {
             return;
         }

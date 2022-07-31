@@ -125,7 +125,7 @@ void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
     FBuild fBuild;
     NodeGraph ng;
     BFFParser p( ng );
-    bool parseResult = p.ParseFromFile( fileName );
+    const bool parseResult = p.ParseFromFile( fileName );
     if ( expectFailure )
     {
         TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
@@ -148,16 +148,19 @@ bool FBuildTest::ParseFromString( bool expectedResult,
     const char * searchStart = GetRecordedOutput().Get() + outputSizeBefore;
 
     // Parse
-    FBuild fBuild;
-    NodeGraph ng;
-    BFFParser p( ng );
-    const bool result = p.ParseFromString( "test.bff", bffContents );
+    bool result;
+    {
+        FBuild fBuild;
+        NodeGraph ng;
+        BFFParser p( ng );
+        result = p.ParseFromString( "test.bff", bffContents );
+    }
 
     // Check result is as expected
     if ( result != expectedResult )
     {
         // Emit message about mismatch
-        OUTPUT( "Test %s but %s was expected", result ? "succeeded" : "failed",
+        OUTPUT( "Test %s but %s was expected\n", result ? "succeeded" : "failed",
                                                expectedResult ? "success" : "failure" );
         return false; // break in calling code
     }
@@ -169,7 +172,7 @@ bool FBuildTest::ParseFromString( bool expectedResult,
         const bool foundExpectedMessage = ( GetRecordedOutput().Find( expectedMessage, searchStart ) != nullptr );
         if ( foundExpectedMessage == false )
         {
-            OUTPUT( "Expected %s was not found: %s", expectedResult ? "message" : "error", expectedMessage );
+            OUTPUT( "Expected %s was not found: %s\n", expectedResult ? "message" : "error", expectedMessage );
             return false;
         }
     }
@@ -181,7 +184,7 @@ bool FBuildTest::ParseFromString( bool expectedResult,
         const bool foundUnexpectedMessage = ( GetRecordedOutput().Find( unexpectedMessage, searchStart ) != nullptr );
         if ( foundUnexpectedMessage )
         {
-            OUTPUT( "Unexpected %s was found: %s", expectedResult ? "message" : "error", unexpectedMessage );
+            OUTPUT( "Unexpected %s was found: %s\n", expectedResult ? "message" : "error", unexpectedMessage );
             return false;
         }
     }
@@ -217,10 +220,10 @@ void FBuildTest::CheckStatsNode( const FBuildStats & stats, size_t numSeen, size
 //------------------------------------------------------------------------------
 void FBuildTest::CheckStatsTotal( const FBuildStats & stats, size_t numSeen, size_t numBuilt ) const
 {
-    size_t actualNumSeen = stats.GetNodesProcessed();
+    const size_t actualNumSeen = stats.GetNodesProcessed();
     TEST_ASSERT( actualNumSeen == numSeen );
 
-    size_t actualNumBuilt = stats.GetNodesBuilt();
+    const size_t actualNumBuilt = stats.GetNodesBuilt();
     TEST_ASSERT( actualNumBuilt == numBuilt );
 }
 

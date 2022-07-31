@@ -71,7 +71,7 @@ void * MemPoolBlock::Alloc()
     // Take first block from free chain
     FreeBlock * block = m_FreeBlockChain;
     m_FreeBlockChain = block->m_Next;
-    return static_cast< void * >( block );
+    return block;
 }
 
 // Free

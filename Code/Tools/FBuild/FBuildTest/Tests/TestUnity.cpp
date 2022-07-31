@@ -25,9 +25,9 @@ private:
 
     // Helpers
     FBuildStats BuildGenerate( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetTestGenerateDBFileName() const { return "../../../../tmp/Test/Unity/generate.fdb"; }
+    const char * GetTestGenerateDBFileName() const { return "../tmp/Test/Unity/generate.fdb"; }
     FBuildStats BuildCompile( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetTestCompileDBFileName() const { return "../../../../tmp/Test/Unity/compile.fdb"; }
+    const char * GetTestCompileDBFileName() const { return "../tmp/Test/Unity/compile.fdb"; }
 
     // Tests
     void TestGenerate() const;
@@ -128,8 +128,8 @@ void TestUnity::TestGenerate_NoRebuild() const
 
     // Unity must be "built" every time, but it only writes files when they change
     // so record the time before and after
-    uint64_t dateTime1 = FileIO::GetFileLastWriteTime( unity1 );
-    uint64_t dateTime2 = FileIO::GetFileLastWriteTime( unity2 );
+    const uint64_t dateTime1 = FileIO::GetFileLastWriteTime( unity1 );
+    const uint64_t dateTime2 = FileIO::GetFileLastWriteTime( unity2 );
 
     // NTFS file resolution is 100ns, so sleep long enough to ensure
     // an invalid write would modify the time
@@ -166,8 +166,8 @@ void TestUnity::TestGenerate_NoRebuild_BFFChange() const
 
     // Unity must be "built" every time, but it only writes files when they change
     // so record the time before and after
-    uint64_t dateTime1 = FileIO::GetFileLastWriteTime( unity1 );
-    uint64_t dateTime2 = FileIO::GetFileLastWriteTime( unity2 );
+    const uint64_t dateTime1 = FileIO::GetFileLastWriteTime( unity1 );
+    const uint64_t dateTime2 = FileIO::GetFileLastWriteTime( unity2 );
 
     // NTFS file resolution is 100ns, so sleep long enough to ensure
     // an invalid write would modify the time
@@ -770,7 +770,7 @@ void TestUnity::SortFiles() const
     // Helper marcos to reduce boilerplate code
     #define SORT( ... )                                                         \
     do {                                                                           \
-        const char * inputs[] = { __VA_ARGS__ };                                \
+        const char * const inputs[] = { __VA_ARGS__ };                          \
         Helper h;                                                               \
         for ( const char * input : inputs )                                     \
         {                                                                       \
@@ -779,7 +779,7 @@ void TestUnity::SortFiles() const
         h.Sort()
 
     #define TEST( ... )                                                         \
-        const char * outputs[] = { __VA_ARGS__ };                               \
+        const char * const outputs[] = { __VA_ARGS__ };                         \
         for ( size_t i = 0; i < (sizeof(outputs) / sizeof(const char *)); ++i ) \
         {                                                                       \
             TEST_ASSERTM( h[ i ] == outputs[ i ], "Mismatch @ index %u: %s != %s", (uint32_t)i, h[ i ].Get(), outputs[ i ] ); \

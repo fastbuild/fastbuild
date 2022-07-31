@@ -1,0 +1,235 @@
+// Visual Studio 2022
+//------------------------------------------------------------------------------
+//
+// Detect VS2022
+//
+// We search in the following locations, in order of preference:
+//  1) Vendorized in External (side by side with this bff)
+//  2) Specified via environment variables (VS Command Prompt)
+//  3) Part of a Visual Studio installation (Program Files)
+//
+#if file_exists( "2022/Community/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+    //
+    // Use vendorized toolchain
+    //
+    .VS2022_BasePath        = '$_CURRENT_BFF_DIR_$/2022/Community/VC'
+    .VS2022_Version         = '14.31.31103'
+    .VS2022_MSC_VER         = '1931'
+#else
+    //
+    // Use environment variable if available (VS Command Prompt)
+    //
+    #if exists( VS170COMNTOOLS )
+        #import VCINSTALLDIR
+        #import VCToolsVersion
+        .VS2022_BasePath        = .VCINSTALLDIR
+        .VS2022_Version         = .VCToolsVersion
+        .VS2022_MSC_VER         = '1931' // NOTE: This cannot be detected and may be incorrect
+    #else
+        //
+        // Use Visual Studio installation
+        //
+        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+            // v17.1.4
+            .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC'
+            .VS2022_Version         = '14.31.31103'
+            .VS2022_MSC_VER         = '1931'
+        #else
+            //
+            // Use Visual Studio 2022 Enterprise installation (used by GitHub Actions)
+            //
+            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+                // v17.1.4
+                .VS2022_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC'
+                .VS2022_Version         = '14.31.31103'
+                .VS2022_MSC_VER         = '1931'
+            #else
+                //
+                // Failed
+                //
+                Print( '-----------------------------------------------------------------------' )
+                Print( '- Unable to auto-detect VS2022 - please specify installation manually -' )
+                Print( '-----------------------------------------------------------------------' )
+                .VS2022_BasePath        = .Set_Path_Here    // <-- Set path here
+                .VS2022_Version         = .Set_Version_Here // <-- Set version here
+                .VS2022_MSC_VER         = .Set_MSC_VER_Here // <-- Set MSC_VER here
+            #endif
+        #endif
+    #endif
+#endif
+
+.VS2022_ToolchainPath   = '$VS2022_BasePath$/Tools/MSVC/$VS2022_Version$'
+
+// X64 Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-VS2022-x64' )
+{
+    .Root       = '$VS2022_ToolchainPath$/bin/Hostx64/x64'
+    .Executable = '$Root$/cl.exe'
+    .ExtraFiles = { '$Root$/c1.dll'
+                    '$Root$/c1xx.dll',
+                    '$Root$/c2.dll',
+                    '$Root$/msobj140.dll'
+                    '$Root$/mspdb140.dll'
+                    '$Root$/mspdbcore.dll'
+                    '$Root$/mspdbsrv.exe'
+                    '$Root$/mspft140.dll'
+                    '$Root$/msvcp140.dll'
+                    '$Root$/msvcp140_atomic_wait.dll' // Required circa 16.8.3 (14.28.29333)
+                    '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
+                    '$Root$/vcruntime140.dll'
+                    '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
+                    '$Root$/1033/clui.dll'
+                    '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
+                  }
+
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
+    #endif
+}
+
+// X64 ToolChain for Windows
+//------------------------------------------------------------------------------
+.ToolChain_VS2022_Windows_X64 =
+[
+    .Platform                       = 'x64'
+
+    // Paths
+    .VSIncludePaths                 = ' /external:W0 /external:I"$VS2022_ToolchainPath$/include/"'
+    .VSIncludePaths_ClangCl         = ' /imsvc "$VS2022_ToolchainPath$/include/"'
+    .VSLibPaths                     = ' /LIBPATH:"$VS2022_ToolchainPath$/lib/x64"'
+    .VCPackagesPath                 = '$VS2022_BasePath$/../Common7/IDE/VC/vcpackages'
+
+    // Compiler
+    .Compiler                       = 'Compiler-VS2022-X64'
+    .CommonCompilerOptions          = ' /Z7 /nologo /c'
+                                    + ' /Zc:inline'         // Remove unreferenced COMDATs at compile time (VS2013.2+)
+                                    + ' /Zc:strictStrings'  // Require const only usage of string literals (VS2013+)
+                                    + ' /fp:fast'
+                                    + ' /diagnostics:caret' // Use improved warning/error messages
+                                    + ' /std:c++17'         // Enable c++17 features
+                                    + ' /permissive-'       // Require conformant code
+
+                                    // Warnings
+                                    + ' /Wall'              // Enable all warnings (we'll disable those that are not useful)
+                                    + ' /WX'                // Warnings as errors
+
+                                    // These warnings are not useful
+                                    + ' /wd4061' // enumerator '%s' in switch of enum '%s' is not explicitly handled by a case label
+                                    + ' /wd4255' // '%s': no function prototype given: converting '()' to '(void)''
+                                    + ' /wd4514' // '%s': unreferenced inline function has been removed
+                                    + ' /wd4577' // 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed. Specify /EHsc
+                                    + ' /wd4625' // '%s' : copy constructor was implicitly defined as deleted
+                                    + ' /wd4710' // '%s': function not inlined
+                                    + ' /wd4711' // function '%s' selected for automatic inline expansion
+                                    + ' /wd4820' // '%s': '%u' bytes padding added after data member '%s'
+                                    + ' /wd5045' // Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
+                                    + ' /wd5220' // '%s': a non-static data member with a volatile qualified type no longer implies that compiler generated copy/move constructors and copy/move assignment operators are not trivial
+
+                                    // Include Paths
+                                    + ' /I"./"'
+                                    + .VSIncludePaths
+
+    .CompilerOptions                = ' $CommonCompilerOptions$ "%1" /Fo"%2"'
+    .CompilerOptionsC               = ' $CommonCompilerOptions$ "%1" /Fo"%2"'
+    .CompilerOptionsDeoptimized     = ' $CommonCompilerOptions$ "%1" /Fo"%2"'
+    .PCHOptions                     = ' $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
+
+    // Librarian
+    .Librarian                      = '$VS2022_ToolchainPath$/bin/Hostx64/x64/lib.exe'
+    .LibrarianOptions               = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
+
+    // Linker
+    .Linker                         = '$VS2022_ToolchainPath$/bin/Hostx64/x64/link.exe'
+    .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+                                    + .VSLibPaths
+    //CRT
+    .CRTLibs_Static                 = ' LIBCMT.LIB'
+                                    + ' libvcruntime.lib'
+                                    + ' libucrt.lib'
+
+    // File Extensions
+    .LibExtension                   = '.lib'
+    .ExeExtension                   = '.exe'
+
+    // Exception Control
+    .UseExceptions                  = ' /EHsc'
+]
+
+// PATH environment variable
+//------------------------------------------------------------------------------
+.VS_2022_PATH                       = '$VS2022_ToolchainPath$/Hostx64/x64'
+
+// Platform Toolset for Project Generation
+//------------------------------------------------------------------------------
+.VS_2022_PlatformToolset            = 'v143'
+
+// _MSC_VER
+//------------------------------------------------------------------------------
+
+// VisualStudioSettings
+//------------------------------------------------------------------------------
+.VisualStudioSettings_VS2022 = 
+[
+    .VS_Version                     = .VS2022_Version
+    .VS_Version_HumanReadable       = '2022'
+    .VS_SolutionVersion             = '16.0.28701.123'
+    .MSC_VER                        = .VS2022_MSC_VER
+    .VS_ToolchainPath               = .VS2022_ToolchainPath
+    .ToolChain_VS_Windows_X64       = .ToolChain_VS2022_Windows_X64
+    .VS_PATH                        = .VS_2022_PATH
+    .VS_PlatformToolset             = .VS_2022_PlatformToolset
+
+                                    // Enable and specify analysis engine
+    .StaticAnalysisOptions          = ' /analyze'
+                                    + ' /analyze:plugin"$VS2022_ToolchainPath$\bin\HostX64\x64\EspXEngine.dll"'
+                                    + ' /analyze:external-' // Disable analysis of external headers
+
+                                    // To investigate: These warnings might be useful and should be checked
+                                    + ' /wd6553'  // The annotation for function 'RegOpenKeyExA' on _Param_(3) does not apply to a value type.
+                                    + ' /wd26400' // Do not assign the result of an allocation or a function call with an owner<T> return value to a raw pointer, use owner<T> instead (i.11).
+                                    + ' /wd26401' // Do not delete a raw pointer that is not an owner<T> (i.11).
+                                    + ' /wd26430' // Symbol '%s' is not tested for nullness on all paths (f.23).: Lines: ...
+                                    + ' /wd26432' // If you define or delete any default operation in the type '%s', define or delete them all (c.21).
+                                    + ' /wd26434' // Function '%s' hides a non-virtual function '%s' (c.128).
+                                    + ' /wd26436' // The type '%s' with a virtual function needs either public virtual or protected non-virtual destructor (c.35).
+                                    + ' /wd26438' // Avoid 'goto' (es.76).
+                                    + ' /wd26451' // Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+                                    + ' /wd26460' // The reference argument '%s' for function '%s' can be marked as const (con.3).
+                                    + ' /wd26475' // Do not use function style C-casts (es.49).
+                                    + ' /wd26476' // Expression/symbol '%s' uses a naked union '%s' with multiple type pointers: Use variant instead (type.7).
+                                    + ' /wd26491' // Don't use static_cast downcasts (type.2).
+                                    + ' /wd26494' // Variable '%s' is uninitialized. Always initialize an object (type.5).
+                                    + ' /wd26495' // Variable '%s' is uninitialized. Always initialize a member variable (type.6).
+                                    + ' /wd26456' // Operator '%s' hides a non-virtual operator '%s' (c.128).
+                                    + ' /wd26497' // The function '%s' could be marked constexpr if compile-time evaluation is desired (f.4).
+                                    + ' /wd26812' // The enum type '%s' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+                                    + ' /wd26814' // The const variable '%s' can be computed at compile-time. Consider using constexpr (con.5).
+
+                                    // These warnings are not useful. They either:
+                                    // a) Are about things we want to do or have no viable alternative
+                                    // b) Are nonsensical, undesirable or impractical
+                                    + ' /wd26402' // Return a scoped object instead of a heap-allocated if it has a move constructor (r.3).
+                                    + ' /wd26409' // Avoid calling new and delete explicitly, use std::make_unique<T> instead (r.11).
+                                    + ' /wd26426' // Global initializer calls a non-constexpr function '%s' (i.22).
+                                    + ' /wd26429' // Symbol '%s' is never tested for nullness, it can be marked as not_null (f.23).
+                                    + ' /wd26435' // Function '%s' should specify exactly one of 'virtual', 'override', or 'final' (c.128).
+                                    + ' /wd26439' // This kind of function may not throw. Declare it 'noexcept' (f.6).
+                                    + ' /wd26440' // Function '%s' can be declared 'noexcept' (f.6).
+                                    + ' /wd26446' // Prefer to use gsl::at() instead of unchecked subscript operator (bounds.4).
+                                    + ' /wd26447' // The function is declared 'noexcept' but calls function '%s' which may throw exceptions (f.6).
+                                    + ' /wd26455' // Default constructor may not throw. Declare it 'noexcept' (f.6).
+                                    + ' /wd26457' // (void) should not be used to ignore return values, use 'std::ignore =' instead (es.48).
+                                    + ' /wd26461' // The pointer argument '%s' for function '%s' can be marked as a pointer to const (con.3).
+                                    + ' /wd26467' // Converting from floating point to unsigned integral types results in non-portable code if the double/float has a negative value. Use gsl::narrow_cast or gsl::narrow instead to guard against undefined behavior and potential data loss (es.46).
+                                    + ' /wd26472' // Don't use a static_cast for arithmetic conversions. Use brace initialization, gsl::narrow_cast or gsl::narrow (type.1).
+                                    + ' /wd26481' // Don't use pointer arithmetic. Use span instead (bounds.1).
+                                    + ' /wd26482' // Only index into arrays using constant expressions (bounds.2).'
+                                    + ' /wd26485' // Expression '%s': No array to pointer decay (bounds.3).
+                                    + ' /wd26490' // Don't use reinterpret_cast (type.1).
+                                    + ' /wd26492' // Don't use const_cast to cast away const or volatile (type.3).
+                                    + ' /wd26493' // Don't use C-style casts (type.4).
+                                    + ' /wd26826' // Don't use C-style variable arguments (f.55).
+]
+
+//------------------------------------------------------------------------------

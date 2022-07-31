@@ -43,7 +43,16 @@
 //------------------------------------------------------------------------------
 .Windows10_SDK_X64 =
 [
+#if USING_VS2022
+    .WindowsSDK_IncludePaths        = ' "/external:I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
+                                    + ' "/external:I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
+                                    + ' "/external:I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
+#else
     .WindowsSDK_IncludePaths        = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
+                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
+                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
+#endif
+    .WindowsSDK_IncludePaths_RC     = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
                                     + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
                                     + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
 

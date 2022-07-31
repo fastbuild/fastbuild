@@ -63,7 +63,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         #endif
         if ( token.BeginsWith( "-cpus=" ) )
         {
-            int32_t numCPUs = (int32_t)Env::GetNumProcessors();
+            const int32_t numCPUs = (int32_t)Env::GetNumProcessors();
             int32_t num( 0 );
             if ( AString::ScanS( token.Get() + 6, "%i", &num ) == 1 )
             {
@@ -153,7 +153,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 void FBuildWorkerOptions::ShowUsageError()
 {
     const char * msg = "FBuildWorker.exe - " FBUILD_VERSION_STRING "\n"
-                       "Copyright 2012-2021 Franta Fulin - https://www.fastbuild.org\n"
+                       "Copyright 2012-2022 Franta Fulin - https://www.fastbuild.org\n"
                        "\n"
                        "Command Line Options:\n"
                        "---------------------------------------------------------------------------\n"

@@ -271,7 +271,7 @@ void TestExec::Build_ExecCommand_UseStdOut() const
 
     FileStream f;
     f.Open( outFile_stdout.Get(), FileStream::READ_ONLY );
-    f.ReadBuffer( static_cast< char * >( &firstLineBuffer[ 0 ] ), firstLineBufferSize - 1 );
+    f.ReadBuffer( &firstLineBuffer[ 0 ], firstLineBufferSize - 1 );
     f.Close();
 
     const AStackString<> firstLine( &firstLineBuffer[ 0 ], &firstLineBuffer[ firstLineBufferSize ] );

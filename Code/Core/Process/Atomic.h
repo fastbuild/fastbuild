@@ -4,62 +4,31 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Env/Types.h"
 #if defined( __WINDOWS__ )
-    #include "Core/Env/WindowsHeader.h"
     #include <intrin.h>
 #endif
 
-// bool
 //------------------------------------------------------------------------------
-inline bool AtomicLoadRelaxed( const volatile bool * x )
-{
-    #if defined( __GNUC__ ) || defined( __clang__ )
-        return __atomic_load_n( x, __ATOMIC_RELAXED );
-    #elif defined( _MSC_VER )
-        return *x;
-    #else
-        #error Unknown compiler
+#if defined( __WINDOWS__ )
+    #if !defined( _M_X64 )
+        // If some future Windows platforms on another architecture is supported
+        // the implementation will need to be updated (arm for example)
+        #error Windows atomic ops have been imlpemented assuming an x86 memory model
     #endif
-}
-inline bool AtomicLoadAcquire( const volatile bool * x )
-{
-    #if defined( __GNUC__ ) || defined( __clang__ )
-        return __atomic_load_n( x, __ATOMIC_ACQUIRE );
-    #elif defined( _MSC_VER )
-        const bool value = *x;
-        _ReadWriteBarrier();
-        return value;
-    #else
-        #error Unknown compiler
-    #endif
-}
-inline void AtomicStoreRelaxed( volatile bool * x, bool value )
-{
-    #if defined( __GNUC__ ) || defined( __clang__ )
-        __atomic_store_n( x, value, __ATOMIC_RELAXED );
-    #elif defined( _MSC_VER )
-        *x = value;
-    #else
-        #error Unknown compiler
-    #endif
-}
-inline void AtomicStoreRelease( volatile bool * x, bool value )
-{
-    #if defined( __GNUC__ ) || defined( __clang__ )
-        __atomic_store_n( x, value, __ATOMIC_RELEASE );
-    #elif defined( _MSC_VER )
-        _ReadWriteBarrier();
-        *x = value;
-    #else
-        #error Unknown compiler
-    #endif
-}
+#endif
+
+// Memory Barrier
+//------------------------------------------------------------------------------
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+    #define MemoryBarrier() __asm__ __volatile__("")
+#else
+    #define MemoryBarrier __faststorefence
+#endif
 
 // Pointers
 //------------------------------------------------------------------------------
 template < class T >
-inline T * AtomicLoadRelaxed( T * const volatile * x )
+[[nodiscard]] inline T * AtomicLoadRelaxed( T * const volatile * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_RELAXED );
@@ -70,7 +39,7 @@ inline T * AtomicLoadRelaxed( T * const volatile * x )
     #endif
 }
 template < class T >
-inline T * AtomicLoadAcquire( T * const volatile * x )
+[[nodiscard]] inline T * AtomicLoadAcquire( T * const volatile * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
@@ -106,258 +75,157 @@ inline void AtomicStoreRelease( T * volatile * x, T * value )
     #endif
 }
 
-// 32bit
+// Atomic Inc/Dec/Add/Sub
 //------------------------------------------------------------------------------
-inline int32_t AtomicInc32( volatile int32_t * i )
-{
+#if defined( __GNUC__ ) || defined( __clang__ )
     #if defined( __WINDOWS__ )
-        return (int32_t)InterlockedIncrement( (volatile uint32_t *)i );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_add_and_fetch( i, 1 );
+        PRAGMA_DISABLE_PUSH_CLANG( "-Watomic-implicit-seq-cst" )
     #endif
-}
-inline uint32_t AtomicIncU32( volatile uint32_t * i )
-{
+    template<typename T> inline T AtomicInc( volatile T * x )
+    {
+        return __sync_add_and_fetch( x, 1 );
+    }
+    template<typename T> inline T AtomicDec( volatile T * x )
+    {
+        return __sync_sub_and_fetch( x, 1 );
+    }
+    template<typename T> inline T AtomicAdd( volatile T * x, T value )
+    {
+        return __sync_add_and_fetch( x, value );
+    }
+    template<typename T> inline T AtomicSub( volatile T * x, T value )
+    {
+        return __sync_sub_and_fetch( x, value );
+    }
     #if defined( __WINDOWS__ )
-        return InterlockedIncrement( i );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_add_and_fetch( i, 1 );
+        PRAGMA_DISABLE_POP_CLANG
     #endif
-}
-inline int32_t AtomicDec32( volatile int32_t * i )
-{
-    #if defined( __WINDOWS__ )
-        return (int32_t)InterlockedDecrement( (volatile uint32_t *)i );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_sub_and_fetch( i, 1 );
-    #endif
-}
-inline uint32_t AtomicDecU32( volatile uint32_t * i )
-{
-    #if defined( __WINDOWS__ )
-        return InterlockedDecrement( i );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_sub_and_fetch( i, 1 );
-    #endif
-}
-inline int32_t AtomicAdd32( volatile int32_t * i, int32_t value )
-{
-    #if defined( __WINDOWS__ )
-        return InterlockedAdd( (volatile long *)i, value );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_add_and_fetch( i, value );
-    #endif
-}
-inline uint32_t AtomicAddU32( volatile uint32_t * i, int32_t value )
-{
-    #if defined( __WINDOWS__ )
-        return (uint32_t)InterlockedAdd( reinterpret_cast<volatile long *>( i ), value );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_add_and_fetch( i, value );
-    #endif
-}
-inline int32_t AtomicSub32( volatile int32_t * i, int32_t value )
-{
-    #if defined( __WINDOWS__ )
-        return InterlockedAdd( (volatile long *)i, -value );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_sub_and_fetch( i, value );
-    #endif
-}
-inline uint32_t AtomicSubU32( volatile uint32_t * i, int32_t value )
-{
-    #if defined( __WINDOWS__ )
-        return (uint32_t)InterlockedAdd( reinterpret_cast<volatile long*>( i ), -value );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_sub_and_fetch( i, value );
-    #endif
-}
+#elif defined( _MSC_VER )
+    // MSVC is missing intrinsics for some sizes so we emulate them:
+    inline char     XInterlockedIncrement8( volatile char * x )                 { return ( _InterlockedExchangeAdd8( x, 1 ) + 1 ); }
+    inline char     XInterlockedDecrement8( volatile char * x )                 { return ( _InterlockedExchangeAdd8( x, -1 ) - 1 ); }
+    inline char     XInterlockedAdd8( volatile char * x, char value )           { return ( _InterlockedExchangeAdd8( x, value ) + value ); }
+    inline short    XInterlockedAdd16( volatile short * x, short value )        { return ( _InterlockedExchangeAdd16( x, value ) + value ); }
 
-inline int32_t AtomicLoadRelaxed( const volatile int32_t * x )
+    // The MSVC compiler crashes if the following intrinsics are used:
+    //              _interlockedadd
+    //              _interlockedadd64
+    // These alternative implementations avoid the crash.
+    //       (see: https://developercommunity.visualstudio.com/t/Internal-compiler-error-using-_interlock/10061949)
+    inline long     XInterlockedAdd32( volatile long * x, long value )          { return ( _InterlockedExchangeAdd( x, value ) + value ); }
+    inline __int64  XInterlockedAdd64( volatile __int64 * x, __int64 value )    { return ( _InterlockedExchangeAdd64( x, value ) + value ); }
+
+    // MSVC has inconsistent function names (suffixes and casing) so the macro below can be used to map
+    // a consistent set of function names for each type
+    #define IMPLEMENT_FUNCTIONS( T, U, INCFUNC, DECFUNC, ADDFUNC ) \
+        inline T AtomicInc( volatile T * x ) \
+        { \
+            return static_cast<T>( INCFUNC( reinterpret_cast<volatile U *>( x ) ) ); \
+        } \
+        inline T AtomicDec( volatile T * x ) \
+        { \
+            return static_cast<T>( DECFUNC( reinterpret_cast<volatile U *>( x ) ) ); \
+        } \
+        inline T AtomicAdd( volatile T * x, T value ) \
+        { \
+            return static_cast<T>( ADDFUNC( reinterpret_cast<volatile U *>( x ), static_cast<U>( value ) ) ); \
+        } \
+        inline T AtomicSub( volatile T * x, T value ) \
+        { \
+            return static_cast<T>( ADDFUNC( reinterpret_cast<volatile U *>( x ), -static_cast<U>( value ) ) ); \
+        }
+
+    IMPLEMENT_FUNCTIONS( uint8_t,  char,    XInterlockedIncrement8,     XInterlockedDecrement8,     XInterlockedAdd8 );
+    IMPLEMENT_FUNCTIONS( int8_t,   char,    XInterlockedIncrement8,     XInterlockedDecrement8,     XInterlockedAdd8 );
+    IMPLEMENT_FUNCTIONS( uint16_t, short,   _InterlockedIncrement16,    _InterlockedDecrement16,    XInterlockedAdd16 );
+    IMPLEMENT_FUNCTIONS( int16_t,  short,   _InterlockedIncrement16,    _InterlockedDecrement16,    XInterlockedAdd16 );
+    IMPLEMENT_FUNCTIONS( uint32_t, long,    _InterlockedIncrement,      _InterlockedDecrement,      XInterlockedAdd32 );
+    IMPLEMENT_FUNCTIONS( int32_t,  long,    _InterlockedIncrement,      _InterlockedDecrement,      XInterlockedAdd32 );
+    IMPLEMENT_FUNCTIONS( uint64_t, __int64, _InterlockedIncrement64,    _InterlockedDecrement64,    XInterlockedAdd64 );
+    IMPLEMENT_FUNCTIONS( int64_t,  __int64, _InterlockedIncrement64,    _InterlockedDecrement64,    XInterlockedAdd64 );
+
+    #undef IMPLEMENT_FUNCTIONS
+#endif
+
+// AtomicLoadRelaxed
+//------------------------------------------------------------------------------
+template<typename T>
+[[nodiscard]] inline T AtomicLoadRelaxed( const volatile T * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
         return *x;
-    #else
-        #error Unknown compiler
     #endif
 }
-inline uint32_t AtomicLoadRelaxed( const volatile uint32_t * x )
-{
-    return static_cast< uint32_t >( AtomicLoadRelaxed( reinterpret_cast< const volatile int32_t * >( x ) ) );
-}
-inline int32_t AtomicLoadAcquire( const volatile int32_t * x )
+
+// AtomicLoadAcquire
+//------------------------------------------------------------------------------
+template<typename T>
+[[nodiscard]] inline T AtomicLoadAcquire( const volatile T * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
     #elif defined( _MSC_VER )
-        const int32_t value = *x;
+        const T value = *x;
         _ReadWriteBarrier();
         return value;
-    #else
-        #error Unknown compiler
     #endif
 }
-inline uint32_t AtomicLoadAcquire( const volatile uint32_t * x )
-{
-    return static_cast< uint32_t >( AtomicLoadAcquire( reinterpret_cast< const volatile int32_t * >( x ) ) );
-}
-inline void AtomicStoreRelaxed( volatile int32_t * x, int32_t value )
+
+// AtomicStoreRelaxed
+//------------------------------------------------------------------------------
+template<typename T>
+inline void AtomicStoreRelaxed( volatile T * x, T value )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
         *x = value;
-    #else
-        #error Unknown compiler
     #endif
 }
-inline void AtomicStoreRelaxed( volatile uint32_t * x, uint32_t value )
-{
-    AtomicStoreRelaxed( reinterpret_cast< volatile int32_t * >( x ), static_cast< int32_t >( value ) );
-}
-inline void AtomicStoreRelease( volatile int32_t * x, int32_t value )
+
+// AtomicStoreRelease
+//------------------------------------------------------------------------------
+template<typename T>
+inline void AtomicStoreRelease( volatile T * x, T value )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELEASE );
     #elif defined( _MSC_VER )
         _ReadWriteBarrier();
         *x = value;
-    #else
-        #error Unknown compiler
     #endif
 }
-inline void AtomicStoreRelease( volatile uint32_t * x, uint32_t value )
-{
-    AtomicStoreRelease( reinterpret_cast< volatile int32_t * >( x ), static_cast< int32_t >( value ) );
-}
 
-// 64bit
 //------------------------------------------------------------------------------
-inline int64_t AtomicInc64( volatile int64_t * i )
+template <class T>
+class Atomic
 {
-    #if defined( __WINDOWS__ )
-        return InterlockedIncrement64( i );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_add_and_fetch( i, 1 );
-    #endif
-}
-inline uint64_t AtomicIncU64( volatile uint64_t * i )
-{
-    #if defined( __WINDOWS__ )
-        return (uint64_t)InterlockedIncrement64( (volatile int64_t *)i );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_add_and_fetch( i, 1 );
-    #endif
-}
-inline int64_t AtomicDec64( volatile int64_t * i )
-{
-    #if defined( __WINDOWS__ )
-        return InterlockedDecrement64( i );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_sub_and_fetch( i, 1 );
-    #endif
-}
-inline uint64_t AtomicDecU64( volatile uint64_t * i )
-{
-    #if defined( __WINDOWS__ )
-        return (uint64_t)InterlockedDecrement64( (volatile int64_t *)i );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_sub_and_fetch( i, 1 );
-    #endif
-}
-inline int64_t AtomicAdd64( volatile int64_t * i, int64_t value )
-{
-    #if defined( __WINDOWS__ )
-        return InterlockedAdd64( (volatile LONG64 *)i, value );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_add_and_fetch( i, value );
-    #endif
-}
-inline uint64_t AtomicAddU64( volatile uint64_t * i, int64_t value )
-{
-    #if defined( __WINDOWS__ )
-        return (uint64_t)InterlockedAdd64( reinterpret_cast<volatile LONG64 *>( i ), value );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_add_and_fetch( i, value );
-    #endif
-}
-inline int64_t AtomicSub64( volatile int64_t * i, int64_t value )
-{
-    #if defined( __WINDOWS__ )
-        return InterlockedAdd64( (volatile LONG64 *)i, -value );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_sub_and_fetch( i, value );
-    #endif
-}
-inline uint64_t AtomicSubU64( volatile uint64_t * i, int64_t value )
-{
-    #if defined( __WINDOWS__ )
-        return (uint64_t)InterlockedAdd64( reinterpret_cast<volatile LONG64*>( i ), -value );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return __sync_sub_and_fetch( i, value );
-    #endif
-}
+public:
+    Atomic()
+        : m_Value( static_cast<T>( 0 ) )
+    {
+    }
+    explicit Atomic( T initValue )
+        : m_Value( initValue )
+    {
+    }
 
-inline int64_t AtomicLoadRelaxed( const volatile int64_t * x )
-{
-    #if defined( __GNUC__ ) || defined( __clang__ )
-        return __atomic_load_n( x, __ATOMIC_RELAXED );
-    #elif defined( _MSC_VER )
-        return *x;
-    #else
-        #error Unknown compiler
-    #endif
-}
-inline uint64_t AtomicLoadRelaxed( const volatile uint64_t * x )
-{
-    return static_cast< uint64_t >( AtomicLoadRelaxed( reinterpret_cast< const volatile int64_t * >( x ) ) );
-}
-inline int64_t AtomicLoadAcquire( const volatile int64_t * x )
-{
-    #if defined( __GNUC__ ) || defined( __clang__ )
-        return __atomic_load_n( x, __ATOMIC_ACQUIRE );
-    #elif defined( _MSC_VER )
-        const int64_t value = *x;
-        _ReadWriteBarrier();
-        return value;
-    #else
-        #error Unknown compiler
-    #endif
-}
-inline uint64_t AtomicLoadAcquire( const volatile uint64_t * x )
-{
-    return static_cast< uint64_t >( AtomicLoadAcquire( reinterpret_cast< const volatile int64_t * >( x ) ) );
-}
-inline void AtomicStoreRelaxed( volatile int64_t * x, int64_t value )
-{
-    #if defined( __GNUC__ ) || defined( __clang__ )
-        __atomic_store_n( x, value, __ATOMIC_RELAXED );
-    #elif defined( _MSC_VER )
-        *x = value;
-    #else
-        #error Unknown compiler
-    #endif
-}
-inline void AtomicStoreRelaxed( volatile uint64_t * x, uint64_t value )
-{
-    AtomicStoreRelaxed( reinterpret_cast< volatile int64_t * >( x ), static_cast< int64_t >( value ) );
-}
-inline void AtomicStoreRelease( volatile int64_t * x, int64_t value )
-{
-    #if defined( __GNUC__ ) || defined( __clang__ )
-        __atomic_store_n( x, value, __ATOMIC_RELEASE );
-    #elif defined( _MSC_VER )
-        _ReadWriteBarrier();
-        *x = value;
-    #else
-        #error Unknown compiler
-    #endif
-}
-inline void AtomicStoreRelease( volatile uint64_t * x, uint64_t value )
-{
-    AtomicStoreRelease( reinterpret_cast< volatile int64_t * >( x ), static_cast< int64_t >( value ) );
-}
+    // Store/Load
+    void            Store( T newValue ) { AtomicStoreRelease( &m_Value, newValue ); }
+    [[nodiscard]] T Load() const        { return AtomicLoadAcquire( &m_Value ); }
+
+    // Increment (returns result)
+    T               Increment()         { return AtomicInc( &m_Value ); }
+    T               Decrement()         { return AtomicDec( &m_Value ); }
+
+    // Add (returns result)
+    T               Add( T value )      { return AtomicAdd( &m_Value, value ); }
+    T               Sub( T value )      { return AtomicSub( &m_Value, value ); }
+
+protected:
+    volatile T m_Value;
+};
 
 //------------------------------------------------------------------------------

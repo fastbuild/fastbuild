@@ -73,6 +73,11 @@ NodeGraph::NodeGraph()
 {
     m_NodeMap = FNEW_ARRAY( Node *[NODEMAP_TABLE_SIZE] );
     memset( m_NodeMap, 0, sizeof( Node * ) * NODEMAP_TABLE_SIZE );
+
+    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+        // Ensure debug flag doesn't linger between test runs
+        ASSERT( ObjectNode::GetFakeSystemFailureForNextJob() == false );
+    #endif
 }
 
 // DESTRUCTOR
@@ -163,11 +168,7 @@ NodeGraph::~NodeGraph()
             }
 
             // Migrate old DB info to new DB
-            const SettingsNode * settings = newNG->GetSettings();
-            if ( ( settings->GetDisableDBMigration() == false ) || forceMigration )
-            {
-                newNG->Migrate( *oldNG );
-            }
+            newNG->Migrate( *oldNG );
             FDELETE( oldNG );
 
             return newNG;
@@ -233,7 +234,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
     ConstMemoryStream ms( memory.Get(), fileSize );
 
     // Load the Old DB
-    NodeGraph::LoadResult res = Load( ms, nodeGraphDBFile );
+    const NodeGraph::LoadResult res = Load( ms, nodeGraphDBFile );
     if ( res == LoadResult::LOAD_ERROR )
     {
         FLOG_ERROR( "Database corrupt (clean build will occur): '%s'", nodeGraphDBFile );
@@ -356,7 +357,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
                 return LoadResult::LOAD_ERROR;
             }
 
-            bool optional = ( savedVarHash == 0 ); // a hash of 0 means the env var was missing when it was evaluated
+            const bool optional = ( savedVarHash == 0 ); // a hash of 0 means the env var was missing when it was evaluated
             if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, importedVarHash ) == false )
             {
                 // make sure the user knows why some things might re-build (only the first thing warns)
@@ -496,7 +497,7 @@ bool NodeGraph::LoadNode( IOStream & stream )
 void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
 {
     // write header and version
-    NodeGraphHeader header;
+    const NodeGraphHeader header;
     stream.Write( (const void *)&header, sizeof( header ) );
 
     AStackString<> nodeGraphDBFileClean( nodeGraphDBFile );
@@ -504,16 +505,16 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     stream.Write( nodeGraphDBFileClean );
 
     // write used file
-    uint32_t numUsedFiles = (uint32_t)m_UsedFiles.GetSize();
+    const uint32_t numUsedFiles = (uint32_t)m_UsedFiles.GetSize();
     stream.Write( numUsedFiles );
 
     for ( uint32_t i=0; i<numUsedFiles; ++i )
     {
         const AString & fileName = m_UsedFiles[ i ].m_FileName;
         stream.Write( fileName );
-        uint64_t timeStamp( m_UsedFiles[ i ].m_TimeStamp );
+        const uint64_t timeStamp( m_UsedFiles[ i ].m_TimeStamp );
         stream.Write( timeStamp );
-        uint64_t dataHash( m_UsedFiles[ i ].m_DataHash );
+        const uint64_t dataHash( m_UsedFiles[ i ].m_DataHash );
         stream.Write( dataHash );
     }
 
@@ -553,7 +554,7 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     FBuild::Get().GetFileExistsInfo().Save( stream );
 
     // Write nodes
-    size_t numNodes = m_AllNodes.GetSize();
+    const size_t numNodes = m_AllNodes.GetSize();
     stream.Write( (uint32_t)numNodes );
 
     // save recursively
@@ -577,7 +578,7 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
 /*static*/ void NodeGraph::SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags )
 {
     // ignore any already saved nodes
-    uint32_t nodeIndex = node->GetIndex();
+    const uint32_t nodeIndex = node->GetIndex();
     ASSERT( nodeIndex != INVALID_NODE_INDEX );
     if ( savedNodeFlags[ nodeIndex ] )
     {
@@ -1272,7 +1273,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
     {
         // all pre-build deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
+        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1289,7 +1290,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     if ( nodeToBuild->GetState() == Node::PRE_DEPS_READY )
     {
         // all static deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
+        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1340,7 +1341,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // dynamic deps
     {
         // all static deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
+        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1349,7 +1350,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
     // dependencies are uptodate, so node can now tell us if it needs
     // building
-    bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
+    const bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
     nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
     if ( forceClean ||
          ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant messages from DetermineNeedToBuild
@@ -2049,11 +2050,11 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     }
 
     // Migrate children before parents
-    for ( Dependency & dep : newNode.m_PreBuildDependencies )
+    for ( const Dependency & dep : newNode.m_PreBuildDependencies )
     {
         MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
     }
-    for ( Dependency& dep : newNode.m_StaticDependencies )
+    for ( const Dependency & dep : newNode.m_StaticDependencies )
     {
         MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
     }

@@ -37,7 +37,7 @@ void TestLibrary::LibraryType() const
         const uint32_t flags = LibraryNode::DetermineFlags( AStackString<>( "auto" ), \
                                                             AStackString<>( exeName ), \
                                                             AString::GetEmpty() ); \
-        TEST_ASSERT( ( flags & expectedFlag ) == expectedFlag ); \
+        TEST_ASSERT( flags & expectedFlag ); \
     } while( false )
 
     TEST_LIBRARYTYPE( "link",       LibraryNode::LIB_FLAG_LIB );

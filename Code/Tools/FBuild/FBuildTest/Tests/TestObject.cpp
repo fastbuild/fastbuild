@@ -50,8 +50,8 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( SourceMapping )
     REGISTER_TEST( ClangExplicitLanguageType )
     REGISTER_TEST( ClangDependencyArgs )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( CLDependencyArgs )
+    #if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
+        REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
     #endif
 REGISTER_TESTS_END
 
@@ -243,7 +243,7 @@ void TestObject::ModTimeChangeBackwards() const
         oldModTime = FileIO::GetFileLastWriteTime( fileAFullPath );
 
         // Modify FileA time (jump through hoops to handle poor filetime granularity)
-        Timer timeout;
+        const Timer timeout;
         for ( ;; )
         {
             TEST_ASSERT( timeout.GetElapsed() < 30.0f );

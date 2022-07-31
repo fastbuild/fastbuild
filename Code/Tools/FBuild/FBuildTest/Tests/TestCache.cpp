@@ -351,7 +351,7 @@ void TestCache::LightCache_IncludeUsingMacro() const
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro/fbuild.bff";
 
-    const char * expectedFiles[] = { "file.1.cpp", "file.1.h", "file.2.cpp", "file.2.h", "file.h" };
+    const char * const expectedFiles[] = { "file.1.cpp", "file.1.h", "file.2.cpp", "file.2.h", "file.h" };
 
     // Single thread
     options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
@@ -451,7 +451,7 @@ void TestCache::LightCache_IncludeUsingMacro2() const
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro2/fbuild.bff";
 
-    const char * expectedFiles[] = { "file.1.cpp", "file.2.cpp", "header1.h", "header2.h" };
+    const char * const expectedFiles[] = { "file.1.cpp", "file.2.cpp", "header1.h", "header2.h" };
 
     // Single thread
     options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
@@ -544,7 +544,7 @@ void TestCache::LightCache_IncludeUsingMacro3() const
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeUsingMacro3/fbuild.bff";
 
-    const char * expectedFiles[] = { "file.cpp", "header1.h", "header2.h" };
+    const char * const expectedFiles[] = { "file.cpp", "header1.h", "header2.h" };
 
     // Single thread
     options.m_NumWorkerThreads = 1;
@@ -676,7 +676,7 @@ void TestCache::LightCache_IncludeHierarchy() const
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_IncludeHierarchy/fbuild.bff";
 
-    const char * expectedFiles[] = { "Folder1/file.cpp", "Folder1/file.h", "Folder2/file.cpp", "Folder2/file.h", "common.h" };
+    const char * const expectedFiles[] = { "Folder1/file.cpp", "Folder1/file.h", "Folder2/file.cpp", "Folder2/file.h", "common.h" };
 
     // Write (single thread)
     {
@@ -902,7 +902,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
     // file2.cpp
     #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
-        TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
+        TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0'" ) );
     #endif
 
     // Check analysis file is present with expected errors

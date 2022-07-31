@@ -561,7 +561,7 @@ static bool ParseStringInArray( const Function * function, const OperandOf<Strin
     const BFFToken * rhsToken = iter.GetCurrent();
     iter++;
 
-    OperandOf<ArrayOfString> rhs( *rhsToken, function );
+    const OperandOf<ArrayOfString> rhs( *rhsToken, function );
     if ( !rhs.IsValid() )
     {
         return false;
@@ -655,7 +655,7 @@ static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange &
         case BFFTokenType::Boolean:        // true or false
         case BFFTokenType::Variable:       // .Var or ^Var
         {
-            OperandOf<Bool> operand( *iter.GetCurrent(), function );
+            const OperandOf<Bool> operand( *iter.GetCurrent(), function );
             if ( !operand.IsValid() )
             {
                 return false;
@@ -734,7 +734,7 @@ static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFToken
         case BFFTokenType::Boolean:         // true, false
         case BFFTokenType::Variable:       // .Var or ^Var
         {
-            OperandOf<Bool> rhsOperand( *iter.GetCurrent(), function );
+            const OperandOf<Bool> rhsOperand( *iter.GetCurrent(), function );
             if ( !rhsOperand.IsValid() )
             {
                 return false;
@@ -788,7 +788,7 @@ static bool ParseIntComparisonExp( const Function * function, const OperandOf<Nu
     }
 
     // TODO: Support literal int arrays.
-    OperandOf<Number> rhs( *iter.GetCurrent(), function );
+    const OperandOf<Number> rhs( *iter.GetCurrent(), function );
     if ( !rhs.IsValid() )
     {
         return false;
@@ -830,7 +830,7 @@ static bool ParseStringComparisonExp( const Function * function, const OperandOf
                 return ParseStringInArray( function, lhs, op, iter, expResult );
             }
 
-            OperandOf<String> rhs(*iter.GetCurrent(), function);
+            const OperandOf<String> rhs(*iter.GetCurrent(), function);
             if ( !rhs.IsValid() )
             {
                 return false;
@@ -898,7 +898,7 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
         case BFFTokenType::Number:         // 12, 56, -102 etc
         case BFFTokenType::String:         // "Hello"
         {
-            Operand operand( *token, function );
+            const Operand operand( *token, function );
             if ( operand.IsValid() == false )
             {
                 return false; // Operand constructor will have emitted error

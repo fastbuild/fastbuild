@@ -589,7 +589,7 @@ void TestGraph::TestDeepGraph() const
     }
 
     {
-        Timer t;
+        const Timer t;
 
         // no op build
         FBuild fBuild( options );
@@ -783,7 +783,7 @@ void TestGraph::BFFDirtied() const
 
     // Modify file, ensuring filetime has changed (different file systems have different resolutions)
     const uint64_t originalTime = FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) );
-    Timer t;
+    const Timer t;
     uint32_t sleepTimeMS = 2;
     for ( ;; )
     {
@@ -836,7 +836,7 @@ void TestGraph::BFFDirtied() const
 void TestGraph::DBVersionChanged() const
 {
     // Generate a fake old version headers
-    NodeGraphHeader header;
+    const NodeGraphHeader header;
     MemoryStream ms;
     ms.WriteBuffer( &header, sizeof( header ) );
 
@@ -899,16 +899,26 @@ void TestGraph::FixupErrorPaths() const
         fixup = path; \
         NodeTestHelper::FixupPathForVSIntegration( fixup ); \
         do { \
-            if ( fixup.BeginsWith( workingDir ) == false ) \
-            { \
-                TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
-                                     "Original           : %s\n" \
-                                     "Returned           : %s\n" \
-                                     "Expected BeginsWith: %s\n", \
-                                     original.Get(), \
-                                     fixup.Get(), \
-                                     workingDir.Get() ); \
-            } \
+           if ( ( original.Find( "/mnt/" ) == nullptr ) && \
+                ( fixup.BeginsWith( workingDir ) == false ) ) \
+           { \
+               TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
+                                       "Original           : %s\n" \
+                                       "Returned           : %s\n" \
+                                       "Expected BeginsWith: %s\n", \
+                                       original.Get(), \
+                                       fixup.Get(), \
+                                       workingDir.Get() ); \
+           } \
+           else if ( fixup.Find( "/mnt/" ) != nullptr ) \
+           { \
+               TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
+                                       "Original           : %s\n" \
+                                       "Returned           : %s\n" \
+                                       "Unexpected         : Contains '/mnt/'\n", \
+                                       original.Get(), \
+                                       fixup.Get() ); \
+           } \
         } while ( false )
 
     // GCC/Clang style
@@ -920,6 +930,9 @@ void TestGraph::FixupErrorPaths() const
 
     // VBCC Style
     TEST_FIXUP( "warning 55 in line 23 of \"Core/Mem/Mem.h\": some warning text" );
+
+    // WSL
+    TEST_FIXUP( "/mnt/c/p4/depot/Code/Core/Mem/Mem.h:23:1: warning: some warning text" );
 
     #undef TEST_FIXUP
 }

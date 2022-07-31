@@ -32,7 +32,6 @@ public:
     inline const Array< AString > &     GetWorkerList() const { return m_Workers; }
     uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
     uint32_t                            GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
-    bool                                GetDisableDBMigration() const { return m_DisableDBMigration; }
 
 private:
     void ProcessEnvironment( const Array< AString > & envStrings ) const;
@@ -51,7 +50,6 @@ private:
     Array< AString  >   m_Workers;
     uint32_t            m_WorkerConnectionLimit;
     uint32_t            m_DistributableJobMemoryLimitMiB;
-    bool                m_DisableDBMigration; // TODO:C Remove this option some time after v0.99
 };
 
 //------------------------------------------------------------------------------

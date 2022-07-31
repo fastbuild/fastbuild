@@ -3,14 +3,14 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
 
 // TestArray
 //------------------------------------------------------------------------------
-class TestArray : public UnitTest
+class TestArray : public TestGroup
 {
 private:
     DECLARE_TESTS
@@ -193,7 +193,7 @@ void TestArray::Construct_OtherArray() const
 void TestArray::Construct_Range() const
 {
     {
-        uint32_t u32s[ 4 ] = { 1, 2, 3, 4 };
+        const uint32_t u32s[ 4 ] = { 1, 2, 3, 4 };
 
         Array<uint32_t> array( u32s, u32s + 4 );
         CheckConsistency( array );
@@ -400,7 +400,7 @@ void TestArray::RangeBasedForLoop() const
         array.Append( 1 );
         array.Append( 2 );
         uint32_t total = 0;
-        for ( uint32_t u : array ) // by value
+        for ( const uint32_t u : array ) // by value
         {
             total += u;
         }
@@ -1836,7 +1836,9 @@ void TestArray::MoveConstructorHelper() const
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
     // Source string should be empty
+    PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
     TEST_ASSERT( arrayA.IsEmpty() );
+    PRAGMA_DISABLE_POP_MSVC
 
     CheckConsistency( arrayA );
     CheckConsistency( arrayB );
@@ -1910,7 +1912,9 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
         // Source string should be empty
+        PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
         TEST_ASSERT( arrayA.IsEmpty() );
+        PRAGMA_DISABLE_POP_MSVC
 
         CheckConsistency( arrayA );
         CheckConsistency( arrayB );
@@ -1942,7 +1946,9 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
             arrayB = Move( (SRC_CAST&)( arrayA ) );
 
             // Source string should be empty
+            PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
             TEST_ASSERT( arrayA.IsEmpty() );
+            PRAGMA_DISABLE_POP_MSVC
 
             CheckConsistency( arrayA );
             CheckConsistency( arrayB );

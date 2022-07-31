@@ -140,7 +140,7 @@ public:
 
     inline State GetState() const { return m_State; }
 
-    NODISCARD inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
+    [[nodiscard]] inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
     inline void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
 
     uint32_t GetLastBuildTime() const;
@@ -229,6 +229,7 @@ protected:
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
     static void FixupPathForVSIntegration_SNC( AString & line, const char * tag );
     static void FixupPathForVSIntegration_VBCC( AString & line, const char * tag );
+    static void CleanPathForVSIntegration( const AString & path, AString & outFixedPath );
 
     static void Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri );
     static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );

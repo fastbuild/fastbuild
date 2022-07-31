@@ -15,11 +15,17 @@
 //  Visual Studio project Type GUID Extractor
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wunknown-warning-option" )
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wreserved-identifier" ) // identifier '%s' is reserved because it starts with '_' followed by a capital letter 
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wcast-function-type" ) // cast from '%s' (aka '%s') to '%s' (aka '%s') converts to incompatible function type
     PRAGMA_DISABLE_PUSH_MSVC( 4191 ) // C4191: 'reinterpret_cast': unsafe conversion from 'FARPROC' to 'Type_CleanUp'
     PRAGMA_DISABLE_PUSH_MSVC( 4530 ) // C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
     #include <VSProjLoaderInterface.h>
     PRAGMA_DISABLE_POP_MSVC // 4530
     PRAGMA_DISABLE_POP_MSVC // 4191
+    PRAGMA_DISABLE_POP_CLANG // -Wcast-function-type
+    PRAGMA_DISABLE_POP_CLANG // -Wreserved-identifier
+    PRAGMA_DISABLE_POP_CLANG // -Wunknown-warning-option
 #endif
 
 // Reflection

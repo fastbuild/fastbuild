@@ -3,14 +3,14 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 // TestPathUtils
 //------------------------------------------------------------------------------
-class TestPathUtils : public UnitTest
+class TestPathUtils : public TestGroup
 {
 private:
     DECLARE_TESTS
@@ -62,9 +62,9 @@ void TestPathUtils::TestPathBeginsWith() const
 {
     #define DOCHECK( path, subPath, expectedResult ) \
     { \
-        AStackString<> a( path ); \
-        AStackString<> b( subPath ); \
-        bool result = PathUtils::PathBeginsWith( a, b ); \
+        const AStackString<> a( path ); \
+        const AStackString<> b( subPath ); \
+        const bool result = PathUtils::PathBeginsWith( a, b ); \
         TEST_ASSERT( result == expectedResult ); \
     }
 
@@ -97,9 +97,9 @@ void TestPathUtils::TestPathEndsWithFile() const
 {
     #define DOCHECK( path, subPath, expectedResult ) \
     { \
-        AStackString<> a( path ); \
-        AStackString<> b( subPath ); \
-        bool result = PathUtils::PathEndsWithFile( a, b ); \
+        const AStackString<> a( path ); \
+        const AStackString<> b( subPath ); \
+        const bool result = PathUtils::PathEndsWithFile( a, b ); \
         TEST_ASSERT( result == expectedResult ); \
     }
 

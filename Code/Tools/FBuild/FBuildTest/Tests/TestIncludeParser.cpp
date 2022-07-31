@@ -73,7 +73,7 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
         TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
     }
 
-    Timer t;
+    const Timer t;
 
     const size_t repeatCount( 50 );
     const AString * buffers[ 2 ] = { &mem, &mem2 };
@@ -93,7 +93,7 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
         }
     }
 
-    float time = t.GetElapsed();
+    const float time = t.GetElapsed();
     OUTPUT( "MSVC                 : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
@@ -144,7 +144,7 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
         TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
     }
 
-    Timer t;
+    const Timer t;
 
     const size_t repeatCount( 50 );
     const AString * buffers[ 2 ] = { &mem, &mem2 };
@@ -164,7 +164,7 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
         }
     }
 
-    float time = t.GetElapsed();
+    const float time = t.GetElapsed();
     OUTPUT( "MSVC /showincludes   : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
@@ -263,7 +263,7 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
         TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
     }
 
-    Timer t;
+    const Timer t;
 
     const size_t repeatCount( 50 );
     const AString * buffers[ 2 ] = { &mem, &mem2 };
@@ -283,7 +283,7 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
         }
     }
 
-    float time = t.GetElapsed();
+    const float time = t.GetElapsed();
     OUTPUT( "GCC                  : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
@@ -313,7 +313,7 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
         TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
     }
 
-    Timer t;
+    const Timer t;
 
     const size_t repeatCount( 50 );
     const AString * buffers[ 2 ] = { &mem, &mem2 };
@@ -333,7 +333,7 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
         }
     }
 
-    float time = t.GetElapsed();
+    const float time = t.GetElapsed();
     OUTPUT( "Clang                : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
@@ -362,7 +362,7 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
         TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
     }
 
-    Timer t;
+    const Timer t;
 
     const size_t repeatCount( 50 );
     const AString * buffers[ 2 ] = { &mem, &mem2 };
@@ -382,7 +382,7 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
         }
     }
 
-    float time = t.GetElapsed();
+    const float time = t.GetElapsed();
     OUTPUT( "Clang (ms-extensions): %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
@@ -417,7 +417,7 @@ void TestIncludeParser::TestEdgeCases() const
     // #pragma or #   pragma should be ignored
     {
         AStackString<> data( "#pragma message\"hello\"\n#   pragma message\"hello\"\n" );
-        uint32_t dataLen = data.GetLength();
+        const uint32_t dataLen = data.GetLength();
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseGCC_Preprocessed( data.Get(), dataLen ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 0 );
@@ -429,7 +429,7 @@ void TestIncludeParser::TestEdgeCases() const
     // "#line..." should both be found for clang (-fms-compat)
     {
         AStackString<> data( "#line 15 \"hello\"\n#line 2 \"hello\"" );
-        uint32_t dataLen = data.GetLength();
+        const uint32_t dataLen = data.GetLength();
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseGCC_Preprocessed( data.Get(), dataLen ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 1 );

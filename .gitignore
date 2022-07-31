@@ -1,6 +1,7 @@
 # FASTBuild
 *.exe
 *.fdb
+*.fdb.corrupt
 *.log
 *.opensdf
 *.pdb
@@ -26,25 +27,16 @@ Desktop.ini
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
-# SDKs
-External/SDK/Clang/Windows/3.4/
-External/SDK/Clang/Windows/3.6/
-External/SDK/Clang/Windows/3.7.1/
-External/SDK/Clang/Windows/5.0.1/
-External/SDK/Clang/Windows/6.0.0/
-External/SDK/Clang/Windows/7.0.1/
-External/SDK/Clang/Windows/8.0.0/
-External/SDK/Clang/Windows/9.0.0/
-External/SDK/Clang/Windows/10.0.0.RC3/
-External/SDK/Clang/Windows/11.0.0/
+# SDKs and Compilers
+External/SDK/Clang/Linux/*/
+External/SDK/Clang/OSX/*/
+External/SDK/Clang/Windows/*/
 External/SDK/CUDA_6.5.14/
-External/SDK/other/
-External/SDK/VisualStudio/2013/
-External/SDK/VisualStudio/2015/
-External/SDK/VisualStudio/2017/
-External/SDK/VisualStudio/2019/
-External/SDK/Windows/8.1/
-External/SDK/Windows/10/
+External/SDK/GCC/Linux/*/
+External/SDK/GCC/OSX/*/
+External/SDK/GCC/Windows/*/
+External/SDK/VisualStudio/*/
+External/SDK/Windows/*/
 
 # Windows shortcuts
 *.lnk

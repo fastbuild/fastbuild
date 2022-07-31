@@ -20,20 +20,12 @@ Settings
 //------------------------------------------------------------------------------
 ObjectList( 'RemoteRaceSystemFailure-Fast' )
 {
-    // An object that can't be distributed
-    .AllowDistribution = false
     .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceSystemFailure/Fast.cpp'
-}
-ObjectList( 'RemoteRaceSystemFailure-Slow' )
-{
-    // An object that can be distributed
-    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceSystemFailure/Slow.cpp'
 }
 Alias( 'RemoteRaceSystemFailure' )
 {
     .Targets    = {
                     'RemoteRaceSystemFailure-Fast'
-                    'RemoteRaceSystemFailure-Slow'
                   }
 }
 

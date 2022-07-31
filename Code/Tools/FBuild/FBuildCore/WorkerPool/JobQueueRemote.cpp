@@ -284,7 +284,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 {
     BuildProfilerScope profileScope( *job, WorkerThread::GetThreadIndex(), job->GetNode()->GetTypeName() );
 
-    Timer timer; // track how long the item takes
+    const Timer timer; // track how long the item takes
 
     ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
 
@@ -338,7 +338,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         }
     }
 
-    uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
+    const uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
     if ( result == Node::NODE_RESULT_FAILED )
     {

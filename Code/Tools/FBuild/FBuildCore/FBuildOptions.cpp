@@ -173,6 +173,26 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += argv[ sizeIndex ];
                 continue;
             }
+            else if ( thisArg == "-distcompressionlevel" )
+            {
+                const int sizeIndex = ( i + 1 );
+                int32_t distLevel;
+                if ( ( sizeIndex >= argc ) ||
+                     ( AString::ScanS( argv[sizeIndex], "%i", &distLevel ) != 1 ) ||
+                     ( ( distLevel < -128 ) || ( distLevel > 12 ) ) ) // See Compressor for valid ranges
+                {
+                    OUTPUT( "FBuild: Error: Missing or bad <level> for '-distcompressionlevel' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                m_DistributionCompressionLevel = static_cast<int16_t>( distLevel );
+                i++; // skip extra arg we've consumed
+
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += argv[ sizeIndex ];
+                continue;
+            }
             else if ( thisArg == "-clean" )
             {
                 m_ForceCleanBuild = true;
@@ -587,6 +607,11 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -debug            (Windows) Break at startup, to attach debugger.\n"
             " -dist             Allow distributed compilation.\n"
             " -distverbose      Print detailed info for distributed compilation.\n"
+            " -distcompressionlevel\n"
+            "                   Control distributed compilation compression (default: -1)\n"
+            "                   - <= -1 : less compression, with -128 being the lowest\n"
+            "                   - ==  0 : disable compression\n"
+            "                   - >=  1 : more compression, with 12 being the highest\n"
             " -dot[full]        Emit known dependency tree info for specified targets to an\n"
             "                   fbuild.gv file in DOT format.\n"
             " -fixuperrorpaths  Reformat error paths to be Visual Studio friendly.\n"
@@ -637,7 +662,7 @@ void FBuildOptions::DisplayVersion() const
         #define VERSION_CONFIG ""
     #endif
     OUTPUT( "FASTBuild " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
-            "Copyright 2012-2021 Franta Fulin - https://www.fastbuild.org\n" );
+            "Copyright 2012-2022 Franta Fulin - https://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }
 

@@ -570,7 +570,7 @@ bool Process::ReadAllData( AString & outMem,
                            AString & errMem,
                            uint32_t timeOutMS )
 {
-    Timer t;
+    const Timer t;
 
     #if defined( __LINUX__ )
         // Start with a short sleep interval to allow rapid termination of
@@ -612,7 +612,7 @@ bool Process::ReadAllData( AString & outMem,
         #if defined( __WINDOWS__ )
             if ( processExited == false )
             {
-                DWORD result = WaitForSingleObject( GetProcessInfo().hProcess, 15 );
+                const DWORD result = WaitForSingleObject( GetProcessInfo().hProcess, 15 );
                 if ( result == WAIT_TIMEOUT )
                 {
                     // Check if timeout is hit
@@ -734,12 +734,13 @@ bool Process::ReadAllData( AString & outMem,
         }
 
         // how much space do we have left for reading into?
-        const uint32_t spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
+        uint32_t spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
         if ( spaceInBuffer == 0 )
         {
             // Expand buffer for new data in large chunks
             const uint32_t newBufferSize = ( buffer.GetReserved() + ( 16 * MEGABYTE ) );
             buffer.SetReserved( newBufferSize );
+            spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
         }
 
         // read the new data

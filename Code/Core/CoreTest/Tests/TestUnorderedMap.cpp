@@ -3,14 +3,14 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Containers/UnorderedMap.h"
 #include "Core/Strings/AString.h"
 
 // TestUnorderedMap
 //------------------------------------------------------------------------------
-class TestUnorderedMap : public UnitTest
+class TestUnorderedMap : public TestGroup
 {
 private:
     DECLARE_TESTS

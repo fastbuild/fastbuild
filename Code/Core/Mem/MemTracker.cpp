@@ -273,7 +273,7 @@
 
         // first caller does init
         static uint32_t threadSafeGuard( 0 );
-        if ( AtomicIncU32( &threadSafeGuard ) != 1 )
+        if ( AtomicInc( &threadSafeGuard ) != 1 )
         {
             // subsequent callers wait for init
             while ( !s_Initialized ) {}

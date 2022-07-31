@@ -456,8 +456,11 @@ void FBuild::SaveDependencyGraph( IOStream & stream, const char* nodeGraphDBFile
                 if ( stopping == false )
                 {
                     // free the network distribution system (if there is one)
-                    FDELETE m_Client;
-                    m_Client = nullptr;
+                    {
+                        MutexHolder mh( m_ClientLifetimeMutex );
+                        FDELETE m_Client;
+                        m_Client = nullptr;
+                    }
 
                     // wait for workers to exit.  Can still be building even though we've failed:
                     //  - only 1 failed node propagating up to root while others are not yet complete
@@ -910,6 +913,7 @@ bool FBuild::CacheTrim() const
 //------------------------------------------------------------------------------
 uint32_t FBuild::GetNumWorkerConnections() const
 {
+    MutexHolder mh( m_ClientLifetimeMutex );
     return (uint32_t)( m_Client ? m_Client->GetNumConnections() : 0 );
 }
 

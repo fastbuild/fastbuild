@@ -31,14 +31,14 @@ WorkerThreadRemote::WorkerThreadRemote( uint16_t threadIndex )
 //------------------------------------------------------------------------------
 WorkerThreadRemote::~WorkerThreadRemote()
 {
-    ASSERT( m_Exited );
+    ASSERT( m_Exited.Load() );
 }
 
 // Main
 //------------------------------------------------------------------------------
 /*virtual*/ void WorkerThreadRemote::Main()
 {
-    while ( AtomicLoadRelaxed( &m_ShouldExit ) == false )
+    while ( m_ShouldExit.Load() == false )
     {
         if ( IsEnabled() == false )
         {
@@ -56,7 +56,7 @@ WorkerThreadRemote::~WorkerThreadRemote()
             }
 
             // process the work
-            Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
+            const Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
             ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_FAILED ) );
 
             {
@@ -74,7 +74,7 @@ WorkerThreadRemote::~WorkerThreadRemote()
         }
     }
 
-    AtomicStoreRelaxed( &m_Exited, true );
+    m_Exited.Store( true );
 
     m_MainThreadWaitForExit.Signal();
 }

@@ -29,8 +29,8 @@ public:
 
     void Destruct();
 
-    bool    IsEmpty() const { return ( m_Count == 0 ); }
-    size_t  GetSize() const { return m_Count; }
+    [[nodiscard]] bool          IsEmpty() const { return ( m_Count == 0 ); }
+    [[nodiscard]] size_t        GetSize() const { return m_Count; }
 
     UnorderedMap< KEY, VALUE > & operator = ( const UnorderedMap< KEY, VALUE > & other ) = delete;
     UnorderedMap< KEY, VALUE > & operator = ( UnorderedMap< KEY, VALUE > && other ) = delete;
@@ -55,10 +55,10 @@ public:
     };
 
     // Check if an item exists in the map
-    NODISCARD KeyValue *    Find( const KEY & key );
+    [[nodiscard]] KeyValue *    Find( const KEY & key );
 
     // Add items to the map
-    KeyValue &    Insert( const KEY & key, const VALUE & value );
+    KeyValue &                  Insert( const KEY & key, const VALUE & value );
 
 protected:
     enum : uint32_t { kTableSizePower = 16 };
@@ -148,9 +148,6 @@ typename UnorderedMap< KEY, VALUE >::KeyValue & UnorderedMap< KEY, VALUE >::Inse
     if ( m_Buckets == nullptr )
     {
         m_Buckets = FNEW( KeyValue *[ kTableSize ]() ); // NOTE: zero initialized
-        #if defined( __WINDOWS__ )
-            __assume( m_Buckets ); // VS2015: Work around false-positive for static analysis
-        #endif
     }
 
     // Hash the key

@@ -353,7 +353,7 @@ ObjectListNode::~ObjectListNode() = default;
     // Handle converting all static inputs into dynamic onces (i.e. cpp->obj)
     for ( size_t i=m_ObjectListInputStartIndex; i<m_ObjectListInputEndIndex; ++i )
     {
-        Dependency & dep = m_StaticDependencies[ i ];
+        const Dependency & dep = m_StaticDependencies[ i ];
 
         // is this a dir list?
         if ( dep.GetNode()->GetType() == Node::DIRECTORY_LIST_NODE )

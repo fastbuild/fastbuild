@@ -24,7 +24,7 @@ bool IOStream::Read( AString & string )
 //------------------------------------------------------------------------------
 bool IOStream::Write( const AString & string )
 {
-    uint32_t len = string.GetLength();
+    const uint32_t len = string.GetLength();
     bool ok = Write( len );
     ok &= ( Write( string.Get(), len ) == len );
     return ok;
@@ -52,7 +52,7 @@ void IOStream::AlignWrite( size_t alignment )
     const uint64_t toPad = Math::RoundUp( tell, (uint64_t)alignment ) - tell;
     for ( uint64_t i = 0; i < toPad; ++i )
     {
-        uint8_t padChar( 0 );
+        const uint8_t padChar( 0 );
         Write( padChar );
     }
     ASSERT( ( Tell() % alignment ) == 0 );

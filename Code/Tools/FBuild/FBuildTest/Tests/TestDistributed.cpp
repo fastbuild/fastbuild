@@ -115,7 +115,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
         TEST_ASSERT( FileIO::FileExists( target ) == false );
     }
 
-    bool pass = fBuild.Build( target );
+    const bool pass = fBuild.Build( target );
     if ( !shouldFail )
     {
         TEST_ASSERT( pass );
@@ -204,12 +204,13 @@ void TestDistributed::RemoteRaceWinRemote()
 
 // RemoteRaceSystemFailure
 //------------------------------------------------------------------------------
-#if defined( DEBUG )
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
 void TestDistributed::RemoteRaceSystemFailure()
 {
     // NOTE: Test only available in DEBUG due to SetFakeSystemFailure
 
-    // Check that a remote race that is won remotely is correctly handled
+    // Check that a remote race that is won remotely with a failure is
+    // correctly handled
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceSystemFailure/fbuild.bff";
     options.m_AllowDistributed = true;
@@ -228,14 +229,13 @@ void TestDistributed::RemoteRaceSystemFailure()
     s.Listen( Protocol::PROTOCOL_TEST_PORT );
 
     // Force a system failure when compiling remotely
-    ObjectNode::SetFakeSystemFailure( true );
+    ObjectNode::SetFakeSystemFailureForNextJob();
 
-    // Timing differences between runs means that either:
-    // a) The race is won locally
-    // b) The race is won remotely (with the system failure)
-    // 
-    // Build should complete in either case
+    // Build
     TEST_ASSERT( fBuild.Build( "RemoteRaceSystemFailure" ) );
+
+    // Ensure the remote failure was induced correctly
+    TEST_ASSERT( GetRecordedOutput().Find( "Injecting system failure (sFakeSystemFailure)" ) );
 }
 #endif
 
@@ -401,11 +401,12 @@ void TestDistributed::ShutdownMemoryLeak() const
         static uint32_t AbortBuild( void * data )
         {
             // Wait until some distributed jobs are available
-            Timer t;
-            float timeout = 5.0f;
+            const Timer t;
             #if __has_feature( thread_sanitizer ) || defined( __SANITIZE_THREAD__ )
                 // Code under ThreadSanitizer runs several time slower than normal, so we need a larger timeout.
-                timeout = 30.0f;
+                const float timeout = 30.0f;
+            #else
+                const float timeout = 5.0f;
             #endif
             while ( t.GetElapsed() < timeout )
             {

@@ -249,114 +249,112 @@ void TestLinker::LibrariesOnCommandLine() const
 //------------------------------------------------------------------------------
 void TestLinker::IncrementalLinking_MSVC() const
 {
-    #if defined( _MSC_VER ) && ( _MSC_VER > 1900 ) // VS2015 link with /VERBOSE doesn't emit output we can use
-        FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestLinker/IncrementalLinking_MSVC/fbuild.bff";
-        options.m_ShowCommandOutput = true; // Show linker output so we can check analyze /VERBOSE outptut
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestLinker/IncrementalLinking_MSVC/fbuild.bff";
+    options.m_ShowCommandOutput = true; // Show linker output so we can check analyze /VERBOSE outptut
 
-        // Files
-        const char * dbFile     = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/fbuild.fdb";
-        const char * cppFileB   = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/FileB.cpp";
+    // Files
+    const char * dbFile     = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/fbuild.fdb";
+    const char * cppFileB   = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/FileB.cpp";
 
-        // Create temp output directory
-        TEST_ASSERT( FileIO::EnsurePathExistsForFile( AStackString<>( cppFileB ) ) );
+    // Create temp output directory
+    TEST_ASSERT( FileIO::EnsurePathExistsForFile( AStackString<>( cppFileB ) ) );
 
-        // Create 10 source files
-        for ( uint32_t i = 0; i < 10; ++i )
+    // Create 10 source files
+    for ( uint32_t i = 0; i < 10; ++i )
+    {
+        AStackString<> fileContents;
+        if ( i == 0 )
         {
-            AStackString<> fileContents;
-            if ( i == 0 )
-            {
-                fileContents += "int main(int, char **) { return 0; }\n";
-            }
-            const char c = ( 'A' + (char)i );
-            fileContents.AppendFormat( "const char * Function%c() { return \"String%c\"; }\n", c, c );
-
-            AStackString<> dst;
-            dst.Format( "../tmp/Test/TestLinker/IncrementalLinking_MSVC/File%c.cpp", c );
-            FileStream f;
-            TEST_ASSERT( f.Open( dst.Get(), FileStream::WRITE_ONLY ) );
-            TEST_ASSERT( f.WriteBuffer( fileContents.Get(), fileContents.GetLength() ) == fileContents.GetLength() );
+            fileContents += "int main(int, char **) { return 0; }\n";
         }
+        const char c = ( 'A' + (char)i );
+        fileContents.AppendFormat( "const char * Function%c() { return \"String%c\"; }\n", c, c );
 
-        // Build executable
-        {
-            FBuildForTest fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
-            TEST_ASSERT( fBuild.Build( "Exe" ) );
+        AStackString<> dst;
+        dst.Format( "../tmp/Test/TestLinker/IncrementalLinking_MSVC/File%c.cpp", c );
+        FileStream f;
+        TEST_ASSERT( f.Open( dst.Get(), FileStream::WRITE_ONLY ) );
+        TEST_ASSERT( f.WriteBuffer( fileContents.Get(), fileContents.GetLength() ) == fileContents.GetLength() );
+    }
 
-            // Save DB for reloading below
-            TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+    // Build executable
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
 
-            // Check stats
-            //               Seen,  Built,  Type
-            CheckStatsNode(     10,     10, Node::OBJECT_NODE );
-            CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Save DB for reloading below
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-            const AString & output( GetRecordedOutput() );
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode(     10,     10, Node::OBJECT_NODE );
+        CheckStatsNode(     1,      1,  Node::EXE_NODE );
 
-            // Should see no incremental linking messages (FASTBuild should have deleted the
-            // old files because the DB is new
-            TEST_ASSERT( output.Find( "modules have changed since prior linking" ) == nullptr );
-            TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
-        }
+        const AString & output( GetRecordedOutput() );
 
-        // Modify one of the files
-        FileIO::SetFileLastWriteTimeToNow( AStackString<>( cppFileB ) );
+        // Should see no incremental linking messages (FASTBuild should have deleted the
+        // old files because the DB is new
+        TEST_ASSERT( output.Find( "modules have changed since prior linking" ) == nullptr );
+        TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
+    }
 
-        // Take note of output size (so we can check only stuff after)
-        uint32_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+    // Modify one of the files
+    FileIO::SetFileLastWriteTimeToNow( AStackString<>( cppFileB ) );
 
-        // Compile again
-        {
-            FBuildForTest fBuild( options );
-            TEST_ASSERT( fBuild.Initialize( dbFile ) );
-            TEST_ASSERT( fBuild.Build( "Exe" ) );
+    // Take note of output size (so we can check only stuff after)
+    uint32_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
 
-            // Save DB for reloading below
-            TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+    // Compile again
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
 
-            // Check stats
-            //               Seen,  Built,  Type
-            CheckStatsNode(     10,     1,  Node::OBJECT_NODE );
-            CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Save DB for reloading below
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode(     10,     1,  Node::OBJECT_NODE );
+        CheckStatsNode(     1,      1,  Node::EXE_NODE );
 
-            // Should see incremental linking messsages..
-            TEST_ASSERT( output.Find( "modules have changed since prior linking" ) );
+        const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
-            // .. but should not be a full link
-            TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
-        }
+        // Should see incremental linking messsages..
+        TEST_ASSERT( output.Find( "modules have changed since prior linking" ) );
 
-        // Take note of output size (so we can check only stuff after)
-        sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+        // .. but should not be a full link
+        TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
+    }
 
-        // Compile again (non-incremental)
-        {
-            options.m_ForceCleanBuild = true; // Force clean build prevents incremental
+    // Take note of output size (so we can check only stuff after)
+    sizeOfRecordedOutput = GetRecordedOutput().GetLength();
 
-            FBuildForTest fBuild( options );
-            TEST_ASSERT( fBuild.Initialize( dbFile ) );
-            TEST_ASSERT( fBuild.Build( "Exe" ) );
+    // Compile again (non-incremental)
+    {
+        options.m_ForceCleanBuild = true; // Force clean build prevents incremental
 
-            // Save DB for reloading below
-            TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "Exe" ) );
 
-            // Check stats
-            //               Seen,  Built,  Type
-            CheckStatsNode(     10,     10, Node::OBJECT_NODE );
-            CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Save DB for reloading below
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode(     10,     10, Node::OBJECT_NODE );
+        CheckStatsNode(     1,      1,  Node::EXE_NODE );
 
-            // Should see no incremental linking messages (FASTBuild should have deleted the
-            // old files because of -clean)
-            TEST_ASSERT( output.Find( "modules have changed since prior linking" ) == nullptr );
-            TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
-        }
-    #endif
+        const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+        // Should see no incremental linking messages (FASTBuild should have deleted the
+        // old files because of -clean)
+        TEST_ASSERT( output.Find( "modules have changed since prior linking" ) == nullptr );
+        TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
+    }
 }
 
 // LinkerType
@@ -367,7 +365,7 @@ void TestLinker::LinkerType() const
     do { \
         const uint32_t flags = LinkerNode::DetermineLinkerTypeFlags( AStackString<>( "auto" ), \
                                                                      AStackString<>( exeName ) ); \
-        TEST_ASSERT( ( flags & expectedFlag ) == expectedFlag ); \
+        TEST_ASSERT( flags & expectedFlag ); \
     } while( false )
 
     TEST_LINKERTYPE( "link",        LinkerNode::LINK_FLAG_MSVC );

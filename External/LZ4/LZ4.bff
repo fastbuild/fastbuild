@@ -69,10 +69,9 @@
                                             - ' /Od'
                                             - ' /RTC1'
 
-                                            // VS2015 gives false positives
-                                            #if USING_VS2015
-                                                - ' /analyze'
-                                            #endif
+                                            // Disable clang-cl static analysis if enabled for this config
+                                            // (we won't fix warnings in 3rd party code)
+                                            - ' --analyze'
                                         #else
                                             - ' -O0'
                                         #endif

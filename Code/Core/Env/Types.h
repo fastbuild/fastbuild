@@ -53,13 +53,6 @@ typedef signed int          int32_t;
     #define THREAD_LOCAL __thread
 #endif
 
-// [[nodiscard]]
-#if defined( _MSC_VER ) && ( _MSC_VER < 1910 ) // Not supported prior to VS2017
-    #define NODISCARD
-#else
-    #define NODISCARD [[nodiscard]]
-#endif
-
 #if defined( __WINDOWS__ )
     #define NO_INLINE __declspec( noinline )
     #define FORCE_INLINE __forceinline
@@ -113,10 +106,6 @@ typedef signed int          int32_t;
 
 #ifndef LONGLONG
     typedef long long LONGLONG;
-#endif
-
-#if defined( __LINUX__ ) || defined( __APPLE__ )
-    #define MemoryBarrier() __asm__ __volatile__("")
 #endif
 
 #if defined( __GNUC__ ) || defined( __clang__ ) // GCC or Clang

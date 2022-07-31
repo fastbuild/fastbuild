@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
@@ -14,7 +14,7 @@
 
 // TestAString
 //------------------------------------------------------------------------------
-class TestAString : public UnitTest
+class TestAString : public TestGroup
 {
 private:
     DECLARE_TESTS
@@ -851,7 +851,9 @@ void TestAString::MoveConstructorHelper() const
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
     // Source string should be empty
+    PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
     TEST_ASSERT( stringA.IsEmpty() );
+    PRAGMA_DISABLE_POP_MSVC
 }
 
 // MoveConstructor
@@ -896,7 +898,9 @@ void TestAString::MoveAssignmentHelper() const
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
         // Source string should be empty
+        PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
         TEST_ASSERT( stringA.IsEmpty() );
+        PRAGMA_DISABLE_POP_MSVC
     }
 
     // Non-empty destination (check move doesn't leak destination string memory)
@@ -916,7 +920,9 @@ void TestAString::MoveAssignmentHelper() const
             stringB = Move( (SRC_CAST &)( stringA ) );
 
             // Source string should be empty
+            PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
             TEST_ASSERT( stringA.IsEmpty() );
+            PRAGMA_DISABLE_POP_MSVC
         }
 
         // Check should be no more active allocs in total, even if some allocs occurred

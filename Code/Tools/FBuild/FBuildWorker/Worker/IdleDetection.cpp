@@ -115,8 +115,8 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
 
         if ( m_LastTimeBusy > 0 )
         {
-            uint64_t idleTimeDelta = ( idleTime - m_LastTimeIdle );
-            uint64_t usedTimeDelta = ( ( userTime + kernTime ) - m_LastTimeBusy );
+            const uint64_t idleTimeDelta = ( idleTime - m_LastTimeIdle );
+            const uint64_t usedTimeDelta = ( ( userTime + kernTime ) - m_LastTimeBusy );
             systemTime = ( idleTimeDelta + usedTimeDelta );
             m_CPUUsageTotal = (float)( (double)usedTimeDelta / (double)systemTime ) * 100.0f;
         }
@@ -154,7 +154,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
                 if ( lastTime != 0 ) // ignore first update
                 {
                     const uint64_t timeSpent = ( totalTime - lastTime );
-                    float perc = (float)( (double)timeSpent / (double)systemTime ) * 100.0f;
+                    const float perc = (float)( (double)timeSpent / (double)systemTime ) * 100.0f;
                     totalPerc += perc;
                 }
                 pi.m_LastTime = totalTime;
@@ -450,13 +450,7 @@ void IdleDetection::UpdateProcessList()
             {
                 // dead process
                 #if defined( __WINDOWS__ )
-                    #if defined( _MSC_VER ) && ( _MSC_VER <= 1900 ) // Avoid VS2015 false positive
-                        PRAGMA_DISABLE_PUSH_MSVC( 6001 ) // Using uninitialized memory
-                    #endif
                     CloseHandle( m_ProcessesInOurHierarchy[ i ].m_ProcessHandle );
-                    #if defined( _MSC_VER ) && ( _MSC_VER <= 1900 ) // Avoid VS2015 false positive
-                        PRAGMA_DISABLE_POP_MSVC // 6001
-                    #endif
                 #endif
                 m_ProcessesInOurHierarchy.EraseIndex( i );
             }

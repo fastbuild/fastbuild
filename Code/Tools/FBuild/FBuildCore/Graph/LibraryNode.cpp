@@ -173,10 +173,10 @@ LibraryNode::~LibraryNode()
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    bool spawnOK = p.Spawn( m_Librarian.Get(),
-                            fullArgs.GetFinalArgs().Get(),
-                            workingDir,
-                            environment );
+    const bool spawnOK = p.Spawn( m_Librarian.Get(),
+                                  fullArgs.GetFinalArgs().Get(),
+                                  workingDir,
+                                  environment );
 
     if ( !spawnOK )
     {
@@ -195,7 +195,7 @@ LibraryNode::~LibraryNode()
     p.ReadAllData( memOut, memErr );
 
     // Get result
-    int result = p.WaitForExit();
+    const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
         return NODE_RESULT_FAILED;

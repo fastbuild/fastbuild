@@ -89,7 +89,7 @@ int Main( const AString & args )
     }
 
     // only allow 1 worker per system
-    Timer t;
+    const Timer t;
     while ( g_OneProcessMutex.TryLock() == false )
     {
         // retry for upto 2 seconds, to allow some time for old worker to close
@@ -155,7 +155,7 @@ int Main( const AString & args )
         Env::GetExePath( exeName );
         AStackString<> exeNameCopy( exeName );
         exeNameCopy += ".copy";
-        Timer t;
+        const Timer t;
         while ( FileIO::FileCopy( exeName.Get(), exeNameCopy.Get() ) == false )
         {
             if ( t.GetElapsed() > 5.0f )
@@ -178,7 +178,7 @@ int Main( const AString & args )
         #if defined( __WINDOWS__ )
             p.DisableHandleRedirection(); // TODO:MAC TODO:LINUX is this needed?
         #endif
-        p.Spawn( exeNameCopy.Get(), argsCopy.Get(), nullptr, nullptr );
+        (void)p.Spawn( exeNameCopy.Get(), argsCopy.Get(), nullptr, nullptr );
         p.Detach();
 
         return 0;

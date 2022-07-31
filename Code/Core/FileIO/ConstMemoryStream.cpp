@@ -57,8 +57,8 @@ void ConstMemoryStream::Replace( const void * data, size_t size, bool ownsMemory
 //------------------------------------------------------------------------------
 uint64_t ConstMemoryStream::ReadBuffer( void * buffer, uint64_t bytesToRead )
 {
-    size_t availBytes = ( m_Size - m_CurrentPos );
-    size_t actualBytesToRead = Math::Min( availBytes, (size_t)bytesToRead );
+    const size_t availBytes = ( m_Size - m_CurrentPos );
+    const size_t actualBytesToRead = Math::Min( availBytes, (size_t)bytesToRead );
     memcpy( buffer, (void *)( (size_t)m_Buffer + m_CurrentPos ), actualBytesToRead );
     m_CurrentPos += actualBytesToRead;
     return actualBytesToRead;

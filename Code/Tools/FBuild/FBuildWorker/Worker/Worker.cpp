@@ -236,7 +236,7 @@ bool Worker::HasEnoughDiskSpace()
 {
     #if defined( __WINDOWS__ )
         // Only check disk space every few seconds
-        float elapsedTime = m_TimerLastDiskSpaceCheck.GetElapsedMS();
+        const float elapsedTime = m_TimerLastDiskSpaceCheck.GetElapsedMS();
         if ( ( elapsedTime < 15000.0f ) && ( m_LastDiskSpaceResult != -1 ) )
         {
             return ( m_LastDiskSpaceResult != 0 );
@@ -252,7 +252,7 @@ bool Worker::HasEnoughDiskSpace()
         // Check available disk space of temp path
         AStackString<> tmpPath;
         VERIFY( FBuild::GetTempDir( tmpPath ) );
-        BOOL result = GetDiskFreeSpaceExA( tmpPath.Get(), (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
+        const BOOL result = GetDiskFreeSpaceExA( tmpPath.Get(), (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
         if ( result && ( freeBytesAvailable >= MIN_DISK_SPACE ) )
         {
             m_LastDiskSpaceResult = 1;
@@ -273,7 +273,7 @@ bool Worker::HasEnoughMemory()
 {
     #if defined( __WINDOWS__ )
         // Only check free memory every few seconds
-        float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
+        const float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
         if ( ( elapsedTime < 1000.0f ) && ( m_LastMemoryCheckResult != -1 ) )
         {
             return ( m_LastMemoryCheckResult != 0 );
@@ -291,7 +291,7 @@ bool Worker::HasEnoughMemory()
             const uint64_t freeMemSize = ( limitMemSize - currentMemSize ) / MEGABYTE;
     
             // Check if the free memory is high enough
-            WorkerSettings & ws = WorkerSettings::Get();
+            const WorkerSettings & ws = WorkerSettings::Get();
             if ( freeMemSize > ws.GetMinimumFreeMemoryMiB() )
             {
                 m_LastMemoryCheckResult = 1;
@@ -317,7 +317,7 @@ void Worker::UpdateAvailability()
     const bool hasEnoughDiskSpace = HasEnoughDiskSpace();
     const bool hasEnoughMemory = HasEnoughMemory();
 
-    WorkerSettings & ws = WorkerSettings::Get();
+    const WorkerSettings & ws = WorkerSettings::Get();
 
     m_IdleDetection.Update( ws.GetIdleThresholdPercent() );
 
@@ -379,7 +379,7 @@ void Worker::UpdateUI()
     }
 
     // title bar
-    size_t numConnections = m_ConnectionPool->GetNumConnections();
+    const size_t numConnections = m_ConnectionPool->GetNumConnections();
     AStackString<> status;
     status.Format( "%u Connections", (uint32_t)numConnections );
     if ( m_RestartNeeded )
@@ -405,7 +405,7 @@ void Worker::UpdateUI()
     if ( InConsoleMode() == false )
     {
         // thread output
-        JobQueueRemote & jqr = JobQueueRemote::Get();
+        const JobQueueRemote & jqr = JobQueueRemote::Get();
         const size_t numWorkers = jqr.GetNumWorkers();
         for ( size_t i = 0; i < numWorkers; ++i )
         {
@@ -458,7 +458,7 @@ void Worker::CheckForExeUpdate()
     }
 
     // get the current last write time
-    uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_BaseExeName );
+    const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_BaseExeName );
 
     // If exe is has been deleted, but not replaced, do nothing
     // (may be part of two step delete/replace)

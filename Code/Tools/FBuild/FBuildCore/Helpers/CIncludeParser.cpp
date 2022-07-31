@@ -297,7 +297,7 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         // skip number
         for ( ;; )
         {
-            char c = * pos;
+            const char c = * pos;
             if ( ( c >= '0' ) && ( c <= '9' ) )
             {
                 pos++;
@@ -375,7 +375,7 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
     #endif
 
     // quick check
-    uint32_t crc1 = xxHash::Calc32( begin, (size_t)( end - begin ) );
+    const uint32_t crc1 = xxHash::Calc32( begin, (size_t)( end - begin ) );
     if ( crc1 == m_LastCRC1 )
     {
         return;
@@ -395,10 +395,10 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
         // Windows and OSX are case-insensitive
         AStackString<> lowerCopy( cleanInclude );
         lowerCopy.ToLower();
-        uint32_t crc2 = xxHash::Calc32( lowerCopy );
+        const uint32_t crc2 = xxHash::Calc32( lowerCopy );
     #else
         // Linux is case-sensitive
-        uint32_t crc2 = xxHash::Calc32( cleanInclude );
+        const uint32_t crc2 = xxHash::Calc32( cleanInclude );
     #endif
     if ( crc2 == m_LastCRC2 )
     {

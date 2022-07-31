@@ -71,12 +71,12 @@ Executable( "PCHTest" )
         .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                             + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
                             + ' -Wno-unused-macros'
-                            #if USING_CLANG_10 || USING_CLANG_11
+                            #if USING_CLANG_10 || USING_CLANG_11 || USING_CLANG_14
                                 + ' -Wno-anon-enum-enum-conversion'
                             #endif
         .PCHOptions         + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
                             + ' -Wno-unused-macros'
-                            #if USING_CLANG_10 || USING_CLANG_11
+                            #if USING_CLANG_10 || USING_CLANG_11 || USING_CLANG_14
                                 + ' -Wno-anon-enum-enum-conversion'
                             #endif
 

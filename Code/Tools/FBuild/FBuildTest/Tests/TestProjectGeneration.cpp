@@ -170,20 +170,20 @@ void TestProjectGeneration::Test() const
 
     FBuild fBuild; // needed for NodeGraph::CleanPath
 
-    AStackString<> projectFile( "../../../../tmp/Test/ProjectGeneration/Core.vcxproj" );
+    AStackString<> projectFile( "../tmp/Test/ProjectGeneration/Core.vcxproj" );
     AStackString<> projectFileClean;
     NodeGraph::CleanPath( projectFile, projectFileClean );
 
     const AString & vcxproj = pg.GenerateVCXProj( projectFileClean, configs, fileTypes, projectImports );
     const AString & filters = pg.GenerateVCXProjFilters( projectFileClean );
 
-    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../../../../tmp/Test/ProjectGeneration/" ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../tmp/Test/ProjectGeneration/" ) ) );
 
     FileStream f;
     TEST_ASSERT( f.Open( projectFileClean.Get(), FileStream::WRITE_ONLY ) );
     TEST_ASSERT( f.Write( vcxproj.Get(), vcxproj.GetLength() ) == vcxproj.GetLength() );
     f.Close();
-    TEST_ASSERT( f.Open( "../../../../tmp/Test/ProjectGeneration/Core.vcxproj.filters", FileStream::WRITE_ONLY ) );
+    TEST_ASSERT( f.Open( "../tmp/Test/ProjectGeneration/Core.vcxproj.filters", FileStream::WRITE_ONLY ) );
     TEST_ASSERT( f.Write( filters.Get(), filters.GetLength() ) == filters.GetLength() );
 }
 
@@ -260,8 +260,8 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
 
     // Projects and Solutions must be "built" every time, but only write files when they change
     // so record the time before and after
-    uint64_t dateTime1 = FileIO::GetFileLastWriteTime( project );
-    uint64_t dateTime2 = FileIO::GetFileLastWriteTime( filters );
+    const uint64_t dateTime1 = FileIO::GetFileLastWriteTime( project );
+    const uint64_t dateTime2 = FileIO::GetFileLastWriteTime( filters );
 
     // NTFS file resolution is 100ns and HFS is 1 second,
     // so sleep long enough to ensure an invalid write would modify the time
@@ -356,21 +356,21 @@ void TestProjectGeneration::TestFunction_Speed() const
     PathUtils::FixupFilePath( projectFileName );
 
     {
-        Timer t;
+        const Timer t;
         for ( size_t i = 0; i < 5; ++i )
         {
             pg.GenerateVCXProj( projectFileName, configs, fileTypes, projectImports );
         }
-        float time = t.GetElapsed();
+        const float time = t.GetElapsed();
         OUTPUT( "Gen vcxproj        : %2.3fs\n", (double)time );
     }
     {
-        Timer t;
+        const Timer t;
         for ( size_t i = 0; i < 5; ++i )
         {
             pg.GenerateVCXProjFilters( projectFileName );
         }
-        float time = t.GetElapsed();
+        const float time = t.GetElapsed();
         OUTPUT( "Gen vcxproj.filters: %2.3fs\n", (double)time );
     }
 }
