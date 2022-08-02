@@ -21,6 +21,7 @@ REFLECT_NODE_BEGIN( RemoveDirNode, Node, MetaNone() )
     REFLECT_ARRAY( m_RemovePatterns,            "RemovePatterns",       MetaOptional() )
     REFLECT(       m_RemovePathsRecurse,        "RemovePathsRecurse",   MetaOptional() )
     REFLECT_ARRAY( m_RemoveExcludePaths,        "RemoveExcludePaths",   MetaOptional() + MetaPath() )
+    REFLECT_ARRAY( m_RemoveExcludeFiles,        "RemoveExcludeFiles",   MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
 REFLECT_END( RemoveDirNode )
 
@@ -50,7 +51,7 @@ RemoveDirNode::RemoveDirNode()
                                               function,
                                               m_RemovePaths,
                                               m_RemoveExcludePaths,
-                                              Array< AString >(), // unused FilesToExclude
+                                              m_RemoveExcludeFiles, // unused FilesToExclude
                                               Array< AString >(), // unused ExcludePatterns
                                               m_RemovePathsRecurse,
                                               false, // Don't include read-only status in hash

@@ -30,6 +30,7 @@ private:
     bool                m_RemovePathsRecurse;
     Array< AString >    m_RemovePatterns;
     Array< AString >    m_RemoveExcludePaths;
+    Array< AString >    m_RemoveExcludeFiles;
     Array< AString >    m_PreBuildDependencyNames;
 };
 
