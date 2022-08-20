@@ -62,18 +62,22 @@ private:
 
     struct ClientState
     {
-        explicit ClientState( const ConnectionInfo * ci ) : m_CurrentMessage( nullptr ), m_Connection( ci ), m_NumJobsAvailable( 0 ), m_NumJobsRequested( 0 ), m_NumJobsActive( 0 ), m_WaitingJobs( 16, true ) {}
+        explicit ClientState( const ConnectionInfo * ci )
+            : m_Connection( ci )
+            , m_WaitingJobs( 16, true )
+        {}
 
         inline bool operator < ( const ClientState & other ) const { return ( m_NumJobsAvailable > other.m_NumJobsAvailable ); }
 
         Mutex                   m_Mutex;
 
-        const Protocol::IMessage * m_CurrentMessage;
-        const ConnectionInfo *  m_Connection;
-        uint32_t                m_NumJobsAvailable;
-        uint32_t                m_NumJobsRequested;
-        uint32_t                m_NumJobsActive;
+        const Protocol::IMessage * m_CurrentMessage = nullptr;
+        const ConnectionInfo *  m_Connection = nullptr;
+        uint32_t                m_NumJobsAvailable = 0;
+        uint32_t                m_NumJobsRequested = 0;
+        uint32_t                m_NumJobsActive = 0;
 
+        uint8_t                 m_ProtocolVersionMinor = 0;
         AString                 m_HostName;
 
         Array< Job * >          m_WaitingJobs; // jobs waiting for manifests/toolchains
