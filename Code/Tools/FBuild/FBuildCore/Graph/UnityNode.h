@@ -52,7 +52,7 @@ public:
     void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
 protected:
-    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const override;
+    virtual bool DetermineNeedToBuildStatic() const override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void Migrate( const Node & oldNode ) override;
 

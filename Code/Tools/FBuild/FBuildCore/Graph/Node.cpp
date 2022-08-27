@@ -143,9 +143,9 @@ Node::~Node() = default;
     return true;
 }
 
-// DetermineNeedToBuild
+// DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
-bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
+/*virtual*/ bool Node::DetermineNeedToBuildStatic() const
 {
     // Some nodes (like File and Directory) always build as they represent external state
     // that can be modified before the build is run
@@ -163,6 +163,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         return true;
     }
 
+    // Handle missing or modified files
     if ( IsAFile() )
     {
         const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
@@ -183,7 +184,26 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         }
     }
 
-    // static deps
+    // Check if anything we statically depend on has changed
+    return DetermineNeedToBuild( m_StaticDependencies );
+}
+
+// DetermineNeedToBuildDynamic
+//------------------------------------------------------------------------------
+/*virtual*/ bool Node::DetermineNeedToBuildDynamic() const
+{
+    // Should never be called if DetermineNeedToBuildStatic would trigger a build
+    ASSERT( ( m_ControlFlags & FLAG_ALWAYS_BUILD ) == 0 );
+    ASSERT( m_Stamp != 0 );
+
+    // Check if anything we dynamically depend on has changed
+    return DetermineNeedToBuild( m_DynamicDependencies );
+}
+
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
+{
     for ( const Dependency & dep : deps )
     {
         // Weak dependencies don't cause rebuilds

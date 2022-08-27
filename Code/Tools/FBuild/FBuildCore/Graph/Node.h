@@ -214,12 +214,15 @@ protected:
 
     inline void SetIndex( uint32_t index ) { m_Index = index; }
 
-    // each node must implement these core functions
+    // each node implements a subset of these as needed
+    virtual bool DetermineNeedToBuildStatic() const;
+    virtual bool DetermineNeedToBuildDynamic() const;
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
-    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const;
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
+
+    bool DetermineNeedToBuild( const Dependencies & deps ) const;
 
     void SetLastBuildTime( uint32_t ms );
     inline void     AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }

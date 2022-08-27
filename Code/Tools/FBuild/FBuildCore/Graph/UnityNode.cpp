@@ -239,9 +239,9 @@ UnityNode::~UnityNode()
 }
 
 
-// DetermineNeedToBuild
+// DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
-/*virtual*/ bool UnityNode::DetermineNeedToBuild( const Dependencies & deps ) const
+/*virtual*/ bool UnityNode::DetermineNeedToBuildStatic() const
 {
     // Of IsolateWriteableFiles is enabled and files come from a directory list
     // then we'll be triggered for a build and don't need any special logic.
@@ -276,7 +276,7 @@ UnityNode::~UnityNode()
         return true;
     }
 
-    return Node::DetermineNeedToBuild( deps );
+    return Node::DetermineNeedToBuildStatic();
 }
 
 // DoBuild

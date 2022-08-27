@@ -1307,7 +1307,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
         // If static deps require us to rebuild, dynamic dependencies need regenerating
         const bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
         if ( forceClean ||
-             nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetStaticDependencies() ) )
+             nodeToBuild->DetermineNeedToBuildStatic() )
         {
             // Clear dynamic dependencies
             nodeToBuild->m_DynamicDependencies.Clear();
@@ -1350,12 +1350,9 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
     // dependencies are uptodate, so node can now tell us if it needs
     // building
-    const bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
     nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
-    if ( forceClean ||
-         ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant messages from DetermineNeedToBuild
-         nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetStaticDependencies() ) ||
-         nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetDynamicDependencies() ) )
+    if ( ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant messages from DetermineNeedToBuild
+         nodeToBuild->DetermineNeedToBuildDynamic() )
     {
         nodeToBuild->m_RecursiveCost = cost;
         JobQueue::Get().AddJobToBatch( nodeToBuild );

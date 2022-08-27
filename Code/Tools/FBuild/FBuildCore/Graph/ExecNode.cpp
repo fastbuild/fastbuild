@@ -156,16 +156,16 @@ ExecNode::~ExecNode() = default;
     return true;
 }
 
-// DetermineNeedToBuild
+// DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DetermineNeedToBuild( const Dependencies & deps ) const
+/*virtual*/ bool ExecNode::DetermineNeedToBuildStatic() const
 {
     if ( m_ExecAlways )
     {
         FLOG_BUILD_REASON( "Need to build '%s' (ExecAlways = true)\n", GetName().Get() );
         return true;
     }
-    return Node::DetermineNeedToBuild( deps );
+    return Node::DetermineNeedToBuildStatic();
 }
 
 // DoBuild
