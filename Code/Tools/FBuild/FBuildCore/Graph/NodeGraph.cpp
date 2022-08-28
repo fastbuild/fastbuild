@@ -43,6 +43,7 @@
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
 #include "Core/Math/xxHash.h"
@@ -62,6 +63,27 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ uint32_t NodeGraph::s_BuildPassTag( 0 );
+
+// IsValid (NodeGraphHeader)
+//------------------------------------------------------------------------------
+bool NodeGraphHeader::IsValid( ConstMemoryStream & ms ) const
+{
+    // Check header token is valid
+    if ( ( m_Identifier[ 0 ] != 'N' ) ||
+         ( m_Identifier[ 1 ] != 'G' ) ||
+         ( m_Identifier[ 2 ] != 'D' ) )
+    {
+        return false;
+    }
+
+    // Check contents of stream is valid
+    const uint64_t tell = ms.Tell();
+    ASSERT( tell == sizeof( NodeGraphHeader ) ); // Stream should be after header
+    const char* data = ( static_cast<const char*>( ms.GetData() ) + tell );
+    const size_t remainingSize = ( ms.GetSize() - tell );
+    const uint64_t hash = xxHash::Calc64( data, remainingSize );
+    return ( hash == m_ContentHash );
+}
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -244,7 +266,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
 
 // Load
 //------------------------------------------------------------------------------
-NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraphDBFile )
+NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * nodeGraphDBFile )
 {
     bool compatibleDB;
     bool movedDB;
@@ -494,7 +516,7 @@ bool NodeGraph::LoadNode( IOStream & stream )
 
 // Save
 //------------------------------------------------------------------------------
-void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
+void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
 {
     // write header and version
     const NodeGraphHeader header;
@@ -570,6 +592,19 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     for ( size_t i=0; i<numNodes; ++i )
     {
         ASSERT( savedNodeFlags[ i ] == true ); // each node was saved
+    }
+
+    // Calculate hash of stream excluding header
+    {
+        char * data = static_cast<char *>( stream.GetDataMutable() );
+        const char * content = reinterpret_cast<char *>( data + sizeof(NodeGraphHeader) );
+        const size_t remainingSize = ( stream.GetSize() - sizeof(NodeGraphHeader) );
+        const uint64_t hash = xxHash::Calc64( content, remainingSize );
+
+        // Update hash in header
+        NodeGraphHeader * headerToUpdate = reinterpret_cast<NodeGraphHeader *>( data );
+        ASSERT( headerToUpdate->GetContentHash() == 0 );
+        headerToUpdate->SetContentHash( hash );
     }
 }
 
@@ -1910,7 +1945,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 
 // ReadHeaderAndUsedFiles
 //------------------------------------------------------------------------------
-bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB, bool & movedDB ) const
+bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB, bool & movedDB ) const
 {
     // Assume good DB by default (cases below will change flags if needed)
     compatibleDB = true;
@@ -1919,7 +1954,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* 
     // check for a valid header
     NodeGraphHeader ngh;
     if ( ( nodeGraphStream.Read( &ngh, sizeof( ngh ) ) != sizeof( ngh ) ) ||
-         ( ngh.IsValid() == false ) )
+         ( ngh.IsValid( nodeGraphStream ) == false ) )
     {
         return false;
     }

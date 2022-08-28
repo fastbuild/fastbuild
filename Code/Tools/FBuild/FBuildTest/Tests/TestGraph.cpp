@@ -29,6 +29,7 @@
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -704,40 +705,53 @@ void TestGraph::DBCorrupt() const
     EnsureFileDoesNotExist( dbFile );
     EnsureFileDoesNotExist( dbFileCorrupt );
 
-    // Create a DB
+    // Test corruption at various places in the file
+    static_assert( sizeof(NodeGraphHeader) == 16, "Update test for DB format change" );
+    static const uint32_t corruptionOffsets[] =
     {
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
-        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
-    }
+        0,      // Header - magic identifier
+        8,      // Header - hash of content
+        128,    // Arbitrary position in the file
+    };
 
     // Corrupt the DB
+    for ( const uint32_t corruptionOffset : corruptionOffsets )
     {
-        FileStream f;
+        // Create a DB
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+        }
 
-        // Read DB into memory
-        TEST_ASSERT( f.Open( dbFile, FileStream::READ_ONLY ) );
-        AString buffer;
-        buffer.SetLength( (uint32_t)f.GetFileSize() );
-        TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-        f.Close(); // Explicit close so we can re-open
+        // Corrupt the DB
+        {
+            FileStream f;
 
-        // Corrupt it
-        buffer[ 0 ] = 'X';
+            // Read DB into memory
+            TEST_ASSERT( f.Open( dbFile, FileStream::READ_ONLY ) );
+            AString buffer;
+            buffer.SetLength( (uint32_t)f.GetFileSize() );
+            TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+            f.Close(); // Explicit close so we can re-open
 
-        // Save corrupt DB
-        TEST_ASSERT( f.Open( dbFile, FileStream::WRITE_ONLY ) );
-        TEST_ASSERT( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) );
-    }
+            // Corrupt it by flipping some bits
+            buffer[ corruptionOffset ] = ~buffer[ corruptionOffset ];
 
-    // Initialization should report a warning, but still work
-    {
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
-        TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
+            // Save corrupt DB
+            TEST_ASSERT( f.Open( dbFile, FileStream::WRITE_ONLY ) );
+            TEST_ASSERT( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) );
+        }
 
-        // Backup of corrupt DB should exit
-        EnsureFileExists( dbFileCorrupt );
+        // Initialization should report a warning, but still work
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
+            TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
+
+            // Backup of corrupt DB should exit
+            EnsureFileExists( dbFileCorrupt );
+        }
     }
 }
 
@@ -836,12 +850,13 @@ void TestGraph::BFFDirtied() const
 void TestGraph::DBVersionChanged() const
 {
     // Generate a fake old version headers
-    const NodeGraphHeader header;
+    NodeGraphHeader header;
+    header.SetContentHash( xxHash::Calc64( "", 0 ) );
     MemoryStream ms;
     ms.WriteBuffer( &header, sizeof( header ) );
 
     // Since we're poking this, we want to know if the layout ever changes somehow
-    TEST_ASSERT( ms.GetFileSize() == 4 );
+    TEST_ASSERT( ms.GetFileSize() == 16 );
     TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[ 3 ] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
 
     ( (uint8_t *)ms.GetDataMutable() )[ 3 ] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
