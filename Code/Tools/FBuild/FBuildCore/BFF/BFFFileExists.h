@@ -12,6 +12,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
+class ConstMemoryStream;
 class IOStream;
 
 // BFFFileExists
@@ -27,7 +28,7 @@ public:
     void Save( IOStream & stream ) const;
 
     // When loading an existing DB, we check if anything changed
-    bool Load( IOStream & stream );
+    void Load( ConstMemoryStream & stream );
     const AString * CheckForChanges( bool & outAdded ) const;
 
 private:

@@ -17,6 +17,7 @@
 //------------------------------------------------------------------------------
 class BFFToken;
 class CompilerNode;
+class ConstMemoryStream;
 class FileNode;
 class Function;
 class IMetaData;
@@ -152,7 +153,7 @@ public:
     inline void     SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
     static Node *   CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name );
-    static Node *   Load( NodeGraph & nodeGraph, IOStream & stream );
+    static Node *   Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
     static void     Save( IOStream & stream, const Node * node );
     virtual void    PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
 
@@ -236,8 +237,8 @@ protected:
 
     static void Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri );
     static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );
-    static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
-    static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
+    static void Deserialize( ConstMemoryStream & stream, void * base, const ReflectionInfo & ri );
+    static void Deserialize( ConstMemoryStream & stream, void * base, const ReflectedProperty & property );
 
     virtual void Migrate( const Node & oldNode );
 

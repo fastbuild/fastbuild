@@ -336,31 +336,19 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 
     // environment
     uint32_t envStringSize = 0;
-    if ( stream.Read( envStringSize ) == false )
-    {
-        return LoadResult::LOAD_ERROR;
-    }
+    VERIFY( stream.Read( envStringSize ) );
     UniquePtr< char > envString;
     AStackString<> libEnvVar;
     if ( envStringSize > 0 )
     {
         envString = ( (char *)ALLOC( envStringSize ) );
-        if ( stream.Read( envString.Get(), envStringSize ) == false )
-        {
-            return LoadResult::LOAD_ERROR;
-        }
-        if ( stream.Read( libEnvVar ) == false )
-        {
-            return LoadResult::LOAD_ERROR;
-        }
+        VERIFY( stream.Read( envString.Get(), envStringSize ) );
+        VERIFY( stream.Read( libEnvVar ) );
     }
 
     // imported environment variables
     uint32_t importedEnvironmentsVarsSize = 0;
-    if ( stream.Read( importedEnvironmentsVarsSize ) == false )
-    {
-        return LoadResult::LOAD_ERROR;
-    }
+    VERIFY( stream.Read( importedEnvironmentsVarsSize ) );
     if ( importedEnvironmentsVarsSize > 0 )
     {
         AStackString<> varName;
@@ -370,14 +358,8 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 
         for ( uint32_t i = 0; i < importedEnvironmentsVarsSize; ++i )
         {
-            if ( stream.Read( varName ) == false )
-            {
-                return LoadResult::LOAD_ERROR;
-            }
-            if ( stream.Read( savedVarHash ) == false )
-            {
-                return LoadResult::LOAD_ERROR;
-            }
+            VERIFY( stream.Read( varName ) );
+            VERIFY( stream.Read( savedVarHash ) );
 
             const bool optional = ( savedVarHash == 0 ); // a hash of 0 means the env var was missing when it was evaluated
             if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, importedVarHash ) == false )
@@ -403,11 +385,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 
     // check if 'LIB' env variable has changed
     uint32_t libEnvVarHashInDB( 0 );
-    if ( stream.Read( libEnvVarHashInDB ) == false )
-    {
-        return LoadResult::LOAD_ERROR;
-    }
-    else
+    VERIFY( stream.Read( libEnvVarHashInDB ) );
     {
         // If the Environment will be overriden, make sure we use the LIB from that
         const uint32_t libEnvVarHash = ( envStringSize > 0 ) ? xxHash::Calc32( libEnvVar ) : GetLibEnvVarHash();
@@ -424,10 +402,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 
     // Files use in file_exists checks
     BFFFileExists fileExistsInfo;
-    if ( fileExistsInfo.Load( stream ) == false )
-    {
-        return LoadResult::LOAD_ERROR;
-    }
+    fileExistsInfo.Load( stream );
     bool added;
     const AString * changedFile = fileExistsInfo.CheckForChanges( added );
     if ( changedFile )
@@ -440,19 +415,13 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 
     // Read nodes
     uint32_t numNodes;
-    if ( stream.Read( numNodes ) == false )
-    {
-        return LoadResult::LOAD_ERROR;
-    }
+    VERIFY( stream.Read( numNodes ) );
 
     m_AllNodes.SetSize( numNodes );
     memset( m_AllNodes.Begin(), 0, numNodes * sizeof( Node * ) );
     for ( uint32_t i=0; i<numNodes; ++i )
     {
-        if ( LoadNode( stream ) == false )
-        {
-            return LoadResult::LOAD_ERROR;
-        }
+        LoadNode( stream );
     }
 
     // sanity check loading
@@ -487,14 +456,11 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 
 // LoadNode
 //------------------------------------------------------------------------------
-bool NodeGraph::LoadNode( IOStream & stream )
+void NodeGraph::LoadNode( ConstMemoryStream & stream )
 {
     // load index
     uint32_t nodeIndex( INVALID_NODE_INDEX );
-    if ( stream.Read( nodeIndex ) == false )
-    {
-        return false;
-    }
+    VERIFY( stream.Read( nodeIndex ) );
 
     // sanity check loading (each node saved once)
     ASSERT( m_AllNodes[ nodeIndex ] == nullptr );
@@ -502,16 +468,11 @@ bool NodeGraph::LoadNode( IOStream & stream )
 
     // load specifics (create node)
     const Node * const n = Node::Load( *this, stream );
-    if ( n == nullptr )
-    {
-        return false;
-    }
+    ASSERT( n ); (void)n;
 
     // sanity check node index was correctly restored
     ASSERT( m_AllNodes[ nodeIndex ] == n );
     ASSERT( n->GetIndex() == nodeIndex );
-
-    return true;
 }
 
 // Save

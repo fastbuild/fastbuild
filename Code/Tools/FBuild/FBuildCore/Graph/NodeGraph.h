@@ -190,7 +190,7 @@ private:
     // load/save helpers
     static void SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags );
     static void SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags );
-    bool LoadNode( IOStream & stream );
+    void LoadNode( ConstMemoryStream & stream );
     static void SerializeToText( Node * node, uint32_t depth, AString & outBuffer );
     static void SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer );
     static void SerializeToDot( Node * node,
