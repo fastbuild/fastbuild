@@ -57,6 +57,7 @@ public:
     void                        Assign( const AString & string );
     void                        Assign( AString && string );
     void                        Clear();
+    void                        ClearAndFreeMemory();
     void                        SetReserved( size_t capacity );
 
     // manually set length - NOTE: caller is responsible for making string contents valid

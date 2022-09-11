@@ -24,6 +24,8 @@ private:
     void AStackStringConstructors() const;
     void AStackStringOverflow() const;
     void BigString() const;
+    void Clear() const;
+    void ClearAndFreeMemory() const;
     void Compare() const;
     void Concatenation() const;
     void EmbeddedNuls() const;
@@ -59,6 +61,8 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( AStackStringConstructors )
     REGISTER_TEST( AStackStringOverflow )
     REGISTER_TEST( BigString )
+    REGISTER_TEST( Clear )
+    REGISTER_TEST( ClearAndFreeMemory )
     REGISTER_TEST( Compare )
     REGISTER_TEST( Concatenation )
     REGISTER_TEST( EmbeddedNuls )
@@ -252,6 +256,79 @@ void TestAString::BigString() const
     string += mem.Get();
     TEST_ASSERT( string.GetLength() == 10 * MEGABYTE );
     TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
+}
+
+// Clear
+//------------------------------------------------------------------------------
+void TestAString::Clear() const
+{
+    {
+        AString str( "String" );
+        str.Clear();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+    }
+    {
+        AStackString<> str( "String" );
+        str.Clear();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+    }
+}
+
+// ClearAndFreeMemory
+//------------------------------------------------------------------------------
+void TestAString::ClearAndFreeMemory() const
+{
+    // AString
+    {
+        // Take note of memory state before
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        AString str( "String" );
+        str.ClearAndFreeMemory();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() == 0 );
+
+        // Check 1 alloc occurred but is no longer active
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+    }
+    // AStackString
+    {
+        // Take note of memory state before
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        AStackString<> str( "String" );
+        str.ClearAndFreeMemory();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() > 0 ); // Stack reservation can be retained
+
+        // Check no allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+    }
+    // AStackString overflows reservation
+    {
+        // Take note of memory state before
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        AStackString<> str;
+        str.SetLength( 1024 );
+        str.ClearAndFreeMemory();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() == 0 ); // Stack reservation can't be retained
+
+        // Check 1 alloc occurred but is no longer active
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+    }
 }
 
 // Compare
