@@ -1830,6 +1830,12 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
         return false;
     }
 
+    // Early out if the JobQueue has completed jobs that haven't been processed yet
+    if ( JobQueue::Get().HasPendingCompletedJobs() )
+    {
+        return false;
+    }
+
     PROFILE_FUNCTION;
 
     s_BuildPassTag++;

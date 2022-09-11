@@ -66,6 +66,7 @@ public:
 
     void GetJobStats( uint32_t & numJobs, uint32_t & numJobsActive,
                       uint32_t & numJobsDist, uint32_t & numJobsDistActive ) const;
+    bool HasPendingCompletedJobs() const;
 
 private:
     // worker threads call these

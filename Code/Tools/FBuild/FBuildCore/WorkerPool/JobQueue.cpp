@@ -238,6 +238,15 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
     numJobsDistActive = (uint32_t)m_DistributableJobs_InProgress.GetSize();
 }
 
+// HasPendingCompletedJobs
+//------------------------------------------------------------------------------
+bool JobQueue::HasPendingCompletedJobs() const
+{
+    MutexHolder mh( m_CompletedJobsMutex );
+    return ( m_CompletedJobs.IsEmpty() == false ) ||
+           ( m_CompletedJobs2.IsEmpty() == false );
+}
+
 // AddJobToBatch (Main Thread)
 //------------------------------------------------------------------------------
 void JobQueue::AddJobToBatch( Node * node )
