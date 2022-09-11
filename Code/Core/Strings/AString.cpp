@@ -490,7 +490,10 @@ void AString::ClearAndFreeMemory()
     else
     {
         // Pointing to unfreeable memory so just reset state
-        m_Contents[ 0 ] = '\000';
+        if ( m_Contents != const_cast<char*>( s_EmptyString ) )
+        {
+            m_Contents[ 0 ] = '\000';
+        }
         m_Length = 0;
     }
 }

@@ -296,6 +296,16 @@ void TestAString::ClearAndFreeMemory() const
         TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
         TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
     }
+    // AString never used
+    {
+        AString str;
+        str.ClearAndFreeMemory();
+
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() == 0 );
+    }
     // AStackString
     {
         // Take note of memory state before
@@ -311,6 +321,16 @@ void TestAString::ClearAndFreeMemory() const
         // Check no allocs occurred
         TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
         TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+    }
+    // AStackString never used
+    {
+        AStackString<> str;
+        str.ClearAndFreeMemory();
+
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() > 0 ); // Stack reservation can be retained
     }
     // AStackString overflows reservation
     {
