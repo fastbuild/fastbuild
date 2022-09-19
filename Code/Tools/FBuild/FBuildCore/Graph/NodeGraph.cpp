@@ -1541,7 +1541,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
             {
                 // check for \.\ (or \./)
                 char nextChar = *( src + 1 );
-                if ( ( nextChar == NATIVE_SLASH ) || ( nextChar == OTHER_SLASH ) )
+                if ( ( nextChar == NATIVE_SLASH ) || ( nextChar == OTHER_SLASH ) || ( nextChar == '\0' ) )
                 {
                     src++; // skip . and slashes
                     while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) )

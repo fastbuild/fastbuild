@@ -410,22 +410,30 @@ void TestGraph::TestCleanPath() const
     CHECK( "..\\file.dat",          "C:\\Windows\\file.dat",            "/tmp/file.dat" )
     CHECK( "..\\..\\file.dat",      "C:\\file.dat",                     "/file.dat" )
     CHECK( "..\\..\\..\\file.dat",  "C:\\file.dat",                     "/file.dat" )
+    CHECK( "folder\\..\\",          "C:\\Windows\\System32\\",          "/tmp/subDir/" )
+    CHECK( "folder\\..",            "C:\\Windows\\System32\\",          "/tmp/subDir/" )
 
     //   "/../"
     CHECK( "file.dat",              "C:\\Windows\\System32\\file.dat",  "/tmp/subDir/file.dat" )
     CHECK( "../file.dat",           "C:\\Windows\\file.dat",            "/tmp/file.dat" )
     CHECK( "../../file.dat",        "C:\\file.dat",                     "/file.dat" )
     CHECK( "../../../file.dat",     "C:\\file.dat",                     "/file.dat" )
+    CHECK( "folder/../",            "C:\\Windows\\System32\\",          "/tmp/subDir/" )
+    CHECK( "folder/..",             "C:\\Windows\\System32\\",          "/tmp/subDir/" )
 
     //   "\.\"
     CHECK( ".\\file.dat",           "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
     CHECK( "folder\\.\\file.dat",   "C:\\Windows\\System32\\folder\\file.dat",  "/tmp/subDir/folder/file.dat" )
     CHECK( ".\\.\\.\\file.dat",     "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
+    CHECK( "folder\\.\\",           "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
+    CHECK( "folder\\.",             "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
 
     //   "/./"
     CHECK( "./file.dat",            "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
     CHECK( "folder/./file.dat",     "C:\\Windows\\System32\\folder\\file.dat",  "/tmp/subDir/folder/file.dat" )
     CHECK( "./././file.dat",        "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
+    CHECK( "folder/./",             "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
+    CHECK( "folder/.",              "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
 
     //   full path '\'
     #if defined( __WINDOWS__ )
