@@ -366,25 +366,34 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                     return;
                 }
 
-                // Is manifest being synchronized?
-                const bool hasManifest = ( manifest->GetFiles().IsEmpty() == false );
-                if ( hasManifest )
+                // If we have an associated connection, we're already synchronizing
+                // on that connection and don't need to do anything.
+                // That may be a connection to another client or to the same client
+                const bool isSynchronizing = ( manifest->GetUserData() != nullptr );
+                if ( isSynchronizing )
                 {
-                    // Missing some files - request any not already being sync'd
-                    RequestMissingFiles( connection, manifest );
+                    // We just need to wait for syncrhonization to complete
                 }
                 else
                 {
-                    // Manifest was not sync'd. This can happen if disconnection
-                    // occurs before the manifest was received.
+                    // Take ownership of toolchain
+                    manifest->SetUserData( (void *)connection );                    
+                    
+                    const bool hasManifest = ( manifest->GetFiles().IsEmpty() == false );
+                    if ( hasManifest )
+                    {
+                        // Missing some files - request any not already being sync'd
+                        RequestMissingFiles( connection, manifest );
+                    }
+                    else
+                    {
+                        // Manifest was not sync'd. This can happen if disconnection
+                        // occurs before the manifest was received.
                    
-                    // Take ownership of manifest
-                    ASSERT( manifest->GetUserData() == nullptr );
-                    manifest->SetUserData( (void *)connection );
-
-                    // request manifest
-                    const Protocol::MsgRequestManifest reqMsg( toolId );
-                    reqMsg.Send( connection );
+                        // request manifest
+                        const Protocol::MsgRequestManifest reqMsg( toolId );
+                        reqMsg.Send( connection );
+                    }
                 }
             }
             else
