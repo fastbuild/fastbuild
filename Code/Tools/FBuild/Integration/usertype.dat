@@ -190,6 +190,7 @@ Projects
 RemoteDebuggerCommand
 RemoteDebuggerCommandArguments
 RemoteDebuggerWorkingDirectory
+RemoveExcludeFiles
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
