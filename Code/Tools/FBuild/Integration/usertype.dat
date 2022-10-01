@@ -94,7 +94,6 @@ Dependencies
 DeploymentFiles
 DeploymentType
 Dest
-DisableDBMigration
 DistributableJobMemoryLimitMiB
 Environment
 ExecAlways
