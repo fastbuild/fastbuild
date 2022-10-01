@@ -73,7 +73,6 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( ExtraFiles_GCNO )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
-
         REGISTER_TEST( LightCache_IncludeUsingMacro )
         REGISTER_TEST( LightCache_IncludeUsingMacro2 )
         REGISTER_TEST( LightCache_IncludeUsingMacro3 )
@@ -1058,7 +1057,6 @@ void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) c
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
-    options.m_CacheVerbose = true;
     options.m_ConfigFile = bffPath;
 
     // Do first build writing to cache
@@ -1102,14 +1100,16 @@ void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) c
 //------------------------------------------------------------------------------
 void TestCache::ExtraFiles_NativeCodeAnalysisXML() const
 {
-    ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_NativeCodeAnalysisXML/fbuild.bff", "../tmp/Test/Cache/ExtraFiles_NativeCodeAnalysisXML/file.nativecodeanalysis.xml" );
+    ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_NativeCodeAnalysisXML/fbuild.bff",
+                "../tmp/Test/Cache/ExtraFiles_NativeCodeAnalysisXML/file.nativecodeanalysis.xml" );
 }
 
 // ExtraFiles_GCNO
 //------------------------------------------------------------------------------
 void TestCache::ExtraFiles_GCNO() const
 {
-    ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_GCNO/fbuild.bff", "../tmp/Test/Cache/ExtraFiles_GCNO/file.gcno" );
+    ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_GCNO/fbuild.bff",
+                "../tmp/Test/Cache/ExtraFiles_GCNO/file.gcno" );
 }
 
 // CheckForDependencies

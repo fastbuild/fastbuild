@@ -1112,7 +1112,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         // * Remote compilation with Gcov coverage is disabled as it has some issues:
         //   1. .gcno files will contain incorrect build root path (working directory on the worker).
         //   2. Object files compiled remotely will create .gcda files in the directory where these object files were stored on the worker.
-        if ( !creatingPCH && !objectiveC && !hasSourceMapping && !( flags.IsUsingGcovCoverage() ) )
+        if ( !creatingPCH && !objectiveC && !hasSourceMapping && !flags.IsUsingGcovCoverage() )
         {
             if ( isDistributableCompiler )
             {
