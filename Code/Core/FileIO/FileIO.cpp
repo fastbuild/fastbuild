@@ -663,7 +663,7 @@
             {
                 // Path exists, so use canonical name
                 outNormalizedPath += info.szDisplayName;
-                pos = nextSlash;
+                pos = nextSlash ? nextSlash : path.GetEnd();
 
                 // Add slash between components
                 if ( pos < path.GetEnd() )
