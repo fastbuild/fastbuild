@@ -513,14 +513,16 @@ void FBuildOptions::SetWorkingDir( const AString & path )
     }
 
     #if defined( __WINDOWS__ )
-        // so C:\ and c:\ are treated the same on Windows, for better cache hits
-        // make the drive letter always uppercase
-        if ( ( m_WorkingDir.GetLength() >= 2 ) &&
-             ( m_WorkingDir[ 1 ] == ':' ) &&
-             ( m_WorkingDir[ 0 ] >= 'a' ) &&
-             ( m_WorkingDir[ 0 ] <= 'z' ) )
+        // Canonicalize the working dir so that drive letters
+        // and directory names have correct/consistent paths.
+        // This ensures things that are sensitive to path casing
+        // work as expected:
+        // a) Compilers with path portability warnings (Clang)
+        // b) Caching
+        AStackString<> normalizedWorkingDir;
+        if ( FileIO::NormalizeWindowsPathCasing( m_WorkingDir, normalizedWorkingDir ) )
         {
-            m_WorkingDir[ 0 ] = ( 'A' + ( m_WorkingDir[ 0 ] - 'a' ) );
+            m_WorkingDir = normalizedWorkingDir;
         }
     #endif
 
