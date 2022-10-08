@@ -2416,7 +2416,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // be 1. There seems to be no definitive way to differentiate this from
         // a process exiting with return code 1, so we default to considering it a
         // system failure, unless we can detect some specific situations.
-        if ( result == 0x1 )
+        if ( result == 0x1 ) // ERROR_INVALID_FUNCTION
         {
             bool treatAsSystemError = true;
 
@@ -2433,6 +2433,13 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 job->OnSystemError(); // task will be retried on another worker
                 return;
             }
+        }
+
+        // This error was observed remotely without a clear cause
+        if ( result == 0x4 ) // ERROR_TOO_MANY_OPEN_FILES
+        {
+            job->OnSystemError(); // task will be retried on another worker
+            return;
         }
 
         // If DLLs are not correctly sync'd, add an extra message to help the user
