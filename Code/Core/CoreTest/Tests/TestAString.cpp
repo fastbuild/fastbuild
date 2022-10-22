@@ -24,6 +24,7 @@ private:
     void AStackStringConstructors() const;
     void AStackStringOverflow() const;
     void BigString() const;
+    void CharacterHelpers() const;
     void Clear() const;
     void ClearAndFreeMemory() const;
     void Compare() const;
@@ -61,6 +62,7 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( AStackStringConstructors )
     REGISTER_TEST( AStackStringOverflow )
     REGISTER_TEST( BigString )
+    REGISTER_TEST( CharacterHelpers )
     REGISTER_TEST( Clear )
     REGISTER_TEST( ClearAndFreeMemory )
     REGISTER_TEST( Compare )
@@ -256,6 +258,44 @@ void TestAString::BigString() const
     string += mem.Get();
     TEST_ASSERT( string.GetLength() == 10 * MEGABYTE );
     TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
+}
+
+// CharacterHelpers
+//------------------------------------------------------------------------------
+void TestAString::CharacterHelpers() const
+{
+    const AStackString<> lowerLetters( "abcdefghijklmnopqrstuvwxyz" );
+    const AStackString<> upperLetters( "ABCDEFGHIJKLMNOPQRSTUZWXYZ" );
+    const AStackString<> letters( "ABCDEFGHIJKLMNOPQRSTUZWXYZabcdefghijklmnopqrstuvwxyz" );
+    const AStackString<> numbers( "0123456789" );
+    const AStackString<> whitespace( " \r\n\t" );
+
+    // IsWhitespace
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsWhitespace( c ) ); }
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsWhitespace( c ) == false ); }
+    for ( char c : letters )        { TEST_ASSERT( AString::IsWhitespace( c ) == false ); }
+
+    // IsUppercaseLetter
+    for ( char c : upperLetters )   { TEST_ASSERT( AString::IsUppercaseLetter( c ) ); }
+    for ( char c : lowerLetters )   { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
+
+    // IsLowercaseLetter
+    for ( char c : lowerLetters )   { TEST_ASSERT( AString::IsLowercaseLetter( c ) ); }
+    for ( char c : upperLetters )   { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
+
+    // IsLetter
+    for ( char c : letters )        { TEST_ASSERT( AString::IsLetter( c ) ); }
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsLetter( c ) == false ); }
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsLetter( c ) == false ); }
+
+    // IsNumber
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsNumber( c ) ); }
+    for ( char c : letters )        { TEST_ASSERT( AString::IsNumber( c ) == false ); }
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsNumber( c ) == false ); }
 }
 
 // Clear

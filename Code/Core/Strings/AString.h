@@ -166,6 +166,13 @@ public:
     [[nodiscard]] static int32_t    StrNCmp( const char * a, const char * b, size_t num );
     [[nodiscard]] static int32_t    StrNCmpI( const char * a, const char * b, size_t num );
 
+    // Character helpers
+    [[nodiscard]] static bool   IsWhitespace( char c )      { return ( ( c == ' ' ) || ( c == '\r' ) || ( c == '\n' ) || ( c == '\t' ) ); }
+    [[nodiscard]] static bool   IsUppercaseLetter( char c ) { return ( ( c >= 'A' ) && ( c <= 'Z' ) ); }
+    [[nodiscard]] static bool   IsLowercaseLetter( char c ) { return ( ( c >= 'a' ) && ( c <= 'z' ) ); }
+    [[nodiscard]] static bool   IsLetter( char c )          { return IsUppercaseLetter( c ) || IsLowercaseLetter( c ); }
+    [[nodiscard]] static bool   IsNumber( char c )          { return ( ( c >= '0' ) && ( c <= '9' ) ); }
+
     // range iteration
     [[nodiscard]]               char * begin()              { return m_Contents; }
     [[nodiscard]]               char * end()                { return m_Contents + m_Length; }
