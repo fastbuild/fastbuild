@@ -190,6 +190,8 @@ public:
     inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
+    static void CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg );
+
 protected:
     friend class FBuild;
     friend struct FBuildStats;

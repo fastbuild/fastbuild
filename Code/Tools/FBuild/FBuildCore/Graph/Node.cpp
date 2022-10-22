@@ -1072,6 +1072,64 @@ void Node::ReplaceDummyName( const AString & newName )
     NodeGraph::CleanPath( path, outFixedPath );
 }
 
+// CleanMessageToPreventMSBuildFailure
+//------------------------------------------------------------------------------
+/*static*/ void Node::CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg )
+{
+    // Search for patterns that MSBuild detects and treats as errors:
+    // 
+    //   <error|warning> <errorCode>: <message>
+    // 
+    // and remove the colon so they are no longer detected:
+    // 
+    //   <error|warning> <errorCode> <message>
+    // 
+    // These can be anywhere in the string, and are case and whitespace insensitive 
+    const char * pos = msg.Get();
+    for ( ;; )
+    {
+        const char * startPos = pos;
+
+        // Look for error or warning
+        const char * tokenPos = msg.FindI( "error ", pos );
+        tokenPos = tokenPos ? tokenPos : msg.FindI( "warning ", pos );
+        if ( tokenPos == nullptr )
+        {
+            outMsg.Append( startPos, msg.GetEnd() ); // Add rest of string
+            return;
+        }
+
+        pos = tokenPos; // Advance to token
+
+        // skip past the token
+        while ( AString::IsLetter( *pos ) )     { ++pos; }
+        while ( AString::IsWhitespace( *pos ) ) { ++pos; }
+
+        // skip error code
+        while ( AString::IsLetter( *pos ) || AString::IsNumber( *pos ) )
+        {
+            ++pos;
+        }
+        while ( AString::IsWhitespace( *pos ) ) { ++pos; }
+
+        // Add everything to here including the token
+        outMsg.Append( startPos, pos );
+
+        // colon?
+        if ( *pos != ':' )
+        {
+            // Keep searching. We need to check all possible instances
+            // of the token because it can appear multiple times
+            continue;
+        }
+
+        // Replace colon
+        outMsg += ' ';
+        ++pos;
+        continue; // Keep searching
+    }
+}
+
 // InitializePreBuildDependencies
 //------------------------------------------------------------------------------
 bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const Array< AString > & preBuildDependencyNames )

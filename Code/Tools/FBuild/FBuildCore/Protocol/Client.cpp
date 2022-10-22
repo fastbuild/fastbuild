@@ -588,7 +588,14 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         failureOutput.Format( "PROBLEM: %s\n", node->GetName().Get() );
         for ( const AString & message : messages )
         {
-            failureOutput += message;
+            // When invoked from MSBuild (directly or from Visual Studio) and
+            // using -distverbose we might output a remote error string. MSBuild
+            // uses regexs to pattern match these strings and force an error
+            // which we don't want. So we "clean" these strings to tweak the
+            // message slightly to avoid that
+            AStackString<> messageCleaned;
+            Node::CleanMessageToPreventMSBuildFailure( message, messageCleaned );
+            failureOutput += messageCleaned;
         }
     }
 
