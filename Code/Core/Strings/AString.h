@@ -69,6 +69,7 @@ public:
     AString &                   operator += ( const AString & string );
     AString &                   Append( const AString & string ) { return this->operator +=( string ); }
     AString &                   Append( const char * string, size_t len );
+    AString &                   Append( const char * start, const char * end ) { return Append( start, static_cast<size_t>( end - start ) ); }
     AString &                   AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // comparison

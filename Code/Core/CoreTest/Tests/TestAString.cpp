@@ -420,20 +420,49 @@ void TestAString::Concatenation() const
     {
         AString a, b;
         a += b;
+        TEST_ASSERT( a.IsEmpty() );
     }
     {
         AString a;
         const char * b = "";
         a += b;
+        TEST_ASSERT( a.IsEmpty() );
     }
     {
         AString a, b;
         a.Append( b );
+        TEST_ASSERT( a.IsEmpty() );
     }
     {
         AString a;
         const char * b = "";
-        a.Append( b, 0 );
+        a.Append( b, static_cast<size_t>(0) );
+        TEST_ASSERT( a.IsEmpty() );
+    }
+    {
+        AString a;
+        const char * b = "";
+        a.Append( b, b );
+        TEST_ASSERT( a.IsEmpty() );
+    }
+
+    // Non-empty strings
+    {
+        AStackString<> a;
+        const char * b = "hello";
+        a.Append( b, AString::StrLen( b ) );
+        TEST_ASSERT( a == "hello" );
+    }
+    {
+        AStackString<> a;
+        const char * b = "hello";
+        a.Append( b, b + AString::StrLen( b ) );
+        TEST_ASSERT( a == "hello" );
+    }
+    {
+        AStackString<> a;
+        a.Append( AStackString<>( "hello" ) );
+        TEST_ASSERT( a == "hello" );
     }
 }
 
