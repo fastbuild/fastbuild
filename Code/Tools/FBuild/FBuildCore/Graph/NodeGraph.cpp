@@ -66,7 +66,7 @@
 
 // IsValid (NodeGraphHeader)
 //------------------------------------------------------------------------------
-bool NodeGraphHeader::IsValid( ConstMemoryStream & ms ) const
+bool NodeGraphHeader::IsValid() const
 {
     // Check header token is valid
     if ( ( m_Identifier[ 0 ] != 'N' ) ||
@@ -75,14 +75,7 @@ bool NodeGraphHeader::IsValid( ConstMemoryStream & ms ) const
     {
         return false;
     }
-
-    // Check contents of stream is valid
-    const uint64_t tell = ms.Tell();
-    ASSERT( tell == sizeof( NodeGraphHeader ) ); // Stream should be after header
-    const char* data = ( static_cast<const char*>( ms.GetData() ) + tell );
-    const size_t remainingSize = ( ms.GetSize() - tell );
-    const uint64_t hash = xxHash::Calc64( data, remainingSize );
-    return ( hash == m_ContentHash );
+    return true;
 }
 
 // CONSTRUCTOR
@@ -1921,7 +1914,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, con
     // check for a valid header
     NodeGraphHeader ngh;
     if ( ( nodeGraphStream.Read( &ngh, sizeof( ngh ) ) != sizeof( ngh ) ) ||
-         ( ngh.IsValid( nodeGraphStream ) == false ) )
+         ( ngh.IsValid() == false ) )
     {
         return false;
     }
@@ -1931,6 +1924,19 @@ bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, con
     {
         compatibleDB = false;
         return true;
+    }
+
+    // Check contents of stream is valid
+    {
+        const uint64_t tell = nodeGraphStream.Tell();
+        ASSERT( tell == sizeof( NodeGraphHeader ) ); // Stream should be after header
+        const char* data = ( static_cast<const char*>( nodeGraphStream.GetData() ) + tell );
+        const size_t remainingSize = ( nodeGraphStream.GetSize() - tell );
+        const uint64_t hash = xxHash::Calc64( data, remainingSize );
+        if ( hash != ngh.GetContentHash() )
+        {
+            return false; // DB is corrupt
+        }
     }
 
     // Read location where .fdb was originally saved

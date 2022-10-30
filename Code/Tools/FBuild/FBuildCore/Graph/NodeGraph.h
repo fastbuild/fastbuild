@@ -65,7 +65,7 @@ public:
 
     enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 165 };
 
-    bool IsValid( ConstMemoryStream & ms ) const;
+    bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == NODE_GRAPH_CURRENT_VERSION; }
 
     uint64_t    GetContentHash() const          { return m_ContentHash; }
