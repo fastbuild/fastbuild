@@ -23,7 +23,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::TEXT_FILE_NODE; }
 
 private:
-    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const override;
+    virtual bool DetermineNeedToBuildStatic() const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     void EmitCompilationMessage() const;

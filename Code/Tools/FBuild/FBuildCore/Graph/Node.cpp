@@ -43,6 +43,7 @@
 // Core
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
+#include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -143,9 +144,9 @@ Node::~Node() = default;
     return true;
 }
 
-// DetermineNeedToBuild
+// DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
-bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
+/*virtual*/ bool Node::DetermineNeedToBuildStatic() const
 {
     // Some nodes (like File and Directory) always build as they represent external state
     // that can be modified before the build is run
@@ -163,6 +164,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         return true;
     }
 
+    // Handle missing or modified files
     if ( IsAFile() )
     {
         const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
@@ -183,7 +185,26 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         }
     }
 
-    // static deps
+    // Check if anything we statically depend on has changed
+    return DetermineNeedToBuild( m_StaticDependencies );
+}
+
+// DetermineNeedToBuildDynamic
+//------------------------------------------------------------------------------
+/*virtual*/ bool Node::DetermineNeedToBuildDynamic() const
+{
+    // Should never be called if DetermineNeedToBuildStatic would trigger a build
+    ASSERT( ( m_ControlFlags & FLAG_ALWAYS_BUILD ) == 0 );
+    ASSERT( m_Stamp != 0 );
+
+    // Check if anything we dynamically depend on has changed
+    return DetermineNeedToBuild( m_DynamicDependencies );
+}
+
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
+{
     for ( const Dependency & dep : deps )
     {
         // Weak dependencies don't cause rebuilds
@@ -348,23 +369,17 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * Node::Load( NodeGraph & nodeGraph, IOStream & stream )
+/*static*/ Node * Node::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
 {
     // read type
     uint8_t nodeType;
-    if ( stream.Read( nodeType ) == false )
-    {
-        return nullptr;
-    }
+    VERIFY( stream.Read( nodeType ) );
 
     PROFILE_SECTION( Node::GetTypeName( (Type)nodeType ) );
 
     // Name of node
     AStackString<> name;
-    if ( stream.Read( name ) == false )
-    {
-        return nullptr;
-    }
+    VERIFY( stream.Read( name ) );
 
     // Create node
     Node * n = CreateNode( nodeGraph, (Type)nodeType, name );
@@ -378,32 +393,20 @@ void Node::SetLastBuildTime( uint32_t ms )
 
     // Read stamp
     uint64_t stamp;
-    if ( stream.Read( stamp ) == false )
-    {
-        return nullptr;
-    }
+    VERIFY( stream.Read( stamp ) );
 
     // Build time
     uint32_t lastTimeToBuild;
-    if ( stream.Read( lastTimeToBuild ) == false )
-    {
-        return nullptr;
-    }
+    VERIFY( stream.Read( lastTimeToBuild ) );
     n->SetLastBuildTime( lastTimeToBuild );    
 
     // Dependencies
-    if ( ( n->m_PreBuildDependencies.Load( nodeGraph, stream ) == false ) ||
-         ( n->m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
-         ( n->m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
-    {
-        return nullptr;
-    }
+    n->m_PreBuildDependencies.Load( nodeGraph, stream );
+    n->m_StaticDependencies.Load( nodeGraph, stream );
+    n->m_DynamicDependencies.Load( nodeGraph, stream );
 
     // Deserialize properties
-    if ( Deserialize( stream, n, *n->GetReflectionInfoV() ) == false )
-    {
-        return nullptr;
-    }
+    Deserialize( stream, n, *n->GetReflectionInfoV() );
 
     n->PostLoad( nodeGraph ); // TODO:C Eliminate the need for this
 
@@ -615,7 +618,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // Deserialize
 //------------------------------------------------------------------------------
-/*static*/ bool Node::Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri )
+/*static*/ void Node::Deserialize( ConstMemoryStream & stream, void * base, const ReflectionInfo & ri )
 {
     const ReflectionInfo * currentRI = &ri;
     do
@@ -624,17 +627,12 @@ void Node::SetLastBuildTime( uint32_t ms )
         for ( ReflectionIter it = currentRI->Begin(); it != end; ++it )
         {
             const ReflectedProperty & property = *it;
-            if ( !Deserialize( stream, base, property ) )
-            {
-                return false;
-            }
+            Deserialize( stream, base, property );
         }
 
         currentRI = currentRI->GetSuperClass();
     }
     while ( currentRI );
-
-    return true;
 }
 
 // Migrate
@@ -650,7 +648,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // Deserialize
 //------------------------------------------------------------------------------
-/*static*/ bool Node::Deserialize( IOStream & stream, void * base, const ReflectedProperty & property )
+/*static*/ void Node::Deserialize( ConstMemoryStream & stream, void * base, const ReflectedProperty & property )
 {
     const PropertyType pt = property.GetType();
     switch ( pt )
@@ -660,70 +658,49 @@ void Node::SetLastBuildTime( uint32_t ms )
             if ( property.IsArray() )
             {
                 Array< AString > * arrayOfStrings = property.GetPtrToArray<AString>( base );
-                if ( stream.Read( *arrayOfStrings ) == false )
-                {
-                    return false;
-                }
+                VERIFY( stream.Read( *arrayOfStrings ) );
             }
             else
             {
                 AString * string = property.GetPtrToProperty<AString>( base );
-                if ( stream.Read( *string ) == false )
-                {
-                    return false;
-                }
+                VERIFY( stream.Read( *string ) );
             }
-            return true;
+            return;
         }
         case PT_BOOL:
         {
             bool b( false );
-            if ( stream.Read( b ) == false )
-            {
-                return false;
-            }
+            VERIFY( stream.Read( b ) );
             property.SetProperty( base, b );
-            return true;
+            return;
         }
         case PT_UINT8:
         {
             uint8_t u8( 0 );
-            if ( stream.Read( u8 ) == false )
-            {
-                return false;
-            }
+            VERIFY( stream.Read( u8 ) );
             property.SetProperty( base, u8 );
-            return true;
+            return;
         }
         case PT_INT32:
         {
             int32_t i32( 0 );
-            if ( stream.Read( i32 ) == false )
-            {
-                return false;
-            }
+            VERIFY( stream.Read( i32 ) );
             property.SetProperty( base, i32 );
-            return true;
+            return;
         }
         case PT_UINT32:
         {
             uint32_t u32( 0 );
-            if ( stream.Read( u32 ) == false )
-            {
-                return false;
-            }
+            VERIFY( stream.Read( u32 ) );
             property.SetProperty( base, u32 );
-            return true;
+            return;
         }
         case PT_UINT64:
         {
             uint64_t u64( 0 );
-            if ( stream.Read( u64 ) == false )
-            {
-                return false;
-            }
+            VERIFY( stream.Read( u64 ) );
             property.SetProperty( base, u64 );
-            return true;
+            return;
         }
         case PT_STRUCT:
         {
@@ -733,28 +710,23 @@ void Node::SetLastBuildTime( uint32_t ms )
             {
                 // Read number of elements
                 uint32_t numElements( 0 );
-                if ( stream.Read( numElements ) == false )
-                {
-                    return false;
-                }
+                VERIFY( stream.Read( numElements ) );
                 propertyS.ResizeArrayOfStruct( base, numElements );
 
                 // Read each element
                 for ( uint32_t i=0; i<numElements; ++i )
                 {
                     void * structBase = propertyS.GetStructInArray( base, (size_t)i );
-                    if ( Deserialize( stream, structBase, *propertyS.GetStructReflectionInfo() ) == false )
-                    {
-                        return false;
-                    }
+                    Deserialize( stream, structBase, *propertyS.GetStructReflectionInfo() );
                 }
-                return true;
+                return;
             }
             else
             {
                 const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();
                 void * structBase = propertyS.GetStructBase( base );
-                return Deserialize( stream, structBase, *structRI );
+                Deserialize( stream, structBase, *structRI );
+                return;
             }
         }
         default:
@@ -764,7 +736,6 @@ void Node::SetLastBuildTime( uint32_t ms )
     }
 
     ASSERT( false ); // Unsupported type
-    return false;
 }
 
 // SetName
@@ -1099,6 +1070,64 @@ void Node::ReplaceDummyName( const AString & newName )
 
     // Normalize path
     NodeGraph::CleanPath( path, outFixedPath );
+}
+
+// CleanMessageToPreventMSBuildFailure
+//------------------------------------------------------------------------------
+/*static*/ void Node::CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg )
+{
+    // Search for patterns that MSBuild detects and treats as errors:
+    // 
+    //   <error|warning> <errorCode>: <message>
+    // 
+    // and remove the colon so they are no longer detected:
+    // 
+    //   <error|warning> <errorCode> <message>
+    // 
+    // These can be anywhere in the string, and are case and whitespace insensitive 
+    const char * pos = msg.Get();
+    for ( ;; )
+    {
+        const char * startPos = pos;
+
+        // Look for error or warning
+        const char * tokenPos = msg.FindI( "error ", pos );
+        tokenPos = tokenPos ? tokenPos : msg.FindI( "warning ", pos );
+        if ( tokenPos == nullptr )
+        {
+            outMsg.Append( startPos, msg.GetEnd() ); // Add rest of string
+            return;
+        }
+
+        pos = tokenPos; // Advance to token
+
+        // skip past the token
+        while ( AString::IsLetter( *pos ) )     { ++pos; }
+        while ( AString::IsWhitespace( *pos ) ) { ++pos; }
+
+        // skip error code
+        while ( AString::IsLetter( *pos ) || AString::IsNumber( *pos ) )
+        {
+            ++pos;
+        }
+        while ( AString::IsWhitespace( *pos ) ) { ++pos; }
+
+        // Add everything to here including the token
+        outMsg.Append( startPos, pos );
+
+        // colon?
+        if ( *pos != ':' )
+        {
+            // Keep searching. We need to check all possible instances
+            // of the token because it can appear multiple times
+            continue;
+        }
+
+        // Replace colon
+        outMsg += ' ';
+        ++pos;
+        continue; // Keep searching
+    }
 }
 
 // InitializePreBuildDependencies

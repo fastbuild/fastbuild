@@ -24,6 +24,9 @@ private:
     void AStackStringConstructors() const;
     void AStackStringOverflow() const;
     void BigString() const;
+    void CharacterHelpers() const;
+    void Clear() const;
+    void ClearAndFreeMemory() const;
     void Compare() const;
     void Concatenation() const;
     void EmbeddedNuls() const;
@@ -59,6 +62,9 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( AStackStringConstructors )
     REGISTER_TEST( AStackStringOverflow )
     REGISTER_TEST( BigString )
+    REGISTER_TEST( CharacterHelpers )
+    REGISTER_TEST( Clear )
+    REGISTER_TEST( ClearAndFreeMemory )
     REGISTER_TEST( Compare )
     REGISTER_TEST( Concatenation )
     REGISTER_TEST( EmbeddedNuls )
@@ -254,6 +260,137 @@ void TestAString::BigString() const
     TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
 }
 
+// CharacterHelpers
+//------------------------------------------------------------------------------
+void TestAString::CharacterHelpers() const
+{
+    const AStackString<> lowerLetters( "abcdefghijklmnopqrstuvwxyz" );
+    const AStackString<> upperLetters( "ABCDEFGHIJKLMNOPQRSTUZWXYZ" );
+    const AStackString<> letters( "ABCDEFGHIJKLMNOPQRSTUZWXYZabcdefghijklmnopqrstuvwxyz" );
+    const AStackString<> numbers( "0123456789" );
+    const AStackString<> whitespace( " \r\n\t" );
+
+    // IsWhitespace
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsWhitespace( c ) ); }
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsWhitespace( c ) == false ); }
+    for ( char c : letters )        { TEST_ASSERT( AString::IsWhitespace( c ) == false ); }
+
+    // IsUppercaseLetter
+    for ( char c : upperLetters )   { TEST_ASSERT( AString::IsUppercaseLetter( c ) ); }
+    for ( char c : lowerLetters )   { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
+
+    // IsLowercaseLetter
+    for ( char c : lowerLetters )   { TEST_ASSERT( AString::IsLowercaseLetter( c ) ); }
+    for ( char c : upperLetters )   { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
+
+    // IsLetter
+    for ( char c : letters )        { TEST_ASSERT( AString::IsLetter( c ) ); }
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsLetter( c ) == false ); }
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsLetter( c ) == false ); }
+
+    // IsNumber
+    for ( char c : numbers )        { TEST_ASSERT( AString::IsNumber( c ) ); }
+    for ( char c : letters )        { TEST_ASSERT( AString::IsNumber( c ) == false ); }
+    for ( char c : whitespace )     { TEST_ASSERT( AString::IsNumber( c ) == false ); }
+}
+
+// Clear
+//------------------------------------------------------------------------------
+void TestAString::Clear() const
+{
+    {
+        AString str( "String" );
+        str.Clear();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+    }
+    {
+        AStackString<> str( "String" );
+        str.Clear();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+    }
+}
+
+// ClearAndFreeMemory
+//------------------------------------------------------------------------------
+void TestAString::ClearAndFreeMemory() const
+{
+    // AString
+    {
+        // Take note of memory state before
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        AString str( "String" );
+        str.ClearAndFreeMemory();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() == 0 );
+
+        // Check 1 alloc occurred but is no longer active
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+    }
+    // AString never used
+    {
+        AString str;
+        str.ClearAndFreeMemory();
+
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() == 0 );
+    }
+    // AStackString
+    {
+        // Take note of memory state before
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        AStackString<> str( "String" );
+        str.ClearAndFreeMemory();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() > 0 ); // Stack reservation can be retained
+
+        // Check no allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+    }
+    // AStackString never used
+    {
+        AStackString<> str;
+        str.ClearAndFreeMemory();
+
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() > 0 ); // Stack reservation can be retained
+    }
+    // AStackString overflows reservation
+    {
+        // Take note of memory state before
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        AStackString<> str;
+        str.SetLength( 1024 );
+        str.ClearAndFreeMemory();
+        TEST_ASSERT( str.IsEmpty() );
+        TEST_ASSERT( str.GetLength() == 0 );
+        TEST_ASSERT( AString::StrLen( str.Get() ) == 0 );
+        TEST_ASSERT( str.GetReserved() == 0 ); // Stack reservation can't be retained
+
+        // Check 1 alloc occurred but is no longer active
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+    }
+}
+
 // Compare
 //------------------------------------------------------------------------------
 void TestAString::Compare() const
@@ -283,20 +420,49 @@ void TestAString::Concatenation() const
     {
         AString a, b;
         a += b;
+        TEST_ASSERT( a.IsEmpty() );
     }
     {
         AString a;
         const char * b = "";
         a += b;
+        TEST_ASSERT( a.IsEmpty() );
     }
     {
         AString a, b;
         a.Append( b );
+        TEST_ASSERT( a.IsEmpty() );
     }
     {
         AString a;
         const char * b = "";
-        a.Append( b, 0 );
+        a.Append( b, static_cast<size_t>(0) );
+        TEST_ASSERT( a.IsEmpty() );
+    }
+    {
+        AString a;
+        const char * b = "";
+        a.Append( b, b );
+        TEST_ASSERT( a.IsEmpty() );
+    }
+
+    // Non-empty strings
+    {
+        AStackString<> a;
+        const char * b = "hello";
+        a.Append( b, AString::StrLen( b ) );
+        TEST_ASSERT( a == "hello" );
+    }
+    {
+        AStackString<> a;
+        const char * b = "hello";
+        a.Append( b, b + AString::StrLen( b ) );
+        TEST_ASSERT( a == "hello" );
+    }
+    {
+        AStackString<> a;
+        a.Append( AStackString<>( "hello" ) );
+        TEST_ASSERT( a == "hello" );
     }
 }
 

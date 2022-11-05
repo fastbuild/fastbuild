@@ -109,7 +109,11 @@ bool MultiBuffer::ExtractFile( size_t index, const AString& fileName ) const
     uint32_t numFiles;
     m_ReadStream->Read( numFiles );
 
-    ASSERT( index <= numFiles );
+    // Caller and MultiBuffer are out of sync
+    if ( index >= numFiles )
+    {
+        return false;
+    }
 
     // work out data offset from file sizes
     uint64_t offset = sizeof( uint32_t ) + ( sizeof( uint64_t ) * numFiles );

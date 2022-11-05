@@ -57,6 +57,7 @@ public:
     void                        Assign( const AString & string );
     void                        Assign( AString && string );
     void                        Clear();
+    void                        ClearAndFreeMemory();
     void                        SetReserved( size_t capacity );
 
     // manually set length - NOTE: caller is responsible for making string contents valid
@@ -68,6 +69,7 @@ public:
     AString &                   operator += ( const AString & string );
     AString &                   Append( const AString & string ) { return this->operator +=( string ); }
     AString &                   Append( const char * string, size_t len );
+    AString &                   Append( const char * start, const char * end ) { return Append( start, static_cast<size_t>( end - start ) ); }
     AString &                   AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // comparison
@@ -164,6 +166,13 @@ public:
     [[nodiscard]] static size_t StrLen( const char * string );
     [[nodiscard]] static int32_t    StrNCmp( const char * a, const char * b, size_t num );
     [[nodiscard]] static int32_t    StrNCmpI( const char * a, const char * b, size_t num );
+
+    // Character helpers
+    [[nodiscard]] static bool   IsWhitespace( char c )      { return ( ( c == ' ' ) || ( c == '\r' ) || ( c == '\n' ) || ( c == '\t' ) ); }
+    [[nodiscard]] static bool   IsUppercaseLetter( char c ) { return ( ( c >= 'A' ) && ( c <= 'Z' ) ); }
+    [[nodiscard]] static bool   IsLowercaseLetter( char c ) { return ( ( c >= 'a' ) && ( c <= 'z' ) ); }
+    [[nodiscard]] static bool   IsLetter( char c )          { return IsUppercaseLetter( c ) || IsLowercaseLetter( c ); }
+    [[nodiscard]] static bool   IsNumber( char c )          { return ( ( c >= '0' ) && ( c <= '9' ) ); }
 
     // range iteration
     [[nodiscard]]               char * begin()              { return m_Contents; }

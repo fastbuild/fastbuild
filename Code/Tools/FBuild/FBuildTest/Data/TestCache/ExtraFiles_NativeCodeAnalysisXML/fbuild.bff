@@ -1,0 +1,14 @@
+//
+// Test extra cached file: .nativecodeanalysis.xml
+//
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCache/ExtraFiles_NativeCodeAnalysisXML/file.cpp' }
+    .CompilerOutputPath = '$Out$/Test/Cache/ExtraFiles_NativeCodeAnalysisXML/'
+    .CompilerOptions    + ' /analyze'
+}

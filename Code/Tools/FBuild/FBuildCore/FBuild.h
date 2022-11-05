@@ -23,7 +23,7 @@ class Client;
 class Dependencies;
 class FileStream;
 class ICache;
-class IOStream;
+class MemoryStream;
 class JobQueue;
 class Node;
 class NodeGraph;
@@ -48,7 +48,7 @@ public:
 
     // after a build we can store progress/parsed rules for next time
     bool SaveDependencyGraph( const char * nodeGraphDBFile ) const;
-    void SaveDependencyGraph( IOStream & memorySteam, const char* nodeGraphDBFile ) const;
+    void SaveDependencyGraph( MemoryStream & memorySteam, const char* nodeGraphDBFile ) const;
 
     const FBuildOptions & GetOptions() const { return m_Options; }
 

@@ -473,6 +473,31 @@ void AString::Clear()
     m_Length = 0;
 }
 
+// ClearAndFreeMemory
+//------------------------------------------------------------------------------
+void AString::ClearAndFreeMemory()
+{
+    if ( MemoryMustBeFreed() )
+    {
+        // Free memory that was allocated
+        FREE( m_Contents );
+
+        // Reset to new empty string state
+        m_Contents = const_cast<char*>( s_EmptyString );
+        m_Length = 0;
+        m_ReservedAndFlags = 0;
+    }
+    else
+    {
+        // Pointing to unfreeable memory so just reset state
+        if ( m_Contents != const_cast<char*>( s_EmptyString ) )
+        {
+            m_Contents[ 0 ] = '\000';
+        }
+        m_Length = 0;
+    }
+}
+
 // SetReserved
 //------------------------------------------------------------------------------
 void AString::SetReserved( size_t capacity )

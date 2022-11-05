@@ -24,7 +24,7 @@ public:
 
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
-    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const override;
+    virtual bool DetermineNeedToBuildStatic() const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     const FileNode * GetExecutable() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }

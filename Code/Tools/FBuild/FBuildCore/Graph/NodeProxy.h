@@ -18,7 +18,8 @@ public:
     virtual bool IsAFile() const override;
 
 protected:
-    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const override;
+    virtual bool DetermineNeedToBuildStatic() const override;
+    virtual bool DetermineNeedToBuildDynamic() const override;
 };
 
 //------------------------------------------------------------------------------

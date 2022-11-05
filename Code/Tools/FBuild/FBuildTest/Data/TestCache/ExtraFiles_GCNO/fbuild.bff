@@ -1,0 +1,29 @@
+//
+// Test extra cached file: .gcno
+//
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    #if __WINDOWS__
+        // Use Clang in Clang mode (clang.exe not clang-cl.exe)
+        Using( .ToolChain_ClangNonCL_Windows )
+    #endif
+    #if __LINUX__
+        Using( .ToolChain_GCC_Linux )
+    #endif
+    #if __OSX__
+        #if __ARM64__
+            Using( .ToolChain_Clang_ARMOSX )
+        #else
+            Using( .ToolChain_Clang_OSX )
+        #endif
+    #endif
+
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCache/ExtraFiles_GCNO/file.cpp' }
+    .CompilerOutputPath = '$Out$/Test/Cache/ExtraFiles_GCNO/'
+    .CompilerOptions    + ' --coverage'
+}

@@ -28,6 +28,44 @@
 
 
 <div class='newsitemheader'>
+    v1.08&nbsp;<font color='#bbbbbb'>(5th-Nov-2022)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Harden FBuildWorker against corrupt data from old clients</li>
+            <li>Prevent toolchain synchronization getting stuck if a worker disconnects before synchronizing the manifest</ul>
+        </ul>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Clang/GCC gcov disables distributed compilation (results are not usable if built remotely)</li>
+            <li>[Windows] Consider remote error 0x4 (ERROR_TOO_MANY_OPEN_FILES) a system failure</li>
+            <li>Modify remote errors that are retried in <a href="options.html#distverbose">-distverbose</a> output to stop MSBuild considering them as failures</li>
+        </ul>
+        <li>Caching</li>
+        <ul>
+            <li>Clang/GCC gcov files (.gcno) are cached when used</li>
+            <li>[Windows] Working dir casing normalized to remove variances in cache key generation</li>
+        </ul>
+        <li>Improve dependency graph traversal performance</li>
+        <li>Optimize dependency graph traversal by eliminating redundant checks</li>
+        <li>Improve database corruption detection to handle things like power loss</li>
+        <li>Improve node graph traversal by avoiding unnecessary cyclic dependency checks</li>
+        <li>RemoveDir can use .RemoveExcludeFiles to exclude specific files (Thanks to Domain)</li>
+        <li>[Windows] Working dir casing normalized avoiding portability issues with Clang</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.07&nbsp;<font color='#bbbbbb'>(31st-July-2022)</font>
 </div>
 <div class='newsitembody'>

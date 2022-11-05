@@ -275,41 +275,76 @@ void ToolManifest::SerializeForRemote( IOStream & ms ) const
 
 // DeserializeFromRemote
 //------------------------------------------------------------------------------
-void ToolManifest::DeserializeFromRemote( IOStream & ms )
+bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 {
-    ms.Read( m_ToolId );
-    ms.Read( m_MainExecutableRootPath );
+    // NOTE: In clients prior to v1.07 a bug could cause ToolManifests to be
+    //       corrupt so we try to read this stream in a way that allows us to
+    //       detect this corruption.
+    // If we ever break protocol compatibility we can simplify this code.
+    // Any replacement packet integrity validation should be not specific to
+    // these packets and belongs at a higher level.
+    static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
 
+    // Should not be called more than once
     ASSERT( m_Files.IsEmpty() );
+    ASSERT( m_CustomEnvironmentVariables.IsEmpty() );
 
+    // Read header info
+    uint64_t toolId;
+    AStackString<> mainExecutablePath;
     uint32_t numFiles( 0 );
-    ms.Read( numFiles );
-    m_Files.SetCapacity( numFiles );
+    if ( !ms.Read( toolId ) ||
+         !ms.Read( mainExecutablePath ) ||
+         !ms.Read( numFiles ) ||
+        ( AString::StrLen( mainExecutablePath.Get() ) != mainExecutablePath.GetLength() ) ||         
+        ( numFiles == 0 ) ||        // Must have at least 1 file
+        ( toolId != m_ToolId ) )    // Must have correct toolId
+    {
+        return false; // Corrupt stream (likely old broken worker)
+    }
 
+    // Read file info
+    Array<ToolManifestFile> files;
+    files.SetCapacity( numFiles );
     for ( size_t i=0; i<(size_t)numFiles; ++i )
     {
         AStackString<> name;
         uint64_t timeStamp( 0 );
         uint32_t hash( 0 );
         uint32_t uncompressedContentSize( 0 );
-        ms.Read( name );
-        ms.Read( timeStamp );
-        ms.Read( hash );
-        ms.Read( uncompressedContentSize );
-        m_Files.EmplaceBack( name, timeStamp, hash, uncompressedContentSize );
+        if ( !ms.Read( name ) ||
+             !ms.Read( timeStamp ) ||
+             !ms.Read( hash ) ||
+             !ms.Read( uncompressedContentSize ) ||
+            ( AString::StrLen( name.Get() ) != name.GetLength() ) ||
+            ( timeStamp == 0 ) ||
+            ( hash == 0 ) )
+        {
+            return false; // Corrupt stream (likely old broken worker)
+        }
+        files.EmplaceBack( name, timeStamp, hash, uncompressedContentSize );
     }
 
-    ASSERT( m_CustomEnvironmentVariables.IsEmpty() );
-
+    // Custom env vars
     uint32_t numEnvVars( 0 );
     ms.Read( numEnvVars );
-    m_CustomEnvironmentVariables.SetCapacity( numEnvVars );
+    Array<AString> customEnvironmentVariables;
+    customEnvironmentVariables.SetCapacity( numEnvVars );
     for ( size_t i = 0; i < (size_t)numEnvVars; ++i )
     {
-        AStackString<> envVar;
-        ms.Read( envVar );
-        m_CustomEnvironmentVariables.Append( envVar );
+        AString envVar;
+        if ( !ms.Read( envVar ) ||
+             ( AString::StrLen( envVar.Get() ) != envVar.GetLength() ) )
+        {
+            return false; // Corrupt stream (likely old broken worker)
+        }
+        customEnvironmentVariables.EmplaceBack( Move( envVar ) );
     }
+
+    // Deserialization is complete so we can keep what we've read
+    m_MainExecutableRootPath = mainExecutablePath;
+    m_Files = Move( files );
+    m_CustomEnvironmentVariables = Move( customEnvironmentVariables );
 
     // determine if any files are remaining from a previous run
     size_t numFilesAlreadySynchronized = 0;
@@ -438,6 +473,8 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     {
         m_Synchronized = true;
     }
+
+    return true; // Deserialization ok
 }
 
 // GetSynchronizationStatus
@@ -474,6 +511,15 @@ void ToolManifest::CancelSynchronizingFiles()
 {
     MutexHolder mh( m_Mutex );
 
+    // We can cancel synchronization before receiving the manifest which means
+    // we don't know how many files we have
+    if ( m_Files.IsEmpty() )
+    {
+        return;
+    }
+
+    // If we have syncrhonized the manifest then it should be impossible to
+    // get here unless we're cancelling synchronization of some files
     bool atLeastOneFileCancelled = false;
 
     // is completely synchronized?
@@ -532,7 +578,10 @@ const void * ToolManifestFile::GetFileData( size_t & outDataSize ) const
 
 // ReceiveFileData
 //------------------------------------------------------------------------------
-bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t & dataSize )
+bool ToolManifest::ReceiveFileData( uint32_t fileId,
+                                    const void * data,
+                                    size_t & dataSize,
+                                    bool & outCorruptData )
 {
     MutexHolder mh( m_Mutex );
 
@@ -547,13 +596,25 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     ASSERT( f.GetSyncState() == ToolManifestFile::SYNCHRONIZING );
 
     // do decompression
-    if ( Compressor::IsValidData( data, dataSize ) == false )
+    outCorruptData = false;
+    Compressor c;
+    if ( ( Compressor::IsValidData( data, dataSize ) == false ) ||
+         ( c.Decompress( data ) == false ) )
     {
-        FLOG_WARN( "Invalid data received for fileId %u", fileId );
+        // NOTE: In clients prior to v1.07 a bug could cause ToolFiles to be
+        //       corrupt so we try to gracefully handle corrupt data.
+        // If we ever break protocol compatibility we can simplify this code.
+        // Any replacement packet integrity validation should be not specific to
+        // these packets and belongs at a higher level.
+        static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
+        
+        // When running tests we should be using latest protocols which don't
+        // have the bug anymore so this should never happen
+        ASSERT( false && "Corrupt file data" ); // Catch errors during development
+
+        outCorruptData = true;
         return false;
     }
-    Compressor c;
-    VERIFY( c.Decompress( data ) );
     const void * uncompressedData = c.GetResult();
     const size_t uncompressedDataSize = c.GetResultSize();
 

@@ -1041,6 +1041,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             flags.Set( CompilerFlags::FLAG_DIAGNOSTICS_COLOR_AUTO );
         }
 
+        bool coverage = false;
+
         Array< AString > tokens;
         args.Tokenize( tokens );
         const AString * const end = tokens.End();
@@ -1055,6 +1057,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             else if ( token.BeginsWith( "-fdiagnostics-color" ) || token == "-fno-diagnostics-color" )
             {
                 flags.Clear( CompilerFlags::FLAG_DIAGNOSTICS_COLOR_AUTO );
+            }
+            else if ( token == "-ftest-coverage" )
+            {
+                flags.Set( CompilerFlags::FLAG_GCOV_COVERAGE );
+            }
+            else if ( token == "-fno-test-coverage" )
+            {
+                flags.Clear( CompilerFlags::FLAG_GCOV_COVERAGE );
+            }
+            else if ( token == "--coverage" )
+            {
+                // --coverage implies -ftest-coverage.
+                // But unlike -ftest-coverage it can't be reverted with -fno-test-coverage, so we need to handle it after the loop.
+                coverage = true;
             }
             else if ( token.BeginsWith( "-werror" ) )
             {
@@ -1076,6 +1092,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                 }
             }
         }
+
+        if ( coverage )
+        {
+            flags.Set( CompilerFlags::FLAG_GCOV_COVERAGE );
+        }
     }
 
     // check for cacheability/distributability for non-MSVC
@@ -1085,10 +1106,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
          flags.IsCodeWarriorWii() ||
          flags.IsGreenHillsWiiU() )
     {
-        // creation of the PCH must be done locally to generate a usable PCH
-        // Objective C/C++ cannot be distributed
-        // Source mappings are not currently forwarded so can only compiled locally
-        if ( !creatingPCH && !objectiveC && !hasSourceMapping )
+        // * Creation of the PCH must be done locally to generate a usable PCH
+        // * Objective C/C++ cannot be distributed
+        // * Source mappings are not currently forwarded so can only compiled locally
+        // * Remote compilation with Gcov coverage is disabled as it has some issues:
+        //   1. .gcno files will contain incorrect build root path (working directory on the worker).
+        //   2. Object files compiled remotely will create .gcda files in the directory where these object files were stored on the worker.
+        if ( !creatingPCH && !objectiveC && !hasSourceMapping && !flags.IsUsingGcovCoverage() )
         {
             if ( isDistributableCompiler )
             {
@@ -1267,6 +1291,18 @@ void ObjectNode::GetNativeAnalysisXMLPath( AString& outXMLFileName ) const
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
     outXMLFileName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
     outXMLFileName += ".nativecodeanalysis.xml";
+}
+
+// GetGCNOPath
+//------------------------------------------------------------------------------
+void ObjectNode::GetGCNOPath( AString & gcnoFileName ) const
+{
+    ASSERT( IsUsingGcovCoverage() );
+
+    // TODO:B The .gcno path can be manually specified with -fprofile-note=
+    const char * extPos = m_Name.FindLast( '.' ); // Only last extension removed
+    gcnoFileName.Assign( m_Name.Get(), extPos ? extPos : m_Name.GetEnd() );
+    gcnoFileName += ".gcno";
 }
 
 // GetObjExtension
@@ -1599,21 +1635,16 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         return;
     }
 
-    // Only the MSVC compiler creates extra objects
     const ObjectNode * objectNode = node->CastTo< ObjectNode >();
-    if ( objectNode->m_CompilerFlags.IsMSVC() == false )
-    {
-        return;
-    }
 
-    // Precompiled Headers have an extra file
-    if ( objectNode->m_CompilerFlags.IsCreatingPCH() )
+    // MSVC precompiled headers have an extra file
+    if ( objectNode->m_CompilerFlags.IsCreatingPCH() && objectNode->m_CompilerFlags.IsMSVC() )
     {
         // .pch.obj
         outFileNames.Append( m_PCHObjectFileName );
     }
 
-    // Static analysis adds extra files
+    // MSVC static analysis adds extra files
     if ( objectNode->m_CompilerFlags.IsUsingStaticAnalysisMSVC() )
     {
         if ( objectNode->m_CompilerFlags.IsCreatingPCH() )
@@ -1637,6 +1668,15 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         AStackString<> xmlFileName;
         GetNativeAnalysisXMLPath( xmlFileName );
         outFileNames.Append( xmlFileName );
+    }
+
+    // Gcov coverage adds extra file
+    if ( objectNode->m_CompilerFlags.IsUsingGcovCoverage() )
+    {
+        // .gcno
+        AStackString<> gcnoFileName;
+        GetGCNOPath( gcnoFileName );
+        outFileNames.Append( gcnoFileName );
     }
 }
 
@@ -2376,7 +2416,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // be 1. There seems to be no definitive way to differentiate this from
         // a process exiting with return code 1, so we default to considering it a
         // system failure, unless we can detect some specific situations.
-        if ( result == 0x1 )
+        if ( result == 0x1 ) // ERROR_INVALID_FUNCTION
         {
             bool treatAsSystemError = true;
 
@@ -2393,6 +2433,13 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 job->OnSystemError(); // task will be retried on another worker
                 return;
             }
+        }
+
+        // This error was observed remotely without a clear cause
+        if ( result == 0x4 ) // ERROR_TOO_MANY_OPEN_FILES
+        {
+            job->OnSystemError(); // task will be retried on another worker
+            return;
         }
 
         // If DLLs are not correctly sync'd, add an extra message to help the user

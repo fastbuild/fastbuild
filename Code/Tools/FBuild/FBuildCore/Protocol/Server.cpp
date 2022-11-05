@@ -151,7 +151,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
         const bool found = m_ClientList.FindAndErase( cs );
         ASSERT( found ); (void)found;
 
-        // because we cancelled manifest syncrhonization, we need to check if other
+        // because we cancelled manifest synchronization, we need to check if other
         // connections are waiting for the same manifest
         for ( ClientState * otherCS : m_ClientList )
         {
@@ -297,6 +297,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     ClientState * cs = (ClientState *)connection->GetUserData();
     MutexHolder mh( cs->m_Mutex );
     cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
+    cs->m_ProtocolVersionMinor = msg->GetProtocolVersionMinor();
     cs->m_HostName = msg->GetHostName();
 }
 
@@ -356,6 +357,8 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
             if ( manifest )
             {
                 job->SetToolManifest( manifest );
+
+                // Is tool fully synchronized?
                 if ( manifest->IsSynchronized() )
                 {
                     // we have all the files - we can do the job
@@ -363,8 +366,35 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                     return;
                 }
 
-                // missing some files - request them
-                RequestMissingFiles( connection, manifest );
+                // If we have an associated connection, we're already synchronizing
+                // on that connection and don't need to do anything.
+                // That may be a connection to another client or to the same client
+                const bool isSynchronizing = ( manifest->GetUserData() != nullptr );
+                if ( isSynchronizing )
+                {
+                    // We just need to wait for syncrhonization to complete
+                }
+                else
+                {
+                    // Take ownership of toolchain
+                    manifest->SetUserData( (void *)connection );                    
+                    
+                    const bool hasManifest = ( manifest->GetFiles().IsEmpty() == false );
+                    if ( hasManifest )
+                    {
+                        // Missing some files - request any not already being sync'd
+                        RequestMissingFiles( connection, manifest );
+                    }
+                    else
+                    {
+                        // Manifest was not sync'd. This can happen if disconnection
+                        // occurs before the manifest was received.
+                   
+                        // request manifest
+                        const Protocol::MsgRequestManifest reqMsg( toolId );
+                        reqMsg.Send( connection );
+                    }
+                }
             }
             else
             {
@@ -372,6 +402,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
 
                 // create manifest object
                 manifest = FNEW( ToolManifest( toolId ) );
+                manifest->SetUserData( (void *)connection ); // This connection owns synchronization
                 job->SetToolManifest( manifest );
                 m_Tools.Append( manifest );
 
@@ -401,7 +432,33 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
         ToolManifest ** found = m_Tools.FindDeref( toolId );
         ASSERT( found );
         manifest = *found;
-        manifest->DeserializeFromRemote( ms );
+        if ( manifest->DeserializeFromRemote( ms ) == false )
+        {
+            // NOTE: In clients prior to v1.07 a bug could cause MsgManifest messages to be
+            //       corrupt and for deserialization to corrupt internal state.
+            //       To maintain backwards compatibility we detect this case and disconnect
+            //       the worker (which can retry connecting).
+            //       The bug has been fixed so should not happen with latest code (only
+            //       when dealing with backwards compatibility with old workers)
+            // If we ever break protocol compatibility, we can remove special handling
+            static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
+            
+            // This should not happen with latest code so we want to catch that when
+            // debugging
+            ASSERT( false && "MsgManifest corrupt" );
+
+            // Disconnect to handle old workers misbehaving
+            ClientState * cs = (ClientState *)connection->GetUserData();
+            AStackString<> remoteAddr;
+            TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
+            FLOG_WARN( "Disconnecting '%s' (%s) due to corrupt MsgManifest (Client protocol %u.%u)\n",
+                       remoteAddr.Get(),
+                       cs->m_HostName.Get(),
+                       Protocol::PROTOCOL_VERSION_MAJOR,
+                       cs->m_ProtocolVersionMinor );
+            Disconnect( connection );
+            return;
+        }
     }
 
     // manifest has checked local files, from previous sessions and may
@@ -433,10 +490,40 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
         manifest = *found;
         ASSERT( manifest->GetUserData() == connection ); (void)connection;
 
-        if ( manifest->ReceiveFileData( fileId, payload, payloadSize ) == false )
+        bool corruptData = false;
+        if ( manifest->ReceiveFileData( fileId, payload, payloadSize, corruptData ) == false )
         {
-            // something went wrong storing the file
-            FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n", fileId, toolId );
+            if ( corruptData )
+            {
+                // NOTE: In clients prior to v1.07 a bug could cause MsgManifest messages to be
+                //       corrupt and for deserialization to corrupt internal state.
+                //       To maintain backwards compatibility we detect this case and disconnect
+                //       the worker (which can retry connecting).
+                //       The bug has been fixed so should not happen with latest code (only
+                //       when dealing with backwards compatibility with old workers)
+                // If we ever break protocol compatibility, we can remove special handling
+                static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
+            
+                // This should not happen with latest code so we want to catch that when
+                // debugging
+                ASSERT( false && "MsgFile corrupt" );
+
+                // Disconnect to handle old workers misbehaving
+                ClientState * cs = (ClientState *)connection->GetUserData();
+                AStackString<> remoteAddr;
+                TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
+                FLOG_WARN( "Disconnecting '%s' (%s) due to corrupt MsgFile (Client protocol %u.%u)\n",
+                           remoteAddr.Get(),
+                           cs->m_HostName.Get(),
+                           Protocol::PROTOCOL_VERSION_MAJOR,
+                           cs->m_ProtocolVersionMinor );
+            }
+            else
+            {
+                // something went wrong storing the file
+                FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n", fileId, toolId );
+            }
+
             Disconnect( connection );
             return;
         }

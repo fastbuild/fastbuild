@@ -47,6 +47,7 @@ private:
     void TestZiDebugFormat() const;
     void TestZiDebugFormat_Local() const;
     void D8049_ToolLongDebugRecord() const;
+    void CleanMessageToPreventMSBuildFailure() const;
 
     void TestHelper( const char * target,
                      uint32_t numRemoteWorkers,
@@ -78,6 +79,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
         REGISTER_TEST( TestZiDebugFormat_Local )
         REGISTER_TEST( D8049_ToolLongDebugRecord )
     #endif
+    REGISTER_TEST( CleanMessageToPreventMSBuildFailure )
 REGISTER_TESTS_END
 
 // Test
@@ -503,6 +505,86 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     s.Listen( Protocol::PROTOCOL_TEST_PORT );
 
     TEST_ASSERT( fBuild.Build( "D8049" ) );
+}
+
+//------------------------------------------------------------------------------
+void TestDistributed::CleanMessageToPreventMSBuildFailure() const
+{
+    // Error should be indentical except for a single remove colon
+    {
+        const AStackString<> in( "C:\\Windows\\TEMP\\.fbuild.tmp\\0x00000000\\"
+                                 "core_1018\\F436D72E\\Module.MergeActors.cpp :"
+                                 " fatal error C1083: Cannot open compiler intermediate"
+                                 " file: 'C:\\Windows\\TEMP\\_CL_7a0408f6in':"
+                                 " No such file or directory" );
+        AStackString<> expectedOut( in );
+        TEST_ASSERT( expectedOut.Replace( "fatal error C1083:", "fatal error C1083 " ) == 1 );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == expectedOut );
+    }
+
+    // String may contain multiple lines
+    {
+        const AStackString<> in( "PROBLEM: C:\\Users\\Franta\\AppData\\Local\\Temp\\.fbuild.tmp\\0x96c448b7\\core_1001\\ErrorWithPercent.obj\n"
+                                 "ErrorWithPercent.cpp\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,11): error C3193: '%': requires '/clr' or '/ZW' command line option\n"
+                                 "    int %s%s%s%s\n"
+                                 "          ^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,11): error C2143: syntax error: missing ';' before '%'\n"
+                                 "    int %s%s%s%s\n"
+                                 "          ^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,11): error C2530: 's': references must be initialized\n"
+                                 "    int %s%s%s%s\n"
+                                 "          ^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,13): error C3071: operator '%' can only be applied to an instance of a ref class or a value-type\n"
+                                 "    int %s%s%s%s\n"
+                                 "            ^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(7,1): error C2143: syntax error: missing ';' before '}'\n"
+                                 "}\n"
+                                 "^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,15): warning C4552: '%': result of expression not used\n"
+                                 "    int %s%s%s%s\n"
+                                 "              ^" );
+        AStackString<> expectedOut( in );
+        TEST_ASSERT( expectedOut.Replace( "error C3193:", "error C3193 " ) == 1 );
+        TEST_ASSERT( expectedOut.Replace( "error C2143:", "error C2143 " ) == 2 );
+        TEST_ASSERT( expectedOut.Replace( "error C2530:", "error C2530 " ) == 1 );
+        TEST_ASSERT( expectedOut.Replace( "error C3071:", "error C3071 " ) == 1 );
+        TEST_ASSERT( expectedOut.Replace( "warning C4552:", "warning C4552 " ) == 1 );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == expectedOut );
+    }
+
+    // Make sure it doesn't fail on other input (should leave string alone)
+    {
+        // empty
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( AString::GetEmpty(), out );
+        TEST_ASSERT( out.IsEmpty() );
+    }
+    {
+        // path
+        const AStackString<> in( "C:\\Windows\\TEMP\\_CL_7a0408f6in" );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == in );
+    }
+    {
+        // error but not in expected format
+        const AStackString<> in( "error C1083 and some other bits" );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == in );
+    }
+    {
+        // keyword only
+        const AStackString<> in( "error" );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == in );
+    }
 }
 
 //------------------------------------------------------------------------------

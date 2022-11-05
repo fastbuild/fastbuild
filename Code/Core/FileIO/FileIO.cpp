@@ -7,18 +7,22 @@
 #include "FileStream.h"
 
 // Core
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Env/ErrorFormat.h"
+#if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h"
+#endif
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
 #include "Core/Math/Conversions.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Time/Time.h"
 #include "Core/Time/Timer.h"
 
 // system
 #if defined( __WINDOWS__ )
-    #include "Core/Env/WindowsHeader.h"
-    #include "Core/Time/Time.h"
+    #include <shellapi.h>
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <dirent.h>
@@ -608,6 +612,85 @@
     AStackString<> pathOnly( name.Get(), lastSlash );
     return EnsurePathExists( pathOnly );
 }
+
+// NormalizeWindowsPathCasing
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    /*static*/ bool FileIO::NormalizeWindowsPathCasing( const AString & path, AString & outNormalizedPath )
+    {
+        // Take a full Windows path and fix the casing so that:
+        // a) the drive letter is always upper-case
+        // b) the components of the path are in the actual case of the parts
+        //    in the file system
+        //
+        // NOTE: We don't want this to resolve substs because some uses
+        //       of subst are specifically to normalize paths between machines
+        //
+        // Only full windows paths in the simple X:\blah format are supported
+        if ( ( path.GetLength() < 3 ) ||
+             !IsValidDriveLetter( path[ 0 ] ) ||
+             ( path[ 1 ] != ':' ) ||
+             ( path[ 2 ] != '\\' ) )
+        {
+            return false;
+        }
+
+        // Keep drive letter and colon but normalize to uppercase
+        outNormalizedPath.Append( path.Get(), 3 );
+        outNormalizedPath.ToUpper(); // Drive letter
+
+        // Process the remaining directories
+        const char * pos = path.Get() + 3;
+        while ( pos < path.GetEnd() )
+        {
+            // Find end of current segment (next slash in either direction or end of path)
+            const char* nextSlash = path.Find( '\\', pos );
+            nextSlash = nextSlash ? nextSlash : path.Find( '/', pos );
+
+            // Get the actual name for this part of the path
+            AStackString<> pathSoFar( outNormalizedPath );
+            if ( nextSlash )
+            {
+                pathSoFar.Append( pos, static_cast<uint32_t>( nextSlash - pos + 1 ) ); // Include slash
+            }
+            else
+            {
+                pathSoFar += pos;
+            }
+            SHFILEINFOA info;
+            memset( &info, 0, sizeof(info) );
+            if( SHGetFileInfoA( pathSoFar.Get(), 0, &info, sizeof(info), SHGFI_DISPLAYNAME ) )
+            {
+                // Path exists, so use canonical name
+                outNormalizedPath += info.szDisplayName;
+                pos = nextSlash ? nextSlash : path.GetEnd();
+
+                // Add slash between components
+                if ( pos < path.GetEnd() )
+                {
+                    outNormalizedPath += '\\';
+                    ++pos; // Skip over component
+                }
+                continue; // Keep processing path
+            }
+            
+            // Path doesn't exist so keep rest of path as-is
+            outNormalizedPath += pos;
+            break;
+        }
+
+        return true;
+    }
+#endif
+
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    /*static*/ bool FileIO::IsValidDriveLetter( char c )
+    {
+        return ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
+               ( ( c >= 'a' ) && ( c <= 'z' ) );
+    }
+#endif
 
 // GetDirectoryIsMountPoint
 //------------------------------------------------------------------------------

@@ -32,9 +32,17 @@ NodeProxy::~NodeProxy() = default;
     return false;
 }
 
-// DetermineNeedToBuild
+// DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
-/*virtual*/ bool NodeProxy::DetermineNeedToBuild( const Dependencies & /*deps*/ ) const
+/*virtual*/ bool NodeProxy::DetermineNeedToBuildStatic() const
+{
+    ASSERT( false ); // should never call this
+    return false;
+}
+
+// DetermineNeedToBuildDynamic
+//------------------------------------------------------------------------------
+/*virtual*/ bool NodeProxy::DetermineNeedToBuildDynamic() const
 {
     ASSERT( false ); // should never call this
     return false;

@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 
 // Core
+#include "Core/FileIO/FileIO.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
@@ -48,6 +49,10 @@ private:
     void Analyze_MSVC_WarningsOnly_WriteFromDist() const;
     void Analyze_MSVC_WarningsOnly_ReadFromDist() const;
 
+    void ExtraFiles( const char * bffPath, const char * extraFilePath ) const;
+    void ExtraFiles_NativeCodeAnalysisXML() const;
+    void ExtraFiles_GCNO() const;
+
     // Helpers
     void CheckForDependencies( const FBuildForTest & fBuild, const char * const files[], size_t numFiles ) const;
     void LightCache_IncludeUsingUndefinedMacros( const char * consfigFile,
@@ -65,7 +70,9 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( Read )
     REGISTER_TEST( ReadWrite )
     REGISTER_TEST( ConsistentCacheKeysWithDist )
+    REGISTER_TEST( ExtraFiles_GCNO )
     #if defined( __WINDOWS__ )
+        REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
         REGISTER_TEST( LightCache_IncludeUsingMacro )
         REGISTER_TEST( LightCache_IncludeUsingMacro2 )
         REGISTER_TEST( LightCache_IncludeUsingMacro3 )
@@ -1042,6 +1049,67 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
     #if defined( _MSC_VER ) && ( _MSC_VER >= 1910 ) // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
+}
+
+// ExtraFiles
+//------------------------------------------------------------------------------
+void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_ConfigFile = bffPath;
+
+    // Do first build writing to cache
+    {
+        options.m_UseCacheRead = false;
+        options.m_UseCacheWrite = true;
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Ensure cache was written to
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed );
+    }
+
+    // Remove the extra file to ensure that it will be restored from cache and not be left over from the first build.
+    TEST_ASSERT( FileIO::FileDelete( extraFilePath ) );
+
+    // Do second build reading from cache
+    {
+        options.m_UseCacheRead = true;
+        options.m_UseCacheWrite = false;
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Ensure cache was read from
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == 0 );
+    }
+
+    // Check that extra file was restored from cache.
+    TEST_ASSERT( FileIO::FileExists( extraFilePath ) );
+}
+
+// ExtraFiles_NativeCodeAnalysisXML
+//------------------------------------------------------------------------------
+void TestCache::ExtraFiles_NativeCodeAnalysisXML() const
+{
+    ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_NativeCodeAnalysisXML/fbuild.bff",
+                "../tmp/Test/Cache/ExtraFiles_NativeCodeAnalysisXML/file.nativecodeanalysis.xml" );
+}
+
+// ExtraFiles_GCNO
+//------------------------------------------------------------------------------
+void TestCache::ExtraFiles_GCNO() const
+{
+    ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_GCNO/fbuild.bff",
+                "../tmp/Test/Cache/ExtraFiles_GCNO/file.gcno" );
 }
 
 // CheckForDependencies
