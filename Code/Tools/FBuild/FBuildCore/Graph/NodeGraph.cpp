@@ -551,7 +551,7 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
     // Calculate hash of stream excluding header
     {
         char * data = static_cast<char *>( stream.GetDataMutable() );
-        const char * content = reinterpret_cast<char *>( data + sizeof(NodeGraphHeader) );
+        const char * content = ( data + sizeof(NodeGraphHeader) );
         const size_t remainingSize = ( stream.GetSize() - sizeof(NodeGraphHeader) );
         const uint64_t hash = xxHash::Calc64( content, remainingSize );
 
