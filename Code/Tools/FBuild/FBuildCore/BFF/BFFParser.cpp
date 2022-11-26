@@ -1683,6 +1683,16 @@ void BFFParser::CreateBuiltInVariables()
         BFFStackFrame::SetVarInt( varName, (int32_t)FBUILD_VERSION, &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
+
+    // _FASTBUILD_EXE_PATH_
+    {
+        AStackString<> varName( "._FASTBUILD_EXE_PATH_" );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
+        AStackString<> exeName;
+        Env::GetExePath( exeName );
+        BFFStackFrame::SetVarString( varName, exeName, &m_BaseStackFrame );
+        // TODO:B Add a mechanism to mark variable as read-only
+    }
 }
 
 // SetBuiltInVariable_CurrentBFFDir
