@@ -306,28 +306,17 @@ void TestExec::Build_ExecEnvCommand() const
 {
     // Build execenv.exe
     FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/execenv.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/Environment/execenv.bff";
     options.m_NumWorkerThreads = 1;
 
     FBuild fBuild( options );
-    fBuild.Initialize();
-
-    const AStackString<> execenv( "../tmp/Test/Exec/execenv.exe" );
-
-    // clean up anything left over from previous runs
-    EnsureFileDoesNotExist( execenv );
+    TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "EnvHelperExe" ) );
 
-    // make sure all output is where it is expected
-    EnsureFileExists( execenv );
-
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsNode ( 1,     1,      Node::EXE_NODE );
 
     // Run the execenv command and ensure we get the expected output
