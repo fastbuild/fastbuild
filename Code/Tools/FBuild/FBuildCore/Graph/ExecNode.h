@@ -49,9 +49,11 @@ private:
     bool                m_ExecAlways;
     bool                m_ExecInputPathRecurse;
     Array< AString >    m_PreBuildDependencyNames;
+    Array< AString >    m_Environment;
 
     // Internal State
     uint32_t            m_NumExecInputFiles;
+    mutable const char * m_EnvironmentString        = nullptr;
 };
 
 //------------------------------------------------------------------------------

@@ -27,6 +27,7 @@ private:
     void Build_ExecCommand_MultipleInputChange() const;
     void Build_ExecCommand_UseStdOut() const;
     void Build_ExecCommand_ExpectedFailures() const;
+    void Build_ExecEnvCommand() const;
     void Exclusions() const;
 };
 
@@ -40,6 +41,7 @@ REGISTER_TESTS_BEGIN( TestExec )
     REGISTER_TEST( Build_ExecCommand_MultipleInputChange )
     REGISTER_TEST( Build_ExecCommand_UseStdOut )
     REGISTER_TEST( Build_ExecCommand_ExpectedFailures )
+    REGISTER_TEST( Build_ExecEnvCommand )
     REGISTER_TEST( Exclusions )
 REGISTER_TESTS_END
 
@@ -297,6 +299,39 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     targets.EmplaceBack( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" );
     targets.EmplaceBack( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" );
     TEST_ASSERT( !fBuild.Build( targets ) );
+}
+
+//------------------------------------------------------------------------------
+void TestExec::Build_ExecEnvCommand() const
+{
+    // Build execenv.exe
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/execenv.bff";
+    options.m_NumWorkerThreads = 1;
+
+    FBuild fBuild( options );
+    fBuild.Initialize();
+
+    const AStackString<> execenv( "../tmp/Test/Exec/execenv.exe" );
+
+    // clean up anything left over from previous runs
+    EnsureFileDoesNotExist( execenv );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( "EnvHelperExe" ) );
+
+    // make sure all output is where it is expected
+    EnsureFileExists( execenv );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+
+    // Run the execenv command and ensure we get the expected output
+    TEST_ASSERT( fBuild.Build( "ExecEnvCommandTest" ) );
 }
 
 // Exclusions
