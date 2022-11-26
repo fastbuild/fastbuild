@@ -80,14 +80,16 @@ bool NodeGraphHeader::IsValid() const
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-NodeGraph::NodeGraph()
-: m_AllNodes( 1024, true )
+NodeGraph::NodeGraph( unsigned nodeMapHashBits )
+: m_NodeMapMaxKey( ( 1u << nodeMapHashBits ) - 1u )
+, m_AllNodes( 1024, true )
 , m_NextNodeIndex( 0 )
 , m_UsedFiles( 16, true )
 , m_Settings( nullptr )
 {
-    m_NodeMap = FNEW_ARRAY( Node *[NODEMAP_TABLE_SIZE] );
-    memset( m_NodeMap, 0, sizeof( Node * ) * NODEMAP_TABLE_SIZE );
+    ASSERT( nodeMapHashBits > 0 && nodeMapHashBits < 32 );
+    m_NodeMap = FNEW_ARRAY( Node * [ m_NodeMapMaxKey + 1 ] );
+    memset( m_NodeMap, 0, sizeof( Node * ) * ( m_NodeMapMaxKey + 1 ) );
 
     #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
         // Ensure debug flag doesn't linger between test runs
@@ -1166,7 +1168,7 @@ void NodeGraph::AddNode( Node * node )
 
     // track in NodeMap
     const uint32_t crc = CRC32::CalcLower( node->GetName() );
-    const size_t key = ( crc & 0xFFFF );
+    const size_t key = ( crc & m_NodeMapMaxKey );
     node->m_Next = m_NodeMap[ key ];
     m_NodeMap[ key ] = node;
 
@@ -1605,7 +1607,7 @@ Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
     ASSERT( Thread::IsMainThread() );
 
     const uint32_t crc = CRC32::CalcLower( fullPath );
-    const size_t key = ( crc & 0xFFFF );
+    const size_t key = ( crc & m_NodeMapMaxKey );
 
     Node * n = m_NodeMap[ key ];
     while ( n )
@@ -1637,7 +1639,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 
     uint32_t worstMinDistance = fullPath.GetLength() + 1;
 
-    for ( size_t i = 0 ; i < NODEMAP_TABLE_SIZE ; i++ )
+    for ( size_t i = 0 ; i <= m_NodeMapMaxKey ; i++ )
     {
         for ( Node * node = m_NodeMap[i] ; nullptr != node ; node = node->m_Next )
         {
