@@ -7,6 +7,9 @@
 
 // Core
 #include "Core/Env/Types.h"
+#if defined( __WINDOWS__ )
+    #include <Core/Env/WindowsHeader.h>
+#endif
 #include "Core/Math/Conversions.h"
 #include "Core/Mem/MemDebug.h"
 #include "Core/Mem/MemPoolBlock.h"
@@ -87,7 +90,7 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
         // Print info for eeach bucket
         for ( uint32_t i = 0; i < BUCKET_NUM_BUCKETS; ++i )
         {
-            MemBucket & bucket = s_Buckets[ i ];
+            const MemBucket & bucket = s_Buckets[ i ];
             const uint32_t numLive = bucket.m_NumActiveAllocations; //GetNumActiveAllocations();
             const uint32_t blockSize = bucket.m_BlockSize; //GetBlockSize();
             const uint32_t numPeak = bucket.m_PeakActiveAllocations;
@@ -250,7 +253,7 @@ bool SmallBlockAllocator::Free( void * ptr )
     }
 
     // Grab the next page
-    const uint32_t pageIndex = AtomicIncU32( &SmallBlockAllocator::s_BucketNextFreePageIndex ) - 1;
+    const uint32_t pageIndex = AtomicInc( &SmallBlockAllocator::s_BucketNextFreePageIndex ) - 1;
 
     // Handle edge case where two or more threads try to allocate the last page simultaneously
     if ( pageIndex >= BUCKET_NUM_PAGES )

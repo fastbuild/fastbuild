@@ -94,7 +94,6 @@ Dependencies
 DeploymentFiles
 DeploymentType
 Dest
-DisableDBMigration
 DistributableJobMemoryLimitMiB
 Environment
 ExecAlways
@@ -191,6 +190,7 @@ Projects
 RemoteDebuggerCommand
 RemoteDebuggerCommandArguments
 RemoteDebuggerWorkingDirectory
+RemoveExcludeFiles
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse

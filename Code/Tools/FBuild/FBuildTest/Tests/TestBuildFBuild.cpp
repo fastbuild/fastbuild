@@ -174,7 +174,7 @@ void TestBuildFBuild::DBSavePerformance() const
 
     MemoryStream ms( 64 * 1024 * 1024, 1024 * 1024 );
 
-    Timer t;
+    const Timer t;
     for ( size_t i = 0; i < 100; ++i )
     {
         ms.Reset();

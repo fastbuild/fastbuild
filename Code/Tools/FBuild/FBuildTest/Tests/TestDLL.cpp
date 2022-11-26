@@ -31,10 +31,10 @@ private:
 
     void TestLinkWithCopy() const;
 
-    const char * GetSingleDLLDBFileName() const { return "../../../../tmp/Test/DLL/singledll.fdb"; }
-    const char * GetTwoDLLsDBFileName() const   { return "../../../../tmp/Test/DLL/twodlls.fdb"; }
-    const char * GetDLLWithPCHDBFileName() const { return "../../../../tmp/Test/DLL/dllwithpch.fdb"; }
-    const char * GetExeWithDLLDBFileName() const { return "../../../../tmp/Test/DLL/dllwithexe.fdb"; }
+    const char * GetSingleDLLDBFileName() const { return "../tmp/Test/DLL/singledll.fdb"; }
+    const char * GetTwoDLLsDBFileName() const   { return "../tmp/Test/DLL/twodlls.fdb"; }
+    const char * GetDLLWithPCHDBFileName() const { return "../tmp/Test/DLL/dllwithpch.fdb"; }
+    const char * GetExeWithDLLDBFileName() const { return "../tmp/Test/DLL/dllwithexe.fdb"; }
 };
 
 // Register Tests
@@ -312,8 +312,8 @@ void TestDLL::TestValidExeWithDLL() const
     const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
 
     Process p;
-    p.Spawn( exe.Get(), nullptr, nullptr, nullptr );
-    int ret = p.WaitForExit();
+    TEST_ASSERT( p.Spawn( exe.Get(), nullptr, nullptr, nullptr ) );
+    const int ret = p.WaitForExit();
     TEST_ASSERT( ret == 99 );
 }
 

@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -13,7 +13,7 @@
 
 // TestFileStream
 //------------------------------------------------------------------------------
-class TestFileStream : public UnitTest
+class TestFileStream : public TestGroup
 {
 private:
     DECLARE_TESTS

@@ -4,7 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
@@ -18,7 +18,7 @@ struct FBuildStats;
 
 // FBuildTest
 //------------------------------------------------------------------------------
-class FBuildTest : public UnitTest
+class FBuildTest : public TestGroup
 {
 protected:
     FBuildTest();
@@ -93,6 +93,9 @@ public:
     const Node * GetNode( const char * nodeName ) const;
 
     void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;
+
+    using FBuild::Build;
+    virtual bool Build( Node * nodeToBuild ) override;
 };
 
 //------------------------------------------------------------------------------

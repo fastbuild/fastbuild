@@ -50,6 +50,10 @@ public:
     static bool DirectoryExists( const AString & path );
     static bool EnsurePathExists( const AString & path );
     static bool EnsurePathExistsForFile( const AString & name );
+    #if defined( __WINDOWS__ )
+        [[nodiscard]] static bool NormalizeWindowsPathCasing( const AString & path, AString & outNormalizedPath );
+        [[nodiscard]] static bool IsValidDriveLetter( char c );
+    #endif
 
     #if !defined( __WINDOWS__ )
         static bool GetDirectoryIsMountPoint( const AString & path );

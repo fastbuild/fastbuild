@@ -40,7 +40,7 @@ FunctionIf::FunctionIf()
 {
 
     // Iterate the args
-    BFFTokenRange header( headerRange );
+    const BFFTokenRange header( headerRange );
 
     bool headerResult;    
     if ( !BFFBooleanExpParser::Parse( this, header, headerResult ) )

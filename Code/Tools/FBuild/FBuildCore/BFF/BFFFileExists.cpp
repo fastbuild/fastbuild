@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/ConstMemoryStream.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -49,11 +50,12 @@ void BFFFileExists::Save( IOStream & stream ) const
 
 // Load
 //------------------------------------------------------------------------------
-bool BFFFileExists::Load( IOStream & stream )
+void BFFFileExists::Load( ConstMemoryStream & stream )
 {
     ASSERT( m_FileNames.IsEmpty() ); // Must only be called on empty object
 
-    return ( stream.Read( m_FileNames ) && stream.Read( m_FileExists ) );
+    VERIFY( stream.Read( m_FileNames ) );
+    VERIFY( stream.Read( m_FileExists ) );
 }
 
 // CheckForChanges

@@ -33,7 +33,7 @@ void MemDebug::FillMem( void * ptr, const size_t size, const uint64_t pattern )
     if (remainder)
     {
         const char * src = reinterpret_cast< const char * >( &pattern );
-        char * dst = static_cast< char * >( static_cast< void * >( it ) );
+        char * dst = reinterpret_cast< char * >( it );
         while (remainder)
         {
             *dst = *src;

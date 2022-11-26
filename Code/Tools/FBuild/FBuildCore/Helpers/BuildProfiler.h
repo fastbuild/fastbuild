@@ -8,6 +8,7 @@
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/Types.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
@@ -82,8 +83,13 @@ protected:
     {
     public:
         int64_t             m_Time = 0;
+
+        // Memory
         uint32_t            m_TotalMemoryMiB = 0;
-        uint32_t            m_DistributedMemoryMiB = 0;
+        uint32_t            m_JobMemoryMiB = 0;
+
+        // Network
+        uint16_t            m_NumConnections = 0;
     };
 
     // Track information about workers which performed useful work
@@ -95,7 +101,7 @@ protected:
     };
 
     Mutex                   m_Mutex;
-    volatile bool           m_ThreadExit = false;
+    Atomic<bool>            m_ThreadExit{ false };
     Semaphore               m_ThreadSignalSemaphore;
     Thread::ThreadHandle    m_Thread = INVALID_THREAD_HANDLE;
     Array<Event>            m_Events;
@@ -112,7 +118,7 @@ public:
     BuildProfilerScope( const char * type );
 
     // A local "worker" thread task
-    BuildProfilerScope( Job * job, uint32_t threadId, const char * type );
+    BuildProfilerScope( Job & job, uint32_t threadId, const char * type );
     ~BuildProfilerScope();
 
     void SetStepName( const char * stepName ) { m_StepName = stepName; }
@@ -120,6 +126,7 @@ public:
 protected:
     BuildProfilerScope& operator = ( BuildProfilerScope & other ) = delete;
 
+    bool            m_Active;
     uint32_t        m_ThreadId;
     const char *    m_StepName;
     const char *    m_TargetName;

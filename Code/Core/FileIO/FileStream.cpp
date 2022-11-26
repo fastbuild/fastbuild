@@ -63,7 +63,7 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
         // access mode
         if ( ( fileMode & READ_ONLY ) != 0 )
         {
-            ASSERT( fileMode == READ_ONLY ); // no extra flags allowed
+            ASSERT( ( fileMode & READ_ONLY ) == fileMode ); // no extra flags allowed
             desiredAccess       |= GENERIC_READ;
             shareMode           |= FILE_SHARE_READ; // allow other readers
             creationDisposition |= OPEN_EXISTING;
@@ -204,8 +204,8 @@ bool FileStream::IsOpen() const
 #if defined( __WINDOWS__ )
     do
     {
-        uint64_t remaining = ( bytesToRead - totalBytesRead );
-        uint32_t tryToReadNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
+        const uint64_t remaining = ( bytesToRead - totalBytesRead );
+        const uint32_t tryToReadNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesReadNow = 0;
         if ( FALSE == ReadFile( (HANDLE)m_Handle,                           // _In_         HANDLE hFile,
                                 (char *)buffer + (size_t)totalBytesRead,    // _Out_        LPVOID lpBuffer,
@@ -241,8 +241,8 @@ bool FileStream::IsOpen() const
 #if defined( __WINDOWS__ )
     do
     {
-        uint64_t remaining = ( bytesToWrite - totalBytesWritten );
-        uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
+        const uint64_t remaining = ( bytesToWrite - totalBytesWritten );
+        const uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesWrittenNow = 0;
         if ( FALSE == WriteFile( (HANDLE)m_Handle,                              // _In_         HANDLE hFile,
                                  (const char *)buffer + (size_t)totalBytesWritten,    // _In_         LPCVOID lpBuffer,
@@ -327,7 +327,7 @@ bool FileStream::IsOpen() const
     #if defined( __WINDOWS__ )
         // seek to end
         DWORD fileSizeHigh;
-        DWORD fileSizeLow = ::GetFileSize( (HANDLE)m_Handle, &fileSizeHigh );
+        const DWORD fileSizeLow = ::GetFileSize( (HANDLE)m_Handle, &fileSizeHigh );
         return ( ( uint64_t( fileSizeHigh ) << 32 ) | uint64_t( fileSizeLow ) );
     #else
         // record current pos to restore

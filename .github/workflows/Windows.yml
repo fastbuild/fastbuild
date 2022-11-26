@@ -16,11 +16,8 @@ jobs:
           - cfg: Build & Tests
             vs: 2019
             os: windows-2019
-          - cfg: Build
+          - cfg: Build & Tests
             vs: 2017
-            os: windows-2019
-          - cfg: Build
-            vs: 2015
             os: windows-2019
           - cfg: Analyze
             vs: 2019
@@ -52,8 +49,9 @@ jobs:
         run: ${FBUILD_PATH} -nostoponerror -summary All-x64{,Clang}-{Debug,Profile,Release}
 
       - name: Tests
+        # -j1 on CI nodes avoids timeouts (CI nodes have only 2 cores)
         if: ${{ matrix.cfg == 'Build & Tests' }}
-        run: ${FBUILD_PATH} -nostoponerror -summary Tests
+        run: ${FBUILD_PATH} -nostoponerror -j1 -summary Tests
 
       - name: Analyze
         if: ${{ matrix.cfg == 'Analyze' }}

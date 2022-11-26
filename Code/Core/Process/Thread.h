@@ -29,17 +29,32 @@ public:
     #else
         #error Unknown platform
     #endif
+    #define INVALID_THREAD_ID ( 0 )
+    enum : uint32_t { kDefaultStackSize = ( 64 * 1024 ) };
 
+    Thread();
+    ~Thread();
+
+    // Lifetime management
+    void        Start( ThreadEntryFunction func,
+                       const char * threadName = nullptr,
+                       void * userData = nullptr,
+                       uint32_t stackSizeBytes = kDefaultStackSize );
+    uint32_t    Join();
+
+    // Thread Identification
     static ThreadId GetCurrentThreadId();
     static ThreadId GetMainThreadId() { return s_MainThreadId; }
     static bool IsThread( ThreadId threadId ) { return ( GetCurrentThreadId() == threadId ); }
     static bool IsMainThread() { return GetCurrentThreadId() == s_MainThreadId; }
 
+    // Sleeps
     static void Sleep( uint32_t ms );
 
+    // Thread lifetime (Legacy API)
     static ThreadHandle CreateThread( ThreadEntryFunction entryFunc,
                                       const char * threadName = nullptr,
-                                      uint32_t stackSize = ( 64 * KILOBYTE ),
+                                      uint32_t stackSize = kDefaultStackSize,
                                       void * userData = nullptr
                                     );
     static int32_t WaitForThread( ThreadHandle handle );
@@ -47,9 +62,12 @@ public:
     static void DetachThread( ThreadHandle handle );
     static void CloseHandle( ThreadHandle h );
 
+    // Debugging
     static void SetThreadName( const char * name );
 
 private:
+    ThreadHandle    m_Handle = INVALID_THREAD_HANDLE;
+
     static ThreadId s_MainThreadId;
 };
 

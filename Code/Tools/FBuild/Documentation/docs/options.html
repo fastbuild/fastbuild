@@ -80,6 +80,10 @@
     <td>Enable distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#distcompressionlevel">-distcompressionlevel [level]</a></td>
+    <td>Control compression level of jobs sent out for distribution. (Default -1)</td>
+  </tr>
+  <tr>
     <td><a href="#distverbose">-distverbose</a></td>
     <td>Enable detailed logging for distributed compilation.</td>
   </tr>
@@ -133,7 +137,7 @@
   </tr>
   <tr>
     <td><a href="#nounity">-nounity</a></td>
-    <td>[Experimental] Individually build all files normally built in Unity.</td>
+    <td>Individually build all files normally built in Unity.</td>
   </tr>
   <tr>
     <td><a href="#profile">-profile</a></td>
@@ -345,6 +349,46 @@ be reproduced in the debugger.</p>
     <div class='newsitemheader' id="dist">-dist</div>
     <div class='newsitembody'>
 <p>Enable distributed compilation. Requires some build configuration.</p>
+
+    <div class='newsitemheader' id="distcompressionlevel">-distcompressionlevel [level]</div>
+    <div class='newsitembody'>
+<p>Control compression level of jobs sent out for distribution. (Default -1)</p>
+<p>This can be used to increase the level of compression for jobs sent out for distribution, trading increased CPU time
+        in order to reduce network transfer. This can be useful in network bandwidth limited environments. Note that
+        this value does not affect the compression level of the responses sent back from workers.</p>
+<table>
+    <tr><th width=150>Level</th><th>Description</th></tr>
+    <tr><td>-128 to -1</td><td>LZ4 compression. Lower values are faster but compress less. Default is -1.</td></tr>
+    <tr><td>0</td><td>Compression is disabled.</td>
+    <tr><td>1 to 12</td><td>LZ4 HC compression. Higher values compress more, but are slower.</td></tr>
+</table>
+<p>Timings will vary depending on hardware and source code being preprocessed, but example timings compressing a
+~1.8MiB flattened source file are as follows:
+    <div class="code">
+File : Tools/FBuild/FBuildTest/Data/TestCompressor/TestPreprocessedFile.ii
+Size : 1802697
+
+        Compression             Decompression
+Level | Time (ms)  MB/s  Ratio | Time (ms)  MB/s
+------------------------------------------------
+0     |    0.289  5943.6  1.00 |    0.283  6066.8
+-256  |    0.992  1733.7  1.25 |    0.291  5912.9
+-128  |    1.059  1622.8  1.44 |    0.345  4977.0
+-64   |    0.955  1799.8  1.86 |    0.448  3837.0
+-32   |    1.179  1457.7  2.53 |    0.508  3384.4
+-16   |    1.348  1274.9  3.37 |    0.553  3106.3
+-8    |    1.442  1192.3  4.05 |    0.542  3169.7
+-4    |    1.517  1132.9  4.53 |    0.537  3198.9
+-2    |    1.559  1102.6  4.80 |    0.620  2772.5
+<b>-1    |    1.612  1066.7  4.94 |    0.557  3085.1  &lt;--- Default</b>
+1     |    5.791   296.9  6.27 |    0.509  3380.1
+3     |    6.875   250.1  6.44 |    0.496  3468.7
+6     |   13.767   124.9  6.67 |    0.613  2804.2
+9     |   34.530    49.8  6.72 |    0.503  3419.4
+12    |  122.061    14.1  6.82 |    0.512  3360.6
+------------------------------------------------
+    </div>
+</p>
 </div>
 
     <div class='newsitemheader' id="distverbose">-distverbose</div>
@@ -469,7 +513,7 @@ useful if you want to see as many errors as possible in your compilation output.
 
     <div class='newsitemheader' id="nounity">-nounity</div>
     <div class='newsitembody'>
-<p><b>[Experimental]</b> Individually build all files normally in Unity.</p>
+<p>Individually build all files normally in Unity.</p>
 <p>All files specified in Unity will instead be built as if specified individually outside of Unity.</p>
 </div>
 
@@ -675,6 +719,6 @@ than this amount it will not accept work.</p>
 </div>
 
 
-    </div><div class='footer'>&copy; 2012-2021 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2022 Franta Fulin</div></div></div>
 </body>
 </html>

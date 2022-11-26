@@ -29,6 +29,7 @@
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -589,7 +590,7 @@ void TestGraph::TestDeepGraph() const
     }
 
     {
-        Timer t;
+        const Timer t;
 
         // no op build
         FBuild fBuild( options );
@@ -704,40 +705,53 @@ void TestGraph::DBCorrupt() const
     EnsureFileDoesNotExist( dbFile );
     EnsureFileDoesNotExist( dbFileCorrupt );
 
-    // Create a DB
+    // Test corruption at various places in the file
+    static_assert( sizeof(NodeGraphHeader) == 16, "Update test for DB format change" );
+    static const uint32_t corruptionOffsets[] =
     {
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
-        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
-    }
+        0,      // Header - magic identifier
+        8,      // Header - hash of content
+        128,    // Arbitrary position in the file
+    };
 
     // Corrupt the DB
+    for ( const uint32_t corruptionOffset : corruptionOffsets )
     {
-        FileStream f;
+        // Create a DB
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+        }
 
-        // Read DB into memory
-        TEST_ASSERT( f.Open( dbFile, FileStream::READ_ONLY ) );
-        AString buffer;
-        buffer.SetLength( (uint32_t)f.GetFileSize() );
-        TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-        f.Close(); // Explicit close so we can re-open
+        // Corrupt the DB
+        {
+            FileStream f;
 
-        // Corrupt it
-        buffer[ 0 ] = 'X';
+            // Read DB into memory
+            TEST_ASSERT( f.Open( dbFile, FileStream::READ_ONLY ) );
+            AString buffer;
+            buffer.SetLength( (uint32_t)f.GetFileSize() );
+            TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+            f.Close(); // Explicit close so we can re-open
 
-        // Save corrupt DB
-        TEST_ASSERT( f.Open( dbFile, FileStream::WRITE_ONLY ) );
-        TEST_ASSERT( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) );
-    }
+            // Corrupt it by flipping some bits
+            buffer[ corruptionOffset ] = ~buffer[ corruptionOffset ];
 
-    // Initialization should report a warning, but still work
-    {
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
-        TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
+            // Save corrupt DB
+            TEST_ASSERT( f.Open( dbFile, FileStream::WRITE_ONLY ) );
+            TEST_ASSERT( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) );
+        }
 
-        // Backup of corrupt DB should exit
-        EnsureFileExists( dbFileCorrupt );
+        // Initialization should report a warning, but still work
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
+            TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
+
+            // Backup of corrupt DB should exit
+            EnsureFileExists( dbFileCorrupt );
+        }
     }
 }
 
@@ -783,7 +797,7 @@ void TestGraph::BFFDirtied() const
 
     // Modify file, ensuring filetime has changed (different file systems have different resolutions)
     const uint64_t originalTime = FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) );
-    Timer t;
+    const Timer t;
     uint32_t sleepTimeMS = 2;
     for ( ;; )
     {
@@ -837,11 +851,12 @@ void TestGraph::DBVersionChanged() const
 {
     // Generate a fake old version headers
     NodeGraphHeader header;
+    header.SetContentHash( xxHash::Calc64( "", 0 ) );
     MemoryStream ms;
     ms.WriteBuffer( &header, sizeof( header ) );
 
     // Since we're poking this, we want to know if the layout ever changes somehow
-    TEST_ASSERT( ms.GetFileSize() == 4 );
+    TEST_ASSERT( ms.GetFileSize() == 16 );
     TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[ 3 ] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
 
     ( (uint8_t *)ms.GetDataMutable() )[ 3 ] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
@@ -899,16 +914,26 @@ void TestGraph::FixupErrorPaths() const
         fixup = path; \
         NodeTestHelper::FixupPathForVSIntegration( fixup ); \
         do { \
-            if ( fixup.BeginsWith( workingDir ) == false ) \
-            { \
-                TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
-                                     "Original           : %s\n" \
-                                     "Returned           : %s\n" \
-                                     "Expected BeginsWith: %s\n", \
-                                     original.Get(), \
-                                     fixup.Get(), \
-                                     workingDir.Get() ); \
-            } \
+           if ( ( original.Find( "/mnt/" ) == nullptr ) && \
+                ( fixup.BeginsWith( workingDir ) == false ) ) \
+           { \
+               TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
+                                       "Original           : %s\n" \
+                                       "Returned           : %s\n" \
+                                       "Expected BeginsWith: %s\n", \
+                                       original.Get(), \
+                                       fixup.Get(), \
+                                       workingDir.Get() ); \
+           } \
+           else if ( fixup.Find( "/mnt/" ) != nullptr ) \
+           { \
+               TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
+                                       "Original           : %s\n" \
+                                       "Returned           : %s\n" \
+                                       "Unexpected         : Contains '/mnt/'\n", \
+                                       original.Get(), \
+                                       fixup.Get() ); \
+           } \
         } while ( false )
 
     // GCC/Clang style
@@ -920,6 +945,9 @@ void TestGraph::FixupErrorPaths() const
 
     // VBCC Style
     TEST_FIXUP( "warning 55 in line 23 of \"Core/Mem/Mem.h\": some warning text" );
+
+    // WSL
+    TEST_FIXUP( "/mnt/c/p4/depot/Code/Core/Mem/Mem.h:23:1: warning: some warning text" );
 
     #undef TEST_FIXUP
 }

@@ -156,16 +156,16 @@ ExecNode::~ExecNode() = default;
     return true;
 }
 
-// DetermineNeedToBuild
+// DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DetermineNeedToBuild( const Dependencies & deps ) const
+/*virtual*/ bool ExecNode::DetermineNeedToBuildStatic() const
 {
     if ( m_ExecAlways )
     {
         FLOG_BUILD_REASON( "Need to build '%s' (ExecAlways = true)\n", GetName().Get() );
         return true;
     }
-    return Node::DetermineNeedToBuild( deps );
+    return Node::DetermineNeedToBuildStatic();
 }
 
 // DoBuild
@@ -183,10 +183,10 @@ ExecNode::~ExecNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    bool spawnOK = p.Spawn( GetExecutable()->GetName().Get(),
-                            fullArgs.Get(),
-                            workingDir,
-                            FBuild::Get().GetEnvironmentString() );
+    const bool spawnOK = p.Spawn( GetExecutable()->GetName().Get(),
+                                  fullArgs.Get(),
+                                  workingDir,
+                                  FBuild::Get().GetEnvironmentString() );
 
     if ( !spawnOK )
     {
@@ -205,7 +205,7 @@ ExecNode::~ExecNode() = default;
     p.ReadAllData( memOut, memErr );
 
     // Get result
-    int result = p.WaitForExit();
+    const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
         return NODE_RESULT_FAILED;

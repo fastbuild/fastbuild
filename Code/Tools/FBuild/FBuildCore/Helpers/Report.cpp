@@ -75,7 +75,7 @@ Report::~Report()
 //------------------------------------------------------------------------------
 void Report::Generate( const FBuildStats & stats )
 {
-    Timer t;
+    const Timer t;
 
     // pre-allocate a large string for output
     m_Output.SetReserved( MEGABYTE );
@@ -296,7 +296,7 @@ void Report::CreateOverview( const FBuildStats & stats )
     else
     {
         const Dependencies & childNodes = rootNode->GetStaticDependencies();
-        size_t num = childNodes.GetSize();
+        const size_t num = childNodes.GetSize();
         for ( size_t i=0; i<num; ++i )
         {
             if ( i != 0 )
@@ -314,15 +314,21 @@ void Report::CreateOverview( const FBuildStats & stats )
     Write( "<tr><td>Result</td><td>%s</td></tr>\n", buildOK ? "OK" : "FAILED" );
 
     // Real Time
-    float totalBuildTime = stats.m_TotalBuildTime;
+    const float totalBuildTime = stats.m_TotalBuildTime;
     stats.FormatTime( totalBuildTime, buffer );
     Write( "<tr><td>Time</td><td>%s</td></tr>\n", buffer.Get() );
 
     // Local CPU Time
-    float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
+    const float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
     stats.FormatTime( totalLocalCPUInSeconds, buffer );
-    float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
+    const float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
     Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
+
+    // Remote CPU Time
+    const float totalRemoteCPUInSeconds = (float)( (double)stats.m_TotalRemoteCPUTimeMS / (double)1000 );
+    stats.FormatTime( totalRemoteCPUInSeconds, buffer );
+    const float remoteRatio = ( totalRemoteCPUInSeconds / totalBuildTime );
+    Write( "<tr><td>Remote CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)remoteRatio );
 
     // version info
     Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
@@ -374,7 +380,7 @@ void Report::DoCacheStats( const FBuildStats & stats )
             Write( "No cacheable items were built.\n" );
             return;
         }
-        uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
+        const uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
         Array< PieItem > pieItems( 3, false );
         pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
@@ -488,7 +494,7 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
     Write( "<tr><th width=80>Type</th><th width=80>Time</th><th width=80>Processed</th><th width=80>Built</th><th width=80>Cache Hits</th></tr>\n" );
     for ( size_t i=0; i < items.GetSize(); ++i )
     {
-        Node::Type type = (Node::Type)(size_t)items[ i ].userData;
+        const Node::Type type = (Node::Type)(size_t)items[ i ].userData;
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
@@ -544,7 +550,7 @@ void Report::DoCPUTimeByItem( const FBuildStats & stats )
           ++ it )
     {
         const Node * node = *it;
-        float time = ( (float)node->GetProcessingTime() * 0.001f ); // ms to s
+        const float time = ( (float)node->GetProcessingTime() * 0.001f ); // ms to s
         const char * type = node->GetTypeName();
         const char * name = node->GetName().Get();
 
@@ -738,7 +744,7 @@ void Report::DoPieChart( const Array< PieItem > & items, const char * units )
 {
     AStackString<> buffer;
 
-    uint32_t height = Math::Max< uint32_t >( 140, 40 + 25 * (uint32_t)items.GetSize() );
+    const uint32_t height = Math::Max< uint32_t >( 140, 40 + 25 * (uint32_t)items.GetSize() );
 
     m_NumPieCharts++;
 
@@ -891,7 +897,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
     }
     node->SetStatFlag( Node::STATS_REPORT_PROCESSED );
 
-    Node::Type type = node->GetType();
+    const Node::Type type = node->GetType();
 
     // object?
     if ( type == Node::OBJECT_NODE )
@@ -904,8 +910,8 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
 
         currentLib->objectCount++;
 
-        bool cacheHit = node->GetStatFlag( Node::STATS_CACHE_HIT );
-        bool cacheMiss = node->GetStatFlag( Node::STATS_CACHE_MISS );
+        const bool cacheHit = node->GetStatFlag( Node::STATS_CACHE_HIT );
+        const bool cacheMiss = node->GetStatFlag( Node::STATS_CACHE_MISS );
         if ( cacheHit || cacheMiss )
         {
             currentLib->objectCount_Cacheable++;
@@ -988,7 +994,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const D
 //------------------------------------------------------------------------------
 void Report::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const
 {
-    Node::Type type = node->GetType();
+    const Node::Type type = node->GetType();
     if ( type == Node::OBJECT_NODE )
     {
         // Dynamic Deps
@@ -1070,8 +1076,8 @@ Report::IncludeStatsMap::~IncludeStatsMap()
 Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 {
     // caculate table entry
-    uint32_t hash = node->GetNameCRC();
-    uint32_t key = ( hash & 0xFFFF );
+    const uint32_t hash = node->GetNameCRC();
+    const uint32_t key = ( hash & 0xFFFF );
     IncludeStats * item = m_Table[ key ];
 
     // check linked list
@@ -1093,8 +1099,8 @@ Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 {
     // caculate table entry
-    uint32_t hash = node->GetNameCRC();
-    uint32_t key = ( hash & 0xFFFF );
+    const uint32_t hash = node->GetNameCRC();
+    const uint32_t key = ( hash & 0xFFFF );
 
     // insert new item
     IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc();

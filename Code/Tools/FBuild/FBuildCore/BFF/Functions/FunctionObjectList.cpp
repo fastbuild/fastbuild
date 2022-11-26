@@ -229,7 +229,10 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Use( const BFFToken * iter,
 
 // GetExtraOutputPaths
 //------------------------------------------------------------------------------
-void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath )
+void FunctionObjectList::GetExtraOutputPaths( const AString & args, 
+                                              AString & outPDBPath, 
+                                              AString & outASMPath,
+                                              AString & outSourceDependenciesPath )
 {
     // split to individual tokens
     Array< AString > tokens;
@@ -240,13 +243,19 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pd
     {
         if ( ObjectNode::IsStartOfCompilerArg_MSVC( *it, "Fd" ) )
         {
-            GetExtraOutputPath( it, end, "Fd", pdbPath );
+            GetExtraOutputPath( it, end, "Fd", outPDBPath );
             continue;
         }
 
         if ( ObjectNode::IsStartOfCompilerArg_MSVC( *it, "Fa" ) )
         {
-            GetExtraOutputPath( it, end, "Fa", asmPath );
+            GetExtraOutputPath( it, end, "Fa", outASMPath );
+            continue;
+        }
+
+        if ( ObjectNode::IsStartOfCompilerArg_MSVC( *it, "sourceDependencies" ) )
+        {
+            GetExtraOutputPath( it, end, "sourceDependencies", outSourceDependenciesPath );
             continue;
         }
     }

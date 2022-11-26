@@ -63,7 +63,7 @@ SharedMemory g_SharedMemory;
 int main( int argc, char * argv[] )
 {
     // This wrapper is purely for profiling scope
-    int result = Main( argc, argv );
+    const int result = Main( argc, argv );
     PROFILE_SYNCHRONIZE // make sure no tags are active and do one final sync
     return result;
 }
@@ -74,7 +74,7 @@ int Main( int argc, char * argv[] )
 {
     PROFILE_FUNCTION;
 
-    Timer t;
+    const Timer t;
 
     // Register Ctrl-C Handler
     CtrlCHandler ctrlCHandler;
@@ -238,7 +238,7 @@ int Main( int argc, char * argv[] )
     // final line of output - status of build
     if ( options.m_ShowTotalTimeTaken )
     {
-        float totalBuildTime = t.GetElapsed();
+        const float totalBuildTime = t.GetElapsed();
         const uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
         const float seconds = ( totalBuildTime - (float)( minutes * 60 ) );
         if ( minutes > 0 )

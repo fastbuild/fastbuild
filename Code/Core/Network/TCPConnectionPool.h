@@ -8,6 +8,7 @@
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Types.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
@@ -22,6 +23,14 @@ class TCPConnectionPool;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
     typedef int TCPSocket;
 #endif
+
+// Constants
+//------------------------------------------------------------------------------
+namespace 
+{
+    static const uint32_t kDefaultConnectionTimeoutMS   = ( 2 * 1000 );
+    static const uint32_t kDefaultSendTimeoutMS         = ( 10 * 60 * 1000 );
+}
 
 // ConnectionInfo - one connection in the pool
 //------------------------------------------------------------------------------
@@ -44,12 +53,12 @@ private:
     TCPSocket               m_Socket;
     uint32_t                m_RemoteAddress;
     uint16_t                m_RemotePort;
-    volatile mutable bool   m_ThreadQuitNotification;
+    mutable Atomic<bool>    m_ThreadQuitNotification;
     TCPConnectionPool *     m_TCPConnectionPool; // back pointer to parent pool
     mutable void *          m_UserData;
 
 #ifdef DEBUG
-    mutable bool            m_InUse; // sanity check we aren't sending from multiple threads unsafely
+    mutable Thread::ThreadId m_SendSocketInUseThreadId; // sanity check we aren't sending from multiple threads unsafely
 #endif
 };
 
@@ -67,8 +76,14 @@ public:
     // manage connections
     bool Listen( uint16_t port );
     void StopListening();
-    const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
-    const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( const AString & host,
+                                    uint16_t port,
+                                    uint32_t timeout = kDefaultConnectionTimeoutMS,
+                                    void * userData = nullptr );
+    const ConnectionInfo * Connect( uint32_t hostIP,
+                                    uint16_t port,
+                                    uint32_t timeout = kDefaultConnectionTimeoutMS,
+                                    void * userData = nullptr );
     void Disconnect( const ConnectionInfo * ci );
     void SetShuttingDown();
 
@@ -76,8 +91,16 @@ public:
     size_t GetNumConnections() const;
 
     // transmit data
-    bool Send( const ConnectionInfo * connection, const void * data, size_t size, uint32_t timeoutMS = 30000 );
-    bool Send( const ConnectionInfo * connection, const void * data, size_t size, const void * payloadData, size_t payloadSize, uint32_t timeoutMS = 30000 );
+    bool Send( const ConnectionInfo * connection,
+               const void * data,
+               size_t size,
+               uint32_t timeoutMS = kDefaultSendTimeoutMS );
+    bool Send( const ConnectionInfo * connection,
+               const void * data,
+               size_t size,
+               const void * payloadData,
+               size_t payloadSize,
+               uint32_t timeoutMS = kDefaultSendTimeoutMS );
     bool Broadcast( const void * data, size_t size );
 
     static void GetAddressAsString( uint32_t addr, AString & address );
@@ -109,6 +132,7 @@ private:
                         struct sockaddr * address,
                         int * addressSize ) const;
     TCPSocket   CreateSocket() const;
+    void        FDSet( TCPSocket fd, void * set ) const;
 
     struct SendBuffer
     {

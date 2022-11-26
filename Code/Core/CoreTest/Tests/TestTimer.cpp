@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include <Core/Process/Thread.h>
@@ -11,7 +11,7 @@
 
 // TestTimer
 //------------------------------------------------------------------------------
-class TestTimer : public UnitTest
+class TestTimer : public TestGroup
 {
 private:
     DECLARE_TESTS

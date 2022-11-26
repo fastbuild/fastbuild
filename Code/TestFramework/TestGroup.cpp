@@ -1,9 +1,9 @@
-// UnitTest.cpp - interface for a unit test
+// TestGroup.cpp - interface for a group of related tests
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
-#include "UnitTest.h"
+#include "TestGroup.h"
 
 // TestNoReturn
 //------------------------------------------------------------------------------

@@ -28,6 +28,144 @@
 
 
 <div class='newsitemheader'>
+    v1.08&nbsp;<font color='#bbbbbb'>(5th-Nov-2022)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Harden FBuildWorker against corrupt data from old clients</li>
+            <li>Prevent toolchain synchronization getting stuck if a worker disconnects before synchronizing the manifest</ul>
+        </ul>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Clang/GCC gcov disables distributed compilation (results are not usable if built remotely)</li>
+            <li>[Windows] Consider remote error 0x4 (ERROR_TOO_MANY_OPEN_FILES) a system failure</li>
+            <li>Modify remote errors that are retried in <a href="options.html#distverbose">-distverbose</a> output to stop MSBuild considering them as failures</li>
+        </ul>
+        <li>Caching</li>
+        <ul>
+            <li>Clang/GCC gcov files (.gcno) are cached when used</li>
+            <li>[Windows] Working dir casing normalized to remove variances in cache key generation</li>
+        </ul>
+        <li>Improve dependency graph traversal performance</li>
+        <li>Optimize dependency graph traversal by eliminating redundant checks</li>
+        <li>Improve database corruption detection to handle things like power loss</li>
+        <li>Improve node graph traversal by avoiding unnecessary cyclic dependency checks</li>
+        <li>RemoveDir can use .RemoveExcludeFiles to exclude specific files (Thanks to Domain)</li>
+        <li>[Windows] Working dir casing normalized avoiding portability issues with Clang</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.07&nbsp;<font color='#bbbbbb'>(31st-July-2022)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version has changed</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Prevent Client/Server network stream desync that can occur during ToolChain synchronization</li>
+        </ul>
+        <li>[Linux][OSX] Fix compiler output being truncated in some situations</li>
+        <li>Fix unsafe mutli-threaded access when using <a href="options.html#profile">-profile</a></li>
+        <li>Messages are correctly escaped in -monitor log (regression in v1.06)</li>
+        <li>Prevent leaking an environment variable string (Thanks to Lambert Clara)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Adds a <a href="options.html#distcompressionlevel">-distcompressionlevel</a> flag (Thanks to Mark De Ruyter)</li>
+        </ul>
+        <li>Settings() DisableDBMigration option has been removed. This feature has been stable for many versions</li>
+        <li><a href="options.html#fixuperrorpaths">-fixuperrorpaths</a> converts WSL paths to Windows paths</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.06&nbsp;<font color='#bbbbbb'>(10th-April-2022)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li><a href="options.html#nounity">-nounity</a> is no longer experimental</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Fix a potential deadlock due to unnecessary lock contention</li>
+            <li>Prevent unnecessary network disconnections when under heavy network load</li>
+            <li><a href="options.html#profile">-profile</a> correctly displays items that fail remotely</li>
+            <li>Fix rare failure with no error if remote race won as local job was being finalized</li>
+            <li>Fix occasional memory leak when a remote race was lost</li>
+            <li>Fix remote system failure causing build failure with no error when being raced</li>
+            <li><a href="options.html#monitor">-monitor</a> info no longer missing for remote jobs that lose a race</li>
+            <li><a href="options.html#distverbose">-distverbose</a> info no longer missing for remote jobs that lose a race</li>
+            <li>stats correctly account for remote failures</li>
+            <li>Distributed compilation no longer fails remotely with a "system error" when MSVC /sourceDependencies is used</li>
+            <li>/sourceDependencies are no longer overwritten when using -cache or -dist (Thanks to Samuel Lorétan)</li>
+        </ul>
+        <li>Caching</li>
+        <ul>
+            <li>LightCache is auto-disabled if MSVC /sourceDependencies is used (falls back to normal cache)</li>
+        </ul>        
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>Fix crash on wrong literal type in boolean evaluator (Thanks to Dummyunit)</li>
+            <li>Avoid spurious error when lhs of an If() expression doesn't exist</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li>XCode project generation handles special characters in filenames</li>
+            <li>Solution, VCXProj & XCodeProj record stamps, avoiding downstream rebuilds</li>
+        </ul>
+        <li>[Linux] Fix file copies on linux for files > 0x7FFF000 bytes (sendfile limit) (Thanks to Domain)</li>
+        <li>Build time cyclic dependencies are detected. An error is reported instead of the build never completing</li>
+        <li><a href="options.html#nounity">-nounity</a> toggle works correctly when toggled with no other changes</li>
+        <li>Space in command line targets are handled when using -wrapper (Thanks to Léo Carnaut-Delord)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Distributed compilation network bandwidth reduced considerably (20-40%)</li>
+            <li><a href="options.html#distverbose">-distverbose</a> provides additional information for remote jobs race and error state</li>
+            <li>When <a href="options.html#dist">-dist</a> and <a href="options.html#cache">-cache</a> are used together, compression is performed remotely</li>
+            <li><a href="options.html#profile">-profile</a> provides additional information for remote jobs race and error state</li>
+            <li><a href="options.html#profile">-profile</a> contains basic network connectivity information</li>
+            <li>Report contains remote CPU time summary (Thanks to Evgeny)</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li>Intellisense options are populated for disabled warnings</li>
+            <li>VCXProject BuildCommand etc set correctly when Keyword = 'Linux' (for WSL)</li>
+        </ul>
+        <li><a href="options.html#profile">-profile</a> entries are more easily distinguishable for failed items</li>
+        <li><a href="options.html#profile">-profile</a> output memory stats descriptions improved</li>
+        <li>FASTBuild will create output folder for MSVC /sourceDependencies if it doesn't exist</li>
+        <li>[Windows] Reduce permissions used to set file last write times</li>
+        <li><a href="options.html#nounity">-nounity</a> avoids unnecessary rebuilds when toggled back to off</li>
+        <li>Windows SDK is auto-detected when compiling FASTBuild (Thanks to Matt Barth)</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.05&nbsp;<font color='#bbbbbb'>(22nd-May-2021)</font>
 </div>
 <div class='newsitembody'>
@@ -2177,6 +2315,6 @@ Fixes
     </div>
 
 
-    </div><div class='footer'>&copy; 2012-2021 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2022 Franta Fulin</div></div></div>
 </body>
 </html>

@@ -6,6 +6,7 @@
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
@@ -33,6 +34,9 @@ private:
     void RegressionTest_RemoteCrashOnErrorFormatting();
     void TestLocalRace();
     void RemoteRaceWinRemote();
+    #if defined( DEBUG )
+        void RemoteRaceSystemFailure();
+    #endif
     void AnonymousNamespaces();
     void ErrorsAreCorrectlyReported_MSVC() const;
     void ErrorsAreCorrectlyReported_Clang() const;
@@ -43,6 +47,7 @@ private:
     void TestZiDebugFormat() const;
     void TestZiDebugFormat_Local() const;
     void D8049_ToolLongDebugRecord() const;
+    void CleanMessageToPreventMSBuildFailure() const;
 
     void TestHelper( const char * target,
                      uint32_t numRemoteWorkers,
@@ -59,6 +64,9 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( RegressionTest_RemoteCrashOnErrorFormatting )
     REGISTER_TEST( TestLocalRace )
     REGISTER_TEST( RemoteRaceWinRemote )
+    #if defined( DEBUG )
+        REGISTER_TEST( RemoteRaceSystemFailure )
+    #endif
     REGISTER_TEST( AnonymousNamespaces )
     REGISTER_TEST( ShutdownMemoryLeak )
     #if defined( __WINDOWS__ )
@@ -71,6 +79,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
         REGISTER_TEST( TestZiDebugFormat_Local )
         REGISTER_TEST( D8049_ToolLongDebugRecord )
     #endif
+    REGISTER_TEST( CleanMessageToPreventMSBuildFailure )
 REGISTER_TESTS_END
 
 // Test
@@ -108,7 +117,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
         TEST_ASSERT( FileIO::FileExists( target ) == false );
     }
 
-    bool pass = fBuild.Build( target );
+    const bool pass = fBuild.Build( target );
     if ( !shouldFail )
     {
         TEST_ASSERT( pass );
@@ -194,6 +203,43 @@ void TestDistributed::RemoteRaceWinRemote()
 
     TEST_ASSERT( fBuild.Build( "RemoteRaceWinRemote" ) );
 }
+
+// RemoteRaceSystemFailure
+//------------------------------------------------------------------------------
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+void TestDistributed::RemoteRaceSystemFailure()
+{
+    // NOTE: Test only available in DEBUG due to SetFakeSystemFailure
+
+    // Check that a remote race that is won remotely with a failure is
+    // correctly handled
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceSystemFailure/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_NoLocalConsumptionOfRemoteJobs = true;
+    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+    options.m_DistVerbose = true;
+    FBuild fBuild( options );
+
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
+    // Force a system failure when compiling remotely
+    ObjectNode::SetFakeSystemFailureForNextJob();
+
+    // Build
+    TEST_ASSERT( fBuild.Build( "RemoteRaceSystemFailure" ) );
+
+    // Ensure the remote failure was induced correctly
+    TEST_ASSERT( GetRecordedOutput().Find( "Injecting system failure (sFakeSystemFailure)" ) );
+}
+#endif
 
 // AnonymousNamespaces
 //------------------------------------------------------------------------------
@@ -357,11 +403,12 @@ void TestDistributed::ShutdownMemoryLeak() const
         static uint32_t AbortBuild( void * data )
         {
             // Wait until some distributed jobs are available
-            Timer t;
-            float timeout = 5.0f;
+            const Timer t;
             #if __has_feature( thread_sanitizer ) || defined( __SANITIZE_THREAD__ )
                 // Code under ThreadSanitizer runs several time slower than normal, so we need a larger timeout.
-                timeout = 30.0f;
+                const float timeout = 30.0f;
+            #else
+                const float timeout = 5.0f;
             #endif
             while ( t.GetElapsed() < timeout )
             {
@@ -458,6 +505,86 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     s.Listen( Protocol::PROTOCOL_TEST_PORT );
 
     TEST_ASSERT( fBuild.Build( "D8049" ) );
+}
+
+//------------------------------------------------------------------------------
+void TestDistributed::CleanMessageToPreventMSBuildFailure() const
+{
+    // Error should be indentical except for a single remove colon
+    {
+        const AStackString<> in( "C:\\Windows\\TEMP\\.fbuild.tmp\\0x00000000\\"
+                                 "core_1018\\F436D72E\\Module.MergeActors.cpp :"
+                                 " fatal error C1083: Cannot open compiler intermediate"
+                                 " file: 'C:\\Windows\\TEMP\\_CL_7a0408f6in':"
+                                 " No such file or directory" );
+        AStackString<> expectedOut( in );
+        TEST_ASSERT( expectedOut.Replace( "fatal error C1083:", "fatal error C1083 " ) == 1 );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == expectedOut );
+    }
+
+    // String may contain multiple lines
+    {
+        const AStackString<> in( "PROBLEM: C:\\Users\\Franta\\AppData\\Local\\Temp\\.fbuild.tmp\\0x96c448b7\\core_1001\\ErrorWithPercent.obj\n"
+                                 "ErrorWithPercent.cpp\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,11): error C3193: '%': requires '/clr' or '/ZW' command line option\n"
+                                 "    int %s%s%s%s\n"
+                                 "          ^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,11): error C2143: syntax error: missing ';' before '%'\n"
+                                 "    int %s%s%s%s\n"
+                                 "          ^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,11): error C2530: 's': references must be initialized\n"
+                                 "    int %s%s%s%s\n"
+                                 "          ^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,13): error C3071: operator '%' can only be applied to an instance of a ref class or a value-type\n"
+                                 "    int %s%s%s%s\n"
+                                 "            ^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(7,1): error C2143: syntax error: missing ';' before '}'\n"
+                                 "}\n"
+                                 "^\n"
+                                 "C:\\p4\\depot\\Code\\Tools\\FBuild\\FBuildTest\\Data\\TestDistributed\\BadCode\\ErrorWithPercent.cpp(6,15): warning C4552: '%': result of expression not used\n"
+                                 "    int %s%s%s%s\n"
+                                 "              ^" );
+        AStackString<> expectedOut( in );
+        TEST_ASSERT( expectedOut.Replace( "error C3193:", "error C3193 " ) == 1 );
+        TEST_ASSERT( expectedOut.Replace( "error C2143:", "error C2143 " ) == 2 );
+        TEST_ASSERT( expectedOut.Replace( "error C2530:", "error C2530 " ) == 1 );
+        TEST_ASSERT( expectedOut.Replace( "error C3071:", "error C3071 " ) == 1 );
+        TEST_ASSERT( expectedOut.Replace( "warning C4552:", "warning C4552 " ) == 1 );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == expectedOut );
+    }
+
+    // Make sure it doesn't fail on other input (should leave string alone)
+    {
+        // empty
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( AString::GetEmpty(), out );
+        TEST_ASSERT( out.IsEmpty() );
+    }
+    {
+        // path
+        const AStackString<> in( "C:\\Windows\\TEMP\\_CL_7a0408f6in" );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == in );
+    }
+    {
+        // error but not in expected format
+        const AStackString<> in( "error C1083 and some other bits" );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == in );
+    }
+    {
+        // keyword only
+        const AStackString<> in( "error" );
+        AStackString<> out;
+        Node::CleanMessageToPreventMSBuildFailure( in, out );
+        TEST_ASSERT( out == in );
+    }
 }
 
 //------------------------------------------------------------------------------

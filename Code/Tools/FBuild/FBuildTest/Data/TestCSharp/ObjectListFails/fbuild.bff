@@ -14,5 +14,4 @@ ObjectList( 'Obj' )
 
     .CompilerOptions    = '/out:"%2" /target:library "%1"'
     .CompilerInputFiles = 'src/file.cs'
-    .CompilerOutput     = 'out/out.dll'
 }

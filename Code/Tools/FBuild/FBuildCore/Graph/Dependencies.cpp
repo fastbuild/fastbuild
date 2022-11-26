@@ -12,6 +12,7 @@
 
 // Core
 #include "Core/FileIO/IOStream.h"
+#include "Core/FileIO/ConstMemoryStream.h"
 
 // Save
 //------------------------------------------------------------------------------
@@ -41,24 +42,18 @@ void Dependencies::Save( IOStream & stream ) const
 
 // Load
 //------------------------------------------------------------------------------
-bool Dependencies::Load( NodeGraph & nodeGraph, IOStream & stream )
+void Dependencies::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
 {
     ASSERT( IsEmpty() );
 
     uint32_t numDeps;
-    if ( stream.Read( numDeps ) == false )
-    {
-        return false;
-    }
+    VERIFY( stream.Read( numDeps ) );
     SetCapacity( numDeps );
     for ( uint32_t i=0; i<numDeps; ++i )
     {
         // Read node index
         uint32_t index( INVALID_NODE_INDEX );
-        if ( stream.Read( index ) == false )
-        {
-            return false;
-        }
+        VERIFY( stream.Read( index ) );
 
         // Convert to Node *
         Node * node = nodeGraph.GetNodeByIndex( index );
@@ -66,21 +61,14 @@ bool Dependencies::Load( NodeGraph & nodeGraph, IOStream & stream )
 
         // Read Stamp
         uint64_t stamp;
-        if ( stream.Read( stamp ) == false )
-        {
-            return false;
-        }
+        VERIFY( stream.Read( stamp ) );
 
         // Read weak flag
         bool isWeak( false );
-        if ( stream.Read( isWeak ) == false )
-        {
-            return false;
-        }
+        VERIFY( stream.Read( isWeak ) );
 
         // Recombine dependency info
         EmplaceBack( node, stamp, isWeak );
     }
-    return true;
 }
 //------------------------------------------------------------------------------

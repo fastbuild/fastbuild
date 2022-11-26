@@ -2,7 +2,7 @@
 //------------------------------------------------------------------------------
 {
     .ProjectName        = 'CoreTest'
-    .ProjectPath        = 'Core\CoreTest'
+    .ProjectPath        = 'Core/CoreTest'
 
     // Executable
     //--------------------------------------------------------------------------
@@ -58,6 +58,7 @@
                 .LinkerOptions                  + ' /SUBSYSTEM:CONSOLE'
                                                 + ' Advapi32.lib'
                                                 + ' kernel32.lib'
+                                                + ' Shell32.lib'
                                                 + ' Ws2_32.lib'
                                                 + ' User32.lib'
                                                 + .CRTLibs_Static

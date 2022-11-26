@@ -35,19 +35,19 @@ public:
     inline         ~UniquePtr() { DELETOR::Delete( m_Pointer ); }
 
     // access the pointer
-    inline       T * Get()       { return m_Pointer; }
-    inline const T * Get() const { return m_Pointer; }
-    inline T *          operator ->()       { ASSERT( m_Pointer ); return m_Pointer; }
-    inline const T *    operator ->() const { ASSERT( m_Pointer ); return m_Pointer; }
+    [[nodiscard]] T *           Get()       { return m_Pointer; }
+    [[nodiscard]] const T *     Get() const { return m_Pointer; }
+    [[nodiscard]] T *           operator ->()       { ASSERT( m_Pointer ); return m_Pointer; }
+    [[nodiscard]] const T *     operator ->() const { ASSERT( m_Pointer ); return m_Pointer; }
 
     // acquire a new pointer
-    inline void operator = ( T * newPtr ) { DELETOR::Delete( m_Pointer ); m_Pointer = newPtr; }
+    void                        operator = ( T * newPtr ) { DELETOR::Delete( m_Pointer ); m_Pointer = newPtr; }
 
     // manually intiate deletion
-    inline void Destroy() { DELETOR::Delete( m_Pointer ); m_Pointer = nullptr; }
+    void                        Destroy() { DELETOR::Delete( m_Pointer ); m_Pointer = nullptr; }
 
     // free the pointer without deleting it
-    inline T * Release() { T * ptr = m_Pointer; m_Pointer = nullptr; return ptr; }
+    [[nodiscard]] T *           Release() { T * ptr = m_Pointer; m_Pointer = nullptr; return ptr; }
 private:
     T * m_Pointer;
 };

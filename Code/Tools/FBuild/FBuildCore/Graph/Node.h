@@ -17,6 +17,7 @@
 //------------------------------------------------------------------------------
 class BFFToken;
 class CompilerNode;
+class ConstMemoryStream;
 class FileNode;
 class Function;
 class IMetaData;
@@ -140,7 +141,7 @@ public:
 
     inline State GetState() const { return m_State; }
 
-    inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
+    [[nodiscard]] inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
     inline void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
 
     uint32_t GetLastBuildTime() const;
@@ -152,7 +153,7 @@ public:
     inline void     SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
     static Node *   CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name );
-    static Node *   Load( NodeGraph & nodeGraph, IOStream & stream );
+    static Node *   Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
     static void     Save( IOStream & stream, const Node * node );
     virtual void    PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
 
@@ -189,6 +190,8 @@ public:
     inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
+    static void CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg );
+
 protected:
     friend class FBuild;
     friend struct FBuildStats;
@@ -214,12 +217,15 @@ protected:
 
     inline void SetIndex( uint32_t index ) { m_Index = index; }
 
-    // each node must implement these core functions
+    // each node implements a subset of these as needed
+    virtual bool DetermineNeedToBuildStatic() const;
+    virtual bool DetermineNeedToBuildDynamic() const;
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
-    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const;
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
+
+    bool DetermineNeedToBuild( const Dependencies & deps ) const;
 
     void SetLastBuildTime( uint32_t ms );
     inline void     AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
@@ -229,11 +235,12 @@ protected:
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
     static void FixupPathForVSIntegration_SNC( AString & line, const char * tag );
     static void FixupPathForVSIntegration_VBCC( AString & line, const char * tag );
+    static void CleanPathForVSIntegration( const AString & path, AString & outFixedPath );
 
     static void Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri );
     static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );
-    static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
-    static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
+    static void Deserialize( ConstMemoryStream & stream, void * base, const ReflectionInfo & ri );
+    static void Deserialize( ConstMemoryStream & stream, void * base, const ReflectedProperty & property );
 
     virtual void Migrate( const Node & oldNode );
 

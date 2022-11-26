@@ -6,6 +6,7 @@
 #include "BuildProfiler.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
@@ -38,18 +39,18 @@ void BuildProfiler::StartMetricsGathering()
     PROFILE_FUNCTION;
 
     ASSERT( m_Thread == INVALID_THREAD_HANDLE );
-    m_ThreadExit = false;
+    m_ThreadExit.Store( false );
     m_Thread = Thread::CreateThread( MetricsThreadWrapper, "BuildProfileMetrics" );
 }
 
 // StopMetricsGathering
 //------------------------------------------------------------------------------
-/*static*/ void BuildProfiler::StopMetricsGathering()
+void BuildProfiler::StopMetricsGathering()
 {
     PROFILE_FUNCTION;
 
     ASSERT( m_Thread != INVALID_THREAD_HANDLE );
-    m_ThreadExit = true;
+    m_ThreadExit.Store( true );
     m_ThreadSignalSemaphore.Signal();
     Thread::WaitForThread( m_Thread );
     Thread::CloseHandle( m_Thread );
@@ -126,6 +127,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     // Section headings
     // - Global metrics
     buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
+    buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-3,\"tid\":0,\"args\":{\"name\":\"Network Usage\"}},";
 
     // - Local Processing
     AStackString<> args( options.GetArgs() );
@@ -154,7 +156,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     // Serialize events
     AStackString<> nameBuffer;
     const double freqMul = ( static_cast<double>( Timer::GetFrequencyInvFloatMS()) * 1000.0 );
-    for ( Event & event : m_Events )
+    for ( const Event & event : m_Events )
     {
         // Emit event with duration
         buffer.AppendFormat( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u",
@@ -179,15 +181,23 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     for ( const Metrics & metrics : m_Metrics )
     {
         // Total Memory
-        buffer.AppendFormat( "{\"name\":\"Total Mem\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
+        buffer.AppendFormat( "{\"name\":\"Total (MiB)\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
                              (uint64_t)( (double)metrics.m_Time * freqMul ),
                              metrics.m_TotalMemoryMiB );
-        // Distributed Memory
-        if ( metrics.m_DistributedMemoryMiB > 0 )
+        // Job Memory
+        if ( metrics.m_JobMemoryMiB > 0 )
         {
-            buffer.AppendFormat( "{\"name\":\"Distributed Mem\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
+            buffer.AppendFormat( "{\"name\":\"Job (MiB)\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
                                  (uint64_t)( (double)metrics.m_Time * freqMul ),
-                                 metrics.m_DistributedMemoryMiB );
+                                 metrics.m_JobMemoryMiB );
+        }
+
+        // Network Connections (if using distributed compilation)
+        if ( metrics.m_NumConnections > 0 )
+        {
+            buffer.AppendFormat( "{\"name\":\"Connections\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-3,\"args\":{\"Num\":%u}},",
+                                    (uint64_t)( (double)metrics.m_Time * freqMul ),
+                                    metrics.m_NumConnections );
         }
     }
 
@@ -243,11 +253,14 @@ void BuildProfiler::MetricsUpdate()
 #endif
 
         // Memory used by distributed jobs
-        metrics.m_DistributedMemoryMiB = (uint32_t)( Job::GetTotalLocalDataMemoryUsage() / ( 1024 * 1024 ) );
+        metrics.m_JobMemoryMiB = (uint32_t)( Job::GetTotalLocalDataMemoryUsage() / ( 1024 * 1024 ) );
+
+        // Network connections
+        metrics.m_NumConnections = (uint16_t)FBuild::Get().GetNumWorkerConnections();
 
         // Exit if we're finished. We check the exit condition here to ensure
         // we always do one final metrics gathering operation before exiting
-        if ( m_ThreadExit )
+        if ( m_ThreadExit.Load() )
         {
             return;
         }
@@ -261,8 +274,10 @@ void BuildProfiler::MetricsUpdate()
 //------------------------------------------------------------------------------
 BuildProfilerScope::BuildProfilerScope( const char * stepName )
 {
+    m_Active = BuildProfiler::IsValid();
+
     // Only record info if the BuildProfiler is active
-    if ( BuildProfiler::IsValid() )
+    if ( m_Active )
     {
         m_ThreadId = 0;
         m_StepName = stepName;
@@ -276,23 +291,23 @@ BuildProfilerScope::BuildProfilerScope( const char * stepName )
 
 // CONSTRUCTOR (BuildProfilerScope)
 //------------------------------------------------------------------------------
-BuildProfilerScope::BuildProfilerScope( Job * job, uint32_t threadId, const char * stepName )
+BuildProfilerScope::BuildProfilerScope( Job & job, uint32_t threadId, const char * stepName )
 {
+    m_Active = ( BuildProfiler::IsValid() &&
+                 job.IsLocal() ); // When testing, remote jobs can occur in the same process
+
     // Only record info if the BuildProfiler is active
-    if ( BuildProfiler::IsValid() )
+    if ( m_Active )
     {
         m_ThreadId = threadId;
         m_StepName = stepName;
-        m_TargetName = job->GetNode()->GetName().Get();
+        m_TargetName = job.GetNode()->GetName().Get();
         m_StartTime = Timer::GetNow();
     }
 
     // Hook into associated job
-    m_Job = job;
-    if ( m_Job )
-    {
-        m_Job->SetBuildProfilerScope( this );
-    }
+    m_Job = &job;
+    m_Job->SetBuildProfilerScope( this );
 }
 
 // DESTRUCTOR (BuildProfilerScope)
@@ -300,7 +315,7 @@ BuildProfilerScope::BuildProfilerScope( Job * job, uint32_t threadId, const char
 BuildProfilerScope::~BuildProfilerScope()
 {
     // Commit profiling info
-    if ( BuildProfiler::IsValid() )
+    if ( m_Active )
     {
         BuildProfiler::Get().RecordLocal( m_ThreadId, m_StartTime, Timer::GetNow(), m_StepName, m_TargetName );
     }

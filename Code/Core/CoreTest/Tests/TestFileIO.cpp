@@ -3,9 +3,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
+#if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h"
+#endif
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Random.h"
@@ -20,7 +23,7 @@
 
 // TestFileIO
 //------------------------------------------------------------------------------
-class TestFileIO : public UnitTest
+class TestFileIO : public TestGroup
 {
 private:
     DECLARE_TESTS
@@ -33,6 +36,9 @@ private:
     void ReadOnly() const;
     void FileTime() const;
     void LongPaths() const;
+    #if defined( __WINDOWS__ )
+        void NormalizeWindowsPathCasing() const;
+    #endif
 
     // Helpers
     mutable Random m_Random;
@@ -50,6 +56,9 @@ REGISTER_TESTS_BEGIN( TestFileIO )
     REGISTER_TEST( ReadOnly )
     REGISTER_TEST( FileTime )
     REGISTER_TEST( LongPaths )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( NormalizeWindowsPathCasing )
+    #endif
 REGISTER_TESTS_END
 
 // FileExists
@@ -300,7 +309,7 @@ void TestFileIO::FileTime() const
 
     // manually set time back
     TEST_ASSERT( FileIO::SetFileLastWriteTime( path, oldTime ) == true );
-    uint64_t timeNow = FileIO::GetFileLastWriteTime( path );
+    const uint64_t timeNow = FileIO::GetFileLastWriteTime( path );
     TEST_ASSERT( timeNow == oldTime );
 }
 
@@ -470,5 +479,42 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
     buffer.Format( "TestFileIO.%u.%u", Process::GetCurrentId(), m_Random.GetRand() );
     tmpFileName += buffer;
 }
+
+// NormalizeWindowsPathCasing
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    void TestFileIO::NormalizeWindowsPathCasing() const
+    {
+        #define CHECK_NORMALIZATION( badPath, expectedPath ) \
+            do { \
+                AStackString<> normalizedPath; \
+                TEST_ASSERT( FileIO::NormalizeWindowsPathCasing( AStackString<>( badPath ), normalizedPath ) ); \
+                TEST_ASSERT( normalizedPath == expectedPath ); \
+            } while( false )
+
+        // Out test needs to rely on some generally available directory.
+        // While technically Windows can be installed on different drives or folders
+        // it's reasonable for our test to not support that.
+        TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( "C:\\Windows" ) ) );
+
+        // Folder parts get the actual case of folders on disk
+        CHECK_NORMALIZATION( "C:\\WINDOWS", "C:\\Windows" );
+        CHECK_NORMALIZATION( "C:\\windows\\sySTem32", "C:\\Windows\\System32" );
+
+        // Drive letters are upper-case
+        CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
+        CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
+
+        // Drive only
+        CHECK_NORMALIZATION( "C:\\", "C:\\" );
+        CHECK_NORMALIZATION( "c:\\", "C:\\" );
+
+        // Paths that partially exist have the parts that exist fixed up
+        // but the parts that don't left alone
+        CHECK_NORMALIZATION( "c:\\winDOWs\\FolderThatDoesNotExist", "C:\\Windows\\FolderThatDoesNotExist" );
+
+        #undef CHECK_NORMALIZATION
+    }
+#endif
 
 //------------------------------------------------------------------------------

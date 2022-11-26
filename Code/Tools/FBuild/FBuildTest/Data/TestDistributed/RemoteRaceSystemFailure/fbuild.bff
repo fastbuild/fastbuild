@@ -1,0 +1,32 @@
+//
+// RemoteRaceSystemFailure
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers = { "127.0.0.1" }
+}
+
+// Common settings
+.CompilerOutputPath         = '$StandardOutputBase$/Test/TestDistributed/RemoteRaceSystemFailure/'
+.CompilerOptions            + ' "-ITools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceSystemFailure"'
+
+// ObjectList
+//------------------------------------------------------------------------------
+ObjectList( 'RemoteRaceSystemFailure-Fast' )
+{
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceSystemFailure/Fast.cpp'
+}
+Alias( 'RemoteRaceSystemFailure' )
+{
+    .Targets    = {
+                    'RemoteRaceSystemFailure-Fast'
+                  }
+}
+
+//------------------------------------------------------------------------------

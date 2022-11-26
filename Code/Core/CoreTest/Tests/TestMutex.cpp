@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Atomic.h"
@@ -12,7 +12,7 @@
 
 // TestMutex
 //------------------------------------------------------------------------------
-class TestMutex : public UnitTest
+class TestMutex : public TestGroup
 {
 private:
     DECLARE_TESTS
@@ -91,10 +91,10 @@ void TestMutex::TestExclusivity() const
     Thread::ThreadHandle h = Thread::CreateThread( TestExclusivityThreadEntryFunction,
                                                    "TestExclusivity",
                                                    ( 64 * KILOBYTE ),
-                                                   static_cast< void * >( &data ) );
+                                                   &data );
 
     // arrive at barrier and wait
-    AtomicIncU32( &data.m_BarrierCounter );
+    AtomicInc( &data.m_BarrierCounter );
     while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
 
     // increment
@@ -121,7 +121,7 @@ void TestMutex::TestExclusivity() const
     TestExclusivityUserData & data = *( static_cast< TestExclusivityUserData * >( userData ) );
 
     // arrive at barrier and wait
-    AtomicIncU32( &data.m_BarrierCounter );
+    AtomicInc( &data.m_BarrierCounter );
     while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
 
     // increment

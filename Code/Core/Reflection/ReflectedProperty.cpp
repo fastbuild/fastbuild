@@ -66,7 +66,7 @@ size_t ReflectedProperty::GetPropertySize() const
         case PT_STRUCT:
         {
             const ReflectedPropertyStruct * rps = static_cast< const ReflectedPropertyStruct * >( this );
-            size_t structSize = rps->GetStructReflectionInfo()->GetStructSize();
+            const size_t structSize = rps->GetStructReflectionInfo()->GetStructSize();
             ASSERT( structSize > 0 );
             return structSize;
         }

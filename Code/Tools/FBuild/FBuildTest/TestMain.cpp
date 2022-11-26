@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // main
 //------------------------------------------------------------------------------
@@ -55,9 +55,9 @@ int main( int, char *[] )
         REGISTER_TESTGROUP( TestZW )
     #endif
 
-    UnitTestManager utm;
+    TestManager utm;
 
-    bool allPassed = utm.RunTests();
+    const bool allPassed = utm.RunTests();
 
     return allPassed ? 0 : -1;
 }

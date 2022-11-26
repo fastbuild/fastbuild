@@ -282,9 +282,9 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 //------------------------------------------------------------------------------
 /*static*/ Node::BuildResult JobQueueRemote::DoBuild( Job * job, bool racingRemoteJob )
 {
-    BuildProfilerScope profileScope( job, WorkerThread::GetThreadIndex(), job->GetNode()->GetTypeName() );
+    BuildProfilerScope profileScope( *job, WorkerThread::GetThreadIndex(), job->GetNode()->GetTypeName() );
 
-    Timer timer; // track how long the item takes
+    const Timer timer; // track how long the item takes
 
     ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
 
@@ -338,10 +338,18 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         }
     }
 
-    uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
+    const uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
     if ( result == Node::NODE_RESULT_FAILED )
     {
+        // Locally we don't record the build time for failures as we
+        // want to keep the last successful build time for job ordering.
+        // If building remotely, we want to return the time taken however.
+        if ( job->IsLocal() == false )
+        {
+            node->SetLastBuildTime( timeTakenMS );
+        }
+
         node->SetStatFlag( Node::STATS_FAILED );
     }
     else
@@ -349,8 +357,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         // build completed ok
         ASSERT( result == Node::NODE_RESULT_OK );
 
-        // record new build time only if built (i.e. if failed, the time
-        // does not represent how long it takes to create this resource)
+        // record new build time
         node->SetLastBuildTime( timeTakenMS );
         node->SetStatFlag( Node::STATS_BUILT );
 

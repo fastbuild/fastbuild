@@ -16,6 +16,7 @@
 #include "Core/Env/Env.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
@@ -237,6 +238,9 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         g.AddConfig( cfg );
     }
 
+    // Accumulate stamp from file contents
+    uint64_t stamp = 0;
+
     // Generate project.pbxproj file
     {
         const AString & output = g.GeneratePBXProj();
@@ -244,6 +248,9 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         {
             return Node::NODE_RESULT_FAILED; // WriteIfDifferent will have emitted an error
         }
+
+        // Combine hash
+        stamp += xxHash::Calc64( output );
     }
 
     // Get folder containing project.pbxproj
@@ -275,6 +282,9 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         {
             return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
         }
+
+        // Combine hash
+        stamp += xxHash::Calc64( output );
     }
 
     // Generate .xcscheme file
@@ -293,7 +303,13 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         {
             return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
         }
+
+        // Combine hash
+        stamp += xxHash::Calc64( output );
     }
+
+    // Record stamp representing the contents of the files
+    m_Stamp = stamp;
 
     return Node::NODE_RESULT_OK;
 }

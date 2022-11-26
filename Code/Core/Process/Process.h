@@ -19,38 +19,38 @@ public:
                       const volatile bool * abortFlag = nullptr );
     ~Process();
 
-    bool Spawn( const char * executable,
-                const char * args,
-                const char * workingDir,
-                const char * environment,
-                bool shareHandles = false );
-    bool IsRunning() const;
-    int32_t WaitForExit();
-    void Detach();
-    void KillProcessTree();
+    [[nodiscard]] bool          Spawn( const char * executable,
+                                       const char * args,
+                                       const char * workingDir,
+                                       const char * environment,
+                                       bool shareHandles = false );
+    [[nodiscard]] bool          IsRunning() const;
+    int32_t                     WaitForExit();
+    void                        Detach();
+    void                        KillProcessTree();
 
     // Read all data from the process until it exits
     // NOTE: Owner must free the returned memory!
-    bool ReadAllData( AString & memOut,
-                      AString & errOut,
-                      uint32_t timeOutMS = 0 );
+    bool                        ReadAllData( AString & memOut,
+                                             AString & errOut,
+                                             uint32_t timeOutMS = 0 );
 
     #if defined( __WINDOWS__ )
         // Prevent handles being redirected
-        inline void DisableHandleRedirection() { m_RedirectHandles = false; }
+        void                    DisableHandleRedirection() { m_RedirectHandles = false; }
     #endif
-    bool HasAborted() const { return m_HasAborted; }
-    static uint32_t GetCurrentId();
+    [[nodiscard]] bool          HasAborted() const { return m_HasAborted; }
+    [[nodiscard]] static uint32_t   GetCurrentId();
 
 private:
     #if defined( __WINDOWS__ )
         void KillProcessTreeInternal( const void * hProc, // HANDLE
                                       const uint32_t processID,
                                       const uint64_t processCreationTime );
-        static uint64_t GetProcessCreationTime( const void * hProc ); // HANDLE
-        void Read( void * handle, AString & buffer );
+        [[nodiscard]] static uint64_t   GetProcessCreationTime( const void * hProc ); // HANDLE
+        void                    Read( void * handle, AString & buffer );
     #else
-        void Read( int handle, AString & buffer );
+        void                    Read( int handle, AString & buffer );
     #endif
 
     void Terminate();

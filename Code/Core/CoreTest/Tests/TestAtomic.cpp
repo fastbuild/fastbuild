@@ -3,187 +3,180 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 
 // Macros
 //------------------------------------------------------------------------------
-#define IMPLEMENT_TEST( type, function, initialValue, expectedResult )                          \
-    struct Test##function##UserData                                                             \
-    {                                                                                           \
-        volatile type m_Count;                                                                  \
-        volatile uint32_t m_BarrierCounter;                                                     \
-    };                                                                                          \
-    void Test##function() const                                                                 \
-    {                                                                                           \
-        Test##function##UserData data;                                                          \
-        data.m_Count = initialValue;                                                            \
-        data.m_BarrierCounter = 0;                                                              \
-                                                                                                \
-        Thread::ThreadHandle h = Thread::CreateThread( Test##function##ThreadEntryFunction,     \
-                                                       #function,                               \
-                                                       ( 64 * KILOBYTE ),                       \
-                                                       static_cast< void * >( &data ) );        \
-                                                                                                \
-        AtomicIncU32( &data.m_BarrierCounter );                                                 \
-        while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}                           \
-                                                                                                \
-        for ( size_t i = 0; i < 1000000; ++i )                                                  \
-        {                                                                                       \
-            function( &data.m_Count );                                                          \
-        }                                                                                       \
-                                                                                                \
-        bool timedOut = false;                                                                  \
-        Thread::WaitForThread( h, 1000, timedOut );                                             \
-        TEST_ASSERT( timedOut == false );                                                       \
-        Thread::CloseHandle( h );                                                               \
-                                                                                                \
-        type res = AtomicLoadRelaxed( &data.m_Count );                                          \
-        TEST_ASSERT( res == expectedResult );                                                   \
-    }                                                                                           \
-    static uint32_t Test##function##ThreadEntryFunction( void * userData )                      \
-    {                                                                                           \
-        Test##function##UserData & data = *( static_cast< Test##function##UserData * >( userData ) ); \
-                                                                                                \
-        AtomicIncU32( &data.m_BarrierCounter );                                                 \
-        while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}                           \
-                                                                                                \
-        for ( size_t i = 0; i < 1000000; ++i )                                                  \
-        {                                                                                       \
-            function( &data.m_Count );                                                          \
-        }                                                                                       \
-                                                                                                \
-        return 0;                                                                               \
+template<typename T>
+class AtomicTestHelper
+{
+public:
+    static const size_t loopCount = 10000;
+    static const size_t addValue = 3;
+    static const size_t subValue = 7;
+
+    AtomicTestHelper()
+    {
+        const T initialValue = 99;
+        PRAGMA_DISABLE_PUSH_MSVC(4307) // integral constant overflow
+        PRAGMA_DISABLE_PUSH_MSVC(4309) // truncation of constant value
+        const T expectedResult = static_cast<T>( initialValue + ( 2 * loopCount * ( addValue - subValue ) ) );
+        PRAGMA_DISABLE_POP_MSVC
+        PRAGMA_DISABLE_POP_MSVC
+
+        // Initialize direct value
+        AtomicStoreRelaxed( &m_Count, initialValue );
+        AtomicStoreRelease( &m_Count, initialValue ); // Redundant to check template
+
+        // Initialize Atomic<>
+        m_Count2.Store( initialValue );
+
+        // Check basic direct operations
+        TEST_ASSERT( AtomicInc( &m_Count ) == ( initialValue + 1 ) ); // Returns new value
+        TEST_ASSERT( AtomicDec( &m_Count ) == initialValue ); // Returns new value
+        TEST_ASSERT( AtomicAdd( &m_Count, (T)13 ) == ( initialValue + (T)13 ) ); // Returns new value
+        TEST_ASSERT( AtomicSub( &m_Count, (T)13 ) == initialValue ); // Returns new value
+
+        // Check basic Atomic<> operations
+        m_Count2.Increment();
+        TEST_ASSERT( m_Count2.Load() == ( initialValue + 1 ) );
+        m_Count2.Decrement();
+        TEST_ASSERT( m_Count2.Load() == initialValue );
+        m_Count2.Add( 13 );
+        TEST_ASSERT( m_Count2.Load() == ( initialValue + 13 ) );
+        m_Count2.Sub( 13 );
+        TEST_ASSERT( m_Count2.Load() == initialValue );
+
+        // Spawn thread
+        Thread::ThreadHandle h = Thread::CreateThread( ThreadWrapper,
+                                                       "AtomicTestHelper",
+                                                       ( 64 * KILOBYTE ),
+                                                       this );
+
+        // Do works locally that mirrors the thread
+        DoWork();
+
+        // Join thread
+        bool timedOut = false;
+        Thread::WaitForThread( h, 1000, timedOut );
+        TEST_ASSERT( timedOut == false );
+        Thread::CloseHandle( h );
+
+        // Check expected results
+        TEST_ASSERT( AtomicLoadRelaxed( &m_Count ) == expectedResult );
+        TEST_ASSERT( AtomicLoadAcquire( &m_Count ) == expectedResult ); // Redundant to check template
+        TEST_ASSERT( m_Count2.Load() == expectedResult );
     }
+
+protected:
+    void DoWork()
+    {
+        for ( size_t i = 0; i < loopCount; ++i )
+        {
+            // Direct
+            AtomicInc( &m_Count );
+            AtomicAdd( &m_Count, static_cast<T>( 3 ) );
+            AtomicDec( &m_Count );
+            AtomicSub( &m_Count, static_cast<T>( 7 ) );
+
+            // Atomic<>
+            m_Count2.Increment();
+            m_Count2.Add( 3 );
+            m_Count2.Decrement();
+            m_Count2.Sub( 7 );
+        }
+    }
+
+    static uint32_t ThreadWrapper( void * userData )
+    {
+        static_cast<AtomicTestHelper *>( userData )->DoWork();
+        return 0;
+    }
+
+    // Test values to operator on
+    volatile T          m_Count;    // Direct access
+    Atomic<T>           m_Count2;   // Via Atomic<> helper
+};
 
 // TestAtomic
 //------------------------------------------------------------------------------
-class TestAtomic : public UnitTest
+class TestAtomic : public TestGroup
 {
 private:
     DECLARE_TESTS
 
-    // Increment
-    IMPLEMENT_TEST( uint32_t, AtomicIncU32, 0, 2000000 )
-    IMPLEMENT_TEST( uint64_t, AtomicIncU64, 0, 2000000 )
-    IMPLEMENT_TEST( int32_t, AtomicInc32, 0, 2000000 )
-    IMPLEMENT_TEST( int64_t, AtomicInc64, 0, 2000000 )
+    // Basic types
+    template<typename T>
+    void DoAtomicTestsForType()
+    {
+        const AtomicTestHelper<T> helper;
+    }
 
-    // Decrement
-    IMPLEMENT_TEST( uint32_t, AtomicDecU32, 2000000, 0 )
-    IMPLEMENT_TEST( uint64_t, AtomicDecU64, 2000000, 0 )
-    IMPLEMENT_TEST( int32_t, AtomicDec32, 0, -2000000 )
-    IMPLEMENT_TEST( int64_t, AtomicDec64, 0, -2000000 )
+    // Boolean
+    void Boolean() const;
 
-    // Add
-    void Add32() const;
-    void AddU32() const;
-    void Add64() const;
-    void AddU64() const;
-
-    // Sub
-    void Sub32() const;
-    void SubU32() const;
-    void Sub64() const;
-    void SubU64() const;
+    // Pointer
+    void Pointer() const;
 };
 
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestAtomic )
-    // Increment
-    REGISTER_TEST( TestAtomicIncU32 )
-    REGISTER_TEST( TestAtomicIncU64 )
-    REGISTER_TEST( TestAtomicInc32 )
-    REGISTER_TEST( TestAtomicInc64 )
+    REGISTER_TEST( DoAtomicTestsForType<uint8_t> )
+    REGISTER_TEST( DoAtomicTestsForType<uint16_t> )
+    REGISTER_TEST( DoAtomicTestsForType<uint32_t> )
+    REGISTER_TEST( DoAtomicTestsForType<uint64_t> )
+    REGISTER_TEST( DoAtomicTestsForType<int8_t> )
+    REGISTER_TEST( DoAtomicTestsForType<int16_t> )
+    REGISTER_TEST( DoAtomicTestsForType<int32_t> )
+    REGISTER_TEST( DoAtomicTestsForType<int64_t> )
 
-    // Decrement
-    REGISTER_TEST( TestAtomicDecU32 )
-    REGISTER_TEST( TestAtomicDecU64 )
-    REGISTER_TEST( TestAtomicDec32 )
-    REGISTER_TEST( TestAtomicDec64 )
+    // Boolean
+    REGISTER_TEST( Boolean )
 
-    // Add
-    REGISTER_TEST( Add32 )
-    REGISTER_TEST( Add64 )
-
-    // Sub
-    REGISTER_TEST( Sub32 )
-    REGISTER_TEST( Sub64 )
+    // Pointer
+    REGISTER_TEST( Pointer )
 REGISTER_TESTS_END
 
-// Add32
+// Boolean
 //------------------------------------------------------------------------------
-void TestAtomic::Add32() const
+void TestAtomic::Boolean() const
 {
-    // Ensure return result is post-add
-    int32_t i32 = 0;
-    TEST_ASSERT( AtomicAdd32( &i32, -999 ) == -999 );
+    // Direct member
+    {
+        volatile bool b = false;
+        AtomicStoreRelease( &b, true );
+        TEST_ASSERT( AtomicLoadAcquire( &b ) == true );
+    }
+
+    // Atomic
+    {
+        Atomic<bool> b( false );
+        b.Store( true );
+        TEST_ASSERT( b.Load() == true );
+    }
 }
 
-// AddU32
+// Pointer
 //------------------------------------------------------------------------------
-void TestAtomic::AddU32() const
+void TestAtomic::Pointer() const
 {
-    // Ensure return result is post-add
-    uint32_t u32 = 0;
-    TEST_ASSERT( AtomicAddU32( &u32, 999 ) == 999 );
-}
+    // Direct member
+    {
+        const TestAtomic * volatile pointer;
+        AtomicStoreRelease( &pointer, this );
+        TEST_ASSERT( AtomicLoadAcquire( &pointer ) == this );
+    }
 
-// Add64
-//------------------------------------------------------------------------------
-void TestAtomic::Add64() const
-{
-    // Ensure return result is post-add
-    int64_t i64 = 0;
-    TEST_ASSERT( AtomicAdd64( &i64, -9876543210 ) == -9876543210 );
-}
-
-// AddU64
-//------------------------------------------------------------------------------
-void TestAtomic::AddU64() const
-{
-    // Ensure return result is post-add
-    uint64_t u64 = 0;
-    TEST_ASSERT( AtomicAddU64( &u64, 9876543210 ) == 9876543210 );
-}
-
-// Sub32
-//------------------------------------------------------------------------------
-void TestAtomic::Sub32() const
-{
-    // Ensure return result is post-sub
-    int32_t i32 = 0;
-    TEST_ASSERT( AtomicSub32( &i32, 999 ) == -999 );
-}
-
-// SubU32
-//------------------------------------------------------------------------------
-void TestAtomic::SubU32() const
-{
-    // Ensure return result is post-sub
-    uint32_t u32 = 999;
-    TEST_ASSERT( AtomicSubU32( &u32, 999 ) == 0 );
-}
-
-// Sub64
-//------------------------------------------------------------------------------
-void TestAtomic::Sub64() const
-{
-    // Ensure return result is post-sub
-    int64_t i64 = 0;
-    TEST_ASSERT( AtomicSub64( &i64, 9876543210 ) == -9876543210 );
-}
-
-// SubU64
-//------------------------------------------------------------------------------
-void TestAtomic::SubU64() const
-{
-    // Ensure return result is post-sub
-    uint64_t u64 = 9876543210;
-    TEST_ASSERT( AtomicSubU64( &u64, 9876543210 ) == 0 );
+    // Atomic
+    {
+        Atomic<const TestAtomic *> pointer( nullptr );
+        pointer.Store( this );
+        TEST_ASSERT( pointer.Load() == this );
+    }
 }
 
 //------------------------------------------------------------------------------

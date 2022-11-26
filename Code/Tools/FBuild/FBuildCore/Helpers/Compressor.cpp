@@ -40,6 +40,7 @@ Compressor::~Compressor()
 //------------------------------------------------------------------------------
 /*static*/ bool Compressor::IsValidData( const void * data, size_t dataSize )
 {
+    ASSERT( data );
     const Header * header = (const Header *)data;
     if ( header->m_CompressionType > 1 )
     {

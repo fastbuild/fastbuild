@@ -20,6 +20,7 @@
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -183,7 +184,7 @@ SLNNode::SLNNode()
         return false; // MergeProjects will have emitted an error
     }
     // SolutionFolders
-    for ( SolutionFolder & solutionFolder : m_SolutionFolders )
+    for ( const SolutionFolder & solutionFolder : m_SolutionFolders )
     {
         if ( !GatherProjects( nodeGraph, function, iter, "SolutionFolders", solutionFolder.m_Projects, projects ) )
         {
@@ -191,7 +192,7 @@ SLNNode::SLNNode()
         }
     }
     // SolutionDependencies
-    for ( SolutionDependency & solutionDependency : m_SolutionDependencies )
+    for ( const SolutionDependency & solutionDependency : m_SolutionDependencies )
     {
         if ( !GatherProjects( nodeGraph, function, iter, "Projects", solutionDependency.m_Projects, projects ) )
         {
@@ -204,7 +205,7 @@ SLNNode::SLNNode()
     }
 
     // SolutionConfigs
-    for ( SolutionConfig & solutionConfig : m_SolutionConfigs )
+    for ( const SolutionConfig & solutionConfig : m_SolutionConfigs )
     {
         // SolutionBuildProjects
         if ( !GatherProjects( nodeGraph, function, iter, "SolutionBuildProject", solutionConfig.m_SolutionBuildProjects, projects ) )
@@ -274,7 +275,7 @@ SLNNode::~SLNNode() = default;
 
     // projects
     Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize(), false );
-    for ( Dependency & dep : m_StaticDependencies )
+    for ( const Dependency & dep : m_StaticDependencies )
     {
         const Node * node = dep.GetNode();
         VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
@@ -297,6 +298,9 @@ SLNNode::~SLNNode() = default;
         return NODE_RESULT_FAILED; // Save will have emitted an error
     }
 
+    // Record stamp representing the contents of the files
+    m_Stamp = xxHash::Calc64( sln );
+
     return NODE_RESULT_OK;
 }
 
@@ -318,7 +322,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     else
     {
         // files differ in size?
-        size_t oldFileSize = (size_t)old.GetFileSize();
+        const size_t oldFileSize = (size_t)old.GetFileSize();
         if ( oldFileSize != content.GetLength() )
         {
             needToWrite = true;

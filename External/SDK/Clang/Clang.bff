@@ -18,6 +18,7 @@
     //#define USING_CLANG_9
     //#define USING_CLANG_10
     #define USING_CLANG_11
+    //#define USING_CLANG_14
 #endif
 
 // Activate
@@ -65,6 +66,9 @@
     #endif
     #if USING_CLANG_11
         #include "Windows/Clang11.bff"
+    #endif
+    #if USING_CLANG_14
+        #include "Windows/Clang14.bff"
     #endif
 #endif
 

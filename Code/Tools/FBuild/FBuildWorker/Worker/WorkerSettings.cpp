@@ -32,7 +32,7 @@ WorkerSettings::WorkerSettings()
     , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
 {
     // half CPUs available to use by default
-    uint32_t numCPUs = Env::GetNumProcessors();
+    const uint32_t numCPUs = Env::GetNumProcessors();
     m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
 
     Load();

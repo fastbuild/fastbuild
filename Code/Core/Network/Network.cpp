@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/Network/NetworkStartupHelper.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AString.h"
@@ -28,7 +29,7 @@
 {
     PROFILE_FUNCTION;
 
-    NetworkStartupHelper nsh; // ensure network is up if not already
+    const NetworkStartupHelper nsh; // ensure network is up if not already
 
     char buffer[ 64 ];
     if ( ::gethostname( buffer, 64 ) == 0 )
@@ -47,7 +48,7 @@
 {
     PROFILE_FUNCTION;
 
-    NetworkStartupHelper nsh; // ensure network is up if not already
+    const NetworkStartupHelper nsh; // ensure network is up if not already
 
     #if defined( __WINDOWS__ )
         TCHAR buffer[ 256 ];
@@ -86,7 +87,7 @@
     // see if string it already in ip4 format
     PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // Deprecated...
     PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'inet_addr' is deprecated: This function or variable may be unsafe...
-    uint32_t ip = inet_addr( hostName.Get() ); // TODO:C Consider using inet_pton()
+    const uint32_t ip = inet_addr( hostName.Get() ); // TODO:C Consider using inet_pton()
     PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
     PRAGMA_DISABLE_POP_MSVC // 4996
     if ( ip != INADDR_NONE )
@@ -169,7 +170,7 @@
     {
         PROFILE_FUNCTION;
 
-        NetworkStartupHelper helper;
+        const NetworkStartupHelper helper;
 
         AStackString<> hostName;
 

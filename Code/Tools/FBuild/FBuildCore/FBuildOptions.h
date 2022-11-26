@@ -76,6 +76,7 @@ public:
     bool        m_NoLocalConsumptionOfRemoteJobs    = false;
     bool        m_AllowLocalRace                    = true;
     uint16_t    m_DistributionPort                  = Protocol::PROTOCOL_PORT;
+    int16_t     m_DistributionCompressionLevel      = -1; // See Compresssor.h
 
     // General Output
     bool        m_ShowVerbose                       = false;

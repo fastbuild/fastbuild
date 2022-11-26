@@ -54,16 +54,16 @@ TextFileNode::TextFileNode()
 //------------------------------------------------------------------------------
 TextFileNode::~TextFileNode() = default;
 
-// DetermineNeedToBuild
+// DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
-/*virtual*/ bool TextFileNode::DetermineNeedToBuild( const Dependencies & deps ) const
+/*virtual*/ bool TextFileNode::DetermineNeedToBuildStatic() const
 {  
     if ( m_TextFileAlways )
     {
         FLOG_VERBOSE( "Need to build '%s' (TextFileAlways = true)", GetName().Get() );
         return true;
     }
-    return Node::DetermineNeedToBuild( deps );
+    return Node::DetermineNeedToBuildStatic();
 }
 
 // DoBuild
@@ -92,7 +92,7 @@ TextFileNode::~TextFileNode() = default;
         FLOG_ERROR( "Could not open '%s' for writing", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
-    uint64_t nWritten = stream.WriteBuffer( textFileContents.Get(), textFileContents.GetLength() );
+    const uint64_t nWritten = stream.WriteBuffer( textFileContents.Get(), textFileContents.GetLength() );
     stream.Close();
 
     if ( nWritten != textFileContents.GetLength() )

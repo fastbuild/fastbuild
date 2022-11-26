@@ -1,10 +1,10 @@
-// UnitTestManager.cpp
+// TestManager.cpp
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
-#include "UnitTestManager.h"
-#include "UnitTest.h"
+#include "TestManager.h"
+#include "TestGroup.h"
 
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
@@ -22,10 +22,10 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ uint32_t UnitTestManager::s_NumTests( 0 );
-/*static*/ UnitTestManager::TestInfo UnitTestManager::s_TestInfos[ MAX_TESTS ];
-/*static*/ UnitTestManager * UnitTestManager::s_Instance = nullptr;
-/*static*/ UnitTest * UnitTestManager::s_FirstTest = nullptr;
+/*static*/ uint32_t TestManager::s_NumTests( 0 );
+/*static*/ TestManager::TestInfo TestManager::s_TestInfos[ MAX_TESTS ];
+/*static*/ TestManager * TestManager::s_Instance = nullptr;
+/*static*/ TestGroup * TestManager::s_FirstTest = nullptr;
 
 // OnAssert callback
 //------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ void OnAssert( const char * /*message*/ )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-UnitTestManager::UnitTestManager()
+TestManager::TestManager()
 {
     // manage singleton
     ASSERT( s_Instance == nullptr );
@@ -59,7 +59,7 @@ UnitTestManager::UnitTestManager()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-UnitTestManager::~UnitTestManager()
+TestManager::~TestManager()
 {
     #ifdef ASSERTS_ENABLED
         if ( IsDebuggerAttached() == false )
@@ -69,10 +69,10 @@ UnitTestManager::~UnitTestManager()
     #endif
 
     // free all registered tests
-    UnitTest * testGroup = s_FirstTest;
+    TestGroup * testGroup = s_FirstTest;
     while ( testGroup )
     {
-        UnitTest * next = testGroup->m_NextTestGroup;
+        TestGroup * next = testGroup->m_NextTestGroup;
         FDELETE testGroup;
         testGroup = next;
     }
@@ -85,7 +85,7 @@ UnitTestManager::~UnitTestManager()
 // Get
 //------------------------------------------------------------------------------
 #ifdef DEBUG
-    /*static*/ UnitTestManager & UnitTestManager::Get()
+    /*static*/ TestManager & TestManager::Get()
     {
         ASSERT( s_Instance );
         return *s_Instance;
@@ -94,7 +94,7 @@ UnitTestManager::~UnitTestManager()
 
 // RegisterTest
 //------------------------------------------------------------------------------
-/*static*/ void UnitTestManager::RegisterTestGroup( UnitTest * testGroup )
+/*static*/ void TestManager::RegisterTestGroup( TestGroup * testGroup )
 {
     // first ever test? place as head of list
     if ( s_FirstTest == nullptr )
@@ -104,7 +104,7 @@ UnitTestManager::~UnitTestManager()
     }
 
     // link to end of list
-    UnitTest * thisGroup = s_FirstTest;
+    TestGroup * thisGroup = s_FirstTest;
     for ( ;; )
     {
         if ( thisGroup->m_NextTestGroup == nullptr )
@@ -118,13 +118,13 @@ UnitTestManager::~UnitTestManager()
 
 // RunTests
 //------------------------------------------------------------------------------
-bool UnitTestManager::RunTests( const char * testGroup )
+bool TestManager::RunTests( const char * testGroup )
 {
     // Reset results so RunTests can be called multiple times
     s_NumTests = 0;
 
     // check for compile time filter
-    UnitTest * test = s_FirstTest;
+    TestGroup * test = s_FirstTest;
     while ( test )
     {
         if ( testGroup != nullptr )
@@ -163,7 +163,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
     OUTPUT( "Summary For All Tests\n" );
     uint32_t numPassed = 0;
     float totalTime = 0.0f;
-    UnitTest * lastGroup = nullptr;
+    TestGroup * lastGroup = nullptr;
     for ( size_t i = 0; i < s_NumTests; ++i )
     {
         const TestInfo & info = s_TestInfos[ i ];
@@ -200,7 +200,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
 
 // TestBegin
 //------------------------------------------------------------------------------
-void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
+void TestManager::TestBegin( TestGroup * testGroup, const char * testName )
 {
     // record info for this test
     ASSERT( s_NumTests < MAX_TESTS );
@@ -227,7 +227,7 @@ void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 
 // TestEnd
 //------------------------------------------------------------------------------
-void UnitTestManager::TestEnd()
+void TestManager::TestEnd()
 {
     TestInfo & info = s_TestInfos[ s_NumTests - 1 ];
 
@@ -244,7 +244,7 @@ void UnitTestManager::TestEnd()
         ProfileManager::Synchronize();
     #endif
 
-    float timeTaken = m_Timer.GetElapsed();
+    const float timeTaken = m_Timer.GetElapsed();
 
     info.m_TimeTaken = timeTaken;
 
@@ -268,9 +268,9 @@ void UnitTestManager::TestEnd()
 
 // AssertFailure
 //------------------------------------------------------------------------------
-/*static*/ bool UnitTestManager::AssertFailure( const char * message,
-                                                const char * file,
-                                                uint32_t line )
+/*static*/ bool TestManager::AssertFailure( const char * message,
+                                            const char * file,
+                                            uint32_t line )
 {
     OUTPUT( "\n-------- TEST ASSERTION FAILED --------\n" );
     OUTPUT( "%s(%u): Assert: %s", file, line, message );
@@ -278,7 +278,7 @@ void UnitTestManager::TestEnd()
 
     if ( IsDebuggerAttached() )
     {
-        return true; // tell the calling code to break at the failure sight
+        return true; // tell the calling code to break at the failure site
     }
 
     // throw will be caught by the unit test framework and noted as a failure
@@ -287,11 +287,11 @@ void UnitTestManager::TestEnd()
 
 // AssertFailureM
 //------------------------------------------------------------------------------
-/*static*/ bool UnitTestManager::AssertFailureM( const char * message,
-                                                 const char * file,
-                                                 uint32_t line,
-                                                 MSVC_SAL_PRINTF const char * formatString,
-                                                 ... )
+/*static*/ bool TestManager::AssertFailureM( const char * message,
+                                             const char * file,
+                                             uint32_t line,
+                                             MSVC_SAL_PRINTF const char * formatString,
+                                             ... )
 {
     AStackString< 4096 > buffer;
     va_list args;
@@ -306,7 +306,7 @@ void UnitTestManager::TestEnd()
 
     if ( IsDebuggerAttached() )
     {
-        return true; // tell the calling code to break at the failure sight
+        return true; // tell the calling code to break at the failure site
     }
 
     // throw will be caught by the unit test framework and noted as a failure

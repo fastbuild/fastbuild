@@ -92,13 +92,13 @@ LinkerNode::LinkerNode()
 
     // Check input/output args for Linker
     {
-        bool hasInputToken = ( m_LinkerOptions.Find( "%1" ) || m_LinkerOptions.Find( "\"%1\"" ) );
+        const bool hasInputToken = ( m_LinkerOptions.Find( "%1" ) || m_LinkerOptions.Find( "\"%1\"" ) );
         if ( hasInputToken == false )
         {
             Error::Error_1106_MissingRequiredToken( iter, function, ".LinkerOptions", "%1" );
             return false;
         }
-        bool hasOutputToken = ( m_LinkerOptions.Find( "%2" ) || m_LinkerOptions.Find( "\"%2\"" ) );
+        const bool hasOutputToken = ( m_LinkerOptions.Find( "%2" ) || m_LinkerOptions.Find( "\"%2\"" ) );
         if ( hasOutputToken == false )
         {
             Error::Error_1106_MissingRequiredToken( iter, function, ".LinkerOptions", "%2" );
@@ -224,10 +224,10 @@ LinkerNode::~LinkerNode()
 
         // spawn the process
         Process p( FBuild::Get().GetAbortBuildPointer() );
-        bool spawnOK = p.Spawn( m_Linker.Get(),
-                                fullArgs.GetFinalArgs().Get(),
-                                workingDir,
-                                environment );
+        const bool spawnOK = p.Spawn( m_Linker.Get(),
+                                      fullArgs.GetFinalArgs().Get(),
+                                      workingDir,
+                                      environment );
 
         if ( !spawnOK )
         {
@@ -247,7 +247,7 @@ LinkerNode::~LinkerNode()
 
         ASSERT( !p.IsRunning() );
         // Get result
-        int result = p.WaitForExit();
+        const int result = p.WaitForExit();
         if ( p.HasAborted() )
         {
             return NODE_RESULT_FAILED;
@@ -337,10 +337,10 @@ LinkerNode::~LinkerNode()
         EmitStampMessage();
 
         Process stampProcess( FBuild::Get().GetAbortBuildPointer() );
-        bool spawnOk = stampProcess.Spawn( linkerStampExe->GetName().Get(),
-                                           m_LinkerStampExeArgs.Get(),
-                                           nullptr,     // working dir
-                                           nullptr );   // env
+        const bool spawnOk = stampProcess.Spawn( linkerStampExe->GetName().Get(),
+                                                 m_LinkerStampExeArgs.Get(),
+                                                 nullptr,     // working dir
+                                                 nullptr );   // env
         if ( spawnOk == false )
         {
             if ( stampProcess.HasAborted() )
@@ -359,7 +359,7 @@ LinkerNode::~LinkerNode()
         ASSERT( !stampProcess.IsRunning() );
 
         // Get result
-        int result = stampProcess.WaitForExit();
+        const int result = stampProcess.WaitForExit();
         if ( stampProcess.HasAborted() )
         {
             return NODE_RESULT_FAILED;

@@ -8,6 +8,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class ConstMemoryStream;
 class IOStream;
 class Node;
 class NodeGraph;
@@ -56,7 +57,7 @@ public:
     {}
 
     void Save( IOStream & stream ) const;
-    bool Load( NodeGraph & nodeGraph, IOStream & stream );
+    void Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
 };
 
 //------------------------------------------------------------------------------

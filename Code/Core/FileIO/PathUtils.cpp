@@ -10,7 +10,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::IsFolderPath( const AString & path )
 {
-    size_t pathLen = path.GetLength();
+    const size_t pathLen = path.GetLength();
     if ( pathLen > 0 )
     {
         const char lastChar = path[ pathLen - 1 ];
@@ -86,10 +86,10 @@
     // Work out if ends match
     #if defined( __LINUX__ )
         // Linux : Case sensitive
-        bool endMatch = cleanPath.EndsWith( fileName );
+        const bool endMatch = cleanPath.EndsWith( fileName );
     #else
         // Windows & OSX : Case insensitive
-        bool endMatch = cleanPath.EndsWithI( fileName );
+        const bool endMatch = cleanPath.EndsWithI( fileName );
     #endif
     if ( !endMatch )
     {
@@ -118,7 +118,7 @@
 /*static*/ void PathUtils::EnsureTrailingSlash( AString & path )
 {
     // check for exsiting slash
-    size_t pathLen = path.GetLength();
+    const size_t pathLen = path.GetLength();
     if ( pathLen > 0 )
     {
         const char lastChar = path[ pathLen - 1 ];
@@ -145,7 +145,7 @@
     // Normalize slashes - TODO:C This could be optimized into one pass
     path.Replace( OTHER_SLASH, NATIVE_SLASH );
     #if defined( __WINDOWS__ )
-        bool isUNCPath = path.BeginsWith( NATIVE_DOUBLE_SLASH );
+        const bool isUNCPath = path.BeginsWith( NATIVE_DOUBLE_SLASH );
     #endif
     while( path.Replace( NATIVE_DOUBLE_SLASH, NATIVE_SLASH_STR ) ) {}
 

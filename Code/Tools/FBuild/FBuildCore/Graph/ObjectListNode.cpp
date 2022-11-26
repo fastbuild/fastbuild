@@ -67,6 +67,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     #endif
     REFLECT( m_ExtraPDBPath,                        "ExtraPDBPath",                     MetaHidden() )
     REFLECT( m_ExtraASMPath,                        "ExtraASMPath",                     MetaHidden() )
+    REFLECT( m_ExtraSourceDependenciesPath,         "ExtraSourceDependenciesPath",      MetaHidden() )
     REFLECT( m_ObjectListInputStartIndex,           "ObjectListInputStartIndex",        MetaHidden() )
     REFLECT( m_ObjectListInputEndIndex,             "ObjectListInputEndIndex",          MetaHidden() )
     REFLECT( m_CompilerFlags.m_Flags,               "ObjFlags",                         MetaHidden() )
@@ -309,7 +310,10 @@ ObjectListNode::ObjectListNode()
     }
 
     // Extra output paths
-    ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions, m_ExtraPDBPath, m_ExtraASMPath );
+    ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions,
+                                                           m_ExtraPDBPath,
+                                                           m_ExtraASMPath,
+                                                           m_ExtraSourceDependenciesPath );
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( compilerInputPath.GetSize() +
@@ -349,7 +353,7 @@ ObjectListNode::~ObjectListNode() = default;
     // Handle converting all static inputs into dynamic onces (i.e. cpp->obj)
     for ( size_t i=m_ObjectListInputStartIndex; i<m_ObjectListInputEndIndex; ++i )
     {
-        Dependency & dep = m_StaticDependencies[ i ];
+        const Dependency & dep = m_StaticDependencies[ i ];
 
         // is this a dir list?
         if ( dep.GetNode()->GetType() == Node::DIRECTORY_LIST_NODE )
@@ -536,6 +540,15 @@ ObjectListNode::~ObjectListNode() = default;
         if ( !FileIO::EnsurePathExists( m_ExtraPDBPath ) )
         {
             FLOG_ERROR( "Failed to create folder for .pdb file '%s'", m_ExtraPDBPath.Get() );
+            return false;
+        }
+    }
+
+    if ( m_ExtraSourceDependenciesPath.IsEmpty() == false )
+    {
+        if ( !FileIO::EnsurePathExists( m_ExtraSourceDependenciesPath ) )
+        {
+            FLOG_ERROR( "Failed to create folder for /sourceDependencies file '%s'", m_ExtraSourceDependenciesPath.Get() );
             return false;
         }
     }

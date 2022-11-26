@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
@@ -38,7 +38,7 @@
 #endif
 // TestTestTCPConnectionPool
 //------------------------------------------------------------------------------
-class TestTestTCPConnectionPool : public UnitTest
+class TestTestTCPConnectionPool : public TestGroup
 {
 private:
     DECLARE_TESTS
@@ -96,7 +96,7 @@ void TestTestTCPConnectionPool::TestOneServerMultipleClients() const
         for ( size_t j = 0; j < numClients; ++j )
         {
             // All each client to retry in case of local resource exhaustion
-            Timer t;
+            const Timer t;
             while ( clients[ j ].Connect( AStackString<>( "127.0.0.1" ), testPort ) == nullptr )
             {
                 TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
@@ -133,7 +133,7 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
         for ( size_t j = 0; j < 4; ++j )
         {
             // All each connection to be retried in case of local resource exhaustion
-            Timer t;
+            const Timer t;
             const uint16_t port = (uint16_t)( testPort + j );
             while ( clientA.Connect( AStackString<>( "127.0.0.1" ), port ) == nullptr )
             {
@@ -172,7 +172,7 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
             for ( size_t j = 0; j < 2; ++j )
             {
                 // All each connection to be retried in case of local resource exhaustion
-                Timer t;
+                const Timer t;
                 const uint16_t port = (uint16_t)( testPort + j );
                 while ( clientA.Connect( AStackString<>( "127.0.0.1" ), port ) == nullptr )
                 {
@@ -206,7 +206,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
         {
             TEST_ASSERT( size == m_DataSize );
             TEST_ASSERT( memcmp( data, m_ExpectedData, size ) == 0 );
-            AtomicAddU64( &m_ReceivedBytes, size );
+            AtomicAdd( &m_ReceivedBytes, (uint64_t)size );
             m_DataReceviedSemaphore.Signal();
         }
         volatile uint64_t m_ReceivedBytes = 0;
@@ -237,10 +237,10 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     size_t sendSize = 31;
     while ( sendSize <= maxSendSize )
     {
-        AtomicStoreRelaxed( &server.m_ReceivedBytes, 0 );
+        AtomicStoreRelaxed( &server.m_ReceivedBytes, (uint64_t) 0 );
         server.m_DataSize = sendSize;
 
-        Timer timer;
+        const Timer timer;
 
         size_t totalSent = 0;
         while ( ( totalSent < maxSendSize ) && ( timer.GetElapsed() < 0.1f ) )

@@ -6,6 +6,7 @@
 #include "Thread.h"
 #include "Core/Env/Assert.h"
 #include "Core/Mem/Mem.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 
 // system
@@ -90,6 +91,51 @@ public:
 //------------------------------------------------------------------------------
 /*static*/ Thread::ThreadId Thread::s_MainThreadId( Thread::GetCurrentThreadId() );
 
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+Thread::Thread() = default;
+
+// DESTRUCTOR
+//------------------------------------------------------------------------------
+Thread::~Thread()
+{
+    // Thread must be joined before being destroyed
+    ASSERT( m_Handle == INVALID_THREAD_HANDLE );
+}
+
+// Start
+//------------------------------------------------------------------------------
+void Thread::Start( ThreadEntryFunction func,
+                    const char * threadName,
+                    void * userData,
+                    uint32_t stackSizeBytes )
+{
+    // Can only start if not already started
+    ASSERT( m_Handle == INVALID_THREAD_HANDLE );
+    
+    // Start thread
+    m_Handle = CreateThread( func, threadName, stackSizeBytes, userData );
+    ASSERT( m_Handle != INVALID_THREAD_HANDLE );
+}
+
+// Join
+//------------------------------------------------------------------------------
+uint32_t Thread::Join()
+{
+    // Must only join if running and not already joined
+    ASSERT( m_Handle != INVALID_THREAD_HANDLE );
+
+    // Wait for thread and obtain return result
+    // TODO:C Fix inconsistent return results when legacy API is removed
+    const uint32_t returnValue = static_cast<uint32_t>( WaitForThread( m_Handle ) );
+
+    // Clean up the handle
+    CloseHandle( m_Handle );
+    m_Handle = INVALID_THREAD_HANDLE;
+
+    return returnValue;
+}
+
 // GetCurrentThreadId
 //------------------------------------------------------------------------------
 /*static*/ Thread::ThreadId Thread::GetCurrentThreadId()
@@ -169,7 +215,7 @@ public:
 {
     #if defined( __WINDOWS__ )
         bool timedOut = true; // default is true to catch cases when timedOut wasn't set by WaitForThread()
-        int32_t ret = WaitForThread( handle, INFINITE, timedOut );
+        const int32_t ret = WaitForThread( handle, INFINITE, timedOut );
 
         if ( timedOut )
         {
@@ -198,7 +244,7 @@ public:
 {
     #if defined( __WINDOWS__ )
         // wait for thread to finish
-        DWORD waitResult = WaitForSingleObject( handle, timeoutMS );
+        const DWORD waitResult = WaitForSingleObject( handle, timeoutMS );
 
         // timed out ?
         if ( waitResult == WAIT_TIMEOUT )

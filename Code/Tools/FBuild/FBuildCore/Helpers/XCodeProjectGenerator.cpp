@@ -733,8 +733,8 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteConfigurationList()
 {
-    const char * sections[3] = { "PBXProject", "PBXLegacyTarget", "PBXNativeTarget" };
-    const char * ext[3] = { "", "", "-doc" };
+    const char * const sections[3] = { "PBXProject", "PBXLegacyTarget", "PBXNativeTarget" };
+    const char * const ext[3] = { "", "", "-doc" };
     const uint32_t configStartIds[3] = { 0, 100, 200 };
 
     Write( "\n" );
@@ -889,7 +889,7 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
     // The rules for this appear to be different to other strings.
 
     bool needsQuotes = false;
-    for ( char c : fileName )
+    for ( const char c : fileName )
     {
         // These characters are not escaped and don't require the string be quoted
         if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||

@@ -1,21 +1,21 @@
-// UnitTest.h - interface for a unit test
+// TestGroup.h - interface for a group of related tests
 //------------------------------------------------------------------------------
 #pragma once
 
 // Includes
 //------------------------------------------------------------------------------
-#include "UnitTestManager.h"
+#include "TestManager.h"
 
 // Core
 #include "Core/Mem/MemTracker.h" // For MEMTRACKER_ENABLED
 
-// UnitTest - Tests derive from this interface
+// TestGroup - Tests derive from this interface
 //------------------------------------------------------------------------------
-class UnitTest
+class TestGroup
 {
 protected:
-    explicit        UnitTest() { m_NextTestGroup = nullptr; }
-    inline virtual ~UnitTest() = default;
+    explicit        TestGroup() { m_NextTestGroup = nullptr; }
+    inline virtual ~TestGroup() = default;
 
     virtual void RunTests() = 0;
     virtual const char * GetName() const = 0;
@@ -25,8 +25,8 @@ protected:
     virtual void PostTest( bool /*passed*/ ) const {}
 
 private:
-    friend class UnitTestManager;
-    UnitTest * m_NextTestGroup;
+    friend class TestManager;
+    TestGroup * m_NextTestGroup;
 };
 
 // Create a no-return helper to improve static analysis
@@ -45,7 +45,7 @@ private:
     PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )       \
         if ( !( expression ) )                                      \
         {                                                           \
-            if ( UnitTestManager::AssertFailure(  #expression, __FILE__, __LINE__ ) ) \
+            if ( TestManager::AssertFailure(  #expression, __FILE__, __LINE__ ) ) \
             {                                                       \
                 BREAK_IN_DEBUGGER;                                      \
             }                                                       \
@@ -61,7 +61,7 @@ private:
     PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )       \
         if ( !( expression ) )                                      \
         {                                                           \
-            if ( UnitTestManager::AssertFailureM(  #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
+            if ( TestManager::AssertFailureM(  #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
             {                                                       \
                 BREAK_IN_DEBUGGER;                                  \
             }                                                       \
@@ -80,7 +80,7 @@ private:
 #define REGISTER_TESTS_BEGIN( testGroupName )                       \
     void testGroupName##Register()                                  \
     {                                                               \
-        UnitTestManager::RegisterTestGroup( new testGroupName );    \
+        TestManager::RegisterTestGroup( new testGroupName );        \
     }                                                               \
     const char * testGroupName::GetName() const                     \
     {                                                               \
@@ -88,7 +88,7 @@ private:
     }                                                               \
     void testGroupName::RunTests()                                  \
     {                                                               \
-        UnitTestManager & utm = UnitTestManager::Get();             \
+        TestManager & utm = TestManager::Get();                     \
         (void)utm;
 
 #define REGISTER_TEST( testFunction )                               \
@@ -119,7 +119,7 @@ private:
 
     // Take a snapshot of the memory state
     #define TEST_MEMORY_SNAPSHOT( snapshot )                            \
-        TestMemorySnapshot snapshot
+        const TestMemorySnapshot snapshot
 
     // Check for expected or unexpected allocations since a snapshot
     #define TEST_EXPECT_ALLOCATION_EVENTS( snapshot, expected )         \

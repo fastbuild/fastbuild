@@ -651,7 +651,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         Array< VSProjectFilePair > uniqueFiles( m_Files.GetSize(), false );
         const VSProjectFilePair * prev = filePointers[ 0 ];
         uniqueFiles.Append( *filePointers[ 0 ] );
-        size_t numFiles = m_Files.GetSize();
+        const size_t numFiles = m_Files.GetSize();
         for ( size_t i=1; i<numFiles; ++i )
         {
             const VSProjectFilePair * current = filePointers[ i ];

@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 // Core
 #include <Core/Process/Semaphore.h>
@@ -11,7 +11,7 @@
 
 // TestSemaphore
 //------------------------------------------------------------------------------
-class TestSemaphore : public UnitTest
+class TestSemaphore : public TestGroup
 {
 private:
     DECLARE_TESTS
@@ -80,7 +80,7 @@ void TestSemaphore::WaitForSignal() const
 //------------------------------------------------------------------------------
 void TestSemaphore::WaitTimeout() const
 {
-    Timer t;
+    const Timer t;
 
     Semaphore s;
 

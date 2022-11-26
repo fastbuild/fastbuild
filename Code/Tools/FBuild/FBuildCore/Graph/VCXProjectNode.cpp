@@ -20,6 +20,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -308,6 +309,9 @@ VCXProjectNode::~VCXProjectNode() = default;
         return NODE_RESULT_FAILED; // Save will have emitted an error
     }
 
+    // Record stamp representing the contents of the files
+    m_Stamp = xxHash::Calc64( project ) + xxHash::Calc64( filters );
+
     return NODE_RESULT_OK;
 }
 
@@ -329,7 +333,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     else
     {
         // files differ in size?
-        size_t oldFileSize = (size_t)old.GetFileSize();
+        const size_t oldFileSize = (size_t)old.GetFileSize();
         if ( oldFileSize != content.GetLength() )
         {
             needToWrite = true;

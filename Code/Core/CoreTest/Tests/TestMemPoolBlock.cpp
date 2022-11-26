@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "TestFramework/TestGroup.h"
 
 #include "Core/Mem/Mem.h"
 #include "Core/Mem/MemPoolBlock.h"
@@ -15,7 +15,7 @@
 
 // TestMemPoolBlock
 //------------------------------------------------------------------------------
-class TestMemPoolBlock : public UnitTest
+class TestMemPoolBlock : public TestGroup
 {
 private:
     DECLARE_TESTS
@@ -102,17 +102,21 @@ void TestMemPoolBlock::TestSpeed()
     // System Allocator
     {
         Array< void * > allocs( numAllocs, false );
-        Timer t1;
+        const Timer t1;
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
+                PRAGMA_DISABLE_PUSH_MSVC(26408) // Memory subsystem is allowed to call malloc
                 uint32_t * const mem = (uint32_t *)malloc( allocSize );
+                PRAGMA_DISABLE_POP_MSVC
                 allocs.Append( mem );
             }
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 void * mem = allocs[ i ];
+                PRAGMA_DISABLE_PUSH_MSVC(26408) // Memory subsystem is allowed to call free
                 free( mem );
+                PRAGMA_DISABLE_POP_MSVC
             }
         }
         time1 = t1.GetElapsed();
@@ -121,7 +125,7 @@ void TestMemPoolBlock::TestSpeed()
     // Alloc
     {
         Array< void * > allocs( numAllocs, false );
-        Timer t2;
+        const Timer t2;
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
@@ -140,7 +144,7 @@ void TestMemPoolBlock::TestSpeed()
     // MemPoolBlock
     {
         Array< void * > allocs( numAllocs, false );
-        Timer t3;
+        const Timer t3;
         {
             MemPoolBlock block( allocSize, 4 );
             for ( uint32_t i = 0; i < numAllocs; ++i )

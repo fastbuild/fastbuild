@@ -1,0 +1,18 @@
+//
+// LightCache does not support /sourceDependencies MSVC argument
+// But it should detect this case and safely fall back to regular cache.
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerOptions    + ' /sourceDependencies$Out$/Test/Cache/LightCache_SourceDependencies/SubDir/'
+
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCache/LightCache_SourceDependencies/file.cpp' }
+    .CompilerOutputPath = '$Out$/Test/Cache/LightCache_SourceDependencies/'
+}
