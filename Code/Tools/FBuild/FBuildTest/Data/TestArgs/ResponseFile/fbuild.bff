@@ -5,31 +5,18 @@
 //
 //------------------------------------------------------------------------------
 
+// Force the use of response files before Compiler is defined
+.ForceResponseFile        = true
+
 // Use the standard test environment
 //------------------------------------------------------------------------------
 #include "../../testcommon.bff"
+
 Using( .StandardEnvironment )
-Settings {}
+
+// Common settings
+ObjectList( 'ResponseFilePath' )
 {
-    // Common settings
     .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/'
-    .UnityOutputPath            = '$Out$/Test/ObjectList/ResponseFile/'
     .CompilerOutputPath         = '$Out$/Test/ObjectList/ResponseFile/'
-
-    Compiler( 'ClangAlwaysUsingResponseFiles' )
-    {
-      .Root                     = '$Clang10_BasePath$'
-      .Executable               = '$Root$/clang'
-      .ForceResponseFile        = true
-    }
-
-    ObjectList( 'ResponseFilePath' )
-    {
-        .Compiler = 'ClangAlwaysUsingResponseFiles'
-    }
-}
-
-Alias( 'Test' )
-{
-    .Targets = { 'ResponseFilePath' }
 }
