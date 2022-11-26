@@ -18,6 +18,7 @@
 
 // Core
 #include "Core/Env/Assert.h"
+#include "Core/Env/Env.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
