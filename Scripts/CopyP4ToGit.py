@@ -139,6 +139,11 @@ for file in dst_files:
     if os.path.exists(src_file) == False:
         # delete dst file
         print('DELETE: {}'.format(dst_file))
+        # Make dest file writable if needed
+        try:
+            os.chmod(dst_file, stat.S_IWRITE)
+        except:
+            pass
         os.remove(dst_file)
 
 print('Done.')
