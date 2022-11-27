@@ -203,10 +203,12 @@ template <class T>
 class Atomic
 {
 public:
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wzero-as-null-pointer-constant" ) // Allow zero to work with pointers here
     Atomic()
         : m_Value( static_cast<T>( 0 ) )
     {
     }
+    PRAGMA_DISABLE_POP_CLANG
     explicit Atomic( T initValue )
         : m_Value( initValue )
     {
