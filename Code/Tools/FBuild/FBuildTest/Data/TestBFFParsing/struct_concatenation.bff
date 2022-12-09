@@ -89,6 +89,13 @@ Print( "---- ArrayOfStructs Recursion" )
     .StructC    = .StructA
                 + .StructB
     Print( .StructC )
+    {
+        Using(.StructC)
+        ForEach(.S in .ArrayOfStructs)
+        {
+            // Check that we actually made an array
+        }
+    }
 }
 
 // Left contains empty arrays

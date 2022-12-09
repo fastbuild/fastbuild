@@ -371,7 +371,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varDst->GetArrayOfStructs() );
             values.Append( varSrc->GetArrayOfStructs() );
 
-            BFFVariable *result = FNEW(BFFVariable(dstName, values));
+            BFFVariable *result = FNEW(BFFVariable(dstName, values, VAR_ARRAY_OF_STRUCTS ));
             return result;
         }
 
