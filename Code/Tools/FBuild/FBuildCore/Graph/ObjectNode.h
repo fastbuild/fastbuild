@@ -69,7 +69,7 @@ public:
         bool IsCUDANVCC() const                     { return ( ( m_Flags & FLAG_CUDA_NVCC ) != 0 ); }
         bool IsIncludesInStdErr() const             { return ( ( m_Flags & FLAG_INCLUDES_IN_STDERR ) != 0 ); }
         bool IsQtRCC() const                        { return ( ( m_Flags & FLAG_QT_RCC ) != 0 ); }
-        bool IsWarningsAsErrorsMSVC() const         { return ( ( m_Flags & FLAG_QT_RCC ) != 0 ); }
+        bool IsWarningsAsErrorsMSVC() const         { return ( ( m_Flags & FLAG_WARNINGS_AS_ERRORS_MSVC ) != 0 ); }
         bool IsVBCC() const                         { return ( ( m_Flags & FLAG_VBCC ) != 0 ); }
         bool IsUsingStaticAnalysisMSVC() const      { return ( ( m_Flags & FLAG_STATIC_ANALYSIS_MSVC ) != 0 ); }
         bool IsOrbisWavePSSLC() const               { return ( ( m_Flags & FLAG_ORBIS_WAVE_PSSLC ) != 0 ); }
