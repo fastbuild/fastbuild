@@ -101,11 +101,9 @@ NodeGraph::NodeGraph( unsigned nodeMapHashBits )
 //------------------------------------------------------------------------------
 NodeGraph::~NodeGraph()
 {
-    Array< Node * >::Iter i = m_AllNodes.Begin();
-    Array< Node * >::Iter end = m_AllNodes.End();
-    for ( ; i != end; ++i )
+    for ( Node * node : m_AllNodes )
     {
-        FDELETE ( *i );
+        FDELETE( node );
     }
 
     FDELETE_ARRAY( m_NodeMap );
@@ -486,14 +484,11 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
     const uint32_t numUsedFiles = (uint32_t)m_UsedFiles.GetSize();
     stream.Write( numUsedFiles );
 
-    for ( uint32_t i=0; i<numUsedFiles; ++i )
+    for ( const NodeGraph::UsedFile & usedFile : m_UsedFiles )
     {
-        const AString & fileName = m_UsedFiles[ i ].m_FileName;
-        stream.Write( fileName );
-        const uint64_t timeStamp( m_UsedFiles[ i ].m_TimeStamp );
-        stream.Write( timeStamp );
-        const uint64_t dataHash( m_UsedFiles[ i ].m_DataHash );
-        stream.Write( dataHash );
+        stream.Write( usedFile.m_FileName );
+        stream.Write( usedFile.m_TimeStamp );
+        stream.Write( usedFile.m_DataHash );
     }
 
     // TODO:C The serialization of these settings doesn't really belong here (not part of node graph)
@@ -516,9 +511,8 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
         const uint32_t importedEnvironmentsVarsSize = static_cast<uint32_t>( importedEnvironmentsVars.GetSize() );
         ASSERT( importedEnvironmentsVarsSize == importedEnvironmentsVars.GetSize() );
         stream.Write( importedEnvironmentsVarsSize );
-        for ( uint32_t i = 0; i < importedEnvironmentsVarsSize; ++i )
+        for ( const FBuild::EnvironmentVarAndHash & varAndHash : importedEnvironmentsVars )
         {
-            const FBuild::EnvironmentVarAndHash & varAndHash = importedEnvironmentsVars[i];
             stream.Write( varAndHash.GetName() );
             stream.Write( varAndHash.GetHash() );
         }
@@ -539,9 +533,9 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
     Array< bool > savedNodeFlags( numNodes, false );
     savedNodeFlags.SetSize( numNodes );
     memset( savedNodeFlags.Begin(), 0, numNodes );
-    for ( size_t i=0; i<numNodes; ++i )
+    for ( Node * node : m_AllNodes )
     {
-        SaveRecurse( stream, m_AllNodes[ i ], savedNodeFlags );
+        SaveRecurse( stream, node, savedNodeFlags );
     }
 
     // sanity check saving
@@ -597,11 +591,9 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
 //------------------------------------------------------------------------------
 /*static*/ void NodeGraph::SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags )
 {
-    const Dependency * const end = dependencies.End();
-    for ( const Dependency * it = dependencies.Begin(); it != end; ++it )
+    for ( const Dependency & dep : dependencies )
     {
-        Node * n = it->GetNode();
-        SaveRecurse( stream, n, savedNodeFlags );
+        SaveRecurse( stream, dep.GetNode(), savedNodeFlags );
     }
 }
 
@@ -657,16 +649,13 @@ void NodeGraph::SerializeToText( const Dependencies & deps, AString & outBuffer 
 //------------------------------------------------------------------------------
 /*static*/ void NodeGraph::SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer )
 {
-    const Dependency * const end = dependencies.End();
-    const Dependency * it = dependencies.Begin();
-    if ( it != end )
+    if ( dependencies.IsEmpty() == false )
     {
         outBuffer.AppendFormat( "%*s%s\n", depth * 4 + 2, "", title );
-    }
-    for ( ; it != end; ++it )
-    {
-        Node * n = it->GetNode();
-        SerializeToText( n, depth + 1, outBuffer );
+        for ( const Dependency & dep : dependencies )
+        {
+            SerializeToText( dep.GetNode(), depth + 1, outBuffer );
+        }
     }
 }
 
@@ -1203,10 +1192,9 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
         const size_t total = nodeToBuild->GetStaticDependencies().GetSize();
         size_t failedCount = 0;
         size_t upToDateCount = 0;
-        const Dependency * const end = nodeToBuild->GetStaticDependencies().End();
-        for ( const Dependency * it = nodeToBuild->GetStaticDependencies().Begin(); it != end; ++it )
+        for ( const Dependency & dep : nodeToBuild->GetStaticDependencies() )
         {
-            Node * n = it->GetNode();
+            Node * n = dep.GetNode();
             if ( n->GetState() < Node::BUILDING )
             {
                 BuildRecurse( n, 0 );
@@ -1371,11 +1359,9 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     uint32_t numberNodesFailed = 0;
     const bool stopOnFirstError = FBuild::Get().GetOptions().m_StopOnFirstError;
 
-    Dependencies::Iter i = dependencies.Begin();
-    Dependencies::Iter end = dependencies.End();
-    for ( ; i < end; ++i )
+    for ( const Dependency & dep : dependencies )
     {
-        Node * n = i->GetNode();
+        Node * n = dep.GetNode();
 
         Node::State state = n->GetState();
 
@@ -1428,7 +1414,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
 
     if ( !stopOnFirstError )
     {
-        if ( numberNodesFailed + numberNodesUpToDate == dependencies.GetSize() )
+        if ( ( numberNodesFailed + numberNodesUpToDate ) == dependencies.GetSize() )
         {
             if ( numberNodesFailed > 0 )
             {
@@ -1498,7 +1484,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     // clean slashes
     char lastChar = NATIVE_SLASH; // consider first item to follow a path (so "..\file.dat" works)
     #if defined( __WINDOWS__ )
-        while ( *src == NATIVE_SLASH || *src == OTHER_SLASH ) { ++src; } // strip leading slashes
+        while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) ) { ++src; } // strip leading slashes
     #endif
 
     const char * lowestRemovableChar = cleanPath.Get();
@@ -1775,11 +1761,9 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
                                                      uint32_t & nodesBuiltTime,
                                                      uint32_t & totalNodeTime )
 {
-    for ( Dependencies::Iter i = dependencies.Begin();
-        i != dependencies.End();
-        i++ )
+    for ( const Dependency & dep : dependencies)
     {
-        UpdateBuildStatusRecurse( i->GetNode(), nodesBuiltTime, totalNodeTime );
+        UpdateBuildStatusRecurse( dep.GetNode(), nodesBuiltTime, totalNodeTime );
     }
 }
 
