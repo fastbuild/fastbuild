@@ -25,6 +25,7 @@ private:
     void BeginAndEnd() const;
 
     void IndexOperator() const;
+    void GetIndexOf() const;
     void Top() const;
 
     void RangeBasedForLoop() const;
@@ -93,6 +94,7 @@ REGISTER_TESTS_BEGIN( TestArray )
     REGISTER_TEST( BeginAndEnd )
 
     REGISTER_TEST( IndexOperator )
+    REGISTER_TEST( GetIndexOf )
     REGISTER_TEST( Top )
 
     REGISTER_TEST( RangeBasedForLoop )
@@ -364,6 +366,29 @@ void TestArray::IndexOperator() const
         TEST_ASSERT( array[ 0 ] == "string1" );
         TEST_ASSERT( array[ 1 ] == "string2" );
         CheckConsistency( array );
+    }
+}
+
+// GetIndexOf
+//------------------------------------------------------------------------------
+void TestArray::GetIndexOf() const
+{
+    // POD
+    {
+        Array<uint32_t> array( 2 );
+        array.Append( 1 );
+        array.Append( 2 );
+        TEST_ASSERT( array.GetIndexOf( &array[ 0 ] ) == 0 );
+        TEST_ASSERT( array.GetIndexOf( &array[ 1 ] ) == 1 );
+    }
+
+    // Complex Type
+    {
+        Array<AString> array( 2 );
+        array.Append( AString( "string1" ) );
+        array.Append( AString( "string2" ) );
+        TEST_ASSERT( array.GetIndexOf( &array[ 0 ] ) == 0 );
+        TEST_ASSERT( array.GetIndexOf( &array[ 1 ] ) == 1 );
     }
 }
 
