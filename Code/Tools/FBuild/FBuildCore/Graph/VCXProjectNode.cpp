@@ -250,7 +250,7 @@ VCXProjectNode::VCXProjectNode()
 
     // Store all dependencies
     m_StaticDependencies.SetCapacity( dirNodes.GetSize() );
-    m_StaticDependencies.Append( dirNodes );
+    m_StaticDependencies.Add( dirNodes );
 
     return true;
 }

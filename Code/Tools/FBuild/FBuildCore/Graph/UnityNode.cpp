@@ -217,10 +217,10 @@ UnityNode::UnityNode()
     }
 
     ASSERT( m_StaticDependencies.IsEmpty() );
-    m_StaticDependencies.Append( dirNodes );
-    m_StaticDependencies.Append( objectListNodes );
-    m_StaticDependencies.Append( fileNodes );
-    m_StaticDependencies.Append( isolateFileListNodes );
+    m_StaticDependencies.Add( dirNodes );
+    m_StaticDependencies.Add( objectListNodes );
+    m_StaticDependencies.Add( fileNodes );
+    m_StaticDependencies.Add( isolateFileListNodes );
 
     return true;
 }

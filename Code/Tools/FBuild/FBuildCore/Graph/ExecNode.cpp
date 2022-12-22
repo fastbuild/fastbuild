@@ -105,9 +105,9 @@ ExecNode::ExecNode()
 
     // Store Static Dependencies
     m_StaticDependencies.SetCapacity( 1 + m_NumExecInputFiles + execInputPaths.GetSize() );
-    m_StaticDependencies.Append( executable );
-    m_StaticDependencies.Append( execInputFiles );
-    m_StaticDependencies.Append( execInputPaths );
+    m_StaticDependencies.Add( executable );
+    m_StaticDependencies.Add( execInputFiles );
+    m_StaticDependencies.Add( execInputPaths );
 
     return true;
 }
@@ -153,7 +153,7 @@ ExecNode::~ExecNode()
                 return false;
             }
 
-            m_DynamicDependencies.EmplaceBack( sn );
+            m_DynamicDependencies.Add( sn );
         }
     }
 

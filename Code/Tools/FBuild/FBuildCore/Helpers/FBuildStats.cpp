@@ -288,12 +288,9 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
 //------------------------------------------------------------------------------
 void FBuildStats::GatherPostBuildStatisticsRecurse( const Dependencies & dependencies )
 {
-    const Dependencies::Iter end = dependencies.End();
-    for ( Dependencies::Iter it = dependencies.Begin();
-          it != end;
-          it++ )
+    for ( const Dependency & dep : dependencies )
     {
-        GatherPostBuildStatisticsRecurse( it->GetNode() );
+        GatherPostBuildStatisticsRecurse( dep.GetNode() );
     }
 }
 

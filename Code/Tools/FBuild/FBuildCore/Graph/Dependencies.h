@@ -41,23 +41,49 @@ private:
     bool m_IsWeak;  // Is node used for build ordering, but not triggering a rebuild
 };
 
-//  Dependencies
+// Dependencies
 //------------------------------------------------------------------------------
-class Dependencies : public Array< Dependency >
+class Dependencies
 {
 public:
-    explicit inline Dependencies()
-        : Array< Dependency >()
+    Dependencies()
     {}
-    explicit inline Dependencies( size_t initialCapacity, bool resizeable = false )
-        : Array< Dependency >( initialCapacity, resizeable )
+    explicit Dependencies( size_t initialCapacity, bool resizeable = false )
+        : m_Dependencies( initialCapacity, resizeable )
     {}
-    explicit inline Dependencies( Dependency * otherBegin, Dependency * otherEnd )
-        : Array< Dependency >( otherBegin, otherEnd )
+    explicit Dependencies( Dependency * otherBegin, Dependency * otherEnd )
+        : m_Dependencies( otherBegin, otherEnd )
     {}
+
+    // Index based access
+    [[nodiscard]] size_t                GetSize() const { return m_Dependencies.GetSize(); }
+    [[nodiscard]] bool                  IsEmpty() const { return m_Dependencies.IsEmpty(); }
+    [[nodiscard]] Dependency &          operator [] ( size_t index )        { return m_Dependencies[ index ]; }
+    [[nodiscard]] const Dependency &    operator [] ( size_t index ) const  { return m_Dependencies[ index ]; }
+    [[nodiscard]] size_t                GetIndexOf( const Dependency * dep ) const { return m_Dependencies.GetIndexOf( dep ); }
+    
+    // Range based access
+    [[nodiscard]] Dependency *          Begin()         { return m_Dependencies.Begin(); }
+    [[nodiscard]] const Dependency *    Begin() const   { return m_Dependencies.Begin(); }
+    [[nodiscard]] Dependency *          begin()         { return m_Dependencies.begin(); }
+    [[nodiscard]] const Dependency *    begin() const   { return m_Dependencies.begin(); }
+    [[nodiscard]] Dependency *          End()           { return m_Dependencies.End(); }
+    [[nodiscard]] const Dependency *    End() const     { return m_Dependencies.End(); }
+    [[nodiscard]] Dependency *          end()           { return m_Dependencies.end(); }
+    [[nodiscard]] const Dependency *    end() const     { return m_Dependencies.end(); }
+
+    // Dependency accumulation
+    void                                SetCapacity( size_t capacity ) { m_Dependencies.SetCapacity( capacity); }
+    void                                Clear() { m_Dependencies.Clear(); }
+    void                                Add( Node * node ) { m_Dependencies.EmplaceBack( node ); }
+    void                                Add( Node * node, uint64_t stamp, bool isWeak ) { m_Dependencies.EmplaceBack( node, stamp, isWeak ); }
+    void                                Add( const Dependencies & deps ) { m_Dependencies.Append( deps.m_Dependencies ); }
 
     void Save( IOStream & stream ) const;
     void Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
+
+protected:
+    Array<Dependency> m_Dependencies;
 };
 
 //------------------------------------------------------------------------------

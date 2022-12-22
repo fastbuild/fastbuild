@@ -123,8 +123,8 @@ CompilerNode::CompilerNode()
 
     // Store Static Dependencies
     m_StaticDependencies.SetCapacity( 1 + extraFiles.GetSize() );
-    m_StaticDependencies.Append( compilerExeFile );
-    m_StaticDependencies.Append( extraFiles );
+    m_StaticDependencies.Add( compilerExeFile );
+    m_StaticDependencies.Add( extraFiles );
 
     if (InitializeCompilerFamily( iter, function ) == false)
     {

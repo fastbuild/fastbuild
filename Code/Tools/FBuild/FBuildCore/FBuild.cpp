@@ -269,7 +269,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
 
             return false;
         }
-        outDeps.EmplaceBack( node );
+        outDeps.Add( node );
     }
 
     return true;

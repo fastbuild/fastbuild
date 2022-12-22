@@ -21,11 +21,8 @@ void Dependencies::Save( IOStream & stream ) const
     const size_t numDeps = GetSize();
     stream.Write( (uint32_t)numDeps );
 
-    Iter endIt = End();
-    for ( Iter it = Begin(); it != endIt; ++it )
+    for ( const Dependency & dep : m_Dependencies )
     {
-        const Dependency & dep = *it;
-
         // Nodes are saved by index to simplify deserialization
         const uint32_t index = dep.GetNode()->GetIndex();
         stream.Write( index );
@@ -68,7 +65,7 @@ void Dependencies::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
         VERIFY( stream.Read( isWeak ) );
 
         // Recombine dependency info
-        EmplaceBack( node, stamp, isWeak );
+        Add( node, stamp, isWeak );
     }
 }
 //------------------------------------------------------------------------------

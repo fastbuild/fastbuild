@@ -159,15 +159,15 @@ LinkerNode::LinkerNode()
                                       assemblyResources.GetSize() +
                                       otherLibraryNodes.GetSize() +
                                       ( linkerStampExe.IsEmpty() ? 0 : 1 ) );
-    m_StaticDependencies.Append( linkerExe );
-    m_StaticDependencies.Append( libraries );
+    m_StaticDependencies.Add( linkerExe );
+    m_StaticDependencies.Add( libraries );
     m_Libraries2StartIndex = (uint32_t)m_StaticDependencies.GetSize();
-    m_StaticDependencies.Append( libraries2 );
+    m_StaticDependencies.Add( libraries2 );
     m_AssemblyResourcesStartIndex = (uint32_t)m_StaticDependencies.GetSize();
-    m_StaticDependencies.Append( assemblyResources );
+    m_StaticDependencies.Add( assemblyResources );
     m_AssemblyResourcesNum = (uint32_t)assemblyResources.GetSize();
-    m_StaticDependencies.Append( otherLibraryNodes );
-    m_StaticDependencies.Append( linkerStampExe );
+    m_StaticDependencies.Add( otherLibraryNodes );
+    m_StaticDependencies.Add( linkerStampExe );
 
     return true;
 }
@@ -333,7 +333,7 @@ LinkerNode::~LinkerNode()
     // post-link stamp step
     if ( m_LinkerStampExe.IsEmpty() == false )
     {
-        const Node * linkerStampExe = m_StaticDependencies.End()[ -1 ].GetNode();
+        const Node * linkerStampExe = m_StaticDependencies[ m_StaticDependencies.GetSize() - 1 ].GetNode();
         EmitStampMessage();
 
         Process stampProcess( FBuild::Get().GetAbortBuildPointer() );
@@ -1370,7 +1370,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         }
 
         // found existing node
-        libs.EmplaceBack( node );
+        libs.Add( node );
         found = true;
         return true; // no error
     }
@@ -1379,7 +1379,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( LinkerNodeFileExistsCache::Get().FileExists( potentialNodeNameClean ) )
     {
         node = nodeGraph.CreateFileNode( potentialNodeNameClean );
-        libs.EmplaceBack( node );
+        libs.Add( node );
         found = true;
         FLOG_VERBOSE( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );
         return true; // no error
@@ -1520,7 +1520,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // node not found - create a new FileNode, assuming we are
     // linking against an externally built library
     node = nodeGraph.CreateFileNode( nodeName );
-    nodes.EmplaceBack( node );
+    nodes.Add( node );
     return true;
 }
 
@@ -1537,7 +1537,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::LIBRARY_NODE )
     {
         // can link directly to it
-        nodes.EmplaceBack( node );
+        nodes.Add( node );
         return true;
     }
 
@@ -1545,7 +1545,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::OBJECT_LIST_NODE )
     {
         // can link directly to it
-        nodes.EmplaceBack( node );
+        nodes.Add( node );
         return true;
     }
 
@@ -1553,7 +1553,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::DLL_NODE )
     {
         // TODO:B Depend on import lib
-        nodes.EmplaceBack( node, (uint64_t)0, true ); // NOTE: Weak dependency
+        nodes.Add( node, (uint64_t)0, true ); // NOTE: Weak dependency
         return true;
     }
 
@@ -1561,7 +1561,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::FILE_NODE )
     {
         // can link directy against it
-        nodes.EmplaceBack( node );
+        nodes.Add( node );
         return true;
     }
 
@@ -1569,7 +1569,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::COPY_FILE_NODE )
     {
         // depend on copy - will use input at build time
-        nodes.EmplaceBack( node );
+        nodes.Add( node );
         return true;
     }
 
@@ -1577,7 +1577,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::EXEC_NODE )
     {
         // depend on ndoe - will use exe output at build time
-        nodes.EmplaceBack( node );
+        nodes.Add( node );
         return true;
     }
 
@@ -1586,13 +1586,9 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     {
         // handle all targets in alias
         const AliasNode * an = node->CastTo< AliasNode >();
-        const Dependencies & aliasNodeList = an->GetAliasedNodes();
-        const Dependencies::Iter end = aliasNodeList.End();
-        for ( Dependencies::Iter it = aliasNodeList.Begin();
-              it != end;
-              ++it )
+        for ( const Dependency & dep : an->GetAliasedNodes() )
         {
-            if ( DependOnNode( iter, function, it->GetNode(), nodes ) == false )
+            if ( DependOnNode( iter, function, dep.GetNode(), nodes ) == false )
             {
                 return false; // something went wrong lower down
             }

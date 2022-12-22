@@ -341,7 +341,7 @@ void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString & ou
 {
     Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
     Dependencies deps( 1, false );
-    deps.EmplaceBack( node );
+    deps.Add( node );
     m_DependencyGraph->SerializeToText( deps, outBuffer );
 }
 

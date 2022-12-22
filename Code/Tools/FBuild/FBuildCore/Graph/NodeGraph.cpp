@@ -2105,7 +2105,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     // - since everything matches, we only need to migrate the stamps
     for ( Dependency & dep : newNode.m_StaticDependencies )
     {
-        const size_t index = size_t( &dep - newNode.m_StaticDependencies.Begin() );
+        const size_t index = newNode.m_StaticDependencies.GetIndexOf( &dep );
         const Dependency & oldDep = oldNode->m_StaticDependencies[ index ];
         dep.Stamp( oldDep.GetNodeStamp() );
     }
@@ -2114,8 +2114,8 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     {
         // New node should have no dynamic dependencies
         ASSERT( newNode.m_DynamicDependencies.GetSize() == 0 );
-        const Array< Dependency > & oldDeps = oldNode->m_DynamicDependencies;
-        Array< Dependency > newDeps( oldDeps.GetSize() );
+        const Dependencies & oldDeps = oldNode->m_DynamicDependencies;
+        Dependencies newDeps( oldDeps.GetSize() );
         for ( const Dependency & oldDep : oldDeps )
         {
             // See if the depenceny already exists in the new DB
@@ -2130,14 +2130,14 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             }
             if ( newDepNode )
             {
-                newDeps.EmplaceBack( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
+                newDeps.Add( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
             }
             else
             {
                 // Create the dependency
                 newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
                 ASSERT( newDepNode );
-                newDeps.EmplaceBack( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
+                newDeps.Add( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
 
                 // Early out for FileNode (no properties and doesn't need Initialization)
                 if ( oldDepNode->GetType() == Node::FILE_NODE )
@@ -2158,7 +2158,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         }
         if ( newDeps.IsEmpty() == false )
         {
-            newNode.m_DynamicDependencies.Append( newDeps );
+            newNode.m_DynamicDependencies.Add( newDeps );
         }
     }
 
