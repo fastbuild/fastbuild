@@ -400,19 +400,28 @@ void Node::SetLastBuildTime( uint32_t ms )
     VERIFY( stream.Read( lastTimeToBuild ) );
     n->SetLastBuildTime( lastTimeToBuild );    
 
-    // Dependencies
-    n->m_PreBuildDependencies.Load( nodeGraph, stream );
-    n->m_StaticDependencies.Load( nodeGraph, stream );
-    n->m_DynamicDependencies.Load( nodeGraph, stream );
-
     // Deserialize properties
     Deserialize( stream, n, *n->GetReflectionInfoV() );
-
-    n->PostLoad( nodeGraph ); // TODO:C Eliminate the need for this
 
     // set stamp
     n->m_Stamp = stamp;
     return n;
+}
+
+// LoadDependencies
+//------------------------------------------------------------------------------
+/*static*/ void Node::LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream )
+{
+    // Early out for FileNode
+    if ( node->GetType() == Node::FILE_NODE )
+    {
+        return;
+    }
+
+    // Dependencies
+    node->m_PreBuildDependencies.Load( nodeGraph, stream );
+    node->m_StaticDependencies.Load( nodeGraph, stream );
+    node->m_DynamicDependencies.Load( nodeGraph, stream );
 }
 
 // PostLoad
@@ -434,14 +443,10 @@ void Node::SetLastBuildTime( uint32_t ms )
     // Save Name
     stream.Write( node->m_Name );
 
-    #if defined( DEBUG )
-        node->MarkAsSaved();
-    #endif
-
     // FileNodes don't need most things serialized:
-    // - they have no dependencies (they are leaf nodes)
-    // - they take sub 1ms to check, so don't need their build time saved
     // - their stamp is obtained every build, so doesn't need saving
+    // - they take sub 1ms to check, so don't need their build time saved
+    // - they have no reflected properties
     if ( nodeType == Node::FILE_NODE )
     {
         return;
@@ -454,15 +459,26 @@ void Node::SetLastBuildTime( uint32_t ms )
     // Build time
     const uint32_t lastBuildTime = node->GetLastBuildTime();
     stream.Write( lastBuildTime );
-    
-    // Deps
-    node->m_PreBuildDependencies.Save( stream );
-    node->m_StaticDependencies.Save( stream );
-    node->m_DynamicDependencies.Save( stream );
 
     // Properties
     const ReflectionInfo * const ri = node->GetReflectionInfoV();
     Serialize( stream, node, *ri );
+}
+
+// SaveDependencies
+//------------------------------------------------------------------------------
+/*static*/ void Node::SaveDependencies( IOStream & stream, const Node * node )
+{
+    // FileNodes have no dependencies
+    if ( node->GetType() == Node::FILE_NODE )
+    {
+        return;
+    }
+
+    // Deps
+    node->m_PreBuildDependencies.Save( stream );
+    node->m_StaticDependencies.Save( stream );
+    node->m_DynamicDependencies.Save( stream );
 }
 
 // LoadRemote

@@ -23,8 +23,8 @@ void Dependencies::Save( IOStream & stream ) const
 
     for ( const Dependency & dep : m_Dependencies )
     {
-        // Nodes are saved by index to simplify deserialization
-        const uint32_t index = dep.GetNode()->GetIndex();
+        // Save index of node we depend on
+        const uint32_t index = dep.GetNode()->GetBuildPassTag();
         stream.Write( index );
 
         // Save stamp

@@ -83,7 +83,6 @@ bool NodeGraphHeader::IsValid() const
 NodeGraph::NodeGraph( unsigned nodeMapHashBits )
 : m_NodeMapMaxKey( ( 1u << nodeMapHashBits ) - 1u )
 , m_AllNodes( 1024, true )
-, m_NextNodeIndex( 0 )
 , m_UsedFiles( 16, true )
 , m_Settings( nullptr )
 {
@@ -409,19 +408,29 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
     // Read nodes
     uint32_t numNodes;
     VERIFY( stream.Read( numNodes ) );
-
-    m_AllNodes.SetSize( numNodes );
-    memset( m_AllNodes.Begin(), 0, numNodes * sizeof( Node * ) );
-    for ( uint32_t i=0; i<numNodes; ++i )
+    m_AllNodes.SetCapacity( numNodes );
+    for ( uint32_t i = 0; i < numNodes; ++i )
     {
-        LoadNode( stream );
+        // Load each node
+        const Node * const n = Node::Load( *this, stream );
+        ASSERT( m_AllNodes[ i ] == n ); // Array is populated as loaded
+        n->SetBuildPassTag( i ); // Store index for dependency deserialization
     }
-
-    // sanity check loading
-    for ( size_t i=0; i<numNodes; ++i )
+    for ( Node * node : m_AllNodes )
     {
-        ASSERT( m_AllNodes[ i ] ); // each node was loaded
-        ASSERT( m_AllNodes[ i ]->GetIndex() == i ); // index was correctly persisted
+        // Load dependencies, but not for FileNodes which have none
+        if ( node->GetType() != Node::FILE_NODE )
+        {
+            Node::LoadDependencies( *this, node, stream );
+        }
+    }
+    for ( Node * node : m_AllNodes )
+    {
+        // Dispatch post-load callback
+        if ( node->GetType() != Node::FILE_NODE )
+        {
+            node->PostLoad( *this ); // TODO:C Eliminate the need for this
+        }
     }
 
     m_Settings = FindNode( AStackString<>( "$$Settings$$" ) )->CastTo< SettingsNode >();
@@ -445,27 +454,6 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
     }
 
     return LoadResult::OK;
-}
-
-// LoadNode
-//------------------------------------------------------------------------------
-void NodeGraph::LoadNode( ConstMemoryStream & stream )
-{
-    // load index
-    uint32_t nodeIndex( INVALID_NODE_INDEX );
-    VERIFY( stream.Read( nodeIndex ) );
-
-    // sanity check loading (each node saved once)
-    ASSERT( m_AllNodes[ nodeIndex ] == nullptr );
-    m_NextNodeIndex = nodeIndex;
-
-    // load specifics (create node)
-    const Node * const n = Node::Load( *this, stream );
-    ASSERT( n ); (void)n;
-
-    // sanity check node index was correctly restored
-    ASSERT( m_AllNodes[ nodeIndex ] == n );
-    ASSERT( n->GetIndex() == nodeIndex );
 }
 
 // Save
@@ -528,20 +516,20 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
     // Write nodes
     const size_t numNodes = m_AllNodes.GetSize();
     stream.Write( (uint32_t)numNodes );
-
-    // save recursively
-    Array< bool > savedNodeFlags( numNodes, false );
-    savedNodeFlags.SetSize( numNodes );
-    memset( savedNodeFlags.Begin(), 0, numNodes );
-    for ( Node * node : m_AllNodes )
+    uint32_t index = 0;
+    for ( const Node * node : m_AllNodes )
     {
-        SaveRecurse( stream, node, savedNodeFlags );
+        // Save each node
+        Node::Save( stream, node );
+        node->SetBuildPassTag( index++ ); // Save index for dependency serialization
     }
-
-    // sanity check saving
-    for ( size_t i=0; i<numNodes; ++i )
+    for ( const Node * node : m_AllNodes )
     {
-        ASSERT( savedNodeFlags[ i ] == true ); // each node was saved
+        // Save depdendencies, but not for FileNodes which have none
+        if ( node->GetType() != Node::FILE_NODE )
+        {
+            Node::SaveDependencies( stream, node );
+        }
     }
 
     // Calculate hash of stream excluding header
@@ -555,45 +543,6 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
         NodeGraphHeader * headerToUpdate = reinterpret_cast<NodeGraphHeader *>( data );
         ASSERT( headerToUpdate->GetContentHash() == 0 );
         headerToUpdate->SetContentHash( hash );
-    }
-}
-
-// SaveRecurse
-//------------------------------------------------------------------------------
-/*static*/ void NodeGraph::SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags )
-{
-    // ignore any already saved nodes
-    const uint32_t nodeIndex = node->GetIndex();
-    ASSERT( nodeIndex != INVALID_NODE_INDEX );
-    if ( savedNodeFlags[ nodeIndex ] )
-    {
-        return;
-    }
-
-    // Dependencies
-    SaveRecurse( stream, node->GetPreBuildDependencies(), savedNodeFlags );
-    SaveRecurse( stream, node->GetStaticDependencies(), savedNodeFlags );
-    SaveRecurse( stream, node->GetDynamicDependencies(), savedNodeFlags );
-
-    // save this node
-    ASSERT( savedNodeFlags[ nodeIndex ] == false ); // sanity check recursion
-
-    // save index
-    stream.Write( nodeIndex );
-
-    // save node specific data
-    Node::Save( stream, node );
-
-    savedNodeFlags[ nodeIndex ] = true; // mark as saved
-}
-
-// SaveRecurse
-//------------------------------------------------------------------------------
-/*static*/ void NodeGraph::SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags )
-{
-    for ( const Dependency & dep : dependencies )
-    {
-        SaveRecurse( stream, dep.GetNode(), savedNodeFlags );
     }
 }
 
@@ -1161,22 +1110,8 @@ void NodeGraph::AddNode( Node * node )
     node->m_Next = m_NodeMap[ key ];
     m_NodeMap[ key ] = node;
 
-    // add to regular list
-    if ( m_NextNodeIndex == m_AllNodes.GetSize() )
-    {
-        // normal addition of nodes to the end
-        m_AllNodes.Append( node );
-    }
-    else
-    {
-        // inserting nodes during database load at specific indices
-        ASSERT( m_AllNodes[ m_NextNodeIndex ] == nullptr );
-        m_AllNodes[ m_NextNodeIndex ] = node;
-    }
-
-    // set index on node
-    node->SetIndex( m_NextNodeIndex );
-    m_NextNodeIndex = (uint32_t)m_AllNodes.GetSize();
+    // add to list
+    m_AllNodes.Append( node );
 }
 
 // Build

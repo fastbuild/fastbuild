@@ -63,7 +63,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 166 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 167 };
 
     bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == NODE_GRAPH_CURRENT_VERSION; }
@@ -188,9 +188,6 @@ private:
     uint32_t GetLibEnvVarHash() const;
 
     // load/save helpers
-    static void SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags );
-    static void SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags );
-    void LoadNode( ConstMemoryStream & stream );
     static void SerializeToText( Node * node, uint32_t depth, AString & outBuffer );
     static void SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer );
     static void SerializeToDot( Node * node,
@@ -218,7 +215,6 @@ private:
     Node **         m_NodeMap;
     uint32_t        m_NodeMapMaxKey; // Always equals to some power of 2 minus 1, can be used as mask.
     Array< Node * > m_AllNodes;
-    uint32_t        m_NextNodeIndex;
 
     Timer m_Timer;
 
