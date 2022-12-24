@@ -14,6 +14,7 @@
 struct FBuildStats;
 class Dependencies;
 class Node;
+class NodeGraph;
 
 // Report
 //------------------------------------------------------------------------------
@@ -23,10 +24,16 @@ public:
     Report();
     ~Report();
 
-    void Generate( const FBuildStats & stats );
+    void Generate( const NodeGraph & nodeGraph, const FBuildStats & stats );
     void Save() const;
 
 private:
+    enum : uint32_t
+    {
+        eNodeNotSeen    = 0,
+        eNodeSeen       = 1,
+    };
+
     // Report sections
     void CreateHeader();
     void CreateTitle();
@@ -110,7 +117,7 @@ private:
     void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // gather stats
-    void GetLibraryStats( const FBuildStats & stats );
+    void GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & stats );
     void GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const;
     void GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const;
     void GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node) const;

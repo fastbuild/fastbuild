@@ -41,11 +41,7 @@ const AString & CompilationDatabase::Generate( const NodeGraph & nodeGraph, Depe
     m_Output += "[\n";
 
     // Mark nodes as not visited
-    const size_t numNodes = nodeGraph.GetNodeCount();
-    for ( size_t i = 0; i < numNodes; ++i )
-    {
-        nodeGraph.GetNodeByIndex( i )->SetBuildPassTag( eSweepTagNotSeen );
-    }
+    nodeGraph.SetBuildPassTagForAllNodes( eSweepTagNotSeen );
 
     // Visit nodes recursively
     VisitNodes( nodeGraph, dependencies );

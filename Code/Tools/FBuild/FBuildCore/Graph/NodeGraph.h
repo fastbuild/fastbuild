@@ -138,6 +138,9 @@ public:
 
     void DoBuildPass( Node * nodeToBuild );
 
+    // Non-build operations that use the BuildPassTag can set it to a known value
+    void SetBuildPassTagForAllNodes( uint32_t value ) const;
+
     static void CleanPath( AString & name, bool makeFullPath = true );
     static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
     #if defined( ASSERTS_ENABLED )

@@ -518,7 +518,7 @@ void FBuild::SaveDependencyGraph( MemoryStream & stream, const char* nodeGraphDB
     const float timeTaken = m_Timer.GetElapsed();
     m_BuildStats.m_TotalBuildTime = timeTaken;
 
-    m_BuildStats.OnBuildStop( nodeToBuild );
+    m_BuildStats.OnBuildStop( *m_DependencyGraph, nodeToBuild );
 
     return ( nodeToBuild->GetState() == Node::UP_TO_DATE );
 }

@@ -1361,6 +1361,15 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     return allDependenciesUpToDate;
 }
 
+//------------------------------------------------------------------------------
+void NodeGraph::SetBuildPassTagForAllNodes( uint32_t value ) const
+{
+    for ( const Node * node : m_AllNodes )
+    {
+        node->SetBuildPassTag( value );
+    }
+}
+
 // CleanPath
 //------------------------------------------------------------------------------
 /*static*/ void NodeGraph::CleanPath( AString & name, bool makeFullPath )

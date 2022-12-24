@@ -8,6 +8,7 @@
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/FBuildStats.h"
 
@@ -73,7 +74,7 @@ Report::~Report()
 
 // Generate
 //------------------------------------------------------------------------------
-void Report::Generate( const FBuildStats & stats )
+void Report::Generate( const NodeGraph & nodeGraph, const FBuildStats & stats )
 {
     const Timer t;
 
@@ -82,7 +83,7 @@ void Report::Generate( const FBuildStats & stats )
     m_Output.SetLength( 0 );
 
     // generate some common data used in reporting
-    GetLibraryStats( stats );
+    GetLibraryStats( nodeGraph, stats );
 
     // build the report
     CreateHeader();
@@ -879,8 +880,11 @@ void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 
 // GetLibraryStats
 //------------------------------------------------------------------------------
-void Report::GetLibraryStats(  const FBuildStats & stats )
+void Report::GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & stats )
 {
+    // Mark all nodes for recursion sweep
+    nodeGraph.SetBuildPassTagForAllNodes( eNodeNotSeen );
+
     // gather library stats, sorted by CPU cost
     GetLibraryStatsRecurse( m_LibraryStats, stats.GetRootNode(), nullptr );
     m_LibraryStats.SortDeref();
@@ -891,11 +895,11 @@ void Report::GetLibraryStats(  const FBuildStats & stats )
 void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const
 {
     // skip nodes we've already seen
-    if ( node->GetStatFlag( Node::STATS_REPORT_PROCESSED ) )
+    if ( node->GetBuildPassTag() == eNodeSeen )
     {
         return;
     }
-    node->SetStatFlag( Node::STATS_REPORT_PROCESSED );
+    node->SetBuildPassTag( eNodeSeen );
 
     const Node::Type type = node->GetType();
 

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 class Dependencies;
 class Node;
+class NodeGraph;
 
 // FBuildStats
 //------------------------------------------------------------------------------
@@ -19,7 +20,7 @@ struct FBuildStats
 public:
     FBuildStats();
 
-    void OnBuildStop( Node * node );
+    void OnBuildStop( const NodeGraph & nodeGraph, Node * node );
 
     // statistics updated from the main thread
 
@@ -33,7 +34,7 @@ public:
     uint32_t    m_TotalRemoteCPUTimeMS; // Total CPU time on remote workers
 
     // after the build it complete, accumulate all the stats
-    void GatherPostBuildStatistics( Node * node );
+    void GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node * node );
 
     void OutputSummary() const;
 
@@ -73,6 +74,12 @@ public:
 
     static inline void SetIgnoreCompilerNodeDeps( bool b ) { s_IgnoreCompilerNodeDeps = b; }
 private:
+    enum : uint32_t
+    {
+        eTagStatsNotProcessed   = 0,
+        eTagStatsProcessed      = 1,
+    };
+
     void GatherPostBuildStatisticsRecurse( Node * node );
     void GatherPostBuildStatisticsRecurse( const Dependencies & dependencies );
 
