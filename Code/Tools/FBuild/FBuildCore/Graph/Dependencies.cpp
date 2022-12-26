@@ -20,9 +20,16 @@ void Dependencies::Save( IOStream & stream ) const
 {
     const size_t numDeps = GetSize();
     stream.Write( (uint32_t)numDeps );
-
-    for ( const Dependency & dep : m_Dependencies )
+    if ( numDeps == 0 )
     {
+        return;
+    }
+
+    const Dependency * deps = GetDependencies( m_DependencyList );
+    for ( size_t i = 0; i < numDeps; ++i )
+    {
+        const Dependency & dep = deps[ i ];
+
         // Save index of node we depend on
         const uint32_t index = dep.GetNode()->GetBuildPassTag();
         stream.Write( index );
@@ -68,4 +75,44 @@ void Dependencies::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
         Add( node, stamp, isWeak );
     }
 }
+
+// GrowCapacity
+//------------------------------------------------------------------------------
+void Dependencies::GrowCapacity( size_t newCapacity )
+{
+    // Expand by doubling but ensure there is always some capacity
+    if ( newCapacity == 0 )
+    {
+        newCapacity = m_DependencyList ? ( m_DependencyList->m_Capacity * 2 )
+                                       : 1;
+        ASSERT( newCapacity > 0 );
+    }
+
+    // Allocate space for new list
+    const size_t allocSize = ( sizeof(DependencyList) + ( newCapacity * sizeof(Dependency) ) );
+    DependencyList * newList = static_cast<DependencyList *>( ALLOC( allocSize ) );
+    newList->m_Size = 0;
+    newList->m_Capacity = static_cast<uint32_t>( newCapacity );
+
+    // Transfer old list if there is one
+    if ( m_DependencyList )
+    {
+        // Copy construct
+        const size_t numDeps = m_DependencyList->m_Size;
+        Dependency * oldPos = GetDependencies( m_DependencyList );
+        Dependency * newPos = GetDependencies( newList );
+        for ( size_t i = 0; i < numDeps; ++i )
+        {
+            INPLACE_NEW ( newPos++ ) Dependency( *oldPos++ );
+        }
+        newList->m_Size = static_cast<uint32_t>(numDeps);
+
+        // Free old list
+        FREE( m_DependencyList ); // NOTE: Skipping destruction of POD Dependency
+    }
+
+    // Keep new list
+    m_DependencyList = newList;
+}
+
 //------------------------------------------------------------------------------
