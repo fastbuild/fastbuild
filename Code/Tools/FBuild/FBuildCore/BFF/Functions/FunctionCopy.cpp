@@ -121,7 +121,7 @@ FunctionCopy::FunctionCopy()
     }
 
     // make all the nodes for copies
-    Dependencies copyNodes( srcNodes.GetSize(), false );
+    Dependencies copyNodes( srcNodes.GetSize() );
     for ( const Node * srcNode : srcNodes )
     {
         AStackString<> dst( dstFile );

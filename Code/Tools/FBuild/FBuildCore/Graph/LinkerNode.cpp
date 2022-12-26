@@ -107,7 +107,7 @@ LinkerNode::LinkerNode()
     }
 
     // Standard library dependencies
-    Dependencies libraries( 64, true );
+    Dependencies libraries( 64 );
     for ( const AString & library : m_Libraries )
     {
         if ( DependOnNode( nodeGraph, iter, function, library, libraries ) == false )
@@ -115,7 +115,7 @@ LinkerNode::LinkerNode()
             return false; // DependOnNode will have emitted an error
         }
     }
-    Dependencies libraries2( 64, true );
+    Dependencies libraries2( 64 );
     for ( const AString & library : m_Libraries2 )
     {
         if ( DependOnNode( nodeGraph, iter, function, library, libraries2 ) == false )
@@ -125,14 +125,14 @@ LinkerNode::LinkerNode()
     }
 
     // Assembly Resources
-    Dependencies assemblyResources( 32, true );
+    Dependencies assemblyResources( 32 );
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".LinkerAssemblyResources", m_LinkerAssemblyResources, assemblyResources ) )
     {
         return false; // GetNodeList will have emitted error
     }
 
     // get inputs not passed through 'LibraryNodes' (i.e. directly specified on the cmd line)
-    Dependencies otherLibraryNodes( 64, true );
+    Dependencies otherLibraryNodes( 64 );
     if ( ( m_Flags & ( LinkerNode::LINK_FLAG_MSVC | LinkerNode::LINK_FLAG_GCC | LinkerNode::LINK_FLAG_SNC | LinkerNode::LINK_FLAG_ORBIS_LD | LinkerNode::LINK_FLAG_GREENHILLS_ELXR | LinkerNode::LINK_FLAG_CODEWARRIOR_LD ) ) != 0 )
     {
         const bool msvcStyle = GetFlag( LinkerNode::LINK_FLAG_MSVC );

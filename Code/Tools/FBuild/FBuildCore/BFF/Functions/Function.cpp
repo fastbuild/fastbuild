@@ -907,7 +907,7 @@ bool Function::GetStrings( const BFFToken * iter, Array< AString > & strings, co
 //------------------------------------------------------------------------------
 bool Function::ProcessAlias( NodeGraph & nodeGraph, const BFFToken * iter, Node * nodeToAlias ) const
 {
-    Dependencies nodesToAlias( 1, false );
+    Dependencies nodesToAlias( 1 );
     nodesToAlias.Add( nodeToAlias );
     return ProcessAlias( nodeGraph, iter, nodesToAlias );
 }

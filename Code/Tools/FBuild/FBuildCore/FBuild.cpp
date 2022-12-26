@@ -281,7 +281,7 @@ bool FBuild::Build( const Array< AString > & targets )
 {
     // create a temporary node, not hooked into the DB
     NodeProxy proxy( AStackString< 32 >( "*proxy*" ) );
-    Dependencies deps( targets.GetSize(), 0 );
+    Dependencies deps( targets.GetSize() );
     if ( !GetTargets( targets, deps ) )
     {
         return false; // GetTargets will have emitted an error

@@ -48,8 +48,8 @@ class Dependencies
 public:
     Dependencies()
     {}
-    explicit Dependencies( size_t initialCapacity, bool resizeable = false )
-        : m_Dependencies( initialCapacity, resizeable )
+    explicit Dependencies( size_t initialCapacity )
+        : m_Dependencies( initialCapacity, true )
     {}
     explicit Dependencies( Dependency * otherBegin, Dependency * otherEnd )
         : m_Dependencies( otherBegin, otherEnd )
