@@ -52,6 +52,11 @@ void Dependencies::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
 
     uint32_t numDeps;
     VERIFY( stream.Read( numDeps ) );
+    if ( numDeps == 0 )
+    {
+        return;
+    }
+    
     SetCapacity( numDeps );
     for ( uint32_t i=0; i<numDeps; ++i )
     {
