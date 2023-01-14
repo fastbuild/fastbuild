@@ -25,6 +25,9 @@ ObjectList( 'Caching' )
                                 #if USING_VS2019 || USING_VS2022
                                     // Avoid compiletime problems as of 16.5.1 (14.25.28610)
                                     + ' /wd5204' // vccorlib.h(705,2): warning C5204: 'Platform::Details::ControlBlock': class has virtual functions, but its trivial destructor is not virtual; instances of objects derived from this class may not be destructed correctly
+
+                                    // Avoid compiletime problems as of 14.4.4 (14.34.31933)
+                                    + ' /wd5264'// __uuidof_?AUIThumb@Primitives@Controls@Xaml@UI@Windows@@': 'const' variable is not used
                                 #endif
 
     .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestZW/Caching/'

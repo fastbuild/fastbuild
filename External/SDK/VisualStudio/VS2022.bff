@@ -8,12 +8,12 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //
-#if file_exists( "2022/Community/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+#if file_exists( "2022/Community/VC/Tools/MSVC/14.34.31933/bin/Hostx64/x64/cl.exe" )
     //
     // Use vendorized toolchain
     //
     .VS2022_BasePath        = '$_CURRENT_BFF_DIR_$/2022/Community/VC'
-    .VS2022_Version         = '14.31.31103'
+    .VS2022_Version         = '14.34.31933'
     .VS2022_MSC_VER         = '1931'
 #else
     //
@@ -29,19 +29,19 @@
         //
         // Use Visual Studio installation
         //
-        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.34.31933/bin/Hostx64/x64/cl.exe" )
             // v17.1.4
             .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC'
-            .VS2022_Version         = '14.31.31103'
+            .VS2022_Version         = '14.34.31933'
             .VS2022_MSC_VER         = '1931'
         #else
             //
             // Use Visual Studio 2022 Enterprise installation (used by GitHub Actions)
             //
-            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe" )
+            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.34.31933/bin/Hostx64/x64/cl.exe" )
                 // v17.1.4
                 .VS2022_BasePath        = 'C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC'
-                .VS2022_Version         = '14.31.31103'
+                .VS2022_Version         = '14.34.31933'
                 .VS2022_MSC_VER         = '1931'
             #else
                 //
