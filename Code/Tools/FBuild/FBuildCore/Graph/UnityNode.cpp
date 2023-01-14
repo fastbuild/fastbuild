@@ -330,7 +330,9 @@ UnityNode::~UnityNode()
     const float numFilesPerUnity = (float)numFiles / (float)m_NumUnityFilesToCreate;
     float remainingInThisUnity( 0.0 );
 
-    uint32_t numFilesWritten( 0 );
+    #if defined(ASSERTS_ENABLED)
+        uint32_t numFilesWritten( 0 );
+    #endif
 
     size_t index = 0;
 
@@ -421,7 +423,9 @@ UnityNode::~UnityNode()
 
             // count the file, whether we wrote it or not, to keep unity files stable
             index++;
-            numFilesWritten++;
+            #if defined(ASSERTS_ENABLED)
+                numFilesWritten++;
+            #endif
         }
 
         // write allocation of includes for this unity file
