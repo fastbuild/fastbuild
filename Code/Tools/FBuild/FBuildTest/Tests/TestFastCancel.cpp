@@ -103,7 +103,7 @@ void TestFastCancel::Cancel() const
         {
             // Ensure if test is broken that it fails sensibly
             tryCount++;
-            ASSERT( tryCount < 100 );
+            TEST_ASSERT( tryCount < 100 );
 
             // Wait and try again
             Thread::Sleep( 10 );
