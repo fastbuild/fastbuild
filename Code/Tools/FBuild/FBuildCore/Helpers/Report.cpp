@@ -19,7 +19,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Report::Report(size_t initialCapacity, bool resizeable)
-    : m_LibraryStats(512, true)
+    : m_LibraryStats(initialCapacity, resizeable)
 {
 }
 
