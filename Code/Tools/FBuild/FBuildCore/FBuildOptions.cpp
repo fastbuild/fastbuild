@@ -605,15 +605,15 @@ Report* FBuildOptions::GetReport() const
 {
     if (m_ReportType == "json")
     {
-        return FNEW(JsonReport());
+        return FNEW( JsonReport );
     }
     else if (m_ReportType == "html")
     {
-        return FNEW(HtmlReport());
+        return FNEW( HtmlReport );
     }
 
     OUTPUT("FBuild: Warning: Invalid report type '%s' for '-report' argument. Defaulting to html\n", m_ReportType);
-    return FNEW(HtmlReport());
+    return FNEW( HtmlReport );
 }
 
 // DisplayHelp
