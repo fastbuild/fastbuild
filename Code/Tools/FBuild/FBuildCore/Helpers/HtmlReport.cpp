@@ -60,14 +60,7 @@ HtmlReport::HtmlReport()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-HtmlReport::~HtmlReport()
-{
-    const LibraryStats * const * end = m_LibraryStats.End();
-    for ( LibraryStats ** it=m_LibraryStats.Begin(); it != end; ++it )
-    {
-        FDELETE *it;
-    }
-}
+HtmlReport::~HtmlReport() {}
 
 // Generate
 //------------------------------------------------------------------------------

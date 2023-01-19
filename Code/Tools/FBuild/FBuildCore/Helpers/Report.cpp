@@ -25,7 +25,14 @@ Report::Report(size_t initialCapacity, bool resizeable)
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-Report::~Report() {}
+Report::~Report() 
+{
+    const LibraryStats* const* end = m_LibraryStats.End();
+    for (LibraryStats** it = m_LibraryStats.Begin(); it != end; ++it)
+    {
+        FDELETE* it;
+    }
+}
 
 // Write
 //------------------------------------------------------------------------------
