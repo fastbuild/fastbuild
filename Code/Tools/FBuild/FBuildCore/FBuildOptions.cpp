@@ -609,11 +609,11 @@ Report* FBuildOptions::GetReport() const
     }
     else if (m_ReportType == "html")
     {
-        return FNEW(HtmlReport);
+        return FNEW(HtmlReport());
     }
 
     OUTPUT("FBuild: Warning: Invalid report type '%s' for '-report' argument. Defaulting to html\n", m_ReportType);
-    return FNEW(JsonReport);
+    return FNEW(HtmlReport());
 }
 
 // DisplayHelp
