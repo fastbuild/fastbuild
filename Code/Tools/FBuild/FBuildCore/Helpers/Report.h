@@ -24,11 +24,8 @@ public:
     Report( size_t initialCapacity, bool resizeable );
     virtual ~Report();
 
-    void Generate( const NodeGraph & nodeGraph, const FBuildStats & stats );
-    void Save() const;
-
-    //virtual void Generate( const FBuildStats& stats ) = 0;
-    //virtual void Save() const = 0;
+    virtual void Generate( const NodeGraph & nodeGraph, const FBuildStats & stats ) = 0;
+    virtual void Save() const = 0;
     
 protected:
     enum : uint32_t

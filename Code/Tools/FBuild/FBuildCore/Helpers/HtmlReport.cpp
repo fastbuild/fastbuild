@@ -64,7 +64,7 @@ HtmlReport::~HtmlReport() {}
 
 // Generate
 //------------------------------------------------------------------------------
-void HtmlReport::Generate( const FBuildStats & stats )
+void HtmlReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats )
 {
     const Timer t;
 
@@ -73,7 +73,7 @@ void HtmlReport::Generate( const FBuildStats & stats )
     m_Output.SetLength( 0 );
 
     // generate some common data used in reporting
-    GetLibraryStats( stats );
+    GetLibraryStats(nodeGraph, stats );
 
     // build the report
     CreateHeader();

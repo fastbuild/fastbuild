@@ -21,7 +21,7 @@ public:
     JsonReport();
     ~JsonReport();
 
-    virtual void Generate( const FBuildStats & stats ) override;
+    virtual void Generate( const NodeGraph& nodeGraph, const FBuildStats& stats ) override;
     virtual void Save() const override;
 
 private:

@@ -34,7 +34,7 @@ JsonReport::~JsonReport() {}
 
 // Generate
 //------------------------------------------------------------------------------
-void JsonReport::Generate( const FBuildStats & stats )
+void JsonReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats )
 {
     const Timer t;
 
@@ -42,7 +42,7 @@ void JsonReport::Generate( const FBuildStats & stats )
     m_Output.SetReserved( MEGABYTE );
     m_Output.SetLength( 0 );
     
-    GetLibraryStats( stats );
+    GetLibraryStats( nodeGraph, stats );
     
     Write( "{\n\t" );
 

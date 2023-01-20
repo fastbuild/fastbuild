@@ -21,7 +21,7 @@ public:
     HtmlReport();
     ~HtmlReport();
 
-    virtual void Generate( const FBuildStats & stats ) override;
+    virtual void Generate(const NodeGraph& nodeGraph, const FBuildStats& stats);
     virtual void Save() const override;
 
 private:
