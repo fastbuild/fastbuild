@@ -14,6 +14,7 @@
 struct FBuildStats;
 class Dependencies;
 class Node;
+class NodeGraph;
 
 // Report
 //------------------------------------------------------------------------------
@@ -23,10 +24,19 @@ public:
     Report( size_t initialCapacity, bool resizeable );
     virtual ~Report();
 
-    virtual void Generate( const FBuildStats& stats ) = 0;
-    virtual void Save() const = 0;
+    void Generate( const NodeGraph & nodeGraph, const FBuildStats & stats );
+    void Save() const;
+
+    //virtual void Generate( const FBuildStats& stats ) = 0;
+    //virtual void Save() const = 0;
     
 protected:
+    enum : uint32_t
+    {
+        eNodeNotSeen = 0,
+        eNodeSeen = 1,
+    };
+
     struct LibraryStats
     {
         const Node *    library;
@@ -71,7 +81,7 @@ protected:
     void Write( MSVC_SAL_PRINTF const char* fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // gather stats
-    void GetLibraryStats( const FBuildStats & stats );
+    void GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & stats );
     void GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const;
     void GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const;
     void GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const;

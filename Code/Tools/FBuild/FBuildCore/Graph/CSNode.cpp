@@ -113,10 +113,10 @@ CSNode::CSNode()
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles + m_NumCompilerReferences );
-    m_StaticDependencies.EmplaceBack( compilerNode );
-    m_StaticDependencies.Append( compilerInputPath );
-    m_StaticDependencies.Append( compilerInputFiles );
-    m_StaticDependencies.Append( compilerReferences );
+    m_StaticDependencies.Add( compilerNode );
+    m_StaticDependencies.Add( compilerInputPath );
+    m_StaticDependencies.Add( compilerInputFiles );
+    m_StaticDependencies.Add( compilerReferences );
 
     return true;
 }
@@ -159,7 +159,7 @@ CSNode::~CSNode() = default;
                 return false;
             }
 
-            m_DynamicDependencies.EmplaceBack( sn );
+            m_DynamicDependencies.Add( sn );
         }
         continue;
     }

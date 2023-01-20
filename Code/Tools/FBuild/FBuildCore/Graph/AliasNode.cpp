@@ -29,7 +29,7 @@ AliasNode::AliasNode()
 //------------------------------------------------------------------------------
 /*virtual*/ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
-    Dependencies targets( 32, true );
+    Dependencies targets( 32 );
     const bool allowCopyDirNodes = true;
     const bool allowUnityNodes = true;
     const bool allowRemoveDirNodes = true;
@@ -52,13 +52,10 @@ AliasNode::~AliasNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult AliasNode::DoBuild( Job * /*job*/ )
 {
-    const Dependencies::Iter end = m_StaticDependencies.End();
-    for ( Dependencies::Iter it = m_StaticDependencies.Begin();
-          it != end;
-          ++it )
+    for ( const Dependency & dep : m_StaticDependencies )
     {
         // If any nodes are file nodes ...
-        const Node * n = it->GetNode();
+        const Node * n = dep.GetNode();
         if ( n->GetType() == Node::FILE_NODE )
         {
             // ... and the file is missing ...

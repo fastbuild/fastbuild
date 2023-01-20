@@ -65,7 +65,7 @@ CompilerNode::CompilerNode()
 /*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .Executable
-    Dependencies compilerExeFile( 1, false );
+    Dependencies compilerExeFile( 1 );
     if ( !Function::GetFileNode( nodeGraph, iter, function, m_Executable, ".Executable", compilerExeFile ) )
     {
         return false; // GetFileNode will have emitted an error
@@ -73,7 +73,7 @@ CompilerNode::CompilerNode()
     ASSERT( compilerExeFile.GetSize() == 1 ); // Should not be possible to expand to > 1 thing
 
     // .ExtraFiles
-    Dependencies extraFiles( 32, true );
+    Dependencies extraFiles( 32 );
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".ExtraFiles", m_ExtraFiles, extraFiles ) )
     {
         return false; // GetNodeList will have emitted an error
@@ -123,8 +123,8 @@ CompilerNode::CompilerNode()
 
     // Store Static Dependencies
     m_StaticDependencies.SetCapacity( 1 + extraFiles.GetSize() );
-    m_StaticDependencies.Append( compilerExeFile );
-    m_StaticDependencies.Append( extraFiles );
+    m_StaticDependencies.Add( compilerExeFile );
+    m_StaticDependencies.Add( extraFiles );
 
     if (InitializeCompilerFamily( iter, function ) == false)
     {

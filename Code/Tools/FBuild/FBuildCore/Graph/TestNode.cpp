@@ -103,9 +103,9 @@ TestNode::TestNode()
 
     // Store Static Dependencies
     m_StaticDependencies.SetCapacity( 1 + m_NumTestInputFiles + testInputPaths.GetSize() );
-    m_StaticDependencies.Append( executable );
-    m_StaticDependencies.Append( testInputFiles );
-    m_StaticDependencies.Append( testInputPaths );
+    m_StaticDependencies.Add( executable );
+    m_StaticDependencies.Add( testInputFiles );
+    m_StaticDependencies.Add( testInputPaths );
 
     return true;
 }
@@ -158,7 +158,7 @@ const char * TestNode::GetEnvironmentString() const
                 return false;
             }
 
-            m_DynamicDependencies.EmplaceBack( sn );
+            m_DynamicDependencies.Add( sn );
         }
         continue;
     }

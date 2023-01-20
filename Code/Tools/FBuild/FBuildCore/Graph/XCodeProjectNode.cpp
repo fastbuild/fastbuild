@@ -131,8 +131,8 @@ XCodeProjectNode::XCodeProjectNode()
     }
 
     ASSERT( m_StaticDependencies.IsEmpty() );
-    m_StaticDependencies.Append( dirNodes );
-    m_StaticDependencies.Append( fileNodes );
+    m_StaticDependencies.Add( dirNodes );
+    m_StaticDependencies.Add( fileNodes );
 
     // Resolve Target names to Node pointers for later use
     if ( XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, iter, function ) == false )

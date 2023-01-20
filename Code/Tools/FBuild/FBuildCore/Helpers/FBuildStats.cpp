@@ -7,6 +7,7 @@
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Report.h"
 
 // Core
@@ -58,7 +59,7 @@ FBuildStats::Stats::Stats()
 
 // OnBuildStop
 //------------------------------------------------------------------------------
-void FBuildStats::OnBuildStop( Node * node )
+void FBuildStats::OnBuildStop( const NodeGraph & nodeGraph, Node * node )
 {
     m_RootNode = node;
 
@@ -72,14 +73,14 @@ void FBuildStats::OnBuildStop( Node * node )
     if ( showSummary || generateReport )
     {
         // do work common to -summary and -report
-        GatherPostBuildStatistics( node );
+        GatherPostBuildStatistics( nodeGraph, node );
 
         // detailed build report
         if ( generateReport )
         {
             Report* report = options.GetReport();
 
-            report->Generate( *this );
+            report->Generate( nodeGraph, *this );
             report->Save();
 
             FREE(report);
@@ -95,9 +96,12 @@ void FBuildStats::OnBuildStop( Node * node )
 
 // GatherPostBuildStatistics
 //------------------------------------------------------------------------------
-void FBuildStats::GatherPostBuildStatistics( Node * node )
+void FBuildStats::GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node * node )
 {
     PROFILE_FUNCTION;
+
+    // Mark nodes to track recursion
+    nodeGraph.SetBuildPassTagForAllNodes( eTagStatsNotProcessed );
 
     // recurse and gather the per-node-type statistics
     GatherPostBuildStatisticsRecurse( node );
@@ -216,10 +220,11 @@ void FBuildStats::OutputSummary() const
 void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
 {
     // have we seen this node when gathering stats?
-    if ( node->GetStatFlag( Node::STATS_STATS_PROCESSED ) )
+    if ( node->GetBuildPassTag() == eTagStatsProcessed )
     {
         return;
     }
+    node->SetBuildPassTag( eTagStatsProcessed );
 
     Node::Type nodeType = node->GetType();
 
@@ -272,9 +277,6 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
         }
     }
 
-    // mark this node as processed to prevent multiple recursion
-    node->SetStatFlag( Node::STATS_STATS_PROCESSED );
-
     // For unit test count check stability we want to exclude "ExtraFiles" on CompilerNodes
     if ( s_IgnoreCompilerNodeDeps && ( node->GetType() == Node::COMPILER_NODE ) )
     {
@@ -291,12 +293,9 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
 //------------------------------------------------------------------------------
 void FBuildStats::GatherPostBuildStatisticsRecurse( const Dependencies & dependencies )
 {
-    const Dependencies::Iter end = dependencies.End();
-    for ( Dependencies::Iter it = dependencies.Begin();
-          it != end;
-          it++ )
+    for ( const Dependency & dep : dependencies )
     {
-        GatherPostBuildStatisticsRecurse( it->GetNode() );
+        GatherPostBuildStatisticsRecurse( dep.GetNode() );
     }
 }
 

@@ -268,7 +268,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
 
             return false;
         }
-        outDeps.EmplaceBack( node );
+        outDeps.Add( node );
     }
 
     return true;
@@ -280,7 +280,7 @@ bool FBuild::Build( const Array< AString > & targets )
 {
     // create a temporary node, not hooked into the DB
     NodeProxy proxy( AStackString< 32 >( "*proxy*" ) );
-    Dependencies deps( targets.GetSize(), 0 );
+    Dependencies deps( targets.GetSize() );
     if ( !GetTargets( targets, deps ) )
     {
         return false; // GetTargets will have emitted an error
@@ -517,7 +517,7 @@ void FBuild::SaveDependencyGraph( MemoryStream & stream, const char* nodeGraphDB
     const float timeTaken = m_Timer.GetElapsed();
     m_BuildStats.m_TotalBuildTime = timeTaken;
 
-    m_BuildStats.OnBuildStop( nodeToBuild );
+    m_BuildStats.OnBuildStop( *m_DependencyGraph, nodeToBuild );
 
     return ( nodeToBuild->GetState() == Node::UP_TO_DATE );
 }

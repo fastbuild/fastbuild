@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Dependencies">
+    <Expand HideRawView="true">
+      <Item Name="[m_Size]" ExcludeView="simple">m_DependencyList ? m_DependencyList->m_Size : 0</Item>
+      <Item Name="[m_Capacity]" ExcludeView="simple">m_DependencyList ? m_DependencyList->m_Capacity : 0</Item>
+      <ArrayItems>
+        <Size>m_DependencyList ? m_DependencyList->m_Size : 0</Size>
+        <ValuePointer>(Dependency*)(m_DependencyList ? (m_DependencyList + 1) : nullptr)</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+</AutoVisualizer>

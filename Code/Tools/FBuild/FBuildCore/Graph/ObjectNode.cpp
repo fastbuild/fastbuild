@@ -156,14 +156,14 @@ ObjectNode::ObjectNode()
 
     // Store Dependencies
     m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
-    m_StaticDependencies.EmplaceBack( compiler );
-    m_StaticDependencies.Append( compilerInputFile );
-    m_StaticDependencies.Append( precompiledHeader );
+    m_StaticDependencies.Add( compiler );
+    m_StaticDependencies.Add( compilerInputFile );
+    m_StaticDependencies.Add( precompiledHeader );
     if ( preprocessor )
     {
-        m_StaticDependencies.EmplaceBack( preprocessor );
+        m_StaticDependencies.Add( preprocessor );
     }
-    m_StaticDependencies.Append( compilerForceUsing );
+    m_StaticDependencies.Add( compilerForceUsing );
 
     return true;
 }
@@ -183,8 +183,8 @@ ObjectNode::ObjectNode( const AString & objectName,
     m_CompilerFlags.m_Flags = flags;
 
     m_StaticDependencies.SetCapacity( 2 );
-    m_StaticDependencies.EmplaceBack( nullptr );
-    m_StaticDependencies.EmplaceBack( srcFile );
+    m_StaticDependencies.Add( nullptr );
+    m_StaticDependencies.Add( srcFile );
 }
 
 // DESTRUCTOR
@@ -311,7 +311,7 @@ ObjectNode::~ObjectNode()
             fn->CastTo< FileNode >()->DoBuild( nullptr );
         }
 
-        m_DynamicDependencies.EmplaceBack( fn );
+        m_DynamicDependencies.Add( fn );
     }
 
     Node::Finalize( nodeGraph );

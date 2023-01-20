@@ -219,42 +219,52 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild( options );
-    fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
+    const char * const dbName = "../tmp/Test/Exec/exec.fdb";
 
-    const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
-    CreateInputFile( inFile_multiInputA );
+    // Try first file
+    {
+        FBuild fBuild( options );
+        fBuild.Initialize( dbName );
 
-    TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
+        const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
+        CreateInputFile( inFile_multiInputA );
 
-    // We expect only one command to run a second time (the one that always runs)
+        TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbName ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode(1, 0, Node::OBJECT_NODE);
-    CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
-    CheckStatsNode(1, 1, Node::ALIAS_NODE);
-    CheckStatsNode(1, 0, Node::EXE_NODE);
-    CheckStatsNode(1, 1, Node::EXEC_NODE);
+        // We expect only one command to run a second time (the one that always runs)
 
-    // ------- Now try the other file
+        // Check stats
+        //               Seen,  Built,  Type
+        // NOTE: Don't test file nodes since test used windows.h
+        CheckStatsNode(1, 0, Node::OBJECT_NODE);
+        CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
+        CheckStatsNode(1, 1, Node::ALIAS_NODE);
+        CheckStatsNode(1, 0, Node::EXE_NODE);
+        CheckStatsNode(1, 1, Node::EXEC_NODE);
+    }
 
-    const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
-    CreateInputFile( inFile_multiInputB );
+    // Try second file
+    {
+        FBuild fBuild( options );
+        fBuild.Initialize( dbName );
 
-    TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
+        const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
+        CreateInputFile( inFile_multiInputB );
 
-    // We expect only one command to run a second time (the one that always runs)
+        TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode(1, 0, Node::OBJECT_NODE);
-    CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
-    CheckStatsNode(1, 1, Node::ALIAS_NODE);
-    CheckStatsNode(1, 0, Node::EXE_NODE);
-    CheckStatsNode(1, 1, Node::EXEC_NODE);
+        // We expect only one command to run a second time (the one that always runs)
+
+        // Check stats
+        //               Seen,  Built,  Type
+        // NOTE: Don't test file nodes since test used windows.h
+        CheckStatsNode(1, 0, Node::OBJECT_NODE);
+        CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
+        CheckStatsNode(1, 1, Node::ALIAS_NODE);
+        CheckStatsNode(1, 0, Node::EXE_NODE);
+        CheckStatsNode(1, 1, Node::EXEC_NODE);
+    }
 }
 
 //------------------------------------------------------------------------------
