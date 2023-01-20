@@ -224,21 +224,21 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
         const uint32_t cacheHits = nodeStats.m_NumCacheHits;
 
         Write( "\"%s\": {", typeName );
-        Write( "\n\t\t\t\t" );
+        Write( "\n\t\t\t" );
 
-        Write( "\"Time (s)\": %2.3f,\n\t\t\t\t", (double)value );
-        Write( "\"Processed\": %u,\n\t\t\t\t", processed );
-        Write( "\"Built\": %u,\n\t\t\t\t", built );
+        Write( "\"Time (s)\": %2.3f,\n\t\t\t", (double)value );
+        Write( "\"Processed\": %u,\n\t\t\t", processed );
+        Write( "\"Built\": %u,\n\t\t\t", built );
 
         if ( type == Node::OBJECT_NODE )
         {
             // cacheable
-            Write( "\"Cache Hits\": %u,\n\t\t\t\t", cacheHits );
+            Write( "\"Cache Hits\": %u,\n\t\t\t", cacheHits );
         }
         else
         {
             // non-cacheable
-            Write( "\"Cache Hits\": \"-\",\n\t\t\t\t" );
+            Write( "\"Cache Hits\": \"-\",\n\t\t\t" );
         }
 
         double percent = 100.0 * items[i].value / total;
