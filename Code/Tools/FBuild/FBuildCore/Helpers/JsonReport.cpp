@@ -91,7 +91,7 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
     AStackString<> buffer;
 
     Write( "\"Overview\": {\n" );
-    Write( "\t\t\t" );
+    Write( "\t\t" );
 
     // Full command line
     AStackString<> commandLineBuffer;
@@ -105,7 +105,7 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
 
     AStackString<> programName( commandLine );
     JSON::Escape( programName );
-    Write( "\"cmd line options\": \"%s\",\n\t\t\t", programName.Get() );
+    Write( "\"cmd line options\": \"%s\",\n\t\t", programName.Get() );
 
     // Target
     AStackString<> targets;
@@ -129,32 +129,32 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
         }
     }
 
-    Write( "\"Target(s)\": \"%s\",\n\t\t\t", targets.Get() );
+    Write( "\"Target(s)\": \"%s\",\n\t\t", targets.Get() );
 
     // Result
     const bool buildOK = ( stats.GetRootNode()->GetState() == Node::UP_TO_DATE );
-    Write( "\"Result\": \"%s\",\n\t\t\t", buildOK ? "OK" : "FAILED" );
+    Write( "\"Result\": \"%s\",\n\t\t", buildOK ? "OK" : "FAILED" );
 
     // Real Time
     const float totalBuildTime = stats.m_TotalBuildTime;
     stats.FormatTime( totalBuildTime, buffer );
-    Write( "\"Time\": \"%s\",\n\t\t\t", buffer.Get() );
+    Write( "\"Time\": \"%s\",\n\t\t", buffer.Get() );
 
     // Local CPU Time
     const float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
     stats.FormatTime( totalLocalCPUInSeconds, buffer );
     const float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
-    Write( "\"CPU Time\": \"%s (%2.1f:1)\",\n\t\t\t", buffer.Get(), (double)localRatio );
+    Write( "\"CPU Time\": \"%s (%2.1f:1)\",\n\t\t", buffer.Get(), (double)localRatio );
 
 
     // Remote CPU Time
     const float totalRemoteCPUInSeconds = (float)( (double)stats.m_TotalRemoteCPUTimeMS / (double)1000 );
     stats.FormatTime( totalRemoteCPUInSeconds, buffer );
     const float remoteRatio = ( totalRemoteCPUInSeconds / totalBuildTime );
-    Write( "\"Remote CPU Time\": \"%s (%2.1f:1)\",\n\t\t\t", buffer.Get(), (double)remoteRatio );
+    Write( "\"Remote CPU Time\": \"%s (%2.1f:1)\",\n\t\t", buffer.Get(), (double)remoteRatio );
 
     // version info
-    Write( "\"Version\": \"%s %s\",\n\t\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    Write( "\"Version\": \"%s %s\",\n\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
 
     // report time
     time_t rawtime;
