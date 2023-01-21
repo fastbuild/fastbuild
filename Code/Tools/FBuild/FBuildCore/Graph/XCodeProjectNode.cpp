@@ -32,6 +32,7 @@ REFLECT_END( XCodeProjectConfig )
 REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
     REFLECT_ARRAY( m_ProjectInputPaths,             "ProjectInputPaths",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_ProjectInputPathsExclude,      "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
+    REFLECT(       m_ProjectInputPathsRecurse,      "ProjectInputPathsRecurse",     MetaOptional() )
     REFLECT_ARRAY( m_ProjectFiles,                  "ProjectFiles",                 MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_ProjectFilesToExclude,         "ProjectFilesToExclude",        MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_PatternToExclude,              "ProjectPatternToExclude",      MetaOptional() + MetaFile())
@@ -114,7 +115,7 @@ XCodeProjectNode::XCodeProjectNode()
                                               m_ProjectInputPathsExclude,
                                               m_ProjectFilesToExclude,
                                               m_PatternToExclude,
-                                              true, // Resursive
+                                              m_ProjectInputPathsRecurse, // Resursive
                                               false, // Don't include read-only status in hash
                                               &m_ProjectAllowedFileExtensions,
                                               "ProjectInputPaths",
