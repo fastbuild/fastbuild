@@ -90,8 +90,8 @@ Print( "---- ArrayOfStructs Recursion" )
                 + .StructB
     Print( .StructC )
     {
-        Using(.StructC)
-        ForEach(.S in .ArrayOfStructs)
+        Using( .StructC )
+        ForEach( .S in .ArrayOfStructs )
         {
             // Check that we actually made an array
         }
@@ -116,14 +116,13 @@ Print( "---- Left contains empty arrays" )
         .EmptyD = .Struct1
     ]
     .StructA + .StructB
-    Print(.StructA)
+    Print( .StructA )
     {
-        Using(.StructA)
-        ForEach(.StructA in .EmptyA,
-                .StructB in .EmptyB,
-                .StructC in .EmptyC,
-                .StructD in .EmptyD,
-        )
+        Using( .StructA )
+        ForEach( .StructA in .EmptyA,
+                 .StructB in .EmptyB,
+                 .StructC in .EmptyC,
+                 .StructD in .EmptyD )
         {
             // Check that we actually made arrays
         }
@@ -144,12 +143,11 @@ Print( "---- Right contains empty arrays" )
         .EmptyB = {}
     ]
     .StructA + .StructB
-    Print(.StructA)
+    Print( .StructA )
     {
-        Using(.StructA)
-        ForEach(.StructA in .EmptyA,
-                .StructB in .EmptyB,
-        )
+        Using( .StructA )
+        ForEach( .StructA in .EmptyA,
+                 .StructB in .EmptyB )
         {
             // Check that we actually made arrays
         }

@@ -272,14 +272,13 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         // Mismatched - is there a supported conversion?
 
         const bool dstIsEmpty = ( varDst == nullptr ) ||
-            ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && varDst->GetArrayOfStrings().IsEmpty() ) ||
-            ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varDst->GetArrayOfStructs().IsEmpty() );
-        const bool srcIsEmpty =
-            ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && varSrc->GetArrayOfStrings().IsEmpty() ) ||
-            ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varSrc->GetArrayOfStructs().IsEmpty() );
+                                ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && varDst->GetArrayOfStrings().IsEmpty() ) ||
+                                ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) && varDst->GetArrayOfStructs().IsEmpty() );
+        const bool srcIsEmpty = ( ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && varSrc->GetArrayOfStrings().IsEmpty() ) ||
+                                ( ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) && varSrc->GetArrayOfStructs().IsEmpty() );
 
         // String to ArrayOfStrings or empty array
-        if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
+        if ( ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) || dstIsEmpty ) &&
              ( srcType == BFFVariable::VAR_STRING ) )
         {
             StackArray<AString> values;
@@ -293,10 +292,10 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             return result;
         }
         // Struct to ArrayOfStructs or empty array concatenation
-        if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS || dstIsEmpty ) &&
+        if ( ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) || dstIsEmpty ) &&
              ( srcType == BFFVariable::VAR_STRUCT ) )
         {
-            const uint32_t num = (uint32_t)( 1 + ( ( !dstIsEmpty ) ? varDst->GetArrayOfStructs().GetSize() : 0 ) );
+            const uint32_t num = (uint32_t)( 1 + ( !dstIsEmpty ? varDst->GetArrayOfStructs().GetSize() : 0 ) );
             StackArray<const BFFVariable *> values;
             values.SetCapacity( num );
             if ( !dstIsEmpty )
@@ -309,23 +308,19 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             return result;
         }
 
-        // Empty array to Array of any type or visc-versa
-        if ( ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS || dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && srcIsEmpty ) ||
-            ( ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS || srcType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && dstIsEmpty ) )
+        // Empty array to Array of any type or vice-versa
+        if ( ( ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) || ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) ) && srcIsEmpty ) ||
+             ( ( ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) || ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS ) ) && dstIsEmpty ) )
         {
-            const BFFVariable * src;
-            if (srcIsEmpty) {
-                src = varDst;
+            const BFFVariable * src = srcIsEmpty ? varDst : varSrc;
+            BFFVariable * result = FNEW( BFFVariable( dstName, src->m_Type ) );
+            if ( src->m_Type == BFFVariable::VAR_ARRAY_OF_STRINGS )
+            {
+                result->SetValueArrayOfStrings( src->GetArrayOfStrings() );
             }
-            else {
-                src = varSrc;
-            }
-            BFFVariable * result = FNEW(BFFVariable(dstName, src->m_Type));
-            if (src->m_Type == BFFVariable::VAR_ARRAY_OF_STRINGS) {
-                result->SetValueArrayOfStrings(src->GetArrayOfStrings());
-            }
-            else {
-                result->SetValueArrayOfStructs(src->GetArrayOfStructs());
+            else
+            {
+                result->SetValueArrayOfStructs( src->GetArrayOfStructs() );
             }
             return result;
         }
@@ -371,7 +366,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varDst->GetArrayOfStructs() );
             values.Append( varSrc->GetArrayOfStructs() );
 
-            BFFVariable *result = FNEW(BFFVariable(dstName, values, VAR_ARRAY_OF_STRUCTS ));
+            BFFVariable * result = FNEW(BFFVariable( dstName, values, VAR_ARRAY_OF_STRUCTS ) );
             return result;
         }
 
