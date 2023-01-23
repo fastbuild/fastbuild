@@ -603,16 +603,16 @@ void FBuildOptions::SetWorkingDir( const AString & path )
 
 Report* FBuildOptions::GetReport() const
 {
-    if (m_ReportType == "json")
+    if ( m_ReportType == "json" )
     {
         return FNEW( JsonReport );
     }
-    else if (m_ReportType == "html")
+    else if ( m_ReportType == "html" )
     {
         return FNEW( HtmlReport );
     }
 
-    OUTPUT("FBuild: Warning: Invalid report type '%s' for '-report' argument. Defaulting to html\n", m_ReportType);
+    OUTPUT( "FBuild: Warning: Invalid report type '%s' for '-report' argument. Defaulting to html\n", m_ReportType.Get() );
     return FNEW( HtmlReport );
 }
 

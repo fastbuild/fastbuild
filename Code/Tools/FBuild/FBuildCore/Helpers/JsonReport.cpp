@@ -144,14 +144,14 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
     const float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
     stats.FormatTime( totalLocalCPUInSeconds, buffer );
     const float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
-    Write( "\"CPU Time\": \"%s (%2.1f:1)\",\n\t\t", buffer.Get(), (double)localRatio );
+    Write( "\"CPU Time\": \"%s (%.1f:1)\",\n\t\t", buffer.Get(), (double)localRatio );
 
 
     // Remote CPU Time
     const float totalRemoteCPUInSeconds = (float)( (double)stats.m_TotalRemoteCPUTimeMS / (double)1000 );
     stats.FormatTime( totalRemoteCPUInSeconds, buffer );
     const float remoteRatio = ( totalRemoteCPUInSeconds / totalBuildTime );
-    Write( "\"Remote CPU Time\": \"%s (%2.1f:1)\",\n\t\t", buffer.Get(), (double)remoteRatio );
+    Write( "\"Remote CPU Time\": \"%s (%.1f:1)\",\n\t\t", buffer.Get(), (double)remoteRatio );
 
     // version info
     Write( "\"Version\": \"%s %s\",\n\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
@@ -226,7 +226,7 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
         Write( "\"%s\": {", typeName );
         Write( "\n\t\t\t" );
 
-        Write( "\"Time (s)\": %2.3f,\n\t\t\t", (double)value );
+        Write( "\"Time (s)\": %.3f,\n\t\t\t", (double)value );
         Write( "\"Processed\": %u,\n\t\t\t", processed );
         Write( "\"Built\": %u,\n\t\t\t", built );
 
@@ -242,7 +242,7 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
         }
 
         double percent = 100.0 * items[i].value / total;
-        Write( "\"Percentage\": %2.1f", percent );
+        Write( "\"Percentage\": %.1f", percent );
 
         Write( "\n\t\t" );
         Write( "}" );
@@ -301,9 +301,9 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
 
             Write( "\"%s\": {", items[i].label );
             Write( "\n\t\t\t\t" );
-            Write( "\"Time (s)\": %2.3f,", (uint32_t)(items[i].value) );
+            Write( "\"Time (s)\": %.3f,", (double)items[i].value );
             Write( "\n\t\t\t\t" );
-            Write( "\"Percentage\": %2.1f", percent );
+            Write( "\"Percentage\": %.1f", percent );
             Write( "\n\t\t\t" );
             Write( "}" );
 
@@ -369,7 +369,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             Write( "\n\t\t\t\t\t" );
             Write( "\"Count\": %u,", outOfDateItems );
             Write( "\n\t\t\t\t\t" );
-            Write( "\"Percentage\": %2.1f", (double)outOfDateItemsPerc );
+            Write( "\"Percentage\": %.1f", (double)outOfDateItemsPerc );
             Write( "\n\t\t\t\t" );
             Write( "}," );
             Write( "\n\t\t\t\t" );
@@ -378,7 +378,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             Write( "\n\t\t\t\t\t" );
             Write( "\"Count\": %u,", cItems );
             Write( "\n\t\t\t\t\t" );
-            Write( "\"Percentage\": %2.1f", (double)cItemsPerc );
+            Write( "\"Percentage\": %.1f", (double)cItemsPerc );
             Write( "\n\t\t\t\t" );
             Write( "}," );
             Write( "\n\t\t\t\t" );
@@ -387,7 +387,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             Write( "\n\t\t\t\t\t" );
             Write( "\"Count\": %u,", cHits );
             Write( "\n\t\t\t\t\t" );
-            Write( "\"Percentage\": %2.1f", (double)cHitsPerc );
+            Write( "\"Percentage\": %.1f", (double)cHitsPerc );
             Write( "\n\t\t\t\t" );
             Write( "}," );
             Write( "\n\t\t\t\t" );
@@ -396,13 +396,13 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             Write( "\n\t\t\t\t\t" );
             Write( "\"Count\": %u,", cMisses );
             Write( "\n\t\t\t\t\t" );
-            Write( "\"Percentage\": %2.1f", (double)cMissesPerc );
+            Write( "\"Percentage\": %.1f", (double)cMissesPerc );
             Write( "\n\t\t\t\t" );
             Write( "}," );
             Write( "\n\t\t\t\t" );
 
             Write( "\"Stores\": %u,\n\t\t\t\t", cStores );
-            Write( "\"Store Time (s)\": %2.3f\n\t\t\t", (double)cStoreTime );
+            Write( "\"Store Time (s)\": %.3f\n\t\t\t", (double)cStoreTime );
 
             Write( "}" );
 
@@ -468,8 +468,8 @@ void JsonReport::DoCPUTimeByLibrary()
         Write( "{" );
         Write( "\n\t\t\t" );
 
-        Write( "\"Time (s)\": %2.3f,\n\t\t\t", (double)time );
-        Write( "\"Percentage\": %2.1f,\n\t\t\t", (double)perc );
+        Write( "\"Time (s)\": %.3f,\n\t\t\t", (double)time );
+        Write( "\"Percentage\": %.1f,\n\t\t\t", (double)perc );
         Write( "\"Obj Built\": %u,\n\t\t\t", objCount );
         Write( "\"Type\": \"%s\",\n\t\t\t", type );
 

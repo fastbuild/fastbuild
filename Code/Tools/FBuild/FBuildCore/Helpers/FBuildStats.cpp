@@ -83,7 +83,7 @@ void FBuildStats::OnBuildStop( const NodeGraph & nodeGraph, Node * node )
             report->Generate( nodeGraph, *this );
             report->Save();
 
-            FREE(report);
+            FDELETE( report );
         }
 
         // stdout summary
