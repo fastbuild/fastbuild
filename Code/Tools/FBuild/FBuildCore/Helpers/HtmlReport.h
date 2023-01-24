@@ -19,7 +19,7 @@ class HtmlReport : public Report
 {
 public:
     HtmlReport();
-    ~HtmlReport();
+    virtual ~HtmlReport() override;
 
     virtual void Generate(const NodeGraph& nodeGraph, const FBuildStats& stats) override;
     virtual void Save() const override;

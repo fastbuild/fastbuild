@@ -329,7 +329,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             const char * libraryName = ls.library->GetName().Get();
 
             // total items in library
-            const uint32_t items = ls.objectCount;
+            const uint32_t totalItemsCount = ls.objectCount;
 
             // out of date items
             const uint32_t  outOfDateItems      = ls.objectCount_OutOfDate;
@@ -337,7 +337,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             {
                 continue; // skip library if nothing was done
             }
-            const float     outOfDateItemsPerc  = ( (float)outOfDateItems / (float)items ) * 100.0f;
+            const float     outOfDateItemsPerc  = ( (float)outOfDateItems / (float)totalItemsCount) * 100.0f;
 
             // cacheable
             const uint32_t  cItems       = ls.objectCount_Cacheable;
@@ -364,7 +364,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             Write( "\n\t\t\t\t" );
 
             Write( "\"Library\": \"%s\",\n\t\t\t\t", libraryName );
-            Write( "\"Items\": %u,\n\t\t\t\t", items );
+            Write( "\"Items\": %u,\n\t\t\t\t", totalItemsCount);
             Write( "\"Out-of-Date\": {" );
             Write( "\n\t\t\t\t\t" );
             Write( "\"Count\": %u,", outOfDateItems );
@@ -538,7 +538,7 @@ void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
             Write( "\n\t\t\t" );
 
             Write( "\"Time\": \"%2.3fs\",\n\t\t\t", (double)time );
-            Write( "\"Type\": \"%s\"\,n\t\t\t", type );
+            Write( "\"Type\": \"%s\",\n\t\t\t", type );
 
             AStackString<> itemName( name );
             JSON::Escape( itemName );
@@ -662,5 +662,6 @@ void JsonReport::DoIncludes()
         Write( "\n\t]" );
     }
 }
+PRAGMA_DISABLE_POP_MSVC // warning C6262: Function uses '262212' bytes of stack
 
 //------------------------------------------------------------------------------

@@ -19,7 +19,7 @@ class JsonReport : public Report
 {
 public:
     JsonReport();
-    ~JsonReport();
+    virtual ~JsonReport() override;
 
     virtual void Generate( const NodeGraph& nodeGraph, const FBuildStats& stats ) override;
     virtual void Save() const override;
