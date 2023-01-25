@@ -241,8 +241,8 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
             Write( "\"Cache Hits\": \"-\",\n\t\t\t" );
         }
 
-        double percent = 100.0 * items[i].value / total;
-        Write( "\"Percentage\": %.1f", percent );
+        float percent = ( items[i].value / total ) * 100.0f;
+        Write( "\"Percentage\": %.1f", (double)percent );
 
         Write( "\n\t\t" );
         Write( "}" );
@@ -297,13 +297,13 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
         AStackString<> buffer;
         for ( size_t i = 0; i < items.GetSize(); ++i )
         {
-            double percent = 100.0 * items[i].value / totalOutOfDateItems;
+            float percent = ( items[i].value / totalOutOfDateItems ) * 100.0f;
 
             Write( "\"%s\": {", items[i].label );
             Write( "\n\t\t\t\t" );
             Write( "\"Time (s)\": %.3f,", (double)items[i].value );
             Write( "\n\t\t\t\t" );
-            Write( "\"Percentage\": %.1f", percent );
+            Write( "\"Percentage\": %.1f", (double)percent );
             Write( "\n\t\t\t" );
             Write( "}" );
 
