@@ -297,7 +297,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
         AStackString<> buffer;
         for ( size_t i = 0; i < items.GetSize(); ++i )
         {
-            float percent = ( items[i].value / totalOutOfDateItems ) * 100.0f;
+            float percent = ( items[i].value / (float)totalOutOfDateItems ) * 100.0f;
 
             Write( "\"%s\": {", items[i].label );
             Write( "\n\t\t\t\t" );
