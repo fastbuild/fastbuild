@@ -52,6 +52,7 @@ private:
 
     Array< AString >    m_ProjectInputPaths;
     Array< AString >    m_ProjectInputPathsExclude;
+    bool                m_ProjectInputPathsRecurse = true;
     Array< AString >    m_ProjectFiles;
     Array< AString >    m_ProjectFilesToExclude;
     Array< AString >    m_PatternToExclude;
