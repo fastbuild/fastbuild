@@ -1,9 +1,9 @@
-// HtmlReport
+// HTMLReport
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
-#include "HtmlReport.h"
+#include "HTMLReport.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -18,8 +18,8 @@
 #include <string.h>
 #include <time.h>
 
-//// Globals
-////------------------------------------------------------------------------------
+// Globals
+//------------------------------------------------------------------------------
 uint32_t g_ReportNodeColors[] = {
                                   0x000000, // PROXY_NODE (never seen)
                                   0xFFFFFF, // COPY_FILE_NODE
@@ -50,21 +50,21 @@ uint32_t g_ReportNodeColors[] = {
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-HtmlReport::HtmlReport()
+HTMLReport::HTMLReport()
     : Report( 512, true )
     , m_NumPieCharts( 0 )
 {
     // Compile time check to ensure color vector is in sync
-    static_assert( sizeof( g_ReportNodeColors ) / sizeof (uint32_t) == Node::NUM_NODE_TYPES, "g_ReportNodeColors item count doesn't match NUM_NODE_TYPES" );
+    static_assert( sizeof( g_ReportNodeColors ) / sizeof( uint32_t ) == Node::NUM_NODE_TYPES, "g_ReportNodeColors item count doesn't match NUM_NODE_TYPES" );
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-HtmlReport::~HtmlReport() {}
+HTMLReport::~HTMLReport() = default;
 
 // Generate
 //------------------------------------------------------------------------------
-void HtmlReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats )
+void HTMLReport::Generate( const NodeGraph & nodeGraph, const FBuildStats & stats )
 {
     const Timer t;
 
@@ -97,12 +97,11 @@ void HtmlReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats 
     stats.FormatTime( time, timeTakenBuffer );
     char * placeholder = m_Output.Find( "^^^^    " );
     memcpy( placeholder, timeTakenBuffer.Get(), timeTakenBuffer.GetLength() );
-
 }
 
 // Save
 //------------------------------------------------------------------------------
-void HtmlReport::Save() const
+void HTMLReport::Save() const
 {
     FileStream f;
     if ( f.Open( "report.html", FileStream::WRITE_ONLY ) )
@@ -113,9 +112,9 @@ void HtmlReport::Save() const
 
 // CreateHeader
 //------------------------------------------------------------------------------
-void HtmlReport::CreateHeader()
+void HTMLReport::CreateHeader()
 {
-    const char * header =
+    const char * const header =
         "<!doctype html>\n"
         "<style type=\"text/css\">\n"
         "body{\n"
@@ -247,15 +246,14 @@ void HtmlReport::CreateHeader()
 
 // CreateTitle
 //------------------------------------------------------------------------------
-void HtmlReport::CreateTitle()
+void HTMLReport::CreateTitle()
 {
-
     Write( "<h1>FASTBuild Report</h1>\n" );
 }
 
 // CreateOverview
 //------------------------------------------------------------------------------
-void HtmlReport::CreateOverview( const FBuildStats & stats )
+void HTMLReport::CreateOverview( const FBuildStats & stats )
 {
     DoSectionTitle( "Overview", "overview" );
 
@@ -280,7 +278,7 @@ void HtmlReport::CreateOverview( const FBuildStats & stats )
     // Target
     AStackString<> targets;
     const Node * rootNode = stats.GetRootNode();
-    if (rootNode->GetType() != Node::PROXY_NODE)
+    if ( rootNode->GetType() != Node::PROXY_NODE )
     {
         targets = rootNode->GetName();
     }
@@ -288,7 +286,7 @@ void HtmlReport::CreateOverview( const FBuildStats & stats )
     {
         const Dependencies & childNodes = rootNode->GetStaticDependencies();
         const size_t num = childNodes.GetSize();
-        for ( size_t i=0; i<num; ++i )
+        for ( size_t i = 0; i < num; ++i )
         {
             if ( i != 0 )
             {
@@ -310,13 +308,13 @@ void HtmlReport::CreateOverview( const FBuildStats & stats )
     Write( "<tr><td>Time</td><td>%s</td></tr>\n", buffer.Get() );
 
     // Local CPU Time
-    const float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
+    const float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / 1000.0 );
     stats.FormatTime( totalLocalCPUInSeconds, buffer );
     const float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
     Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
 
     // Remote CPU Time
-    const float totalRemoteCPUInSeconds = (float)( (double)stats.m_TotalRemoteCPUTimeMS / (double)1000 );
+    const float totalRemoteCPUInSeconds = (float)( (double)stats.m_TotalRemoteCPUTimeMS / 1000.0 );
     stats.FormatTime( totalRemoteCPUInSeconds, buffer );
     const float remoteRatio = ( totalRemoteCPUInSeconds / totalBuildTime );
     Write( "<tr><td>Remote CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)remoteRatio );
@@ -345,7 +343,7 @@ void HtmlReport::CreateOverview( const FBuildStats & stats )
 
 // DoCacheStats
 //------------------------------------------------------------------------------
-void HtmlReport::DoCacheStats( const FBuildStats & stats )
+void HTMLReport::DoCacheStats( const FBuildStats & stats )
 {
     (void)stats;
 
@@ -452,7 +450,7 @@ void HtmlReport::DoCacheStats( const FBuildStats & stats )
 
 // DoCPUTimeByType
 //------------------------------------------------------------------------------
-void HtmlReport::DoCPUTimeByType( const FBuildStats & stats )
+void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
 {
     DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
 
@@ -519,12 +517,12 @@ void HtmlReport::DoCPUTimeByType( const FBuildStats & stats )
 
 // DoCPUTimeByItem
 //------------------------------------------------------------------------------
-void HtmlReport::DoCPUTimeByItem( const FBuildStats & stats )
+void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
 {
     const FBuildOptions & options = FBuild::Get().GetOptions();
     const bool cacheEnabled = ( options.m_UseCacheRead || options.m_UseCacheWrite );
 
-    DoSectionTitle("CPU Time by Item", "cpuTimeByItem");
+    DoSectionTitle( "CPU Time by Item", "cpuTimeByItem" );
 
     DoTableStart();
 
@@ -578,7 +576,7 @@ void HtmlReport::DoCPUTimeByItem( const FBuildStats & stats )
 
 // DoCPUTimeByLibrary
 //------------------------------------------------------------------------------
-void HtmlReport::DoCPUTimeByLibrary()
+void HTMLReport::DoCPUTimeByLibrary()
 {
     DoSectionTitle( "CPU Time by Library", "cpuTimeByLibrary" );
 
@@ -623,11 +621,11 @@ void HtmlReport::DoCPUTimeByLibrary()
         const char * type = ls.library->GetTypeName();
         switch ( ls.library->GetType() )
         {
-            case Node::LIBRARY_NODE: type = "Static"; break;
-            case Node::DLL_NODE: type = "DLL"; break;
-            case Node::CS_NODE: type = "C# DLL"; break;
-            case Node::OBJECT_LIST_NODE: type = "ObjectList"; break;
-            default: break;
+            case Node::LIBRARY_NODE:        type = "Static"; break;
+            case Node::DLL_NODE:            type = "DLL"; break;
+            case Node::CS_NODE:             type = "C# DLL"; break;
+            case Node::OBJECT_LIST_NODE:    type = "ObjectList"; break;
+            default:                        break;
         }
         const char * name = ls.library->GetName().Get();
         Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%2.3fs</td><td style=\"width:50px;\">%2.1f</td><td style=\"width:70px;\">%u</td><td style=\"width:50px;\">%s</td><td>%s</td></tr>\n"
@@ -647,7 +645,7 @@ void HtmlReport::DoCPUTimeByLibrary()
 // DoIncludes
 //------------------------------------------------------------------------------
 PRAGMA_DISABLE_PUSH_MSVC( 6262 ) // warning C6262: Function uses '262212' bytes of stack
-void HtmlReport::DoIncludes()
+void HTMLReport::DoIncludes()
 {
     DoSectionTitle( "Includes", "includes" );
 
@@ -731,7 +729,7 @@ PRAGMA_DISABLE_POP_MSVC // warning C6262: Function uses '262212' bytes of stack
 
 // DoPieChart
 //------------------------------------------------------------------------------
-void HtmlReport::DoPieChart( const Array< PieItem > & items, const char * units )
+void HTMLReport::DoPieChart( const Array< PieItem > & items, const char * units )
 {
     AStackString<> buffer;
 
@@ -786,25 +784,24 @@ void HtmlReport::DoPieChart( const Array< PieItem > & items, const char * units 
 
 // CreateFooter
 //------------------------------------------------------------------------------
-void HtmlReport::CreateFooter()
+void HTMLReport::CreateFooter()
 {
-    const char * footer =
-        "<br><br><br>\n"
-        "</body>\n"
-        "</html>\n";
+    const char * const footer = "<br><br><br>\n"
+                                "</body>\n"
+                                "</html>\n";
     m_Output += footer;
 }
 
 // DoSectionTitle
 //------------------------------------------------------------------------------
-void HtmlReport::DoSectionTitle( const char * sectionName, const char * sectionId )
+void HTMLReport::DoSectionTitle( const char * sectionName, const char * sectionId )
 {
     Write( "<h2 id=\"%s\">%s</h2>\n", sectionId, sectionName );
 }
 
 // DoTableStart
 //------------------------------------------------------------------------------
-void HtmlReport::DoTableStart( uint32_t width, const char * id, bool hidden )
+void HTMLReport::DoTableStart( uint32_t width, const char * id, bool hidden )
 {
     AStackString<> output;
     output.Format( "<table width=%u", width );
@@ -824,14 +821,14 @@ void HtmlReport::DoTableStart( uint32_t width, const char * id, bool hidden )
 
 // DoTableStop
 //------------------------------------------------------------------------------
-void HtmlReport::DoTableStop()
+void HTMLReport::DoTableStop()
 {
     Write( "</table>\n" );
 }
 
 // DoToggleSection
 //------------------------------------------------------------------------------
-void HtmlReport::DoToggleSection( size_t numMore )
+void HTMLReport::DoToggleSection( size_t numMore )
 {
     static uint32_t tableId = 0;
     ++tableId;

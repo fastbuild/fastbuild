@@ -10,6 +10,8 @@
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Report/HTMLReport.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Report/JSONReport.h"
 
 // Core
 #include "Core/Strings/AStackString.h"
@@ -18,27 +20,48 @@
 #include <stdarg.h> // for va_args
 #include <string.h>
 
+//------------------------------------------------------------------------------
+/*static*/ void Report::Generate( const AString & reportType,
+                                  const NodeGraph & nodeGraph,
+                                  const FBuildStats & stats )
+{
+    if ( reportType == "json" )
+    {
+        JSONReport report;
+        report.Generate( nodeGraph, stats );
+        report.Save();
+    }
+    else
+    {
+        ASSERT( reportType == "html" );
+        HTMLReport report;
+        report.Generate( nodeGraph, stats );
+        report.Save();
+    }
+}
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Report::Report(size_t initialCapacity, bool resizeable)
-    : m_LibraryStats(initialCapacity, resizeable)
+Report::Report( size_t initialCapacity, bool resizeable )
+    : m_LibraryStats( initialCapacity, resizeable )
 {
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-Report::~Report() 
+Report::~Report()
 {
-    const LibraryStats* const* end = m_LibraryStats.End();
-    for (LibraryStats** it = m_LibraryStats.Begin(); it != end; ++it)
+    const LibraryStats * const * end = m_LibraryStats.End();
+    for ( LibraryStats ** it = m_LibraryStats.Begin(); it != end; ++it )
     {
-        FDELETE* it;
+        FDELETE *it;
+
     }
 }
 
 // Write
 //------------------------------------------------------------------------------
-void Report::Write(MSVC_SAL_PRINTF const char* fmtString, ...)
+void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 
@@ -70,7 +93,7 @@ void Report::GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & s
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse(Array< LibraryStats* >& libStats, const Node* node, LibraryStats* currentLib) const
+void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const
 {
     // skip nodes we've already seen
     if ( node->GetBuildPassTag() == eNodeSeen )
@@ -102,14 +125,14 @@ void Report::GetLibraryStatsRecurse(Array< LibraryStats* >& libStats, const Node
             {
                 currentLib->objectCount_CacheHits++;
             }
-            if ( node->GetStatFlag(Node::STATS_CACHE_STORE) )
+            if ( node->GetStatFlag( Node::STATS_CACHE_STORE ) )
             {
                 currentLib->objectCount_CacheStores++;
                 currentLib->cacheTimeMS += node->GetCachingTime();
             }
         }
 
-        if ( cacheHit || cacheMiss || node->GetStatFlag(Node::STATS_BUILT) )
+        if ( cacheHit || cacheMiss || node->GetStatFlag( Node::STATS_BUILT ) )
         {
             currentLib->objectCount_OutOfDate++;
             currentLib->cpuTimeMS += node->GetProcessingTime();
@@ -121,15 +144,15 @@ void Report::GetLibraryStatsRecurse(Array< LibraryStats* >& libStats, const Node
     bool isLibrary = false;
     switch ( type )
     {
-    case Node::DLL_NODE:        isLibrary = true; break;
-    case Node::LIBRARY_NODE:    isLibrary = true; break;
-    case Node::OBJECT_LIST_NODE: isLibrary = true; break;
-    case Node::CS_NODE:
-    {
-        isLibrary = node->GetName().EndsWithI( ".dll" ); // TODO:C - robustify this (could have an aribtrary extension)
-        break;
-    }
-    default: break; // not a library
+        case Node::DLL_NODE:        isLibrary = true; break;
+        case Node::LIBRARY_NODE:    isLibrary = true; break;
+        case Node::OBJECT_LIST_NODE: isLibrary = true; break;
+        case Node::CS_NODE:
+        {
+            isLibrary = node->GetName().EndsWithI( ".dll" ); // TODO:C - robustify this (could have an aribtrary extension)
+            break;
+        }
+        default: break; // not a library
     }
 
     if ( isLibrary )
@@ -145,7 +168,7 @@ void Report::GetLibraryStatsRecurse(Array< LibraryStats* >& libStats, const Node
         currentLib->cacheTimeMS = 0;
 
         // count time for library/dll itself
-        if ( node->GetStatFlag(Node::STATS_BUILT) || node->GetStatFlag(Node::STATS_FAILED) )
+        if ( node->GetStatFlag( Node::STATS_BUILT ) || node->GetStatFlag( Node::STATS_FAILED ) )
         {
             currentLib->cpuTimeMS += node->GetProcessingTime();
         }
@@ -163,27 +186,26 @@ void Report::GetLibraryStatsRecurse(Array< LibraryStats* >& libStats, const Node
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse(Array< LibraryStats* >& libStats, const Dependencies& dependencies, LibraryStats* currentLib) const
+void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
 {
-    const Dependency* const end = dependencies.End();
-    for ( const Dependency* it = dependencies.Begin(); it != end; ++it )
+    const Dependency * const end = dependencies.End();
+    for ( const Dependency * it = dependencies.Begin(); it != end; ++it )
     {
         GetLibraryStatsRecurse( libStats, it->GetNode(), currentLib );
     }
 }
 
-
 // GetIncludeFilesRecurse
 //------------------------------------------------------------------------------
-void Report::GetIncludeFilesRecurse(IncludeStatsMap& incStats, const Node* node) const
+void Report::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const
 {
     const Node::Type type = node->GetType();
     if ( type == Node::OBJECT_NODE )
     {
         // Dynamic Deps
-        const Dependencies& dynamicDeps = node->GetDynamicDependencies();
-        const Dependency* const end = dynamicDeps.End();
-        for ( const Dependency* it = dynamicDeps.Begin(); it != end; ++it )
+        const Dependencies & dynamicDeps = node->GetDynamicDependencies();
+        const Dependency * const end = dynamicDeps.End();
+        for ( const Dependency * it = dynamicDeps.Begin(); it != end; ++it )
         {
             AddInclude( incStats, it->GetNode(), node );
         }
@@ -192,17 +214,17 @@ void Report::GetIncludeFilesRecurse(IncludeStatsMap& incStats, const Node* node)
     }
 
     // Static Deps
-    const Dependencies& staticDeps = node->GetStaticDependencies();
-    const Dependency* end = staticDeps.End();
-    for ( const Dependency* it = staticDeps.Begin(); it != end; ++it )
+    const Dependencies & staticDeps = node->GetStaticDependencies();
+    const Dependency * end = staticDeps.End();
+    for ( const Dependency * it = staticDeps.Begin(); it != end; ++it )
     {
         GetIncludeFilesRecurse( incStats, it->GetNode() );
     }
 
     // Dynamic Deps
-    const Dependencies& dynamicDeps = node->GetDynamicDependencies();
+    const Dependencies & dynamicDeps = node->GetDynamicDependencies();
     end = dynamicDeps.End();
-    for ( const Dependency* it = dynamicDeps.Begin(); it != end; ++it )
+    for ( const Dependency * it = dynamicDeps.Begin(); it != end; ++it )
     {
         GetIncludeFilesRecurse( incStats, it->GetNode() );
     }
@@ -210,17 +232,17 @@ void Report::GetIncludeFilesRecurse(IncludeStatsMap& incStats, const Node* node)
 
 // AddInclude
 //------------------------------------------------------------------------------
-void Report::AddInclude(IncludeStatsMap& incStats, const Node* node, const Node* parentNode) const
+void Report::AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode ) const
 {
     bool isHeaderInPCH = false;
     if ( parentNode->GetType() == Node::OBJECT_NODE )
     {
-        const ObjectNode* obj = parentNode->CastTo< ObjectNode >();
+        const ObjectNode * obj = parentNode->CastTo< ObjectNode >();
         isHeaderInPCH = obj->IsCreatingPCH();
     }
 
     // check for existing
-    IncludeStats* stats = incStats.Find( node );
+    IncludeStats * stats = incStats.Find( node );
     if ( stats == nullptr )
     {
         stats = incStats.Insert( node );
@@ -230,26 +252,25 @@ void Report::AddInclude(IncludeStatsMap& incStats, const Node* node, const Node*
     stats->inPCH |= isHeaderInPCH;
 }
 
-
 // IncludeStatsMap (CONSTRUCTOR)
 //------------------------------------------------------------------------------
 Report::IncludeStatsMap::IncludeStatsMap()
-    : m_Pool(sizeof(IncludeStats), __alignof(IncludeStats))
+    : m_Pool( sizeof( IncludeStats ), __alignof( IncludeStats ) )
 {
-    memset( m_Table, 0, sizeof(m_Table) );
+    memset( m_Table, 0, sizeof( m_Table ) );
 }
 
 // IncludeStatsMap (DESTRUCTOR)
 //------------------------------------------------------------------------------
 Report::IncludeStatsMap::~IncludeStatsMap()
 {
-    for (size_t i = 0; i < 65536; ++i)
+    for ( size_t i = 0; i < 65536; ++i )
     {
-        IncludeStats* item = m_Table[i];
-        while (item)
+        IncludeStats * item = m_Table[ i ];
+        while ( item )
         {
-            IncludeStats* next = item->m_Next;
-            m_Pool.Free(item);
+            IncludeStats * next = item->m_Next;
+            m_Pool.Free( item );
             item = next;
         }
     }
@@ -257,17 +278,17 @@ Report::IncludeStatsMap::~IncludeStatsMap()
 
 // Find
 //------------------------------------------------------------------------------
-Report::IncludeStats* Report::IncludeStatsMap::Find(const Node* node) const
+Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 {
     // caculate table entry
     const uint32_t hash = node->GetNameCRC();
     const uint32_t key = ( hash & 0xFFFF );
-    IncludeStats* item = m_Table[key];
+    IncludeStats * item = m_Table[ key ];
 
     // check linked list
-    while (item)
+    while ( item )
     {
-        if (item->node == node)
+        if ( item->node == node )
         {
             return item;
         }
@@ -280,33 +301,33 @@ Report::IncludeStats* Report::IncludeStatsMap::Find(const Node* node) const
 
 // Insert
 //------------------------------------------------------------------------------
-Report::IncludeStats* Report::IncludeStatsMap::Insert(const Node* node)
+Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 {
     // caculate table entry
     const uint32_t hash = node->GetNameCRC();
     const uint32_t key = ( hash & 0xFFFF );
 
     // insert new item
-    IncludeStats* newStats = (IncludeStats*)m_Pool.Alloc();
+    IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc();
     newStats->node = node;
     newStats->count = 0;
     newStats->inPCH = false;
-    newStats->m_Next = m_Table[key];
-    m_Table[key] = newStats;
+    newStats->m_Next = m_Table[ key ];
+    m_Table[ key ] = newStats;
 
     return newStats;
 }
 
 // Flatten
 //------------------------------------------------------------------------------
-void Report::IncludeStatsMap::Flatten(Array< const IncludeStats* >& stats) const
+void Report::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
 {
-    for (size_t i = 0; i < 65536; ++i)
+    for ( size_t i = 0; i < 65536; ++i )
     {
-        IncludeStats* item = m_Table[i];
+        IncludeStats * item = m_Table[ i ];
         while ( item )
         {
-            IncludeStats* next = item->m_Next;
+            IncludeStats * next = item->m_Next;
             stats.Append( item );
             item = next;
         }

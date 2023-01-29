@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
-#include "Tools/FBuild/FBuildCore/Helpers/Report.h"
 
 // Core
 #include "Core/Env/Types.h"
@@ -40,8 +39,6 @@ public:
     inline const AString & GetWorkingDir() const { return m_WorkingDir; }
 
     const AString& GetArgs() const { return m_Args; }
-
-    Report* GetReport() const;
 
     // Basic Args
     AString     m_ProgramName;
@@ -93,7 +90,6 @@ public:
     bool        m_ShowTotalTimeTaken                = true;
     bool        m_ShowPrintStatements               = true;
     bool        m_NoSummaryOnError                  = false;
-    bool        m_GenerateReport                    = false;
     AString     m_ReportType;
     bool        m_EnableMonitor                     = false;
     bool        m_Profile                           = false;

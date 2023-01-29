@@ -1,11 +1,10 @@
-// JsonReport - Build JsonReport Generator
+// JSONReport
 //------------------------------------------------------------------------------
 #pragma once
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/Helpers/Report.h"
-
+#include "Tools/FBuild/FBuildCore/Helpers/Report/Report.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -13,15 +12,15 @@ struct FBuildStats;
 class Dependencies;
 class Node;
 
-// JsonReport
+// JSONReport
 //------------------------------------------------------------------------------
-class JsonReport : public Report
+class JSONReport : public Report
 {
 public:
-    JsonReport();
-    virtual ~JsonReport() override;
+    JSONReport();
+    virtual ~JSONReport() override;
 
-    virtual void Generate( const NodeGraph& nodeGraph, const FBuildStats& stats ) override;
+    virtual void Generate( const NodeGraph & nodeGraph, const FBuildStats & stats ) override;
     virtual void Save() const override;
 
 private:

@@ -21,17 +21,22 @@ class NodeGraph;
 class Report
 {
 public:
+    static void Generate( const AString & reportType,
+                          const NodeGraph & nodeGraph,
+                          const FBuildStats & stats );
+
+protected:
     Report( size_t initialCapacity, bool resizeable );
     virtual ~Report();
 
     virtual void Generate( const NodeGraph & nodeGraph, const FBuildStats & stats ) = 0;
     virtual void Save() const = 0;
-    
-protected:
+
     enum : uint32_t
     {
-        eNodeNotSeen = 0,
-        eNodeSeen = 1,
+        eNodeNotSeen    = 0,
+        eNodeSeen       = 1,
+
     };
 
     struct LibraryStats
@@ -47,16 +52,16 @@ protected:
 
         bool operator < ( const LibraryStats & other ) const { return cpuTimeMS > other.cpuTimeMS; }
     };
-    
+
     struct IncludeStats
     {
-        const Node*     node;
+        const Node *    node;
         uint32_t        count;
         bool            inPCH;
 
-        bool operator < ( const IncludeStats& other ) const { return count > other.count; }
+        bool operator < ( const IncludeStats & other ) const { return count > other.count; }
 
-        IncludeStats* m_Next; // in-place hash map chain
+        IncludeStats *  m_Next; // in-place hash map chain
     };
 
     class IncludeStatsMap
@@ -75,7 +80,7 @@ protected:
     };
 
     // Helper to format some text
-    void Write( MSVC_SAL_PRINTF const char* fmtString, ... ) FORMAT_STRING( 2, 3 );
+    void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // gather stats
     void GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & stats );

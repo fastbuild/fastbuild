@@ -8,7 +8,7 @@
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/Helpers/Report.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Report/Report.h"
 
 // Core
 #include "Core/Profile/Profile.h"
@@ -67,7 +67,7 @@ void FBuildStats::OnBuildStop( const NodeGraph & nodeGraph, Node * node )
 
     const FBuildOptions & options = FBuild::Get().GetOptions();
     const bool showSummary = options.m_ShowSummary && ( !options.m_NoSummaryOnError || buildOk );
-    const bool generateReport = options.m_GenerateReport;
+    const bool generateReport = ( options.m_ReportType.IsEmpty() == false );
 
     // Any output required?
     if ( showSummary || generateReport )
@@ -78,12 +78,7 @@ void FBuildStats::OnBuildStop( const NodeGraph & nodeGraph, Node * node )
         // detailed build report
         if ( generateReport )
         {
-            Report* report = options.GetReport();
-
-            report->Generate( nodeGraph, *this );
-            report->Save();
-
-            FDELETE( report );
+            Report::Generate( options.m_ReportType, nodeGraph, *this );
         }
 
         // stdout summary

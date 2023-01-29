@@ -1,16 +1,16 @@
-// JsonReport
+// JSONReport
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
-#include "JsonReport.h"
+#include "JSONReport.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/FBuildStats.h"
-#include "JSON.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -23,18 +23,18 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JsonReport::JsonReport()
+JSONReport::JSONReport()
     : Report( 512, true )
 {
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-JsonReport::~JsonReport() {}
+JSONReport::~JSONReport() = default;
 
 // Generate
 //------------------------------------------------------------------------------
-void JsonReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats )
+void JSONReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats )
 {
     const Timer t;
 
@@ -75,7 +75,7 @@ void JsonReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats 
 
 // Save
 //------------------------------------------------------------------------------
-void JsonReport::Save() const
+void JSONReport::Save() const
 {
     FileStream f;
     if ( f.Open( "report.json", FileStream::WRITE_ONLY ) )
@@ -86,7 +86,7 @@ void JsonReport::Save() const
 
 // CreateOverview
 //------------------------------------------------------------------------------
-void JsonReport::CreateOverview( const FBuildStats & stats )
+void JSONReport::CreateOverview( const FBuildStats & stats )
 {
     AStackString<> buffer;
 
@@ -176,7 +176,7 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
 
 // DoCPUTimeByType
 //------------------------------------------------------------------------------
-void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
+void JSONReport::DoCPUTimeByType(const FBuildStats& stats)
 {
     Write( "\"CPU Time by Node Type\": {" );
     Write( "\n\t\t" );
@@ -258,7 +258,7 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
 
 // DoCacheStats
 //------------------------------------------------------------------------------
-void JsonReport::DoCacheStats( const FBuildStats & stats )
+void JSONReport::DoCacheStats( const FBuildStats & stats )
 {
     (void)stats;
 
@@ -421,7 +421,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
 
 // DoCPUTimeByLibrary
 //------------------------------------------------------------------------------
-void JsonReport::DoCPUTimeByLibrary()
+void JSONReport::DoCPUTimeByLibrary()
 {
     Write( "\"CPU Time by Library\": [" );
 
@@ -457,11 +457,11 @@ void JsonReport::DoCPUTimeByLibrary()
         const char* type = ls.library->GetTypeName();
         switch ( ls.library->GetType() )
         {
-        case Node::LIBRARY_NODE: type = "Static"; break;
-        case Node::DLL_NODE: type = "DLL"; break;
-        case Node::CS_NODE: type = "C# DLL"; break;
-        case Node::OBJECT_LIST_NODE: type = "ObjectList"; break;
-        default: break;
+            case Node::LIBRARY_NODE:        type = "Static"; break;
+            case Node::DLL_NODE:            type = "DLL"; break;
+            case Node::CS_NODE:             type = "C# DLL"; break;
+            case Node::OBJECT_LIST_NODE:    type = "ObjectList"; break;
+            default:                        break;
         }
         const char* name = ls.library->GetName().Get();
 
@@ -493,7 +493,7 @@ void JsonReport::DoCPUTimeByLibrary()
 
 // DoCPUTimeByItem
 //------------------------------------------------------------------------------
-void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
+void JSONReport::DoCPUTimeByItem( const FBuildStats & stats )
 {
     const FBuildOptions & options = FBuild::Get().GetOptions();
     const bool cacheEnabled = ( options.m_UseCacheRead || options.m_UseCacheWrite );
@@ -561,7 +561,7 @@ void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
 // DoIncludes
 //------------------------------------------------------------------------------
 PRAGMA_DISABLE_PUSH_MSVC( 6262 ) // warning C6262: Function uses '262212' bytes of stack
-void JsonReport::DoIncludes()
+void JSONReport::DoIncludes()
 {
     Write( "\"Includes\": [" );
     Write( "\n\t\t" );

@@ -1,11 +1,10 @@
-// HtmlReport - Build HtmlReport Generator
+// HTMLReport
 //------------------------------------------------------------------------------
 #pragma once
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/Helpers/Report.h"
-
+#include "Tools/FBuild/FBuildCore/Helpers/Report/Report.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -13,15 +12,15 @@ struct FBuildStats;
 class Dependencies;
 class Node;
 
-// HtmlReport
+// HTMLReport
 //------------------------------------------------------------------------------
-class HtmlReport : public Report
+class HTMLReport : public Report
 {
 public:
-    HtmlReport();
-    virtual ~HtmlReport() override;
+    HTMLReport();
+    virtual ~HTMLReport() override;
 
-    virtual void Generate(const NodeGraph& nodeGraph, const FBuildStats& stats) override;
+    virtual void Generate(const NodeGraph & nodeGraph, const FBuildStats & stats) override;
     virtual void Save() const override;
 
 private:
@@ -66,7 +65,6 @@ private:
 
     // intermediate collected data
     uint32_t m_NumPieCharts;
-
 };
 
 //------------------------------------------------------------------------------
