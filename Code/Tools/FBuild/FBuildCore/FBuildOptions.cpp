@@ -7,6 +7,8 @@
 #include "FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Helpers/HtmlReport.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JsonReport.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -350,9 +352,25 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowVerbose = false;
                 continue;
             }
-            else if ( thisArg == "-report" )
+            else if (thisArg.BeginsWith("-report"))
             {
+                Array<AString> reportTokens;
+                thisArg.Tokenize(reportTokens, '=');
+
+                // if there is something after the '=' sign, then we take whatever comes after as the report type
+                if (reportTokens.GetSize() > 1) 
+                {
+                    m_ReportType = reportTokens[1];
+                }
+                else
+                {
+                    // default report type if nothing specified
+                    m_ReportType = "html";
+                }
+
                 m_GenerateReport = true;
+                m_ReportType.ToLower();
+
                 continue;
             }
             else if ( thisArg == "-showcmds" )
@@ -582,6 +600,22 @@ void FBuildOptions::SetWorkingDir( const AString & path )
     m_SharedMemoryName.Format( "FASTBuildSharedMemory_%08x", m_WorkingDirHash );
 }
 
+
+Report* FBuildOptions::GetReport() const
+{
+    if ( m_ReportType == "json" )
+    {
+        return FNEW( JsonReport );
+    }
+    else if ( m_ReportType == "html" )
+    {
+        return FNEW( HtmlReport );
+    }
+
+    OUTPUT( "FBuild: Warning: Invalid report type '%s' for '-report' argument. Defaulting to html\n", m_ReportType.Get() );
+    return FNEW( HtmlReport );
+}
+
 // DisplayHelp
 //------------------------------------------------------------------------------
 void FBuildOptions::DisplayHelp( const AString & programName ) const
@@ -634,7 +668,11 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -profile          Output an fbuild_profiling.json describing the build.\n"
             " -progress         Show build progress bar even if stdout is redirected.\n"
             " -quiet            Don't show build output.\n"
-            " -report           Ouput report.html at build end. (Increases build time)\n"
+            " -report<=json|html>\n"
+            "                   Ouput report(default html) at build end. (Increases build time)\n"
+            "                   - =html : outputs a report.html file\n"
+            "                   - =json : outputs a report.json file\n"
+            "                   default : if no option specified, i.e. only using -report, it will output html\n"
             " -showcmds         Show command lines used to launch external processes.\n"
             " -showcmdoutput    Show output of external processes.\n"
             " -showdeps         Show known dependency tree for specified targets.\n"

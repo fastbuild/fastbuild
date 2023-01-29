@@ -78,9 +78,12 @@ void FBuildStats::OnBuildStop( const NodeGraph & nodeGraph, Node * node )
         // detailed build report
         if ( generateReport )
         {
-            Report r;
-            r.Generate( nodeGraph, *this );
-            r.Save();
+            Report* report = options.GetReport();
+
+            report->Generate( nodeGraph, *this );
+            report->Save();
+
+            FDELETE( report );
         }
 
         // stdout summary
