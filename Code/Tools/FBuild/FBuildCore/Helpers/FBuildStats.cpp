@@ -296,9 +296,9 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( const Dependencies & depende
 
 // FormatTime
 //------------------------------------------------------------------------------
-void FBuildStats::FormatTime( float timeInSeconds , AString & buffer ) const
+/*static*/ void FBuildStats::FormatTime( float timeInSeconds, AString & outBuffer )
 {
-    buffer.Clear();
+    outBuffer.Clear();
 
     const uint32_t days = (uint32_t)( timeInSeconds / ( 24.0f * 60.0f * 60.0f ) );
     timeInSeconds -= ( (float)days * ( 24.0f * 60.0f * 60.0f ) );
@@ -307,26 +307,20 @@ void FBuildStats::FormatTime( float timeInSeconds , AString & buffer ) const
     const uint32_t mins = (uint32_t)( timeInSeconds / 60.0f );
     timeInSeconds -= ( (float)mins * 60.0f );
 
-    AStackString<> temp;
-
     if ( days > 0 )
     {
-        temp.Format( "%u days, ", days );
-        buffer += temp;
+        outBuffer.AppendFormat( "%u days, ", days );
     }
     if ( hours > 0 )
     {
-        temp.Format( "%uh:", hours );
-        buffer += temp;
+        outBuffer.AppendFormat( "%uh:", hours );
     }
     if ( mins > 0 )
     {
-        temp.Format( "%um ", mins );
-        buffer += temp;
+        outBuffer.AppendFormat( "%um ", mins );
     }
 
-    temp.Format( "%2.3fs", (double)timeInSeconds );
-    buffer += temp;
+    outBuffer.AppendFormat( "%2.3fs", (double)timeInSeconds );
 }
 
 //------------------------------------------------------------------------------

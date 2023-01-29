@@ -4,10 +4,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Mem/MemPoolBlock.h"
 #include "Core/Strings/AString.h"
+#include "Core/Time/Timer.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -26,7 +28,7 @@ public:
                           const FBuildStats & stats );
 
 protected:
-    Report( size_t initialCapacity, bool resizeable );
+    Report();
     virtual ~Report();
 
     virtual void Generate( const NodeGraph & nodeGraph, const FBuildStats & stats ) = 0;
@@ -36,30 +38,31 @@ protected:
     {
         eNodeNotSeen    = 0,
         eNodeSeen       = 1,
-
     };
 
-    struct LibraryStats
+    class LibraryStats
     {
-        const Node *    library;
-        uint32_t        cpuTimeMS;
-        uint32_t        objectCount;
-        uint32_t        objectCount_OutOfDate;
-        uint32_t        objectCount_Cacheable;
-        uint32_t        objectCount_CacheHits;
-        uint32_t        objectCount_CacheStores;
-        uint32_t        cacheTimeMS;
+    public:
+        const Node *    m_Library;
+        uint32_t        m_CPUTimeMS;
+        uint32_t        m_ObjectCount;
+        uint32_t        m_ObjectCount_OutOfDate;
+        uint32_t        m_ObjectCount_Cacheable;
+        uint32_t        m_ObjectCount_CacheHits;
+        uint32_t        m_ObjectCount_CacheStores;
+        uint32_t        m_CacheTimeMS;
 
-        bool operator < ( const LibraryStats & other ) const { return cpuTimeMS > other.cpuTimeMS; }
+        bool operator < ( const LibraryStats & other ) const { return m_CPUTimeMS > other.m_CPUTimeMS; }
     };
 
-    struct IncludeStats
+    class IncludeStats
     {
-        const Node *    node;
-        uint32_t        count;
-        bool            inPCH;
+    public:
+        const Node *    m_Node;
+        uint32_t        m_Count;
+        bool            m_InPCH;
 
-        bool operator < ( const IncludeStats & other ) const { return count > other.count; }
+        bool operator < ( const IncludeStats & other ) const { return m_Count > other.m_Count; }
 
         IncludeStats *  m_Next; // in-place hash map chain
     };
@@ -79,8 +82,11 @@ protected:
         MemPoolBlock m_Pool;
     };
 
-    // Helper to format some text
+    // Helpers to format text
     void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    void GetReportDateTime( AString & outReportDateTime ) const;
+    const char * GetTimeTakenPlaceholder() const { return "<TIME_TAKEN_PLACEHOLDER>"; }
+    void FixupTimeTakenPlaceholder();
 
     // gather stats
     void GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & stats );
@@ -91,6 +97,7 @@ protected:
 
     // intermediate collected data
     Array< LibraryStats * > m_LibraryStats;
+    Timer m_Timer;
 
     // final output
     AString m_Output;

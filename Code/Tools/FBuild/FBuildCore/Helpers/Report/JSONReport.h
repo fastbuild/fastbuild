@@ -9,8 +9,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 struct FBuildStats;
-class Dependencies;
-class Node;
 
 // JSONReport
 //------------------------------------------------------------------------------
@@ -32,20 +30,21 @@ private:
     void DoCPUTimeByLibrary();
     void DoIncludes();
 
-    struct TimingStats
+    class TimingStats
     {
-        TimingStats( const char * l, float v, void * u = nullptr )
-            : label( l )
-            , value( v )
-            , userData( u )
+    public:
+        TimingStats( const char * label, float value, void * userData = nullptr )
+            : m_Label( label )
+            , m_Value( value )
+            , m_UserData( userData )
         {
         }
 
-        const char *    label;
-        float           value;
-        void *          userData;
+        const char *    m_Label;
+        float           m_Value;
+        void *          m_UserData;
 
-        bool operator < ( const TimingStats& other ) const { return value > other.value; }
+        bool operator < ( const TimingStats& other ) const { return m_Value > other.m_Value; }
     };
 };
 

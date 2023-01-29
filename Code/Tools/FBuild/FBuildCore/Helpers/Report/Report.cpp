@@ -19,6 +19,7 @@
 // system
 #include <stdarg.h> // for va_args
 #include <string.h>
+#include <time.h>
 
 //------------------------------------------------------------------------------
 /*static*/ void Report::Generate( const AString & reportType,
@@ -42,20 +43,21 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Report::Report( size_t initialCapacity, bool resizeable )
-    : m_LibraryStats( initialCapacity, resizeable )
+Report::Report()
+    : m_LibraryStats( 512, true )
 {
+    // pre-allocate a large string for output
+    m_Output.SetReserved( MEGABYTE );
+    m_Output.SetLength( 0 );
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 Report::~Report()
 {
-    const LibraryStats * const * end = m_LibraryStats.End();
-    for ( LibraryStats ** it = m_LibraryStats.Begin(); it != end; ++it )
+    for ( const LibraryStats * ls : m_LibraryStats )
     {
-        FDELETE *it;
-
+        FDELETE ls;
     }
 }
 
@@ -77,6 +79,37 @@ void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
     }
 
     m_Output += tmp;
+}
+
+// GetReportDateTime
+//------------------------------------------------------------------------------
+void Report::GetReportDateTime( AString & outReportDateTime ) const
+{
+    // report time
+    time_t rawtime;
+    struct tm * timeinfo;
+    time( &rawtime );
+    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'localtime' is deprecated: This function or variable may be unsafe...
+    timeinfo = localtime( &rawtime ); // TODO:C Consider using localtime_s
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
+    PRAGMA_DISABLE_POP_MSVC // 4996
+    char timeBuffer[ 256 ];
+    // Mon 1-Jan-2000 - 18:01:15
+    VERIFY( strftime( timeBuffer, 256, "%a %d-%b-%Y - %H:%M:%S", timeinfo ) > 0 );
+    outReportDateTime = timeBuffer;
+}
+
+// FixupTimeTakenPlaceholder
+//------------------------------------------------------------------------------
+void Report::FixupTimeTakenPlaceholder()
+{
+    const float timeTakenSecs =  m_Timer.GetElapsed();
+
+    // patch in time take
+    AStackString<> timeTakenBuffer;
+    FBuildStats::FormatTime( timeTakenSecs, timeTakenBuffer );
+    m_Output.Replace( GetTimeTakenPlaceholder(), timeTakenBuffer.Get() );
 }
 
 // GetLibraryStats
@@ -113,29 +146,29 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
             return;
         }
 
-        currentLib->objectCount++;
+        currentLib->m_ObjectCount++;
 
         const bool cacheHit = node->GetStatFlag( Node::STATS_CACHE_HIT );
         const bool cacheMiss = node->GetStatFlag( Node::STATS_CACHE_MISS );
         if ( cacheHit || cacheMiss )
         {
-            currentLib->objectCount_Cacheable++;
+            currentLib->m_ObjectCount_Cacheable++;
 
             if ( cacheHit )
             {
-                currentLib->objectCount_CacheHits++;
+                currentLib->m_ObjectCount_CacheHits++;
             }
             if ( node->GetStatFlag( Node::STATS_CACHE_STORE ) )
             {
-                currentLib->objectCount_CacheStores++;
-                currentLib->cacheTimeMS += node->GetCachingTime();
+                currentLib->m_ObjectCount_CacheStores++;
+                currentLib->m_CacheTimeMS += node->GetCachingTime();
             }
         }
 
         if ( cacheHit || cacheMiss || node->GetStatFlag( Node::STATS_BUILT ) )
         {
-            currentLib->objectCount_OutOfDate++;
-            currentLib->cpuTimeMS += node->GetProcessingTime();
+            currentLib->m_ObjectCount_OutOfDate++;
+            currentLib->m_CPUTimeMS += node->GetProcessingTime();
         }
 
         return; // Stop recursing at Objects
@@ -158,19 +191,19 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
     if ( isLibrary )
     {
         currentLib = FNEW( LibraryStats );
-        currentLib->library = node;
-        currentLib->cpuTimeMS = 0;
-        currentLib->objectCount = 0;
-        currentLib->objectCount_OutOfDate = 0;
-        currentLib->objectCount_Cacheable = 0;
-        currentLib->objectCount_CacheHits = 0;
-        currentLib->objectCount_CacheStores = 0;
-        currentLib->cacheTimeMS = 0;
+        currentLib->m_Library = node;
+        currentLib->m_CPUTimeMS = 0;
+        currentLib->m_ObjectCount = 0;
+        currentLib->m_ObjectCount_OutOfDate = 0;
+        currentLib->m_ObjectCount_Cacheable = 0;
+        currentLib->m_ObjectCount_CacheHits = 0;
+        currentLib->m_ObjectCount_CacheStores = 0;
+        currentLib->m_CacheTimeMS = 0;
 
         // count time for library/dll itself
         if ( node->GetStatFlag( Node::STATS_BUILT ) || node->GetStatFlag( Node::STATS_FAILED ) )
         {
-            currentLib->cpuTimeMS += node->GetProcessingTime();
+            currentLib->m_CPUTimeMS += node->GetProcessingTime();
         }
 
         libStats.Append( currentLib );
@@ -188,10 +221,9 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
 //------------------------------------------------------------------------------
 void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
 {
-    const Dependency * const end = dependencies.End();
-    for ( const Dependency * it = dependencies.Begin(); it != end; ++it )
+    for ( const Dependency & dep : dependencies )
     {
-        GetLibraryStatsRecurse( libStats, it->GetNode(), currentLib );
+        GetLibraryStatsRecurse( libStats, dep.GetNode(), currentLib );
     }
 }
 
@@ -203,30 +235,24 @@ void Report::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * no
     if ( type == Node::OBJECT_NODE )
     {
         // Dynamic Deps
-        const Dependencies & dynamicDeps = node->GetDynamicDependencies();
-        const Dependency * const end = dynamicDeps.End();
-        for ( const Dependency * it = dynamicDeps.Begin(); it != end; ++it )
+        for ( const Dependency & dep : node->GetDynamicDependencies() )
         {
-            AddInclude( incStats, it->GetNode(), node );
+            AddInclude( incStats, dep.GetNode(), node );
         }
 
         return;
     }
 
     // Static Deps
-    const Dependencies & staticDeps = node->GetStaticDependencies();
-    const Dependency * end = staticDeps.End();
-    for ( const Dependency * it = staticDeps.Begin(); it != end; ++it )
+    for ( const Dependency & dep : node->GetStaticDependencies() )
     {
-        GetIncludeFilesRecurse( incStats, it->GetNode() );
+        GetIncludeFilesRecurse( incStats, dep.GetNode() );
     }
 
     // Dynamic Deps
-    const Dependencies & dynamicDeps = node->GetDynamicDependencies();
-    end = dynamicDeps.End();
-    for ( const Dependency * it = dynamicDeps.Begin(); it != end; ++it )
+    for ( const Dependency & dep : node->GetDynamicDependencies() )
     {
-        GetIncludeFilesRecurse( incStats, it->GetNode() );
+        GetIncludeFilesRecurse( incStats, dep.GetNode() );
     }
 }
 
@@ -248,8 +274,8 @@ void Report::AddInclude( IncludeStatsMap & incStats, const Node * node, const No
         stats = incStats.Insert( node );
     }
 
-    stats->count++;
-    stats->inPCH |= isHeaderInPCH;
+    stats->m_Count++;
+    stats->m_InPCH |= isHeaderInPCH;
 }
 
 // IncludeStatsMap (CONSTRUCTOR)
@@ -288,7 +314,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
     // check linked list
     while ( item )
     {
-        if ( item->node == node )
+        if ( item->m_Node == node )
         {
             return item;
         }
@@ -309,9 +335,9 @@ Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 
     // insert new item
     IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc();
-    newStats->node = node;
-    newStats->count = 0;
-    newStats->inPCH = false;
+    newStats->m_Node = node;
+    newStats->m_Count = 0;
+    newStats->m_InPCH = false;
     newStats->m_Next = m_Table[ key ];
     m_Table[ key ] = newStats;
 

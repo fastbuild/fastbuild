@@ -9,8 +9,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 struct FBuildStats;
-class Dependencies;
-class Node;
 
 // HTMLReport
 //------------------------------------------------------------------------------
@@ -36,22 +34,23 @@ private:
 
     void CreateFooter();
 
-    struct PieItem
+    class PieItem
     {
-        PieItem( const char * l, float v, uint32_t c, void * u = nullptr )
-            : label( l )
-            , value( v )
-            , color( c )
-            , userData( u )
+    public:
+        PieItem( const char * label, float value, uint32_t color, void * userData = nullptr )
+            : m_Label( label )
+            , m_Value( value )
+            , m_Color( color )
+            , m_UserData( userData )
         {
         }
 
-        const char *    label;
-        float           value;
-        uint32_t        color;
-        void *          userData;
+        const char *    m_Label;
+        float           m_Value;
+        uint32_t        m_Color;
+        void *          m_UserData;
 
-        bool operator < ( const PieItem & other ) const { return value > other.value; }
+        bool operator < ( const PieItem & other ) const { return m_Value > other.m_Value; }
     };
     
     enum { DEFAULT_TABLE_WIDTH = 990 };
@@ -64,7 +63,7 @@ private:
     void DoPieChart( const Array< PieItem > & items, const char * units );
 
     // intermediate collected data
-    uint32_t m_NumPieCharts;
+    uint32_t m_NumPieCharts = 0;
 };
 
 //------------------------------------------------------------------------------

@@ -17,16 +17,9 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
-// system
-#include <string.h>
-#include <time.h>
-
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JSONReport::JSONReport()
-    : Report( 512, true )
-{
-}
+JSONReport::JSONReport() = default;
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
@@ -34,14 +27,8 @@ JSONReport::~JSONReport() = default;
 
 // Generate
 //------------------------------------------------------------------------------
-void JSONReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats )
+void JSONReport::Generate( const NodeGraph & nodeGraph, const FBuildStats & stats )
 {
-    const Timer t;
-
-    // pre-allocate a large string for output
-    m_Output.SetReserved( MEGABYTE );
-    m_Output.SetLength( 0 );
-    
     GetLibraryStats( nodeGraph, stats );
     
     Write( "{\n\t" );
@@ -66,11 +53,7 @@ void JSONReport::Generate( const NodeGraph& nodeGraph, const FBuildStats& stats 
     Write( "\n}" );
 
     // patch in time take
-    const float time = t.GetElapsed();
-    AStackString<> timeTakenBuffer;
-    stats.FormatTime( time, timeTakenBuffer );
-    char * placeholder = m_Output.Find( "^^^^    " );
-    memcpy( placeholder, timeTakenBuffer.Get(), timeTakenBuffer.GetLength() );
+    FixupTimeTakenPlaceholder();
 }
 
 // Save
@@ -97,7 +80,7 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
     AStackString<> commandLineBuffer;
     Env::GetCmdLine( commandLineBuffer );
     #if defined( __WINDOWS__ )
-        const char * exeExtension = strstr( commandLineBuffer.Get(), ".exe\"" );
+        const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
         const char * commandLine = exeExtension ? ( exeExtension + 5 ) : commandLineBuffer.Get(); // skip .exe + closing quote
     #else
         const char * commandLine = commandLineBuffer.Get();
@@ -146,7 +129,6 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
     const float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
     Write( "\"CPU Time\": \"%s (%.1f:1)\",\n\t\t", buffer.Get(), (double)localRatio );
 
-
     // Remote CPU Time
     const float totalRemoteCPUInSeconds = (float)( (double)stats.m_TotalRemoteCPUTimeMS / (double)1000 );
     stats.FormatTime( totalRemoteCPUInSeconds, buffer );
@@ -157,20 +139,11 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
     Write( "\"Version\": \"%s %s\",\n\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
 
     // report time
-    time_t rawtime;
-    struct tm * timeinfo;
-    time( &rawtime );
-    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'localtime' is deprecated: This function or variable may be unsafe...
-    timeinfo = localtime( &rawtime ); // TODO:C Consider using localtime_s
-    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
-    PRAGMA_DISABLE_POP_MSVC // 4996
-    char timeBuffer[ 256 ];
-    // Mon 1-Jan-2000 - 18:01:15
-    VERIFY( strftime( timeBuffer, 256, "%a %d-%b-%Y - %H:%M:%S", timeinfo ) > 0 );
+    AStackString<> reportDateTime;
+    GetReportDateTime( reportDateTime );
 
-    // NOTE: leave space to patch in time taken later "^^^^    "
-    Write( "\"Report Generated\": \"^^^^    - %s\"\n\t", timeBuffer );
+    // NOTE: leave space to patch in time taken later
+    Write( "\"Report Generated\": \"%s - %s\"\n\t", GetTimeTakenPlaceholder(), reportDateTime.Get() );
     Write( "}" );
 }
 
@@ -204,13 +177,13 @@ void JSONReport::DoCPUTimeByType(const FBuildStats& stats)
     float total = 0.0f;
     for ( size_t i = 0; i < items.GetSize(); ++i )
     {
-        total += items[i].value;
+        total += items[ i ].m_Value;
     }
 
     AStackString<> buffer;
     for ( size_t i = 0; i < items.GetSize(); ++i )
     {
-        const Node::Type type = (Node::Type)(size_t)items[i].userData;
+        const Node::Type type = (Node::Type)(size_t)items[ i ].m_UserData;
         const FBuildStats::Stats& nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
@@ -241,7 +214,7 @@ void JSONReport::DoCPUTimeByType(const FBuildStats& stats)
             Write( "\"Cache Hits\": \"-\",\n\t\t\t" );
         }
 
-        float percent = ( items[i].value / total ) * 100.0f;
+        float percent = ( items[ i ].m_Value / total ) * 100.0f;
         Write( "\"Percentage\": %.1f", (double)percent );
 
         Write( "\n\t\t" );
@@ -258,10 +231,8 @@ void JSONReport::DoCPUTimeByType(const FBuildStats& stats)
 
 // DoCacheStats
 //------------------------------------------------------------------------------
-void JSONReport::DoCacheStats( const FBuildStats & stats )
+void JSONReport::DoCacheStats( const FBuildStats & /*stats*/ )
 {
-    (void)stats;
-
     Write( "\"Cache Stats\": {\n" );
 
     const FBuildOptions & options = FBuild::Get().GetOptions();
@@ -271,13 +242,11 @@ void JSONReport::DoCacheStats( const FBuildStats & stats )
         uint32_t totalOutOfDateItems( 0 );
         uint32_t totalCacheable( 0 );
         uint32_t totalCacheHits( 0 );
-        const LibraryStats * const * end = m_LibraryStats.End();
-        for ( LibraryStats ** it = m_LibraryStats.Begin(); it != end; ++it )
+        for ( const LibraryStats * ls : m_LibraryStats )
         {
-            const LibraryStats & ls = *( *it );
-            totalOutOfDateItems += ls.objectCount_OutOfDate;
-            totalCacheable += ls.objectCount_Cacheable;
-            totalCacheHits += ls.objectCount_CacheHits;
+            totalOutOfDateItems += ls->m_ObjectCount_OutOfDate;
+            totalCacheable += ls->m_ObjectCount_Cacheable;
+            totalCacheHits += ls->m_ObjectCount_CacheHits;
         }
         if ( totalOutOfDateItems == 0 )
         {
@@ -297,11 +266,11 @@ void JSONReport::DoCacheStats( const FBuildStats & stats )
         AStackString<> buffer;
         for ( size_t i = 0; i < items.GetSize(); ++i )
         {
-            float percent = ( items[i].value / (float)totalOutOfDateItems ) * 100.0f;
+            float percent = ( items[ i ].m_Value / (float)totalOutOfDateItems ) * 100.0f;
 
-            Write( "\"%s\": {", items[i].label );
+            Write( "\"%s\": {", items[ i ].m_Label );
             Write( "\n\t\t\t\t" );
-            Write( "\"Time (s)\": %.3f,", (double)items[i].value );
+            Write( "\"Time (s)\": %.3f,", (double)items[ i ].m_Value );
             Write( "\n\t\t\t\t" );
             Write( "\"Percentage\": %.1f", (double)percent );
             Write( "\n\t\t\t" );
@@ -323,37 +292,36 @@ void JSONReport::DoCacheStats( const FBuildStats & stats )
         size_t numOutput( 0 );
 
         // items
-        for ( LibraryStats ** it = m_LibraryStats.Begin(); it != end; ++it )
+        for ( const LibraryStats * ls : m_LibraryStats )
         {
-            const LibraryStats & ls = *( *it );
-            const char * libraryName = ls.library->GetName().Get();
+            const char * libraryName = ls->m_Library->GetName().Get();
 
             // total items in library
-            const uint32_t totalItemsCount = ls.objectCount;
+            const uint32_t totalItemsCount = ls->m_ObjectCount;
 
             // out of date items
-            const uint32_t  outOfDateItems      = ls.objectCount_OutOfDate;
+            const uint32_t  outOfDateItems = ls->m_ObjectCount_OutOfDate;
             if ( outOfDateItems == 0 )
             {
                 continue; // skip library if nothing was done
             }
-            const float     outOfDateItemsPerc  = ( (float)outOfDateItems / (float)totalItemsCount) * 100.0f;
+            const float     outOfDateItemsPerc = ( (float)outOfDateItems / (float)totalItemsCount) * 100.0f;
 
             // cacheable
-            const uint32_t  cItems       = ls.objectCount_Cacheable;
-            const float     cItemsPerc   = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
+            const uint32_t  cItems      = ls->m_ObjectCount_Cacheable;
+            const float     cItemsPerc  = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
 
             // hits
-            const uint32_t  cHits        = ls.objectCount_CacheHits;
-            const float     cHitsPerc    = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
+            const uint32_t  cHits       = ls->m_ObjectCount_CacheHits;
+            const float     cHitsPerc   = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
 
             // misses
-            const uint32_t  cMisses      = ( cItems - cHits );
-            const float     cMissesPerc  = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
+            const uint32_t  cMisses     = ( cItems - cHits );
+            const float     cMissesPerc = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
 
             // stores
-            const uint32_t  cStores     = ls.objectCount_CacheStores;
-            const float     cStoreTime  = (float)ls.cacheTimeMS / 1000.0f; // ms to s
+            const uint32_t  cStores     = ls->m_ObjectCount_CacheStores;
+            const float     cStoreTime  = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
 
             if ( numOutput > 0 )
             {
@@ -427,10 +395,9 @@ void JSONReport::DoCPUTimeByLibrary()
 
     // total
     uint32_t total = 0;
-    const LibraryStats* const* end = m_LibraryStats.End();
-    for ( LibraryStats** it = m_LibraryStats.Begin(); it != end; ++it )
+    for ( const LibraryStats * ls : m_LibraryStats )
     {
-        total += ( *it )->cpuTimeMS;
+        total += ls->m_CPUTimeMS;
     }
     if ( total == 0 )
     {
@@ -443,19 +410,18 @@ void JSONReport::DoCPUTimeByLibrary()
     const float totalS = (float)((double)total * 0.001);
     size_t numOutput( 0 );
     // Result
-    for ( LibraryStats** it = m_LibraryStats.Begin(); it != end; ++it )
+    for ( const LibraryStats * ls : m_LibraryStats )
     {
-        const LibraryStats& ls = *( *it );
-        if ( ls.cpuTimeMS == 0 )
+        if ( ls->m_CPUTimeMS == 0 )
         {
             continue;
         }
 
-        const uint32_t objCount = ls.objectCount_OutOfDate;
-        const float time = ( (float)ls.cpuTimeMS * 0.001f ); // ms to s
+        const uint32_t objCount = ls->m_ObjectCount_OutOfDate;
+        const float time = ( (float)ls->m_CPUTimeMS * 0.001f ); // ms to s
         const float perc = (float)( (double)time / (double)totalS * 100 );
-        const char* type = ls.library->GetTypeName();
-        switch ( ls.library->GetType() )
+        const char* type = ls->m_Library->GetTypeName();
+        switch ( ls->m_Library->GetType() )
         {
             case Node::LIBRARY_NODE:        type = "Static"; break;
             case Node::DLL_NODE:            type = "DLL"; break;
@@ -463,7 +429,7 @@ void JSONReport::DoCPUTimeByLibrary()
             case Node::OBJECT_LIST_NODE:    type = "ObjectList"; break;
             default:                        break;
         }
-        const char* name = ls.library->GetName().Get();
+        const char* name = ls->m_Library->GetName().Get();
 
         Write( "{" );
         Write( "\n\t\t\t" );
@@ -477,7 +443,7 @@ void JSONReport::DoCPUTimeByLibrary()
         JSON::Escape( itemName );
         Write( "\"Name\": \"%s\"\n\t\t", itemName.Get() );
 
-        Write( "}");
+        Write( "}" );
 
         if ( numOutput < m_LibraryStats.GetSize() - 1 )
         {
@@ -569,16 +535,15 @@ void JSONReport::DoIncludes()
     size_t numLibsOutput = 0;
 
     // build per-library stats
-    const LibraryStats * const * end = m_LibraryStats.End();
-    for ( LibraryStats ** it = m_LibraryStats.Begin(); it != end; ++it )
+    for ( const LibraryStats * ls : m_LibraryStats )
     {
-        if ( ( *it )->objectCount_OutOfDate == 0 )
+        if ( ls->m_ObjectCount_OutOfDate == 0 )
         {
             continue;
         }
 
         // get all the includes for this library
-        const Node * library = ( *it )->library;
+        const Node * library = ls->m_Library;
         IncludeStatsMap incStatsMap;
         GetIncludeFilesRecurse( incStatsMap, library );
 
@@ -599,15 +564,15 @@ void JSONReport::DoIncludes()
             // insert a comma for next library if we are not done yet
             if (numLibsOutput < m_LibraryStats.GetSize() - 1)
             {
-                Write(",\n\t\t");
+                Write( ",\n\t\t" );
             }
 
             continue;
         }
 
-        Write("\n\t\t\t\t");
+        Write( "\n\t\t\t\t" );
 
-        const uint32_t numObjects = ( *it )->objectCount;
+        const uint32_t numObjects = ls->m_ObjectCount;
 
         // output
         const size_t numIncludes = incStats.GetSize();
@@ -615,9 +580,9 @@ void JSONReport::DoIncludes()
         for ( size_t i=0; i<numIncludes; ++i )
         {
             const IncludeStats & s = *incStats[ i ];
-            const char * fileName = s.node->GetName().Get();
-            const uint32_t included = s.count;
-            const bool inPCH = s.inPCH;
+            const char * fileName = s.m_Node->GetName().Get();
+            const uint32_t included = s.m_Count;
+            const bool inPCH = s.m_InPCH;
 
             Write( "{" );
             Write( "\n\t\t\t\t\t" );

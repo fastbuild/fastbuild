@@ -67,7 +67,7 @@ public:
         uint32_t m_CachingTimeMS;
     };
 
-    void FormatTime( float timeInSeconds , AString & buffer  ) const;
+    static void FormatTime( float timeInSeconds, AString & outBuffer );
 
     const Node * GetRootNode() const { return m_RootNode; }
     const Array< const Node * > & GetNodesByTime() const { return m_NodesByTime; }
