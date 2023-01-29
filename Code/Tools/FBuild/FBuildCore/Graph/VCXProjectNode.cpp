@@ -185,7 +185,7 @@ VCXProjectNode::VCXProjectNode()
                                               m_ProjectInputPathsExclude,
                                               m_ProjectFilesToExclude,
                                               m_ProjectPatternToExclude,
-                                              m_ProjectInputPathsRecurse, // Recursive
+                                              m_ProjectInputPathsRecurse,
                                               false, // Don't include read-only status in hash
                                               &m_ProjectAllowedFileExtensions,
                                               "ProjectInputPaths",

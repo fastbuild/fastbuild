@@ -115,7 +115,7 @@ XCodeProjectNode::XCodeProjectNode()
                                               m_ProjectInputPathsExclude,
                                               m_ProjectFilesToExclude,
                                               m_PatternToExclude,
-                                              m_ProjectInputPathsRecurse, // Resursive
+                                              m_ProjectInputPathsRecurse,
                                               false, // Don't include read-only status in hash
                                               &m_ProjectAllowedFileExtensions,
                                               "ProjectInputPaths",

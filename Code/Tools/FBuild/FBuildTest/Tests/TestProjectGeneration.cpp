@@ -1101,19 +1101,19 @@ void TestProjectGeneration::VCXProj_InputPaths() const
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/VCXProj_InputPaths/fbuild.bff";
-    FBuildForTest fBuild(options);
-    TEST_ASSERT(fBuild.Initialize());
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 
     // Delete files from previous builds
-    EnsureFileDoesNotExist("../tmp/Test/ProjectGeneration/VCXProj_InputPaths/Default.vcxproj");
-    EnsureFileDoesNotExist("../tmp/Test/ProjectGeneration/VCXProj_InputPaths/NoRecurse.vcxproj");
+    EnsureFileDoesNotExist( "../tmp/Test/ProjectGeneration/VCXProj_InputPaths/Default.vcxproj" );
+    EnsureFileDoesNotExist( "../tmp/Test/ProjectGeneration/VCXProj_InputPaths/NoRecurse.vcxproj" );
 
     // Do build
-    TEST_ASSERT(fBuild.Build("All"));
+    TEST_ASSERT( fBuild.Build( "All" ) );
 
     // Find VCXProject nodes
-    Array< const Node* > nodes;
-    fBuild.GetNodesOfType(Node::VCXPROJECT_NODE, nodes);
+    Array<const Node *> nodes;
+    fBuild.GetNodesOfType( Node::VCXPROJECT_NODE, nodes );
     TEST_ASSERT( nodes.GetSize() == 2 );
 
     for ( const Node * projNode : nodes )
@@ -1121,21 +1121,21 @@ void TestProjectGeneration::VCXProj_InputPaths() const
         const Dependencies & deps = projNode->GetStaticDependencies();
         TEST_ASSERT( deps.GetSize() == 1 );
         TEST_ASSERT( deps[0].GetNode()->GetType() == Node::Type::DIRECTORY_LIST_NODE );
-        const DirectoryListNode * dirNode = deps[0].GetNode()->CastTo<DirectoryListNode>();
+        const DirectoryListNode * dirNode = deps[ 0 ].GetNode()->CastTo<DirectoryListNode>();
         bool rootItemFound = false;
         bool subdirItemFound = false;
         for ( const FileIO::FileInfo & info : dirNode->GetFiles() )
         {
-            rootItemFound |= info.m_Name.EndsWith("root_item.cpp");
-            subdirItemFound |= info.m_Name.EndsWith("subdir_item.cpp");
+            rootItemFound |= info.m_Name.EndsWith( "root_item.cpp" );
+            subdirItemFound |= info.m_Name.EndsWith( "subdir_item.cpp" );
         }
 
-        if ( projNode->GetName().EndsWith("Default.vcxproj") )
+        if ( projNode->GetName().EndsWith( "Default.vcxproj" ) )
         {
             TEST_ASSERT( dirNode->GetFiles().GetSize() == 2 );
             TEST_ASSERT( rootItemFound && subdirItemFound );
         }
-        else if ( projNode->GetName().EndsWith("NoRecurse.vcxproj") )
+        else if ( projNode->GetName().EndsWith( "NoRecurse.vcxproj" ) )
         {
             TEST_ASSERT( dirNode->GetFiles().GetSize() == 1 );
             TEST_ASSERT( rootItemFound && !subdirItemFound );
