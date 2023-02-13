@@ -154,18 +154,26 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     }
     else
     {
-        m_DependencyGraphFile = bffFile;
-        if ( m_DependencyGraphFile.EndsWithI( ".bff" ) )
+        if ( m_Options.m_DBFile.IsEmpty() )
         {
-            m_DependencyGraphFile.SetLength( m_DependencyGraphFile.GetLength() - 4 );
+            m_DependencyGraphFile = bffFile;
+            if ( m_DependencyGraphFile.EndsWithI( ".bff" ) )
+            {
+                m_DependencyGraphFile.SetLength( m_DependencyGraphFile.GetLength() - 4 );
+            }
+            #if defined( __WINDOWS__ )
+                m_DependencyGraphFile += ".windows.fdb";
+            #elif defined( __OSX__ )
+                m_DependencyGraphFile += ".osx.fdb";
+            #elif defined( __LINUX__ )
+                m_DependencyGraphFile += ".linux.fdb";
+            #endif
         }
-        #if defined( __WINDOWS__ )
-            m_DependencyGraphFile += ".windows.fdb";
-        #elif defined( __OSX__ )
-            m_DependencyGraphFile += ".osx.fdb";
-        #elif defined( __LINUX__ )
-            m_DependencyGraphFile += ".linux.fdb";
-        #endif
+        else
+        {
+            // DB filename explicitly set on command line
+            m_DependencyGraphFile = m_Options.m_DBFile;
+        }
     }
 
     SmallBlockAllocator::SetSingleThreadedMode( true );

@@ -222,6 +222,25 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += '"';
                 continue;
             }
+            else if ( thisArg == "-dbfile" )
+            {
+                const int32_t pathIndex = ( i + 1 );
+                if ( pathIndex >= argc )
+                {
+                    OUTPUT( "FBuild: Error: Missing <path> for '-dbfile' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                m_DBFile = argv[ pathIndex ];
+                i++; // skip extra arg we've consumed
+
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += '"'; // surround db file with quotes to avoid problems with spaces in the path
+                m_Args += m_DBFile;
+                m_Args += '"';
+                continue;
+            }
             #if defined( __WINDOWS__ )
                 else if ( thisArg == "-debug" )
                 {
@@ -624,6 +643,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -config <path>    Explicitly specify the config file to use.\n"
             " -continueafterdbmove\n"
             "       Allow builds after a DB move.\n"
+            " -dbfile <path>    Explicitly specify the dependency database file to use.\n"
             " -debug            (Windows) Break at startup, to attach debugger.\n"
             " -dist             Allow distributed compilation.\n"
             " -distverbose      Print detailed info for distributed compilation.\n"
