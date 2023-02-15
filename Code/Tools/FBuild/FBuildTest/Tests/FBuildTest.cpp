@@ -345,6 +345,13 @@ void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString & ou
     m_DependencyGraph->SerializeToText( deps, outBuffer );
 }
 
+// GetDependencyGraphFile
+//------------------------------------------------------------------------------
+const char * FBuildForTest::GetDependencyGraphFile() const
+{
+    return m_DependencyGraphFile.Get();
+}
+
 // Build
 //------------------------------------------------------------------------------
 /*virtual*/ bool FBuildForTest::Build( Node * nodeToBuild )

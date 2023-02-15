@@ -57,6 +57,7 @@ private:
     void DBVersionChanged() const;
     void FixupErrorPaths() const;
     void CyclicDependency() const;
+    void DBLocation() const;
 };
 
 // Register Tests
@@ -78,6 +79,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( DBVersionChanged )
     REGISTER_TEST( FixupErrorPaths )
     REGISTER_TEST( CyclicDependency )
+    REGISTER_TEST( DBLocation )
 REGISTER_TESTS_END
 
 // NodeTestHelper
@@ -1002,6 +1004,41 @@ void TestGraph::CyclicDependency() const
         // and fails
         TEST_ASSERT( fBuild.Build( "all" ) == false );
         TEST_ASSERT( GetRecordedOutput().Find( "Error: Cyclic dependency detected" ) );
+    }
+}
+
+// DBLocation
+//------------------------------------------------------------------------------
+void TestGraph::DBLocation() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseLocation/fbuild.bff";
+    options.m_SaveDBOnCompletion = true;
+
+    AString dbFileDefaultLocation( "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseLocation/" );
+    AString dbFileExplicitLocation( "../tmp/Test/Graph/DatabaseLocation/GraphDB.fdb" );
+
+    EnsureFileDoesNotExist( dbFileDefaultLocation );
+    EnsureFileDoesNotExist( dbFileExplicitLocation );
+
+    // Build a target and let serialization save to default location
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "TestTarget" ) );
+        AString dbFile( fBuild.GetDependencyGraphFile() );
+        TEST_ASSERT( PathUtils::PathBeginsWith( dbFile, dbFileDefaultLocation ) );
+    }
+
+    // Build a target and let serialization save to explicitly specified location
+    {
+        options.m_DBFile = dbFileExplicitLocation;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "TestTarget" ) );
+        AString dbFile( fBuild.GetDependencyGraphFile() );
+        TEST_ASSERT( PathUtils::ArePathsEqual( dbFile, dbFileExplicitLocation ) );
     }
 }
 
