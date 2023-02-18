@@ -2406,6 +2406,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     #if defined( __WINDOWS__ )
         // If remote PC is shutdown by user, compiler can be terminated
         if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
+             ( (uint32_t)result == 0xC000013A ) || // STATUS_CONTROL_C_EXIT - Occurs if remote user forcibly ended the process
              ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
         {
             job->OnSystemError(); // task will be retried on another worker
