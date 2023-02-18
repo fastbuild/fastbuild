@@ -1072,7 +1072,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                 // But unlike -ftest-coverage it can't be reverted with -fno-test-coverage, so we need to handle it after the loop.
                 coverage = true;
             }
-            else if ( token.BeginsWith( "-werror" ) )
+            else if ( token.BeginsWith( "-Werror" ) )
             {
                 flags.Set( CompilerFlags::FLAG_WARNINGS_AS_ERRORS_CLANGGCC );
             }
