@@ -25,7 +25,6 @@ protected:
     Array<AString>      m_BrokerageRoots;
     AString             m_BrokerageRootPaths;
     bool                m_BrokerageInitialized;
-    AString             m_HostName;
 };
 
 //------------------------------------------------------------------------------

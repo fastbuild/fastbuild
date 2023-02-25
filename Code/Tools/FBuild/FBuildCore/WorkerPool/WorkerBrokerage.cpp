@@ -88,8 +88,6 @@ void WorkerBrokerage::InitBrokerage()
         }
     }
 
-    Network::GetHostName( m_HostName );
-
     m_BrokerageInitialized = true;
 }
 

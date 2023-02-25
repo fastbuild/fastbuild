@@ -36,6 +36,7 @@ protected:
     AString             m_BrokerageFilePath;
     AString             m_IPAddress;
     AString             m_DomainName;
+    AString             m_HostName;
 };
 
 //------------------------------------------------------------------------------

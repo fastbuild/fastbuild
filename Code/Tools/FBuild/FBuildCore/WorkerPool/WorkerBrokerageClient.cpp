@@ -12,6 +12,7 @@
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Network/Network.h"
 #include "Core/Profile/Profile.h"
 
 // CONSTRUCTOR
@@ -74,15 +75,23 @@ void WorkerBrokerageClient::FindWorkers( Array< AString > & outWorkerList )
         outWorkerList.SetCapacity( outWorkerList.GetSize() + results.GetSize() );
     }
 
+    // Get addresses for the local host
+    StackArray<AString> localAddresses;
+    Network::GetIPv4Addresses( localAddresses );
+
     // convert worker strings
     for (const AString & fileName : results )
     {
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
         AStackString<> workerName( lastSlash + 1 );
-        if ( workerName.CompareI( m_HostName ) != 0 )
+
+        // Filter out local addresses
+        if ( localAddresses.Find( workerName ) )
         {
-            outWorkerList.Append( workerName );
+            continue;
         }
+
+        outWorkerList.Append( workerName );
     }
 }
 

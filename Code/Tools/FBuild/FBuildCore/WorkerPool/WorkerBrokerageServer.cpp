@@ -73,7 +73,9 @@ void WorkerBrokerageServer::SetAvailability( bool available )
             bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
 
             // Check IP last update time and determine if host name or IP address has changed
-            if ( m_IPAddress.IsEmpty() || ( m_TimerLastIPUpdate.GetElapsed() >= sBrokerageIPAddressUpdateTime ) )
+            if ( m_HostName.IsEmpty() ||
+                 m_IPAddress.IsEmpty() ||
+                 ( m_TimerLastIPUpdate.GetElapsed() >= sBrokerageIPAddressUpdateTime ) )
             {
                 AStackString<> hostName;
                 AStackString<> domainName;
