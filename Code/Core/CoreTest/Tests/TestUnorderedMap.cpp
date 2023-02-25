@@ -69,7 +69,7 @@ void TestUnorderedMap::Find() const
 
         // found
         {
-            auto* pair = map.Find( AString( "Hello" ) );
+            const auto* pair = map.Find( AString( "Hello" ) );
             TEST_ASSERT( pair );
             TEST_ASSERT( pair->m_Key == "Hello" );
             TEST_ASSERT( pair->m_Value == "there" );
@@ -77,7 +77,7 @@ void TestUnorderedMap::Find() const
 
         // not found
         {
-            auto* pair = map.Find( AString( "Thing" ) );
+            const auto* pair = map.Find( AString( "Thing" ) );
             TEST_ASSERT( pair == nullptr );
         }
     }
