@@ -7,7 +7,7 @@
 #include "IdleDetection.h"
 
 // FBuild
-#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerageServer.h"
 
 // Core
 #include "Core/Containers/Singleton.h"
@@ -56,7 +56,7 @@ private:
     NetworkStartupHelper * m_NetworkStartupHelper;
     WorkerSettings      * m_WorkerSettings;
     IdleDetection       m_IdleDetection;
-    WorkerBrokerage     m_WorkerBrokerage;
+    WorkerBrokerageServer m_WorkerBrokerage;
     AString             m_BaseExeName;
     AString             m_BaseArgs;
     uint64_t            m_LastWriteTime;
