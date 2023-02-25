@@ -183,7 +183,7 @@ void TestObjectList::ObjectListChaining() const
         // Check stats
         //               Seen,  Built,  Type
         CheckStatsNode(     2,      2,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      2,  Node::OBJECT_NODE );
+        CheckStatsNode(     4,      4,  Node::OBJECT_NODE );
         CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText1 );
@@ -198,7 +198,7 @@ void TestObjectList::ObjectListChaining() const
         // Check stats
         //               Seen,  Built,  Type
         CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
+        CheckStatsNode(     4,      0,  Node::OBJECT_NODE );
         CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
     }
 
@@ -213,7 +213,7 @@ void TestObjectList::ObjectListChaining() const
         // Check stats
         //               Seen,  Built,  Type
         CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
+        CheckStatsNode(     4,      0,  Node::OBJECT_NODE );
         CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText2 );
