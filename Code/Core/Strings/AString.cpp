@@ -277,7 +277,7 @@ loop:
 
 // Scan
 //------------------------------------------------------------------------------
-int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... )
+int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... ) const
 {
     va_list args;
     va_start( args, fmtString );
