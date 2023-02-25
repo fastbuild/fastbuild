@@ -38,6 +38,7 @@ public:
     void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const;
     void GetInputFiles( Array< AString > & files ) const;
 
+    inline const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
     inline const AString & GetCompilerOptions() const { return m_CompilerOptions; }
     inline const AString & GetCompiler() const { return m_Compiler; }
 

@@ -467,7 +467,7 @@ ObjectListNode::~ObjectListNode() = default;
                 }
 
                 // create the object that will compile the above file
-                if ( CreateDynamicObjectNode( nodeGraph, n->GetName(), AString::GetEmpty() ) == false )
+                if ( CreateDynamicObjectNode( nodeGraph, n->GetName(), objListNode->GetCompilerOutputPath() ) == false )
                 {
                     return false; // CreateDynamicObjectNode will have emitted error
                 }
@@ -837,7 +837,7 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
     {
         callback( file, AString::GetEmpty(), userData );
     }
-    
+
     // Dynamically discovered files
     for ( size_t i = m_ObjectListInputStartIndex; i < m_ObjectListInputEndIndex; ++i )
     {
