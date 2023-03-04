@@ -153,7 +153,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 void FBuildWorkerOptions::ShowUsageError()
 {
     const char * msg = "FBuildWorker.exe - " FBUILD_VERSION_STRING "\n"
-                       "Copyright 2012-2022 Franta Fulin - https://www.fastbuild.org\n"
+                       "Copyright 2012-2023 Franta Fulin - https://www.fastbuild.org\n"
                        "\n"
                        "Command Line Options:\n"
                        "---------------------------------------------------------------------------\n"
