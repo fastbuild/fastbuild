@@ -121,7 +121,7 @@ FunctionCopy::FunctionCopy()
     }
 
     // make all the nodes for copies
-    Dependencies copyNodes( srcNodes.GetSize(), false );
+    Dependencies copyNodes( srcNodes.GetSize() );
     for ( const Node * srcNode : srcNodes )
     {
         AStackString<> dst( dstFile );
@@ -163,7 +163,7 @@ FunctionCopy::FunctionCopy()
             return false; // Initialize will have emitted an error
         }
 
-        copyNodes.EmplaceBack( copyFileNode );
+        copyNodes.Add( copyFileNode );
     }
 
     // handle alias creation
@@ -178,11 +178,9 @@ bool FunctionCopy::GetSourceNodes( const BFFToken * iter, Node * node, Array< No
     {
         // resolve aliases to real nodes
         const AliasNode * aliasNode = node->CastTo< AliasNode >();
-        const Dependencies & aliasedNodes = aliasNode->GetAliasedNodes();
-        const Dependency * const end = aliasedNodes.End();
-        for ( const Dependency * it = aliasedNodes.Begin(); it != end; ++it )
+        for ( const Dependency & dep : aliasNode->GetAliasedNodes() )
         {
-            if ( !GetSourceNodes( iter, it->GetNode(), nodes ) )
+            if ( !GetSourceNodes( iter, dep.GetNode(), nodes ) )
             {
                 return false;
             }

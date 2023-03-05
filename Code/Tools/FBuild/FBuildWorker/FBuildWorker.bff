@@ -94,6 +94,7 @@
             #if __WINDOWS__
                 .LinkerOptions              + ' /SUBSYSTEM:WINDOWS'
                                             + ' Advapi32.lib'
+                                            + ' Iphlpapi.lib'
                                             + ' kernel32.lib'
                                             + ' Ws2_32.lib'
                                             + ' User32.lib'

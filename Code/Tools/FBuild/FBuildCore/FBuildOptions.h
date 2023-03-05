@@ -90,7 +90,7 @@ public:
     bool        m_ShowTotalTimeTaken                = true;
     bool        m_ShowPrintStatements               = true;
     bool        m_NoSummaryOnError                  = false;
-    bool        m_GenerateReport                    = false;
+    AString     m_ReportType;
     bool        m_EnableMonitor                     = false;
     bool        m_Profile                           = false;
 

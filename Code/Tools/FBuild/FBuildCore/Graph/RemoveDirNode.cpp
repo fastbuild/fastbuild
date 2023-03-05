@@ -63,7 +63,7 @@ RemoveDirNode::RemoveDirNode()
     }
 
     // Store dependencies
-    m_StaticDependencies.Append( fileListDeps );
+    m_StaticDependencies.Add( fileListDeps );
 
     return true;
 }

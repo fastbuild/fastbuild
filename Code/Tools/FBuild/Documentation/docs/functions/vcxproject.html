@@ -39,6 +39,7 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
   // Input Options
   .ProjectInputPaths              // (optional) Paths to include in project
   .ProjectInputPathsExclude       // (optional) Paths to exclude from project
+  .ProjectInputPathsRecurse       // (optional) Recurse into project input paths when finding files (default true)
   .ProjectPatternToExclude        // (optional) Pattern(s) for files to exclude from project
   .ProjectAllowedFileExtensions   // (optional) Extensions to allow in path searches
   .ProjectFiles                   // (optional) List of files to include in project
@@ -189,6 +190,13 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
                               }</div>
       <hr>    
 
+      <p><b>.ProjectInputPathsRecurse</b> - bool - (Optional)</p>
+      <p>Toggles whether to recurse into subdirectories of .ProjectInputPaths
+      when finding files to add to the project.
+      </p>
+      Example:
+<div class='code'>.ProjectInputPathsRecurse   = false</div>
+      <hr>
       
       <p><b>.ProjectPatternToExclude</b> - String or ArrayOfStrings - (Optional)</p>
       <p>Pattern(s) for files to exclude from project.</p>
@@ -590,6 +598,6 @@ build configuration), but can be explicitily set via .LocalDebuggerCommand if de
 
 </div>
 
-    </div><div class='footer'>&copy; 2012-2022 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2023 Franta Fulin</div></div></div>
 </body>
 </html>

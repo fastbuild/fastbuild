@@ -178,6 +178,7 @@ ProjectFilesToExclude
 ProjectGuid
 ProjectInputPaths
 ProjectInputPathsExclude
+ProjectInputPathsRecurse
 ProjectOutput
 ProjectPatternToExclude
 ProjectProjectImports

@@ -36,6 +36,7 @@ REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecUseStdOutAsOutput,    "ExecUseStdOutAsOutput",    MetaOptional() )
     REFLECT(        m_ExecAlways,               "ExecAlways",               MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
 
     // Internal State
     REFLECT(        m_NumExecInputFiles,        "NumExecInputFiles",        MetaHidden() )
@@ -104,16 +105,19 @@ ExecNode::ExecNode()
 
     // Store Static Dependencies
     m_StaticDependencies.SetCapacity( 1 + m_NumExecInputFiles + execInputPaths.GetSize() );
-    m_StaticDependencies.Append( executable );
-    m_StaticDependencies.Append( execInputFiles );
-    m_StaticDependencies.Append( execInputPaths );
+    m_StaticDependencies.Add( executable );
+    m_StaticDependencies.Add( execInputFiles );
+    m_StaticDependencies.Add( execInputPaths );
 
     return true;
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ExecNode::~ExecNode() = default;
+ExecNode::~ExecNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
@@ -149,7 +153,7 @@ ExecNode::~ExecNode() = default;
                 return false;
             }
 
-            m_DynamicDependencies.EmplaceBack( sn );
+            m_DynamicDependencies.Add( sn );
         }
     }
 
@@ -179,14 +183,16 @@ ExecNode::~ExecNode() = default;
     AStackString< 4 * KILOBYTE > fullArgs;
     GetFullArgs(fullArgs);
 
+    const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
+
     EmitCompilationMessage( fullArgs );
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
     const bool spawnOK = p.Spawn( GetExecutable()->GetName().Get(),
-                                  fullArgs.Get(),
-                                  workingDir,
-                                  FBuild::Get().GetEnvironmentString() );
+                            fullArgs.Get(),
+                            workingDir,
+                            environment );
 
     if ( !spawnOK )
     {

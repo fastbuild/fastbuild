@@ -24,7 +24,6 @@
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestManager::s_NumTests( 0 );
 /*static*/ TestManager::TestInfo TestManager::s_TestInfos[ MAX_TESTS ];
-/*static*/ TestManager * TestManager::s_Instance = nullptr;
 /*static*/ TestGroup * TestManager::s_FirstTest = nullptr;
 
 // OnAssert callback
@@ -42,10 +41,6 @@ void OnAssert( const char * /*message*/ )
 //------------------------------------------------------------------------------
 TestManager::TestManager()
 {
-    // manage singleton
-    ASSERT( s_Instance == nullptr );
-    s_Instance = this;
-
     // if we're running outside the debugger, we don't want
     // failures to pop up a dialog.  We want them to throw so
     // the test framework can catch the exception
@@ -76,21 +71,7 @@ TestManager::~TestManager()
         FDELETE testGroup;
         testGroup = next;
     }
-
-    // manage singleton
-    ASSERT( s_Instance == this );
-    s_Instance = nullptr;
 }
-
-// Get
-//------------------------------------------------------------------------------
-#ifdef DEBUG
-    /*static*/ TestManager & TestManager::Get()
-    {
-        ASSERT( s_Instance );
-        return *s_Instance;
-    }
-#endif
 
 // RegisterTest
 //------------------------------------------------------------------------------

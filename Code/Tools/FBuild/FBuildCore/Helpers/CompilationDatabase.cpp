@@ -40,12 +40,11 @@ const AString & CompilationDatabase::Generate( const NodeGraph & nodeGraph, Depe
 {
     m_Output += "[\n";
 
-    const size_t numNodes = nodeGraph.GetNodeCount();
-    Array< bool > visited( numNodes, false );
-    visited.SetSize( numNodes );
-    memset( visited.Begin(), 0, numNodes );
+    // Mark nodes as not visited
+    nodeGraph.SetBuildPassTagForAllNodes( eSweepTagNotSeen );
 
-    VisitNodes( nodeGraph, dependencies, visited );
+    // Visit nodes recursively
+    VisitNodes( nodeGraph, dependencies );
 
     // Remove last comma
     for ( uint32_t i = m_Output.GetLength() - 1; i != 0; --i )
@@ -71,25 +70,22 @@ const AString & CompilationDatabase::Generate( const NodeGraph & nodeGraph, Depe
 // VisitNodes
 //------------------------------------------------------------------------------
 void CompilationDatabase::VisitNodes( const NodeGraph & nodeGraph,
-                                      const Dependencies & dependencies,
-                                      Array< bool > & visited )
+                                      const Dependencies & dependencies )
 {
     for ( const Dependency & dep : dependencies )
     {
         const Node * node = dep.GetNode();
 
         // Skip already visited nodes
-        const uint32_t nodeIndex = node->GetIndex();
-        ASSERT( nodeIndex != INVALID_NODE_INDEX );
-        if ( visited[ nodeIndex ] )
+        if ( node->GetBuildPassTag() == eSweepTagSeen )
         {
             continue;
         }
-        visited[ nodeIndex ] = true;
+        node->SetBuildPassTag( eSweepTagSeen );
 
-        VisitNodes( nodeGraph, node->GetPreBuildDependencies(), visited );
-        VisitNodes( nodeGraph, node->GetStaticDependencies(), visited );
-        VisitNodes( nodeGraph, node->GetDynamicDependencies(), visited );
+        VisitNodes( nodeGraph, node->GetPreBuildDependencies() );
+        VisitNodes( nodeGraph, node->GetStaticDependencies() );
+        VisitNodes( nodeGraph, node->GetDynamicDependencies() );
 
         switch ( node->GetType() )
         {

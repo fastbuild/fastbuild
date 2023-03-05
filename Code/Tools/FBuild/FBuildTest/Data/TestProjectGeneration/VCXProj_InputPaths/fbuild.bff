@@ -1,0 +1,24 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+VCXProject( 'Default' )
+{
+    .ProjectOutput              = '$Out$/Test/ProjectGeneration/VCXProj_InputPaths/Default.vcxproj'
+
+    .ProjectInputPaths          = '$_CURRENT_BFF_DIR_$/source'
+}
+
+VCXProject( 'NoRecurse' )
+{
+    .ProjectOutput              = '$Out$/Test/ProjectGeneration/VCXProj_InputPaths/NoRecurse.vcxproj'
+
+    .ProjectInputPaths          = '$_CURRENT_BFF_DIR_$/source'
+    .ProjectInputPathsRecurse   = false
+}
+
+Alias( 'All' )
+{
+    .Targets                    = { 'Default', 'NoRecurse' }
+}

@@ -34,6 +34,7 @@ public:
     [[nodiscard]] Iter          End() const     { return m_Begin + m_Size; }
     [[nodiscard]] T &           operator [] ( size_t index )        { ASSERT( index < m_Size ); return m_Begin[ index ]; }
     [[nodiscard]] const T &     operator [] ( size_t index ) const  { ASSERT( index < m_Size ); return m_Begin[ index ]; }
+    [[nodiscard]] size_t        GetIndexOf( const T * it ) const;
     [[nodiscard]] T &           Top()       { ASSERT( m_Size ); return *( m_Begin + m_Size - 1 ); }
     [[nodiscard]] const T &     Top() const { ASSERT( m_Size ); return *( m_Begin + m_Size - 1 ); }
 
@@ -239,6 +240,16 @@ void Array< T >::Destruct()
     m_Begin = nullptr;
     m_Size = 0;
     m_CapacityAndFlags = 0;
+}
+
+// GetIndexOf
+//------------------------------------------------------------------------------
+template < class T >
+size_t Array< T >::GetIndexOf( const T * it ) const
+{
+    const size_t index = static_cast<size_t>( it - m_Begin );
+    ASSERT( index < m_Size ); // out of bounds pointer will result in invalid index
+    return index;
 }
 
 // SetCapacity

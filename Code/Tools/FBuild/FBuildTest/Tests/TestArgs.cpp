@@ -6,13 +6,9 @@
 #include "FBuildTest.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
-//#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
-//#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
-//#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
-
-//#include "Core/Strings/AStackString.h"
 
 // TestArgs
 //------------------------------------------------------------------------------
@@ -29,6 +25,7 @@ private:
     void ResponseFile_IfNeeded_Long() const;
     void ResponseFile_Always_Short() const;
     void ResponseFile_Always_Long() const;
+    void ResponseFile_CommandLineQuoting() const;
 
     // Helpers
     void Check( ArgsResponseFileMode mode,
@@ -52,6 +49,7 @@ REGISTER_TESTS_BEGIN( TestArgs )
     REGISTER_TEST( ResponseFile_IfNeeded_Long )
     REGISTER_TEST( ResponseFile_Always_Short )
     REGISTER_TEST( ResponseFile_Always_Long )
+    REGISTER_TEST( ResponseFile_CommandLineQuoting )
 REGISTER_TESTS_END
 
 // Unused
@@ -107,6 +105,28 @@ void TestArgs::ResponseFile_Always_Long() const
 {
     //     Mode                             LongArgs    Success     UseResponseFile
     Check( ArgsResponseFileMode::ALWAYS,    true,       true,       true );
+}
+
+// ResponseFile_CommandLineQuoting
+//------------------------------------------------------------------------------
+void TestArgs::ResponseFile_CommandLineQuoting() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/fbuild.bff";
+
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "ResponseFilePath" ) );
+
+    // Ensure response file use is forced on the compiler
+    StackArray<const Node *> nodes;
+    fBuild.GetNodesOfType( Node::COMPILER_NODE, nodes );
+    TEST_ASSERT( nodes.IsEmpty() == false );
+    for ( const Node * node : nodes )
+    {
+        const CompilerNode * cn = (const CompilerNode *)node;
+        TEST_ASSERT( cn->ShouldForceResponseFileUse() == true );
+    }
 }
 
 // Check

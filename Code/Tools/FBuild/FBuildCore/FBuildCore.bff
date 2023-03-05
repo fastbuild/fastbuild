@@ -19,7 +19,7 @@
             .UnityInputPath             = '$ProjectPath$/'
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
             .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
-            .UnityNumFiles              = 4
+            .UnityNumFiles              = 8
         }
 
         // Library

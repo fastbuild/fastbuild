@@ -116,15 +116,15 @@ void TestGraph::TestNodeTypes() const
     FBuild fb;
     NodeGraph ng;
 
-    FileNode * fn = ng.CreateFileNode( AStackString<>( "file" ) );
+    const FileNode * fn = ng.CreateFileNode( AStackString<>( "file" ) );
     TEST_ASSERT( fn->GetType() == Node::FILE_NODE );
     TEST_ASSERT( FileNode::GetTypeS() == Node::FILE_NODE );
 
     {
         #if defined( __WINDOWS__ )
-            CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
+            const CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
         #else
-            CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "/usr/bin/gcc" ) );
+            const CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "/usr/bin/gcc" ) );
         #endif
         TEST_ASSERT( cn->GetType() == Node::COMPILER_NODE );
         TEST_ASSERT( AStackString<>( "Compiler" ) == cn->GetTypeName() );
@@ -132,9 +132,9 @@ void TestGraph::TestNodeTypes() const
 
     {
         #if defined( __WINDOWS__ )
-            Node * n = ng.CreateCopyFileNode( AStackString<>( "c:\\dummy" ) );
+            const Node * n = ng.CreateCopyFileNode( AStackString<>( "c:\\dummy" ) );
         #else
-            Node * n = ng.CreateCopyFileNode( AStackString<>( "/dummy/dummy" ) );
+            const Node * n = ng.CreateCopyFileNode( AStackString<>( "/dummy/dummy" ) );
         #endif
         TEST_ASSERT( n->GetType() == Node::COPY_FILE_NODE );
         TEST_ASSERT( CopyFileNode::GetTypeS() == Node::COPY_FILE_NODE );
@@ -142,9 +142,9 @@ void TestGraph::TestNodeTypes() const
     }
 
     #if defined( __WINDOWS__ )
-        DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path\\|*.cpp|false|" ) );
+        const DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path\\|*.cpp|false|" ) );
     #else
-        DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path/|*.cpp|false|" ) );
+        const DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path/|*.cpp|false|" ) );
     #endif
     TEST_ASSERT( dn->GetType() == Node::DIRECTORY_LIST_NODE );
     TEST_ASSERT( DirectoryListNode::GetTypeS() == Node::DIRECTORY_LIST_NODE );
@@ -152,9 +152,9 @@ void TestGraph::TestNodeTypes() const
 
     {
         #if defined( __WINDOWS__ )
-            Node * n = ng.CreateExecNode( AStackString<>( "c:\\execdummy" ) );
+            const Node * n = ng.CreateExecNode( AStackString<>( "c:\\execdummy" ) );
         #else
-            Node * n = ng.CreateExecNode( AStackString<>( "/execdummy/execdummy" ) );
+            const Node * n = ng.CreateExecNode( AStackString<>( "/execdummy/execdummy" ) );
         #endif
         TEST_ASSERT( n->GetType() == Node::EXEC_NODE );
         TEST_ASSERT( ExecNode::GetTypeS() == Node::EXEC_NODE );
@@ -162,9 +162,9 @@ void TestGraph::TestNodeTypes() const
     }
     {
         #if defined( __WINDOWS__ )
-            Node * n = ng.CreateLibraryNode( AStackString<>( "c:\\library.lib" ) );
+            const Node * n = ng.CreateLibraryNode( AStackString<>( "c:\\library.lib" ) );
         #else
-            Node * n = ng.CreateLibraryNode( AStackString<>( "/library/library.a" ) );
+            const Node * n = ng.CreateLibraryNode( AStackString<>( "/library/library.a" ) );
         #endif
         TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
         TEST_ASSERT( LibraryNode::GetTypeS() == Node::LIBRARY_NODE );
@@ -172,16 +172,16 @@ void TestGraph::TestNodeTypes() const
     }
     {
         #if defined( __WINDOWS__ )
-            Node * n = ng.CreateObjectNode( AStackString<>( "c:\\object.lib" ) );
+            const Node * n = ng.CreateObjectNode( AStackString<>( "c:\\object.lib" ) );
         #else
-            Node * n = ng.CreateObjectNode( AStackString<>( "/library/object.o" ) );
+            const Node * n = ng.CreateObjectNode( AStackString<>( "/library/object.o" ) );
         #endif
         TEST_ASSERT( n->GetType() == Node::OBJECT_NODE );
         TEST_ASSERT( ObjectNode::GetTypeS() == Node::OBJECT_NODE );
         TEST_ASSERT( AStackString<>( "Object" ) == n->GetTypeName() );
     }
     {
-        Node * n = ng.CreateAliasNode( AStackString<>( "alias" ) );
+        const Node * n = ng.CreateAliasNode( AStackString<>( "alias" ) );
         TEST_ASSERT( n->GetType() == Node::ALIAS_NODE );
         TEST_ASSERT( AliasNode::GetTypeS() == Node::ALIAS_NODE );
         TEST_ASSERT( AStackString<>( "Alias" ) == n->GetTypeName() );
@@ -209,7 +209,7 @@ void TestGraph::TestNodeTypes() const
         TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );
     }
     {
-        Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ) );
+        const Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ) );
         TEST_ASSERT( n->GetType() == Node::UNITY_NODE );
         TEST_ASSERT( UnityNode::GetTypeS() == Node::UNITY_NODE );
         TEST_ASSERT( AStackString<>( "Unity" ) == n->GetTypeName() );
@@ -410,22 +410,30 @@ void TestGraph::TestCleanPath() const
     CHECK( "..\\file.dat",          "C:\\Windows\\file.dat",            "/tmp/file.dat" )
     CHECK( "..\\..\\file.dat",      "C:\\file.dat",                     "/file.dat" )
     CHECK( "..\\..\\..\\file.dat",  "C:\\file.dat",                     "/file.dat" )
+    CHECK( "folder\\..\\",          "C:\\Windows\\System32\\",          "/tmp/subDir/" )
+    CHECK( "folder\\..",            "C:\\Windows\\System32\\",          "/tmp/subDir/" )
 
     //   "/../"
     CHECK( "file.dat",              "C:\\Windows\\System32\\file.dat",  "/tmp/subDir/file.dat" )
     CHECK( "../file.dat",           "C:\\Windows\\file.dat",            "/tmp/file.dat" )
     CHECK( "../../file.dat",        "C:\\file.dat",                     "/file.dat" )
     CHECK( "../../../file.dat",     "C:\\file.dat",                     "/file.dat" )
+    CHECK( "folder/../",            "C:\\Windows\\System32\\",          "/tmp/subDir/" )
+    CHECK( "folder/..",             "C:\\Windows\\System32\\",          "/tmp/subDir/" )
 
     //   "\.\"
     CHECK( ".\\file.dat",           "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
     CHECK( "folder\\.\\file.dat",   "C:\\Windows\\System32\\folder\\file.dat",  "/tmp/subDir/folder/file.dat" )
     CHECK( ".\\.\\.\\file.dat",     "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
+    CHECK( "folder\\.\\",           "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
+    CHECK( "folder\\.",             "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
 
     //   "/./"
     CHECK( "./file.dat",            "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
     CHECK( "folder/./file.dat",     "C:\\Windows\\System32\\folder\\file.dat",  "/tmp/subDir/folder/file.dat" )
     CHECK( "./././file.dat",        "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
+    CHECK( "folder/./",             "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
+    CHECK( "folder/.",              "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
 
     //   full path '\'
     #if defined( __WINDOWS__ )

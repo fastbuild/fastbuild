@@ -18,6 +18,7 @@
 
 // Core
 #include "Core/Env/Assert.h"
+#include "Core/Env/Env.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
@@ -1681,6 +1682,16 @@ void BFFParser::CreateBuiltInVariables()
         AStackString<> varName( "._FASTBUILD_VERSION_" );
         ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
         BFFStackFrame::SetVarInt( varName, (int32_t)FBUILD_VERSION, &m_BaseStackFrame );
+        // TODO:B Add a mechanism to mark variable as read-only
+    }
+
+    // _FASTBUILD_EXE_PATH_
+    {
+        AStackString<> varName( "._FASTBUILD_EXE_PATH_" );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
+        AStackString<> exeName;
+        Env::GetExePath( exeName );
+        BFFStackFrame::SetVarString( varName, exeName, &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
 }

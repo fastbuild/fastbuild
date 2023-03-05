@@ -95,7 +95,7 @@ public:
     AString &                   VFormat( const char * fmtString, va_list arg );
 
     // ScanF
-    [[nodiscard]] int32_t           Scan( MSVC_SAL_SCANF const char * fmtString, ... ) SCAN_STRING( 2, 3 );
+    [[nodiscard]] int32_t           Scan( MSVC_SAL_SCANF const char * fmtString, ... ) const SCAN_STRING( 2, 3 );
     [[nodiscard]] static int32_t    ScanS( const char * buffer, MSVC_SAL_SCANF const char * fmtString, ... ) SCAN_STRING( 2, 3 );
 
     void                        Tokenize( Array< AString > & tokens, char splitChar = ' ' ) const;

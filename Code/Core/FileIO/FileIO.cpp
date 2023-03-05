@@ -651,18 +651,22 @@
             AStackString<> pathSoFar( outNormalizedPath );
             if ( nextSlash )
             {
-                pathSoFar.Append( pos, static_cast<uint32_t>( nextSlash - pos + 1 ) ); // Include slash
+                pathSoFar.Append( pos, static_cast<uint32_t>( nextSlash - pos ) );
             }
             else
             {
                 pathSoFar += pos;
             }
-            SHFILEINFOA info;
-            memset( &info, 0, sizeof(info) );
-            if( SHGetFileInfoA( pathSoFar.Get(), 0, &info, sizeof(info), SHGFI_DISPLAYNAME ) )
+
+            // Get a directory listing of the path so far to get the canonical name
+            WIN32_FIND_DATAA fileFileData;
+            HANDLE findHandle = FindFirstFileA( pathSoFar.Get(), &fileFileData );
+            if ( findHandle != INVALID_HANDLE_VALUE )
             {
+                FindClose( findHandle );
+
                 // Path exists, so use canonical name
-                outNormalizedPath += info.szDisplayName;
+                outNormalizedPath += fileFileData.cFileName;
                 pos = nextSlash ? nextSlash : path.GetEnd();
 
                 // Add slash between components

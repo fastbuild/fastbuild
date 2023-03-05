@@ -40,6 +40,7 @@
   // Input Options
   .ProjectInputPaths             // (optional) Path(s) containing files to include in project 
   .ProjectInputPathsExclude      // (optional) Path(s) to exclude from project
+  .ProjectInputPathsRecurse      // (optional) Recurse into project input paths when finding files (default true)
   .ProjectPatternToExclude       // (optional) Pattern(s) for files to exclude from project
   .ProjectFiles                  // (optional) File(s) to include in project
   .ProjectFilesToExclude         // (optional) File(s) to exclude from project
@@ -137,6 +138,14 @@
                             }</div>
       <hr>
       
+      <p><b>.ProjectInputPathsRecurse</b> - bool - (Optional)</p>
+      <p>Toggles whether to recurse into subdirectories of .ProjectInputPaths
+      when finding files to add to the project.
+      </p>
+      Example:
+<div class='code'>.ProjectInputPathsRecurse   = false</div>
+      <hr>
+
       <p><b>.ProjectPatternToExclude</b> - String or ArrayOfStrings - (Optional)</p>
       <p>One or more patterns can be specified to ignore during directory traversal.
       </p>
@@ -347,6 +356,6 @@
 
     </div>
 
-    </div><div class='footer'>&copy; 2012-2022 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2023 Franta Fulin</div></div></div>
 </body>
 </html>

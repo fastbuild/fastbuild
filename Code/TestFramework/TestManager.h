@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Containers/Singleton.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
@@ -15,7 +16,7 @@ class TestGroup;
 
 // TestManager
 //------------------------------------------------------------------------------
-class TestManager
+class TestManager : public Singleton<TestManager>
 {
 public:
     TestManager();
@@ -23,14 +24,6 @@ public:
 
     // run all tests, or tests from a group
     bool RunTests( const char * testGroup = nullptr );
-
-    // singleton behaviour
-    #ifdef RELEASE
-        static inline TestManager & Get() { return *s_Instance; }
-    #else
-        static        TestManager & Get();
-    #endif
-    static inline bool IsValid() { return ( s_Instance != nullptr ); }
 
     // tests register (using the test declaration macros) via this interface
     static void RegisterTestGroup( TestGroup * testGroup );
@@ -60,7 +53,6 @@ private:
     static uint32_t     s_NumTests;
     static TestInfo     s_TestInfos[ MAX_TESTS ];
 
-    static TestManager * s_Instance;
     static TestGroup *  s_FirstTest;
 };
 

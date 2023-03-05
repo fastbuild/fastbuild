@@ -99,7 +99,7 @@ Settings
 ]
 .Fuzzer_Config =
 [
-    #if USING_CLANG_6
+    #if !USING_CLANG_3
         // These options are valid for Clang >= 6.0.0:
         .CompilerOptions                = ' -fsanitize=fuzzer-no-link'
     #else
@@ -436,7 +436,7 @@ Alias( 'Exes' )
 .PlatformConfigs_x64Clang      = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release' }
-#if USING_CLANG_6
+#if !USING_CLANG_3
                                + { 'ASan', 'MSan', 'TSan' }
 #endif
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }

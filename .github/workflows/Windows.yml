@@ -1,0 +1,62 @@
+name: Windows CI
+
+on: [push, pull_request]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: Code
+
+jobs:
+  windows-ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cfg: Build & Tests
+            vs: 2019
+            os: windows-2019
+          - cfg: Build & Tests
+            vs: 2017
+            os: windows-2019
+          - cfg: Analyze
+            vs: 2019
+            os: windows-2019
+
+    name: Windows (${{ matrix.cfg }}, VS ${{ matrix.vs }})
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ./.github/actions/DownloadFBuild
+
+      - name: Configure fbuild.bff
+        run: |
+          'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\LLVM\x64\bin\clang.exe' --version
+          # Inject "#define CI_BUILD" into root configs to activate CI logic.
+          sed -i -e "1i\\
+          #define CI_BUILD
+          " fbuild.bff Tools/FBuild/FBuildTest/Data/testcommon.bff
+          # Comment all "#define USING_VS" lines and then uncomment the one we want.
+          sed -i -e "
+          /#define USING_VS/ s:^[^#]*://:
+          /#define USING_VS${{ matrix.vs }}/ s:^[^#]*::
+          " ../External/SDK/VisualStudio/VisualStudio.bff
+
+      - name: Build
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: ${FBUILD_PATH} -nostoponerror -summary All-x64{,Clang}-{Debug,Profile,Release}
+
+      - name: Tests
+        # -j1 on CI nodes avoids timeouts (CI nodes have only 2 cores)
+        if: ${{ matrix.cfg == 'Build & Tests' }}
+        run: ${FBUILD_PATH} -nostoponerror -j1 -summary Tests
+
+      - name: Analyze
+        if: ${{ matrix.cfg == 'Analyze' }}
+        run: ${FBUILD_PATH} -nostoponerror -summary All-x64-Analyze
+
+      - name: Build (NoUnity)
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: ${FBUILD_PATH} -nostoponerror -summary -nounity -clean All-x64{,Clang}-Debug

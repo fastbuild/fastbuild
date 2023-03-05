@@ -32,6 +32,7 @@ REFLECT_END( XCodeProjectConfig )
 REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
     REFLECT_ARRAY( m_ProjectInputPaths,             "ProjectInputPaths",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_ProjectInputPathsExclude,      "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
+    REFLECT(       m_ProjectInputPathsRecurse,      "ProjectInputPathsRecurse",     MetaOptional() )
     REFLECT_ARRAY( m_ProjectFiles,                  "ProjectFiles",                 MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_ProjectFilesToExclude,         "ProjectFilesToExclude",        MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_PatternToExclude,              "ProjectPatternToExclude",      MetaOptional() + MetaFile())
@@ -114,7 +115,7 @@ XCodeProjectNode::XCodeProjectNode()
                                               m_ProjectInputPathsExclude,
                                               m_ProjectFilesToExclude,
                                               m_PatternToExclude,
-                                              true, // Resursive
+                                              m_ProjectInputPathsRecurse,
                                               false, // Don't include read-only status in hash
                                               &m_ProjectAllowedFileExtensions,
                                               "ProjectInputPaths",
@@ -131,8 +132,8 @@ XCodeProjectNode::XCodeProjectNode()
     }
 
     ASSERT( m_StaticDependencies.IsEmpty() );
-    m_StaticDependencies.Append( dirNodes );
-    m_StaticDependencies.Append( fileNodes );
+    m_StaticDependencies.Add( dirNodes );
+    m_StaticDependencies.Add( fileNodes );
 
     // Resolve Target names to Node pointers for later use
     if ( XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, iter, function ) == false )

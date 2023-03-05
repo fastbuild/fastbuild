@@ -1,0 +1,101 @@
+name: Linux CI
+
+on: [push, pull_request]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: Code
+
+jobs:
+  linux-ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cfg: Build & Tests
+            gcc: 10
+            clang: 12
+            os: ubuntu-20.04
+          - cfg: Build
+            gcc: 7
+            clang: 9
+            os: ubuntu-18.04
+          - cfg: ASan
+            gcc: 10
+            clang: 12
+            os: ubuntu-20.04
+          - cfg: MSan
+            gcc: 10
+            clang: 12
+            os: ubuntu-20.04
+            can-fail: true
+          - cfg: TSan
+            gcc: 10
+            clang: 12
+            os: ubuntu-20.04
+            can-fail: true
+
+    name: Linux (${{ matrix.cfg }}, GCC ${{ matrix.gcc }}, Clang ${{ matrix.clang }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.can-fail || false }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ./.github/actions/DownloadFBuild
+
+      - name: Configure fbuild.bff
+        env:
+          GCC: gcc-${{ matrix.gcc }}
+          GXX: g++-${{ matrix.gcc }}
+          CLANG: clang-${{ matrix.clang }}
+          CLANGXX: clang++-${{ matrix.clang }}
+        run: |
+          for x in ${GCC} ${GXX} $(${GCC} -print-prog-name=cc1) $(${GCC} -print-prog-name=cc1plus) ${CLANG} ${CLANGXX}; do
+            echo $x; which $x && readlink -f $(which $x)
+            echo
+          done
+          ${GCC} --version
+          ${CLANG} --version
+          # Inject "#define CI_BUILD" into root configs to activate CI logic.
+          sed -i -e "1i\\
+          #define CI_BUILD
+          " fbuild.bff Tools/FBuild/FBuildTest/Data/testcommon.bff
+          # Put full paths to GCC binaries into config files.
+          sed -i -e "
+          s:GCC_BINARY:$(which ${GCC}):
+          s:GXX_BINARY:$(which ${GXX}):
+          s:CC1_BINARY:$(${GCC} -print-prog-name=cc1):
+          s:CC1PLUS_BINARY:$(${GCC} -print-prog-name=cc1plus):
+          " ../External/SDK/GCC/Linux/GCC_CI.bff
+          # Put full paths to Clang binaries into config files.
+          sed -i -e "
+          s:CLANG_BINARY:$(which ${CLANG}):
+          s:CLANGXX_BINARY:$(which ${CLANGXX}):
+          " ../External/SDK/Clang/Linux/Clang_CI.bff
+
+      - name: Build
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: ${FBUILD_PATH} -nostoponerror -summary All-x64{,Clang}Linux-{Debug,Profile,Release}
+
+      - name: Tests
+        # -j1 on CI nodes avoids timeouts (CI nodes have only 2 cores)
+        if: ${{ matrix.cfg == 'Build & Tests' }}
+        run: ${FBUILD_PATH} -nostoponerror -j1 -summary Tests
+
+      - name: ASan
+        if: ${{ matrix.cfg == 'ASan' }}
+        run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
+
+      - name: MSan
+        if: ${{ matrix.cfg == 'MSan' }}
+        run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
+
+      - name: TSan
+        if: ${{ matrix.cfg == 'TSan' }}
+        run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-TSan
+
+      - name: Build (NoUnity)
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: ${FBUILD_PATH} -nostoponerror -summary -nounity -clean All-x64{,Clang}Linux-Debug

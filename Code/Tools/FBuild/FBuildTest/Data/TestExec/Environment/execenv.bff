@@ -1,0 +1,40 @@
+// Exec
+//
+// Run an arbitrary executable
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+.OutPath                 = '$Out$/Test/Exec/Environment/'
+
+ObjectList( 'ExecEnv-Lib' )
+{
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestExec/Environment/execenv.cpp'
+    .CompilerOutputPath     = '$OutPath$/'
+}
+
+Executable( 'EnvHelperExe' )
+{
+    .LinkerOutput       = '$OutPath$execenv.exe'
+    #if __WINDOWS__
+        .LinkerOptions      + ' kernel32.lib'
+                            + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+                            + ' kernel32.lib'
+    #endif
+    .Libraries          = { 'ExecEnv-Lib' }
+}
+
+// Tests the FB_ENV_TEST_VALUE environment variable is set
+Exec( 'ExecEnvCommandTest' )
+{
+    .ExecExecutable         = 'EnvHelperExe'
+    .ExecUseStdOutAsOutput  = true
+    .ExecOutput             = '$OutPath$\output.txt'
+    .Environment            = { 'FB_ENV_TEST_VALUE=FASTbuild' }
+}

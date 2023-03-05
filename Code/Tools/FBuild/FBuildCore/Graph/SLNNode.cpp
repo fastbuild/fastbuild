@@ -257,7 +257,7 @@ SLNNode::SLNNode()
     m_StaticDependencies.SetCapacity( projects.GetSize() );
     for ( VSProjectBaseNode * project : projects )
     {
-        m_StaticDependencies.EmplaceBack( project );
+        m_StaticDependencies.Add( project );
     }
 
     return true;

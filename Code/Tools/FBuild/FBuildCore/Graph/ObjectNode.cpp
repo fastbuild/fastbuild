@@ -156,14 +156,14 @@ ObjectNode::ObjectNode()
 
     // Store Dependencies
     m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
-    m_StaticDependencies.EmplaceBack( compiler );
-    m_StaticDependencies.Append( compilerInputFile );
-    m_StaticDependencies.Append( precompiledHeader );
+    m_StaticDependencies.Add( compiler );
+    m_StaticDependencies.Add( compilerInputFile );
+    m_StaticDependencies.Add( precompiledHeader );
     if ( preprocessor )
     {
-        m_StaticDependencies.EmplaceBack( preprocessor );
+        m_StaticDependencies.Add( preprocessor );
     }
-    m_StaticDependencies.Append( compilerForceUsing );
+    m_StaticDependencies.Add( compilerForceUsing );
 
     return true;
 }
@@ -183,8 +183,8 @@ ObjectNode::ObjectNode( const AString & objectName,
     m_CompilerFlags.m_Flags = flags;
 
     m_StaticDependencies.SetCapacity( 2 );
-    m_StaticDependencies.EmplaceBack( nullptr );
-    m_StaticDependencies.EmplaceBack( srcFile );
+    m_StaticDependencies.Add( nullptr );
+    m_StaticDependencies.Add( srcFile );
 }
 
 // DESTRUCTOR
@@ -311,7 +311,7 @@ ObjectNode::~ObjectNode()
             fn->CastTo< FileNode >()->DoBuild( nullptr );
         }
 
-        m_DynamicDependencies.EmplaceBack( fn );
+        m_DynamicDependencies.Add( fn );
     }
 
     Node::Finalize( nodeGraph );
@@ -1072,7 +1072,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                 // But unlike -ftest-coverage it can't be reverted with -fno-test-coverage, so we need to handle it after the loop.
                 coverage = true;
             }
-            else if ( token.BeginsWith( "-werror" ) )
+            else if ( token.BeginsWith( "-Werror" ) )
             {
                 flags.Set( CompilerFlags::FLAG_WARNINGS_AS_ERRORS_CLANGGCC );
             }
@@ -2406,6 +2406,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     #if defined( __WINDOWS__ )
         // If remote PC is shutdown by user, compiler can be terminated
         if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
+             ( (uint32_t)result == 0xC000013A ) || // STATUS_CONTROL_C_EXIT - Occurs if remote user forcibly ended the process
              ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
         {
             job->OnSystemError(); // task will be retried on another worker

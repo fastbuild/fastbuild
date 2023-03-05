@@ -89,4 +89,67 @@ Print( "---- ArrayOfStructs Recursion" )
     .StructC    = .StructA
                 + .StructB
     Print( .StructC )
+    {
+        Using( .StructC )
+        ForEach( .S in .ArrayOfStructs )
+        {
+            // Check that we actually made an array
+        }
+    }
+}
+
+// Left contains empty arrays
+//--------------------------------------------------------------------
+Print( "---- Left contains empty arrays" )
+{
+    .Struct1 = [ .String = '1' ]
+    .StructA = [
+        .EmptyA = {}
+        .EmptyB = {}
+        .EmptyC = {}
+        .EmptyD = {}
+    ]
+    .StructB = [
+        .EmptyA = { 'C' }
+        .EmptyB = 'C'
+        .EmptyC = { .Struct1 }
+        .EmptyD = .Struct1
+    ]
+    .StructA + .StructB
+    Print( .StructA )
+    {
+        Using( .StructA )
+        ForEach( .StructA in .EmptyA,
+                 .StructB in .EmptyB,
+                 .StructC in .EmptyC,
+                 .StructD in .EmptyD )
+        {
+            // Check that we actually made arrays
+        }
+    }
+}
+
+// Right contains empty arrays
+//--------------------------------------------------------------------
+Print( "---- Right contains empty arrays" )
+{
+    .Struct1 = [ .String = '1' ]
+    .StructA = [
+        .EmptyA = { 'C' }
+        .EmptyB = { .Struct1 }
+    ]
+    .StructB = [
+        .EmptyA = {}
+        .EmptyB = {}
+    ]
+    .StructA + .StructB
+    Print( .StructA )
+    {
+        Using( .StructA )
+        ForEach( .StructA in .EmptyA,
+                 .StructB in .EmptyB )
+        {
+            // Check that we actually made arrays
+        }
+    }
 }

@@ -1,0 +1,22 @@
+//
+// TestArgs - ResponseFile
+//
+// Check the invocation command-line
+//
+//------------------------------------------------------------------------------
+
+// Force the use of response files before Compiler is defined
+.ForceResponseFile        = true
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+
+Using( .StandardEnvironment )
+
+// Common settings
+ObjectList( 'ResponseFilePath' )
+{
+    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/'
+    .CompilerOutputPath         = '$Out$/Test/ObjectList/ResponseFile/'
+}

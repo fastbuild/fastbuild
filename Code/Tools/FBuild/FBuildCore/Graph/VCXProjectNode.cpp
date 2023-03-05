@@ -90,6 +90,7 @@ REFLECT_END( VSProjectImport )
 REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_ProjectInputPaths,            "ProjectInputPaths",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_ProjectInputPathsExclude,     "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
+    REFLECT(        m_ProjectInputPathsRecurse,     "ProjectInputPathsRecurse",     MetaOptional() )
     REFLECT_ARRAY(  m_ProjectFiles,                 "ProjectFiles",                 MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_ProjectFilesToExclude,        "ProjectFilesToExclude",        MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_ProjectPatternToExclude,      "ProjectPatternToExclude",      MetaOptional() + MetaFile() )
@@ -184,7 +185,7 @@ VCXProjectNode::VCXProjectNode()
                                               m_ProjectInputPathsExclude,
                                               m_ProjectFilesToExclude,
                                               m_ProjectPatternToExclude,
-                                              true, // Recursive
+                                              m_ProjectInputPathsRecurse,
                                               false, // Don't include read-only status in hash
                                               &m_ProjectAllowedFileExtensions,
                                               "ProjectInputPaths",
@@ -250,7 +251,7 @@ VCXProjectNode::VCXProjectNode()
 
     // Store all dependencies
     m_StaticDependencies.SetCapacity( dirNodes.GetSize() );
-    m_StaticDependencies.Append( dirNodes );
+    m_StaticDependencies.Add( dirNodes );
 
     return true;
 }

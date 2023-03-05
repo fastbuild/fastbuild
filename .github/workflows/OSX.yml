@@ -1,0 +1,55 @@
+name: OSX CI
+
+on: [push, pull_request]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: Code
+
+jobs:
+  osx-ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cfg: Build & Tests
+            os: macos-10.15
+
+    name: OSX (${{ matrix.cfg }})
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ./.github/actions/DownloadFBuild
+
+      - name: Configure fbuild.bff
+        run: |
+          for x in clang clang++; do
+            echo $x; which $x
+            echo
+          done
+          clang --version
+          # Inject "#define CI_BUILD" into root configs to activate CI logic.
+          sed -i -e "1i\\
+          #define CI_BUILD
+          " fbuild.bff Tools/FBuild/FBuildTest/Data/testcommon.bff
+          # Put full paths to Clang binaries into config files.
+          sed -i -e "
+          s:CLANG_BINARY:$(which clang):
+          s:CLANGXX_BINARY:$(which clang++):
+          " ../External/SDK/Clang/OSX/Clang_CI.bff
+
+      - name: Build
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: ${FBUILD_PATH} -nostoponerror -summary All-x64OSX-{Debug,Profile,Release}
+
+      - name: Tests
+        # -j1 on CI nodes avoids timeouts (CI nodes have only 2 cores)
+        if: ${{ matrix.cfg == 'Build & Tests' }}
+        run: ${FBUILD_PATH} -nostoponerror -j1 -summary Tests
+
+      - name: Build (NoUnity)
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: ${FBUILD_PATH} -nostoponerror -summary -nounity -clean All-x64OSX-Debug

@@ -243,7 +243,7 @@ bool Worker::HasEnoughDiskSpace()
         }
         m_TimerLastDiskSpaceCheck.Start();
 
-        static constexpr uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
+        constexpr uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
 
         uint64_t freeBytesAvailable = 0;
         uint64_t totalNumberOfBytes = 0;

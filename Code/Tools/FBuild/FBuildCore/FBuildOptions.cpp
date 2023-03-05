@@ -350,9 +350,27 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowVerbose = false;
                 continue;
             }
-            else if ( thisArg == "-report" )
+            else if ( thisArg.BeginsWith( "-report" ) )
             {
-                m_GenerateReport = true;
+                StackArray<AString> reportTokens;
+                thisArg.Tokenize( reportTokens, '=' );
+
+                // if there is something after the '=' sign, then we take whatever comes after as the report type
+                if ( reportTokens.GetSize() > 1 ) 
+                {
+                    m_ReportType = reportTokens[ 1 ];
+                    m_ReportType.ToLower();
+                    if ( ( m_ReportType != "html" ) && ( m_ReportType != "json" ) )
+                    {
+                        OUTPUT( "FBuild: Error: Invalid report type '%s' for '-report'\n", m_ReportType.Get() );
+                        OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                        return OPTIONS_ERROR;
+                    }
+                }
+                else
+                {
+                    m_ReportType = "html"; // default report type if nothing specified
+                }
                 continue;
             }
             else if ( thisArg == "-showcmds" )
@@ -634,7 +652,10 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -profile          Output an fbuild_profiling.json describing the build.\n"
             " -progress         Show build progress bar even if stdout is redirected.\n"
             " -quiet            Don't show build output.\n"
-            " -report           Ouput report.html at build end. (Increases build time)\n"
+            " -report[=json|html]\n"
+            "                   Ouput report at build end. (Increases build time)\n"
+            "                   - =html : outputs a report.html file (default)\n"
+            "                   - =json : outputs a report.json file\n"
             " -showcmds         Show command lines used to launch external processes.\n"
             " -showcmdoutput    Show output of external processes.\n"
             " -showdeps         Show known dependency tree for specified targets.\n"
@@ -664,7 +685,7 @@ void FBuildOptions::DisplayVersion() const
         #define VERSION_CONFIG ""
     #endif
     OUTPUT( "FASTBuild " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
-            "Copyright 2012-2022 Franta Fulin - https://www.fastbuild.org\n" );
+            "Copyright 2012-2023 Franta Fulin - https://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }
 

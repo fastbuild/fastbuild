@@ -27,6 +27,7 @@ private:
     void Build_ExecCommand_MultipleInputChange() const;
     void Build_ExecCommand_UseStdOut() const;
     void Build_ExecCommand_ExpectedFailures() const;
+    void Build_ExecEnvCommand() const;
     void Exclusions() const;
 };
 
@@ -40,6 +41,7 @@ REGISTER_TESTS_BEGIN( TestExec )
     REGISTER_TEST( Build_ExecCommand_MultipleInputChange )
     REGISTER_TEST( Build_ExecCommand_UseStdOut )
     REGISTER_TEST( Build_ExecCommand_ExpectedFailures )
+    REGISTER_TEST( Build_ExecEnvCommand )
     REGISTER_TEST( Exclusions )
 REGISTER_TESTS_END
 
@@ -217,42 +219,52 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild( options );
-    fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
+    const char * const dbName = "../tmp/Test/Exec/exec.fdb";
 
-    const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
-    CreateInputFile( inFile_multiInputA );
+    // Try first file
+    {
+        FBuild fBuild( options );
+        fBuild.Initialize( dbName );
 
-    TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
+        const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
+        CreateInputFile( inFile_multiInputA );
 
-    // We expect only one command to run a second time (the one that always runs)
+        TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbName ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode(1, 0, Node::OBJECT_NODE);
-    CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
-    CheckStatsNode(1, 1, Node::ALIAS_NODE);
-    CheckStatsNode(1, 0, Node::EXE_NODE);
-    CheckStatsNode(1, 1, Node::EXEC_NODE);
+        // We expect only one command to run a second time (the one that always runs)
 
-    // ------- Now try the other file
+        // Check stats
+        //               Seen,  Built,  Type
+        // NOTE: Don't test file nodes since test used windows.h
+        CheckStatsNode(1, 0, Node::OBJECT_NODE);
+        CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
+        CheckStatsNode(1, 1, Node::ALIAS_NODE);
+        CheckStatsNode(1, 0, Node::EXE_NODE);
+        CheckStatsNode(1, 1, Node::EXEC_NODE);
+    }
 
-    const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
-    CreateInputFile( inFile_multiInputB );
+    // Try second file
+    {
+        FBuild fBuild( options );
+        fBuild.Initialize( dbName );
 
-    TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
+        const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
+        CreateInputFile( inFile_multiInputB );
 
-    // We expect only one command to run a second time (the one that always runs)
+        TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode(1, 0, Node::OBJECT_NODE);
-    CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
-    CheckStatsNode(1, 1, Node::ALIAS_NODE);
-    CheckStatsNode(1, 0, Node::EXE_NODE);
-    CheckStatsNode(1, 1, Node::EXEC_NODE);
+        // We expect only one command to run a second time (the one that always runs)
+
+        // Check stats
+        //               Seen,  Built,  Type
+        // NOTE: Don't test file nodes since test used windows.h
+        CheckStatsNode(1, 0, Node::OBJECT_NODE);
+        CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
+        CheckStatsNode(1, 1, Node::ALIAS_NODE);
+        CheckStatsNode(1, 0, Node::EXE_NODE);
+        CheckStatsNode(1, 1, Node::EXEC_NODE);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -297,6 +309,28 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     targets.EmplaceBack( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" );
     targets.EmplaceBack( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" );
     TEST_ASSERT( !fBuild.Build( targets ) );
+}
+
+//------------------------------------------------------------------------------
+void TestExec::Build_ExecEnvCommand() const
+{
+    // Build execenv.exe
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/Environment/execenv.bff";
+    options.m_NumWorkerThreads = 1;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( "EnvHelperExe" ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+
+    // Run the execenv command and ensure we get the expected output
+    TEST_ASSERT( fBuild.Build( "ExecEnvCommandTest" ) );
 }
 
 // Exclusions
