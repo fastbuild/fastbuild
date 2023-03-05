@@ -475,14 +475,6 @@ void Node::SetLastBuildTime( uint32_t ms )
         return;
     }
 
-    // Stamp
-    const uint64_t stamp = node->GetStamp();
-    stream.Write( stamp );
-
-    // Build time
-    const uint32_t lastBuildTime = node->GetLastBuildTime();
-    stream.Write( lastBuildTime );
-    
     // Deps
     node->m_PreBuildDependencies.Save( stream );
     node->m_StaticDependencies.Save( stream );
