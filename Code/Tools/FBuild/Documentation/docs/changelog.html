@@ -26,6 +26,42 @@
 
 <h1>Changelog</h1>
 
+<div class='newsitemheader'>
+    v1.09&nbsp;<font color='#bbbbbb'>(5th-Mar-2023)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Distributed compilation will no longer distribute to itself (the host machine)</li>
+        </ul>
+        <li>[Windows] Working dir canonicalization works in directories with special display names</li>
+        <li>Response files arg is correctly quoted for Clang compatibility (Thanks to Sebastien Alaiwan)</li>
+        <li>Directories ending in /.. or /. (no trailing slash) are handled correctly in various places (Thanks to dummyunit)</li>
+        <li>Re-instate optimization to avoid some processing when MSVC warnings as errors (/WX) is used</li>
+        <li>Concatenating empty arrays within structs is properly handled (Thanks to Curtis Maves)</li>
+        <li>Concatenating non-empty ArrayOfStructs no longer incorrectly changes type to Struct (Thanks to Curtis Maves)</li>
+        <li>Add missing .CompilerInputAllowNoFiles for Library() in basic documentation</li>
+        <li>-Werror for clang/gcc was not properly detected inhibiting a minor optimization (Thanks to poljak181)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>[Windows] STATUS_CONTROL_C_EXIT (0xC000013A) is considered a retryable System Failure (Thanks to Sam Hocevar)</li>
+        </ul>
+        <li>Add FASTBUILD_EXE_PATH built-in variable (Thanks to Lambert Clara)</li>
+        <li>Add .Environment option to Exec() (Thanks to ZeroErrors)</li>
+        <li>Improved compression perf in some scenarios (LZ4 1.9.4)</li>
+        <li>Expose recursion control for in VCXProject & XCodeProject via .CompilerInputPathsRecurse (Thanks to Troels Gram)</li>
+        <li><a href="options.html#report">-report</a> can output in json format as well as html (Thanks to EwanMoshi)</li>
+    </ul>
+</div>
 
 <div class='newsitemheader'>
     v1.08&nbsp;<font color='#bbbbbb'>(5th-Nov-2022)</font>
