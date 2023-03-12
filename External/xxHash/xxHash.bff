@@ -1,0 +1,119 @@
+// xxHash
+//------------------------------------------------------------------------------
+.xxHashBasePath         = '../External/xxHash/0.8.1/'
+.xxHashIncludePaths     = ' "-I$xxHashBasePath$"'
+{
+    .ProjectName        = 'xxHash'
+    .ProjectPath        = '$xxHashBasePath$'
+
+    // Target/Compiler specific options
+    .xxHashOptions_x64      = [
+                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
+                              ]
+    .xxHashOptions_x64Clang = [
+                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
+                              ]
+    .xxHashOptions_x64Linux = [
+                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
+                              ]
+    .xxHashOptions_x64ClangLinux  = .xxHashOptions_x64Linux
+    .xxHashOptions_x64OSX   = [
+                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
+                              ]
+    .xxHashOptions_ARMOSX   = [
+                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
+                              ]
+
+    // Library
+    //--------------------------------------------------------------------------
+    .ProjectConfigs = {}
+    ForEach( .BuildConfig in .BuildConfigs )
+    {
+        Using( .BuildConfig )
+
+        .OutputBase + '\$Platform$-$BuildConfigName$'
+
+        Using( ."xxHashOptions_$Platform$" )
+
+        // Static Library
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        {
+            // Input - Only build specific files we use
+            .CompilerInputFiles         = {
+                                            '$xxHashBasePath$\xxhash.c'
+                                          }
+
+            // Options
+            .CompilerOptions            = .CompilerOptionsC
+                                        + .xxHashIncludePaths
+                                        + .xxHashCompilerOptions
+
+                                        // Place xxHash functions in a namespace to avoid collisions with lz4
+                                        + ' "-DXXH_NAMESPACE=xxHashLib_"'
+
+                                        // TODO:C Figure out why static_asserts don't compile properly
+                                        + ' "-DXXH_STATIC_ASSERT(x)="'
+
+                                        #if __WINDOWS__
+                                            // Remove flags that disable opimizations
+                                            - ' /Od'
+                                            - ' /RTC1'
+
+                                            // Disable static analysis if enabled
+                                            // (we won't fix warnings in 3rd party code)
+                                            - ' --analyze'
+                                            - .StaticAnalysisOptions
+                                        #else
+                                            - ' -O0'
+                                        #endif
+                                        
+                                        // Disable warnings if using Clang. There are too many warnings in xxHash
+                                        // and they differ with every version of Clang
+                                        - ' -Wall'
+                                        - ' -Werror'
+                                        - ' -Wfatal-errors'
+                                        - ' -Wextra'
+                                        - ' -Wshadow'
+                                        - ' -Weverything'
+
+            // Output
+            .CompilerOutputPath         = '$OutputBase$/External/$ProjectName$/'
+        }
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$BuildConfigName$' }
+
+        #if __WINDOWS__
+            .ProjectConfig              = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = '$ProjectName$-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+        #if __OSX__
+            .ProjectConfig              = [ .Config = '$BuildConfigName$'   .Target = '$ProjectName$-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+    }
+
+    // Aliases
+    //--------------------------------------------------------------------------
+    CreateCommonAliases( .ProjectName )
+
+    // Visual Studio Project Generation
+    //--------------------------------------------------------------------------
+    #if __WINDOWS__
+        .ExtraOptions   = [
+                            .ProjectFiles = '../External/xxHash/xxHash.bff'
+                          ]
+        CreateVCXProject_Lib( .ProjectName, .ProjectPath, .ProjectConfigs, .ExtraOptions )
+    #endif
+
+    // XCode Project Generation
+    //--------------------------------------------------------------------------
+    #if __OSX__
+        XCodeProject( '$ProjectName$-xcodeproj' )
+        {
+            .ProjectOutput              = '../tmp/XCode/Projects/0_External/$ProjectName$.xcodeproj/project.pbxproj'
+            .ProjectInputPaths          = '$ProjectPath$/'
+            .ProjectBasePath            = '$ProjectPath$/'
+
+            .XCodeBuildWorkingDir       = '../../../../Code/'
+        }
+    #endif
+}

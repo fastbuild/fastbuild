@@ -394,6 +394,7 @@ Settings
 
 // External
 #include "..\External\LZ4\LZ4.bff"
+#include "../External/xxHash/xxHash.bff"
 
 // Test Framework
 #include "TestFramework\TestFramework.bff"
@@ -628,7 +629,7 @@ Alias( 'All+Tests' )
         .Folder_External =
         [
             .Path           = 'External'
-            .Projects       = { 'LZ4-proj', 'SDKs-proj' }
+            .Projects       = { 'LZ4-proj', 'SDKs-proj', 'xxHash-proj' }
         ]
         .Folder_Test =
         [
@@ -668,7 +669,8 @@ Alias( 'All+Tests' )
                                         'FBuildWorker-xcodeproj'
                                         'LZ4-xcodeproj'
                                         'OSUI-xcodeproj'
-                                        'TestFramework-xcodeproj' }
+                                        'TestFramework-xcodeproj'
+                                        'xxHash-xcodeproj' }
         .ProjectConfigs = {}
         ForEach( .BuildConfig in .BuildConfigs )
         {

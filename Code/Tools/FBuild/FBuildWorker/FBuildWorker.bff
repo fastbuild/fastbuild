@@ -79,6 +79,7 @@
                                             'OSUI-Lib-$Platform$-$BuildConfigName$'
                                             'Core-Lib-$Platform$-$BuildConfigName$',
                                             'LZ4-Lib-$Platform$-$BuildConfigName$'
+                                            'xxHash-Lib-$Platform$-$BuildConfigName$'
                                           }
                                         #if __WINDOWS__
                                             + 'FBuildWorker-Res-$Platform$-$BuildConfigName$'
