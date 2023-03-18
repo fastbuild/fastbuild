@@ -34,11 +34,7 @@ Server::Server( uint32_t numThreadsInJobQueue )
 {
     m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
 
-    m_Thread = Thread::CreateThread( ThreadFuncStatic,
-                                     "Server",
-                                     ( 64 * KILOBYTE ),
-                                     this );
-    ASSERT( m_Thread );
+    m_Thread.Start( ThreadFuncStatic, "Server", this );
 }
 
 // DESTRUCTOR
@@ -47,11 +43,9 @@ Server::~Server()
 {
     m_ShouldExit.Store( true );
     JobQueueRemote::Get().WakeMainThread();
-    Thread::WaitForThread( m_Thread );
+    m_Thread.Join();
 
     ShutdownAllConnections();
-
-    Thread::CloseHandle( m_Thread );
 
     FDELETE m_JobQueueRemote;
 

@@ -51,19 +51,14 @@ public:
         TEST_ASSERT( m_Count2.Load() == initialValue );
 
         // Spawn thread
-        Thread::ThreadHandle h = Thread::CreateThread( ThreadWrapper,
-                                                       "AtomicTestHelper",
-                                                       ( 64 * KILOBYTE ),
-                                                       this );
+        Thread t;
+        t.Start( ThreadWrapper, "AtomicTestHelper", this );
 
         // Do works locally that mirrors the thread
         DoWork();
 
         // Join thread
-        bool timedOut = false;
-        Thread::WaitForThread( h, 1000, timedOut );
-        TEST_ASSERT( timedOut == false );
-        Thread::CloseHandle( h );
+        t.Join();
 
         // Check expected results
         TEST_ASSERT( AtomicLoadRelaxed( &m_Count ) == expectedResult );

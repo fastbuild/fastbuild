@@ -37,10 +37,8 @@ BuildProfiler::~BuildProfiler() = default;
 void BuildProfiler::StartMetricsGathering()
 {
     PROFILE_FUNCTION;
-
-    ASSERT( m_Thread == INVALID_THREAD_HANDLE );
     m_ThreadExit.Store( false );
-    m_Thread = Thread::CreateThread( MetricsThreadWrapper, "BuildProfileMetrics" );
+    m_Thread.Start( MetricsThreadWrapper, "BuildProfileMetrics" );
 }
 
 // StopMetricsGathering
@@ -48,13 +46,9 @@ void BuildProfiler::StartMetricsGathering()
 void BuildProfiler::StopMetricsGathering()
 {
     PROFILE_FUNCTION;
-
-    ASSERT( m_Thread != INVALID_THREAD_HANDLE );
     m_ThreadExit.Store( true );
     m_ThreadSignalSemaphore.Signal();
-    Thread::WaitForThread( m_Thread );
-    Thread::CloseHandle( m_Thread );
-    m_Thread = INVALID_THREAD_HANDLE;
+    m_Thread.Join();
 }
 
 // RecordLocal
@@ -113,7 +107,7 @@ void BuildProfiler::RecordRemote( uint32_t workerId,
 bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileName )
 {
     // Thread must be stopped
-    ASSERT( m_Thread == INVALID_THREAD_HANDLE );
+    ASSERT( m_Thread.IsRunning() == false );
 
     // Record time taken to save (can't use regular macros since we're process those)
     const int64_t saveStart = Timer::GetNow();

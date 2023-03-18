@@ -13,7 +13,6 @@
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/FileIO/FileStream.h"
-#include "Core/Process/Thread.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -72,7 +71,6 @@ private:
         int32_t             m_LastMemoryCheckResult;    // -1 : No check done yet. 0=Not enough memory right now. 1=OK for now.
 #endif
     mutable AString     m_LastStatusMessage;
-    Thread::ThreadHandle m_WorkThread;
 };
 
 //------------------------------------------------------------------------------

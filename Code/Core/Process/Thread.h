@@ -41,6 +41,7 @@ public:
                        void * userData = nullptr,
                        uint32_t stackSizeBytes = kDefaultStackSize );
     uint32_t    Join();
+    bool        IsRunning() const;
 
     // Thread Identification
     static ThreadId GetCurrentThreadId();

@@ -88,7 +88,7 @@ private:
     JobQueueRemote *        m_JobQueueRemote;
 
     Atomic<bool>            m_ShouldExit;   // signal from main thread
-    Thread::ThreadHandle    m_Thread;       // the thread to manage workload
+    Thread                  m_Thread;       // the thread to manage workload
     Mutex                   m_ClientListMutex;
     Array< ClientState * >  m_ClientList;
 

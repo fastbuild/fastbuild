@@ -52,7 +52,8 @@ void TestSemaphore::WaitForSignal() const
     Semaphore s;
 
     // Create a thread which will signal the Semaphore
-    Thread::ThreadHandle h = Thread::CreateThread( WaitForSignal_Thread, "Test::WaitForSignal", ( 32 * KILOBYTE ), &s );
+    Thread t;
+    t.Start( WaitForSignal_Thread, "Test::WaitForSignal", &s );
 
     // Wait or the expected signal count
     for ( size_t i = 0; i < 100; ++i )
@@ -61,10 +62,7 @@ void TestSemaphore::WaitForSignal() const
     }
 
     // Cleanup thread
-    bool timedOut;
-    Thread::WaitForThread( h, 1000, timedOut );
-    TEST_ASSERT( timedOut == false );
-    Thread::CloseHandle( h );
+    t.Join();
 }
 
 // WaitForSignal_Thread

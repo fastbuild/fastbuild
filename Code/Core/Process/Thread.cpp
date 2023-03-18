@@ -111,11 +111,11 @@ void Thread::Start( ThreadEntryFunction func,
                     uint32_t stackSizeBytes )
 {
     // Can only start if not already started
-    ASSERT( m_Handle == INVALID_THREAD_HANDLE );
+    ASSERT( !IsRunning() );
     
     // Start thread
     m_Handle = CreateThread( func, threadName, stackSizeBytes, userData );
-    ASSERT( m_Handle != INVALID_THREAD_HANDLE );
+    ASSERT( IsRunning() );
 }
 
 // Join
@@ -123,7 +123,7 @@ void Thread::Start( ThreadEntryFunction func,
 uint32_t Thread::Join()
 {
     // Must only join if running and not already joined
-    ASSERT( m_Handle != INVALID_THREAD_HANDLE );
+    ASSERT( IsRunning() );
 
     // Wait for thread and obtain return result
     // TODO:C Fix inconsistent return results when legacy API is removed
@@ -134,6 +134,13 @@ uint32_t Thread::Join()
     m_Handle = INVALID_THREAD_HANDLE;
 
     return returnValue;
+}
+
+// IsRunning
+//------------------------------------------------------------------------------
+bool Thread::IsRunning() const
+{
+    return ( m_Handle != INVALID_THREAD_HANDLE );
 }
 
 // GetCurrentThreadId

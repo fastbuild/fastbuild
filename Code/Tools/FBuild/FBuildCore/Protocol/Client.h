@@ -69,7 +69,7 @@ private:
     Array< AString >    m_WorkerList;   // workers to connect to
     Atomic<bool>        m_ShouldExit;   // signal from main thread
     bool                m_DetailedLogging;
-    Thread::ThreadHandle m_Thread;      // the thread to find and manage workers
+    Thread              m_Thread;       // the thread to find and manage workers
 
     // state
     Timer               m_StatusUpdateTimer;

@@ -426,14 +426,14 @@ void TestDistributed::ShutdownMemoryLeak() const
         }
     };
     bool detectedDistributedJobs = false;
-    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild, nullptr, 64 * KILOBYTE, &detectedDistributedJobs );
+    Thread thread;
+    thread.Start( Helper::AbortBuild,"TestDistributed", &detectedDistributedJobs );
 
     // Start build and check it was aborted
     TEST_ASSERT( fBuild.Build( "ShutdownMemoryLeak" ) == false );
     TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) );
 
-    Thread::WaitForThread( h );
-    Thread::CloseHandle( h );
+    thread.Join();
 
     TEST_ASSERT( detectedDistributedJobs );
 }

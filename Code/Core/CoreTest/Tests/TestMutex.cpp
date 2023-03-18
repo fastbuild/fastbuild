@@ -88,10 +88,8 @@ void TestMutex::TestExclusivity() const
     data.m_Count = 0;
     data.m_BarrierCounter = 0;
 
-    Thread::ThreadHandle h = Thread::CreateThread( TestExclusivityThreadEntryFunction,
-                                                   "TestExclusivity",
-                                                   ( 64 * KILOBYTE ),
-                                                   &data );
+    Thread t;
+    t.Start( TestExclusivityThreadEntryFunction, "TestExclusivity", &data );
 
     // arrive at barrier and wait
     AtomicInc( &data.m_BarrierCounter );
@@ -105,10 +103,7 @@ void TestMutex::TestExclusivity() const
     }
 
     // wait for other thread to complete
-    bool timedOut = false;
-    Thread::WaitForThread( h, 1000, timedOut );
-    TEST_ASSERT( timedOut == false );
-    Thread::CloseHandle( h );
+    t.Join();
 
     // ensure total is correct
     TEST_ASSERT( data.m_Count == 2000000 );

@@ -28,6 +28,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
+#include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
@@ -132,11 +133,8 @@ int32_t Worker::Work()
     }
 
     // spawn work thread
-    m_WorkThread = Thread::CreateThread( &WorkThreadWrapper,
-                                         "WorkerThread",
-                                         ( 256 * KILOBYTE ),
-                                         this );
-    ASSERT( m_WorkThread != INVALID_THREAD_HANDLE );
+    Thread workThread;
+    workThread.Start( &WorkThreadWrapper, "WorkerThread", this, ( 256 * KILOBYTE ) );
 
     // Run the UI message loop if we're not in console mode
     if ( m_MainWindow )
@@ -145,7 +143,7 @@ int32_t Worker::Work()
     }
 
     // Join work thread and get exit code
-    return Thread::WaitForThread( m_WorkThread );
+    return static_cast<int32_t>( workThread.Join() );
 }
 
 // WorkThreadWrapper

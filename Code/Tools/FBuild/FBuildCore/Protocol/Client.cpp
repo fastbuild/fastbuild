@@ -46,11 +46,7 @@ Client::Client( const Array< AString > & workerList,
     // allocate space for server states
     m_ServerList.SetSize( workerList.GetSize() );
 
-    m_Thread = Thread::CreateThread( ThreadFuncStatic,
-                                     "Client",
-                                     ( 64 * KILOBYTE ),
-                                     this );
-    ASSERT( m_Thread );
+    m_Thread.Start( ThreadFuncStatic, "Client", this );
 }
 
 // DESTRUCTOR
@@ -62,11 +58,9 @@ Client::~Client()
     SetShuttingDown();
 
     m_ShouldExit.Store( true );
-    Thread::WaitForThread( m_Thread );
+    m_Thread.Join();
 
     ShutdownAllConnections();
-
-    Thread::CloseHandle( m_Thread );
 }
 
 //------------------------------------------------------------------------------
