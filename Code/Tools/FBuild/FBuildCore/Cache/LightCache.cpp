@@ -331,7 +331,7 @@ bool LightCache::Hash( ObjectNode * node,
         hashes.Append( file->m_ContentHash );
         outIncludes.Append( file->m_FileName );
     }
-    outSourceHash = xxHash::Calc64( hashes.Begin(), hashes.GetSize() * sizeof( uint64_t ) );
+    outSourceHash = xxHash3::Calc64( hashes.Begin(), hashes.GetSize() * sizeof( uint64_t ) );
 
     return true;
 }
@@ -365,7 +365,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
 
 
     // Store hash of file
-    file->m_ContentHash = xxHash::Calc64( fileContents );
+    file->m_ContentHash = xxHash3::Calc64( fileContents );
 
     const char * pos = fileContents.Get();
     for (;;)
@@ -503,7 +503,7 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char * & pos 
     if ( ParseIncludeString( pos, include, includeType ) == false )
     {
         // Not an include. We only care that this exists (not what it resolves to)
-        file.m_NonIncludeDefines.Append( xxHash::Calc64( macroName ) );
+        file.m_NonIncludeDefines.Append( xxHash3::Calc64( macroName ) );
         return true;
     }
 
@@ -649,7 +649,7 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
 
             // The macro was not defined as a valid include path
             // Is it defined at all?
-            const uint64_t hash = xxHash::Calc64( include );
+            const uint64_t hash = xxHash3::Calc64( include );
             bool foundNonIncludeDefine = false;
             for ( const IncludedFile * includedFile : m_AllIncludedFiles )
             {
@@ -858,7 +858,7 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & 
 //------------------------------------------------------------------------------
 const IncludedFile * LightCache::FileExists( const AString & fileName )
 {
-    const uint64_t fileNameHash = xxHash::Calc64( fileName );
+    const uint64_t fileNameHash = xxHash3::Calc64( fileName );
     const uint64_t bucketIndex = LIGHTCACHE_HASH_TO_BUCKET( fileNameHash );
     IncludedFileBucket & bucket = g_AllIncludedFiles[ bucketIndex ];
     // Retrieve from shared cache

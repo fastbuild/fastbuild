@@ -859,7 +859,7 @@ void TestGraph::DBVersionChanged() const
 {
     // Generate a fake old version headers
     NodeGraphHeader header;
-    header.SetContentHash( xxHash::Calc64( "", 0 ) );
+    header.SetContentHash( xxHash3::Calc64( "", 0 ) );
     MemoryStream ms;
     ms.WriteBuffer( &header, sizeof( header ) );
 

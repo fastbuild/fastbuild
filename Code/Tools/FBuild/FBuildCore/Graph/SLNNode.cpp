@@ -299,7 +299,7 @@ SLNNode::~SLNNode() = default;
     }
 
     // Record stamp representing the contents of the files
-    m_Stamp = xxHash::Calc64( sln );
+    m_Stamp = xxHash3::Calc64( sln );
 
     return NODE_RESULT_OK;
 }

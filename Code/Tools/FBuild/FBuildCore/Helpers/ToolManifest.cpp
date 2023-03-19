@@ -216,7 +216,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
-    m_ToolId = xxHash::Calc64( mem, memSize );
+    m_ToolId = xxHash3::Calc64( mem, memSize );
     FREE( mem );
 
     // update time stamp (most recent file in manifest)

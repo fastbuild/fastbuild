@@ -574,7 +574,7 @@ ObjectListNode::~ObjectListNode() = default;
             ASSERT( on->GetStamp() );
             stamps.Append( on->GetStamp() );
         }
-        m_Stamp = xxHash::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
+        m_Stamp = xxHash3::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
     }
 
     return NODE_RESULT_OK;

@@ -306,7 +306,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
             return LoadResult::LOAD_ERROR; // error reading
         }
 
-        const uint64_t dataHash = xxHash::Calc64( mem.Get(), size );
+        const uint64_t dataHash = xxHash3::Calc64( mem.Get(), size );
         if ( dataHash == usedFiles[ i ].m_DataHash )
         {
             // file didn't change, update stored timestamp to save time on the next run
@@ -537,7 +537,7 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
         char * data = static_cast<char *>( stream.GetDataMutable() );
         const char * content = ( data + sizeof(NodeGraphHeader) );
         const size_t remainingSize = ( stream.GetSize() - sizeof(NodeGraphHeader) );
-        const uint64_t hash = xxHash::Calc64( content, remainingSize );
+        const uint64_t hash = xxHash3::Calc64( content, remainingSize );
 
         // Update hash in header
         NodeGraphHeader * headerToUpdate = reinterpret_cast<NodeGraphHeader *>( data );
@@ -1862,7 +1862,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, con
         ASSERT( tell == sizeof( NodeGraphHeader ) ); // Stream should be after header
         const char* data = ( static_cast<const char*>( nodeGraphStream.GetData() ) + tell );
         const size_t remainingSize = ( nodeGraphStream.GetSize() - tell );
-        const uint64_t hash = xxHash::Calc64( data, remainingSize );
+        const uint64_t hash = xxHash3::Calc64( data, remainingSize );
         if ( hash != ngh.GetContentHash() )
         {
             return false; // DB is corrupt
