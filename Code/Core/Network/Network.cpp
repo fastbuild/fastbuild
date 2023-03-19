@@ -173,19 +173,17 @@
     data.safeToFree = false; // will be marked by other thread
 
     // Create thread to perform resolution
-    Thread::ThreadHandle handle = Thread::CreateThread( NameResolutionThreadFunc,
-                                                        "NameResolution",
-                                                        ( 32 * KILOBYTE ),
-                                                        &data );
+    Thread thread;
+    thread.Start( NameResolutionThreadFunc, "NameResolution", &data, ( 32 * KILOBYTE ) );
 
     // wait for name resolution with timeout
     bool timedOut( false );
-    int returnCode( 0 );
+    uint32_t returnCode( 0 );
     uint32_t remainingTimeMS( timeoutMS );
     const uint32_t sleepInterval( 100 ); // Check exit condition periodically - TODO:C would be better to use an event
     for ( ;; )
     {
-        returnCode = Thread::WaitForThread( handle, sleepInterval, timedOut );
+        returnCode = thread.JoinWithTimeout( sleepInterval, timedOut ); // TODO:B Remove use of this unsafe API
 
         // Are we shutting down?
         if ( NetworkStartupHelper::IsShuttingDown() )
@@ -210,9 +208,8 @@
     }
     if ( timedOut )
     {
-        Thread::DetachThread( handle );
+        thread.Detach(); // TODO:B Remove use of this unsafe API
     }
-    Thread::CloseHandle( handle );
 
     // handle race where timeout occurred before thread marked data as
     // safe to delete (this could happen if system was under load and timeout was very small)
@@ -227,7 +224,7 @@
     }
 
     // return result of resolution (could also have failed)
-    return (uint32_t)returnCode;
+    return returnCode;
 }
 
 // NameResolutionThreadFunc

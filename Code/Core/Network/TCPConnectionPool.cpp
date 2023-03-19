@@ -920,13 +920,9 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
     m_ListenConnection->m_ThreadQuitNotification.Store( false );
 
     // Spawn thread to handle socket
-    Thread::ThreadHandle h = Thread::CreateThread( &ListenThreadWrapperFunction,
-                                         "TCPListen",
-                                         ( 32 * KILOBYTE ),
-                                         m_ListenConnection ); // user data argument
-    ASSERT( h != INVALID_THREAD_HANDLE );
-    Thread::DetachThread( h );
-    Thread::CloseHandle( h ); // we don't need this anymore
+    Thread thread;
+    thread.Start( &ListenThreadWrapperFunction, "TCPListen", m_ListenConnection, ( 32 * KILOBYTE ) );
+    thread.Detach(); // TODO: Remove use of this unsafe API
 }
 
 // ThreadWrapperFunction
@@ -1043,13 +1039,9 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
     #endif
 
     // Spawn thread to handle socket
-    Thread::ThreadHandle h = Thread::CreateThread( &ConnectionThreadWrapperFunction,
-                                                   "TCPConnection",
-                                                   ( 64 * KILOBYTE ),
-                                                   ci ); // user data argument
-    ASSERT( h != INVALID_THREAD_HANDLE );
-    Thread::DetachThread( h );
-    Thread::CloseHandle( h ); // we don't need this anymore
+    Thread thread;
+    thread.Start( &ConnectionThreadWrapperFunction, "TCPConnection", ci );
+    thread.Detach(); // TODO:B Remove use of this unsafe API
 
     m_Connections.Append( ci );
 
