@@ -68,19 +68,21 @@ public:
 
     static const BFFVariable ** GetMemberByName( const AString & name, const Array< const BFFVariable * > & members );
 
+    const BFFToken & GetToken() const { return m_Token; }
+
 private:
     friend class BFFStackFrame;
 
     explicit BFFVariable( const BFFVariable & other );
 
-    explicit BFFVariable( const AString & name, VarType type );
-    explicit BFFVariable( const AString & name, const AString & value );
-    explicit BFFVariable( const AString & name, bool value );
-    explicit BFFVariable( const AString & name, const Array< AString > & values );
-    explicit BFFVariable( const AString & name, int32_t i );
-    explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & values );
-    explicit BFFVariable( const AString & name, Array<BFFVariable *> && values );
-    explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & structs, VarType type ); // type for disambiguation
+    explicit BFFVariable( const AString & name, const BFFToken & token, VarType type );
+    explicit BFFVariable( const AString & name, const BFFToken & token, const AString & value );
+    explicit BFFVariable( const AString & name, const BFFToken & token, bool value );
+    explicit BFFVariable( const AString & name, const BFFToken & token, const Array< AString > & values );
+    explicit BFFVariable( const AString & name, const BFFToken & token, int32_t i );
+    explicit BFFVariable( const AString & name, const BFFToken & token, const Array< const BFFVariable * > & values );
+    explicit BFFVariable( const AString & name, const BFFToken & token, Array<BFFVariable *> && values );
+    explicit BFFVariable( const AString & name, const BFFToken & token, const Array< const BFFVariable * > & structs, VarType type ); // type for disambiguation
     ~BFFVariable();
 
     BFFVariable & operator =( const BFFVariable & other ) = delete;
@@ -104,6 +106,7 @@ private:
     AString             m_StringValue;
     Array< AString >    m_ArrayValues;
     Array< BFFVariable * > m_SubVariables; // Used for struct members of arrays of structs
+    const BFFToken &    m_Token;
 
     static const char * s_TypeNames[ MAX_VAR_TYPES ];
 };

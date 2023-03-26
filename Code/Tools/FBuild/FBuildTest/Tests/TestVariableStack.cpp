@@ -7,6 +7,7 @@
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFToken.h"
 
 #include "Core/Strings/AStackString.h"
 
@@ -46,7 +47,7 @@ void TestVariableStack::TestStackFramesAdditional() const
 {
     // a stack frame with a variable
     BFFStackFrame sf1;
-    BFFStackFrame::SetVarString( AStackString<>( "myVarA" ), AStackString<>( "valueA" ), nullptr );
+    BFFStackFrame::SetVarString( AStackString<>( "myVarA" ), BFFToken::GetBuiltInToken(), AStackString<>( "valueA" ), nullptr );
 
     TEST_ASSERT( BFFStackFrame::GetVar( "myVarA" ) );
     TEST_ASSERT( BFFStackFrame::GetVar( "myVarA" )->GetString() == "valueA" );
@@ -54,7 +55,7 @@ void TestVariableStack::TestStackFramesAdditional() const
     // another stack frame
     {
         BFFStackFrame sf2;
-        BFFStackFrame::SetVarString( AStackString<>( "myVarB" ), AStackString<>( "valueB" ), nullptr );
+        BFFStackFrame::SetVarString( AStackString<>( "myVarB" ), BFFToken::GetBuiltInToken(), AStackString<>( "valueB" ), nullptr );
         TEST_ASSERT( BFFStackFrame::GetVar( "myVarA" ) );
         TEST_ASSERT( BFFStackFrame::GetVar( "myVarA" )->GetString() == "valueA" );
         TEST_ASSERT( BFFStackFrame::GetVar( "myVarB" ) );
@@ -73,7 +74,7 @@ void TestVariableStack::TestStackFramesOverride() const
 {
     // a stack frame with a variable
     BFFStackFrame sf1;
-    BFFStackFrame::SetVarString( AStackString<>( "myVar" ), AStackString<>( "originalValue" ), nullptr );
+    BFFStackFrame::SetVarString( AStackString<>( "myVar" ), BFFToken::GetBuiltInToken(), AStackString<>( "originalValue" ), nullptr );
 
     TEST_ASSERT( BFFStackFrame::GetVar( "myVar" ) );
     TEST_ASSERT( BFFStackFrame::GetVar( "myVar" )->GetString() == "originalValue" );
@@ -82,7 +83,7 @@ void TestVariableStack::TestStackFramesOverride() const
     {
         // which replaces the same variable
         BFFStackFrame sf2;
-        BFFStackFrame::SetVarString( AStackString<>( "myVar" ), AStackString<>( "replacedValue" ), nullptr );
+        BFFStackFrame::SetVarString( AStackString<>( "myVar" ), BFFToken::GetBuiltInToken(), AStackString<>( "replacedValue" ), nullptr );
 
         // we should get the replaced value
         TEST_ASSERT( BFFStackFrame::GetVar( "myVar" ) );
@@ -102,7 +103,7 @@ void TestVariableStack::TestStackFramesParent() const
 
     // a stack frame with a variable
     BFFStackFrame sf1;
-    BFFStackFrame::SetVarString( AStackString<>( "myVar" ), AStackString<>( "originalValue" ), nullptr );
+    BFFStackFrame::SetVarString( AStackString<>( "myVar" ), BFFToken::GetBuiltInToken(), AStackString<>( "originalValue" ), nullptr );
 
     TEST_ASSERT( BFFStackFrame::GetVar( "myVar", &sf1 ) );
     TEST_ASSERT( BFFStackFrame::GetVar( "myVar", &sf1 )->GetString() == "originalValue" );
@@ -118,7 +119,7 @@ void TestVariableStack::TestStackFramesParent() const
         TEST_ASSERT( BFFStackFrame::GetVar( "myVar", &sf2 ) == nullptr );
 
         // which replaces the same variable
-        BFFStackFrame::SetVarString( AStackString<>( "myVar" ), AStackString<>( "replacedValue" ), &sf2 );
+        BFFStackFrame::SetVarString( AStackString<>( "myVar" ), BFFToken::GetBuiltInToken(), AStackString<>( "replacedValue" ), &sf2 );
 
         // we should bet the original value
         TEST_ASSERT( BFFStackFrame::GetVar( "myVar", &sf1 ) );

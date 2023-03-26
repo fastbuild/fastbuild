@@ -7,6 +7,15 @@
 
 #include <stdio.h>
 
+// Static Data
+//------------------------------------------------------------------------------
+/*static*/ const BFFFile    BFFToken::s_BuiltInFile( "<builtin>", AString::GetEmpty() );
+/*static*/ const BFFToken   BFFToken::s_BuiltInToken( s_BuiltInFile,
+                                                      s_BuiltInFile.GetSourceFileContents().Get(),
+                                                      BFFTokenType::Invalid,
+                                                      s_BuiltInFile.GetSourceFileContents().Get(),
+                                                      s_BuiltInFile.GetSourceFileContents().Get() );
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFToken::BFFToken( const BFFFile & file,

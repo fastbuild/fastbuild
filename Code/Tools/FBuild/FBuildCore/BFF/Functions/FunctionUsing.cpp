@@ -108,12 +108,12 @@ FunctionUsing::FunctionUsing()
             sameNameMember = member;
             continue;
         }
-        BFFStackFrame::SetVar( member, frame );
+        BFFStackFrame::SetVar( member, *varToken, frame );
     }
 
     if ( sameNameMember != nullptr )
     {
-        BFFStackFrame::SetVar( sameNameMember, frame );
+        BFFStackFrame::SetVar( sameNameMember, *varToken, frame );
     }
 
     if ( headerIter.IsAtEnd() == false )
