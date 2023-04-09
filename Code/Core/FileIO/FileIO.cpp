@@ -500,7 +500,7 @@
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         umask( 0 ); // disable default creation mask // TODO:LINUX TODO:MAC Changes global program state; needs investigation
-        mode_t mode = (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+        mode_t mode = ( S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH );
         if ( mkdir( path.Get(), mode ) == 0 )
         {
             return true; // created ok
@@ -888,7 +888,7 @@
         {
             return true; // can't even get the attributes, treat as not read only
         }
-        const unsigned int anyWriteBits = S_IWUSR | S_IWGRP | S_IWOTH;
+        const uint32_t anyWriteBits = S_IWUSR | S_IWGRP | S_IWOTH;
         const bool currentlyReadOnly = ( ( s.st_mode & anyWriteBits ) == 0 );
         if ( readOnly == currentlyReadOnly )
         {
