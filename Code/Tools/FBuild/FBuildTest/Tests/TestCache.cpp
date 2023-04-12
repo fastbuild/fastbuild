@@ -49,8 +49,17 @@ private:
     void Analyze_MSVC_WarningsOnly_WriteFromDist() const;
     void Analyze_MSVC_WarningsOnly_ReadFromDist() const;
 
+    // Clang time trace tests
+    const char* const mClangTimeTraceBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Clang_Time_Trace/fbuild.bff";
+    const char* const mClangTimeTraceFile = "../tmp/Test/Cache/Clang_Time_Trace/TimeTrace/file.json";
+    void Clang_Time_Trace_Write() const;
+    void Clang_Time_Trace_Read() const;
+    void Clang_Time_Trace_WriteFromDist() const;
+    void Clang_Time_Trace_ReadFromDist() const;
+
     void ExtraFiles( const char * bffPath, const char * extraFilePath ) const;
     void ExtraFiles_NativeCodeAnalysisXML() const;
+    void ExtraFiles_TimeTraceJson() const;
     void ExtraFiles_GCNO() const;
 
     // Helpers
@@ -70,7 +79,12 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( Read )
     REGISTER_TEST( ReadWrite )
     REGISTER_TEST( ConsistentCacheKeysWithDist )
+    REGISTER_TEST( Clang_Time_Trace_Write )
+    REGISTER_TEST( Clang_Time_Trace_Read )
+    REGISTER_TEST( Clang_Time_Trace_WriteFromDist )
+    REGISTER_TEST( Clang_Time_Trace_ReadFromDist )
     REGISTER_TEST( ExtraFiles_GCNO )
+    REGISTER_TEST( ExtraFiles_TimeTraceJson )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
         REGISTER_TEST( LightCache_IncludeUsingMacro )
@@ -1051,6 +1065,128 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
     #endif
 }
 
+// Clang_Time_Trace_Write
+//-------------------------------------------------------------------------------
+void TestCache::Clang_Time_Trace_Write() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheWrite = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = mClangTimeTraceBFFPath;
+
+    EnsureFileDoesNotExist(mClangTimeTraceFile);
+
+    // Compile with -ftime-trace (cache write)
+    FBuildForTest fBuild(options);
+    TEST_ASSERT(fBuild.Initialize());
+    TEST_ASSERT(fBuild.Build("TimeTrace"));
+
+    // Check for cache store
+    TEST_ASSERT(fBuild.GetStats().GetStatsFor(Node::OBJECT_NODE).m_NumCacheStores == 1);
+
+    // Check json file is present with expected items
+    AString json;
+    LoadFileContentsAsString(mClangTimeTraceFile, json);
+    TEST_ASSERT(json.Find("traceEvents"));
+}
+
+// Clang_Time_Trace_Read
+//------------------------------------------------------------------------------
+void TestCache::Clang_Time_Trace_Read() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheRead = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = mClangTimeTraceBFFPath;
+
+    EnsureFileDoesNotExist(mClangTimeTraceFile);
+
+    // Compile with -ftime-trace (cache read)
+    FBuildForTest fBuild(options);
+    TEST_ASSERT(fBuild.Initialize());
+    TEST_ASSERT(fBuild.Build("TimeTrace"));
+
+    // Check for cache hit
+    TEST_ASSERT(fBuild.GetStats().GetStatsFor(Node::OBJECT_NODE).m_NumCacheHits == 1);
+
+    // Check json file is present with expected items
+    AString json;
+    LoadFileContentsAsString(mClangTimeTraceFile, json);
+    TEST_ASSERT(json.Find("traceEvents"));
+}
+
+// Clang_Time_Trace_WriteFromDist
+//------------------------------------------------------------------------------
+void TestCache::Clang_Time_Trace_WriteFromDist() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheWrite = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = mClangTimeTraceBFFPath;
+
+    // Ensure compilation is performed "remotely"
+    options.m_AllowDistributed = true;
+    options.m_AllowLocalRace = false;
+    options.m_NoLocalConsumptionOfRemoteJobs = true;
+
+    EnsureFileDoesNotExist(mClangTimeTraceFile);
+
+    // Compile with -ftime-trace
+    FBuildForTest fBuild(options);
+    TEST_ASSERT(fBuild.Initialize());
+
+    Server s;
+    s.Listen(Protocol::PROTOCOL_TEST_PORT);
+
+    TEST_ASSERT(fBuild.Build("TimeTrace"));
+
+    // Check for cache hit
+    TEST_ASSERT(fBuild.GetStats().GetStatsFor(Node::OBJECT_NODE).m_NumCacheStores == 1);
+
+    // Check json file is present with expected items
+    AString json;
+    LoadFileContentsAsString(mClangTimeTraceFile, json);
+    TEST_ASSERT(json.Find("traceEvents"));
+}
+
+// Clang_Time_Trace_ReadFromDist
+//------------------------------------------------------------------------------
+void TestCache::Clang_Time_Trace_ReadFromDist() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheRead = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = mClangTimeTraceBFFPath;
+
+    // Ensure compilation is performed "remotely"
+    options.m_AllowDistributed = true;
+    options.m_AllowLocalRace = false;
+    options.m_NoLocalConsumptionOfRemoteJobs = true;
+
+    EnsureFileDoesNotExist(mClangTimeTraceFile);
+
+    // Compile with -ftime-trace
+    FBuildForTest fBuild(options);
+    TEST_ASSERT(fBuild.Initialize());
+
+    Server s;
+    s.Listen(Protocol::PROTOCOL_TEST_PORT);
+
+    TEST_ASSERT(fBuild.Build("TimeTrace"));
+
+    // Check for cache hit
+    TEST_ASSERT(fBuild.GetStats().GetStatsFor(Node::OBJECT_NODE).m_NumCacheHits == 1);
+
+    // Check json file is present with expected items
+    AString json;
+    LoadFileContentsAsString(mClangTimeTraceFile, json);
+    TEST_ASSERT(json.Find("traceEvents"));
+}
+
 // ExtraFiles
 //------------------------------------------------------------------------------
 void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) const
@@ -1102,6 +1238,14 @@ void TestCache::ExtraFiles_NativeCodeAnalysisXML() const
 {
     ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_NativeCodeAnalysisXML/fbuild.bff",
                 "../tmp/Test/Cache/ExtraFiles_NativeCodeAnalysisXML/file.nativecodeanalysis.xml" );
+}
+
+// ExtraFiles_TimeTraceJson
+//------------------------------------------------------------------------------
+void TestCache::ExtraFiles_TimeTraceJson() const
+{
+    ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_TimeTraceJson/fbuild.bff",
+        "../tmp/Test/Cache/ExtraFiles_TimeTraceJson/file.json" );
 }
 
 // ExtraFiles_GCNO
