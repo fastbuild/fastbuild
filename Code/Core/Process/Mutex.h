@@ -18,8 +18,9 @@ public:
     Mutex();
     ~Mutex();
 
-    void Lock();
-    void Unlock();
+    void                Lock();
+    [[nodiscard]] bool  TryLock();
+    void                Unlock();
 
 private:
     // do this to avoid including windows.h

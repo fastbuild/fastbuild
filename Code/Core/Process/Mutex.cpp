@@ -54,6 +54,17 @@ void Mutex::Lock()
     #endif
 }
 
+// TryLock
+//------------------------------------------------------------------------------
+bool Mutex::TryLock()
+{
+    #if defined( __WINDOWS__ )
+        return ( TryEnterCriticalSection( (CRITICAL_SECTION *)&m_CriticalSection ) != FALSE );
+    #else
+        return ( pthread_mutex_trylock( &m_Mutex ) == 0 );
+    #endif
+}
+
 // Unlock
 //------------------------------------------------------------------------------
 void Mutex::Unlock()
