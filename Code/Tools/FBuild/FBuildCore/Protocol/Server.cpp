@@ -666,6 +666,12 @@ void Server::FindNeedyClients()
                 cs->m_NumJobsRequested++;
                 availableJobs--;
                 anyJobsRequested = true;
+
+                // Have we consumed all of our requests?
+                if ( availableJobs == 0 )
+                {
+                    break;
+                }
             }
 
             // if we did a pass and couldn't request any more jobs, then bail out
