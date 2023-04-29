@@ -72,28 +72,19 @@ typedef signed int          int32_t;
 #endif
 
 #ifndef intptr_t
-    #if defined( WIN64 )
+    #if defined( __WINDOWS__ )
         typedef int64_t     intptr_t;
         typedef uint64_t    uintptr_t;
-    #elif defined( WIN32 )
-        typedef int32_t     intptr_t;
-        typedef uint32_t    uintptr_t;
     #endif
 #endif
 #ifndef uintptr_t
     #if defined( __LINUX__ )
-        #if defined( __X64__ ) || defined( __ARM64__ )
-            typedef uint64_t    uintptr_t;
-        #else
-            typedef uint32_t    uintptr_t;
-        #endif
+        typedef uint64_t    uintptr_t;
     #endif
 #endif
 #ifndef size_t
-    #if defined( WIN64 )
+    #if defined( __WINDOWS__ )
         typedef uint64_t    size_t;
-    #elif defined( WIN32 )
-        typedef uint32_t    size_t;
     #endif
 #endif
 
@@ -120,7 +111,7 @@ typedef signed int          int32_t;
 
 // Warning disabling
 //------------------------------------------------------------------------------
-#if defined( WIN32 ) || defined( WIN64 )
+#if defined( __WINDOWS__ )
     #define PRAGMA_DISABLE_PUSH_MSVC( num ) __pragma(warning(push))         \
                                             __pragma(warning(disable:num))
     #define PRAGMA_DISABLE_POP_MSVC         __pragma(warning(pop))

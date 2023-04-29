@@ -23,7 +23,7 @@
 #define NUM_TEST_PASSES ( 16 )
 
 // unique port for test in all configs so the tests can run in parallel
-#ifdef WIN64
+#if defined( __WINDOWS__ )
     #ifdef DEBUG
         #define TEST_PORT uint16_t( 21941 ) // arbitrarily chosen
     #else

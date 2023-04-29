@@ -213,7 +213,7 @@ bool Thread::IsRunning() const
 {
     PROFILE_FUNCTION;
 
-    #if defined( WIN32 ) || defined( WIN64 )
+    #if defined( __WINDOWS__ )
         ::Sleep( ms );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         usleep( ms * 1000 );
