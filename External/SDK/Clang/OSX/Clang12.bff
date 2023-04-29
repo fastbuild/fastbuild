@@ -34,7 +34,6 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -arch x86_64'   // Intel 64-bit
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
-                                    + ' -D__X64__'      // Architecture define
 
                                     // Include paths
                                     + ' -I./'
@@ -80,7 +79,6 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -arch arm64'    // Apple Silicon
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
-                                    + ' -D__ARM64__'    // Architecture define
 
                                     // Include paths
                                     + ' -I./'

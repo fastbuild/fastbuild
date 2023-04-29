@@ -32,7 +32,6 @@ Compiler( 'Compiler-Clang8' )
                                     + ' -m64'           // x86_64
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
-                                    + ' -D__X64__'      // Architecture define
                                     + ' -mmacosx-version-min=10.7'
                                     + ' -stdlib=libc++'
 

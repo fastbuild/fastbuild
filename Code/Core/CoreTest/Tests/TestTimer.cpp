@@ -32,7 +32,7 @@ void TestTimer::Validate() const
     Timer t;
     t.Start();
     const int64_t before = t.GetNow();
-    #if defined( __OSX__ ) && defined( __ARM64__ )
+    #if defined( __OSX__ ) && defined( __aarch64__ ) // ARM
         // TODO:B Figure out why sleep granularity is so poor on Apple Silicon
         Thread::Sleep( 100 ); // sleep for 100ms
     #else

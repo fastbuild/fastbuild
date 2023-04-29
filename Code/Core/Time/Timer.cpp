@@ -38,7 +38,7 @@ public:
             Timer::s_Frequency = freq.QuadPart;
         #endif
         #if defined( __APPLE__ )
-            #if defined( __ARM64__ )
+            #if defined( __aarch64__ ) // ARM
                 Timer::s_Frequency = 1000000000;
             #else
                 mach_timebase_info_data_t info;
@@ -64,7 +64,7 @@ int64_t Timer::GetNow()
         VERIFY( QueryPerformanceCounter( &now ) );
         return now.QuadPart;
     #elif defined( __APPLE__ )
-        #if defined( __ARM64__ )
+        #if defined( __aarch64__ ) // ARM
             // mach_absolute_time seems to return the wrong time on Apple Silicon
             return (int64_t)clock_gettime_nsec_np( CLOCK_MONOTONIC );
         #else
