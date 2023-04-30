@@ -837,7 +837,7 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
     {
         callback( file, AString::GetEmpty(), userData );
     }
-
+    
     // Dynamically discovered files
     for ( size_t i = m_ObjectListInputStartIndex; i < m_ObjectListInputEndIndex; ++i )
     {
