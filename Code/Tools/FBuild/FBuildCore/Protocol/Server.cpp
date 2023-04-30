@@ -668,9 +668,9 @@ void Server::FindNeedyClients()
                     {
                         continue; // Skip this worker for now
                     }
+                    cs->m_NumJobsRequested.Increment(); // Must be before Send() to ensure consistent counts
                     msg.Send( cs->m_Connection );
                 }
-                cs->m_NumJobsRequested.Increment();
                 availableJobs--;
                 anyJobsRequested = true;
 
