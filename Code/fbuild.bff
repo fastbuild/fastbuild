@@ -388,9 +388,14 @@ Settings
 .Targets_x64OSX_Debug = {}
 .Targets_x64OSX_Profile = {}
 .Targets_x64OSX_Release = {}
-.Targets_ARMOSX_Debug = {}
-.Targets_ARMOSX_Profile = {}
-.Targets_ARMOSX_Release = {}
+#if CLANG_SUPPORTS_ARMOSX
+    .Targets_ARMOSX_Debug = {}
+    .Targets_ARMOSX_Profile = {}
+    .Targets_ARMOSX_Release = {}
+    .Targets_OSX_Debug = {}
+    .Targets_OSX_Profile = {}
+    .Targets_OSX_Release = {}
+#endif
 
 // External
 #include "..\External\LZ4\LZ4.bff"
@@ -420,6 +425,14 @@ ForEach( .BuildConfig in .BuildConfigs )
     Using( .BuildConfig )
 
     Alias( 'All-$Platform$-$BuildConfigName$' ) { .Targets = .'Targets_$Platform$_$BuildConfigName$' }
+    
+    // Create additional Universal targets
+    #if CLANG_SUPPORTS_ARMOSX
+        If( .Platform == 'ARMOSX' )
+        {
+            Alias( 'All-OSX-$BuildConfigName$' ) { .Targets = .'Targets_OSX_$BuildConfigName$' }
+        }
+    #endif
 }
 
 // Exes
@@ -432,7 +445,18 @@ Alias( 'Exes' )
 
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
-.Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX', 'ARMOSX' }
+.Platforms =
+{
+    'x64',
+    'x64Clang',
+    'x64Linux',
+    'x64ClangLinux',
+    'x64OSX'
+    #if CLANG_SUPPORTS_ARMOSX
+        'ARMOSX'
+        'OSX'
+    #endif
+}
 .PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
@@ -441,7 +465,10 @@ Alias( 'Exes' )
                                + { 'ASan', 'MSan', 'TSan' }
 #endif
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
-.PlatformConfigs_ARMOSX        = { 'Debug', 'Profile', 'Release' }
+#if CLANG_SUPPORTS_ARMOSX
+    .PlatformConfigs_ARMOSX         = { 'Debug', 'Profile', 'Release' }
+    .PlatformConfigs_OSX            = { 'Debug', 'Profile', 'Release' }
+#endif
 ForEach( .Platform in .Platforms )
 {
     Alias( 'All-$Platform$' )
@@ -480,9 +507,10 @@ ForEach( .Platform in .Platforms )
 #if __OSX__
     Alias( 'All' )
     {
-        .Targets        = { 'All-x64OSX' }
-        #if CLANG_SUPPORTS_OSXARM
-                        + { 'All-ARMOSX' }
+        #if CLANG_SUPPORTS_ARMOSX
+            .Targets        = { 'All-OSX' }     // X64, ARM & Universal
+        #else
+            .Targets        = { 'All-x64OSX' }  // X64 only
         #endif
     }
 #endif
