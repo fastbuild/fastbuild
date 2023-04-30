@@ -614,17 +614,18 @@ void Server::FindNeedyClients()
     }
 
     PROFILE_FUNCTION;
+    
+    // determine job availability
+    int32_t availableJobs = (int32_t)WorkerThreadRemote::GetNumCPUsToUse();
+    if ( availableJobs == 0 )
+    {
+        return;
+    }
+    ++availableJobs; // over request to parallelize building/network transfers
+
 
     {
         MutexHolder mh( m_ClientListMutex );
-
-        // determine job availability
-        int availableJobs = (int)WorkerThreadRemote::GetNumCPUsToUse();
-        if ( availableJobs == 0 )
-        {
-            return;
-        }
-        ++availableJobs; // over request to parallelize building/network transfers
 
         for ( ClientState * cs : m_ClientList )
         {
