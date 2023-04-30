@@ -94,7 +94,7 @@ void TestMutex::TestMultiLockUnlock() const
 //------------------------------------------------------------------------------
 void TestMutex::TryLock() const
 {
-    // Ensure lock can be acquired multiple times
+    // Ensure lock can be acquired
     Mutex m;
     TEST_ASSERT( m.TryLock() );
     m.Unlock();
@@ -106,10 +106,25 @@ void TestMutex::TryLockMultiple() const
 {
     // Ensure lock can be acquired multiple times
     Mutex m;
-    TEST_ASSERT( m.TryLock() );
-    TEST_ASSERT( m.TryLock() );
-    m.Unlock();
-    m.Unlock();
+    {
+        // Manual locks
+        TEST_ASSERT( m.TryLock() );
+        TEST_ASSERT( m.TryLock() );
+        m.Unlock();
+        m.Unlock();
+    }
+    {
+        // RAII lock
+        MutexHolder mh( m );
+        MutexHolder m2( m );
+    }
+    {
+        // RAII lock (Try)
+        TryMutexHolder mh( m );
+        TEST_ASSERT( mh.IsLocked() );
+        TryMutexHolder mh2( m );
+        TEST_ASSERT( mh2.IsLocked() );
+    }
 }
 
 // TryLockMixed

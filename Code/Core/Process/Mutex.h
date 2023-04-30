@@ -52,4 +52,32 @@ private:
     Mutex & m_Mutex;
 };
 
+// TryMutexHolder
+//------------------------------------------------------------------------------
+class TryMutexHolder
+{
+public:
+    explicit TryMutexHolder( Mutex & mutex )
+        : m_Mutex( mutex )
+        , m_Locked( mutex.TryLock() )
+    {
+    }
+    ~TryMutexHolder()
+    {
+        if ( m_Locked )
+        {
+            m_Mutex.Unlock();
+        }
+    }
+
+    [[nodiscard]] bool IsLocked() const { return m_Locked; }
+
+private:
+    TryMutexHolder( const TryMutexHolder & other ) = delete;
+    void operator = ( TryMutexHolder & other ) = delete;
+
+    Mutex &     m_Mutex;
+    const bool  m_Locked;
+};
+
 //------------------------------------------------------------------------------
