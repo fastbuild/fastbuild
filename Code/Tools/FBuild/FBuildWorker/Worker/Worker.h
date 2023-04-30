@@ -40,7 +40,7 @@ private:
 
     void UpdateAvailability();
     void UpdateUI();
-    void CheckForExeUpdate();
+    void CheckIfRestartNeeded();
     bool HasEnoughDiskSpace();
     bool HasEnoughMemory();
 
@@ -61,6 +61,7 @@ private:
     uint64_t            m_LastWriteTime;
     bool                m_WantToQuit;
     bool                m_RestartNeeded;
+    Timer               m_PeriodicRestartTimer;
     Timer               m_UIUpdateTimer;
     FileStream          m_TargetIncludeFolderLock;
     #if defined( __WINDOWS__ )

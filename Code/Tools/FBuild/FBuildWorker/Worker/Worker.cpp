@@ -207,7 +207,7 @@ uint32_t Worker::WorkThread()
 
         UpdateUI();
 
-        CheckForExeUpdate();
+        CheckIfRestartNeeded();
 
         PROFILE_SYNCHRONIZE
 
@@ -432,9 +432,9 @@ void Worker::UpdateUI()
     m_UIUpdateTimer.Start();
 }
 
-// CheckForExeUpdate
+// CheckIfRestartNeeded
 //------------------------------------------------------------------------------
-void Worker::CheckForExeUpdate()
+void Worker::CheckIfRestartNeeded()
 {
     PROFILE_FUNCTION;
 
@@ -453,6 +453,15 @@ void Worker::CheckForExeUpdate()
     if ( m_BaseExeName.IsEmpty() )
     {
         return; // not running as a copy to allow restarts
+    }
+
+    // Check if periodic restart time has been reached
+    const float periodicRestartSecs = ( 4.0f * 60.0f * 60.0f ); // 4 hours
+    if ( m_PeriodicRestartTimer.GetElapsed() > periodicRestartSecs )
+    {
+        m_RestartNeeded = true;
+        JobQueueRemote::Get().SignalStopWorkers();
+        return;
     }
 
     // get the current last write time
