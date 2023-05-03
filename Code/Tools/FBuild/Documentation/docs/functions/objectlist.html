@@ -37,7 +37,7 @@ Builds a list of objects, typically for later input into a Library, Executable o
   ; options for compilation
   .Compiler                 ; Compiler to use
   .CompilerOptions          ; Options for compiler
-  .CompilerOutputPath       ; Path to store intermediate objects
+  .CompilerOutputPath       ; (optional) Path to store intermediate objects
   .CompilerOutputExtension  ; (optional) Specify the file extension for generated objects (default .obj or .o)
   .CompilerOutputKeepBaseExtension ; (optional) Append extension instead of replacing it (default: false)
   .CompilerOutputPrefix     ; (optional) Specify a prefix for generated objects (default none)
@@ -54,7 +54,7 @@ Builds a list of objects, typically for later input into a Library, Executable o
   .CompilerInputUnity          ; (optional) Unity to build (or Unities)
   .CompilerInputAllowNoFiles   ; (optional) Don't fail if no inputs are found
   .CompilerInputObjectLists    ; (optional) ObjectList(s) whos output should be used as an input
-  
+
   ; Cache & Distributed compilation control
   .AllowCaching             ; (optional) Allow caching of compiled objects if available (default true)
   .AllowDistribution        ; (optional) Allow distributed compilation if available (default true)
@@ -62,7 +62,7 @@ Builds a list of objects, typically for later input into a Library, Executable o
   ; Custom preprocessor support
   .Preprocessor             ; (optional) Compiler to use for preprocessing
   .PreprocessorOptions      ; (optional) Args to pass to compiler if using custom preprocessor
-  
+
   ; Additional compiler options
   .CompilerForceUsing       ; (optional) List of objects to be used with /FU
 

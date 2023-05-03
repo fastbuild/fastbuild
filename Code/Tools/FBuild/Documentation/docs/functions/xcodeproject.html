@@ -36,9 +36,9 @@
 {
   // Basic Options
   .ProjectOutput                 // Path to project.pbxproj file to be created
-  
+
   // Input Options
-  .ProjectInputPaths             // (optional) Path(s) containing files to include in project 
+  .ProjectInputPaths             // (optional) Path(s) containing files to include in project
   .ProjectInputPathsExclude      // (optional) Path(s) to exclude from project
   .ProjectInputPathsRecurse      // (optional) Recurse into project input paths when finding files (default true)
   .ProjectPatternToExclude       // (optional) Pattern(s) for files to exclude from project
@@ -46,7 +46,7 @@
   .ProjectFilesToExclude         // (optional) File(s) to exclude from project
   .ProjectBasePath               // (optional) Base path(s) to use to build folder hierarchy in project
   .ProjectAllowedFileExtensions  // (optional) File extension pattern(s) to include in project (see below for default)
- 	
+
   // Compilation Options
   .XCodeBuildToolPath            // (optional) Path to FASTBuild executable
   .XCodeBuildToolArgs            // (optional) Args to pass to FASTBuild
@@ -76,7 +76,7 @@
 </div>
     </div>
 
-	<!-- 
+	<!--
 		Details
 	-->
     <div id='unity' class='newsitemheader'>
@@ -92,22 +92,22 @@
 		keeping FASTBuild as the underlying build system.<p>
     </div>
 
-	<!-- 
+	<!--
 		Basic Options
 	-->
     <div id='unity' class='newsitemheader'>
       Basic Options
     </div>
     <div class='newsitembody'>
-      
+
       <p><b>.ProjectOutput</b> - String - (Required)</p>
       <p>The output location of the project.pbxproj file. Note that a valid XCode Project requires
 	  a project.pbxproj file be created within a specifically named folder.</p>
       Example:
       <div class='code'>.ProjectOutput = 'tmp/XCode/MyProject.xcodeproj/project.pbxproj'</div>
     </div>
-      
-	<!-- 
+
+	<!--
 		Input Options
 	-->
     <div id='unity' class='newsitemheader'>
@@ -125,7 +125,7 @@
                        'Code/Lib/Folder2/'
                      }</div>
       <hr>
-      
+
       <p><b>.ProjectInputPathsExclude</b> - String or ArrayOfStrings - (Optional)</p>
       <p>One or more directories can be specified to ignore during directory traversal.
       </p>
@@ -137,7 +137,7 @@
                               'Code/Lib/FolderToExclude2/'
                             }</div>
       <hr>
-      
+
       <p><b>.ProjectInputPathsRecurse</b> - bool - (Optional)</p>
       <p>Toggles whether to recurse into subdirectories of .ProjectInputPaths
       when finding files to add to the project.
@@ -156,8 +156,8 @@
                               '*/Windows/*'
                               '*/Linux/*'
                            }</div>
-      <hr>      
-      
+      <hr>
+
       <p><b>.ProjectFiles</b> - String or ArrayOfStrings - (Optional)</p>
       <p>One or more files can be explicitly listed for inclusion in the project.</p>
       Example:
@@ -166,15 +166,15 @@
       <div class='code'>.ProjectFiles = {
                   'Code/Libraries/Core/A.cpp'
                   'Code/Libraries/Core/B.cpp'
-                }</div>         
+                }</div>
       </p>
 	  Additionally, XCodeProjects can be embedded within other XCodeProjects:
       <div class='code'>.ProjectFiles = {
                   'Core-xcode'   // Assume alias to previously defined XCodeProject
                   'Engine-xcode' // Assume alias to previously defined XCodeProject
-                }</div>         
+                }</div>
       <hr>
-				
+
       <p><b>.ProjectFilesToExclude</b> - String or ArrayOfStrings - (Optional)</p>
       <p>One or move files can be specified to ignore during directory traversal.
       </p>
@@ -186,7 +186,7 @@
                            'Code/Lib/FileToExclude2.cpp'
                          }</div>
       <hr>
-	  
+
       <p><b>.ProjectBasePath</b> - String or ArrayOfStrings - (Optional)</p>
       <p>One or move directories can be specified as the root of the folder hierarchy that
 	  will be created within the generated project.
@@ -207,7 +207,7 @@
       Example:
       <div class='code'>.ProjectAllowedFileExtensions = '*.cpp'</div>
 	  Or:
-      <div class='code'>.ProjectAllowedFileExtensions = { '*.cpp', '*.h' }</div>	  
+      <div class='code'>.ProjectAllowedFileExtensions = { '*.cpp', '*.h' }</div>
 	  If not specified, the default will be used:
       <div class='code'>
 .ProjectAllowedFileExtensions = {
@@ -218,15 +218,15 @@
                                   '*.natvis', '*.editorconfig'
                                 }</div>
     </div>
-	
-	<!-- 
+
+	<!--
 		Compilation Options
 	-->
     <div id='unity' class='newsitemheader'>
       Compilation Options
     </div>
     <div class='newsitembody'>
-      
+
       <p><b>.XCodeBuildToolPath</b> - String - (Optional)</p>
       <p>The location of the FASTBuild executable to invoke can be specified.</p>
       Example:
@@ -234,7 +234,7 @@
 	  If not specified, the default will be used:
       <div class='code'>.XCodeBuildToolPath = './FBuild'</div>
       <hr>
-	  
+
       <p><b>.XCodeBuildToolArgs</b> - String - (Optional)</p>
       <p>The command line args to pass to FASTBuild when compiling can be specified.</p>
       Example:
@@ -246,17 +246,17 @@
 	  this symbol correctly for each build configuration.</li>
 	  <li>Note that the $ is escaped so that it's not interpretted by FASTBuild as the beginning of a variable substitution.</li>
 	  </ul>
-      <hr>	  
-  
+      <hr>
+
       <p><b>.XCodeBuildWorkingDir</b> - String - (Optional)</p>
       <p>The location to set as a working directory for compilation.</p>
       Example:
       <div class='code'>.XCodeBuildToolPath = 'Code/'</div>
 	  If not specified, the default will be used:
-      <div class='code'>.XCodeBuildToolPath = './'</div>  
+      <div class='code'>.XCodeBuildToolPath = './'</div>
     </div>
 
-	<!-- 
+	<!--
 		Debugging Options
 	-->
     <div id='unity' class='newsitemheader'>
@@ -273,7 +273,7 @@
       Example:
       <div class='code'>.XCodeDocumentVersioning = true</div>
       <hr>
-	  
+
       <p><b>.XCodeCommandLineArguments</b> - String or ArrayOfStrings - (Optional)</p>
       <p>Specify command line arguments passed to the process when debugging.</p>
       Example:
@@ -283,21 +283,21 @@
 	  will not overwrite it when it changes (so as not to overwrite other user edited settings).
 	  The .xcscheme can be deleted to force regeneration.
       <hr>
-	  
+
       <p><b>.XCodeCommandLineArgumentsDisabled</b> - String or ArrayOfStrings - (Optional)</p>
       <p>Specify command line arguments passed to the process when debugging (same as
 	  .XCodeCommandLineArguments), but disable them by default.</p>
     </div>
 
-	<!-- 
+	<!--
 		Other Options
 	-->
     <div id='unity' class='newsitemheader'>
       Other Options
     </div>
     <div class='newsitembody'>
-      
-      <p><b>.XCodeOrganizationName</b> - String - (Required)</p>
+
+      <p><b>.XCodeOrganizationName</b> - String - (Optional)</p>
       <p>The organization name which appears in the generated project can be set.</p>
       Example:
       <div class='code'>.XCodeOrganizationName = 'MyCompany'</div>
@@ -305,14 +305,14 @@
       <div class='code'>.XCodeOrganizationName = 'Organization'</div>
     </div>
 
-	<!-- 
+	<!--
 		Project Configurations
 	-->
     <div id='unity' class='newsitemheader'>
       Project Configurations
     </div>
     <div class='newsitembody'>
-      
+
       <p><b>.ProjectConfigs</b> - Array of ProjectConfig Structure(s) - (Required)</p>
       <p>One or more build configuration must be specified. Each configuration can be selected
       in the XCode UI and the various properties specify how to generate configuration info
