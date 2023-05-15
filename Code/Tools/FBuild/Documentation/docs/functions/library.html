@@ -37,7 +37,7 @@ Builds a statically linked library.
   ; options for compilation
   .Compiler                 ; Compiler to use
   .CompilerOptions          ; Options for compiler
-  .CompilerOutputPath       ; (optional) Path to store intermediate objects
+  .CompilerOutputPath       ; Path to store intermediate objects
   .CompilerOutputExtension  ; (optional) Specify the file extension for generated objects (default .obj or .o)
   .CompilerOutputPrefix     ; (optional) Specify a prefix for generated objects (default none)
 
@@ -49,7 +49,7 @@ Builds a statically linked library.
                             ; Default is 'auto' (use the librarian executable name to detect)
   .LibrarianOutput          ; Output path for lib file
   .LibrarianAdditionalInputs; (optional) Additional inputs to merge into library
-  .LibrarianAllowResponseFile ; (optional) Allow response files to be used if not auto-detected (default: false)
+  .LibrarianAllowResponseFile ; (optional) Allow response files to be used if not auto-detected (default: false)  
   .LibrarianForceResponseFile ; (optional) Force use of response files (default: false)
 
   ; Specify inputs for compilation
@@ -68,11 +68,11 @@ Builds a statically linked library.
   ; Cache & Distributed compilation control
   .AllowCaching             ; (optional) Allow caching of compiled objects if available (default true)
   .AllowDistribution        ; (optional) Allow distributed compilation if available (default true)
-
+  
   ; Custom preprocessor support
   .Preprocessor             ; (optional) Compiler to use for preprocessing
   .PreprocessorOptions      ; (optional) Args to pass to compiler if using custom preprocessor
-
+  
   ; Additional compiler options
   .CompilerForceUsing       ; (optional) List of objects to be used with /FU
 
