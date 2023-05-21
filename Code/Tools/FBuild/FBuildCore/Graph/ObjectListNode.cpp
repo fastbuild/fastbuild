@@ -233,6 +233,7 @@ ObjectListNode::ObjectListNode()
         if ( m_CompilerOutputPath.IsEmpty() )
         {
             Error::Error_1101_MissingProperty( iter, function, AStackString<>( "CompilerOutputPath" ) );
+            return false;
         }
     }
 
