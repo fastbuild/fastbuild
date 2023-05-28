@@ -17,10 +17,6 @@ jobs:
             gcc: 10
             clang: 12
             os: ubuntu-20.04
-          - cfg: Build
-            gcc: 7
-            clang: 9
-            os: ubuntu-18.04
           - cfg: ASan
             gcc: 10
             clang: 12
@@ -41,7 +37,7 @@ jobs:
     continue-on-error: ${{ matrix.can-fail || false }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: ./.github/actions/DownloadFBuild
 

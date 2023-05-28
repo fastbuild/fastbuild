@@ -34,11 +34,7 @@ Server::Server( uint32_t numThreadsInJobQueue )
 {
     m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
 
-    m_Thread = Thread::CreateThread( ThreadFuncStatic,
-                                     "Server",
-                                     ( 64 * KILOBYTE ),
-                                     this );
-    ASSERT( m_Thread );
+    m_Thread.Start( ThreadFuncStatic, "Server", this );
 }
 
 // DESTRUCTOR
@@ -47,11 +43,9 @@ Server::~Server()
 {
     m_ShouldExit.Store( true );
     JobQueueRemote::Get().WakeMainThread();
-    Thread::WaitForThread( m_Thread );
+    m_Thread.Join();
 
     ShutdownAllConnections();
-
-    Thread::CloseHandle( m_Thread );
 
     FDELETE m_JobQueueRemote;
 
@@ -296,7 +290,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     // take note of initial status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
     MutexHolder mh( cs->m_Mutex );
-    cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
+    cs->m_NumJobsAvailable.Store( msg->GetNumJobsAvailable() );
     cs->m_ProtocolVersionMinor = msg->GetProtocolVersionMinor();
     cs->m_HostName = msg->GetHostName();
 }
@@ -307,8 +301,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgStat
 {
     // take note of latest status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
-    MutexHolder mh( cs->m_Mutex );
-    cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
+    cs->m_NumJobsAvailable.Store( msg->GetNumJobsAvailable() );
 
     // Wake main thread to request jobs
     JobQueueRemote::Get().WakeMainThread();
@@ -320,9 +313,8 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgNoJo
 {
     // We requested a job, but the client didn't have any left
     ClientState * cs = (ClientState *)connection->GetUserData();
-    MutexHolder mh( cs->m_Mutex );
-    ASSERT( cs->m_NumJobsRequested > 0 );
-    cs->m_NumJobsRequested--;
+    ASSERT( cs->m_NumJobsRequested.Load() > 0 );
+    cs->m_NumJobsRequested.Decrement();
 }
 
 // Process( MsgJob )
@@ -331,11 +323,12 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
 {
     ClientState * cs = (ClientState *)connection->GetUserData();
     {
+        ASSERT( cs->m_NumJobsRequested.Load() > 0 );
+        cs->m_NumJobsRequested.Decrement();
+        cs->m_NumJobsActive.Increment();
+
         MutexHolder mh( cs->m_Mutex );
-        ASSERT( cs->m_NumJobsRequested > 0 );
-        cs->m_NumJobsRequested--;
-        cs->m_NumJobsActive++;
-    
+
         // deserialize job
         ConstMemoryStream ms( payload, payloadSize );
     
@@ -620,24 +613,26 @@ void Server::FindNeedyClients()
     }
 
     PROFILE_FUNCTION;
+    
+    // determine job availability
+    int32_t availableJobs = (int32_t)WorkerThreadRemote::GetNumCPUsToUse();
+    if ( availableJobs == 0 )
+    {
+        return;
+    }
+    ++availableJobs; // over request to parallelize building/network transfers
+
 
     {
         MutexHolder mh( m_ClientListMutex );
 
-        // determine job availability
-        int availableJobs = (int)WorkerThreadRemote::GetNumCPUsToUse();
-        if ( availableJobs == 0 )
+        // determine if all available job slots are in use
+        for ( const ClientState * cs : m_ClientList )
         {
-            return;
-        }
-        ++availableJobs; // over request to parallelize building/network transfers
-
-        for ( ClientState * cs : m_ClientList )
-        {
-            MutexHolder mh2( cs->m_Mutex );
-
             // any jobs requested or in progress reduce the available count
-            const int32_t reservedJobs = (int32_t)( cs->m_NumJobsRequested + cs->m_NumJobsActive );
+            const uint32_t jobsRequested = cs->m_NumJobsRequested.Load();
+            const uint32_t jobsActive = cs->m_NumJobsActive.Load();
+            const int32_t reservedJobs = static_cast<int32_t>( jobsRequested + jobsActive );
             availableJobs -= reservedJobs;
             if ( availableJobs <= 0 )
             {
@@ -658,20 +653,32 @@ void Server::FindNeedyClients()
 
             for ( ClientState * cs : m_ClientList )
             {
-                MutexHolder mh2( cs->m_Mutex );
+                const uint32_t reservedJobs = cs->m_NumJobsRequested.Load();
 
-                const size_t reservedJobs = cs->m_NumJobsRequested;
-
-                if ( reservedJobs >= cs->m_NumJobsAvailable )
+                if ( reservedJobs >= cs->m_NumJobsAvailable.Load() )
                 {
                     continue; // we've maxed out the requests to this worker
                 }
 
                 // request job from this client
-                msg.Send( cs->m_Connection );
-                cs->m_NumJobsRequested++;
+                {
+                    // Acquire the lock but don't wait if unavailable
+                    TryMutexHolder tryLock( cs->m_Mutex );
+                    if ( tryLock.IsLocked() == false )
+                    {
+                        continue; // Skip this worker for now
+                    }
+                    cs->m_NumJobsRequested.Increment(); // Must be before Send() to ensure consistent counts
+                    msg.Send( cs->m_Connection );
+                }
                 availableJobs--;
                 anyJobsRequested = true;
+
+                // Have we consumed all of our requests?
+                if ( availableJobs == 0 )
+                {
+                    break;
+                }
             }
 
             // if we did a pass and couldn't request any more jobs, then bail out
@@ -718,9 +725,10 @@ void Server::FinalizeCompletedJobs()
                 ms.WriteBuffer( job->GetData(), job->GetDataSize() );
 
                 {
+                    ASSERT( cs->m_NumJobsActive.Load() > 0 );
+                    cs->m_NumJobsActive.Decrement();
+                    
                     MutexHolder mh2( cs->m_Mutex );
-                    ASSERT( cs->m_NumJobsActive );
-                    cs->m_NumJobsActive--;
     
                     if ( job->GetResultCompressionLevel() == 0 )
                     {

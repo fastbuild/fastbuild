@@ -104,6 +104,15 @@ void TestHash::CompareHashTimes_Large() const
         OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
     }
 
+    // xxHash3_64
+    {
+        const Timer t;
+        const uint64_t crc = xxHash3::Calc64( data.Get(), dataSize );
+        const float time = t.GetElapsed();
+        const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+        OUTPUT( "xxHash3-64      : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
+    }
+
     // CRC32 - 8x8 slicing
     {
         const Timer t;
@@ -190,6 +199,22 @@ void TestHash::CompareHashTimes_Small() const
         const float time = t.GetElapsed();
         const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
         OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
+    }
+
+    // xxHash3 - 64
+    {
+        const Timer t;
+        uint64_t crc( 0 );
+        for ( size_t j = 0; j < numIterations; ++j )
+        {
+            for ( size_t i = 0; i < numStrings; ++i )
+            {
+                crc += xxHash3::Calc64( strings[ i ].Get(), strings[ i ].GetLength() );
+            }
+        }
+        const float time = t.GetElapsed();
+        const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+        OUTPUT( "xxHash3-64      : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
     }
 
     // CRC32 - 8x8 slicing

@@ -22,19 +22,15 @@ Compiler( 'Compiler-Clang12' )
 
 // ToolChain
 //------------------------------------------------------------------------------
-.ToolChain_Clang_OSX =
+.ToolChain_Clang_OSXCommon =
 [
-    .Platform                       = 'x64OSX'
-
     // Compiler Options
     .Compiler                       = 'Compiler-Clang12'
     .CommonCompilerOptions          = ' -o "%2" "%1"'   // Input/Output
                                     + ' -c'             // Compile only
                                     + ' -g'             // Generate debug info
-                                    + ' -arch x86_64'   // Intel 64-bit
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
-                                    + ' -D__X64__'      // Architecture define
 
                                     // Include paths
                                     + ' -I./'
@@ -48,7 +44,6 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
                                     + ' -Wno-implicit-exception-spec-mismatch' // Fires on our new/delete operator (Clang bug?)
 
-
     .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
 
@@ -58,7 +53,7 @@ Compiler( 'Compiler-Clang12' )
 
     // Linker
     .Linker                         = '$Clang12_BasePath$/clang++'
-    .LinkerOptions                  = '"%1" -o "%2" -g -arch x86_64'
+    .LinkerOptions                  = '"%1" -o "%2" -g'
 
     // File Extensions
     .LibExtension                   = '.a'
@@ -68,50 +63,26 @@ Compiler( 'Compiler-Clang12' )
     .UseExceptions                  = ' -fexceptions'
 ]
 
+.ToolChain_Clang_OSX =
+[
+    Using( .ToolChain_Clang_OSXCommon )
+    
+    // Intel 64-bit
+    .Platform                       = 'x64OSX'
+    .CompilerOptions                + ' -arch x86_64'
+    .CompilerOptionsC               + ' -arch x86_64'
+    .LinkerOptions                  + ' -arch x86_64'
+]
+
 .ToolChain_Clang_ARMOSX =
 [
+    Using( .ToolChain_Clang_OSXCommon )
+    
+    // Apple ARM Silicon
     .Platform                       = 'ARMOSX'
-
-    // Compiler Options
-    .Compiler                       = 'Compiler-Clang12'
-    .CommonCompilerOptions          = ' -o "%2" "%1"'   // Input/Output
-                                    + ' -c'             // Compile only
-                                    + ' -g'             // Generate debug info
-                                    + ' -arch arm64'    // Apple Silicon
-                                    + ' -D__OSX__'      // Platform define
-                                    + ' -D__APPLE__'    // Platform define
-                                    + ' -D__ARM64__'    // Architecture define
-
-                                    // Include paths
-                                    + ' -I./'
-
-                                    // Enable warnings
-                                    + ' -Wall -Werror -Wfatal-errors'       // warnings as errors
-                                    + ' -Wextra'
-
-                                    // Disabled warnings
-                                    + ' -Wno-#pragma-messages'
-                                    + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
-                                    + ' -Wno-implicit-exception-spec-mismatch' // Fires on our new/delete operator (Clang bug?)
-
-
-    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
-    .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
-
-    // Librarian
-    .Librarian                      = '$Clang12_BasePath$/ar'
-    .LibrarianOptions               = 'rcs "%2" "%1"'
-
-    // Linker
-    .Linker                         = '$Clang12_BasePath$/clang++'
-    .LinkerOptions                  = '"%1" -o "%2" -g -arch arm64'
-
-    // File Extensions
-    .LibExtension                   = '.a'
-    .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
+    .CompilerOptions                + ' -arch arm64'
+    .CompilerOptionsC               + ' -arch arm64'
+    .LinkerOptions                  + ' -arch arm64'
 ]
 
 //------------------------------------------------------------------------------

@@ -243,6 +243,10 @@
     <td><a href="#nosubprocess">-nosubprocess</a></td>
     <td>Don't spawn as a sub-process.</td>
   </tr>
+  <tr>
+    <td><a href="#periodicrestart">-periodicrestart</a></td>
+    <td>Restart worker every 4 hours.</td>
+  </tr>
 </table>
 </div>
 
@@ -717,6 +721,13 @@ than this amount it will not accept work.</p>
 <p>By default, when the FBuildWorker is launched, it makes a copy of itself (FBuildWorker.exe.copy), launches the copy and terminates.  The duplicate process monitors the original executable file for changes, and re-launches itself if the file is updated. In this way, the FBuildWorker.exe can be kept under revision control, and when synchronized to a new version, will automatically re-start.</p>
 <p>The "-nosubprocess" option suppresses this behaviour.</p>
 </div>
+
+    <div class='newsitemheader' id="periodicrestart">-periodicrestart</div>
+    <div class='newsitembody'>
+<p>Restart worker every 4 hours.</p>
+<p>If worker reliability issues are encountered, perhaps due to uncontrolable factors such as OS instability, network driver issues or as yet unresolved FASTBuild bugs, the worker can be instructed to periodically restart itself as a potential workaround.</p>
+</div>
+
 
 
     </div><div class='footer'>&copy; 2012-2023 Franta Fulin</div></div></div>

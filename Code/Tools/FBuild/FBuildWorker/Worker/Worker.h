@@ -13,7 +13,6 @@
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/FileIO/FileStream.h"
-#include "Core/Process/Thread.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -28,7 +27,7 @@ class WorkerSettings;
 class Worker : public Singleton<Worker>
 {
 public:
-    explicit Worker( const AString & args, bool consoleMode );
+    explicit Worker( const AString & args, bool consoleMode, bool periodicRestart );
     ~Worker();
 
     int32_t Work();
@@ -41,7 +40,7 @@ private:
 
     void UpdateAvailability();
     void UpdateUI();
-    void CheckForExeUpdate();
+    void CheckIfRestartNeeded();
     bool HasEnoughDiskSpace();
     bool HasEnoughMemory();
 
@@ -51,6 +50,7 @@ private:
     void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
     bool                m_ConsoleMode;
+    bool                m_PeriodicRestart;
     WorkerWindow        * m_MainWindow;
     Server              * m_ConnectionPool;
     NetworkStartupHelper * m_NetworkStartupHelper;
@@ -62,6 +62,7 @@ private:
     uint64_t            m_LastWriteTime;
     bool                m_WantToQuit;
     bool                m_RestartNeeded;
+    Timer               m_PeriodicRestartTimer;
     Timer               m_UIUpdateTimer;
     FileStream          m_TargetIncludeFolderLock;
     #if defined( __WINDOWS__ )
@@ -72,7 +73,6 @@ private:
         int32_t             m_LastMemoryCheckResult;    // -1 : No check done yet. 0=Not enough memory right now. 1=OK for now.
 #endif
     mutable AString     m_LastStatusMessage;
-    Thread::ThreadHandle m_WorkThread;
 };
 
 //------------------------------------------------------------------------------

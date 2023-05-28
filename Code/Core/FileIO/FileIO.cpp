@@ -500,7 +500,7 @@
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         umask( 0 ); // disable default creation mask // TODO:LINUX TODO:MAC Changes global program state; needs investigation
-        mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO; // TODO:LINUX TODO:MAC Check these permissions
+        mode_t mode = ( S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH );
         if ( mkdir( path.Get(), mode ) == 0 )
         {
             return true; // created ok
@@ -888,7 +888,8 @@
         {
             return true; // can't even get the attributes, treat as not read only
         }
-        const bool currentlyReadOnly = !( ( s.st_mode & S_IWUSR ) == S_IWUSR ); // TODO:LINUX Is this the correct behaviour?
+        const uint32_t anyWriteBits = S_IWUSR | S_IWGRP | S_IWOTH;
+        const bool currentlyReadOnly = ( ( s.st_mode & anyWriteBits ) == 0 );
         if ( readOnly == currentlyReadOnly )
         {
             return true; // already in desired state
@@ -897,13 +898,13 @@
         // update writable flag
         if ( readOnly )
         {
-            // remove writable flag
-            s.st_mode &= ( ~S_IWUSR ); // TODO:LINUX Is this the correct behaviour?
+            // remove writable flag for everyone
+            s.st_mode &= ~( S_IWUSR | S_IWGRP | S_IWOTH );
         }
         else
         {
-            // add writable flag
-            s.st_mode |= S_IWUSR; // TODO:LINUX Is this the correct behaviour?
+            // add writable flag for just the user
+            s.st_mode |= S_IWUSR;
         }
 
         if ( chmod( fileName, s.st_mode ) == 0 )
@@ -948,11 +949,14 @@
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     /*static*/ bool FileIO::SetExecutable( const char * fileName )
     {
-        // rwxr-x--x (751) TODO:LINUX TODO:MAC Is this correct?
-        mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR |
-                      S_IRGRP |           S_IXGRP |
-                                          S_IXOTH;
-        if ( chmod( fileName, mode ) == 0 )
+        struct stat s;
+        if ( lstat( fileName, &s ) != 0 )
+        {
+            return false; // failed to stat
+        }
+
+        s.st_mode |= S_IXUSR | S_IXGRP | S_IXOTH;
+        if ( chmod( fileName, s.st_mode ) == 0 )
         {
             return true;
         }

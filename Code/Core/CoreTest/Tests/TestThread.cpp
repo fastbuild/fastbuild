@@ -41,6 +41,7 @@ void TestThread::Unused() const
 {
     // A thread object never used to create a thread
     Thread t;
+    TEST_ASSERT( t.IsRunning() == false );
 }
 
 // StartAndJoin
@@ -55,10 +56,12 @@ void TestThread::StartAndJoin() const
     t.Start( ThreadFunc,
              "StartAndJoin",
              reinterpret_cast<void *>( static_cast<size_t>( userData ) ) );
+    TEST_ASSERT( t.IsRunning() );
 
     // Join and check result
     const uint32_t result = t.Join();
     TEST_ASSERT( result == userData );
+    TEST_ASSERT( t.IsRunning() == false );
 }
 
 //------------------------------------------------------------------------------

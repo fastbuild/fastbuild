@@ -49,6 +49,7 @@
                                             'FBuildCore-Lib-$Platform$-$BuildConfigName$',
                                             'Core-Lib-$Platform$-$BuildConfigName$',
                                             'LZ4-Lib-$Platform$-$BuildConfigName$'
+                                            'xxHash-Lib-$Platform$-$BuildConfigName$'
                                           }
             #if __LINUX__
                 .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuild$ExeExtension$' // NOTE: lower case
@@ -93,6 +94,19 @@
         #endif
     }
 
+    // Create Universal binaries
+    #if CLANG_SUPPORTS_ARMOSX
+        ForEach( .BuildConfig in .BuildConfigs )
+        {
+            Using( .BuildConfig )
+            If( .Platform == 'ARMOSX' )
+            {
+                CreateUniversalBinary( .ProjectName, .ProjectPath, .BuildConfigName, .OutputBase )
+                ^'Targets_OSX_$BuildConfigName$' + { '$ProjectName$-OSX-$BuildConfigName$' }
+            }
+        }
+    #endif
+        
     // Aliases
     //--------------------------------------------------------------------------
     CreateCommonAliases( .ProjectName )

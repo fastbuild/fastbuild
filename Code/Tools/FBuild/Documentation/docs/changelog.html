@@ -27,6 +27,45 @@
 <h1>Changelog</h1>
 
 <div class='newsitemheader'>
+    v1.10&nbsp;<font color='#bbbbbb'>(28th-May-2023)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version changed : cache will be re-populated</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>[OSX] Apple Silicon is supported natively using Universal binaries</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Prevent Worker over-requesting jobs when there are multiple Clients</li>
+        </ul>
+        <li>[Linux][OSX] Fix file/folder permissions being exessively permissive (Thanks to Pete Lewis)</li>
+        <li>Chained ObjectLists correctly handle duplicate names in sub-directories (Thanks to Dandielo)</li>
+        <li>Fix crash when .CompilerOutputPath is missing but required on ObjectList/Library</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Toolchain management performance improved slightly when toolchain changes</li>
+            <li>Remove some unecessary lock contention in FBuildWorker</li>
+            <li>FBuildWorker can be set to restart every 4 hours (<a href="options.html#periodicrestart">-periodicrestart</a>)</li>
+            <li>Eliminate various instances of lock contention in FBuildWorker</li>
+        </ul>
+        <li>Cache performance improved slightly for check, store and retrieve operations</li>
+        <li>Performance of various build steps improved slightly</li>
+        <li>Database validation improved, reducing startup/shutdown time slightly</li>
+        <li>Fix documenation errors for some optional fields (Thanks to Harrison Ting)</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.09&nbsp;<font color='#bbbbbb'>(5th-Mar-2023)</font>
 </div>
 <div class='newsitembody'>

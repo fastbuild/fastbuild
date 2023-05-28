@@ -79,6 +79,7 @@
                                             'OSUI-Lib-$Platform$-$BuildConfigName$'
                                             'Core-Lib-$Platform$-$BuildConfigName$',
                                             'LZ4-Lib-$Platform$-$BuildConfigName$'
+                                            'xxHash-Lib-$Platform$-$BuildConfigName$'
                                           }
                                         #if __WINDOWS__
                                             + 'FBuildWorker-Res-$Platform$-$BuildConfigName$'
@@ -134,7 +135,20 @@
             ^ProjectConfigs             + .ProjectConfig
         #endif
     }
-
+    
+    // Create Universal binaries
+    #if CLANG_SUPPORTS_ARMOSX
+        ForEach( .BuildConfig in .BuildConfigs )
+        {
+            Using( .BuildConfig )
+            If( .Platform == 'ARMOSX' )
+            {
+                CreateUniversalBinary( .ProjectName, .ProjectPath, .BuildConfigName, .OutputBase )
+                ^'Targets_OSX_$BuildConfigName$' + { '$ProjectName$-OSX-$BuildConfigName$' }
+            }
+        }
+    #endif
+    
     // Aliases
     //--------------------------------------------------------------------------
     CreateCommonAliases( .ProjectName )

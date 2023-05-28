@@ -38,7 +38,7 @@ FunctionForEach::FunctionForEach()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionForEach::ParseFunction( NodeGraph & /*nodeGraph*/,
                                                  BFFParser & parser,
-                                                 const BFFToken * /*functionNameStart*/,
+                                                 const BFFToken * functionNameStart,
                                                  const BFFTokenRange & headerRange,
                                                  const BFFTokenRange & bodyRange ) const
 {
@@ -189,11 +189,11 @@ FunctionForEach::FunctionForEach()
         {
             if ( arrayVars[ j ]->GetType() == BFFVariable::VAR_ARRAY_OF_STRINGS )
             {
-                BFFStackFrame::SetVarString( localNames[ j ], arrayVars[ j ]->GetArrayOfStrings()[ i ], &loopStackFrame );
+                BFFStackFrame::SetVarString( localNames[ j ], *functionNameStart, arrayVars[ j ]->GetArrayOfStrings()[ i ], &loopStackFrame );
             }
             else if ( arrayVars[ j ]->GetType() == BFFVariable::VAR_ARRAY_OF_STRUCTS )
             {
-                BFFStackFrame::SetVarStruct( localNames[ j ], arrayVars[ j ]->GetArrayOfStructs()[ i ]->GetStructMembers(), &loopStackFrame );
+                BFFStackFrame::SetVarStruct( localNames[ j ], *functionNameStart, arrayVars[ j ]->GetArrayOfStructs()[ i ]->GetStructMembers(), &loopStackFrame );
             }
             else
             {

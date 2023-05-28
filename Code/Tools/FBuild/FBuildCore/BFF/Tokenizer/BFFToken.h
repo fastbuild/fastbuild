@@ -81,6 +81,9 @@ public:
 
     void GetPosInfo( uint32_t & outLine, uint32_t & outColumn, const char * & outLineStart ) const;
 
+    // Some variables come from built-in declarations so we need a proxy BFFToken for those
+    static const BFFToken & GetBuiltInToken()       { return s_BuiltInToken; }
+
 private:
     BFFTokenType    m_Type;
     bool            m_Boolean   = false;
@@ -88,6 +91,10 @@ private:
     AString         m_String;
     const BFFFile & m_BFFFile;
     const char *    m_SourcePos = nullptr;
+
+    // Static Data
+    static const BFFFile    s_BuiltInFile;
+    static const BFFToken   s_BuiltInToken;
 };
 
 //------------------------------------------------------------------------------

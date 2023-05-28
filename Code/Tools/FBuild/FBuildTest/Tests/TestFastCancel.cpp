@@ -84,14 +84,14 @@ void TestFastCancel::Cancel() const
     SystemMutex * mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
 
     // Create thread that will abort build once all processes are spawned
-    Thread::ThreadHandle h = Thread::CreateThread( CancelHelperThread );
+    Thread thread;
+    thread.Start( CancelHelperThread );
 
     // Start build and check it was aborted
     TEST_ASSERT( fBuild.Build( "Cancel" ) == false );
     TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: Cancel" ) );
 
-    Thread::WaitForThread( h );
-    Thread::CloseHandle( h );
+    thread.Join();
 
     // Ensure that processes were killed
     for ( SystemMutex * mutex : mutexes )

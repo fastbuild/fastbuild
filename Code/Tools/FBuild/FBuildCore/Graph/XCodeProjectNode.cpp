@@ -251,7 +251,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         }
 
         // Combine hash
-        stamp += xxHash::Calc64( output );
+        stamp += xxHash3::Calc64( output );
     }
 
     // Get folder containing project.pbxproj
@@ -285,7 +285,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         }
 
         // Combine hash
-        stamp += xxHash::Calc64( output );
+        stamp += xxHash3::Calc64( output );
     }
 
     // Generate .xcscheme file
@@ -306,7 +306,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         }
 
         // Combine hash
-        stamp += xxHash::Calc64( output );
+        stamp += xxHash3::Calc64( output );
     }
 
     // Record stamp representing the contents of the files

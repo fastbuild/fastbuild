@@ -33,7 +33,6 @@ Compiler( 'Compiler-GCC4' )
                                     + ' -g'             // Generate debug info
                                     + ' -m64'           // x86_64
                                     + ' -D__LINUX__'    // Platform define
-                                    + ' -D__X64__'      // Architecture define
                                     + ' -ffreestanding' // prevent extra magic includes like stdc-predefs.h
 
                                     // Include paths

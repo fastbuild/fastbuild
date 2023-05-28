@@ -285,7 +285,7 @@ void TestNodeReflection::String_Optional_Set() const
     TestHelper helper( new Node_String_Optional );
 
     // Set string
-    helper.m_Frame.SetVarString( AStackString<>( ".String" ), AStackString<>( "value" ), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".String" ), BFFToken::GetBuiltInToken(), AStackString<>( "value" ), nullptr );
 
     // Check string was set
     TEST_ASSERT( helper.Populate() );
@@ -299,7 +299,7 @@ void TestNodeReflection::String_Optional_Empty() const
     TestHelper helper( new Node_String_Optional );
 
     // Set string to empty
-    helper.m_Frame.SetVarString( AStackString<>( ".String" ), AString::GetEmpty(), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".String" ), BFFToken::GetBuiltInToken(), AString::GetEmpty(), nullptr );
 
     // Check ok (setting empty on optional property is ok)
     TEST_ASSERT( helper.Populate() );
@@ -333,7 +333,7 @@ void TestNodeReflection::String_Required_Set() const
     TestHelper helper( new Node_String_Required );
 
     // Set string
-    helper.m_Frame.SetVarString( AStackString<>( ".String" ), AStackString<>( "value" ), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".String" ), BFFToken::GetBuiltInToken(), AStackString<>( "value" ), nullptr );
 
     // Check string was set
     TEST_ASSERT( helper.Populate() );
@@ -347,7 +347,7 @@ void TestNodeReflection::String_Required_Empty() const
     TestHelper helper( new Node_String_Required );
 
     // Set string to empty
-    helper.m_Frame.SetVarString( AStackString<>( ".String" ), AString::GetEmpty(), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".String" ), BFFToken::GetBuiltInToken(), AString::GetEmpty(), nullptr );
 
     // Check for failure (required strings can't be empty)
     TEST_ASSERT( helper.Populate() == false );
@@ -384,7 +384,7 @@ void TestNodeReflection::ArrayOfStrings_Optional_Set() const
     // Set string array
     Array<AString> strings;
     strings.EmplaceBack( "value" );
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check array was set
     TEST_ASSERT( helper.Populate() );
@@ -400,7 +400,7 @@ void TestNodeReflection::ArrayOfStrings_Optional_Empty() const
 
     // Set array to empty
     Array<AString> empty;
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), empty, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), BFFToken::GetBuiltInToken(), empty, nullptr );
 
     // Check ok (setting empty on optional property is ok)
     TEST_ASSERT( helper.Populate() );
@@ -417,7 +417,7 @@ void TestNodeReflection::ArrayOfStrings_Optional_EmptyElement() const
     Array<AString> strings;
     strings.EmplaceBack( "value" );
     strings.EmplaceBack();
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
     TEST_ASSERT( helper.Populate() == false );
@@ -453,7 +453,7 @@ void TestNodeReflection::ArrayOfStrings_Required_Set() const
     // Set string array
     Array<AString> strings;
     strings.EmplaceBack( "value" );
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check array was set
     TEST_ASSERT( helper.Populate() );
@@ -469,7 +469,7 @@ void TestNodeReflection::ArrayOfStrings_Required_Empty() const
 
     // Set array to empty
     Array<AString> empty;
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), empty, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), BFFToken::GetBuiltInToken(), empty, nullptr );
 
     // Check for failure (can't set empty array if property is required)
     TEST_ASSERT( helper.Populate() == false );
@@ -486,7 +486,7 @@ void TestNodeReflection::ArrayOfStrings_Required_EmptyElement() const
     Array<AString> strings;
     strings.EmplaceBack( "value" );
     strings.EmplaceBack();
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
     TEST_ASSERT( helper.Populate() == false );
@@ -519,7 +519,7 @@ void TestNodeReflection::MetaFile_String_Optional_Set() const
     TestHelper helper( new Node_MetaFile_String_Optional );
 
     // Push a string
-    helper.m_Frame.SetVarString( AStackString<>( ".File" ), AStackString<>( "value" ), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".File" ), BFFToken::GetBuiltInToken(), AStackString<>( "value" ), nullptr );
 
     // Check the property was set and converted to a full path
     TEST_ASSERT( helper.Populate() == true );
@@ -534,7 +534,7 @@ void TestNodeReflection::MetaFile_String_Optional_Empty() const
     TestHelper helper( new Node_MetaFile_String_Optional );
 
     // Push an empty string
-    helper.m_Frame.SetVarString( AStackString<>( ".File" ), AString::GetEmpty(), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".File" ), BFFToken::GetBuiltInToken(), AString::GetEmpty(), nullptr );
 
     // Ok for property to be empty because it is optional
     TEST_ASSERT( helper.Populate() == true );
@@ -567,7 +567,7 @@ void TestNodeReflection::MetaFile_String_Required_Set() const
     TestHelper helper( new Node_MetaFile_String_Required );
 
     // Push a string
-    helper.m_Frame.SetVarString( AStackString<>( ".File" ), AStackString<>( "value" ), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".File" ), BFFToken::GetBuiltInToken(), AStackString<>( "value" ), nullptr );
 
     // Check the property was set and converted to a full path
     TEST_ASSERT( helper.Populate() == true );
@@ -582,7 +582,7 @@ void TestNodeReflection::MetaFile_String_Required_Empty() const
     TestHelper helper( new Node_MetaFile_String_Required );
 
     // Push an empty string
-    helper.m_Frame.SetVarString( AStackString<>( ".File" ), AString::GetEmpty(), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".File" ), BFFToken::GetBuiltInToken(), AString::GetEmpty(), nullptr );
 
     // Check that populating properties fails and that appropriate error is reported
     TEST_ASSERT( helper.Populate() == false );
@@ -617,7 +617,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Optional_Set() const
     // Set string array
     Array<AString> strings;
     strings.EmplaceBack( "value" );
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check the property was set and converted to a full paths
     TEST_ASSERT( helper.Populate() == true );
@@ -634,7 +634,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Optional_Empty() const
 
     // Set string array with an empty element in in
     Array<AString> empty;
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), empty, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), BFFToken::GetBuiltInToken(), empty, nullptr );
 
     // Ok for property to be empty because it is optional
     TEST_ASSERT( helper.Populate() == true );
@@ -650,7 +650,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Optional_EmptyElement() const
     Array<AString> strings;
     strings.EmplaceBack( "value" );
     strings.EmplaceBack();
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
     TEST_ASSERT( helper.Populate() == false );
@@ -686,7 +686,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Required_Set() const
     // Set string array
     Array<AString> strings;
     strings.EmplaceBack( "value" );
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check the property was set and converted to a full path
     TEST_ASSERT( helper.Populate() == true );
@@ -703,7 +703,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Required_Empty() const
 
     // Set string array with an empty element in in
     Array<AString> empty;
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), empty, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), BFFToken::GetBuiltInToken(), empty, nullptr );
 
     // Check that populating properties fails and that appropriate error is reported
     TEST_ASSERT( helper.Populate() == false );
@@ -720,7 +720,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Required_EmptyElement() const
     Array<AString> strings;
     strings.EmplaceBack( "value" );
     strings.EmplaceBack();
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
     TEST_ASSERT( helper.Populate() == false );
@@ -753,7 +753,7 @@ void TestNodeReflection::MetaPath_String_Optional_Set() const
     TestHelper helper( new Node_MetaPath_String_Optional );
 
     // Push a string
-    helper.m_Frame.SetVarString( AStackString<>( ".Path" ), AStackString<>( "value" ), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".Path" ), BFFToken::GetBuiltInToken(), AStackString<>( "value" ), nullptr );
 
     // Check the property was set and converted to a full path
     TEST_ASSERT( helper.Populate() == true );
@@ -768,7 +768,7 @@ void TestNodeReflection::MetaPath_String_Optional_Empty() const
     TestHelper helper( new Node_MetaPath_String_Optional );
 
     // Push an empty string
-    helper.m_Frame.SetVarString( AStackString<>( ".Path" ), AString::GetEmpty(), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".Path" ), BFFToken::GetBuiltInToken(), AString::GetEmpty(), nullptr );
 
     // Ok for property to be empty because it is optional
     TEST_ASSERT( helper.Populate() == true );
@@ -801,7 +801,7 @@ void TestNodeReflection::MetaPath_String_Required_Set() const
     TestHelper helper( new Node_MetaPath_String_Required );
 
     // Push a string
-    helper.m_Frame.SetVarString( AStackString<>( ".Path" ), AStackString<>( "value" ), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".Path" ), BFFToken::GetBuiltInToken(), AStackString<>( "value" ), nullptr );
 
     // Check the property was set and converted to a full path
     TEST_ASSERT( helper.Populate() == true );
@@ -816,7 +816,7 @@ void TestNodeReflection::MetaPath_String_Required_Empty() const
     TestHelper helper( new Node_MetaPath_String_Required );
 
     // Push an empty string
-    helper.m_Frame.SetVarString( AStackString<>( ".Path" ), AString::GetEmpty(), nullptr );
+    helper.m_Frame.SetVarString( AStackString<>( ".Path" ), BFFToken::GetBuiltInToken(), AString::GetEmpty(), nullptr );
 
     // Check that populating properties fails and that appropriate error is reported
     TEST_ASSERT( helper.Populate() == false );
@@ -851,7 +851,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Optional_Set() const
     // Set string array
     Array<AString> strings;
     strings.EmplaceBack( "value" );
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check the property was set and converted to a full paths
     TEST_ASSERT( helper.Populate() == true );
@@ -868,7 +868,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Optional_Empty() const
 
     // Set string array with an empty element in in
     Array<AString> empty;
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), empty, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), BFFToken::GetBuiltInToken(), empty, nullptr );
 
     // Ok for property to be empty because it is optional
     TEST_ASSERT( helper.Populate() == true );
@@ -884,7 +884,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Optional_EmptyElement() const
     Array<AString> strings;
     strings.EmplaceBack( "value" );
     strings.EmplaceBack();
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
     TEST_ASSERT( helper.Populate() == false );
@@ -920,7 +920,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Required_Set() const
     // Set string array
     Array<AString> strings;
     strings.EmplaceBack( "value" );
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check the property was set and converted to a full path
     TEST_ASSERT( helper.Populate() == true );
@@ -937,7 +937,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Required_Empty() const
 
     // Set string array with an empty element in in
     Array<AString> empty;
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), empty, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), BFFToken::GetBuiltInToken(), empty, nullptr );
 
     // Check that populating properties fails and that appropriate error is reported
     TEST_ASSERT( helper.Populate() == false );
@@ -954,7 +954,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Required_EmptyElement() const
     Array<AString> strings;
     strings.EmplaceBack( "value" );
     strings.EmplaceBack();
-    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), strings, nullptr );
+    helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), BFFToken::GetBuiltInToken(), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
     TEST_ASSERT( helper.Populate() == false );

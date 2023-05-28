@@ -67,15 +67,15 @@ private:
             , m_WaitingJobs( 16, true )
         {}
 
-        inline bool operator < ( const ClientState & other ) const { return ( m_NumJobsAvailable > other.m_NumJobsAvailable ); }
+        inline bool operator < ( const ClientState & other ) const { return ( m_NumJobsAvailable.Load() > other.m_NumJobsAvailable.Load() ); }
 
         Mutex                   m_Mutex;
 
         const Protocol::IMessage * m_CurrentMessage = nullptr;
         const ConnectionInfo *  m_Connection = nullptr;
-        uint32_t                m_NumJobsAvailable = 0;
-        uint32_t                m_NumJobsRequested = 0;
-        uint32_t                m_NumJobsActive = 0;
+        Atomic<uint32_t>        m_NumJobsAvailable;
+        Atomic<uint32_t>        m_NumJobsRequested;
+        Atomic<uint32_t>        m_NumJobsActive;
 
         uint8_t                 m_ProtocolVersionMinor = 0;
         AString                 m_HostName;
@@ -88,7 +88,7 @@ private:
     JobQueueRemote *        m_JobQueueRemote;
 
     Atomic<bool>            m_ShouldExit;   // signal from main thread
-    Thread::ThreadHandle    m_Thread;       // the thread to manage workload
+    Thread                  m_Thread;       // the thread to manage workload
     Mutex                   m_ClientListMutex;
     Array< ClientState * >  m_ClientList;
 

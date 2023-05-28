@@ -41,6 +41,7 @@ public:
                        void * userData = nullptr,
                        uint32_t stackSizeBytes = kDefaultStackSize );
     uint32_t    Join();
+    bool        IsRunning() const;
 
     // Thread Identification
     static ThreadId GetCurrentThreadId();
@@ -51,16 +52,9 @@ public:
     // Sleeps
     static void Sleep( uint32_t ms );
 
-    // Thread lifetime (Legacy API)
-    static ThreadHandle CreateThread( ThreadEntryFunction entryFunc,
-                                      const char * threadName = nullptr,
-                                      uint32_t stackSize = kDefaultStackSize,
-                                      void * userData = nullptr
-                                    );
-    static int32_t WaitForThread( ThreadHandle handle );
-    static int32_t WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut );
-    static void DetachThread( ThreadHandle handle );
-    static void CloseHandle( ThreadHandle h );
+    // Legacy Functions - TODO:B Remove these unsafe functions
+    void        Detach(); // TODO:B Remove this unsafe function
+    uint32_t    JoinWithTimeout( uint32_t timeoutMS, bool & outTimedOut ); // TODO:B Remove this unsafe API
 
     // Debugging
     static void SetThreadName( const char * name );

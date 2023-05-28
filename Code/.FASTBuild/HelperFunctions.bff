@@ -59,9 +59,16 @@ function CreateCommonAliases( .ProjectName )
         Alias( '$ProjectName$-TSan' )            { .Targets = { '$ProjectName$-X64Linux-TSan',    '$ProjectName$-X64ClangLinux-TSan' } }
     #endif
     #if __OSX__
-        Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64OSX-Debug' } }
-        Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X64OSX-Profile' } }
-        Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64OSX-Release' } }
+        #if CLANG_SUPPORTS_ARMOSX
+            // Universal Binaries
+            Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-OSX-Debug' } }
+            Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-OSX-Profile' } }
+            Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-OSX-Release' } }
+        #else
+            Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64OSX-Debug' } }
+            Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X64OSX-Profile' } }
+            Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64OSX-Release' } }
+        #endif
     #endif
 
     // Per-Platform
@@ -70,6 +77,10 @@ function CreateCommonAliases( .ProjectName )
     Alias( '$ProjectName$-X64Linux' )        { .Targets = { '$ProjectName$-X64Linux-Debug', '$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile', '$ProjectName$-X64Linux-ASan', '$ProjectName$-X64Linux-TSan' } }
     Alias( '$ProjectName$-X64ClangLinux' )   { .Targets = { '$ProjectName$-X64ClangLinux-Debug', '$ProjectName$-X64ClangLinux-Release', '$ProjectName$-X64ClangLinux-Profile', '$ProjectName$-X64ClangLinux-ASan', '$ProjectName$-X64ClangLinux-MSan', '$ProjectName$-X64ClangLinux-TSan' } }
     Alias( '$ProjectName$-X64OSX' )          { .Targets = { '$ProjectName$-X64OSX-Debug', '$ProjectName$-X64OSX-Release', '$ProjectName$-X64OSX-Profile' } }
+    #if CLANG_SUPPORTS_ARMOSX
+        Alias( '$ProjectName$-ARMOSX' )         { .Targets = { '$ProjectName$-ARMOSX-Debug', '$ProjectName$-ARMOSX-Release', '$ProjectName$-ARMOSX-Profile' } }
+        Alias( '$ProjectName$-OSX' )            { .Targets = { '$ProjectName$-OSX-Debug', '$ProjectName$-OSX-Release', '$ProjectName$-OSX-Profile' } }
+    #endif
 
     // All
     Alias( '$ProjectName$' )
@@ -159,4 +170,24 @@ function CreateVCXProject_Exe( .Name
     CreateVCXProject_Lib( .Name, .Path, .Configs, .ExtraOptions )
 }
 
+
+// CreateUniversalBinary
+//------------------------------------------------------------------------------
+#if CLANG_SUPPORTS_ARMOSX
+    function CreateUniversalBinary( .ProjectName
+                                    .ProjectPath
+                                    .BuildConfigName
+                                    .OutputBase )
+    {
+        Exec( '$ProjectName$-Exe-OSX-$BuildConfigName$' )
+        {
+            .ExecExecutable         = '/usr/bin/lipo'
+            .ExecInput              = { '$ProjectName$-Exe-x64OSX-$BuildConfigName$', '$ProjectName$-Exe-ARMOSX-$BuildConfigName$' }
+            .ExecOutput             = '$OutputBase$/OSX-$BuildConfigName$/$ProjectPath$/$ProjectName$'
+            .ExecArguments          = '-create -output %2 %1'
+        }
+        Alias( '$ProjectName$-OSX-$BuildConfigName$' ) { .Targets = '$ProjectName$-Exe-OSX-$BuildConfigName$' }
+    }
+#endif
+        
 //------------------------------------------------------------------------------

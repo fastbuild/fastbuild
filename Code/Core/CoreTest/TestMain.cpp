@@ -28,6 +28,7 @@ int main( int, char *[] )
     REGISTER_TESTGROUP( TestSmallBlockAllocator )
     REGISTER_TESTGROUP( TestSystemMutex )
     REGISTER_TESTGROUP( TestTestTCPConnectionPool )
+    REGISTER_TESTGROUP( TestThread )
     REGISTER_TESTGROUP( TestTimer )
     REGISTER_TESTGROUP( TestUnorderedMap )
 

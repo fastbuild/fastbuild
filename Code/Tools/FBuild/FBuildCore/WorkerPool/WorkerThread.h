@@ -8,6 +8,7 @@
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
+#include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
@@ -49,6 +50,7 @@ protected:
     virtual void Main();
 
     // signal to exit thread
+    Thread        m_Thread;
     Atomic<bool>  m_ShouldExit;
     Atomic<bool>  m_Exited;
     uint16_t      m_ThreadIndex;

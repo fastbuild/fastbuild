@@ -233,6 +233,7 @@ ObjectListNode::ObjectListNode()
         if ( m_CompilerOutputPath.IsEmpty() )
         {
             Error::Error_1101_MissingProperty( iter, function, AStackString<>( "CompilerOutputPath" ) );
+            return false;
         }
     }
 
@@ -467,7 +468,7 @@ ObjectListNode::~ObjectListNode() = default;
                 }
 
                 // create the object that will compile the above file
-                if ( CreateDynamicObjectNode( nodeGraph, n->GetName(), AString::GetEmpty() ) == false )
+                if ( CreateDynamicObjectNode( nodeGraph, n->GetName(), objListNode->GetCompilerOutputPath() ) == false )
                 {
                     return false; // CreateDynamicObjectNode will have emitted error
                 }
@@ -574,7 +575,7 @@ ObjectListNode::~ObjectListNode() = default;
             ASSERT( on->GetStamp() );
             stamps.Append( on->GetStamp() );
         }
-        m_Stamp = xxHash::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
+        m_Stamp = xxHash3::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
     }
 
     return NODE_RESULT_OK;

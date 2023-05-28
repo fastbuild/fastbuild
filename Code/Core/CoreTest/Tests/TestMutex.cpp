@@ -8,6 +8,7 @@
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
+#include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
 
 // TestMutex
@@ -20,6 +21,11 @@ private:
     void TestConstruct() const;
     void TestLockUnlock() const;
     void TestMultiLockUnlock() const;
+    void TryLock() const;
+    void TryLockMultiple() const;
+    void TryLockMixed() const;
+    void TryLockFail() const;
+    static uint32_t TestLockFailThreadEntryFunction( void * data );
 
     void TestExclusivity() const;
     struct TestExclusivityUserData
@@ -47,6 +53,10 @@ REGISTER_TESTS_BEGIN( TestMutex )
     REGISTER_TEST( TestConstruct )
     REGISTER_TEST( TestLockUnlock )
     REGISTER_TEST( TestMultiLockUnlock )
+    REGISTER_TEST( TryLock )
+    REGISTER_TEST( TryLockMultiple )
+    REGISTER_TEST( TryLockMixed )
+    REGISTER_TEST( TryLockFail )
     REGISTER_TEST( TestExclusivity )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestAlignment )
@@ -80,6 +90,86 @@ void TestMutex::TestMultiLockUnlock() const
     m.Unlock();
 }
 
+// TryLock
+//------------------------------------------------------------------------------
+void TestMutex::TryLock() const
+{
+    // Ensure lock can be acquired
+    Mutex m;
+    TEST_ASSERT( m.TryLock() );
+    m.Unlock();
+}
+
+// TryLockMultiple
+//------------------------------------------------------------------------------
+void TestMutex::TryLockMultiple() const
+{
+    // Ensure lock can be acquired multiple times
+    Mutex m;
+    {
+        // Manual locks
+        TEST_ASSERT( m.TryLock() );
+        TEST_ASSERT( m.TryLock() );
+        m.Unlock();
+        m.Unlock();
+    }
+    {
+        // RAII lock
+        MutexHolder mh( m );
+        MutexHolder m2( m );
+    }
+    {
+        // RAII lock (Try)
+        TryMutexHolder mh( m );
+        TEST_ASSERT( mh.IsLocked() );
+        TryMutexHolder mh2( m );
+        TEST_ASSERT( mh2.IsLocked() );
+    }
+}
+
+// TryLockMixed
+//------------------------------------------------------------------------------
+void TestMutex::TryLockMixed() const
+{
+    Mutex m;
+    // Lock then TryLock
+    {
+        m.Lock();
+        TEST_ASSERT( m.TryLock() );
+        m.Unlock();
+        m.Unlock();
+    }
+    // TryLock then Lock
+    {
+        TEST_ASSERT( m.TryLock() );
+        m.Lock();
+        m.Unlock();
+        m.Unlock();
+    }
+}
+
+// TryLockFail
+//------------------------------------------------------------------------------
+void TestMutex::TryLockFail() const
+{
+    Mutex m;
+    MutexHolder mh( m ); // Hold lock so thread cannot acquire it
+
+    Thread t;
+    t.Start( TestLockFailThreadEntryFunction, "TryLockFail", &m );
+    t.Join();
+}
+
+// TestLockFailThreadEntryFunction
+//------------------------------------------------------------------------------
+/*static*/ uint32_t TestMutex::TestLockFailThreadEntryFunction( void * data )
+{
+    // main thread should hold lock
+    Mutex * m = static_cast<Mutex *>( data );
+    TEST_ASSERT( m->TryLock() == false );
+    return 0;
+}
+
 // TestExclusivity
 //------------------------------------------------------------------------------
 void TestMutex::TestExclusivity() const
@@ -88,10 +178,8 @@ void TestMutex::TestExclusivity() const
     data.m_Count = 0;
     data.m_BarrierCounter = 0;
 
-    Thread::ThreadHandle h = Thread::CreateThread( TestExclusivityThreadEntryFunction,
-                                                   "TestExclusivity",
-                                                   ( 64 * KILOBYTE ),
-                                                   &data );
+    Thread t;
+    t.Start( TestExclusivityThreadEntryFunction, "TestExclusivity", &data );
 
     // arrive at barrier and wait
     AtomicInc( &data.m_BarrierCounter );
@@ -105,10 +193,7 @@ void TestMutex::TestExclusivity() const
     }
 
     // wait for other thread to complete
-    bool timedOut = false;
-    Thread::WaitForThread( h, 1000, timedOut );
-    TEST_ASSERT( timedOut == false );
-    Thread::CloseHandle( h );
+    t.Join();
 
     // ensure total is correct
     TEST_ASSERT( data.m_Count == 2000000 );

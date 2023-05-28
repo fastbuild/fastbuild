@@ -41,19 +41,14 @@ void WorkerThread::Init()
     PROFILE_FUNCTION;
 
     // Start thread
-    Thread::ThreadHandle h = Thread::CreateThread( ThreadWrapperFunc,
-                                                   "WorkerThread",
-                                                   MEGABYTE,
-                                                   this );
-    ASSERT( h != nullptr );
-    Thread::DetachThread( h );
-    Thread::CloseHandle( h ); // we don't want to keep this, so free it now
+    m_Thread.Start( ThreadWrapperFunc, "WorkerThread", this, MEGABYTE );
 }
 
 //------------------------------------------------------------------------------
 WorkerThread::~WorkerThread()
 {
     ASSERT( m_Exited.Load() );
+    m_Thread.Join();
 }
 
 // InitTmpDir

@@ -234,7 +234,7 @@ DirectoryListNode::~DirectoryListNode() = default;
                 ms.Write( file.IsReadOnly() );
             }
         }
-        m_Stamp = xxHash::Calc64( ms.GetData(), ms.GetSize() );
+        m_Stamp = xxHash3::Calc64( ms.GetData(), ms.GetSize() );
     }
 
     return NODE_RESULT_OK;

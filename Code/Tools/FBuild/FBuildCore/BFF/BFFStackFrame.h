@@ -10,6 +10,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
+class Function;
 
 // BFFStackFrame
 //------------------------------------------------------------------------------
@@ -23,30 +24,42 @@ public:
 
     // set the value of a variable
     static void SetVarString( const AString & name,
+                              const BFFToken & token,
                               const AString & value,
                               BFFStackFrame * frame );
     static void SetVarArrayOfStrings( const AString & name,
+                                      const BFFToken & token,
                                       const Array< AString > & values,
                                       BFFStackFrame * frame );
     static void SetVarBool( const AString & name,
+                            const BFFToken & token,
                             bool value,
                             BFFStackFrame * frame );
     static void SetVarInt( const AString & name,
+                           const BFFToken & token,
                            int value,
                            BFFStackFrame * frame );
     static void SetVarStruct( const AString & name,
+                              const BFFToken & token,
                               const Array< const BFFVariable * > & members,
                               BFFStackFrame * frame );
     static void SetVarStruct( const AString & name,
+                              const BFFToken & token,
                               Array<BFFVariable *> && members,
                               BFFStackFrame * frame );
     static void SetVarArrayOfStructs( const AString & name,
+                                      const BFFToken & token,
                                       const Array< const BFFVariable * > & structs,
                                       BFFStackFrame * frame );
 
     // set from an existing variable
-    static void SetVar( const BFFVariable * var, BFFStackFrame * frame );
-    static void SetVar( const BFFVariable * srcVar, const AString & dstName, BFFStackFrame * frame );
+    static void SetVar( const BFFVariable * var,
+                        const BFFToken & token,
+                        BFFStackFrame * frame );
+    static void SetVar( const BFFVariable * srcVar,
+                        const BFFToken & token,
+                        const AString & dstName,
+                        BFFStackFrame * frame );
 
     // set from two existing variable
     static BFFVariable * ConcatVars( const AString & name,

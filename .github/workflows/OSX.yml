@@ -14,13 +14,13 @@ jobs:
       matrix:
         include:
           - cfg: Build & Tests
-            os: macos-10.15
+            os: macos-11
 
     name: OSX (${{ matrix.cfg }})
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: ./.github/actions/DownloadFBuild
 
@@ -43,7 +43,7 @@ jobs:
 
       - name: Build
         if: ${{ startsWith(matrix.cfg, 'Build') }}
-        run: ${FBUILD_PATH} -nostoponerror -summary All-x64OSX-{Debug,Profile,Release}
+        run: ${FBUILD_PATH} -nostoponerror -summary All-OSX-{Debug,Profile,Release}
 
       - name: Tests
         # -j1 on CI nodes avoids timeouts (CI nodes have only 2 cores)
@@ -52,4 +52,4 @@ jobs:
 
       - name: Build (NoUnity)
         if: ${{ startsWith(matrix.cfg, 'Build') }}
-        run: ${FBUILD_PATH} -nostoponerror -summary -nounity -clean All-x64OSX-Debug
+        run: ${FBUILD_PATH} -nostoponerror -summary -nounity -clean All-OSX-Debug

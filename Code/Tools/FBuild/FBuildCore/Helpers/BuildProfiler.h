@@ -103,7 +103,7 @@ protected:
     Mutex                   m_Mutex;
     Atomic<bool>            m_ThreadExit{ false };
     Semaphore               m_ThreadSignalSemaphore;
-    Thread::ThreadHandle    m_Thread = INVALID_THREAD_HANDLE;
+    Thread                  m_Thread;
     Array<Event>            m_Events;
     Array<Metrics>          m_Metrics;
     Array<WorkerInfo>       m_WorkerInfo;

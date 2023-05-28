@@ -39,6 +39,9 @@ public:
     // Console mode
     bool m_ConsoleMode;
 
+    // Other
+    bool m_PeriodicRestart;
+
 private:
     void ShowUsageError();
 };

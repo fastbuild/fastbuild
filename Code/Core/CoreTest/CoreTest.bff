@@ -52,6 +52,7 @@
                                                 'TestFrameWork-Lib-$Platform$-$BuildConfigName$'
                                                 'Core-Lib-$Platform$-$BuildConfigName$'
                                                 'LZ4-Lib-$Platform$-$BuildConfigName$'
+                                                'xxHash-Lib-$Platform$-$BuildConfigName$'
                                               }
             .LinkerOutput                   = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$'
             #if __WINDOWS__

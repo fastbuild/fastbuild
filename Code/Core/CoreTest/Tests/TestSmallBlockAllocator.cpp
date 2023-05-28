@@ -30,7 +30,7 @@ private:
     class ThreadInfo
     {
     public:
-        Thread::ThreadHandle    m_ThreadHandle      = INVALID_THREAD_HANDLE;
+        Thread                  m_Thread;
         Array< uint32_t > *     m_AllocationSizes   = nullptr;
         uint32_t                m_RepeatCount       = 0;
         float                   m_TimeTaken         = 0.0f;
@@ -101,17 +101,13 @@ void TestSmallBlockAllocator::MultiThreaded() const
         {
             info[ i ].m_AllocationSizes = & allocSizes;
             info[ i ].m_RepeatCount = repeatCount;
-            info[ i ].m_ThreadHandle = Thread::CreateThread( ThreadFunction_System, "SmallBlock", ( 64 * KILOBYTE ), (void*)&info[ i ] );
-            TEST_ASSERT( info[ i ].m_ThreadHandle != INVALID_THREAD_HANDLE );
+            info[ i ].m_Thread.Start( ThreadFunction_System, "SmallBlock", (void*)&info[ i ] );
         }
 
         // Join the threads
         for ( size_t i = 0; i < numThreads; ++i )
         {
-            bool timedOut;
-            Thread::WaitForThread( info[ i ].m_ThreadHandle, 500 * 1000, timedOut );
-            Thread::CloseHandle( info[ i ].m_ThreadHandle );
-            TEST_ASSERT( timedOut == false );
+            info[ i ].m_Thread.Join();
             time1 += info[ i ].m_TimeTaken;
         }
     }
@@ -124,17 +120,13 @@ void TestSmallBlockAllocator::MultiThreaded() const
         {
             info[ i ].m_AllocationSizes = & allocSizes;
             info[ i ].m_RepeatCount = repeatCount;
-            info[ i ].m_ThreadHandle = Thread::CreateThread( ThreadFunction_SmallBlock, "SmallBlock", ( 64 * KILOBYTE ), (void*)&info[ i ] );
-            TEST_ASSERT( info[ i ].m_ThreadHandle != INVALID_THREAD_HANDLE );
+            info[ i ].m_Thread.Start( ThreadFunction_SmallBlock, "SmallBlock", (void*)&info[ i ] );
         }
 
         // Join the threads
         for ( size_t i = 0; i < numThreads; ++i )
         {
-            bool timedOut;
-            Thread::WaitForThread( info[ i ].m_ThreadHandle, 500 * 1000, timedOut );
-            Thread::CloseHandle( info[ i ].m_ThreadHandle );
-            TEST_ASSERT( timedOut == false );
+            info[ i ].m_Thread.Join();
             time2 += info[ i ].m_TimeTaken;
         }
         time2 /= numThreads;

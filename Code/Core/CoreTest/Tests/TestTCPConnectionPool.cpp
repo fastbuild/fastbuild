@@ -23,7 +23,7 @@
 #define NUM_TEST_PASSES ( 16 )
 
 // unique port for test in all configs so the tests can run in parallel
-#ifdef WIN64
+#if defined( __WINDOWS__ )
     #ifdef DEBUG
         #define TEST_PORT uint16_t( 21941 ) // arbitrarily chosen
     #else
@@ -288,10 +288,8 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     TEST_ASSERT( ci );
 
     // start a thread to flood the slow server
-    Thread::ThreadHandle h = Thread::CreateThread( TestConnectionStuckDuringSend_ThreadFunc,
-                                                   "Sender",
-                                                   ( 64 * KILOBYTE ),
-                                                   (void *)ci );
+    Thread thread;
+    thread.Start( TestConnectionStuckDuringSend_ThreadFunc, "Sender", (void *)ci );
 
     // let thread send enough data to become blocked in Send
     Thread::Sleep( 100 );
@@ -301,8 +299,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 
     // wait for client thread to exit, with timeout
     bool timedOut( false );
-    Thread::WaitForThread( h, 1000, timedOut );
-    Thread::CloseHandle( h );
+    thread.JoinWithTimeout( 1000, timedOut ); // TODO:B Remove use of unsafe API
 
     // if timeout was hit, things were stuck
     TEST_ASSERT( timedOut == false );
