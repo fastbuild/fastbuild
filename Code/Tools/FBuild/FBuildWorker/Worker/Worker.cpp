@@ -41,8 +41,9 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( const AString & args, bool consoleMode )
+Worker::Worker( const AString & args, bool consoleMode, bool periodicRestart )
     : m_ConsoleMode( consoleMode )
+    , m_PeriodicRestart( periodicRestart )
     , m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
@@ -456,12 +457,15 @@ void Worker::CheckIfRestartNeeded()
     }
 
     // Check if periodic restart time has been reached
-    const float periodicRestartSecs = ( 4.0f * 60.0f * 60.0f ); // 4 hours
-    if ( m_PeriodicRestartTimer.GetElapsed() > periodicRestartSecs )
+    if ( m_PeriodicRestart )
     {
-        m_RestartNeeded = true;
-        JobQueueRemote::Get().SignalStopWorkers();
-        return;
+        const float periodicRestartSecs = ( 4.0f * 60.0f * 60.0f ); // 4 hours
+        if ( m_PeriodicRestartTimer.GetElapsed() > periodicRestartSecs )
+        {
+            m_RestartNeeded = true;
+            JobQueueRemote::Get().SignalStopWorkers();
+            return;
+        }
     }
 
     // get the current last write time

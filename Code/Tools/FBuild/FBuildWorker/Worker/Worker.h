@@ -27,7 +27,7 @@ class WorkerSettings;
 class Worker : public Singleton<Worker>
 {
 public:
-    explicit Worker( const AString & args, bool consoleMode );
+    explicit Worker( const AString & args, bool consoleMode, bool periodicRestart );
     ~Worker();
 
     int32_t Work();
@@ -50,6 +50,7 @@ private:
     void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
     bool                m_ConsoleMode;
+    bool                m_PeriodicRestart;
     WorkerWindow        * m_MainWindow;
     Server              * m_ConnectionPool;
     NetworkStartupHelper * m_NetworkStartupHelper;

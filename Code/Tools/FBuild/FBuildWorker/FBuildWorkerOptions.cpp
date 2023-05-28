@@ -31,7 +31,8 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
     m_MinimumFreeMemoryMiB( 0 ),
-    m_ConsoleMode( false )
+    m_ConsoleMode( false ),
+    m_PeriodicRestart( false )
 {
     #ifdef __LINUX__
         m_ConsoleMode = true; // Only console mode supported on Linux
@@ -114,6 +115,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
+        else if ( token == "-periodicrestart" )
+        {
+            m_PeriodicRestart = true;
+            continue;
+        }
         #if defined( __WINDOWS__ )
             else if ( token.BeginsWith( "-minfreememory=" ) )
             {
@@ -175,6 +181,8 @@ void FBuildWorkerOptions::ShowUsageError()
                        "        Set minimum free memory (MiB) required to accept work.\n"
                        " -nosubprocess\n"
                        "        (Windows) Don't spawn a sub-process worker copy.\n"
+                       " -periodicrestart\n"
+                       "        Worker will restart every 4 hours.\n"
                        "---------------------------------------------------------------------------\n"
                        ;
 
