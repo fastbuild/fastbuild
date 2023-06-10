@@ -74,7 +74,6 @@ void WorkerBrokerageServer::SetAvailability( bool available )
 
             // Check IP last update time and determine if host name or IP address has changed
             if ( m_HostName.IsEmpty() ||
-                 m_IPAddress.IsEmpty() ||
                  ( m_TimerLastIPUpdate.GetElapsed() >= sBrokerageIPAddressUpdateTime ) )
             {
                 AStackString<> hostName;
@@ -86,17 +85,23 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                 Network::GetDomainName( domainName );
 
                 // Resolve host name to ip address
-                const uint32_t ip = Network::GetHostIPFromName( hostName );
-                if ( ( ip != 0 ) && ( ip != 0x0100007f ) )
-                {
-                    TCPConnectionPool::GetAddressAsString( ip, ipAddress );
+                if ( m_IPAddress.IsEmpty() ) {
+                    const uint32_t ip = Network::GetHostIPFromName( hostName );
+                    if ( ( ip != 0 ) && ( ip != 0x0100007f ) )
+                    {
+                        TCPConnectionPool::GetAddressAsString( ip, ipAddress );
+                    }
                 }
 
-                if ( ( hostName != m_HostName ) || ( domainName != m_DomainName ) || ( ipAddress != m_IPAddress ) )
+                if ( ( hostName != m_HostName ) || ( domainName != m_DomainName ) )
                 {
                     m_HostName = hostName;
                     m_DomainName = domainName;
-                    m_IPAddress = ipAddress;
+
+                    if ( !ipAddress.IsEmpty() )
+                    {
+                        m_IPAddress = ipAddress;
+                    }
 
                     // Remove existing brokerage file, as filename is being updated
                     FileIO::FileDelete( m_BrokerageFilePath.Get() );
