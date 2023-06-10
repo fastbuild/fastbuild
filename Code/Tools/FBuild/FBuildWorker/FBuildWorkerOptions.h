@@ -9,10 +9,7 @@
 
 // Core
 #include "Core/Env/Types.h"
-
-// Forward Declaration
-//------------------------------------------------------------------------------
-class AString;
+#include "Core/Strings/AString.h"
 
 // FBuildWorkerOptions
 //------------------------------------------------------------------------------
@@ -28,6 +25,8 @@ public:
         bool m_IsSubprocess;    // Process is child? (Internal)
         bool m_UseSubprocess;   // Should we launch a sub-process?
     #endif
+
+    AString m_OverrideIPAddress; // IP Address to advertise as on worker brokerage
 
     // resource usage
     bool m_OverrideCPUAllocation;

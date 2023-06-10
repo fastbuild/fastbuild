@@ -44,6 +44,10 @@
     <td>Set location of the Brokerage Path for distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#FASTBUILD_WORKER_IP_ADDRESS">FASTBUILD_WORKER_IP_ADDRESS</a></td>
+    <td>Set the IP address for FBuildWorker to advertise as.</td>
+  </tr>
+  <tr>
     <td><a href="#FASTBUILD_WORKERS">FASTBUILD_WORKERS</a></td>
     <td>Set the list of workers explicitly.</td>
   </tr>
@@ -76,6 +80,11 @@ executables being spawned from the temp directory.</p>
 <p>FBuildWorkers signal their availability by writing a token to the "Brokerage Path".
 The location of the brokerage path can be set via the FASTBUILD_BROKERAGE_PATH.</p>
 </div>
+
+    <div class='newsitemheader' id="FASTBUILD_WORKER_IP_ADDRESS">FASTBUILD_WORKER_IP_ADDRESS</div>
+    <div class='newsitembody'>
+<p>If set, this is the IP address used by FBuildWorker to advertise as on the worker brokerage.</p>
+    </div>
 
     <div class='newsitemheader' id="FASTBUILD_WORKERS">FASTBUILD_WORKERS</div>
     <div class='newsitembody'>
