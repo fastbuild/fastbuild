@@ -84,8 +84,13 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                 Network::GetHostName( hostName );
                 Network::GetDomainName( domainName );
 
-                // Resolve host name to ip address
-                if ( m_IPAddress.IsEmpty() ) {
+                if ( m_IPAddressOverridden )
+                {
+                    ipAddress = m_IPAddress;
+                }
+                else
+                {
+                    // Resolve host name to ip address
                     const uint32_t ip = Network::GetHostIPFromName( hostName );
                     if ( ( ip != 0 ) && ( ip != 0x0100007f ) )
                     {
@@ -93,15 +98,11 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                     }
                 }
 
-                if ( ( hostName != m_HostName ) || ( domainName != m_DomainName ) )
+                if ( ( hostName != m_HostName ) || ( domainName != m_DomainName ) ||  ( ipAddress != m_IPAddress ) )
                 {
                     m_HostName = hostName;
                     m_DomainName = domainName;
-
-                    if ( !ipAddress.IsEmpty() )
-                    {
-                        m_IPAddress = ipAddress;
-                    }
+                    m_IPAddress = ipAddress;
 
                     // Remove existing brokerage file, as filename is being updated
                     FileIO::FileDelete( m_BrokerageFilePath.Get() );
@@ -240,6 +241,14 @@ void WorkerBrokerageServer::UpdateBrokerageFilePath()
             m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
         }
     }
+}
+
+// SetIPAddressOverride
+//------------------------------------------------------------------------------
+void WorkerBrokerageServer::SetIPAddressOverride( const AString & ipAddress )
+{
+    m_IPAddress = ipAddress;
+    m_IPAddressOverridden = true;
 }
 
 //------------------------------------------------------------------------------
