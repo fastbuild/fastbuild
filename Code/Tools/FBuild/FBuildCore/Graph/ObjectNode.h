@@ -165,6 +165,7 @@ public:
 
     const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
     const AString & GetOwnerObjectList() const { return m_OwnerObjectList; }
+    const AString & GetClangTidyConfigurationFile() const { return m_ClangTidyConfigurationFile; }
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
 
@@ -290,6 +291,7 @@ private:
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
     Array< AString >    m_PreBuildDependencyNames;
+    AString             m_ClangTidyConfigurationFile;
 
     // Internal State
     AString             m_PrecompiledHeader;

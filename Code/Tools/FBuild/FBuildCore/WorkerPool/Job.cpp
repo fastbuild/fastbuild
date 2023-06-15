@@ -175,6 +175,7 @@ void Job::Serialize( IOStream & stream )
     stream.Write( IsDataCompressed() );
 
     stream.Write( m_DataSize );
+    stream.Write( m_ExtraDataSize );
     stream.Write( m_Data, m_DataSize );
 }
 
@@ -196,6 +197,7 @@ void Job::Deserialize( IOStream & stream )
     // read extra data
     uint32_t dataSize;
     stream.Read( dataSize );
+    stream.Read( m_ExtraDataSize );
     void * data = ALLOC( dataSize );
     stream.Read( data, dataSize );
 

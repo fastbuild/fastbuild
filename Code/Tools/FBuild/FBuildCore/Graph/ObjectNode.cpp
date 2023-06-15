@@ -77,6 +77,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
+    REFLECT( m_ClangTidyConfigurationFile,          "ClangTidyConfigurationFile",       MetaOptional() + MetaFile() )
 
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
@@ -667,6 +668,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         FileIO::FileDelete( tmpFileName.Get() );
     }
 
+    if ( job->GetExtraDataSize() != 0 )
+    {
+        tmpFileName += ".config.yaml";
+        FileIO::FileDelete( tmpFileName.Get() );
+    }
+
     // cleanup temp directory
     if ( tmpDirectoryName.IsEmpty() == false )
     {
@@ -844,7 +851,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     {
         const char * output = (char *)job->GetData();
-        size_t outputSize = job->GetDataSize();
+        size_t outputSize = job->GetDataSize() - job->GetExtraDataSize();
 
         // Unlike most compilers, VBCC writes preprocessed output to a file
         ConstMemoryStream vbccMemoryStream;
@@ -1776,6 +1783,14 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         const AString & token = tokens[ i ];
         const AString & nextToken = ( i < ( numTokens - 1 ) ) ? tokens[ i + 1 ] : AString::GetEmpty();
 
+        if ( token.BeginsWith( "--config-file=" ) )
+        {
+            fullArgs += "--config-file=";
+            fullArgs += overrideSrcFile;
+            fullArgs += ".config.yaml ";
+            continue;
+        }
+
         // Handle Preprocessor args adjustment
         if ( ( pass == PASS_PREPROCESSOR_ONLY ) && driver->ProcessArg_PreprocessorOnly( token, i, nextToken, fullArgs ) )
         {
@@ -1937,6 +1952,26 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
     const size_t outputBufferSize = dataSize;
     size_t newBufferSize = outputBufferSize;
     char * bufferCopy = nullptr;
+    AString extraBuffer;
+
+    const AString& clangTidyConfigureFilePath = job->GetNode()->CastTo<ObjectNode>()->GetClangTidyConfigurationFile();
+    if ( !clangTidyConfigureFilePath.IsEmpty() )
+    {
+        FileStream configFile;
+        if ( configFile.Open( clangTidyConfigureFilePath.Get() ) == false )
+        {
+            FLOG_ERROR( "Error: could not open file at '%s'", clangTidyConfigureFilePath.Get() );
+            return;
+        }
+        extraBuffer.SetLength( (uint32_t)configFile.GetFileSize() );
+        if ( configFile.ReadBuffer( extraBuffer.Get(), extraBuffer.GetLength() ) != extraBuffer.GetLength() )
+        {
+            FLOG_ERROR( "Error: could not read file at '%s'", clangTidyConfigureFilePath.Get() );
+            return;
+        }
+        job->SetExtraDataSize( extraBuffer.GetLength() );
+        configFile.Close();
+    }
 
     #if defined( __WINDOWS__ )
         // VS 2012 sometimes generates corrupted code when preprocessing an already preprocessed file when it encounters
@@ -2035,12 +2070,17 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
         else
     #endif
     {
-        bufferCopy = (char *)ALLOC( newBufferSize + 1 ); // null terminator for include parser
+        bufferCopy = (char*)ALLOC( newBufferSize + extraBuffer.GetLength() + 1 ); // null terminator for include parser
         memcpy( bufferCopy, outputBuffer, newBufferSize );
         bufferCopy[ newBufferSize ] = 0; // null terminator for include parser
+        if ( !clangTidyConfigureFilePath.IsEmpty() )
+        {
+            memcpy( bufferCopy + newBufferSize + 1, extraBuffer.Get(), extraBuffer.GetLength() );
+        }
     }
 
-    job->OwnData( bufferCopy, newBufferSize );
+    job->OwnData( bufferCopy, newBufferSize + extraBuffer.GetLength() );
+
 }
 
 // WriteTmpFile
@@ -2149,7 +2189,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
             return NODE_RESULT_FAILED;
         }
     }
-    if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
+    if ( tmpFile.Write( dataToWrite, dataToWriteSize - job->GetExtraDataSize() ) != dataToWriteSize - job->GetExtraDataSize() )
     {
         job->Error( "Failed to write to temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
         job->OnSystemError();
@@ -2158,6 +2198,35 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     tmpFile.Close();
 
     FileIO::WorkAroundForWindowsFilePermissionProblem( tmpFileName );
+
+    if ( job->GetExtraDataSize() != 0 )
+    {
+        FileStream tmpConfigFile;
+        AStackString<> configFileName;
+        configFileName += tmpDirectory;
+        configFileName += sourceFile->GetName().FindLast(NATIVE_SLASH) + 1;
+        configFileName += ".config.yaml";
+        if ( WorkerThread::CreateTempFile( configFileName, tmpConfigFile ) == false )
+        {
+            FileIO::WorkAroundForWindowsFilePermissionProblem( configFileName, FileStream::WRITE_ONLY, 10 ); // 10s max wait
+
+            // Try again
+            if ( WorkerThread::CreateTempFile( configFileName, tmpConfigFile ) == false )
+            {
+                job->Error( "Failed to create temp config file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, configFileName.Get(), GetName().Get() );
+                job->OnSystemError();
+                return NODE_RESULT_FAILED;
+            }
+        }
+        if ( tmpConfigFile.Write( (uint8_t*)dataToWrite + dataToWriteSize - job->GetExtraDataSize() + 1, job->GetExtraDataSize()) != job->GetExtraDataSize() )
+        {
+            job->Error( "Failed to write to temp config file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, configFileName.Get(), GetName().Get() );
+            job->OnSystemError();
+            return NODE_RESULT_FAILED;
+        }
+        tmpConfigFile.Close();
+        FileIO::WorkAroundForWindowsFilePermissionProblem( configFileName );
+    }
 
     // On remote workers, free compressed buffer as we don't need it anymore
     // This reduces memory consumed on the remote worker.

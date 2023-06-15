@@ -51,6 +51,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
     REFLECT( m_Hidden,                              "Hidden",                           MetaOptional() )
+    REFLECT( m_ClangTidyConfigurationFile,          "ClangTidyConfigurationFile",       MetaOptional() + MetaFile() )
     // Precompiled Headers
     REFLECT( m_PCHInputFile,                        "PCHInputFile",                     MetaOptional() + MetaFile() )
     REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
@@ -315,6 +316,22 @@ ObjectListNode::ObjectListNode()
                                                            m_ExtraPDBPath,
                                                            m_ExtraASMPath,
                                                            m_ExtraSourceDependenciesPath );
+
+    // clang-tidy
+    if ( m_CompilerFlags.IsClangTidy() )
+    {
+        if (m_ClangTidyConfigurationFile.IsEmpty())
+        {
+            Error::Error_1101_MissingProperty( iter, function, AStackString<>( "ClangTidyConfigurationFile" ) );
+            return false;
+        }
+
+        Dependencies configFile;
+        if ( !Function::GetFileNode( nodeGraph, iter, function, m_ClangTidyConfigurationFile, ".ClangTidyConfigurationFile", configFile ) )
+        {
+            return false; // GetFileNode will have emitted an error
+        }
+    }
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( compilerInputPath.GetSize() +
@@ -780,6 +797,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_CompilerOptions = compilerOptions;
     node->m_CompilerOptionsDeoptimized = compilerOptionsDeoptimized;
     node->m_CompilerInputFile = objectInput;
+    node->m_ClangTidyConfigurationFile = m_ClangTidyConfigurationFile;
     node->m_CompilerOutputExtension = m_CompilerOutputExtension;
     node->m_PCHObjectFileName = pchObjectName;
     if ( flags.IsCreatingPCH() )
