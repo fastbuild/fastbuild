@@ -1023,7 +1023,7 @@ void TestGraph::DBLocation() const
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        AString dbFile( fBuild.GetDependencyGraphFile() );
+        const AString & dbFile( fBuild.GetDependencyGraphFile() );
         EnsureFileDoesNotExist( dbFile );
 
         TEST_ASSERT( fBuild.Build( "TestTarget" ) );
@@ -1037,7 +1037,7 @@ void TestGraph::DBLocation() const
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        AString dbFile( fBuild.GetDependencyGraphFile() );
+        const AString & dbFile( fBuild.GetDependencyGraphFile() );
         EnsureFileDoesNotExist( dbFile );
 
         TEST_ASSERT( fBuild.Build( "TestTarget" ) );
