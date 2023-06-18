@@ -72,6 +72,10 @@
     <td>Allow build to continue after a DB move.</td>
   </tr>
   <tr>
+    <td><a href="#dbfile">-dbfile &lt;path&gt;</a></td>
+    <td>Explicitly specify the dependency database file to use.</td>
+  </tr>
+  <tr>
     <td><a href="#debug_fbuild">-debug</a></td>
     <td>[Windows Only] Allow attaching a debugger immediately on startup.</td>
   </tr>
@@ -344,7 +348,13 @@ specified instead.</p>
 to continue after this error has been emitted, ignoring and replacing the DB file.</p>
 </div>
 
-    <div class='newsitemheader' id="debug_fbuild">-debug</div>
+    <div class='newsitemheader' id="dbfile">-dbfile &lt;path&gt;</div>
+    <div class='newsitembody'>
+<p>Explicitly specify the dependency database file to use. By default, FASTBuild will load and save its dependency database in the same directory as the config file
+(with a ".platform.fdb" suffix). This option allows the file to be explicitly specified instead.</p>
+</div>
+
+<div class='newsitemheader' id="debug_fbuild">-debug</div>
     <div class='newsitembody'>
 <p>[Windows Only] Display a message box on startup to allow a debugger to be attached. Can be useful if triaging problems with FASTBuild that can't
 be reproduced in the debugger.</p>
