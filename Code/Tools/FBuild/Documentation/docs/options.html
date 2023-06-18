@@ -64,7 +64,7 @@
     <td>Generate JSON compilation database for the specified targets.</td>
   </tr>
   <tr>
-    <td><a href="#config">-config [path]</a></td>
+    <td><a href="#config">-config &lt;path&gt;</a></td>
     <td>Explicitly specify the config file to use.</td>
   </tr>
   <tr>
@@ -331,13 +331,13 @@ information and performance metrics. This can be used to assist troubleshooting.
 <p>Instead of building specified targets generate a <a href="https://clang.llvm.org/docs/JSONCompilationDatabase.html">JSON compilation database</a> for them. Resulting compilation database will include entries for all source files from ObjectList and Library nodes that are dependencies of the specified targets.</p>
 </div>
 
-    <div class='newsitemheader' id="config">-config [path]</div>
+    <div class='newsitemheader' id="config">-config &lt;path&gt;</div>
     <div class='newsitembody'>
 <p>Explicitly specify the config file to use.  By default, FASTBuild looks for "fbuild.bff" in the current directory.  This options allows a file to be explicitly
 specified instead.</p>
 </div>
 
-    <div class='newsitemheader' id="continueafterdbmove">--continueafterdbmove</div>
+    <div class='newsitemheader' id="continueafterdbmove">-continueafterdbmove</div>
     <div class='newsitembody'>
 <p>Allow build to continue after a DB move.</p>
 <p>FASTBuild's database is tied to the directory in which it was created and cannot be moved. If a move is detected, an error will be emitted. -continueafterdbmove allows the build
