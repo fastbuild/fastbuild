@@ -53,10 +53,10 @@ public:
     void                        Swap( Array< T > & other );
 
     // sorting
-    void                        Sort() { ShellSort( m_Begin, m_Begin + m_Size, AscendingCompare() ); }
-    void                        SortDeref() { ShellSort( m_Begin, m_Begin + m_Size, AscendingCompareDeref() ); }
+    void                        Sort() { QuickSort( m_Begin, m_Begin + m_Size, AscendingCompare() ); }
+    void                        SortDeref() { QuickSort( m_Begin, m_Begin + m_Size, AscendingCompareDeref() ); }
     template < class COMPARER >
-    void                        Sort( const COMPARER & comp ) { ShellSort( m_Begin, m_Begin + m_Size, comp ); }
+    void                        Sort( const COMPARER & comp ) { QuickSort( m_Begin, m_Begin + m_Size, comp ); }
 
     // find
     template < class U >
