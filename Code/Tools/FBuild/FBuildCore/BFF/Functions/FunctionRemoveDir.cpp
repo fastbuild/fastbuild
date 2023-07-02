@@ -42,7 +42,7 @@ FunctionRemoveDir::FunctionRemoveDir()
         return false;
     }
 
-    RemoveDirNode * removeDirNode = nodeGraph.CreateRemoveDirNode( m_AliasForFunction );
+    Node * removeDirNode = nodeGraph.CreateNode<RemoveDirNode>( m_AliasForFunction );
 
     if ( !PopulateProperties( nodeGraph, funcStartIter, removeDirNode ) )
     {

@@ -327,46 +327,6 @@ void Node::SetLastBuildTime( uint32_t ms )
     AtomicStoreRelaxed( &m_LastBuildTimeMs, ms );
 }
 
-// CreateNode
-//------------------------------------------------------------------------------
-/*static*/ Node * Node::CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name )
-{
-    switch ( nodeType )
-    {
-        case Node::PROXY_NODE:          ASSERT( false ); return nullptr;
-        case Node::COPY_FILE_NODE:      return nodeGraph.CreateCopyFileNode( name );
-        case Node::DIRECTORY_LIST_NODE: return nodeGraph.CreateDirectoryListNode( name );
-        case Node::EXEC_NODE:           return nodeGraph.CreateExecNode( name );
-        case Node::FILE_NODE:           return nodeGraph.CreateFileNode( name );
-        case Node::LIBRARY_NODE:        return nodeGraph.CreateLibraryNode( name );
-        case Node::OBJECT_NODE:         return nodeGraph.CreateObjectNode( name );
-        case Node::ALIAS_NODE:          return nodeGraph.CreateAliasNode( name );
-        case Node::EXE_NODE:            return nodeGraph.CreateExeNode( name );
-        case Node::CS_NODE:             return nodeGraph.CreateCSNode( name );
-        case Node::UNITY_NODE:          return nodeGraph.CreateUnityNode( name );
-        case Node::TEST_NODE:           return nodeGraph.CreateTestNode( name );
-        case Node::COMPILER_NODE:       return nodeGraph.CreateCompilerNode( name );
-        case Node::DLL_NODE:            return nodeGraph.CreateDLLNode( name );
-        case Node::VCXPROJECT_NODE:     return nodeGraph.CreateVCXProjectNode( name );
-        case Node::VSPROJEXTERNAL_NODE: return nodeGraph.CreateVSProjectExternalNode( name );
-        case Node::OBJECT_LIST_NODE:    return nodeGraph.CreateObjectListNode( name );
-        case Node::COPY_DIR_NODE:       return nodeGraph.CreateCopyDirNode( name );
-        case Node::SLN_NODE:            return nodeGraph.CreateSLNNode( name );
-        case Node::REMOVE_DIR_NODE:     return nodeGraph.CreateRemoveDirNode( name );
-        case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
-        case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
-        case Node::TEXT_FILE_NODE:      return nodeGraph.CreateTextFileNode( name );
-        case Node::LIST_DEPENDENCIES_NODE: return nodeGraph.CreateListDependenciesNode( name );
-        case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
-    }
-
-    #if defined( __GNUC__ ) || defined( _MSC_VER )
-        // GCC and incorrectly reports reaching end of non-void function (as of GCC 7.3.0)
-        // MSVC incorrectly reports reaching end of non-void function (as of VS 2017)
-        return nullptr;
-    #endif
-}
-
 // Load
 //------------------------------------------------------------------------------
 /*static*/ Node * Node::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
@@ -382,7 +342,7 @@ void Node::SetLastBuildTime( uint32_t ms )
     VERIFY( stream.Read( name ) );
 
     // Create node
-    Node * n = CreateNode( nodeGraph, (Type)nodeType, name );
+    Node * n = nodeGraph.CreateNode( (Type)nodeType, name );
     ASSERT( n );
 
     // Early out for FileNode

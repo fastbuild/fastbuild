@@ -155,7 +155,7 @@ FunctionCopy::FunctionCopy()
         }
 
         // create our node
-        CopyFileNode * copyFileNode = nodeGraph.CreateCopyFileNode( dst );
+        CopyFileNode * copyFileNode = nodeGraph.CreateNode<CopyFileNode>( dst );
         copyFileNode->m_Source = srcNode->GetName();
         copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames;
         if ( !copyFileNode->Initialize( nodeGraph, funcStartIter, this ) )

@@ -7,6 +7,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
@@ -112,29 +113,13 @@ public:
     void RegisterNode( Node * n );
 
     // create new nodes
-    CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
-    CopyDirNode * CreateCopyDirNode( const AString & nodeName );
-    RemoveDirNode * CreateRemoveDirNode( const AString & nodeName );
-    ExecNode * CreateExecNode( const AString & dstFileName );
-    FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
-    DirectoryListNode * CreateDirectoryListNode( const AString & name );
-    LibraryNode *   CreateLibraryNode( const AString & libraryName );
-    ObjectNode *    CreateObjectNode( const AString & objectName );
-    AliasNode *     CreateAliasNode( const AString & aliasName );
-    DLLNode *       CreateDLLNode( const AString & dllName );
-    ExeNode *       CreateExeNode( const AString & exeName );
-    UnityNode * CreateUnityNode( const AString & unityName );
-    CSNode * CreateCSNode( const AString & csAssemblyName );
-    TestNode * CreateTestNode( const AString & testOutput );
-    CompilerNode * CreateCompilerNode( const AString & name );
-    VSProjectBaseNode * CreateVCXProjectNode( const AString & name );
-    VSProjectBaseNode * CreateVSProjectExternalNode( const AString& name );
-    SLNNode * CreateSLNNode( const AString & name );
-    ObjectListNode * CreateObjectListNode( const AString & listName );
-    XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
-    SettingsNode * CreateSettingsNode( const AString & name );
-    ListDependenciesNode* CreateListDependenciesNode( const AString& name );
-    TextFileNode * CreateTextFileNode( const AString & name );
+    Node *      CreateNode( Node::Type type, const AString & name );
+    template<class T>
+    T *         CreateNode( const AString & name )
+    {
+        return CreateNode( T::GetTypeS(), name )->template CastTo<T>();
+    }
+    FileNode *  CreateFileNode( const AString & fileName );
 
     void DoBuildPass( Node * nodeToBuild );
 

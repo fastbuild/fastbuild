@@ -34,7 +34,7 @@ FunctionSettings::FunctionSettings()
         return false;
     }
 
-    SettingsNode * settingsNode = nodeGraph.CreateSettingsNode( name );
+    SettingsNode * settingsNode = nodeGraph.CreateNode<SettingsNode>( name );
 
     if ( !PopulateProperties( nodeGraph, funcStartIter, settingsNode ) )
     {

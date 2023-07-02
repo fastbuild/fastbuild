@@ -150,7 +150,6 @@ public:
     inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
     inline void     SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
-    static Node *   CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name );
     static Node *   Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
     static void     LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
     static void     Save( IOStream & stream, const Node * node );

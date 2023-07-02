@@ -213,7 +213,8 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
         // default instance if needed.
         const AStackString<> settingsNodeName( "$$Settings$$" );
         const Node * settingsNode = FindNode( settingsNodeName );
-        m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : CreateSettingsNode( settingsNodeName ); // Create a default
+        m_Settings = settingsNode ? settingsNode->CastTo<SettingsNode>()
+                                  : CreateNode<SettingsNode>( settingsNodeName ); // Create a default
 
         // Parser will populate m_UsedFiles
         const Array<BFFFile *> & usedFiles = bffParser.GetUsedFiles();
@@ -794,302 +795,64 @@ void NodeGraph::RegisterNode( Node * node )
     AddNode( node );
 }
 
-// CreateCopyFileNode
+// CreateNode
 //------------------------------------------------------------------------------
-CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( dstFileName ) );
-
-    CopyFileNode * node = FNEW( CopyFileNode() );
-    node->SetName( dstFileName );
-    AddNode( node );
-    return node;
-}
-
-// CreateCopyDirNode
-//------------------------------------------------------------------------------
-CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName )
+Node * NodeGraph::CreateNode( Node::Type type, const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
 
-    CopyDirNode * node = FNEW( CopyDirNode() );
-    node->SetName( nodeName );
+    Node * node = nullptr;
+    switch ( type )
+    {
+        case Node::PROXY_NODE:              ASSERT( false ); return nullptr;
+        case Node::COPY_FILE_NODE:          node = FNEW( CopyFileNode() ); break;
+        case Node::DIRECTORY_LIST_NODE:     node = FNEW( DirectoryListNode() ); break;
+        case Node::EXEC_NODE:               node = FNEW( ExecNode() ); break;
+        case Node::FILE_NODE:               return CreateFileNode( name ); // TODO: Eliminate special case
+        case Node::LIBRARY_NODE:            node = FNEW( LibraryNode() ); break;
+        case Node::OBJECT_NODE:             node = FNEW( ObjectNode() ); break;
+        case Node::ALIAS_NODE:              node = FNEW( AliasNode() ); break;
+        case Node::EXE_NODE:                node = FNEW( ExeNode() ); break;
+        case Node::CS_NODE:                 node = FNEW( CSNode() ); break;
+        case Node::UNITY_NODE:              node = FNEW( UnityNode() ); break;
+        case Node::TEST_NODE:               node = FNEW( TestNode() ); break;
+        case Node::COMPILER_NODE:           node = FNEW( CompilerNode() ); break;
+        case Node::DLL_NODE:                node = FNEW( DLLNode() ); break;
+        case Node::VCXPROJECT_NODE:         node = FNEW( VCXProjectNode() ); break;
+        case Node::VSPROJEXTERNAL_NODE:     node = FNEW( VSProjectExternalNode() ); break;
+        case Node::OBJECT_LIST_NODE:        node = FNEW( ObjectListNode() ); break;
+        case Node::COPY_DIR_NODE:           node = FNEW( CopyDirNode() ); break;
+        case Node::SLN_NODE:                node = FNEW( SLNNode() ); break;
+        case Node::REMOVE_DIR_NODE:         node = FNEW( RemoveDirNode() ); break;
+        case Node::XCODEPROJECT_NODE:       node = FNEW( XCodeProjectNode() ); break;
+        case Node::SETTINGS_NODE:           node = FNEW( SettingsNode() ); break;
+        case Node::TEXT_FILE_NODE:          node = FNEW( TextFileNode() ); break;
+        case Node::LIST_DEPENDENCIES_NODE:  node = FNEW( ListDependenciesNode() ); break;
+        case Node::NUM_NODE_TYPES:          ASSERT( false ); return nullptr;
+    }
+
+    ASSERT( node ); // All cases handled above means this is impossible
+
+    // Names for files must be normalized by the time we get here
+    ASSERT( !node->IsAFile() || IsCleanPath( name ) );
+
+    // Store name and track new node
+    node->SetName( name );
     AddNode( node );
-    return node;
-}
 
-// CreateRemoveDirNode
-//------------------------------------------------------------------------------
-RemoveDirNode * NodeGraph::CreateRemoveDirNode( const AString & nodeName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    RemoveDirNode * node = FNEW( RemoveDirNode() );
-    node->SetName( nodeName );
-    AddNode( node );
-    return node;
-}
-
-// CreateExecNode
-//------------------------------------------------------------------------------
-ExecNode * NodeGraph::CreateExecNode( const AString & nodeName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( nodeName ) );
-
-    ExecNode * node = FNEW( ExecNode() );
-    node->SetName( nodeName );
-    AddNode( node );
     return node;
 }
 
 // CreateFileNode
 //------------------------------------------------------------------------------
-FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
+FileNode * NodeGraph::CreateFileNode( const AString & fileName )
 {
     ASSERT( Thread::IsMainThread() );
 
-    FileNode * node;
+    AStackString< 512 > fullPath;
+    CleanPath( fileName, fullPath );
+    FileNode * node = FNEW( FileNode( fullPath, Node::FLAG_ALWAYS_BUILD ) );
 
-    if ( cleanPath )
-    {
-        AStackString< 512 > fullPath;
-        CleanPath( fileName, fullPath );
-        node = FNEW( FileNode( fullPath, Node::FLAG_ALWAYS_BUILD ) );
-    }
-    else
-    {
-        node = FNEW( FileNode( fileName, Node::FLAG_ALWAYS_BUILD ) );
-    }
-
-    AddNode( node );
-    return node;
-}
-
-// CreateDirectoryListNode
-//------------------------------------------------------------------------------
-DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    DirectoryListNode * node = FNEW( DirectoryListNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateLibraryNode
-//------------------------------------------------------------------------------
-LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( libraryName ) );
-
-    LibraryNode * node = FNEW( LibraryNode() );
-    node->SetName( libraryName );
-    AddNode( node );
-    return node;
-}
-
-// CreateObjectNode
-//------------------------------------------------------------------------------
-ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( objectName ) );
-
-    ObjectNode * node = FNEW( ObjectNode() );
-    node->SetName( objectName );
-    AddNode( node );
-    return node;
-}
-
-// CreateAliasNode
-//------------------------------------------------------------------------------
-AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    AliasNode * node = FNEW( AliasNode() );
-    node->SetName( aliasName );
-    AddNode( node );
-    return node;
-}
-
-// CreateDLLNode
-//------------------------------------------------------------------------------
-DLLNode * NodeGraph::CreateDLLNode( const AString & dllName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( dllName ) );
-
-    DLLNode * node = FNEW( DLLNode() );
-    node->SetName( dllName );
-    AddNode( node );
-    return node;
-}
-
-// CreateExeNode
-//------------------------------------------------------------------------------
-ExeNode * NodeGraph::CreateExeNode( const AString & exeName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( exeName ) );
-
-    ExeNode * node = FNEW( ExeNode() );
-    node->SetName( exeName );
-    AddNode( node );
-    return node;
-}
-
-// CreateUnityNode
-//------------------------------------------------------------------------------
-UnityNode * NodeGraph::CreateUnityNode( const AString & unityName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    UnityNode * node = FNEW( UnityNode() );
-    node->SetName( unityName );
-    AddNode( node );
-    return node;
-}
-
-// CreateCSNode
-//------------------------------------------------------------------------------
-CSNode * NodeGraph::CreateCSNode( const AString & csAssemblyName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( csAssemblyName ) );
-
-    CSNode * node = FNEW( CSNode() );
-    node->SetName( csAssemblyName );
-    AddNode( node );
-    return node;
-}
-
-// CreateTestNode
-//------------------------------------------------------------------------------
-TestNode * NodeGraph::CreateTestNode( const AString & testOutput )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( testOutput ) );
-
-    TestNode * node = FNEW( TestNode() );
-    node->SetName( testOutput );
-    AddNode( node );
-    return node;
-}
-
-// CreateCompilerNode
-//------------------------------------------------------------------------------
-CompilerNode * NodeGraph::CreateCompilerNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    CompilerNode * node = FNEW( CompilerNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateVCXProjectNode
-//------------------------------------------------------------------------------
-VSProjectBaseNode * NodeGraph::CreateVCXProjectNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( name ) );
-
-    VCXProjectNode * node = FNEW( VCXProjectNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateVSProjectExternalNode
-//------------------------------------------------------------------------------
-VSProjectBaseNode * NodeGraph::CreateVSProjectExternalNode(const AString& name)
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( name ) );
-
-    VSProjectExternalNode* node = FNEW( VSProjectExternalNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateSLNNode
-//------------------------------------------------------------------------------
-SLNNode * NodeGraph::CreateSLNNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( name ) );
-
-    SLNNode * node = FNEW( SLNNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateObjectListNode
-//------------------------------------------------------------------------------
-ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    ObjectListNode * node = FNEW( ObjectListNode() );
-    node->SetName( listName );
-    AddNode( node );
-    return node;
-}
-
-// CreateXCodeProjectNode
-//------------------------------------------------------------------------------
-XCodeProjectNode * NodeGraph::CreateXCodeProjectNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( name ) );
-
-    XCodeProjectNode * node = FNEW( XCodeProjectNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateSettingsNode
-//------------------------------------------------------------------------------
-SettingsNode * NodeGraph::CreateSettingsNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    SettingsNode * node = FNEW( SettingsNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateListDependenciesNode
-//------------------------------------------------------------------------------
-ListDependenciesNode * NodeGraph::CreateListDependenciesNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    ListDependenciesNode * node = FNEW( ListDependenciesNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateTextFileNode
-//------------------------------------------------------------------------------
-TextFileNode* NodeGraph::CreateTextFileNode( const AString& nodeName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( nodeName ) );
-
-    TextFileNode* node = FNEW( TextFileNode() );
-    node->SetName( nodeName );
     AddNode( node );
     return node;
 }
@@ -2079,7 +1842,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             else
             {
                 // Create the dependency
-                newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
+                newDepNode = CreateNode( oldDepNode->GetType(), oldDepNode->GetName() );
                 ASSERT( newDepNode );
                 newDeps.Add( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
 

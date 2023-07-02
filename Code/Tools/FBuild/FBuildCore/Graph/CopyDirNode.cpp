@@ -135,7 +135,7 @@ CopyDirNode::~CopyDirNode() = default;
             Node * n = nodeGraph.FindNode( dstFile );
             if ( n == nullptr )
             {
-                CopyFileNode * copyFileNode = nodeGraph.CreateCopyFileNode( dstFile );
+                CopyFileNode * copyFileNode = nodeGraph.CreateNode<CopyFileNode>( dstFile );
                 copyFileNode->m_Source = srcFileNode->GetName();
                 copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames; // inherit PreBuildDependencies
                 const BFFToken * token = nullptr;

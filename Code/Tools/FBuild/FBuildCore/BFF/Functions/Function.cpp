@@ -562,8 +562,8 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         Node * node = nodeGraph.FindNode( name );
         if ( node == nullptr )
         {
-            node = nodeGraph.CreateDirectoryListNode( name );
-            DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+            DirectoryListNode * dln = nodeGraph.CreateNode<DirectoryListNode>( name );
+            node = dln;
             dln->m_Path = path;
             if ( patterns )
             {
@@ -645,7 +645,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         }
 
         // Implicitly create the new node
-        compilerNode = nodeGraph.CreateCompilerNode( nodeName );
+        compilerNode = nodeGraph.CreateNode<CompilerNode>( nodeName );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "Executable", compiler ) );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
         const char * lastSlash = compiler.FindLast( NATIVE_SLASH );
@@ -929,7 +929,7 @@ bool Function::ProcessAlias( NodeGraph & nodeGraph, const BFFToken * iter, Depen
     }
 
     // create an alias against the node
-    AliasNode * an = nodeGraph.CreateAliasNode( m_AliasForFunction );
+    AliasNode * an = nodeGraph.CreateNode<AliasNode>( m_AliasForFunction );
     an->m_StaticDependencies = nodesToAlias; // TODO: make this use m_Targets & Initialize()
 
     // clear the string so it can't be used again

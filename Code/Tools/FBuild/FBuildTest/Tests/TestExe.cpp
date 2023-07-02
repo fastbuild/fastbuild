@@ -46,7 +46,7 @@ void TestExe::CreateNode() const
     #else
         AStackString<> exeName( "/tmp/exe.exe" );
     #endif
-    const ExeNode * exeNode = ng.CreateExeNode( exeName );
+    const ExeNode * exeNode = ng.CreateNode<ExeNode>( exeName );
     TEST_ASSERT( exeNode->GetType() == Node::EXE_NODE );
     TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
     TEST_ASSERT( AStackString<>( "Exe" ) == exeNode->GetTypeName() );
