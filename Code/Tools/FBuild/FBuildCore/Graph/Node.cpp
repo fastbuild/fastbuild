@@ -47,7 +47,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/CRC32.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Profile/Profile.h"
@@ -715,7 +715,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 //------------------------------------------------------------------------------
 void Node::SetName( AString && name )
 {
-    m_NameCRC = CRC32::CalcLower( name );
+    m_NameHash = CalcNameHash( name );
     m_Name = Move( name );
 }
 
@@ -1043,6 +1043,16 @@ void Node::ReplaceDummyName( const AString & newName )
 
     // Normalize path
     NodeGraph::CleanPath( path, outFixedPath );
+}
+
+// CalcNameHash
+//------------------------------------------------------------------------------
+/*static*/ uint32_t Node::CalcNameHash( const AString & name )
+{
+    // xxHash3 returns a 64 bit hash and we use the lower 32 bits
+    AStackString<> nameLower( name );
+    nameLower.ToLower();
+    return static_cast<uint32_t>( xxHash3::Calc64( nameLower ) );
 }
 
 // CleanMessageToPreventMSBuildFailure

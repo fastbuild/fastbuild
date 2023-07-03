@@ -307,7 +307,7 @@ Report::IncludeStatsMap::~IncludeStatsMap()
 Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 {
     // caculate table entry
-    const uint32_t hash = node->GetNameCRC();
+    const uint32_t hash = node->GetNameHash();
     const uint32_t key = ( hash & 0xFFFF );
     IncludeStats * item = m_Table[ key ];
 
@@ -330,7 +330,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 {
     // caculate table entry
-    const uint32_t hash = node->GetNameCRC();
+    const uint32_t hash = node->GetNameHash();
     const uint32_t key = ( hash & 0xFFFF );
 
     // insert new item

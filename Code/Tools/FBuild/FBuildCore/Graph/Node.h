@@ -127,7 +127,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
-    inline uint32_t        GetNameCRC() const { return m_NameCRC; }
+    uint32_t        GetNameHash() const { return m_NameHash; }
     inline Type GetType() const { return m_Type; }
     inline const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
     inline static const char * GetTypeName( Type t ) { return s_NodeTypeNames[ t ]; }
@@ -180,6 +180,8 @@ public:
     inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
     inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+
+    static uint32_t CalcNameHash( const AString & name );
 
     static void CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg );
 
@@ -256,7 +258,7 @@ protected:
     // Note: Unused 2 bytes here
     uint32_t            m_RecursiveCost = 0;        // Recursive cost used during task ordering
     Node *              m_Next = nullptr;           // Node map in-place linked list pointer
-    uint32_t            m_NameCRC;                  // Hash of mName. **Set by constructor**
+    uint32_t            m_NameHash;                 // Hash of mName
     uint32_t            m_LastBuildTimeMs = 0;      // Time it took to do last known full build of this node
     uint32_t            m_ProcessingTime = 0;       // Time spent on this node during this build
     uint32_t            m_CachingTime = 0;          // Time spent caching this node

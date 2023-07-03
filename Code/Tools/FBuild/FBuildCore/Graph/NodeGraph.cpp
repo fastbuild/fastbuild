@@ -45,7 +45,6 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/CRC32.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Thread.h"
@@ -887,7 +886,7 @@ void NodeGraph::AddNode( Node * node )
     ASSERT( FindNodeInternal( node->GetName() ) == nullptr ); // node name must be unique
 
     // track in NodeMap
-    const uint32_t crc = CRC32::CalcLower( node->GetName() );
+    const uint32_t crc = Node::CalcNameHash( node->GetName() );
     const size_t key = ( crc & m_NodeMapMaxKey );
     node->m_Next = m_NodeMap[ key ];
     m_NodeMap[ key ] = node;
@@ -1318,15 +1317,15 @@ Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
 {
     ASSERT( Thread::IsMainThread() );
 
-    const uint32_t crc = CRC32::CalcLower( fullPath );
-    const size_t key = ( crc & m_NodeMapMaxKey );
+    const uint32_t hash = Node::CalcNameHash( fullPath );
+    const size_t key = ( hash & m_NodeMapMaxKey );
 
     Node * n = m_NodeMap[ key ];
     while ( n )
     {
-        if ( n->GetNameCRC() == crc )
+        if ( n->GetNameHash() == hash )
         {
-            if ( n->GetName().CompareI( fullPath ) == 0 )
+            if ( n->GetName().EqualsI( fullPath ) )
             {
                 return n;
             }
