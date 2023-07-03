@@ -25,7 +25,7 @@ REFLECT_END( CopyFileNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CopyFileNode::CopyFileNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
 {
     m_Type = Node::COPY_FILE_NODE;
 }

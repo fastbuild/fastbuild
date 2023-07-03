@@ -41,7 +41,7 @@ public:
     ObjectNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     // simplified remote constructor
-    explicit ObjectNode( const AString & objectName,
+    explicit ObjectNode( AString && objectName,
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
                          uint32_t flags );

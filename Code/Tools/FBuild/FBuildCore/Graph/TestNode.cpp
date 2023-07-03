@@ -43,7 +43,7 @@ REFLECT_END( TestNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TestNode::TestNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_TestExecutable()
     , m_TestArguments()
     , m_TestWorkingDir()
@@ -150,7 +150,7 @@ const char * TestNode::GetEnvironmentString() const
             Node * sn = nodeGraph.FindNode( file.m_Name );
             if ( sn == nullptr )
             {
-                sn = nodeGraph.CreateFileNode( file.m_Name );
+                sn = nodeGraph.CreateNode<FileNode>( file.m_Name );
             }
             else if ( sn->IsAFile() == false )
             {

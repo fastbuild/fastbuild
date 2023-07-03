@@ -87,7 +87,7 @@ public:
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ListDependenciesNode::ListDependenciesNode()
-: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
 {
     m_Type = Node::LIST_DEPENDENCIES_NODE;
 }

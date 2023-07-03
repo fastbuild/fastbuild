@@ -122,12 +122,9 @@ REFLECT_END( Node )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Node::Node( const AString & name, Type type, uint8_t controlFlags )
+Node::Node( Type type )
 {
     m_Type = type;
-    m_ControlFlags = controlFlags;
-
-    SetName( name );
 
     // Compile time check to ensure name vector is in sync
     static_assert( sizeof( s_NodeTypeNames ) / sizeof(const char *) == NUM_NODE_TYPES, "s_NodeTypeNames item count doesn't match NUM_NODE_TYPES" );
@@ -338,11 +335,11 @@ void Node::SetLastBuildTime( uint32_t ms )
     PROFILE_SECTION( Node::GetTypeName( (Type)nodeType ) );
 
     // Name of node
-    AStackString<> name;
+    AString name;
     VERIFY( stream.Read( name ) );
 
     // Create node
-    Node * n = nodeGraph.CreateNode( (Type)nodeType, name );
+    Node * n = nodeGraph.CreateNode( (Type)nodeType, Move( name ) );
     ASSERT( n );
 
     // Early out for FileNode
@@ -716,10 +713,10 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // SetName
 //------------------------------------------------------------------------------
-void Node::SetName( const AString & name )
+void Node::SetName( AString && name )
 {
-    m_Name = name;
     m_NameCRC = CRC32::CalcLower( name );
+    m_Name = Move( name );
 }
 
 // ReplaceDummyName

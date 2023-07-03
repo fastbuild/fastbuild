@@ -31,10 +31,11 @@ REFLECT_END( DirectoryListNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 DirectoryListNode::DirectoryListNode()
-    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_ALWAYS_BUILD )
+    : Node( Node::DIRECTORY_LIST_NODE )
     , m_Recursive( true )
     , m_IncludeReadOnlyStatusInHash( false )
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_LastBuildTimeMs = 100;
 }
 

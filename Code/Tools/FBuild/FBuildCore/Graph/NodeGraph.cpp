@@ -797,7 +797,7 @@ void NodeGraph::RegisterNode( Node * node )
 
 // CreateNode
 //------------------------------------------------------------------------------
-Node * NodeGraph::CreateNode( Node::Type type, const AString & name )
+Node * NodeGraph::CreateNode( Node::Type type, AString && name )
 {
     ASSERT( Thread::IsMainThread() );
 
@@ -808,7 +808,12 @@ Node * NodeGraph::CreateNode( Node::Type type, const AString & name )
         case Node::COPY_FILE_NODE:          node = FNEW( CopyFileNode() ); break;
         case Node::DIRECTORY_LIST_NODE:     node = FNEW( DirectoryListNode() ); break;
         case Node::EXEC_NODE:               node = FNEW( ExecNode() ); break;
-        case Node::FILE_NODE:               return CreateFileNode( name ); // TODO: Eliminate special case
+        case Node::FILE_NODE:
+        {
+            node = FNEW( FileNode() );
+            node->m_ControlFlags = Node::FLAG_ALWAYS_BUILD; // TODO:C Eliminate special case
+            break;
+        }
         case Node::LIBRARY_NODE:            node = FNEW( LibraryNode() ); break;
         case Node::OBJECT_NODE:             node = FNEW( ObjectNode() ); break;
         case Node::ALIAS_NODE:              node = FNEW( AliasNode() ); break;
@@ -837,24 +842,38 @@ Node * NodeGraph::CreateNode( Node::Type type, const AString & name )
     ASSERT( !node->IsAFile() || IsCleanPath( name ) );
 
     // Store name and track new node
-    node->SetName( name );
+    node->SetName( Move( name ) );
     AddNode( node );
 
     return node;
 }
 
-// CreateFileNode
+
+// CreateNode
 //------------------------------------------------------------------------------
-FileNode * NodeGraph::CreateFileNode( const AString & fileName )
+Node * NodeGraph::CreateNode( Node::Type type, const AString & name )
 {
-    ASSERT( Thread::IsMainThread() );
+    // Where possible callers should call the move version to transfer ownership
+    // of strings, but calers don't always have a string to transfer so this 
+    // helper can be called in those situations
+    AString nameCopy;
 
-    AStackString< 512 > fullPath;
-    CleanPath( fileName, fullPath );
-    FileNode * node = FNEW( FileNode( fullPath, Node::FLAG_ALWAYS_BUILD ) );
+    // TODO:C Eliminate special case handling of FileNode
+    // For historical reasons users of FileNodes don't clean paths so we have to
+    // do it here. Ideally this special case would be eliminated in the future.
+    if ( type == Node::FILE_NODE )
+    {
+        // Clean path
+        AStackString< 512 > cleanPath;
+        CleanPath( name, cleanPath );
+        nameCopy = cleanPath;
+    }
+    else
+    {
+        nameCopy = name;
+    }
 
-    AddNode( node );
-    return node;
+    return CreateNode( type, Move( nameCopy ) );
 }
 
 // AddNode

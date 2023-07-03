@@ -95,7 +95,7 @@ REFLECT_END( ObjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ObjectNode::ObjectNode()
-: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
 {
     m_Type = OBJECT_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
@@ -170,14 +170,15 @@ ObjectNode::ObjectNode()
 
 // CONSTRUCTOR (Remote)
 //------------------------------------------------------------------------------
-ObjectNode::ObjectNode( const AString & objectName,
+ObjectNode::ObjectNode( AString && objectName,
                         NodeProxy * srcFile,
                         const AString & compilerOptions,
                         uint32_t flags )
-: FileNode( objectName, Node::FLAG_NONE )
-, m_CompilerOptions( compilerOptions )
-, m_Remote( true )
+    : FileNode()
+    , m_CompilerOptions( compilerOptions )
+    , m_Remote( true )
 {
+    SetName( Move( objectName ) );
     m_Type = OBJECT_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
     m_CompilerFlags.m_Flags = flags;
@@ -294,7 +295,7 @@ ObjectNode::~ObjectNode()
         Node * fn = nodeGraph.FindNode( *it );
         if ( fn == nullptr )
         {
-            fn = nodeGraph.CreateFileNode( *it );
+            fn = nodeGraph.CreateNode<FileNode>( *it );
         }
         else if ( fn->IsAFile() == false )
         {
@@ -893,8 +894,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 //------------------------------------------------------------------------------
 /*static*/ Node * ObjectNode::LoadRemote( IOStream & stream )
 {
-    AStackString<> name;
-    AStackString<> sourceFile;
+    AString name;
+    AString sourceFile;
     uint32_t flags;
     AStackString<> compilerArgs;
     if ( ( stream.Read( name ) == false ) ||
@@ -905,9 +906,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         return nullptr;
     }
 
-    NodeProxy * srcFile = FNEW( NodeProxy( sourceFile ) );
+    NodeProxy * srcFile = FNEW( NodeProxy( Move( sourceFile ) ) );
 
-    return FNEW( ObjectNode( name, srcFile, compilerArgs, flags ) );
+    return FNEW( ObjectNode( Move( name ), srcFile, compilerArgs, flags ) );
 }
 
 // DetermineFlags

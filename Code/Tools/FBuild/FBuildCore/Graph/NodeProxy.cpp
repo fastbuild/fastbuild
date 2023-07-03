@@ -7,9 +7,10 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-NodeProxy::NodeProxy( const AString & name )
-    : Node( name, Node::PROXY_NODE, 0 )
+NodeProxy::NodeProxy( AString && name )
+    : Node( Node::PROXY_NODE )
 {
+    SetName( Move( name ) );
 }
 
 // DESTRUCTOR

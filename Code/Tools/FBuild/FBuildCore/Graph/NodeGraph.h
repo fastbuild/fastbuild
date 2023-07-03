@@ -113,13 +113,13 @@ public:
     void RegisterNode( Node * n );
 
     // create new nodes
+    Node *      CreateNode( Node::Type type, AString && name );
     Node *      CreateNode( Node::Type type, const AString & name );
     template<class T>
     T *         CreateNode( const AString & name )
     {
         return CreateNode( T::GetTypeS(), name )->template CastTo<T>();
     }
-    FileNode *  CreateFileNode( const AString & fileName );
 
     void DoBuildPass( Node * nodeToBuild );
 

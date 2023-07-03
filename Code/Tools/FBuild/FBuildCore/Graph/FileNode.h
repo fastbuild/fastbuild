@@ -11,7 +11,7 @@
 class FileNode : public Node
 {
 public:
-    explicit FileNode( const AString & fileName, uint8_t controlFlags );
+    FileNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) override;
     virtual ~FileNode() override;
 

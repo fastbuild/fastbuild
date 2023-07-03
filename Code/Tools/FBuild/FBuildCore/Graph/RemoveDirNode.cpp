@@ -28,9 +28,10 @@ REFLECT_END( RemoveDirNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 RemoveDirNode::RemoveDirNode()
-    : Node( AString::GetEmpty(), Node::REMOVE_DIR_NODE, Node::FLAG_ALWAYS_BUILD )
+    : Node( Node::REMOVE_DIR_NODE )
     , m_RemovePathsRecurse( true )
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_RemovePatterns.EmplaceBack( "*" );
 }
 

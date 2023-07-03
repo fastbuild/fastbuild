@@ -29,7 +29,7 @@ REFLECT_END( CopyDirNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CopyDirNode::CopyDirNode()
-: Node( AString::GetEmpty(), Node::COPY_DIR_NODE, Node::FLAG_NONE )
+    : Node( Node::COPY_DIR_NODE )
 {
 }
 
@@ -119,7 +119,7 @@ CopyDirNode::~CopyDirNode() = default;
             Node * srcFileNode = nodeGraph.FindNode( srcFile );
             if ( srcFileNode == nullptr )
             {
-                srcFileNode = nodeGraph.CreateFileNode( srcFile );
+                srcFileNode = nodeGraph.CreateNode<FileNode>( srcFile );
             }
             else if ( srcFileNode->IsAFile() == false )
             {

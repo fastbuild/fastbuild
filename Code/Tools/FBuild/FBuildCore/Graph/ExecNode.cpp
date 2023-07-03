@@ -45,7 +45,7 @@ REFLECT_END( ExecNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ExecNode::ExecNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_ExecReturnCode( 0 )
     , m_ExecAlwaysShowOutput( false )
     , m_ExecUseStdOutAsOutput( false )
@@ -145,7 +145,7 @@ ExecNode::~ExecNode()
             Node * sn = nodeGraph.FindNode( file.m_Name );
             if ( sn == nullptr )
             {
-                sn = nodeGraph.CreateFileNode( file.m_Name );
+                sn = nodeGraph.CreateNode<FileNode>( file.m_Name );
             }
             else if ( sn->IsAFile() == false )
             {

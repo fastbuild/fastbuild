@@ -77,7 +77,7 @@ REFLECT_END( ObjectListNode )
 // ObjectListNode
 //------------------------------------------------------------------------------
 ObjectListNode::ObjectListNode()
-: Node( AString::GetEmpty(), Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
+    : Node( Node::OBJECT_LIST_NODE )
 {
     m_LastBuildTimeMs = 10000;
 
@@ -371,7 +371,7 @@ ObjectListNode::~ObjectListNode() = default;
                 Node * n = nodeGraph.FindNode( fIt->m_Name );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( fIt->m_Name );
+                    n = nodeGraph.CreateNode<FileNode>( fIt->m_Name );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -409,7 +409,7 @@ ObjectListNode::~ObjectListNode() = default;
                 Node * n = nodeGraph.FindNode( *it );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( *it );
+                    n = nodeGraph.CreateNode<FileNode>( *it );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -430,7 +430,7 @@ ObjectListNode::~ObjectListNode() = default;
                 Node * n = nodeGraph.FindNode( isolatedFile.GetFileName() );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( isolatedFile.GetFileName() );
+                    n = nodeGraph.CreateNode<FileNode>( isolatedFile.GetFileName() );
                 }
                 else if ( n->IsAFile() == false )
                 {

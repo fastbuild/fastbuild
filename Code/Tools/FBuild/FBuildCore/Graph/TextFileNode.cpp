@@ -30,7 +30,7 @@ REFLECT_END( TextFileNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TextFileNode::TextFileNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_TextFileAlways( false )
 {
     m_Type = TEXT_FILE_NODE;

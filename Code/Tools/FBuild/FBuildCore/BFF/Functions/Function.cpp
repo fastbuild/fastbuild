@@ -315,14 +315,14 @@ Function::~Function() = default;
     //  - For nodes that specify a name as a property (usually the output of the node)
     //    use that as the name (i.e. the filename is the name)
     //  - Otherwise, what would normally be the alias
-    AStackString<> nameFromMetaData;
+    AString nameFromMetaData;
     if ( GetNameForNode( nodeGraph, funcStartIter, node->GetReflectionInfoV(), nameFromMetaData ) == false )
     {
         FDELETE node;
         return false; // GetNameForNode will have emitted an error
     }
     const bool aliasUsedForName = nameFromMetaData.IsEmpty();
-    const AString & name = ( aliasUsedForName ) ? m_AliasForFunction : nameFromMetaData;
+    AString & name = ( aliasUsedForName ) ? m_AliasForFunction : nameFromMetaData;
     ASSERT( name.IsEmpty() == false );
 
     // Check name isn't already used
@@ -334,7 +334,7 @@ Function::~Function() = default;
     }
 
     // Set Name
-    node->SetName( name );
+    node->SetName( Move( name ) );
 
     // Register with NodeGraph
     nodeGraph.RegisterNode( node );
@@ -676,7 +676,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     Node * node = nodeGraph.FindNode( file );
     if ( node == nullptr )
     {
-        node = nodeGraph.CreateFileNode( file );
+        node = nodeGraph.CreateNode<FileNode>( file );
     }
     else if ( node->IsAFile() == false )
     {
@@ -786,7 +786,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     if ( n == nullptr )
     {
         // not found - create a new file node
-        n = nodeGraph.CreateFileNode( nodeName );
+        n = nodeGraph.CreateNode<FileNode>( nodeName );
         nodes.Add( n );
         return true;
     }

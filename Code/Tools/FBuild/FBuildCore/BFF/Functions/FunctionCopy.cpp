@@ -104,7 +104,7 @@ FunctionCopy::FunctionCopy()
             else
             {
                 // source file not defined by use - assume an external file
-                srcNodes.Append( nodeGraph.CreateFileNode( *it ) );
+                srcNodes.Append( nodeGraph.CreateNode<FileNode>( *it ) );
             }
         }
     }

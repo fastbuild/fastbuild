@@ -92,8 +92,10 @@ class NodeTestHelper : public Node
     REFLECT_DECLARE( NodeTestHelper )
 public:
     NodeTestHelper()
-        : Node( AStackString<>( "dummy" ), Node::PROXY_NODE, 0 )
-    {}
+        : Node( Node::PROXY_NODE )
+    {
+        SetName( AStackString<>( "placeholder" ) );
+    }
     virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ ) override
     {
         ASSERT( false );
@@ -169,7 +171,7 @@ void TestGraph::SingleFileNode() const
     TEST_ASSERT( ng.FindNode( testFileName ) == nullptr );
 
     // create the node, and make sure we can access it by name
-    FileNode * node = ng.CreateFileNode( testFileName );
+    FileNode * node = ng.CreateNode<FileNode>( testFileName );
     TEST_ASSERT( ng.FindNode( testFileName ) == node );
 
     TEST_ASSERT( fb.Build( node ) );
@@ -188,7 +190,7 @@ void TestGraph::SingleFileNodeMissing() const
 
     // make a node for a file that does not exist
     const AStackString<> testFileName( "ThisFileDoesNotExist.cpp" );
-    FileNode * node = ng.CreateFileNode( testFileName );
+    FileNode * node = ng.CreateNode<FileNode>( testFileName );
 
     // make sure build still passes
     // a missing file is not an error.  it would need to be required by something

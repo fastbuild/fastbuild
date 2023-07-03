@@ -43,7 +43,7 @@ REFLECT_END( CompilerNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilerNode::CompilerNode()
-    : Node( AString::GetEmpty(), Node::COMPILER_NODE, Node::FLAG_NONE )
+    : Node( Node::COMPILER_NODE )
     , m_AllowDistribution( true )
     , m_AllowResponseFile( false )
     , m_ForceResponseFile( false )

@@ -90,12 +90,13 @@ REFLECT_END( XCodeProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 XCodeProjectNode::XCodeProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
+    : FileNode()
     , m_XCodeOrganizationName( "Organization" )
     , m_XCodeBuildToolPath( "./FBuild" )
     , m_XCodeBuildToolArgs( "-ide $(FASTBUILD_TARGET)" )
     , m_XCodeBuildWorkingDir( "./" )
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_Type = Node::XCODEPROJECT_NODE;
 
     ProjectGeneratorBase::GetDefaultAllowedFileExtensions( m_ProjectAllowedFileExtensions );
