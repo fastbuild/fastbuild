@@ -355,7 +355,7 @@ void Node::SetLastBuildTime( uint32_t ms )
     // Build time
     uint32_t lastTimeToBuild;
     VERIFY( stream.Read( lastTimeToBuild ) );
-    n->SetLastBuildTime( lastTimeToBuild );    
+    n->SetLastBuildTime( lastTimeToBuild );
 
     // Deserialize properties
     Deserialize( stream, n, *n->GetReflectionInfoV() );
@@ -1050,14 +1050,14 @@ void Node::ReplaceDummyName( const AString & newName )
 /*static*/ void Node::CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg )
 {
     // Search for patterns that MSBuild detects and treats as errors:
-    // 
+    //
     //   <error|warning> <errorCode>: <message>
-    // 
+    //
     // and remove the colon so they are no longer detected:
-    // 
+    //
     //   <error|warning> <errorCode> <message>
-    // 
-    // These can be anywhere in the string, and are case and whitespace insensitive 
+    //
+    // These can be anywhere in the string, and are case and whitespace insensitive
     const char * pos = msg.Get();
     for ( ;; )
     {
@@ -1135,18 +1135,18 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
         // No - return build-wide environment
         return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
     }
-    
+
     // More than one caller could be retrieving the same env string
     // in some cases. For simplicity, we protect in all cases even
     // if we could avoid it as the mutex will not be heavily constested.
     MutexHolder mh( g_NodeEnvStringMutex );
-    
+
     // If we've previously built a custom env string, use it
     if ( inoutCachedEnvString )
     {
         return inoutCachedEnvString;
     }
-    
+
     // Caller owns the memory
     inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
     return inoutCachedEnvString;
@@ -1157,14 +1157,14 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
 void Node::RecordStampFromBuiltFile()
 {
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    
+
     // An external tool might fail to write a file. Higher level code checks for
     // that (see "missing despite success"), so we don't need to do anything here.
     if ( m_Stamp == 0 )
     {
         return;
     }
-    
+
     // On OS X, the 'ar' tool (for making libraries) appears to clamp the
     // modification time of libraries to whole seconds. On HFS/HFS+ file systems,
     // this doesn't matter because the resolution of the file system is 1 second.
@@ -1193,7 +1193,7 @@ void Node::RecordStampFromBuiltFile()
             {
                 // Set to current time
                 FileIO::SetFileLastWriteTimeToNow( m_Name );
-                
+
                 // Re-query the time from the file
                 m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
                 ASSERT( m_Stamp != 0 );

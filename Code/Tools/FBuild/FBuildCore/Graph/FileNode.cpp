@@ -42,8 +42,8 @@ FileNode::~FileNode() = default;
     #if defined( __WINDOWS__ )
         ASSERT( ( m_Name.FindLast( ':' ) == nullptr ) ||
                 ( m_Name.FindLast( ':' ) == ( m_Name.Get() + 1 ) ) );
-    #endif	
-	
+    #endif
+
     // NOTE: Not calling RecordStampFromBuiltFile as this is not a built file
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
     // Don't assert m_Stamp != 0 as input file might not exist

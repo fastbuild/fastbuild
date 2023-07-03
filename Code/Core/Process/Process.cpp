@@ -601,7 +601,7 @@ bool Process::ReadAllData( AString & outMem,
         if ( ( prevOutSize != outMem.GetLength() ) || ( prevErrSize != errMem.GetLength() ) )
         {
             #if defined( __LINUX__ )
-                // Reset sleep interval            
+                // Reset sleep interval
                 sleepIntervalMS = 1;
             #endif
             continue; // try reading again right away incase there is more
@@ -702,7 +702,7 @@ bool Process::ReadAllData( AString & outMem,
         {
             ASSERT( false ); // error!
         }
-        
+
         // Update length
         buffer.SetLength( sizeSoFar + bytesReadNow );
     }
@@ -749,7 +749,7 @@ bool Process::ReadAllData( AString & outMem,
             ASSERT( false ); // error!
             result = 0; // no bytes read
         }
-        
+
         // Update length
         buffer.SetLength( buffer.GetLength() + (uint32_t)result );
     }

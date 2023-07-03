@@ -1411,7 +1411,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         {
             pchKey = xxHash3::Calc64( cacheData, cacheDataSize );
         }
-        
+
         const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
 
         MultiBuffer buffer( cacheData, cacheDataSize );
@@ -2330,13 +2330,13 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             {
                 Thread::Sleep( 1 );
             }
-            
+
             // Add fake failure
             ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
             m_Result = 1;
             job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
             job->OnSystemError();
-            
+
             // Clear failure state
             sFakeSystemFailureState.Store( DISABLED );
         }
@@ -2551,7 +2551,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
     }
 
-    #if !defined( __WINDOWS__) 
+    #if !defined( __WINDOWS__)
         (void)stdOut; // No checks use stdOut outside of Windows right now
     #endif
 }

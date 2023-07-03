@@ -278,17 +278,17 @@ bool Worker::HasEnoughMemory()
             return ( m_LastMemoryCheckResult != 0 );
         }
         m_TimerLastMemoryCheck.Start();
-    
+
         PERFORMANCE_INFORMATION memInfo;
         memInfo.cb = sizeof( memInfo );
         if ( GetPerformanceInfo( &memInfo, sizeof( memInfo ) ) )
         {
             const uint64_t limitMemSize = memInfo.CommitLimit * memInfo.PageSize;
             const uint64_t currentMemSize = memInfo.CommitTotal * memInfo.PageSize;
-    
+
             // Calculate the free memory in MiB.
             const uint64_t freeMemSize = ( limitMemSize - currentMemSize ) / MEGABYTE;
-    
+
             // Check if the free memory is high enough
             const WorkerSettings & ws = WorkerSettings::Get();
             if ( freeMemSize > ws.GetMinimumFreeMemoryMiB() )
@@ -297,7 +297,7 @@ bool Worker::HasEnoughMemory()
                 return true;
             }
         }
-    
+
         // The machine doesn't have enough memory or query failed. Exclude this machine from worker pool.
         m_LastMemoryCheckResult = 0;
         return false;

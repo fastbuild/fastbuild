@@ -143,13 +143,13 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     {
         ++index; // Skip next arg which specifies the mode for '/sourceDependencies'
         return true;
-	}
+    }
     // Remove "/sourceDependencies<arg>"
     if ( IsStartOfCompilerArg_MSVC( token, "sourceDependencies" ) )
     {
         return true;
     }
-    
+
     return false;
 }
 

@@ -66,7 +66,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
         const float elapsedTime = m_TimerLastUpdate.GetElapsed();
         if ( elapsedTime >= sBrokerageAvailabilityUpdateTime )
         {
-            // If settings have changed, (re)create the file 
+            // If settings have changed, (re)create the file
             // If settings have not changed, update the modification timestamp
             const WorkerSettings & workerSettings = WorkerSettings::Get();
             const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();

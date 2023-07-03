@@ -159,7 +159,7 @@ NodeGraph::~NodeGraph()
                 corruptDBName += ".corrupt";
                 FileIO::FileMove( AStackString<>( nodeGraphDBFile ), corruptDBName ); // Will overwrite if needed
             }
-            
+
             // Create a fresh DB by parsing the BFF
             FDELETE( oldNG );
             NodeGraph * newNG = FNEW( NodeGraph );
@@ -854,7 +854,7 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name )
 Node * NodeGraph::CreateNode( Node::Type type, const AString & name )
 {
     // Where possible callers should call the move version to transfer ownership
-    // of strings, but calers don't always have a string to transfer so this 
+    // of strings, but calers don't always have a string to transfer so this
     // helper can be called in those situations
     AString nameCopy;
 
@@ -1507,8 +1507,8 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
     //
     // Some of these things depend on timing, so this check could conceivably run
     // when not stuck, but it will never falsly detect a cyclic dependency.
-    // 
-    
+    //
+
     // Early out if the root node is being processed
     if ( node->GetState() >= Node::State::BUILDING )
     {
@@ -1529,7 +1529,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
     JobQueue::Get().GetJobStats( numJobs, numJobsActive, numJobsDist, numJobsDistActive );
     if ( ( numJobs > 0 ) ||
          ( numJobsActive > 0 ) ||
-         ( numJobsDist > 0 ) || 
+         ( numJobsDist > 0 ) ||
          ( numJobsDistActive > 0 ) )
     {
         return false;

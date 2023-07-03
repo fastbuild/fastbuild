@@ -57,7 +57,7 @@ TextFileNode::~TextFileNode() = default;
 // DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
 /*virtual*/ bool TextFileNode::DetermineNeedToBuildStatic() const
-{  
+{
     if ( m_TextFileAlways )
     {
         FLOG_VERBOSE( "Need to build '%s' (TextFileAlways = true)", GetName().Get() );

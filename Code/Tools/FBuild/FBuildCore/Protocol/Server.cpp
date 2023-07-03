@@ -163,13 +163,13 @@ bool Server::IsSynchingTool( AString & statusStr ) const
         // This is usually null here, but might need to be freed if
         // we had the connection drop between message and payload
         FREE( (void *)( cs->m_CurrentMessage ) );
-    
+
         // delete any jobs where we were waiting on Tool synchronization
         for ( Job * job : cs->m_WaitingJobs )
         {
             delete job;
         }
-    
+
         FDELETE cs;
     }
 }
@@ -331,11 +331,11 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
 
         // deserialize job
         ConstMemoryStream ms( payload, payloadSize );
-    
+
         Job * job = FNEW( Job( ms ) );
         job->SetUserData( cs );
         job->SetResultCompressionLevel( msg->GetResultCompressionLevel() );
-    
+
         // Get ToolId
         const uint64_t toolId = msg->GetToolId();
         ASSERT( toolId );
@@ -370,8 +370,8 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                 else
                 {
                     // Take ownership of toolchain
-                    manifest->SetUserData( (void *)connection );                    
-                    
+                    manifest->SetUserData( (void *)connection );
+
                     const bool hasManifest = ( manifest->GetFiles().IsEmpty() == false );
                     if ( hasManifest )
                     {
@@ -382,7 +382,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                     {
                         // Manifest was not sync'd. This can happen if disconnection
                         // occurs before the manifest was received.
-                   
+
                         // request manifest
                         const Protocol::MsgRequestManifest reqMsg( toolId );
                         reqMsg.Send( connection );
@@ -435,7 +435,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
             //       when dealing with backwards compatibility with old workers)
             // If we ever break protocol compatibility, we can remove special handling
             static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
-            
+
             // This should not happen with latest code so we want to catch that when
             // debugging
             ASSERT( false && "MsgManifest corrupt" );
@@ -496,7 +496,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
                 //       when dealing with backwards compatibility with old workers)
                 // If we ever break protocol compatibility, we can remove special handling
                 static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
-            
+
                 // This should not happen with latest code so we want to catch that when
                 // debugging
                 ASSERT( false && "MsgFile corrupt" );
@@ -596,7 +596,7 @@ void Server::ThreadFunc()
         FinalizeCompletedJobs();
 
         FindNeedyClients();
-        
+
         TouchToolchains();
 
         JobQueueRemote::Get().MainThreadWait( 100 );
@@ -613,7 +613,7 @@ void Server::FindNeedyClients()
     }
 
     PROFILE_FUNCTION;
-    
+
     // determine job availability
     int32_t availableJobs = (int32_t)WorkerThreadRemote::GetNumCPUsToUse();
     if ( availableJobs == 0 )
@@ -727,9 +727,9 @@ void Server::FinalizeCompletedJobs()
                 {
                     ASSERT( cs->m_NumJobsActive.Load() > 0 );
                     cs->m_NumJobsActive.Decrement();
-                    
+
                     MutexHolder mh2( cs->m_Mutex );
-    
+
                     if ( job->GetResultCompressionLevel() == 0 )
                     {
                         // Uncompressed

@@ -366,7 +366,7 @@ LinkerNode::~LinkerNode()
         }
 
         // Show output if desired
-        const bool showCommandOutput = ( result != 0 ) || 
+        const bool showCommandOutput = ( result != 0 ) ||
                                        FBuild::Get().GetOptions().m_ShowCommandOutput;
         if ( showCommandOutput )
         {

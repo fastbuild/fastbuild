@@ -229,8 +229,8 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Use( const BFFToken * iter,
 
 // GetExtraOutputPaths
 //------------------------------------------------------------------------------
-void FunctionObjectList::GetExtraOutputPaths( const AString & args, 
-                                              AString & outPDBPath, 
+void FunctionObjectList::GetExtraOutputPaths( const AString & args,
+                                              AString & outPDBPath,
                                               AString & outASMPath,
                                               AString & outSourceDependenciesPath )
 {

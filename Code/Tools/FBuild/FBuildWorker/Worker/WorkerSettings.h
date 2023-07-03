@@ -50,7 +50,7 @@ public:
 
 private:
     Mode        m_Mode;
-    uint32_t	m_IdleThresholdPercent;
+    uint32_t    m_IdleThresholdPercent;
     uint32_t    m_NumCPUsToUse;
     bool        m_StartMinimized;
     uint64_t    m_SettingsWriteTime;    // FileTime of settings when last changed/written to disk

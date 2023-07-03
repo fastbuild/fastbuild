@@ -296,7 +296,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     if ( !ms.Read( toolId ) ||
          !ms.Read( mainExecutablePath ) ||
          !ms.Read( numFiles ) ||
-        ( AString::StrLen( mainExecutablePath.Get() ) != mainExecutablePath.GetLength() ) ||         
+        ( AString::StrLen( mainExecutablePath.Get() ) != mainExecutablePath.GetLength() ) ||
         ( numFiles == 0 ) ||        // Must have at least 1 file
         ( toolId != m_ToolId ) )    // Must have correct toolId
     {
@@ -607,7 +607,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
         // Any replacement packet integrity validation should be not specific to
         // these packets and belongs at a higher level.
         static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
-        
+
         // When running tests we should be using latest protocols which don't
         // have the bug anymore so this should never happen
         ASSERT( false && "Corrupt file data" ); // Catch errors during development
@@ -701,7 +701,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
             // Get path to file
             AStackString<> fileName;
             GetRemoteFilePath( fileId, fileName );
-        
+
             // Make modification time now
             FileIO::SetFileLastWriteTimeToNow( fileName );
         }

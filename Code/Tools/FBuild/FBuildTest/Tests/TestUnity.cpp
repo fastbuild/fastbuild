@@ -195,7 +195,7 @@ void TestUnity::DetectDeletedUnityFiles() const
 {
     // Ensure that a generated Unity file that has been deleted is
     // detected and regenerated
-    
+
     EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity1.cpp" );
     EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity2.cpp" );
 

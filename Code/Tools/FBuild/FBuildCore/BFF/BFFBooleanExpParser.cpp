@@ -770,7 +770,7 @@ static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFToken
 
 // ParseIntComparisonExp
 // Forms:
-//    bool-exp = 
+//    bool-exp =
 //             | number-exp ==/!=/>/>=/</<= number-exp
 //    number-exp = number-literal | number-variable
 //
@@ -799,7 +799,7 @@ static bool ParseIntComparisonExp( const Function * function, const OperandOf<Nu
 
 // ParseStringComparisonExp
 // Forms:
-//    bool-exp = 
+//    bool-exp =
 //             | string-exp ==/!= string-exp
 //             | string-exp in string-set
 //             | string-exp not in string-set

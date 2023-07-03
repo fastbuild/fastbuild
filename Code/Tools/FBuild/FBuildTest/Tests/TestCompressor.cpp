@@ -142,7 +142,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 
     // Compress at various compression levels
     const int32_t compressionLevels[] =
-    { 
+    {
         0,                                          // Disabled
         -256, -128, -64, -32, -16, -8, -4, -2, -1,  // LZ4
         1, 3, 6, 9, 12                              // LZ4 HC

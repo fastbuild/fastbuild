@@ -600,7 +600,7 @@ bool LightCache::ParseMacroName( const char * & pos, AString & outMacroName )
         c = *pos;
         if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||
                 ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
-                ( ( c >= '0' ) && ( c <= '9' ) ) || 
+                ( ( c >= '0' ) && ( c <= '9' ) ) ||
                 ( c == '_' ) )
         {
             ++pos;
@@ -868,7 +868,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         if ( location )
         {
             m_IncludeDefines.Append( location->m_IncludeDefines );
-            
+
             return location; // File previously handled so we can re-use the result
         }
     }

@@ -613,7 +613,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             default: break; // Unsupported type - ignore
         }
     }
-    
+
     return nullptr;
 }
 

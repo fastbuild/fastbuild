@@ -425,7 +425,7 @@ ForEach( .BuildConfig in .BuildConfigs )
     Using( .BuildConfig )
 
     Alias( 'All-$Platform$-$BuildConfigName$' ) { .Targets = .'Targets_$Platform$_$BuildConfigName$' }
-    
+
     // Create additional Universal targets
     #if CLANG_SUPPORTS_ARMOSX
         If( .Platform == 'ARMOSX' )
@@ -603,7 +603,7 @@ Alias( 'All+Tests' )
         ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
-            .ProjectConfig          = [ 
+            .ProjectConfig          = [
                                         Using( .'Project_$Platform$_$BuildConfigName$' )
                                         .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
                                         .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'

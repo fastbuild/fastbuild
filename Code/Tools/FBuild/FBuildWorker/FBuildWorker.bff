@@ -55,7 +55,7 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
-            
+
             #if __WINDOWS__
                 .CompilerOptions        + ' -D"PSAPI_VERSION=1"'
             #endif
@@ -85,7 +85,7 @@
                                             + 'FBuildWorker-Res-$Platform$-$BuildConfigName$'
                                         #endif
                                         #if __OSX__
-                                            + '$ProjectName$-OSXRes-$Platform$-$BuildConfigName$' 
+                                            + '$ProjectName$-OSXRes-$Platform$-$BuildConfigName$'
                                         #endif
             #if __LINUX__
                 .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuildworker$ExeExtension$' // NOTE: lower case
@@ -135,7 +135,7 @@
             ^ProjectConfigs             + .ProjectConfig
         #endif
     }
-    
+
     // Create Universal binaries
     #if CLANG_SUPPORTS_ARMOSX
         ForEach( .BuildConfig in .BuildConfigs )
@@ -148,7 +148,7 @@
             }
         }
     #endif
-    
+
     // Aliases
     //--------------------------------------------------------------------------
     CreateCommonAliases( .ProjectName )

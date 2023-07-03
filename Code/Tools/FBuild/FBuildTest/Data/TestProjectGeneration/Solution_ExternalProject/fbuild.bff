@@ -54,7 +54,7 @@ VSSolution( 'ExternalProjectSolution' )
 
     // only uncomment this if you have VSProjTypeExtractor / Visual Studio with C# support available (which is not likely the case on CI)
     ;.SolutionProjects               + { 'External', 'ExternalMissingBraces' }
-    
+
     // only uncomment this if you have VSProjTypeExtractor / Visual Studio with Python support available (which is not likely the case on CI)
     ;.SolutionProjects               + { 'ExternalDummyProject_2' }
 

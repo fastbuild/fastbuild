@@ -52,7 +52,7 @@ bool IsDebuggerAttached()
         // reason, we get a predictable result.
         struct kinfo_proc info;
         info.kp_proc.p_flag = 0;
-        
+
         // Initialize mib, which tells sysctl the info we want, in this case
         // we're looking for information about a specific process ID.
         int mib[ 4 ];
@@ -60,11 +60,11 @@ bool IsDebuggerAttached()
         mib[ 1 ] = KERN_PROC;
         mib[ 2 ] = KERN_PROC_PID;
         mib[ 3 ] = getpid();
-        
+
         // Call sysctl
         size_t size = sizeof(info);
         VERIFY( sysctl( mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0 ) == 0 );
-    
+
         // We're being debugged if the P_TRACED flag is set.
         return ( ( info.kp_proc.p_flag & P_TRACED ) != 0 );
     #elif defined( __LINUX__ )

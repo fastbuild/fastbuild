@@ -26,7 +26,7 @@ class TCPConnectionPool;
 
 // Constants
 //------------------------------------------------------------------------------
-namespace 
+namespace
 {
     static const uint32_t kDefaultConnectionTimeoutMS   = ( 2 * 1000 );
     static const uint32_t kDefaultSendTimeoutMS         = ( 10 * 60 * 1000 );

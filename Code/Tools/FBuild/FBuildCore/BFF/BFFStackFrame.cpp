@@ -132,7 +132,7 @@ void BFFStackFrame::DisconnectStackChain()
 
 // SetVarInt
 //------------------------------------------------------------------------------
-/*static*/ void BFFStackFrame::SetVarInt( const AString & name, 
+/*static*/ void BFFStackFrame::SetVarInt( const AString & name,
                                           const BFFToken & token,
                                           int value,
                                           BFFStackFrame * frame )

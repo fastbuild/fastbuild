@@ -115,7 +115,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IfExistsDirective )
     REGISTER_TEST( IfFileExistsDirective )
     REGISTER_TEST( IfFileExistsDirective_RelativePaths )
-    REGISTER_TEST( IfBooleanOperators )    
+    REGISTER_TEST( IfBooleanOperators )
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
     REGISTER_TEST( ElseDirective_Bad2 )
@@ -543,7 +543,7 @@ void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
 {
     // file_exists treats paths the same way as #include
     // (paths are relative to the bff)
-    
+
     FBuildTestOptions options;
     options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
 

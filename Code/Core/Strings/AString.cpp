@@ -709,7 +709,7 @@ void AString::TrimStart( char charToTrimFromStart )
     uint32_t nbrCharsToRemoveFromStart = 0;
     const char * pos = m_Contents;
     const char * end = m_Contents + m_Length;
-    for ( ; pos < end && *pos == charToTrimFromStart; ++pos, ++nbrCharsToRemoveFromStart ) 
+    for ( ; pos < end && *pos == charToTrimFromStart; ++pos, ++nbrCharsToRemoveFromStart )
     {
     }
 
@@ -723,7 +723,7 @@ void AString::TrimEnd( char charToTrimFromEnd )
     uint32_t nbrCharsToRemoveFromEnd = 0;
     const char * pos = m_Contents + m_Length - 1;
     const char * end = m_Contents;
-    for ( ; pos >= end && *pos == charToTrimFromEnd; --pos, ++nbrCharsToRemoveFromEnd ) 
+    for ( ; pos >= end && *pos == charToTrimFromEnd; --pos, ++nbrCharsToRemoveFromEnd )
     {
     }
 

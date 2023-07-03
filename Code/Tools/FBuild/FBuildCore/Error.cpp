@@ -765,7 +765,7 @@
                                   "1234567890"
                                   "~`!@#$%^&*()-_+="
                                    "{[]}|\\"
-                                   ";:\"'" 
+                                   ";:\"'"
                                    "<,.>/?";
     bool printable = false;
     const char c = *iter->GetSourcePos();

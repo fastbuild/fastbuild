@@ -797,7 +797,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     {
         // nothing to check
     }
-    else 
+    else
     {
         // build completed ok, or retrieved from cache...
         ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_OK_CACHE ) );

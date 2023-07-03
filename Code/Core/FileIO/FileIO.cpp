@@ -58,13 +58,13 @@
     {
     public:
         typedef int (*FuncPtr)( int dirfd, const char * pathname, const struct timespec times[ 2 ], int flags );
-        
+
         OSXHelper_utimensat()
         {
             // Open the c runtime library
             m_LibCHandle = dlopen( "libc.dylib", RTLD_LAZY );
             ASSERT( m_LibCHandle ); // This should never fail
-        
+
             // See if utimensat exists
             m_FuncPtr = (FuncPtr)dlsym( m_LibCHandle, "utimensat" );
         }
@@ -677,7 +677,7 @@
                 }
                 continue; // Keep processing path
             }
-            
+
             // Path doesn't exist so keep rest of path as-is
             outNormalizedPath += pos;
             break;
@@ -812,7 +812,7 @@
             t[ 1 ] = t[ 0 ];
             return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), t, 0 ) == 0 );
         }
-    
+
         // Fallback to regular low-resolution filetime setting
         struct timeval t[ 2 ];
         t[ 0 ].tv_sec = fileTime / 1000000000ULL;
@@ -843,7 +843,7 @@
         {
             return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), nullptr, 0 ) == 0 );
         }
-    
+
         // Fallback to regular low-resolution filetime setting
         return ( utimes( fileName.Get(), nullptr ) == 0 );
     #elif defined( __LINUX__ )

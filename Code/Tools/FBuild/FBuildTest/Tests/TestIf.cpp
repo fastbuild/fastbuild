@@ -130,7 +130,7 @@ void TestIf::IfFunctionBool() const
     // Unary
     TEST_EXP_TRUE( "", "!false" );
     TEST_EXP_FALSE( "", "!true" );
-    
+
     // Binary
     TEST_EXP_TRUE( "", "false != true" );
 
@@ -182,7 +182,7 @@ void TestIf::IfFunctionInt() const
     TEST_EXP_TRUE( "", "2 < 3" );
     TEST_EXP_TRUE( "", "2 <= 3" );
     TEST_EXP_FALSE( "", "2 <= 1" );
-    
+
     // Greater Than
     TEST_EXP_TRUE( "", "2 > 1" );
     TEST_EXP_TRUE( "", "2 >= 1" );

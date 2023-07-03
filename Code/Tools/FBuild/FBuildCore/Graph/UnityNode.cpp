@@ -806,7 +806,7 @@ bool UnityNode::GetIsolatedFilesFromList( Array< AString > & files ) const
     {
         return true; // No list specified so option is disabled
     }
-    
+
     // Open file
     FileStream input;
     if ( input.Open( m_IsolateListFile.Get() ) == false )

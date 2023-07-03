@@ -167,7 +167,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 }
                 m_CacheCompressionLevel = static_cast< int16_t >( cacheCompressionLevel );
                 i++; // skip extra arg we've consumed
-                
+
                 // add to args we might pass to subprocess
                 m_Args += ' ';
                 m_Args += argv[ sizeIndex ];
@@ -375,7 +375,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 thisArg.Tokenize( reportTokens, '=' );
 
                 // if there is something after the '=' sign, then we take whatever comes after as the report type
-                if ( reportTokens.GetSize() > 1 ) 
+                if ( reportTokens.GetSize() > 1 )
                 {
                     m_ReportType = reportTokens[ 1 ];
                     m_ReportType.ToLower();

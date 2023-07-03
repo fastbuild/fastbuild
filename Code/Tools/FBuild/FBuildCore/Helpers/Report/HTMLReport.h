@@ -52,7 +52,7 @@ private:
 
         bool operator < ( const PieItem & other ) const { return m_Value > other.m_Value; }
     };
-    
+
     enum { DEFAULT_TABLE_WIDTH = 990 };
 
     // Helpers

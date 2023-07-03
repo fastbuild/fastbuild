@@ -95,7 +95,7 @@ public:
     const AString & GetLastVariableSeen() const { return m_LastVariableSeen; }
     BFFStackFrame * GetLastVariableSeenFrame() const { return m_LastVariableSeenFrame; }
     void            SetLastVariableSeen( const AString & varName, BFFStackFrame * frame )
-    { 
+    {
         m_LastVariableSeen = varName;
         m_LastVariableSeenFrame = frame;
     }

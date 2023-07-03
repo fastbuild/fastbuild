@@ -217,7 +217,7 @@ ExecNode::~ExecNode()
         return NODE_RESULT_FAILED;
     }
     const bool buildFailed = ( result != m_ExecReturnCode );
-    
+
     // Print output if appropriate
     if ( buildFailed ||
         m_ExecAlwaysShowOutput ||

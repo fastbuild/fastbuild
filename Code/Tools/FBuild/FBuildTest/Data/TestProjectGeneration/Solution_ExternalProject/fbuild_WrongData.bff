@@ -24,10 +24,10 @@ VSSolution( 'ExternalWrongDataProjectSolution' )
 {
     .SolutionProjects               = { 'Proj1w', 'Proj2w' }
 
-	// this will always fail, even if you have VSProjTypeExtractor / Visual Studio with WiX toolset support available (which is not likely the case on CI)
-	// and should do so, that's what this test validates
-	.SolutionProjects               + { 'ExternalDummyProject_3' }
-	
+    // this will always fail, even if you have VSProjTypeExtractor / Visual Studio with WiX toolset support available (which is not likely the case on CI)
+    // and should do so, that's what this test validates
+    .SolutionProjects               + { 'ExternalDummyProject_3' }
+
     .SolutionX64Debug               = [ .Platform = 'x64'   .Config = 'Debug' ]
     .SolutionX64Release             = [ .Platform = 'x64'   .Config = 'Release' .SolutionDeployProjects = 'Proj1w' ]
     .SolutionConfigs                = { .SolutionX64Debug, .SolutionX64Release }

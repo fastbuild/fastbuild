@@ -804,7 +804,7 @@ bool FBuild::GenerateDotGraph( const Array< AString > & targets, const bool full
     OUTPUT( "Saving DOT graph file to '%s'\n", dotFileName );
 
     // Generate
-    AString buffer( 10 * 1024 * 1024 );    
+    AString buffer( 10 * 1024 * 1024 );
     m_DependencyGraph->SerializeToDotFormat( deps, fullGraph, buffer );
 
     // Write to disk

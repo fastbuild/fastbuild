@@ -694,16 +694,16 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
 
             // Store to history
             operatorHistory[ numOperators++ ] = r;
-            
+
             // Check for excessive complexity
             if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
             {
                 Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
                 return false;
-            }            
+            }
         }
     }
-    
+
     // Apply any && operators. Any valid expression isn't going to end with an operator, so we don't check that.
     for ( uint32_t i = 0; i < ( numOperators - 1 ); i++ )
     {

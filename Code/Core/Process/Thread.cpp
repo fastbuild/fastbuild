@@ -112,7 +112,7 @@ void Thread::Start( ThreadEntryFunction func,
 {
     // Can only start if not already started
     ASSERT( !IsRunning() );
-    
+
     // Create structure to pass to thread
     ThreadStartInfo & info = *FNEW( ThreadStartInfo( func, userData, threadName ) );
     MemoryBarrier();

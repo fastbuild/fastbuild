@@ -212,7 +212,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
     {
         // Tokenizer should ensure this is valid
         ASSERT( iter->GetValueString().EndsWith( *pos ) );
-        ASSERT( iter->GetValueString().GetLength() >= 4 ); // at least one char inside: ."x" 
+        ASSERT( iter->GetValueString().GetLength() >= 4 ); // at least one char inside: ."x"
 
         // unescape and subsitute embedded variables
         AStackString<> value;
@@ -222,7 +222,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // sanity check it is a sensible length
-        if ( name.GetLength() + 1  > MAX_VARIABLE_NAME_LENGTH ) // +1 for '.' will be added 
+        if ( name.GetLength() + 1  > MAX_VARIABLE_NAME_LENGTH ) // +1 for '.' will be added
         {
             Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)value.GetLength(), (uint32_t)MAX_VARIABLE_NAME_LENGTH );
             return false;

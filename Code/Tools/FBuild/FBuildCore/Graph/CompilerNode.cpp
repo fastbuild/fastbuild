@@ -308,7 +308,7 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     {
         m_CompilerFamilyEnum = CLANG_CL;
         return true;
-    }    
+    }
     if ( m_CompilerFamilyString.EqualsI( "snc" ) )
     {
         m_CompilerFamilyEnum = SNC;
