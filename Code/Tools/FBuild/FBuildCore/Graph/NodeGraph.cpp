@@ -1018,7 +1018,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
             nodeToBuild->m_Stamp = 0;
 
             // Regenerate dynamic dependencies
-            if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
+            if ( nodeToBuild->DoDynamicDependencies( *this ) == false )
             {
                 nodeToBuild->SetState( Node::FAILED );
                 return;

@@ -25,7 +25,7 @@ public:
     virtual bool IsAFile() const override;
 
 private:
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     // Exposed Properties

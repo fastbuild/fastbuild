@@ -82,10 +82,8 @@ CopyDirNode::~CopyDirNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool CopyDirNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool CopyDirNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
-    (void)forceClean; // dynamic deps are always re-added here, so this is meaningless
-
     m_DynamicDependencies.Clear();
 
     ASSERT( !m_StaticDependencies.IsEmpty() );

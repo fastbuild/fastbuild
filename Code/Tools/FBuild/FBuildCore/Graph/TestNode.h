@@ -26,7 +26,7 @@ public:
     const char * GetEnvironmentString() const;
 
 private:
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     void EmitCompilationMessage( const char * workingDir ) const;

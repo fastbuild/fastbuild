@@ -49,8 +49,8 @@ public:
 protected:
     friend class FunctionObjectList;
 
-    virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph );
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     // internal helpers

@@ -25,7 +25,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::CS_NODE; }
 
 private:
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     CompilerNode * GetCompiler() const;

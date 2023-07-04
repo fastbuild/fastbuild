@@ -126,7 +126,7 @@ const char * TestNode::GetEnvironmentString() const
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
+/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();

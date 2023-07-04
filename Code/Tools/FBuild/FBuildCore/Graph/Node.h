@@ -211,7 +211,7 @@ protected:
     // each node implements a subset of these as needed
     virtual bool DetermineNeedToBuildStatic() const;
     virtual bool DetermineNeedToBuildDynamic() const;
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph );
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );

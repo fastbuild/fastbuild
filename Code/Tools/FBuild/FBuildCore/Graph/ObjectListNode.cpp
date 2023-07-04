@@ -344,10 +344,8 @@ ObjectListNode::~ObjectListNode() = default;
 
 // GatherDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( NodeGraph & nodeGraph )
 {
-    (void)forceClean; // dynamic deps are always re-added here, so this is meaningless
-
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
 
@@ -513,9 +511,9 @@ ObjectListNode::~ObjectListNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool ObjectListNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
-    if ( GatherDynamicDependencies( nodeGraph, forceClean ) == false )
+    if ( GatherDynamicDependencies( nodeGraph ) == false )
     {
         return false; // GatherDynamicDependencies will have emitted error
     }

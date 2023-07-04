@@ -136,7 +136,7 @@ Node::~Node() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool Node::DoDynamicDependencies( NodeGraph &, bool )
+/*virtual*/ bool Node::DoDynamicDependencies( NodeGraph & /*nodeGraph*/ )
 {
     return true;
 }

@@ -121,9 +121,9 @@ LibraryNode::~LibraryNode()
 
 // GatherDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool LibraryNode::GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool LibraryNode::GatherDynamicDependencies( NodeGraph & nodeGraph )
 {
-    if ( ObjectListNode::GatherDynamicDependencies( nodeGraph, forceClean ) == false )
+    if ( ObjectListNode::GatherDynamicDependencies( nodeGraph ) == false )
     {
         return false; // GatherDynamicDependencies will have emited an error
     }
