@@ -34,7 +34,6 @@ public:
 //------------------------------------------------------------------------------
 JobSubQueue::JobSubQueue()
     : m_Count( 0 )
-    , m_Jobs( 1024, true )
 {
 }
 
@@ -57,6 +56,8 @@ uint32_t JobSubQueue::GetCount() const
 //------------------------------------------------------------------------------
 void JobSubQueue::QueueJobs( Array< Node * > & nodes )
 {
+    PROFILE_FUNCTION;
+
     // Create wrapper Jobs around Nodes
     Array< Job * > jobs( nodes.GetSize() );
     for ( Node * node : nodes )
@@ -73,16 +74,43 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     MutexHolder mh( m_Mutex );
     const bool wasEmpty = m_Jobs.IsEmpty();
 
-    m_Jobs.Append( jobs );
     AtomicAdd( &m_Count, (uint32_t)jobs.GetSize() );
 
     if ( wasEmpty )
     {
+        m_Jobs.Swap( jobs );
         return; // skip re-sorting
     }
 
-    // sort merged lists
-    m_Jobs.Sort( sorter );
+    // Merge lists
+    Array< Job * > mergedList;
+    mergedList.SetSize( m_Jobs.GetSize() + jobs.GetSize() );
+    Job ** dst = mergedList.Begin();
+    Job ** src1 = m_Jobs.Begin();
+    const Job * const * end1 = m_Jobs.End();
+    Job ** src2 = jobs.Begin();
+    const Job * const * end2 = jobs.End();
+    while ( ( src1 < end1 ) && ( src2 < end2 ) )
+    {
+        if ( sorter( *src1, *src2 ) )
+        {
+            *dst++ = *src1++;
+        }
+        else
+        {
+            *dst++ = *src2++;
+        }
+    }
+    while ( src1 < end1 )
+    {
+        *dst++ = *src1++;
+    }
+    while ( src2 < end2 )
+    {
+        *dst++ = *src2++;
+    }
+    ASSERT( dst == mergedList.End() );
+    m_Jobs.Swap( mergedList );
 }
 
 // RemoveJob
