@@ -27,7 +27,9 @@ static uint32_t s_LastJobId( 0 );
 Job::Job( Node * node )
     : m_Node( node )
 {
-    m_JobId = AtomicInc( &s_LastJobId );
+    // Constructor that assigns JobId can only be called on the main thread.
+    ASSERT( Thread::IsMainThread() );
+    m_JobId = ++s_LastJobId;
 }
 
 // CONSTRUCTOR
