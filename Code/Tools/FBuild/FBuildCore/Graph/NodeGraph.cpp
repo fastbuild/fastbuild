@@ -213,7 +213,7 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
         const AStackString<> settingsNodeName( "$$Settings$$" );
         const Node * settingsNode = FindNode( settingsNodeName );
         m_Settings = settingsNode ? settingsNode->CastTo<SettingsNode>()
-                                  : CreateNode<SettingsNode>( settingsNodeName ); // Create a default
+                                  : CreateNode<SettingsNode>( settingsNodeName, &BFFToken::GetBuiltInToken() ); // Create a default
 
         // Parser will populate m_UsedFiles
         const Array<BFFFile *> & usedFiles = bffParser.GetUsedFiles();
@@ -223,6 +223,11 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
             m_UsedFiles.EmplaceBack( file->GetFileName(), file->GetTimeStamp(), file->GetHash() );
         }
     }
+
+    // Free token tracking data we no longer need (and won't be valid when
+    // BFFParser falls out of scope)
+    m_NodeSourceTokens.Destruct();
+
     return ok;
 }
 
@@ -786,12 +791,38 @@ size_t NodeGraph::GetNodeCount() const
 
 // RegisterNode
 //------------------------------------------------------------------------------
-void NodeGraph::RegisterNode( Node * node )
+void NodeGraph::RegisterNode( Node * node, const BFFToken * sourceToken )
 {
     ASSERT( Thread::IsMainThread() );
     ASSERT( node->GetName().IsEmpty() == false );
     ASSERT( FindNode( node->GetName() ) == nullptr );
     AddNode( node );
+    RegisterSourceToken( node, sourceToken );
+}
+
+// RegisterSourceToken
+//------------------------------------------------------------------------------
+void NodeGraph::RegisterSourceToken( const Node * node, const BFFToken * sourceToken )
+{
+    // Where available, record the source token for the node
+    if ( sourceToken )
+    {
+        // Ammortize array growth in parallel with m_AllNodes
+        m_NodeSourceTokens.SetCapacity( m_AllNodes.GetCapacity() );
+
+        // Nobody should have added this before
+        ASSERT( m_NodeSourceTokens.GetSize() < m_AllNodes.GetSize() );
+
+        // Array may be non-contiguous, so fill it in
+        while ( m_NodeSourceTokens.GetSize() < m_AllNodes.GetSize() )
+        {
+            m_NodeSourceTokens.EmplaceBack( nullptr );
+        }
+
+        // Store the token in the parallel at the same place as the node
+        ASSERT( m_AllNodes.Top() == node ); (void)node;
+        m_NodeSourceTokens.Top() = sourceToken;
+    }
 }
 
 // CreateNode
@@ -850,7 +881,7 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name )
 
 // CreateNode
 //------------------------------------------------------------------------------
-Node * NodeGraph::CreateNode( Node::Type type, const AString & name )
+Node * NodeGraph::CreateNode( Node::Type type, const AString & name, const BFFToken * sourceToken )
 {
     // Where possible callers should call the move version to transfer ownership
     // of strings, but calers don't always have a string to transfer so this
@@ -872,7 +903,11 @@ Node * NodeGraph::CreateNode( Node::Type type, const AString & name )
         nameCopy = name;
     }
 
-    return CreateNode( type, Move( nameCopy ) );
+    Node * node = CreateNode( type, Move( nameCopy ) );
+
+    RegisterSourceToken( node, sourceToken );
+
+    return node;
 }
 
 // AddNode
@@ -1149,6 +1184,23 @@ void NodeGraph::SetBuildPassTagForAllNodes( uint32_t value ) const
     {
         node->SetBuildPassTag( value );
     }
+}
+
+// FindNodeSourceToken
+//------------------------------------------------------------------------------
+const BFFToken * NodeGraph::FindNodeSourceToken( const Node * node ) const
+{
+    // Find the index of the node. This is a slow operation, but we only expect
+    // this to happen in non-critical paths like when emitting BFF parsing errors
+    const size_t index = m_AllNodes.GetIndexOf( m_AllNodes.Find( node ) );
+
+    // Return token if available. Not all nodes have creation info available.
+    if ( index < m_NodeSourceTokens.GetSize() )
+    {
+        return m_NodeSourceTokens[ index ];
+    }
+
+    return nullptr;
 }
 
 // CleanPath

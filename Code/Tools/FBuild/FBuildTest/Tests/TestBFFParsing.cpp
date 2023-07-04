@@ -81,6 +81,7 @@ private:
     void ErrorRowAndColumn() const;
     void ForEach() const;
     void FunctionHeaders() const;
+    void AlreadyDefined() const;
 };
 
 // Register Tests
@@ -145,6 +146,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( ErrorRowAndColumn )
     REGISTER_TEST( ForEach )
     REGISTER_TEST( FunctionHeaders )
+    REGISTER_TEST( AlreadyDefined )
 REGISTER_TESTS_END
 
 // Empty
@@ -1094,6 +1096,35 @@ void TestBFFParsing::FunctionHeaders() const
                    "ObjectList( .Name ) {}\n"
                    ".Name = 'Y'\n"
                    "ObjectList( .Name ) {}\n" );
+}
+
+//------------------------------------------------------------------------------
+void TestBFFParsing::AlreadyDefined() const
+{
+    // Alias
+    TEST_PARSE_FAIL( "Alias( 'X' ) { .Targets = 'file' }\n"
+                     "Alias( 'X' ) { .Targets = 'file' }\n",
+                     "Error #1100 - Previously declared here:" );
+
+    // Alias for a Function
+    TEST_PARSE_FAIL( "Test( 'X' ) { .TestExecutable = 'exe' .TestOutput = 'out1' }\n"
+                     "Test( 'X' ) { .TestExecutable = 'exe' .TestOutput = 'out2' }\n",
+                     "Error #1100 - Previously declared here:" );
+
+    // Direct name (not an Alias)
+    TEST_PARSE_FAIL( "ObjectList( 'X' ) { .Compiler = 'clang' .CompilerOptions = '%1 %2' }\n"
+                     "ObjectList( 'X' ) { .Compiler = 'clang' .CompilerOptions = '%1 %2' }\n",
+                     "Error #1100 - Previously declared here:" );
+
+    // Aliasing output
+    TEST_PARSE_FAIL( "Alias( 'X' ) { .Targets = 'file' }\n"
+                     "TextFile()   { .TextFileOutput = 'file' }\n",
+                     "Error #1100 - Previously declared here:" );
+
+    // Same target created multiple times in a loop
+    TEST_PARSE_FAIL( ".Y = { 'a', 'b' }\n"
+                     "ForEach( .X in .Y ) { Test() { .TestExecutable = 'exe' .TestOutput = 'out' } }\n",
+                     "Error #1100 - Previously declared here:" );
 }
 
 //------------------------------------------------------------------------------

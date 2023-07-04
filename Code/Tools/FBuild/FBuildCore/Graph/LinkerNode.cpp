@@ -1378,7 +1378,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // see if the file exists on disk at this location
     if ( LinkerNodeFileExistsCache::Get().FileExists( potentialNodeNameClean ) )
     {
-        node = nodeGraph.CreateNode<FileNode>( potentialNodeNameClean );
+        node = nodeGraph.CreateNode<FileNode>( potentialNodeNameClean, iter );
         libs.Add( node );
         found = true;
         FLOG_VERBOSE( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );
@@ -1519,7 +1519,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 
     // node not found - create a new FileNode, assuming we are
     // linking against an externally built library
-    node = nodeGraph.CreateNode<FileNode>( nodeName );
+    node = nodeGraph.CreateNode<FileNode>( nodeName, iter );
     nodes.Add( node );
     return true;
 }

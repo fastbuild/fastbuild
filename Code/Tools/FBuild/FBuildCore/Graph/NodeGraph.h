@@ -110,21 +110,26 @@ public:
     size_t GetNodeCount() const;
     const SettingsNode * GetSettings() const { return m_Settings; }
 
-    void RegisterNode( Node * n );
+    void RegisterNode( Node * n, const BFFToken * sourceToken );
 
     // create new nodes
     Node *      CreateNode( Node::Type type, AString && name );
-    Node *      CreateNode( Node::Type type, const AString & name );
+    Node *      CreateNode( Node::Type type,
+                            const AString & name,
+                            const BFFToken * sourceToken = nullptr );
     template<class T>
-    T *         CreateNode( const AString & name )
+    T *         CreateNode( const AString & name,
+                            const BFFToken * sourceToken = nullptr )
     {
-        return CreateNode( T::GetTypeS(), name )->template CastTo<T>();
+        return CreateNode( T::GetTypeS(), name, sourceToken )->template CastTo<T>();
     }
 
     void DoBuildPass( Node * nodeToBuild );
 
     // Non-build operations that use the BuildPassTag can set it to a known value
     void SetBuildPassTagForAllNodes( uint32_t value ) const;
+
+    const BFFToken * FindNodeSourceToken( const Node * node ) const;
 
     static void CleanPath( AString & name, bool makeFullPath = true );
     static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
@@ -175,6 +180,8 @@ private:
                                  bool & movedDB ) const;
     uint32_t GetLibEnvVarHash() const;
 
+    void RegisterSourceToken( const Node * node, const BFFToken * sourceToken );
+
     // load/save helpers
     static void SerializeToText( Node * node, uint32_t depth, AString & outBuffer );
     static void SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer );
@@ -215,6 +222,8 @@ private:
         uint64_t    m_DataHash;
     };
     Array< UsedFile > m_UsedFiles;
+
+    Array< const BFFToken * > m_NodeSourceTokens;
 
     const SettingsNode * m_Settings;
 

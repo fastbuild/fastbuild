@@ -138,7 +138,8 @@ public:
     //------------------------------------------------------------------------------
     static void Error_1100_AlreadyDefined( const BFFToken * iter,
                                           const Function * function,
-                                          const AString & name );
+                                          const AString & name,
+                                          const BFFToken * previousDeclarationToken = nullptr );
     static void Error_1101_MissingProperty( const BFFToken * iter,
                                            const Function * function,
                                            const AString & name );
