@@ -279,7 +279,7 @@ bool JobQueue::HasPendingCompletedJobs() const
 //------------------------------------------------------------------------------
 void JobQueue::AddJobToBatch( Node * node )
 {
-    ASSERT( node->GetState() == Node::DYNAMIC_DEPS_DONE );
+    ASSERT( node->GetState() == Node::DYNAMIC_DEPS );
 
     // mark as building
     node->SetState( Node::BUILDING );

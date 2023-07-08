@@ -993,108 +993,108 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 {
     ASSERT( nodeToBuild );
 
-    // already building, or queued to build?
-    ASSERT( nodeToBuild->GetState() != Node::BUILDING );
-
     // accumulate recursive cost
     cost += nodeToBuild->GetLastBuildTime();
 
-    // check pre-build dependencies
-    if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
+    // False positive "Unannotated fallthrough between switch labels" (VS 2019 v14.29.30037)
+    #if ( _MSC_VER < 1935 )
+        PRAGMA_DISABLE_PUSH_MSVC(26819)
+    #endif
+
+    switch ( nodeToBuild->GetState() )
     {
-        // all pre-build deps done?
-        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
-        if ( allDependenciesUpToDate == false )
+        case Node::NOT_PROCESSED:
         {
-            return; // not ready or failed
-        }
-
-        nodeToBuild->SetState( Node::PRE_DEPS_READY );
-    }
-
-    ASSERT( ( nodeToBuild->GetState() == Node::PRE_DEPS_READY ) ||
-            ( nodeToBuild->GetState() == Node::STATIC_DEPS_READY ) ||
-            ( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE ) );
-
-    // test static dependencies first
-    if ( nodeToBuild->GetState() == Node::PRE_DEPS_READY )
-    {
-        // all static deps done?
-        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
-        if ( allDependenciesUpToDate == false )
-        {
-            return; // not ready or failed
-        }
-
-        nodeToBuild->SetState( Node::STATIC_DEPS_READY );
-    }
-
-    ASSERT( ( nodeToBuild->GetState() == Node::STATIC_DEPS_READY ) ||
-            ( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE ) );
-
-    if ( nodeToBuild->GetState() != Node::DYNAMIC_DEPS_DONE )
-    {
-        // If static deps require us to rebuild, dynamic dependencies need regenerating
-        const bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
-        if ( forceClean ||
-             nodeToBuild->DetermineNeedToBuildStatic() )
-        {
-            // Clear dynamic dependencies
-            nodeToBuild->m_DynamicDependencies.Clear();
-
-            // Explicitly mark node in a way that will result in it rebuilding should
-            // we cancel the build before builing this node
-            if ( nodeToBuild->m_Stamp == 0 )
+            // check pre-build dependencies
+            const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
+            if ( allDependenciesUpToDate == false )
             {
-                // Note that this is the first time we're building (since Node can't check
-                // stamp as we clear it below)
-                nodeToBuild->SetStatFlag( Node::STATS_FIRST_BUILD );
+                return; // not ready or failed
             }
-            nodeToBuild->m_Stamp = 0;
+            nodeToBuild->SetState( Node::STATIC_DEPS );
 
-            // Regenerate dynamic dependencies
-            if ( nodeToBuild->DoDynamicDependencies( *this ) == false )
+            [[fallthrough]];
+        }
+        case Node::STATIC_DEPS:
+        {
+            // check static dependencies
+            const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
+            if ( allDependenciesUpToDate == false )
             {
-                nodeToBuild->SetState( Node::FAILED );
-                return;
+                return; // not ready or failed
             }
 
-            // Continue through to check dynamic dependencies and build
+            // If static deps require us to rebuild, dynamic dependencies need regenerating
+            if ( FBuild::Get().GetOptions().m_ForceCleanBuild ||
+                 nodeToBuild->DetermineNeedToBuildStatic() )
+            {
+                // Explicitly mark node in a way that will result in it rebuilding should
+                // we cancel the build before builing this node
+                if ( nodeToBuild->m_Stamp == 0 )
+                {
+                    // Note that this is the first time we're building (since Node can't check
+                    // stamp as we clear it below)
+                    nodeToBuild->SetStatFlag( Node::STATS_FIRST_BUILD );
+                }
+                nodeToBuild->m_Stamp = 0;
+
+                // Regenerate dynamic dependencies
+                nodeToBuild->m_DynamicDependencies.Clear();
+                if ( nodeToBuild->DoDynamicDependencies( *this ) == false )
+                {
+                    nodeToBuild->SetState( Node::FAILED );
+                    return;
+                }
+
+                // Continue through to check dynamic dependencies and build
+            }
+
+            // Dynamic dependencies are ready to be checked
+            nodeToBuild->SetState( Node::DYNAMIC_DEPS );
+
+            [[fallthrough]];
         }
-
-        // Dynamic dependencies are ready to be checked
-        nodeToBuild->SetState( Node::DYNAMIC_DEPS_DONE );
-    }
-
-    ASSERT( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE );
-
-    // dynamic deps
-    {
-        // all static deps done?
-        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
-        if ( allDependenciesUpToDate == false )
+        case Node::DYNAMIC_DEPS:
         {
-            return; // not ready or failed
+            // check dynamic dependencies
+            const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
+            if ( allDependenciesUpToDate == false )
+            {
+                return; // not ready or failed
+            }
+
+            // dependencies are uptodate, so node can now tell us if it needs
+            // building
+            nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
+            if ( ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant work in DetermineNeedToBuild
+                 nodeToBuild->DetermineNeedToBuildDynamic() )
+            {
+                nodeToBuild->m_RecursiveCost = cost;
+                JobQueue::Get().AddJobToBatch( nodeToBuild );
+            }
+            else
+            {
+                if ( FLog::ShowVerbose() )
+                {
+                    FLOG_BUILD_REASON( "Up-To-Date '%s'\n", nodeToBuild->GetName().Get() );
+                }
+                nodeToBuild->SetState( Node::UP_TO_DATE );
+            }
+            break;
+        }
+        case Node::BUILDING:
+        case Node::FAILED:
+        case Node::UP_TO_DATE:
+        {
+            ASSERT(false); // Should be impossible
+            break;
         }
     }
 
-    // dependencies are uptodate, so node can now tell us if it needs
-    // building
-    nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
-    if ( ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant messages from DetermineNeedToBuild
-         nodeToBuild->DetermineNeedToBuildDynamic() )
-    {
-        nodeToBuild->m_RecursiveCost = cost;
-        JobQueue::Get().AddJobToBatch( nodeToBuild );
-    }
-    else
-    {
-        if ( FLog::ShowVerbose() )
-        {
-            FLOG_BUILD_REASON( "Up-To-Date '%s'\n", nodeToBuild->GetName().Get() );
-        }
-        nodeToBuild->SetState( Node::UP_TO_DATE );
-    }
+    // False positive "Unannotated fallthrough between switch labels" (VS 2019 v14.29.30037)
+    #if ( _MSC_VER < 1935 )
+        PRAGMA_DISABLE_POP_MSVC // 26819
+    #endif
 }
 
 // CheckDependencies

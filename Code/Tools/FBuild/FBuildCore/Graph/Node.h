@@ -114,10 +114,9 @@ public:
 
     enum State : uint8_t
     {
-        NOT_PROCESSED,      // no work done (either not part of this build, or waiting on static dependencies )
-        PRE_DEPS_READY,     // pre-build deps processed
-        STATIC_DEPS_READY,  // static dependencies are uptodate - we are ready to DoDynamicDeps
-        DYNAMIC_DEPS_DONE,  // dynamic deps updated, waiting for dynamic deps to be ready
+        NOT_PROCESSED,      // no work done (either not part of this build, or not yet seen)
+        STATIC_DEPS,        // pre-build deps processed and checking static deps
+        DYNAMIC_DEPS,       // dynamic deps regenerated and being checked
         BUILDING,           // in the queue for building
         FAILED,             // failed to build
         UP_TO_DATE,         // built, or confirmed as not needing building
