@@ -139,14 +139,14 @@ void Free( void * ptr )
     // Directly called
     void * operator new( size_t size ) { return AllocFileLine( size, "Unknown", 0 ); }
     void * operator new[]( size_t size ) { return AllocFileLine( size, "Unknown", 0 ); }
-    void operator delete( void * ptr ) NOEXCEPT { Free( ptr ); }
-    void operator delete[]( void * ptr ) NOEXCEPT { Free( ptr ); }
+    void operator delete( void * ptr ) noexcept { Free( ptr ); }
+    void operator delete[]( void * ptr ) noexcept { Free( ptr ); }
 #else
     #if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !__has_feature( thread_sanitizer ) && !defined( __SANITIZE_ADDRESS__ )
         void * operator new( size_t size ) { return Alloc( size ); }
         void * operator new[]( size_t size ) { return Alloc( size ); }
-        void operator delete( void * ptr ) NOEXCEPT { Free( ptr ); }
-        void operator delete[]( void * ptr ) NOEXCEPT { Free( ptr ); }
+        void operator delete( void * ptr ) noexcept { Free( ptr ); }
+        void operator delete[]( void * ptr ) noexcept { Free( ptr ); }
     #endif
 #endif
 //------------------------------------------------------------------------------
