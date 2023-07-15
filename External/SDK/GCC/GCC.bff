@@ -22,6 +22,9 @@
     #if USING_GCC_7
         #include "Linux/GCC7.bff"
     #endif
+    #if USING_GCC_9
+        #include "Linux/GCC9.bff"
+    #endif
     #if USING_GCC_11
         #include "Linux/GCC11.bff"
     #endif
