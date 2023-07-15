@@ -23,7 +23,7 @@
 
                             // When mixing old versions of Clang with VS2019, there are some problems with certian
                             // bitscan intrinsics, so we disable their use here
-                            #if USING_CLANG_7 || USING_CLANG_8 || USING_CLANG_9
+                            #if USING_CLANG_8 || USING_CLANG_9
                                 .LZ4CompilerOptions + ' -DLZ4_FORCE_SW_BITCOUNT'
                             #endif
                           ]
