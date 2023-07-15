@@ -1,0 +1,63 @@
+// Clang 14.0.0
+//------------------------------------------------------------------------------
+.Clang14_BasePath = '/usr/lib/llvm-14/bin'
+
+// Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-Clang14' )
+{
+    .Root                           = '$Clang14_BasePath$'
+    .Executable                     = '$Root$/clang'
+
+    // Allow tests to activate some experimental behavior
+    #if ENABLE_RELATIVE_PATHS
+        .UseRelativePaths_Experimental = true
+    #endif
+    #if ENABLE_SOURCE_MAPPING
+        .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
+}
+
+// ToolChain
+//------------------------------------------------------------------------------
+.ToolChain_Clang_Linux =
+[
+    .Platform                       = 'x64ClangLinux'
+
+    // Compiler Options
+    .Compiler                       = 'Compiler-Clang14'
+    .CommonCompilerOptions          = ' -o "%2" "%1"'   // Input/Output
+                                    + ' -c'             // Compile only
+                                    + ' -g'             // Generate debug info
+                                    + ' -m64'           // x86_64
+                                    + ' -D__LINUX__'    // Platform define
+
+                                    // Include paths
+                                    + ' -I./'
+
+                                    // Enable warnings
+                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                                    + ' -Wextra'
+                                    + ' -Wshadow'
+
+    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
+                                    + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+    .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+
+    // Librarian
+    .Librarian                      = '$Clang14_BasePath$/llvm-ar'
+    .LibrarianOptions               = 'rcs "%2" "%1"'
+
+    // Linker
+    .Linker                         = '$Clang14_BasePath$/clang++'
+    .LinkerOptions                  = '"%1" -o "%2"'
+
+    // File Extensions
+    .LibExtension                   = '.a'
+    .ExeExtension                   = ''
+
+    // Exception Control
+    .UseExceptions                  = ' -fexceptions'
+]
+
+//------------------------------------------------------------------------------
