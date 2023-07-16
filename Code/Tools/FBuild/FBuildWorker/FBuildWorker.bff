@@ -80,6 +80,7 @@
                                             'Core-Lib-$Platform$-$BuildConfigName$',
                                             'LZ4-Lib-$Platform$-$BuildConfigName$'
                                             'xxHash-Lib-$Platform$-$BuildConfigName$'
+                                            'Zstd-Lib-$Platform$-$BuildConfigName$'
                                           }
                                         #if __WINDOWS__
                                             + 'FBuildWorker-Res-$Platform$-$BuildConfigName$'

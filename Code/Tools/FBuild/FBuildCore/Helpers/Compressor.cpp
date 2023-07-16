@@ -19,6 +19,7 @@
 // External
 #include "lz4.h"
 #include "lz4hc.h"
+#include "zstd.h"
 
 #include <memory.h>
 
@@ -172,4 +173,108 @@ bool Compressor::Decompress( const void * data )
     return false;
 }
 
+// CompressZstd
+//------------------------------------------------------------------------------
+bool Compressor::CompressZstd( const void * data,
+                               size_t dataSize,
+                               int32_t compressionLevel)
+{
+    PROFILE_FUNCTION;
+
+    ASSERT( data );
+    ASSERT( m_Result == nullptr );
+
+    // allocate worst case output size for LZ4
+    const size_t worstCaseSize = ZSTD_compressBound( dataSize );
+    UniquePtr<char> output( (char *)ALLOC( worstCaseSize ) );
+
+    size_t compressedSize;
+
+    // do compression
+    if ( compressionLevel > 0 )
+    {
+        compressedSize = ZSTD_compress( output.Get(),
+                                        worstCaseSize,
+                                        static_cast<const char *>( data ),
+                                        dataSize,
+                                        compressionLevel);
+    }
+    else
+    {
+        // Disable compression
+        compressedSize = dataSize; // Act as if compression achieved nothing
+    }
+
+    // did the compression yield any benefit?
+    const bool compressed = ( compressedSize < dataSize );
+
+    if (compressed)
+    {
+        // trim memory usage to compressed size
+        m_Result = ALLOC( (uint32_t)compressedSize + sizeof(Header) );
+        memcpy( (char *)m_Result + sizeof(Header), output.Get(), (size_t)compressedSize );
+        m_ResultSize = (uint32_t)compressedSize + sizeof(Header);
+    }
+    else
+    {
+        // compression failed, so just copy the old data
+        m_Result = ALLOC( dataSize + sizeof(Header) );
+        memcpy( (char *)m_Result + sizeof(Header), data, dataSize );
+        m_ResultSize = dataSize + sizeof(Header);
+    }
+
+    // fill out header
+    Header * header = (Header *)m_Result;
+    header->m_CompressionType = compressed ? 2u : 0u;   // compression type
+    header->m_UncompressedSize = (uint32_t)dataSize;    // input size
+    header->m_CompressedSize = compressed ? (uint32_t)compressedSize : (uint32_t)dataSize; // output size
+
+    return compressed;
+}
+
+// DecompressZstd
+//------------------------------------------------------------------------------
+bool Compressor::DecompressZstd( const void * data )
+{
+    PROFILE_FUNCTION;
+
+    ASSERT( data );
+    ASSERT( m_Result == nullptr );
+
+    const Header * header = static_cast<const Header *>(data);
+
+    // handle uncompressed case
+    if (header->m_CompressionType == 0)
+    {
+        m_Result = ALLOC(header->m_UncompressedSize);
+        memcpy(m_Result, (const char *)data + sizeof(Header), header->m_UncompressedSize);
+        m_ResultSize = header->m_UncompressedSize;
+        return true;
+    }
+    ASSERT( header->m_CompressionType == 2 );
+
+    // uncompressed size
+    const uint32_t uncompressedSize = header->m_UncompressedSize;
+    m_Result = ALLOC( uncompressedSize );
+    m_ResultSize = uncompressedSize;
+
+    // skip over header to LZ4 data
+    const char * compressedData = ( (const char *)data + sizeof(Header) );
+
+    // decompress
+    const size_t bytesDecompressed = ZSTD_decompress( m_Result,
+                                                      uncompressedSize,
+                                                      compressedData,
+                                                      header->m_CompressedSize );
+    if ( bytesDecompressed == uncompressedSize )
+    {
+        return true;
+    }
+
+    // Data is corrupt
+    FREE( m_Result );
+    m_Result = nullptr;
+    m_ResultSize = 0;
+    return false;
+}
 //------------------------------------------------------------------------------

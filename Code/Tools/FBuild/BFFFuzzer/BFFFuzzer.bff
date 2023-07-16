@@ -53,6 +53,7 @@
                                             'Core-Lib-$Platform$-$BuildConfigName$',
                                             'LZ4-Lib-$Platform$-$BuildConfigName$'
                                             'xxHash-Lib-$Platform$-$BuildConfigName$'
+                                            'Zstd-Lib-$Platform$-$BuildConfigName$'
                                           }
             .LinkerOutput               = '$OutputBase$/$ProjectPath$/bfffuzzer$ExeExtension$'
             .LinkerOptions              + ' -pthread -ldl -lrt'
