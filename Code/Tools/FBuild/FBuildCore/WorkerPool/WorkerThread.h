@@ -8,13 +8,13 @@
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
-#include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
 class FileStream;
+class ThreadPool;
 
 // WorkerThread
 //------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ class WorkerThread
 {
 public:
     explicit WorkerThread( uint16_t threadIndex );
-    void Init();
+    void Init( ThreadPool * pool );
     virtual ~WorkerThread();
 
     static void InitTmpDir( bool remote = false );
@@ -46,11 +46,10 @@ protected:
     static bool Update();
 
     // worker thread main loop
-    static uint32_t ThreadWrapperFunc( void * param );
+    static void ThreadWrapperFunc( void * param );
     virtual void Main();
 
     // signal to exit thread
-    Thread        m_Thread;
     Atomic<bool>  m_ShouldExit;
     Atomic<bool>  m_Exited;
     uint16_t      m_ThreadIndex;

@@ -16,7 +16,7 @@
 #include "Core/Time/Timer.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Atomic.h"
-#include "Core/Process/Thread.h"
+#include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
 
 // JobCostSorter
@@ -161,14 +161,21 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
 
     WorkerThread::InitTmpDir();
 
-    for ( uint32_t i=0; i<numWorkerThreads; ++i )
+    if ( numWorkerThreads > 0 )
     {
-        // identify each worker with an id starting from 1
-        // (the "main" thread is considered 0)
-        const uint16_t threadIndex = static_cast<uint16_t>( i + 1 );
-        WorkerThread * wt = FNEW( WorkerThread( threadIndex ) );
-        wt->Init();
-        m_Workers.Append( wt );
+        // Create thread pool
+        m_ThreadPool = FNEW( ThreadPool( numWorkerThreads ) );
+
+        // Create a job to run on each thread
+        for ( uint32_t i = 0; i < numWorkerThreads; ++i )
+        {
+            // identify each worker with an id starting from 1
+            // (the "main" thread is considered 0)
+            const uint16_t threadIndex = static_cast<uint16_t>( i + 1 );
+            WorkerThread * wt = FNEW( WorkerThread( threadIndex ) );
+            wt->Init( m_ThreadPool );
+            m_Workers.Append( wt );
+        }
     }
 }
 
@@ -211,6 +218,8 @@ JobQueue::~JobQueue()
     ASSERT( m_CompletedJobs.IsEmpty() );
     ASSERT( m_CompletedJobsFailed.IsEmpty() );
     ASSERT( Job::GetTotalLocalDataMemoryUsage() == 0 );
+
+    FDELETE m_ThreadPool;
 }
 
 // SignalStopWorkers (Main Thread)

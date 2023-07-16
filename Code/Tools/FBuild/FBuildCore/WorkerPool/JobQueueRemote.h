@@ -15,6 +15,7 @@
 //------------------------------------------------------------------------------
 class Node;
 class Job;
+class ThreadPool;
 class WorkerThread;
 
 // JobQueueRemote
@@ -67,6 +68,7 @@ private:
     Semaphore           m_WorkerThreadSemaphore;
     Semaphore           m_WorkerThreadSleepSemaphore;
 
+    ThreadPool *        m_ThreadPool;
     Array< WorkerThread * > m_Workers;
 };
 

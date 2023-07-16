@@ -15,6 +15,7 @@
 //------------------------------------------------------------------------------
 class Node;
 class Job;
+class ThreadPool;
 class WorkerThread;
 
 
@@ -117,6 +118,7 @@ private:
     Array< Job * >      m_CompletedJobs2;
     Array< Job * >      m_CompletedJobsFailed2;
 
+    ThreadPool *        m_ThreadPool = nullptr;
     Array< WorkerThread * > m_Workers;
 };
 

@@ -17,7 +17,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Atomic.h"
-#include "Core/Process/Thread.h"
+#include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
 
 // Static
@@ -36,19 +36,17 @@ WorkerThread::WorkerThread( uint16_t threadIndex )
 
 // Init
 //------------------------------------------------------------------------------
-void WorkerThread::Init()
+void WorkerThread::Init( ThreadPool * pool )
 {
     PROFILE_FUNCTION;
 
-    // Start thread
-    m_Thread.Start( ThreadWrapperFunc, "WorkerThread", this, MEGABYTE );
+    pool->EnqueueJob( ThreadWrapperFunc, this );
 }
 
 //------------------------------------------------------------------------------
 WorkerThread::~WorkerThread()
 {
     ASSERT( m_Exited.Load() );
-    m_Thread.Join();
 }
 
 // InitTmpDir
@@ -107,19 +105,12 @@ void WorkerThread::WaitForStop()
 
 // MainWrapper
 //------------------------------------------------------------------------------
-/*static*/ uint32_t WorkerThread::ThreadWrapperFunc( void * param )
+/*static*/ void WorkerThread::ThreadWrapperFunc( void * param )
 {
     WorkerThread * wt = static_cast< WorkerThread * >( param );
     s_WorkerThreadThreadIndex = wt->m_ThreadIndex;
 
-    #if defined( PROFILING_ENABLED )
-        AStackString<> threadName;
-        threadName.Format( "%s_%02u", s_WorkerThreadThreadIndex > 1000 ? "RemoteWorkerThread" : "WorkerThread", s_WorkerThreadThreadIndex );
-        PROFILE_SET_THREAD_NAME( threadName.Get() );
-    #endif
-
     wt->Main();
-    return 0;
 }
 
 // Main
