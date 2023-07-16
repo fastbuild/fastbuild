@@ -15,7 +15,11 @@
                                                             + ' /wd6239'    // (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
                                                             + ' /wd6293'    // Ill-defined for-loop:  counts down from minimum.
                                                             + ' /wd6326'    // Potential comparison of a constant with another constant.
-                                                            + ' /wd28251'   // warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
+                                                            + ' /wd26448'   // Consider using gsl::finally if final action is intended (gsl.util).
+                                                            + ' /wd26462'   // The value pointed to by '%s' is assigned only once, mark it as a pointer to const
+                                                            + ' /wd26818'   // Switch statement does not cover all cases. Consider adding a 'default' label (es.79).
+                                                            + ' /wd26819'   // Unannotated fallthrough between switch labels (es.78).
+                                                            + ' /wd28251'   // Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
 
                                                             + ' -O2'        // Compile with optimizations even in debug to improve performance
                                   ]
@@ -32,6 +36,10 @@
     .ZstdOptions_x64ClangLinux  = .ZstdOptions_x64Linux
     .ZstdOptions_x64OSX         = [
                                     .ZstdCompilerOptions    = ' -O2'        // Compile with optimizations even in debug to improve performance
+
+                                                            // Disable inline asm - TODO:B Is this a significant perf gain for Linux vs other platforms
+                                                            //                      that don't seem to use it?
+                                                            + ' -DZSTD_DISABLE_ASM'
                                   ]
     .ZstdOptions_ARMOSX         = [
                                     .ZstdCompilerOptions    = ' -O2'        // Compile with optimizations even in debug to improve performance
