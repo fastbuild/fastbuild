@@ -32,10 +32,6 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ bool                                 SmallBlockAllocator::s_ThreadSafeAllocs( true );
-#if defined( ASSERTS_ENABLED )
-    /*static*/ uint64_t                         SmallBlockAllocator::s_ThreadSafeAllocsDebugOwnerThread( 0 );
-#endif
 /*static*/ void *                               SmallBlockAllocator::s_BucketMemoryStart( MEM_BUCKETS_NOT_INITIALIZED );
 /*static*/ uint32_t                             SmallBlockAllocator::s_BucketNextFreePageIndex( 0 );
 /*static*/ uint64_t                             SmallBlockAllocator::s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof (uint64_t) ];
@@ -143,19 +139,11 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
         return nullptr; // Can't satify alignment
     }
 
-    // Sanity check that we're being used safely
-    ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
-
-        void* ptr;
+    void* ptr;
 
     // Alloc
-    if ( s_ThreadSafeAllocs )
     {
-        MutexHolder mh(bucket.m_Mutex);
-        ptr = bucket.Alloc();
-    }
-    else
-    {
+        MutexHolder mh( bucket.m_Mutex );
         ptr = bucket.Alloc();
     }
 
@@ -193,53 +181,13 @@ bool SmallBlockAllocator::Free( void * ptr )
         MemDebug::FillMem( ptr, bucket.m_BlockSize, MemDebug::MEM_FILL_FREED_ALLOCATION_PATTERN );
     #endif
 
-    // Sanity check that we're being used safely
-    ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
-
     // Free it
-    if ( s_ThreadSafeAllocs )
     {
-        bucket.m_Mutex.Lock();
-    }
-
-    bucket.Free( ptr );
-
-    if ( s_ThreadSafeAllocs )
-    {
-        bucket.m_Mutex.Unlock();
+        MutexHolder mh( bucket.m_Mutex );
+        bucket.Free( ptr );
     }
 
     return true;
-}
-
-// SetSingleThreadedMode
-//------------------------------------------------------------------------------
-/*static*/ void SmallBlockAllocator::SetSingleThreadedMode( bool singleThreadedMode )
-{
-    if ( singleThreadedMode )
-    {
-        // Sanity check we're not already in single threaded mode
-        ASSERT( s_ThreadSafeAllocs == true );
-        ASSERT( s_ThreadSafeAllocsDebugOwnerThread == 0 );
-
-        // Store the new owner thread for further safety checks
-        #if defined( ASSERTS_ENABLED )
-            s_ThreadSafeAllocsDebugOwnerThread = (uint64_t)Thread::GetCurrentThreadId();
-        #endif
-    }
-    else
-    {
-        // Sanity check we're in single threaded mode
-        ASSERT( s_ThreadSafeAllocs == false );
-        ASSERT( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() );
-
-        // Store the new owner thread for further safety checks
-        #if defined( ASSERTS_ENABLED )
-            s_ThreadSafeAllocsDebugOwnerThread = 0;
-        #endif
-    }
-
-    s_ThreadSafeAllocs = ( !singleThreadedMode );
 }
 
 // AllocateMemoryForPage
