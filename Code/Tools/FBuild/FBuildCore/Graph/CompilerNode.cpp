@@ -198,6 +198,14 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
             return true;
         }
 
+        // Clang-tidy
+        if ( compiler.EndsWithI( "clang-tidy.exe" ) ||
+            compiler.EndsWithI( "clang-tidy" ) )
+        {
+            m_CompilerFamilyEnum = CLANG_TIDY;
+            return true;
+        }
+
         // GCC
         if ( compiler.EndsWithI( "gcc.exe" ) ||
              compiler.EndsWithI( "gcc" ) ||
@@ -307,6 +315,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     if ( m_CompilerFamilyString.EqualsI( "clang-cl" ) )
     {
         m_CompilerFamilyEnum = CLANG_CL;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "clang-tidy" ) )
+    {
+        m_CompilerFamilyEnum = CLANG_TIDY;
         return true;
     }
     if ( m_CompilerFamilyString.EqualsI( "snc" ) )

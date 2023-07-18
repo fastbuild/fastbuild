@@ -66,6 +66,14 @@ void FileNode::HandleWarningsClangCl( Job * job, const AString & name, const ASt
     return HandleWarnings( job, name, data, clangWarningString );
 }
 
+// HandleWarningsClangTidy
+//------------------------------------------------------------------------------
+void FileNode::HandleWarningsClangTidy( Job* job, const AString& name, const AString& data )
+{
+    constexpr const char* clangTidyWarningString = " warning:";
+    return HandleWarnings( job, name, data, clangTidyWarningString );
+}
+
 // HandleWarnings
 //------------------------------------------------------------------------------
 void FileNode::HandleWarnings( Job * job, const AString & name, const AString & data, const char * warningString )

@@ -55,6 +55,7 @@ public:
         ORBIS_WAVE_PSSLC= 10,
         CSHARP          = 11,
         CLANG_CL        = 12,
+        CLANG_TIDY      = 13,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 

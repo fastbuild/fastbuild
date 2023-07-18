@@ -238,7 +238,7 @@ ObjectNode::~ObjectNode()
     const bool useCache = ShouldUseCache();
     const bool useDist = m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
     const bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
-    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
+    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsClangTidy() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -947,6 +947,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         case CompilerNode::CompilerFamily::MSVC:            flags.Set( CompilerFlags::FLAG_MSVC );              break;
         case CompilerNode::CompilerFamily::CLANG:           flags.Set( CompilerFlags::FLAG_CLANG );             break;
         case CompilerNode::CompilerFamily::CLANG_CL:        flags.Set( CompilerFlags::FLAG_CLANG_CL );          break;
+        case CompilerNode::CompilerFamily::CLANG_TIDY:      flags.Set( CompilerFlags::FLAG_CLANG_TIDY );        break;
         case CompilerNode::CompilerFamily::GCC:             flags.Set( CompilerFlags::FLAG_GCC );               break;
         case CompilerNode::CompilerFamily::SNC:             flags.Set( CompilerFlags::FLAG_SNC );               break;
         case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags.Set( CompilerFlags::CODEWARRIOR_WII );        break;
@@ -962,7 +963,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
 
     // Check MS compiler options
-    if ( flags.IsMSVC() || flags.IsClangCl() )
+    if ( flags.IsMSVC() || flags.IsClangCl() || flags.IsClangTidy() )
     {
         bool usingCLR = false;
         bool usingWinRT = false;
@@ -2304,6 +2305,14 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
                     HandleWarningsClangGCC( job, GetName(), ch.GetOut() );
                 }
             }
+            else if ( IsClangTidy() )
+            {
+                if ( IsWarningsAsErrorsMSVC() == false )
+                {
+                    HandleWarningsClangTidy( job, GetName(), ch.GetErr() );
+                    HandleWarningsClangTidy( job, GetName(), ch.GetOut() );
+                }
+            }
         }
 
         // Special case for clang static analysis which doesn't write any
@@ -2312,7 +2321,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
         // error
         if ( ch.GetResult() == 0 )
         {
-            if ( IsClang() || IsClangCl() )
+            if ( IsClang() || IsClangCl() || IsClangTidy() )
             {
                 if ( FileIO::FileExists( GetName().Get() ) == false )
                 {
@@ -2726,6 +2735,7 @@ ArgsResponseFileMode ObjectNode::GetResponseFileMode() const
              IsSNC() ||
              IsClang() ||
              IsClangCl() ||
+             IsClangTidy() ||
              IsCodeWarriorWii() ||
              IsGreenHillsWiiU() )
         {
