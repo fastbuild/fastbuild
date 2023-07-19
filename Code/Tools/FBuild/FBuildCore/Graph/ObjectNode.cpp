@@ -2231,7 +2231,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 
     // On remote workers, free compressed buffer as we don't need it anymore
     // This reduces memory consumed on the remote worker.
-    if ( job->IsLocal() == false )
+    if ( !IsClangTidy() && job->IsLocal() == false )
     {
         job->OwnData( nullptr, 0, false ); // Free compressed buffer
     }
@@ -2311,6 +2311,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
                 {
                     HandleWarningsClangTidy( job, GetName(), ch.GetErr() );
                     HandleWarningsClangTidy( job, GetName(), ch.GetOut() );
+                    job->OwnData( nullptr, 0, false ); // Free compressed buffer
                 }
             }
         }
