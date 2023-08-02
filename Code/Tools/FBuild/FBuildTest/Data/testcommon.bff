@@ -10,6 +10,7 @@
 #include "../../../../../External/SDK/VisualStudio/VisualStudio.bff"
 #include "../../../../../External/SDK/Clang/Clang.bff"
 #include "../../../../../External/SDK/Windows/Windows.bff"
+#include "../../../../../External/SDK/Clang/Windows/Clang-tidy.bff"
 
 #if __WINDOWS__
     .VisualStudioToolChain_X64  = .ToolChain_VS_Windows_X64

@@ -42,6 +42,7 @@ private:
     void ErrorsAreCorrectlyReported_Clang() const;
     void WarningsAreCorrectlyReported_MSVC() const;
     void WarningsAreCorrectlyReported_Clang() const;
+    void WarningsAreCorrectlyReported_ClangTidy() const;
     void ShutdownMemoryLeak() const;
     void TestForceInclude() const;
     void TestZiDebugFormat() const;
@@ -74,6 +75,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
         REGISTER_TEST( ErrorsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
         REGISTER_TEST( WarningsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
         REGISTER_TEST( WarningsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( WarningsAreCorrectlyReported_ClangTidy ) // TODO:B Enable for OSX and Linux
         REGISTER_TEST( TestForceInclude )
         REGISTER_TEST( TestZiDebugFormat )
         REGISTER_TEST( TestZiDebugFormat_Local )
@@ -371,6 +373,35 @@ void TestDistributed::WarningsAreCorrectlyReported_Clang() const
 
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
+}
+
+// WarningsAreCorrectlyReported_Clang
+//------------------------------------------------------------------------------
+void TestDistributed::WarningsAreCorrectlyReported_ClangTidy() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+    options.m_ShowCommandLines = true;
+
+    FBuild fBuild(options);
+    TEST_ASSERT(fBuild.Initialize());
+
+    // start a client to emulate the other end
+    Server s(1);
+    s.Listen(Protocol::PROTOCOL_TEST_PORT);
+
+    // Check that build passes
+    TEST_ASSERT(fBuild.Build("WarningsAreCorrectlyReported-ClangTidy"));
+
+    // Check that error is returned
+    TEST_ASSERT(GetRecordedOutput().Find(":6:9: warning: variable 'x' is not initialized [cppcoreguidelines-init-variables]"));
 }
 
 // ShutdownMemoryLeak
