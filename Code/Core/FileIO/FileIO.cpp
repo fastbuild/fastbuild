@@ -260,6 +260,8 @@
     ssize_t bytesCopied = 0;
     ssize_t offset = 0;
 
+    bool sendfileUnavailable = false;
+
     while ( offset < stat_source.st_size )
     {
         // sendfile has an arbitrary limit of 0x7ffff000 on all systems (even if 64bit)
@@ -269,9 +271,44 @@
         const ssize_t sent = sendfile( dest, source, &offset, count );
         if ( sent <= 0 )
         {
+            // sendfile manual suggests defaulting to read/write functions
+            if ( ( sent == -1 ) && ( ( errno == EINVAL ) || ( errno == ENOSYS ) ) )
+            {
+                sendfileUnavailable = true;
+            }
+
             break; // Copy failed (incomplete)
         }
         bytesCopied += sent;
+    }
+
+    // manually copy source file to destination in fixed-size chunks
+    // continues until source EOF is reached or any data fails to copy
+    if ( sendfileUnavailable )
+    {
+        const size_t count = 4096;
+        void * buf = ALLOC( count );
+
+        while ( bytesCopied < stat_source.st_size )
+        {
+            const ssize_t readBytes = read( source, buf, count );
+
+            if ( readBytes <= 0 )
+            {
+                break;
+            }
+
+            const ssize_t written = write( dest, buf, readBytes );
+
+            if ( written != readBytes )
+            {
+                break;
+            }
+
+            bytesCopied += written;
+        }
+
+        FREE( buf );
     }
 
     close( source );
