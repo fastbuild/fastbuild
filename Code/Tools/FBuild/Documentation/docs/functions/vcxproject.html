@@ -135,6 +135,7 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 .LinuxProjectType               // (optional) Set the project type GUID for Linux
 .PackagePath,                   // (optional) Path to package to debug
 .AdditionalSymbolSearchPaths,   // (optional) Additional symbol search paths for debugging
+.AndroidApkLocation             // (optional) Location of APK for Android Game Development Extension
 
 // Misc
 .PlatformToolset                // (optional) Specify PlatformToolset.
@@ -573,6 +574,9 @@ build configuration), but can be explicitily set via .LocalDebuggerCommand if de
 <hr>
       <p><b>AdditionalSymbolSearchPaths</b> - String - (Optional)</p>
       <p>Path to additional symbols to be used when debugging.</p>
+<hr>
+      <p><b>AndroidApkLocation</b> - String - (Optional)</p>
+      <p>Location of APK for Android Game Development Extension</p>
 <hr>
 
       <p><b>PlatformToolset</b> - String - (Optional)</p>

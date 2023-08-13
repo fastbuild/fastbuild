@@ -297,6 +297,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WritePGItem( "NMakeReBuildCommandLine",         config.m_ProjectRebuildCommand );
                 WritePGItem( "NMakeCleanCommandLine",           config.m_ProjectCleanCommand );
             }
+            if ( !config.m_AndroidApkLocation.IsEmpty() )
+            {
+                WritePGItem( "AndroidApkLocation",              config.m_AndroidApkLocation );
+            }
 
             WritePGItem( "NMakeOutput",                     config.m_Output );
             const ObjectListNode * oln = nullptr;
