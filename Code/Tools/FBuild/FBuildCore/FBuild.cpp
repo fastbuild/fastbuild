@@ -34,6 +34,7 @@
 #include "Core/Mem/SmallBlockAllocator.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/SystemMutex.h"
+#include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
@@ -77,6 +78,12 @@ FBuild::FBuild( const FBuildOptions & options )
 
     // store all user provided options
     m_Options = options;
+
+    // Create ThreadPool
+    if ( m_Options.m_NumWorkerThreads > 0 )
+    {
+        m_ThreadPool = FNEW( ThreadPool( m_Options.m_NumWorkerThreads ) );
+    }
 
     // track the old working dir to restore if modified (mainly for unit tests)
     VERIFY( FileIO::GetCurrentDir( m_OldWorkingDir ) );
@@ -129,6 +136,8 @@ FBuild::~FBuild()
     {
         FDELETE( &BuildProfiler::Get() );
     }
+
+    FDELETE m_ThreadPool;
 }
 
 // Initialize
@@ -373,7 +382,7 @@ void FBuild::SaveDependencyGraph( MemoryStream & stream, const char* nodeGraphDB
     AtomicStoreRelaxed( &s_AbortBuild, false ); // allow multiple runs in same process
 
     // create worker threads
-    m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads ) );
+    m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads, m_ThreadPool ) );
 
     // create the connection management system if needed
     // (must be after JobQueue is created)

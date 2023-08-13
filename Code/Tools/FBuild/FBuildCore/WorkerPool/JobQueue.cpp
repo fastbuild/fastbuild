@@ -142,7 +142,7 @@ Job * JobSubQueue::RemoveJob()
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueue::JobQueue( uint32_t numWorkerThreads ) :
+JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool ) :
     m_NumLocalJobsActive( 0 ),
     m_DistributableJobs_Available( 1024, true ),
     m_DistributableJobs_InProgress( 1024, true ),
@@ -163,9 +163,6 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
 
     if ( numWorkerThreads > 0 )
     {
-        // Create thread pool
-        m_ThreadPool = FNEW( ThreadPool( numWorkerThreads ) );
-
         // Create a job to run on each thread
         for ( uint32_t i = 0; i < numWorkerThreads; ++i )
         {
@@ -173,7 +170,7 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
             // (the "main" thread is considered 0)
             const uint16_t threadIndex = static_cast<uint16_t>( i + 1 );
             WorkerThread * wt = FNEW( WorkerThread( threadIndex ) );
-            wt->Init( m_ThreadPool );
+            wt->Init( threadPool );
             m_Workers.Append( wt );
         }
     }
@@ -218,8 +215,6 @@ JobQueue::~JobQueue()
     ASSERT( m_CompletedJobs.IsEmpty() );
     ASSERT( m_CompletedJobsFailed.IsEmpty() );
     ASSERT( Job::GetTotalLocalDataMemoryUsage() == 0 );
-
-    FDELETE m_ThreadPool;
 }
 
 // SignalStopWorkers (Main Thread)

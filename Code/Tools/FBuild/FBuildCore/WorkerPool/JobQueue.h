@@ -45,7 +45,7 @@ private:
 class JobQueue : public Singleton< JobQueue >
 {
 public:
-    explicit JobQueue( uint32_t numWorkerThreads );
+    explicit JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool );
     ~JobQueue();
 
     // main thread calls these
@@ -118,7 +118,6 @@ private:
     Array< Job * >      m_CompletedJobs2;
     Array< Job * >      m_CompletedJobsFailed2;
 
-    ThreadPool *        m_ThreadPool = nullptr;
     Array< WorkerThread * > m_Workers;
 };
 

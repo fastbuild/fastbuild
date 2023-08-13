@@ -27,6 +27,7 @@ class MemoryStream;
 class JobQueue;
 class Node;
 class NodeGraph;
+class ThreadPool;
 
 // FBuild
 //------------------------------------------------------------------------------
@@ -122,6 +123,7 @@ protected:
     static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild
 
     NodeGraph * m_DependencyGraph;
+    ThreadPool * m_ThreadPool = nullptr;
     JobQueue * m_JobQueue;
     mutable Mutex m_ClientLifetimeMutex;
     Client * m_Client; // manage connections to worker servers
