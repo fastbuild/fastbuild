@@ -27,6 +27,33 @@
 <h1>Changelog</h1>
 
 <div class='newsitemheader'>
+    v1.11&nbsp;<font color='#bbbbbb'>(19th-Aug-2023)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>[Linux] Robustify file copy if sendfile isn't supported  (Thanks to Nick Krecklow)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Reduce cost of queueing jobs during graph traversal</li>
+        <li>Improve LightCache performance considerably for many CPU core systems</li>
+        <li>Directory listings with excluded folders optimized significantly</li>
+        <li>All directory listings optimized slightly</li>
+        <li>Database loading and various lookup performance improved slightly</li>
+        <li>Improve database load time slightly</li>
+        <li>Error #1100 emits location of previous declaration</li>
+        <li><a href="options.html#dbfile">-dbfile</a> arg can explicitly set dependency db file location (Thanks to Troels Gram)</li>
+        <li>[Linux] Improve detection of max args length using _SC_ARG_MAX (Thanks to Domain)</li>
+        <li>VXCProject exposes AndroidApkLocation for Android Game Development Extension</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.10&nbsp;<font color='#bbbbbb'>(28th-May-2023)</font>
 </div>
 <div class='newsitembody'>
