@@ -47,6 +47,7 @@ void WorkerThread::Init( ThreadPool * pool )
 WorkerThread::~WorkerThread()
 {
     ASSERT( m_Exited.Load() );
+    m_Thread.Join();
 }
 
 // InitTmpDir
