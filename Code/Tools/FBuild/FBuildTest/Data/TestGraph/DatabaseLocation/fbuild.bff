@@ -1,0 +1,16 @@
+//
+// DatabaseLocation
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+TextFile( 'TestTarget' )
+{
+    .TextFileOutput         = '$Out$/Test/Graph/DatabaseLocation/test.txt'
+    .TextFileInputStrings   = { 'Test content' }
+}

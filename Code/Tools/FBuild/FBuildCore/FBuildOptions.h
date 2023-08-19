@@ -99,6 +99,7 @@ public:
     bool        m_FixupErrorPaths                   = false;
     bool        m_ForceDBMigration_Debug            = false; // Force migration even if bff has not changed (for tests)
     bool        m_ContinueAfterDBMove               = false;
+    AString     m_DBFile;
 
     uint32_t    m_NumWorkerThreads                  = 0; // True default detected in constructor
     AString     m_ConfigFile;

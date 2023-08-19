@@ -170,8 +170,10 @@ class BaseNode : public Node
     REFLECT_DECLARE( BaseNode )
 public:
     BaseNode()
-        : Node( AStackString<>( "dummy" ), Node::PROXY_NODE, 0 )
-    {}
+        : Node( Node::PROXY_NODE )
+    {
+        SetName( AStackString<>( "placeholder" ) );
+    }
     virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ ) override
     {
         ASSERT( false );

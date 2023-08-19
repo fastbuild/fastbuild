@@ -142,7 +142,7 @@ bool UnityNode::UnityFileAndOrigin::operator < ( const UnityFileAndOrigin & othe
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 UnityNode::UnityNode()
-    : Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_NONE )
+    : Node( Node::UNITY_NODE )
     , m_InputPathRecurse( true )
     , m_InputPattern( 1, true )
     , m_Files( 0, true )
@@ -806,7 +806,7 @@ bool UnityNode::GetIsolatedFilesFromList( Array< AString > & files ) const
     {
         return true; // No list specified so option is disabled
     }
-    
+
     // Open file
     FileStream input;
     if ( input.Open( m_IsolateListFile.Get() ) == false )

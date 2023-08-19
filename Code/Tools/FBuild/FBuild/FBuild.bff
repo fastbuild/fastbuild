@@ -50,6 +50,7 @@
                                             'Core-Lib-$Platform$-$BuildConfigName$',
                                             'LZ4-Lib-$Platform$-$BuildConfigName$'
                                             'xxHash-Lib-$Platform$-$BuildConfigName$'
+                                            'Zstd-Lib-$Platform$-$BuildConfigName$'
                                           }
             #if __LINUX__
                 .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuild$ExeExtension$' // NOTE: lower case
@@ -106,7 +107,7 @@
             }
         }
     #endif
-        
+
     // Aliases
     //--------------------------------------------------------------------------
     CreateCommonAliases( .ProjectName )

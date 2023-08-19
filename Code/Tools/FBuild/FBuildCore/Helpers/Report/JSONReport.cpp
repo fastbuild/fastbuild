@@ -30,7 +30,7 @@ JSONReport::~JSONReport() = default;
 void JSONReport::Generate( const NodeGraph & nodeGraph, const FBuildStats & stats )
 {
     GetLibraryStats( nodeGraph, stats );
-    
+
     Write( "{\n\t" );
 
     // build the report
@@ -622,7 +622,7 @@ void JSONReport::DoIncludes()
     {
         Write( "]" );
     }
-    else 
+    else
     {
         Write( "\n\t]" );
     }

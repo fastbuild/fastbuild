@@ -283,7 +283,7 @@ void OSWindow::StartMessagePump()
 
             // Allow our message pump to do the work, whether it's WM_QUIT (0 bRet) or not (non-zero bRet)
             TranslateMessage( &msg );
-            DispatchMessage( &msg ); 
+            DispatchMessage( &msg );
         }
     #elif defined( __OSX__ )
         // This call blocks until messaged by StopMessagePump

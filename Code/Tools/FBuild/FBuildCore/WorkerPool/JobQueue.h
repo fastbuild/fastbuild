@@ -15,6 +15,7 @@
 //------------------------------------------------------------------------------
 class Node;
 class Job;
+class ThreadPool;
 class WorkerThread;
 
 
@@ -44,7 +45,7 @@ private:
 class JobQueue : public Singleton< JobQueue >
 {
 public:
-    explicit JobQueue( uint32_t numWorkerThreads );
+    explicit JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool );
     ~JobQueue();
 
     // main thread calls these

@@ -223,7 +223,7 @@ void Env::GetExePath( AString & output )
         uint32_t bufferSize = 0;
         VERIFY( _NSGetExecutablePath( nullptr, &bufferSize ) == -1 );
         ASSERT( bufferSize > 0 ); // Updated by _NSGetExecutablePath
-    
+
         // Reserve enough space (-1 since bufferSize includes the null)
         output.SetLength( bufferSize - 1 );
         VERIFY( _NSGetExecutablePath( output.Get(), &bufferSize ) == 0 );

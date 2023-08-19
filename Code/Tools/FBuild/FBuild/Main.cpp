@@ -256,7 +256,7 @@ int Main( int argc, char * argv[] )
     if ( problemSavingBuildProfileJSON )
     {
         return FBUILD_FAILED_TO_WRITE_PROFILE_JSON;
-    }    
+    }
     return ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
 }
 

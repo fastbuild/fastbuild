@@ -77,7 +77,7 @@ REFLECT_END( ObjectListNode )
 // ObjectListNode
 //------------------------------------------------------------------------------
 ObjectListNode::ObjectListNode()
-: Node( AString::GetEmpty(), Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
+    : Node( Node::OBJECT_LIST_NODE )
 {
     m_LastBuildTimeMs = 10000;
 
@@ -344,10 +344,8 @@ ObjectListNode::~ObjectListNode() = default;
 
 // GatherDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( NodeGraph & nodeGraph )
 {
-    (void)forceClean; // dynamic deps are always re-added here, so this is meaningless
-
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
 
@@ -371,7 +369,7 @@ ObjectListNode::~ObjectListNode() = default;
                 Node * n = nodeGraph.FindNode( fIt->m_Name );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( fIt->m_Name );
+                    n = nodeGraph.CreateNode<FileNode>( fIt->m_Name );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -409,7 +407,7 @@ ObjectListNode::~ObjectListNode() = default;
                 Node * n = nodeGraph.FindNode( *it );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( *it );
+                    n = nodeGraph.CreateNode<FileNode>( *it );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -430,7 +428,7 @@ ObjectListNode::~ObjectListNode() = default;
                 Node * n = nodeGraph.FindNode( isolatedFile.GetFileName() );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( isolatedFile.GetFileName() );
+                    n = nodeGraph.CreateNode<FileNode>( isolatedFile.GetFileName() );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -513,9 +511,9 @@ ObjectListNode::~ObjectListNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool ObjectListNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
-    if ( GatherDynamicDependencies( nodeGraph, forceClean ) == false )
+    if ( GatherDynamicDependencies( nodeGraph ) == false )
     {
         return false; // GatherDynamicDependencies will have emitted error
     }
@@ -777,7 +775,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const AString & objectInput,
                                                const AString & pchObjectName )
 {
-    ObjectNode * node= nodeGraph.CreateObjectNode( objectName );
+    ObjectNode * node= nodeGraph.CreateNode<ObjectNode>( objectName, iter );
     node->m_Compiler = m_Compiler;
     node->m_CompilerOptions = compilerOptions;
     node->m_CompilerOptionsDeoptimized = compilerOptionsDeoptimized;
@@ -838,7 +836,7 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
     {
         callback( file, AString::GetEmpty(), userData );
     }
-    
+
     // Dynamically discovered files
     for ( size_t i = m_ObjectListInputStartIndex; i < m_ObjectListInputEndIndex; ++i )
     {

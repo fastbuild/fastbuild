@@ -23,7 +23,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::EXEC_NODE; }
 
 private:
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual bool DetermineNeedToBuildStatic() const override;
     virtual BuildResult DoBuild( Job * job ) override;
 

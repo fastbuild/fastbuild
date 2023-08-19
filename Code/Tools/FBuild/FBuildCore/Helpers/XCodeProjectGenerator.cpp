@@ -83,7 +83,7 @@ const AString & XCodeProjectGenerator::GenerateUserSchemeMangementPList()
                         "\t\t\t<key>primary</key>\n"
                         "\t\t\t<true/>\n"
                         "\t\t</dict>\n"
-                    	"\t</dict>\n",
+                        "\t</dict>\n",
                         pbxNativeTargetGUID.Get() );
 
     // Footer
@@ -147,7 +147,7 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
                         "         </BuildActionEntry>\n"
                         "      </BuildActionEntries>\n"
                         "   </BuildAction>\n",
-                        pbxLegacyTargetGUID.Get(), m_ProjectName.Get(), m_ProjectName.Get(), m_ProjectName.Get() );                       
+                        pbxLegacyTargetGUID.Get(), m_ProjectName.Get(), m_ProjectName.Get(), m_ProjectName.Get() );
 
     // Test Action
     m_Tmp.AppendFormat( "   <TestAction\n"
@@ -197,8 +197,8 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
                                 "            argument = \"%s\"\n"
                                 "            isEnabled = \"NO\">\n"
                                 "         </CommandLineArgument>\n",
-                                escapedArgument.Get() );                            
-        }        
+                                escapedArgument.Get() );
+        }
         m_Tmp.AppendFormat( "      </CommandLineArguments>\n" );
     }
     m_Tmp.AppendFormat( "      <AdditionalOptions>\n"
@@ -397,7 +397,7 @@ void XCodeProjectGenerator::WriteFolders()
                    "\t\t\tchildren = (\n",
                    pbxGroupGUID.Get() );
         }
-        
+
         // Child Files
         for ( const File * file : folder->m_Files )
         {
@@ -813,7 +813,7 @@ void XCodeProjectGenerator::WriteString( uint32_t indentDepth,
     {
         tabs += '\t';
     }
-   
+
     // Empty strings and strings with spaces are quoted
     const char quoteString = ShouldQuoteString( value );
     const char * const formatString = quoteString ? "%s%s = \"%s\";\n"

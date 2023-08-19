@@ -42,7 +42,7 @@ REFLECT_END( CSNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CSNode::CSNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_CompilerInputPathRecurse( true )
     , m_NumCompilerInputFiles( 0 )
     , m_NumCompilerReferences( 0 )
@@ -127,7 +127,7 @@ CSNode::~CSNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
+/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -151,7 +151,7 @@ CSNode::~CSNode() = default;
             Node * sn = nodeGraph.FindNode( file.m_Name );
             if ( sn == nullptr )
             {
-                sn = nodeGraph.CreateFileNode( file.m_Name );
+                sn = nodeGraph.CreateNode<FileNode>( file.m_Name );
             }
             else if ( sn->IsAFile() == false )
             {

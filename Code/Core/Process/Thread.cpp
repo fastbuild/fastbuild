@@ -48,12 +48,16 @@ public:
     ThreadStartInfo( Thread::ThreadEntryFunction entryFunc, void * userData, const char * threadName )
         : m_UserEntryFunction( entryFunc )
         , m_UserData( userData )
-        , m_ThreadName( threadName )
-    {}
+    {
+        if ( threadName )
+        {
+            m_ThreadName = threadName;
+        }
+    }
 
     Thread::ThreadEntryFunction m_UserEntryFunction;
     void *          m_UserData;
-    const char *    m_ThreadName;
+    AString         m_ThreadName;
 
     #if defined( __WINDOWS__ )
         static uint32_t WINAPI ThreadStartFunction( void * userData )
@@ -66,13 +70,16 @@ public:
         Thread::ThreadEntryFunction realFunction = originalInfo->m_UserEntryFunction;
         void * realUserData = originalInfo->m_UserData;
 
-        // Set thread name for debugging
-        #ifdef DEBUG
-            if ( originalInfo->m_ThreadName )
-            {
-                Thread::SetThreadName( originalInfo->m_ThreadName );
-            }
-        #endif
+        if ( originalInfo->m_ThreadName.IsEmpty() == false )
+        {
+            // Set thread name for debugging
+            #ifdef DEBUG
+                Thread::SetThreadName( originalInfo->m_ThreadName.Get() );
+            #endif
+
+            // Set thread name for profiling
+            PROFILE_SET_THREAD_NAME( originalInfo->m_ThreadName.Get() );
+        }
 
         // done with ThreadStartInfo
         MemoryBarrier();
@@ -85,6 +92,8 @@ public:
             return (void *)(size_t)( (*realFunction)( realUserData ) );
         #endif
     }
+
+    void operator =(const ThreadStartInfo& other) = delete;
 };
 
 // Static Data
@@ -112,7 +121,7 @@ void Thread::Start( ThreadEntryFunction func,
 {
     // Can only start if not already started
     ASSERT( !IsRunning() );
-    
+
     // Create structure to pass to thread
     ThreadStartInfo & info = *FNEW( ThreadStartInfo( func, userData, threadName ) );
     MemoryBarrier();

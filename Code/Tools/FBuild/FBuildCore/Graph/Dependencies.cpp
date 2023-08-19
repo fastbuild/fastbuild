@@ -56,7 +56,7 @@ void Dependencies::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
     {
         return;
     }
-    
+
     SetCapacity( numDeps );
     for ( uint32_t i=0; i<numDeps; ++i )
     {

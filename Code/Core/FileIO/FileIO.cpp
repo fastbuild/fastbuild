@@ -58,13 +58,13 @@
     {
     public:
         typedef int (*FuncPtr)( int dirfd, const char * pathname, const struct timespec times[ 2 ], int flags );
-        
+
         OSXHelper_utimensat()
         {
             // Open the c runtime library
             m_LibCHandle = dlopen( "libc.dylib", RTLD_LAZY );
             ASSERT( m_LibCHandle ); // This should never fail
-        
+
             // See if utimensat exists
             m_FuncPtr = (FuncPtr)dlsym( m_LibCHandle, "utimensat" );
         }
@@ -260,6 +260,8 @@
     ssize_t bytesCopied = 0;
     ssize_t offset = 0;
 
+    bool sendfileUnavailable = false;
+
     while ( offset < stat_source.st_size )
     {
         // sendfile has an arbitrary limit of 0x7ffff000 on all systems (even if 64bit)
@@ -269,9 +271,44 @@
         const ssize_t sent = sendfile( dest, source, &offset, count );
         if ( sent <= 0 )
         {
+            // sendfile manual suggests defaulting to read/write functions
+            if ( ( sent == -1 ) && ( ( errno == EINVAL ) || ( errno == ENOSYS ) ) )
+            {
+                sendfileUnavailable = true;
+            }
+
             break; // Copy failed (incomplete)
         }
         bytesCopied += sent;
+    }
+
+    // manually copy source file to destination in fixed-size chunks
+    // continues until source EOF is reached or any data fails to copy
+    if ( sendfileUnavailable )
+    {
+        const size_t count = 4096;
+        void * buf = ALLOC( count );
+
+        while ( bytesCopied < stat_source.st_size )
+        {
+            const ssize_t readBytes = read( source, buf, count );
+
+            if ( readBytes <= 0 )
+            {
+                break;
+            }
+
+            const ssize_t written = write( dest, buf, readBytes );
+
+            if ( written != readBytes )
+            {
+                break;
+            }
+
+            bytesCopied += written;
+        }
+
+        FREE( buf );
     }
 
     close( source );
@@ -319,6 +356,17 @@
     }
 
     return ( results->GetSize() != oldSize );
+}
+
+// GetFiles
+//------------------------------------------------------------------------------
+/*static*/ void FileIO::GetFiles( const AString & path,
+                                  GetFilesHelper & helper )
+{
+    // make a copy of the path as it will be modified during recursion
+    AStackString<> pathCopy( path );
+    PathUtils::EnsureTrailingSlash( pathCopy );
+    GetFilesRecurse( pathCopy, helper );
 }
 
 // GetFilesEx
@@ -677,7 +725,7 @@
                 }
                 continue; // Keep processing path
             }
-            
+
             // Path doesn't exist so keep rest of path as-is
             outNormalizedPath += pos;
             break;
@@ -812,7 +860,7 @@
             t[ 1 ] = t[ 0 ];
             return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), t, 0 ) == 0 );
         }
-    
+
         // Fallback to regular low-resolution filetime setting
         struct timeval t[ 2 ];
         t[ 0 ].tv_sec = fileTime / 1000000000ULL;
@@ -843,7 +891,7 @@
         {
             return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), nullptr, 0 ) == 0 );
         }
-    
+
         // Fallback to regular low-resolution filetime setting
         return ( utimes( fileName.Get(), nullptr ) == 0 );
     #elif defined( __LINUX__ )
@@ -963,6 +1011,150 @@
         return false; // failed to chmod
     }
 #endif
+
+//------------------------------------------------------------------------------
+/*static*/ void FileIO::GetFilesRecurse( AString & pathCopy, GetFilesHelper & helper )
+{
+    const uint32_t baseLength = pathCopy.GetLength();
+
+    // Windows requires the path contain a wildcard
+    #if defined( __WINDOWS__ )
+        pathCopy += '*'; // retrieve all files/folders
+    #endif
+
+    // Don't traverse into symlinks - TODO:B Why is this OSX/Linux only?
+    #if defined( __LINUX__ ) || defined( __APPLE__ )
+        // Special case symlinks
+        struct stat stat_source;
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
+        if ( S_ISLNK( stat_source.st_mode ) )
+        {
+            return;
+        }
+    #endif
+
+    // Start dir list operation
+    #if defined( __WINDOWS__ )
+        WIN32_FIND_DATA findData;
+        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
+        if ( hFind == INVALID_HANDLE_VALUE)
+        {
+            return;
+        }
+    #else
+        DIR * dir = opendir( pathCopy.Get() );
+        if ( dir == nullptr )
+        {
+            return;
+        }
+    #endif
+
+    // Iterate entries
+    #if defined( __LINUX__ ) || defined( __APPLE__ )
+        for ( ;; )
+    #else
+        do
+    #endif
+    {
+        #if defined( __LINUX__ ) || defined( __APPLE__ )
+            dirent * entry = readdir( dir );
+            if ( entry == nullptr )
+            {
+                break; // no more entries
+            }
+        #endif
+
+        // Name of this entry
+        #if defined( __WINDOWS__ )
+            const char * const entryName = findData.cFileName;
+        #else
+            const char * const entryName = entry->d_name;
+        #endif
+
+        // Determine if entry is a directory
+        #if defined( __WINDOWS__ )
+            const bool isDir = ( ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) == FILE_ATTRIBUTE_DIRECTORY );
+        #else
+            bool isDir = ( entry->d_type == DT_DIR );
+
+            // Not all filesystems have support for returning the file type in
+            // d_type and applications must properly handle a return of DT_UNKNOWN.
+            if ( entry->d_type == DT_UNKNOWN )
+            {
+                pathCopy.SetLength( baseLength );
+                pathCopy += entry->d_name;
+
+                struct stat info;
+                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
+                isDir = S_ISDIR( info.st_mode );
+            }
+        #endif
+
+        // Directory?
+        if ( isDir )
+        {
+            // ignore magic '.' and '..' folders
+            // (don't need to check length of name, as all names are at least 1 char
+            // which means index 0 and 1 are valid to access)
+            if ( ( entryName[ 0 ] == '.' ) &&
+                 ( ( entryName[ 1 ] == '.' ) || ( entryName[ 1 ] == 0 ) ) )
+            {
+                continue;
+            }
+
+            // Process Dir
+            pathCopy.SetLength( baseLength );
+            pathCopy += entryName;
+            pathCopy += NATIVE_SLASH;
+            const bool recurseIntoDir = helper.OnDirectory( pathCopy );
+            if ( recurseIntoDir )
+            {
+                GetFilesRecurse( pathCopy, helper );
+            }
+            continue;
+        }
+
+        // Process File
+        pathCopy.SetLength( baseLength );
+        if ( helper.ShouldIncludeFile( entryName ) )
+        {
+            FileInfo fileInfo;
+            const uint32_t fileNameLen = static_cast<uint32_t>( AString::StrLen( entryName ) );
+            const uint32_t fullPathLen = pathCopy.GetLength()  + fileNameLen;
+            fileInfo.m_Name.SetReserved( fullPathLen );
+            fileInfo.m_Name.Assign( pathCopy );
+            fileInfo.m_Name.Append(entryName, fileNameLen );
+            #if defined( __WINDOWS__ )
+                fileInfo.m_Attributes = findData.dwFileAttributes;
+                fileInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
+                fileInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
+            #else
+                struct stat info;
+                VERIFY( lstat( fileInfo.m_Name.Get(), &info ) == 0 );
+                fileInfo.m_Attributes = info.st_mode;
+                #if defined( __APPLE__ )
+                    fileInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
+                #else
+                    fileInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
+                #endif
+                fileInfo.m_Size = info.st_size;
+            #endif
+            helper.OnFile( Move( fileInfo ) );
+        }
+    }
+    #if defined( __WINDOWS__ )
+        while ( FindNextFile( hFind, &findData ) != 0 );
+    #endif
+
+    #if defined( __WINDOWS__ )
+        FindClose( hFind );
+    #else
+        closedir( dir );
+    #endif
+}
 
 // GetFilesRecurse
 //------------------------------------------------------------------------------
@@ -1606,6 +1798,46 @@ bool FileIO::FileInfo::IsReadOnly() const
     }
 
     return false;
+}
+
+// GetFilesHelper CONSTRUCTOR
+//------------------------------------------------------------------------------
+GetFilesHelper::GetFilesHelper( size_t sizeHint )
+    : m_Files( sizeHint, true )
+{
+}
+
+//------------------------------------------------------------------------------
+GetFilesHelper::GetFilesHelper( const Array<AString> & patterns, size_t sizeHint )
+    : m_Patterns( &patterns )
+    , m_Files( sizeHint, true )
+{
+}
+
+// GetFilesHelper DESTRUCTOR
+//------------------------------------------------------------------------------
+GetFilesHelper::~GetFilesHelper() = default;
+
+// OnDirectory
+//------------------------------------------------------------------------------
+/*virtual*/ bool GetFilesHelper::OnDirectory( const AString & /*dirPath*/ )
+{
+    return m_Recurse;
+}
+
+// ShouldIncludeFile
+//------------------------------------------------------------------------------
+/*virtual*/ bool GetFilesHelper::ShouldIncludeFile( const char * fileName )
+{
+    // Check wildcard patterns
+    return FileIO::IsMatch( m_Patterns, fileName );
+}
+
+// OnFile
+//------------------------------------------------------------------------------
+/*virtual*/ void GetFilesHelper::OnFile( FileIO::FileInfo && fileInfo )
+{
+    m_Files.EmplaceBack( Move( fileInfo ) );
 }
 
 //------------------------------------------------------------------------------

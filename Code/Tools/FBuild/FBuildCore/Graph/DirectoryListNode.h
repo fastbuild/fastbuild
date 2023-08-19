@@ -40,7 +40,7 @@ public:
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
-    void MakePrettyName( const size_t totalFiles );
+    void MakePrettyName();
 
     friend class CompilationDatabase; // For DoBuild - TODO:C This is not ideal
 

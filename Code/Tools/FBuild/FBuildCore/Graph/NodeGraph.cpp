@@ -45,7 +45,6 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/CRC32.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Thread.h"
@@ -159,7 +158,7 @@ NodeGraph::~NodeGraph()
                 corruptDBName += ".corrupt";
                 FileIO::FileMove( AStackString<>( nodeGraphDBFile ), corruptDBName ); // Will overwrite if needed
             }
-            
+
             // Create a fresh DB by parsing the BFF
             FDELETE( oldNG );
             NodeGraph * newNG = FNEW( NodeGraph );
@@ -213,7 +212,8 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
         // default instance if needed.
         const AStackString<> settingsNodeName( "$$Settings$$" );
         const Node * settingsNode = FindNode( settingsNodeName );
-        m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : CreateSettingsNode( settingsNodeName ); // Create a default
+        m_Settings = settingsNode ? settingsNode->CastTo<SettingsNode>()
+                                  : CreateNode<SettingsNode>( settingsNodeName, &BFFToken::GetBuiltInToken() ); // Create a default
 
         // Parser will populate m_UsedFiles
         const Array<BFFFile *> & usedFiles = bffParser.GetUsedFiles();
@@ -223,6 +223,11 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
             m_UsedFiles.EmplaceBack( file->GetFileName(), file->GetTimeStamp(), file->GetHash() );
         }
     }
+
+    // Free token tracking data we no longer need (and won't be valid when
+    // BFFParser falls out of scope)
+    m_NodeSourceTokens.Destruct();
+
     return ok;
 }
 
@@ -786,311 +791,122 @@ size_t NodeGraph::GetNodeCount() const
 
 // RegisterNode
 //------------------------------------------------------------------------------
-void NodeGraph::RegisterNode( Node * node )
+void NodeGraph::RegisterNode( Node * node, const BFFToken * sourceToken )
 {
     ASSERT( Thread::IsMainThread() );
     ASSERT( node->GetName().IsEmpty() == false );
     ASSERT( FindNode( node->GetName() ) == nullptr );
     AddNode( node );
+    RegisterSourceToken( node, sourceToken );
 }
 
-// CreateCopyFileNode
+// RegisterSourceToken
 //------------------------------------------------------------------------------
-CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName )
+void NodeGraph::RegisterSourceToken( const Node * node, const BFFToken * sourceToken )
 {
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( dstFileName ) );
-
-    CopyFileNode * node = FNEW( CopyFileNode() );
-    node->SetName( dstFileName );
-    AddNode( node );
-    return node;
-}
-
-// CreateCopyDirNode
-//------------------------------------------------------------------------------
-CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    CopyDirNode * node = FNEW( CopyDirNode() );
-    node->SetName( nodeName );
-    AddNode( node );
-    return node;
-}
-
-// CreateRemoveDirNode
-//------------------------------------------------------------------------------
-RemoveDirNode * NodeGraph::CreateRemoveDirNode( const AString & nodeName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    RemoveDirNode * node = FNEW( RemoveDirNode() );
-    node->SetName( nodeName );
-    AddNode( node );
-    return node;
-}
-
-// CreateExecNode
-//------------------------------------------------------------------------------
-ExecNode * NodeGraph::CreateExecNode( const AString & nodeName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( nodeName ) );
-
-    ExecNode * node = FNEW( ExecNode() );
-    node->SetName( nodeName );
-    AddNode( node );
-    return node;
-}
-
-// CreateFileNode
-//------------------------------------------------------------------------------
-FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    FileNode * node;
-
-    if ( cleanPath )
+    // Where available, record the source token for the node
+    if ( sourceToken )
     {
-        AStackString< 512 > fullPath;
-        CleanPath( fileName, fullPath );
-        node = FNEW( FileNode( fullPath, Node::FLAG_ALWAYS_BUILD ) );
+        // Ammortize array growth in parallel with m_AllNodes
+        m_NodeSourceTokens.SetCapacity( m_AllNodes.GetCapacity() );
+
+        // Nobody should have added this before
+        ASSERT( m_NodeSourceTokens.GetSize() < m_AllNodes.GetSize() );
+
+        // Array may be non-contiguous, so fill it in
+        while ( m_NodeSourceTokens.GetSize() < m_AllNodes.GetSize() )
+        {
+            m_NodeSourceTokens.EmplaceBack( nullptr );
+        }
+
+        // Store the token in the parallel at the same place as the node
+        ASSERT( m_AllNodes.Top() == node ); (void)node;
+        m_NodeSourceTokens.Top() = sourceToken;
+    }
+}
+
+// CreateNode
+//------------------------------------------------------------------------------
+Node * NodeGraph::CreateNode( Node::Type type, AString && name )
+{
+    ASSERT( Thread::IsMainThread() );
+
+    Node * node = nullptr;
+    switch ( type )
+    {
+        case Node::PROXY_NODE:              ASSERT( false ); return nullptr;
+        case Node::COPY_FILE_NODE:          node = FNEW( CopyFileNode() ); break;
+        case Node::DIRECTORY_LIST_NODE:     node = FNEW( DirectoryListNode() ); break;
+        case Node::EXEC_NODE:               node = FNEW( ExecNode() ); break;
+        case Node::FILE_NODE:
+        {
+            node = FNEW( FileNode() );
+            node->m_ControlFlags = Node::FLAG_ALWAYS_BUILD; // TODO:C Eliminate special case
+            break;
+        }
+        case Node::LIBRARY_NODE:            node = FNEW( LibraryNode() ); break;
+        case Node::OBJECT_NODE:             node = FNEW( ObjectNode() ); break;
+        case Node::ALIAS_NODE:              node = FNEW( AliasNode() ); break;
+        case Node::EXE_NODE:                node = FNEW( ExeNode() ); break;
+        case Node::CS_NODE:                 node = FNEW( CSNode() ); break;
+        case Node::UNITY_NODE:              node = FNEW( UnityNode() ); break;
+        case Node::TEST_NODE:               node = FNEW( TestNode() ); break;
+        case Node::COMPILER_NODE:           node = FNEW( CompilerNode() ); break;
+        case Node::DLL_NODE:                node = FNEW( DLLNode() ); break;
+        case Node::VCXPROJECT_NODE:         node = FNEW( VCXProjectNode() ); break;
+        case Node::VSPROJEXTERNAL_NODE:     node = FNEW( VSProjectExternalNode() ); break;
+        case Node::OBJECT_LIST_NODE:        node = FNEW( ObjectListNode() ); break;
+        case Node::COPY_DIR_NODE:           node = FNEW( CopyDirNode() ); break;
+        case Node::SLN_NODE:                node = FNEW( SLNNode() ); break;
+        case Node::REMOVE_DIR_NODE:         node = FNEW( RemoveDirNode() ); break;
+        case Node::XCODEPROJECT_NODE:       node = FNEW( XCodeProjectNode() ); break;
+        case Node::SETTINGS_NODE:           node = FNEW( SettingsNode() ); break;
+        case Node::TEXT_FILE_NODE:          node = FNEW( TextFileNode() ); break;
+        case Node::LIST_DEPENDENCIES_NODE:  node = FNEW( ListDependenciesNode() ); break;
+        case Node::NUM_NODE_TYPES:          ASSERT( false ); return nullptr;
+    }
+
+    ASSERT( node ); // All cases handled above means this is impossible
+
+    // Names for files must be normalized by the time we get here
+    ASSERT( !node->IsAFile() || IsCleanPath( name ) );
+
+    // Store name and track new node
+    node->SetName( Move( name ) );
+    AddNode( node );
+
+    return node;
+}
+
+
+// CreateNode
+//------------------------------------------------------------------------------
+Node * NodeGraph::CreateNode( Node::Type type, const AString & name, const BFFToken * sourceToken )
+{
+    // Where possible callers should call the move version to transfer ownership
+    // of strings, but calers don't always have a string to transfer so this
+    // helper can be called in those situations
+    AString nameCopy;
+
+    // TODO:C Eliminate special case handling of FileNode
+    // For historical reasons users of FileNodes don't clean paths so we have to
+    // do it here. Ideally this special case would be eliminated in the future.
+    if ( type == Node::FILE_NODE )
+    {
+        // Clean path
+        AStackString< 512 > cleanPath;
+        CleanPath( name, cleanPath );
+        nameCopy = cleanPath;
     }
     else
     {
-        node = FNEW( FileNode( fileName, Node::FLAG_ALWAYS_BUILD ) );
+        nameCopy = name;
     }
 
-    AddNode( node );
-    return node;
-}
+    Node * node = CreateNode( type, Move( nameCopy ) );
 
-// CreateDirectoryListNode
-//------------------------------------------------------------------------------
-DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
+    RegisterSourceToken( node, sourceToken );
 
-    DirectoryListNode * node = FNEW( DirectoryListNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateLibraryNode
-//------------------------------------------------------------------------------
-LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( libraryName ) );
-
-    LibraryNode * node = FNEW( LibraryNode() );
-    node->SetName( libraryName );
-    AddNode( node );
-    return node;
-}
-
-// CreateObjectNode
-//------------------------------------------------------------------------------
-ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( objectName ) );
-
-    ObjectNode * node = FNEW( ObjectNode() );
-    node->SetName( objectName );
-    AddNode( node );
-    return node;
-}
-
-// CreateAliasNode
-//------------------------------------------------------------------------------
-AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    AliasNode * node = FNEW( AliasNode() );
-    node->SetName( aliasName );
-    AddNode( node );
-    return node;
-}
-
-// CreateDLLNode
-//------------------------------------------------------------------------------
-DLLNode * NodeGraph::CreateDLLNode( const AString & dllName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( dllName ) );
-
-    DLLNode * node = FNEW( DLLNode() );
-    node->SetName( dllName );
-    AddNode( node );
-    return node;
-}
-
-// CreateExeNode
-//------------------------------------------------------------------------------
-ExeNode * NodeGraph::CreateExeNode( const AString & exeName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( exeName ) );
-
-    ExeNode * node = FNEW( ExeNode() );
-    node->SetName( exeName );
-    AddNode( node );
-    return node;
-}
-
-// CreateUnityNode
-//------------------------------------------------------------------------------
-UnityNode * NodeGraph::CreateUnityNode( const AString & unityName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    UnityNode * node = FNEW( UnityNode() );
-    node->SetName( unityName );
-    AddNode( node );
-    return node;
-}
-
-// CreateCSNode
-//------------------------------------------------------------------------------
-CSNode * NodeGraph::CreateCSNode( const AString & csAssemblyName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( csAssemblyName ) );
-
-    CSNode * node = FNEW( CSNode() );
-    node->SetName( csAssemblyName );
-    AddNode( node );
-    return node;
-}
-
-// CreateTestNode
-//------------------------------------------------------------------------------
-TestNode * NodeGraph::CreateTestNode( const AString & testOutput )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( testOutput ) );
-
-    TestNode * node = FNEW( TestNode() );
-    node->SetName( testOutput );
-    AddNode( node );
-    return node;
-}
-
-// CreateCompilerNode
-//------------------------------------------------------------------------------
-CompilerNode * NodeGraph::CreateCompilerNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    CompilerNode * node = FNEW( CompilerNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateVCXProjectNode
-//------------------------------------------------------------------------------
-VSProjectBaseNode * NodeGraph::CreateVCXProjectNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( name ) );
-
-    VCXProjectNode * node = FNEW( VCXProjectNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateVSProjectExternalNode
-//------------------------------------------------------------------------------
-VSProjectBaseNode * NodeGraph::CreateVSProjectExternalNode(const AString& name)
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( name ) );
-
-    VSProjectExternalNode* node = FNEW( VSProjectExternalNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateSLNNode
-//------------------------------------------------------------------------------
-SLNNode * NodeGraph::CreateSLNNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( name ) );
-
-    SLNNode * node = FNEW( SLNNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateObjectListNode
-//------------------------------------------------------------------------------
-ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    ObjectListNode * node = FNEW( ObjectListNode() );
-    node->SetName( listName );
-    AddNode( node );
-    return node;
-}
-
-// CreateXCodeProjectNode
-//------------------------------------------------------------------------------
-XCodeProjectNode * NodeGraph::CreateXCodeProjectNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( name ) );
-
-    XCodeProjectNode * node = FNEW( XCodeProjectNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateSettingsNode
-//------------------------------------------------------------------------------
-SettingsNode * NodeGraph::CreateSettingsNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    SettingsNode * node = FNEW( SettingsNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateListDependenciesNode
-//------------------------------------------------------------------------------
-ListDependenciesNode * NodeGraph::CreateListDependenciesNode( const AString & name )
-{
-    ASSERT( Thread::IsMainThread() );
-
-    ListDependenciesNode * node = FNEW( ListDependenciesNode() );
-    node->SetName( name );
-    AddNode( node );
-    return node;
-}
-
-// CreateTextFileNode
-//------------------------------------------------------------------------------
-TextFileNode* NodeGraph::CreateTextFileNode( const AString& nodeName )
-{
-    ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( nodeName ) );
-
-    TextFileNode* node = FNEW( TextFileNode() );
-    node->SetName( nodeName );
-    AddNode( node );
     return node;
 }
 
@@ -1105,7 +921,7 @@ void NodeGraph::AddNode( Node * node )
     ASSERT( FindNodeInternal( node->GetName() ) == nullptr ); // node name must be unique
 
     // track in NodeMap
-    const uint32_t crc = CRC32::CalcLower( node->GetName() );
+    const uint32_t crc = Node::CalcNameHash( node->GetName() );
     const size_t key = ( crc & m_NodeMapMaxKey );
     node->m_Next = m_NodeMap[ key ];
     m_NodeMap[ key ] = node;
@@ -1177,108 +993,108 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 {
     ASSERT( nodeToBuild );
 
-    // already building, or queued to build?
-    ASSERT( nodeToBuild->GetState() != Node::BUILDING );
-
     // accumulate recursive cost
     cost += nodeToBuild->GetLastBuildTime();
 
-    // check pre-build dependencies
-    if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
+    // False positive "Unannotated fallthrough between switch labels" (VS 2019 v14.29.30037)
+    #if ( _MSC_VER < 1935 )
+        PRAGMA_DISABLE_PUSH_MSVC(26819)
+    #endif
+
+    switch ( nodeToBuild->GetState() )
     {
-        // all pre-build deps done?
-        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
-        if ( allDependenciesUpToDate == false )
+        case Node::NOT_PROCESSED:
         {
-            return; // not ready or failed
-        }
-
-        nodeToBuild->SetState( Node::PRE_DEPS_READY );
-    }
-
-    ASSERT( ( nodeToBuild->GetState() == Node::PRE_DEPS_READY ) ||
-            ( nodeToBuild->GetState() == Node::STATIC_DEPS_READY ) ||
-            ( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE ) );
-
-    // test static dependencies first
-    if ( nodeToBuild->GetState() == Node::PRE_DEPS_READY )
-    {
-        // all static deps done?
-        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
-        if ( allDependenciesUpToDate == false )
-        {
-            return; // not ready or failed
-        }
-
-        nodeToBuild->SetState( Node::STATIC_DEPS_READY );
-    }
-
-    ASSERT( ( nodeToBuild->GetState() == Node::STATIC_DEPS_READY ) ||
-            ( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE ) );
-
-    if ( nodeToBuild->GetState() != Node::DYNAMIC_DEPS_DONE )
-    {
-        // If static deps require us to rebuild, dynamic dependencies need regenerating
-        const bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
-        if ( forceClean ||
-             nodeToBuild->DetermineNeedToBuildStatic() )
-        {
-            // Clear dynamic dependencies
-            nodeToBuild->m_DynamicDependencies.Clear();
-
-            // Explicitly mark node in a way that will result in it rebuilding should
-            // we cancel the build before builing this node
-            if ( nodeToBuild->m_Stamp == 0 )
+            // check pre-build dependencies
+            const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
+            if ( allDependenciesUpToDate == false )
             {
-                // Note that this is the first time we're building (since Node can't check
-                // stamp as we clear it below)
-                nodeToBuild->SetStatFlag( Node::STATS_FIRST_BUILD );
+                return; // not ready or failed
             }
-            nodeToBuild->m_Stamp = 0;
+            nodeToBuild->SetState( Node::STATIC_DEPS );
 
-            // Regenerate dynamic dependencies
-            if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
+            [[fallthrough]];
+        }
+        case Node::STATIC_DEPS:
+        {
+            // check static dependencies
+            const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
+            if ( allDependenciesUpToDate == false )
             {
-                nodeToBuild->SetState( Node::FAILED );
-                return;
+                return; // not ready or failed
             }
 
-            // Continue through to check dynamic dependencies and build
+            // If static deps require us to rebuild, dynamic dependencies need regenerating
+            if ( FBuild::Get().GetOptions().m_ForceCleanBuild ||
+                 nodeToBuild->DetermineNeedToBuildStatic() )
+            {
+                // Explicitly mark node in a way that will result in it rebuilding should
+                // we cancel the build before builing this node
+                if ( nodeToBuild->m_Stamp == 0 )
+                {
+                    // Note that this is the first time we're building (since Node can't check
+                    // stamp as we clear it below)
+                    nodeToBuild->SetStatFlag( Node::STATS_FIRST_BUILD );
+                }
+                nodeToBuild->m_Stamp = 0;
+
+                // Regenerate dynamic dependencies
+                nodeToBuild->m_DynamicDependencies.Clear();
+                if ( nodeToBuild->DoDynamicDependencies( *this ) == false )
+                {
+                    nodeToBuild->SetState( Node::FAILED );
+                    return;
+                }
+
+                // Continue through to check dynamic dependencies and build
+            }
+
+            // Dynamic dependencies are ready to be checked
+            nodeToBuild->SetState( Node::DYNAMIC_DEPS );
+
+            [[fallthrough]];
         }
-
-        // Dynamic dependencies are ready to be checked
-        nodeToBuild->SetState( Node::DYNAMIC_DEPS_DONE );
-    }
-
-    ASSERT( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE );
-
-    // dynamic deps
-    {
-        // all static deps done?
-        const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
-        if ( allDependenciesUpToDate == false )
+        case Node::DYNAMIC_DEPS:
         {
-            return; // not ready or failed
+            // check dynamic dependencies
+            const bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
+            if ( allDependenciesUpToDate == false )
+            {
+                return; // not ready or failed
+            }
+
+            // dependencies are uptodate, so node can now tell us if it needs
+            // building
+            nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
+            if ( ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant work in DetermineNeedToBuild
+                 nodeToBuild->DetermineNeedToBuildDynamic() )
+            {
+                nodeToBuild->m_RecursiveCost = cost;
+                JobQueue::Get().AddJobToBatch( nodeToBuild );
+            }
+            else
+            {
+                if ( FLog::ShowVerbose() )
+                {
+                    FLOG_BUILD_REASON( "Up-To-Date '%s'\n", nodeToBuild->GetName().Get() );
+                }
+                nodeToBuild->SetState( Node::UP_TO_DATE );
+            }
+            break;
+        }
+        case Node::BUILDING:
+        case Node::FAILED:
+        case Node::UP_TO_DATE:
+        {
+            ASSERT(false); // Should be impossible
+            break;
         }
     }
 
-    // dependencies are uptodate, so node can now tell us if it needs
-    // building
-    nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
-    if ( ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant messages from DetermineNeedToBuild
-         nodeToBuild->DetermineNeedToBuildDynamic() )
-    {
-        nodeToBuild->m_RecursiveCost = cost;
-        JobQueue::Get().AddJobToBatch( nodeToBuild );
-    }
-    else
-    {
-        if ( FLog::ShowVerbose() )
-        {
-            FLOG_BUILD_REASON( "Up-To-Date '%s'\n", nodeToBuild->GetName().Get() );
-        }
-        nodeToBuild->SetState( Node::UP_TO_DATE );
-    }
+    // False positive "Unannotated fallthrough between switch labels" (VS 2019 v14.29.30037)
+    #if ( _MSC_VER < 1935 )
+        PRAGMA_DISABLE_POP_MSVC // 26819
+    #endif
 }
 
 // CheckDependencies
@@ -1368,6 +1184,23 @@ void NodeGraph::SetBuildPassTagForAllNodes( uint32_t value ) const
     {
         node->SetBuildPassTag( value );
     }
+}
+
+// FindNodeSourceToken
+//------------------------------------------------------------------------------
+const BFFToken * NodeGraph::FindNodeSourceToken( const Node * node ) const
+{
+    // Find the index of the node. This is a slow operation, but we only expect
+    // this to happen in non-critical paths like when emitting BFF parsing errors
+    const size_t index = m_AllNodes.GetIndexOf( m_AllNodes.Find( node ) );
+
+    // Return token if available. Not all nodes have creation info available.
+    if ( index < m_NodeSourceTokens.GetSize() )
+    {
+        return m_NodeSourceTokens[ index ];
+    }
+
+    return nullptr;
 }
 
 // CleanPath
@@ -1536,15 +1369,15 @@ Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
 {
     ASSERT( Thread::IsMainThread() );
 
-    const uint32_t crc = CRC32::CalcLower( fullPath );
-    const size_t key = ( crc & m_NodeMapMaxKey );
+    const uint32_t hash = Node::CalcNameHash( fullPath );
+    const size_t key = ( hash & m_NodeMapMaxKey );
 
     Node * n = m_NodeMap[ key ];
     while ( n )
     {
-        if ( n->GetNameCRC() == crc )
+        if ( n->GetNameHash() == hash )
         {
-            if ( n->GetName().CompareI( fullPath ) == 0 )
+            if ( n->GetName().EqualsI( fullPath ) )
             {
                 return n;
             }
@@ -1725,8 +1558,8 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
     //
     // Some of these things depend on timing, so this check could conceivably run
     // when not stuck, but it will never falsly detect a cyclic dependency.
-    // 
-    
+    //
+
     // Early out if the root node is being processed
     if ( node->GetState() >= Node::State::BUILDING )
     {
@@ -1747,7 +1580,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
     JobQueue::Get().GetJobStats( numJobs, numJobsActive, numJobsDist, numJobsDistActive );
     if ( ( numJobs > 0 ) ||
          ( numJobsActive > 0 ) ||
-         ( numJobsDist > 0 ) || 
+         ( numJobsDist > 0 ) ||
          ( numJobsDistActive > 0 ) )
     {
         return false;
@@ -2079,7 +1912,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             else
             {
                 // Create the dependency
-                newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
+                newDepNode = CreateNode( oldDepNode->GetType(), oldDepNode->GetName() );
                 ASSERT( newDepNode );
                 newDeps.Add( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
 

@@ -94,6 +94,8 @@ public:
 
     void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;
 
+    const AString & GetDependencyGraphFile() const { return m_DependencyGraphFile; }
+
     using FBuild::Build;
     virtual bool Build( Node * nodeToBuild ) override;
 };

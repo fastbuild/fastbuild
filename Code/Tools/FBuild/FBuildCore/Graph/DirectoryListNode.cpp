@@ -14,6 +14,7 @@
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
@@ -28,13 +29,85 @@ REFLECT_NODE_BEGIN( DirectoryListNode, Node, MetaNone() )
     REFLECT( m_IncludeReadOnlyStatusInHash, "IncludeReadOnlyStatusInHash", MetaHidden() )
 REFLECT_END( DirectoryListNode )
 
+// DirectoryListNodeGetFilesHelper
+//------------------------------------------------------------------------------
+class DirectoryListNodeGetFilesHelper : public GetFilesHelper
+{
+public:
+    //--------------------------------------------------------------------------
+    DirectoryListNodeGetFilesHelper( const Array<AString> & patterns,
+                                     const Array<AString> & excludePaths,
+                                     const Array<AString> & filesToExclude,
+                                     const Array<AString> & excludePatterns,
+                                     bool recurse )
+        : GetFilesHelper( patterns )
+        , m_ExcludePaths( excludePaths )
+        , m_FilesToExclude( filesToExclude )
+        , m_ExcludePatterns( excludePatterns )
+    {
+        m_Recurse = recurse;
+    }
+
+    //--------------------------------------------------------------------------
+    virtual bool OnDirectory( const AString & path ) override
+    {
+        if ( m_Recurse == false )
+        {
+            return false;
+        }
+
+        // Filter excluded paths
+        for ( const AString & excludedPath : m_ExcludePaths )
+        {
+            if ( PathUtils::PathBeginsWith( path, excludedPath ) )
+            {
+                return false; // Don't recurse into dir
+            }
+        }
+
+        return true; // Recurse into directory
+    }
+
+    //--------------------------------------------------------------------------
+    virtual void OnFile( FileIO::FileInfo && info ) override
+    {
+        // filter excluded files
+        for ( const AString & fileToExclude : m_FilesToExclude )
+        {
+            if ( PathUtils::PathEndsWithFile( info.m_Name, fileToExclude ) )
+            {
+                return; // Exclude
+            }
+        }
+
+        // Filter excluded patterns
+        for ( const AString & excludePattern : m_ExcludePatterns )
+        {
+            if ( PathUtils::IsWildcardMatch( excludePattern.Get(), info.m_Name.Get() ) )
+            {
+                return; // Exclude
+            }
+        }
+
+        // Keep file info
+        m_Files.EmplaceBack( Move( info ) );
+    }
+
+    DirectoryListNodeGetFilesHelper& operator =(DirectoryListNodeGetFilesHelper&) = delete;
+protected:
+    const Array<AString> & m_ExcludePaths;
+    const Array<AString> & m_FilesToExclude;
+    const Array<AString> & m_ExcludePatterns;
+};
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 DirectoryListNode::DirectoryListNode()
-    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_ALWAYS_BUILD )
+    : Node( Node::DIRECTORY_LIST_NODE )
     , m_Recursive( true )
     , m_IncludeReadOnlyStatusInHash( false )
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_LastBuildTimeMs = 100;
 }
 
@@ -141,65 +214,20 @@ DirectoryListNode::~DirectoryListNode() = default;
     // NOTE: The DirectoryListNode makes no assumptions about whether no files
     // is an error or not.  That's up to the dependent nodes to decide.
 
-    Array< FileIO::FileInfo > files( 4096, true );
-    FileIO::GetFilesEx( m_Path, &m_Patterns, m_Recursive, &files );
-
-    m_Files.SetCapacity( files.GetSize() );
-
-    // filter exclusions
-    const FileIO::FileInfo * const end = files.End();
-    for ( const FileIO::FileInfo * it = files.Begin(); it != end; it++ )
     {
-        bool excluded = false;
+        // Get the list of files, filtered in various ways
+        DirectoryListNodeGetFilesHelper helper( m_Patterns,
+                                                m_ExcludePaths,
+                                                m_FilesToExclude,
+                                                m_ExcludePatterns,
+                                                m_Recursive );
+        FileIO::GetFiles( m_Path, helper );
 
-        // filter excluded paths
-        const AString * const eEnd = m_ExcludePaths.End();
-        for ( const AString * eIt=m_ExcludePaths.Begin(); eIt != eEnd; ++eIt )
-        {
-            if ( PathUtils::PathBeginsWith( it->m_Name, *eIt ) )
-            {
-                excluded = true;
-                break;
-            }
-        }
-
-        // filter excluded files
-        if ( !excluded )
-        {
-            const AString * fit = m_FilesToExclude.Begin();
-            const AString * const fend = m_FilesToExclude.End();
-            for ( ; fit != fend; ++fit )
-            {
-                if ( PathUtils::PathEndsWithFile( it->m_Name, *fit ) )
-                {
-                    excluded = true;
-                    break;
-                }
-            }
-        }
-
-        // filter excluded patterns
-        if ( !excluded )
-        {
-            const AString * pit = m_ExcludePatterns.Begin();
-            const AString * const pend = m_ExcludePatterns.End();
-            for ( ; pit != pend; ++pit )
-            {
-                if ( PathUtils::IsWildcardMatch( pit->Get(), it->m_Name.Get() ) )
-                {
-                    excluded = true;
-                    break;
-                }
-            }
-        }
-
-        if ( !excluded )
-        {
-            m_Files.Append( *it );
-        }
+        // Transfer ownership of filtered list
+        m_Files = Move( helper.GetFiles() );
     }
 
-    MakePrettyName( files.GetSize() );
+    MakePrettyName();
 
     if ( FLog::ShowVerbose() )
     {
@@ -242,7 +270,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 
 // MakePrettyName
 //------------------------------------------------------------------------------
-void DirectoryListNode::MakePrettyName( const size_t totalFiles )
+void DirectoryListNode::MakePrettyName()
 {
     AStackString<> prettyName( m_Path );
     if (m_Recursive)
@@ -251,7 +279,7 @@ void DirectoryListNode::MakePrettyName( const size_t totalFiles )
     }
 
     const size_t numFiles = m_Files.GetSize();
-    prettyName.AppendFormat( ", files kept: %zu / %zu", numFiles, totalFiles );
+    prettyName.AppendFormat( ", files: %zu ", numFiles );
 
     m_PrettyName = prettyName;
 }

@@ -31,7 +31,8 @@ private:
     void CompressSimpleHelper( const char * data,
                                size_t size,
                                size_t expectedCompressedSize,
-                               bool shouldCompress ) const;
+                               bool shouldCompress,
+                               bool useZstd = false ) const;
     void CompressHelper( const char * fileName ) const;
 };
 
@@ -76,7 +77,8 @@ void TestCompressor::CompressSimple() const
 void TestCompressor::CompressSimpleHelper( const char * data,
                                            size_t size,
                                            size_t expectedCompressedSize,
-                                           bool shouldCompress ) const
+                                           bool shouldCompress,
+                                           bool useZstd ) const
 {
     // raw input strings may not be aligned on Linux/OSX, so copy
     // them to achieve our required alignment
@@ -86,7 +88,8 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 
     // compress
     Compressor c;
-    const bool compressed = c.Compress( data, size );
+    const bool compressed = useZstd ? c.CompressZstd( data, size )
+                                    : c.Compress( data, size );
     TEST_ASSERT( compressed == shouldCompress );
     const size_t compressedSize = c.GetResultSize();
     if ( expectedCompressedSize > 0 )
@@ -97,7 +100,14 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 
     // decompress
     Compressor d;
-    TEST_ASSERT( d.Decompress( compressedMem ) );
+    if ( useZstd )
+    {
+        TEST_ASSERT( d.DecompressZstd( compressedMem ) );
+    }
+    else
+    {
+        TEST_ASSERT( d.Decompress( compressedMem ) );
+    }
     const size_t decompressedSize = d.GetResultSize();
     TEST_ASSERT( decompressedSize == size );
     TEST_ASSERT( memcmp( data, d.GetResult(), size ) == 0 );
@@ -140,9 +150,11 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     OUTPUT( "Level | Time (ms)  MB/s  Ratio | Time (ms)  MB/s\n" );
     OUTPUT( "------------------------------------------------\n" );
 
+    OUTPUT( "LZ4:\n" );
+
     // Compress at various compression levels
     const int32_t compressionLevels[] =
-    { 
+    {
         0,                                          // Disabled
         -256, -128, -64, -32, -16, -8, -4, -2, -1,  // LZ4
         1, 3, 6, 9, 12                              // LZ4 HC
@@ -175,6 +187,61 @@ void TestCompressor::CompressHelper( const char * fileName ) const
             const Timer t2;
             Compressor d;
             TEST_ASSERT( d.Decompress( c.Get()->GetResult() ) );
+            TEST_ASSERT( d.GetResultSize() == dataSize );
+            decompressTimeTaken += (double)t2.GetElapsedMS();
+
+            // Sanity check decompression returns original results
+            if ( i == 0 )
+            {
+                TEST_ASSERT( memcmp( data.Get(), d.GetResult(), dataSize ) == 0 );
+            }
+        }
+
+        const double compressThroughputMBs    = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double decompressThroughputMBs  = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double ratio = ( (double)dataSize / (double)compressedSize );
+
+        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n", compressionLevel,
+                                                            ( compressTimeTaken / numRepeats ), compressThroughputMBs, (double)ratio,
+                                                            ( decompressTimeTaken / numRepeats ), decompressThroughputMBs );
+    }
+
+    OUTPUT( "Zstd:\n" );
+
+    // Compress at various compression levels
+    const int32_t zStdCompressionLevels[] =
+    { 
+        0,                                          // Disabled
+        1, 3, 6, 9, 12, 15, 18, 21                  // Zstd
+    };
+
+    for ( const int32_t compressionLevel : zStdCompressionLevels )
+    {
+        // compress/decompress the data several times to get more stable throughput value
+        const uint32_t numRepeats = 4; // Increase to get more consistent numbers
+        double compressTimeTaken = 0.0;
+        double decompressTimeTaken = 0.0;
+        uint64_t compressedSize = 0;
+
+        // Compression speed
+        UniquePtr< Compressor, DeleteDeletor > c;
+        for ( uint32_t i = 0; i < numRepeats; ++i )
+        {
+            // Compress
+            c = FNEW( Compressor );
+            const Timer t;
+            c.Get()->CompressZstd( data.Get(), dataSize, compressionLevel );
+            compressedSize = c.Get()->GetResultSize();
+            compressTimeTaken += (double)t.GetElapsedMS();
+        }
+
+        // Decompression speed
+        for ( uint32_t i = 0; i < numRepeats; ++i )
+        {
+            // Decompress
+            const Timer t2;
+            Compressor d;
+            TEST_ASSERT( d.DecompressZstd( c.Get()->GetResult() ) );
             TEST_ASSERT( d.GetResultSize() == dataSize );
             decompressTimeTaken += (double)t2.GetElapsedMS();
 

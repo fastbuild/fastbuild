@@ -19,7 +19,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Env/Assert.h"
 #include "Core/Mem/MemPoolBlock.h"
 #include "Core/Process/Mutex.h"
 
@@ -33,9 +32,6 @@
 
         // Attempt to free. Returns false if not a bucket owned allocation
         static bool     Free( void * ptr );
-
-        // Hint when operating only on a single thread as we can greatly reduce allocation cost
-        static void     SetSingleThreadedMode( bool singleThreadedMode );
 
         #if defined( DEBUG )
             static void DumpStats();
@@ -68,15 +64,6 @@
             friend class SmallBlockAllocator;
             Mutex           m_Mutex;
         };
-
-        friend class MemBucket;
-
-        // Single Threaded Mode
-        static bool         s_ThreadSafeAllocs;
-        #if defined( ASSERTS_ENABLED )
-            // When in single-threaded mode, catch unsafe use
-            static uint64_t s_ThreadSafeAllocsDebugOwnerThread;
-        #endif
 
         // Address space used by allocators
         static void *       s_BucketMemoryStart;

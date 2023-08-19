@@ -64,7 +64,7 @@ void TestDependencies::Add() const
     // Node with defaults
     {
         Dependencies d;
-        d.Add( nodes[ 0 ] ); 
+        d.Add( nodes[ 0 ] );
         TEST_ASSERT( d.IsEmpty() == false );
         TEST_ASSERT( d.GetSize() == 1 );
         TEST_ASSERT( d.GetCapacity() > 0 );

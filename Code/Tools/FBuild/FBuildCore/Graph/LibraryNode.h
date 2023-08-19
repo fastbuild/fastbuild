@@ -42,7 +42,7 @@ public:
 private:
     friend class FunctionLibrary;
 
-    virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     // internal helpers

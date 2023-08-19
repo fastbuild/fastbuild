@@ -19,6 +19,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
@@ -33,13 +34,17 @@ JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
 {
     WorkerThread::InitTmpDir( true ); // remote == true
 
+    // Create thread pool
+    m_ThreadPool = FNEW( ThreadPool( numWorkerThreads ) );
+
+    // Create a job to run on each thread
     for ( uint32_t i=0; i<numWorkerThreads; ++i )
     {
         // identify each worker with an id starting from 1
         // (the "main" thread is considered 0)
         const uint16_t threadIndex = static_cast<uint16_t>( i + 1001 );
         WorkerThread * wt = FNEW( WorkerThreadRemote( threadIndex ) );
-        wt->Init();
+        wt->Init( m_ThreadPool );
         m_Workers.Append( wt );
     }
 }
@@ -58,6 +63,8 @@ JobQueueRemote::~JobQueueRemote()
         m_Workers[ i ]->WaitForStop();
         FDELETE m_Workers[ i ];
     }
+
+    FDELETE m_ThreadPool;
 }
 
 // SignalStopWorkers (Main Thread)

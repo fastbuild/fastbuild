@@ -14,8 +14,9 @@ REFLECT_END( VSProjectBaseNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 VSProjectBaseNode::VSProjectBaseNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
+    : FileNode()
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_LastBuildTimeMs = 100; // higher default than a file node
 }
 

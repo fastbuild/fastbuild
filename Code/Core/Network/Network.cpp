@@ -133,7 +133,7 @@
                                      NI_NUMERICHOST ) == 0 );
                 outAddresses.EmplaceBack( host );
             }
-            
+
             info = info->ifa_next;
         }
 

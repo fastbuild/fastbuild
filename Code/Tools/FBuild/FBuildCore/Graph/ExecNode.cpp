@@ -45,7 +45,7 @@ REFLECT_END( ExecNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ExecNode::ExecNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_ExecReturnCode( 0 )
     , m_ExecAlwaysShowOutput( false )
     , m_ExecUseStdOutAsOutput( false )
@@ -121,7 +121,7 @@ ExecNode::~ExecNode()
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
+/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -145,7 +145,7 @@ ExecNode::~ExecNode()
             Node * sn = nodeGraph.FindNode( file.m_Name );
             if ( sn == nullptr )
             {
-                sn = nodeGraph.CreateFileNode( file.m_Name );
+                sn = nodeGraph.CreateNode<FileNode>( file.m_Name );
             }
             else if ( sn->IsAFile() == false )
             {
@@ -217,7 +217,7 @@ ExecNode::~ExecNode()
         return NODE_RESULT_FAILED;
     }
     const bool buildFailed = ( result != m_ExecReturnCode );
-    
+
     // Print output if appropriate
     if ( buildFailed ||
         m_ExecAlwaysShowOutput ||

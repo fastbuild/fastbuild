@@ -40,7 +40,7 @@ protected:
 
     friend class TestObjectList;
     static void GetExtraOutputPaths( const AString & args,
-                                     AString & outPDBPath, 
+                                     AString & outPDBPath,
                                      AString & outASMPath,
                                      AString & outSourceDependenciesPath );
     static void GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path );

@@ -59,6 +59,7 @@ public:
     AString             m_LinuxProjectType;
     AString             m_PackagePath;
     AString             m_AdditionalSymbolSearchPaths;
+    AString             m_AndroidApkLocation;
 };
 
 // VSProjectConfig

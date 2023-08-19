@@ -16,7 +16,7 @@
 #include "Core/Time/Timer.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Atomic.h"
-#include "Core/Process/Thread.h"
+#include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
 
 // JobCostSorter
@@ -34,7 +34,6 @@ public:
 //------------------------------------------------------------------------------
 JobSubQueue::JobSubQueue()
     : m_Count( 0 )
-    , m_Jobs( 1024, true )
 {
 }
 
@@ -57,6 +56,8 @@ uint32_t JobSubQueue::GetCount() const
 //------------------------------------------------------------------------------
 void JobSubQueue::QueueJobs( Array< Node * > & nodes )
 {
+    PROFILE_FUNCTION;
+
     // Create wrapper Jobs around Nodes
     Array< Job * > jobs( nodes.GetSize() );
     for ( Node * node : nodes )
@@ -73,16 +74,43 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     MutexHolder mh( m_Mutex );
     const bool wasEmpty = m_Jobs.IsEmpty();
 
-    m_Jobs.Append( jobs );
     AtomicAdd( &m_Count, (uint32_t)jobs.GetSize() );
 
     if ( wasEmpty )
     {
+        m_Jobs.Swap( jobs );
         return; // skip re-sorting
     }
 
-    // sort merged lists
-    m_Jobs.Sort( sorter );
+    // Merge lists
+    Array< Job * > mergedList;
+    mergedList.SetSize( m_Jobs.GetSize() + jobs.GetSize() );
+    Job ** dst = mergedList.Begin();
+    Job ** src1 = m_Jobs.Begin();
+    const Job * const * end1 = m_Jobs.End();
+    Job ** src2 = jobs.Begin();
+    const Job * const * end2 = jobs.End();
+    while ( ( src1 < end1 ) && ( src2 < end2 ) )
+    {
+        if ( sorter( *src1, *src2 ) )
+        {
+            *dst++ = *src1++;
+        }
+        else
+        {
+            *dst++ = *src2++;
+        }
+    }
+    while ( src1 < end1 )
+    {
+        *dst++ = *src1++;
+    }
+    while ( src2 < end2 )
+    {
+        *dst++ = *src2++;
+    }
+    ASSERT( dst == mergedList.End() );
+    m_Jobs.Swap( mergedList );
 }
 
 // RemoveJob
@@ -114,7 +142,7 @@ Job * JobSubQueue::RemoveJob()
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueue::JobQueue( uint32_t numWorkerThreads ) :
+JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool ) :
     m_NumLocalJobsActive( 0 ),
     m_DistributableJobs_Available( 1024, true ),
     m_DistributableJobs_InProgress( 1024, true ),
@@ -133,14 +161,18 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
 
     WorkerThread::InitTmpDir();
 
-    for ( uint32_t i=0; i<numWorkerThreads; ++i )
+    if ( numWorkerThreads > 0 )
     {
-        // identify each worker with an id starting from 1
-        // (the "main" thread is considered 0)
-        const uint16_t threadIndex = static_cast<uint16_t>( i + 1 );
-        WorkerThread * wt = FNEW( WorkerThread( threadIndex ) );
-        wt->Init();
-        m_Workers.Append( wt );
+        // Create a job to run on each thread
+        for ( uint32_t i = 0; i < numWorkerThreads; ++i )
+        {
+            // identify each worker with an id starting from 1
+            // (the "main" thread is considered 0)
+            const uint16_t threadIndex = static_cast<uint16_t>( i + 1 );
+            WorkerThread * wt = FNEW( WorkerThread( threadIndex ) );
+            wt->Init( threadPool );
+            m_Workers.Append( wt );
+        }
     }
 }
 
@@ -251,7 +283,7 @@ bool JobQueue::HasPendingCompletedJobs() const
 //------------------------------------------------------------------------------
 void JobQueue::AddJobToBatch( Node * node )
 {
-    ASSERT( node->GetState() == Node::DYNAMIC_DEPS_DONE );
+    ASSERT( node->GetState() == Node::DYNAMIC_DEPS );
 
     // mark as building
     node->SetState( Node::BUILDING );
@@ -797,7 +829,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     {
         // nothing to check
     }
-    else 
+    else
     {
         // build completed ok, or retrieved from cache...
         ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_OK_CACHE ) );

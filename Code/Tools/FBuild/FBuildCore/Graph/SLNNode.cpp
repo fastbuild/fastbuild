@@ -76,8 +76,9 @@ struct VCXProjectNodeComp
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SLNNode::SLNNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
+    : FileNode()
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_LastBuildTimeMs = 100; // higher default than a file node
     m_Type = Node::SLN_NODE;
 }
@@ -163,7 +164,7 @@ SLNNode::SLNNode()
         {
             // Merge list of projects
             found->m_Projects.Append( folder.m_Projects );
-            
+
             // Merge list of items
             found->m_Items.Append( folder.m_Items );
         }

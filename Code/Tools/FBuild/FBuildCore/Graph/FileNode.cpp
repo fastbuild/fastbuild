@@ -16,15 +16,9 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-FileNode::FileNode( const AString & fileName, uint8_t controlFlags )
-    : Node( fileName, Node::FILE_NODE, controlFlags )
+FileNode::FileNode()
+    : Node( Node::FILE_NODE )
 {
-    ASSERT( fileName.EndsWith( "\\" ) == false );
-    #if defined( __WINDOWS__ )
-        ASSERT( ( fileName.FindLast( ':' ) == nullptr ) ||
-                ( fileName.FindLast( ':' ) == ( fileName.Get() + 1 ) ) );
-    #endif
-
     m_LastBuildTimeMs = 1; // very little work required
 }
 
@@ -44,6 +38,12 @@ FileNode::~FileNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult FileNode::DoBuild( Job * /*job*/ )
 {
+    ASSERT( m_Name.EndsWith( "\\" ) == false );
+    #if defined( __WINDOWS__ )
+        ASSERT( ( m_Name.FindLast( ':' ) == nullptr ) ||
+                ( m_Name.FindLast( ':' ) == ( m_Name.Get() + 1 ) ) );
+    #endif
+
     // NOTE: Not calling RecordStampFromBuiltFile as this is not a built file
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
     // Don't assert m_Stamp != 0 as input file might not exist

@@ -320,7 +320,7 @@ void TestFileIO::LongPaths() const
     //
     // Ensure long paths are correctly handled by various functions
     //
-    
+
     #if defined( __WINDOWS__ )
         // On Windows, long path support must be enabled via a registry key
         // Only if this is enabled can we expect our test to pass
@@ -365,7 +365,7 @@ void TestFileIO::LongPaths() const
         filePathB.Trim( 0, 5 );
         filePathB += ".copy";
         TEST_ASSERT( filePathB.GetLength() == ( filePathA.GetLength() ) );
-        
+
         // long subdir 1
         subDir1.Format( "%s/%s", tmpPath2.Get(), a.Get() );
         TEST_ASSERT( subDir1.GetLength() == ( tmpPath2.GetLength() + 1 + 255 ) );

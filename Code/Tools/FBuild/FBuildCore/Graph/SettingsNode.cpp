@@ -37,9 +37,9 @@ REFLECT_END( SettingsNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SettingsNode::SettingsNode()
-: Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
-, m_WorkerConnectionLimit( 15 )
-, m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
+    : Node( Node::SETTINGS_NODE )
+    , m_WorkerConnectionLimit( 15 )
+    , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );

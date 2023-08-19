@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -124,7 +125,7 @@ private:
 
     Array< AString >    m_Messages;
 
-    static int64_t s_TotalLocalDataMemoryUsage; // Total memory being managed by OwnData
+    static Atomic<int64_t> s_TotalLocalDataMemoryUsage; // Total memory being managed by OwnData
 };
 
 //------------------------------------------------------------------------------

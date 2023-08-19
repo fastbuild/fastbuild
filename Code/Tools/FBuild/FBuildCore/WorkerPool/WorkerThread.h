@@ -15,6 +15,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class FileStream;
+class ThreadPool;
 
 // WorkerThread
 //------------------------------------------------------------------------------
@@ -22,7 +23,7 @@ class WorkerThread
 {
 public:
     explicit WorkerThread( uint16_t threadIndex );
-    void Init();
+    void Init( ThreadPool * pool );
     virtual ~WorkerThread();
 
     static void InitTmpDir( bool remote = false );
@@ -46,7 +47,7 @@ protected:
     static bool Update();
 
     // worker thread main loop
-    static uint32_t ThreadWrapperFunc( void * param );
+    static void ThreadWrapperFunc( void * param );
     virtual void Main();
 
     // signal to exit thread

@@ -105,7 +105,7 @@ void TestSemaphore::WaitTimeout() const
     void TestSemaphore::MaxCount() const
     {
         // Only Windows supports a signall count limit for Semaphores
-        
+
         // Create sempahore with a max count
         Semaphore s( 1 );
 

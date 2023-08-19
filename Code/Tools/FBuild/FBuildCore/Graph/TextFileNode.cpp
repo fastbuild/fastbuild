@@ -30,7 +30,7 @@ REFLECT_END( TextFileNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TextFileNode::TextFileNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_TextFileAlways( false )
 {
     m_Type = TEXT_FILE_NODE;
@@ -57,7 +57,7 @@ TextFileNode::~TextFileNode() = default;
 // DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
 /*virtual*/ bool TextFileNode::DetermineNeedToBuildStatic() const
-{  
+{
     if ( m_TextFileAlways )
     {
         FLOG_VERBOSE( "Need to build '%s' (TextFileAlways = true)", GetName().Get() );

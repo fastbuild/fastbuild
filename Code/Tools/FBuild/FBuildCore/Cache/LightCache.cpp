@@ -41,8 +41,8 @@ public:
     class Include
     {
     public:
-        Include( const AString & include, IncludeType type )
-            : m_Include( include )
+        Include( AString && include, IncludeType type )
+            : m_Include( Move( include ) )
             , m_Type( type )
         {}
 
@@ -97,8 +97,7 @@ public:
         return nullptr;
     }
 
-    // If two threads find the same include simultaneously, we delete the new
-    // one and return the old one.
+    // Insert a new item. Item must not already exist.
     const IncludedFile * Insert( IncludedFile * item )
     {
         if ( ( m_Buckets.GetSize() / 2 ) <= m_Elts )
@@ -111,13 +110,7 @@ public:
         IncludedFile ** location = InternalFind( item->m_FileName, item->m_FileNameHash );
         ASSERT( location != nullptr );
 
-        if ( *location != nullptr )
-        {
-            // A race between multiple threads got us a duplicate item.
-            // delete the new one
-            FDELETE item;
-            return *location;
-        }
+        ASSERT( *location == nullptr ); // Item must not exist already
 
         ++m_Elts;
         *location = item;
@@ -227,7 +220,8 @@ IncludedFile::~IncludedFile()
 
 // IncludedFileBucket
 //------------------------------------------------------------------------------
-class IncludedFileBucket
+PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
+class alignas(64) IncludedFileBucket // Align to cache line boundary
 {
 public:
     IncludedFileBucket() = default;
@@ -241,9 +235,9 @@ public:
     Mutex                   m_Mutex;
     IncludedFileHashSet     m_HashSet;
 };
-// using a power of two number of buckets.  64 top level buckets should be a
-// reasonable tradeoff between size and contention
-#define LIGHTCACHE_NUM_BUCKET_BITS 6
+PRAGMA_DISABLE_POP_MSVC // 4324
+// Power of two number of buckets
+#define LIGHTCACHE_NUM_BUCKET_BITS 9 // 512 buckets
 #define LIGHTCACHE_NUM_BUCKETS ( 1ULL << LIGHTCACHE_NUM_BUCKET_BITS )
 #define LIGHTCACHE_BUCKET_MASK_BASE ( LIGHTCACHE_NUM_BUCKETS - 1ULL )
 // use upper bits for bucket selection, as lower bits get used in the hash set
@@ -446,7 +440,7 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
     SkipWhitespace( pos );
 
     // Get include string
-    AStackString<> include;
+    AString include;
     if ( ( *pos == '"' ) || ( *pos == '<' ) )
     {
         // Looks like a normal include
@@ -458,12 +452,12 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
             return false;
         }
 
-        file.m_Includes.EmplaceBack( include, includeType );
+        file.m_Includes.EmplaceBack( Move( include ), includeType );
         return true;
     }
 
     // Not a normal include - perhaps this is a macro?
-    AStackString<> macroName;
+    AString macroName;
     if ( ParseMacroName( pos, macroName ) == false )
     {
         // We saw an unexpected sequence after the #include
@@ -472,7 +466,7 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
     }
 
     // Store the macro include which will be resolved later
-    file.m_Includes.EmplaceBack( macroName, IncludeType::MACRO );
+    file.m_Includes.EmplaceBack( Move( macroName ), IncludeType::MACRO );
     return true;
 }
 
@@ -600,7 +594,7 @@ bool LightCache::ParseMacroName( const char * & pos, AString & outMacroName )
         c = *pos;
         if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||
                 ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
-                ( ( c >= '0' ) && ( c <= '9' ) ) || 
+                ( ( c >= '0' ) && ( c <= '9' ) ) ||
                 ( c == '_' ) )
         {
             ++pos;
@@ -861,21 +855,34 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     const uint64_t fileNameHash = xxHash3::Calc64( fileName );
     const uint64_t bucketIndex = LIGHTCACHE_HASH_TO_BUCKET( fileNameHash );
     IncludedFileBucket & bucket = g_AllIncludedFiles[ bucketIndex ];
+
+    // Lock the bucket while we deal with this file.
+    // 
+    // This prevents two threads processing the same file, which for most
+    // codebases would otherwise happen a lot (code tends to have a large set
+    // of shared headers).
+    // 
+    // Collisions in the bucketIndex mean some unrelated files will block
+    // each other, but not redundantly processing the same file results
+    // in a significant speedup which more than offsets the blocking caused
+    // by collisions. LIGHTCACHE_NUM_BUCKET_BITS can be increased to further
+    // reduce collisions at the cost of memory.
+    //
+    MutexHolder mh( bucket.m_Mutex );
+
     // Retrieve from shared cache
     {
-        MutexHolder mh( bucket.m_Mutex );
         const IncludedFile * location = bucket.m_HashSet.Find( fileName, fileNameHash );
         if ( location )
         {
             m_IncludeDefines.Append( location->m_IncludeDefines );
-            
+
             return location; // File previously handled so we can re-use the result
         }
     }
 
     // A newly seen file
     IncludedFile * newFile = FNEW( IncludedFile() );
-    const IncludedFile * retval = nullptr;
     newFile->m_FileNameHash = fileNameHash;
     newFile->m_FileName = fileName;
     newFile->m_Exists = false;
@@ -885,23 +892,16 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     FileStream f;
     if ( f.Open( fileName.Get() ) == false )
     {
-        {
-            // Store to shared cache
-            MutexHolder mh( bucket.m_Mutex );
-            retval = bucket.m_HashSet.Insert( newFile );
-        }
-        return retval;
+        // Store to shared cache
+        return bucket.m_HashSet.Insert( newFile );
     }
 
     // File exists - parse it
     newFile->m_Exists = true;
     Parse( newFile, f );
 
-    {
-        // Store to shared cache
-        MutexHolder mh( bucket.m_Mutex );
-        retval = bucket.m_HashSet.Insert( newFile );
-    }
+    // Store to shared cache
+    const IncludedFile * retval = bucket.m_HashSet.Insert( newFile );
 
     m_IncludeDefines.Append( retval->m_IncludeDefines );
 

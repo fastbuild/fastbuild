@@ -20,14 +20,16 @@
 // Static
 //------------------------------------------------------------------------------
 static uint32_t s_LastJobId( 0 );
-/*static*/ int64_t Job::s_TotalLocalDataMemoryUsage( 0 );
+/*static*/ Atomic<int64_t> Job::s_TotalLocalDataMemoryUsage( 0 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Job::Job( Node * node )
     : m_Node( node )
 {
-    m_JobId = AtomicInc( &s_LastJobId );
+    // Constructor that assigns JobId can only be called on the main thread.
+    ASSERT( Thread::IsMainThread() );
+    m_JobId = ++s_LastJobId;
 }
 
 // CONSTRUCTOR
@@ -86,8 +88,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
         // Update total memory use tracking
         if ( m_IsLocal )
         {
-            ASSERT( s_TotalLocalDataMemoryUsage >= m_DataSize );
-            AtomicSub( &s_TotalLocalDataMemoryUsage, (int64_t)m_DataSize );
+            VERIFY( s_TotalLocalDataMemoryUsage.Sub( static_cast<int64_t>( m_DataSize ) ) >= 0 );
         }
     }
 
@@ -99,7 +100,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
     // Update total memory use tracking
     if ( m_IsLocal )
     {
-        AtomicAdd( &s_TotalLocalDataMemoryUsage, (int64_t)m_DataSize );
+        s_TotalLocalDataMemoryUsage.Add( static_cast<int64_t>( m_DataSize ) );
     }
 }
 
@@ -266,7 +267,7 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
 //------------------------------------------------------------------------------
 /*static*/ uint64_t Job::GetTotalLocalDataMemoryUsage()
 {
-    return (uint64_t)AtomicLoadRelaxed( &s_TotalLocalDataMemoryUsage );
+    return static_cast<uint64_t>( s_TotalLocalDataMemoryUsage.Load() );
 }
 
 // SetBuildProfilerScope

@@ -126,6 +126,7 @@ protected:
     // for functions that support a simple alias parameter, the base class can
     // parse it out
     mutable AString m_AliasForFunction;
+    mutable const BFFToken * m_AliasForFunctionSourceToken = nullptr;
 
     // Helpers to get nodes
     bool GetNodeList( NodeGraph & nodeGraph,
@@ -145,8 +146,8 @@ protected:
     bool GetStrings( const BFFToken * iter, Array< AString > & strings, const char * name, bool required = false ) const;
 
     // helper function to make alias for target
-    bool ProcessAlias( NodeGraph & nodeGraph, const BFFToken * iter, Node * nodeToAlias ) const;
-    bool ProcessAlias( NodeGraph & nodeGraph, const BFFToken * iter, Dependencies & nodesToAlias ) const;
+    bool ProcessAlias( NodeGraph & nodeGraph, Node * nodeToAlias ) const;
+    bool ProcessAlias( NodeGraph & nodeGraph, Dependencies & nodesToAlias ) const;
 
     // Reflection based property population
     bool GetNameForNode( NodeGraph & nodeGraph, const BFFToken *iter, const ReflectionInfo * ri, AString & name ) const;

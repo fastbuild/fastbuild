@@ -114,20 +114,19 @@ public:
 
     enum State : uint8_t
     {
-        NOT_PROCESSED,      // no work done (either not part of this build, or waiting on static dependencies )
-        PRE_DEPS_READY,     // pre-build deps processed
-        STATIC_DEPS_READY,  // static dependencies are uptodate - we are ready to DoDynamicDeps
-        DYNAMIC_DEPS_DONE,  // dynamic deps updated, waiting for dynamic deps to be ready
+        NOT_PROCESSED,      // no work done (either not part of this build, or not yet seen)
+        STATIC_DEPS,        // pre-build deps processed and checking static deps
+        DYNAMIC_DEPS,       // dynamic deps regenerated and being checked
         BUILDING,           // in the queue for building
         FAILED,             // failed to build
         UP_TO_DATE,         // built, or confirmed as not needing building
     };
 
-    explicit Node( const AString & name, Type type, uint8_t controlFlags );
+    explicit Node( Type type );
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
-    inline uint32_t        GetNameCRC() const { return m_NameCRC; }
+    uint32_t        GetNameHash() const { return m_NameHash; }
     inline Type GetType() const { return m_Type; }
     inline const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
     inline static const char * GetTypeName( Type t ) { return s_NodeTypeNames[ t ]; }
@@ -150,7 +149,6 @@ public:
     inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
     inline void     SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
-    static Node *   CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name );
     static Node *   Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
     static void     LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
     static void     Save( IOStream & stream, const Node * node );
@@ -182,6 +180,8 @@ public:
     inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
+    static uint32_t CalcNameHash( const AString & name );
+
     static void CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg );
 
 protected:
@@ -197,7 +197,7 @@ protected:
     friend class WorkerThread;
     friend class CompilationDatabase;
 
-    void SetName( const AString & name );
+    void SetName( AString && name );
 
     void ReplaceDummyName( const AString & newName );
 
@@ -210,7 +210,7 @@ protected:
     // each node implements a subset of these as needed
     virtual bool DetermineNeedToBuildStatic() const;
     virtual bool DetermineNeedToBuildDynamic() const;
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph );
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
@@ -252,12 +252,12 @@ protected:
     mutable uint16_t    m_StatsFlags = 0;           // Stats recorded in the current build
     mutable uint32_t    m_BuildPassTag = 0;         // Prevent multiple recursions into the same node during a single sweep
     uint64_t            m_Stamp = 0;                // "Stamp" representing this node for dependency comparissons
-    uint8_t             m_ControlFlags;             // Control build behavior special cases - Set by constructor
+    uint8_t             m_ControlFlags = FLAG_NONE; // Control build behavior special cases - Set by constructor
     bool                m_Hidden = false;           // Hidden from -showtargets?
     // Note: Unused 2 bytes here
     uint32_t            m_RecursiveCost = 0;        // Recursive cost used during task ordering
     Node *              m_Next = nullptr;           // Node map in-place linked list pointer
-    uint32_t            m_NameCRC;                  // Hash of mName. **Set by constructor**
+    uint32_t            m_NameHash;                 // Hash of mName
     uint32_t            m_LastBuildTimeMs = 0;      // Time it took to do last known full build of this node
     uint32_t            m_ProcessingTime = 0;       // Time spent on this node during this build
     uint32_t            m_CachingTime = 0;          // Time spent caching this node

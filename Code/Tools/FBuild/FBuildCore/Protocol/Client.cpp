@@ -479,14 +479,14 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
         // If we will write the results to the cache, and this node is cacheable
         // then we want to respect higher cache compression levels if set
         const int16_t cacheCompressionLevel = FBuild::Get().GetOptions().m_CacheCompressionLevel;
-        if ( ( cacheCompressionLevel != 0 ) && 
-             ( FBuild::Get().GetOptions().m_UseCacheWrite ) && 
+        if ( ( cacheCompressionLevel != 0 ) &&
+             ( FBuild::Get().GetOptions().m_UseCacheWrite ) &&
              ( job->GetNode()->CastTo< ObjectNode >()->ShouldUseCache() ) )
         {
             resultCompressionLevel = Math::Max( resultCompressionLevel, cacheCompressionLevel );
         }
     }
-    
+
     // Take note of the results compression level so we know to expect
     // compressed results
     job->SetResultCompressionLevel( resultCompressionLevel );
@@ -548,7 +548,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
 
     uint32_t buildTime;
     ms.Read( buildTime );
-    
+
     uint16_t remoteThreadId = 0;
     ms.Read( remoteThreadId );
 
@@ -694,7 +694,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     if ( result == true )
     {
         // built ok - serialize to disc
-        
+
         ObjectNode * objectNode = node->CastTo< ObjectNode >();
 
         // Store to cache if needed

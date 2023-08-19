@@ -29,7 +29,7 @@ REFLECT_END( CopyDirNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CopyDirNode::CopyDirNode()
-: Node( AString::GetEmpty(), Node::COPY_DIR_NODE, Node::FLAG_NONE )
+    : Node( Node::COPY_DIR_NODE )
 {
 }
 
@@ -82,10 +82,8 @@ CopyDirNode::~CopyDirNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool CopyDirNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool CopyDirNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
-    (void)forceClean; // dynamic deps are always re-added here, so this is meaningless
-
     m_DynamicDependencies.Clear();
 
     ASSERT( !m_StaticDependencies.IsEmpty() );
@@ -119,7 +117,7 @@ CopyDirNode::~CopyDirNode() = default;
             Node * srcFileNode = nodeGraph.FindNode( srcFile );
             if ( srcFileNode == nullptr )
             {
-                srcFileNode = nodeGraph.CreateFileNode( srcFile );
+                srcFileNode = nodeGraph.CreateNode<FileNode>( srcFile );
             }
             else if ( srcFileNode->IsAFile() == false )
             {
@@ -135,7 +133,7 @@ CopyDirNode::~CopyDirNode() = default;
             Node * n = nodeGraph.FindNode( dstFile );
             if ( n == nullptr )
             {
-                CopyFileNode * copyFileNode = nodeGraph.CreateCopyFileNode( dstFile );
+                CopyFileNode * copyFileNode = nodeGraph.CreateNode<CopyFileNode>( dstFile );
                 copyFileNode->m_Source = srcFileNode->GetName();
                 copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames; // inherit PreBuildDependencies
                 const BFFToken * token = nullptr;

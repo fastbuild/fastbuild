@@ -167,7 +167,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 }
                 m_CacheCompressionLevel = static_cast< int16_t >( cacheCompressionLevel );
                 i++; // skip extra arg we've consumed
-                
+
                 // add to args we might pass to subprocess
                 m_Args += ' ';
                 m_Args += argv[ sizeIndex ];
@@ -219,6 +219,25 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += ' ';
                 m_Args += '"'; // surround config file with quotes to avoid problems with spaces in the path
                 m_Args += m_ConfigFile;
+                m_Args += '"';
+                continue;
+            }
+            else if ( thisArg == "-dbfile" )
+            {
+                const int32_t pathIndex = ( i + 1 );
+                if ( pathIndex >= argc )
+                {
+                    OUTPUT( "FBuild: Error: Missing <path> for '-dbfile' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                m_DBFile = argv[ pathIndex ];
+                i++; // skip extra arg we've consumed
+
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += '"'; // surround db file with quotes to avoid problems with spaces in the path
+                m_Args += m_DBFile;
                 m_Args += '"';
                 continue;
             }
@@ -356,7 +375,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 thisArg.Tokenize( reportTokens, '=' );
 
                 // if there is something after the '=' sign, then we take whatever comes after as the report type
-                if ( reportTokens.GetSize() > 1 ) 
+                if ( reportTokens.GetSize() > 1 )
                 {
                     m_ReportType = reportTokens[ 1 ];
                     m_ReportType.ToLower();
@@ -624,6 +643,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -config <path>    Explicitly specify the config file to use.\n"
             " -continueafterdbmove\n"
             "       Allow builds after a DB move.\n"
+            " -dbfile <path>    Explicitly specify the dependency database file to use.\n"
             " -debug            (Windows) Break at startup, to attach debugger.\n"
             " -dist             Allow distributed compilation.\n"
             " -distverbose      Print detailed info for distributed compilation.\n"

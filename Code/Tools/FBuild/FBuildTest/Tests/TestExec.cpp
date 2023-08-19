@@ -322,15 +322,14 @@ void TestExec::Build_ExecEnvCommand() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    // build (via alias)
-    TEST_ASSERT( fBuild.Build( "EnvHelperExe" ) );
+    // Build and run exe that checks env var is set 
+    // (the executable checks the expected env var)
+    TEST_ASSERT( fBuild.Build( "ExecEnvCommandTest" ) );
 
     // Check stats
     //               Seen,  Built,  Type
     CheckStatsNode ( 1,     1,      Node::EXE_NODE );
-
-    // Run the execenv command and ensure we get the expected output
-    TEST_ASSERT( fBuild.Build( "ExecEnvCommandTest" ) );
+    CheckStatsNode ( 1,     1,      Node::EXEC_NODE );
 }
 
 // Exclusions

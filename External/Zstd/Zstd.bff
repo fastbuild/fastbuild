@@ -1,0 +1,147 @@
+// Zstd
+//------------------------------------------------------------------------------
+.ZstdBasePath        = '../External/Zstd/zstd-1.5.5/lib'
+.ZstdIncludePaths    = ' "-I$ZstdBasePath$"'
+{
+    .ProjectName        = 'Zstd'
+    .ProjectPath        = '$ZstdBasePath$'
+
+    // Target/Compiler specific options
+    .ZstdOptions_x64            = [
+                                    .ZstdCompilerOptions    = ' /wd4365'    // conversion from '%s' to '%s', signed/unsigned mismatch
+                                                            + ' /wd4464'    // relative include path contains '..'
+                                                            + ' /wd4574'    // '__has_attribute' is defined to be '0': did you mean to use '#if __has_attribute'?
+                                                            + ' /wd6011'    // Dereferencing NULL pointer 'ptr'.
+                                                            + ' /wd6239'    // (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
+                                                            + ' /wd6293'    // Ill-defined for-loop:  counts down from minimum.
+                                                            + ' /wd6326'    // Potential comparison of a constant with another constant.
+                                                            + ' /wd26448'   // Consider using gsl::finally if final action is intended (gsl.util).
+                                                            + ' /wd26462'   // The value pointed to by '%s' is assigned only once, mark it as a pointer to const
+                                                            + ' /wd26818'   // Switch statement does not cover all cases. Consider adding a 'default' label (es.79).
+                                                            + ' /wd26819'   // Unannotated fallthrough between switch labels (es.78).
+                                                            + ' /wd28251'   // Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
+
+                                                            + ' -O2'        // Compile with optimizations even in debug to improve performance
+                                  ]
+    .ZstdOptions_x64Clang       = [
+                                    .ZstdCompilerOptions    = ' -O2'        // Compile with optimizations even in debug to improve performance
+                                  ]
+    .ZstdOptions_x64Linux       = [
+                                    .ZstdCompilerOptions    = ' -O2'        // Compile with optimizations even in debug to improve performance
+
+                                                            // Disable inline asm - TODO:B Is this a significant perf gain for Linux vs other platforms
+                                                            //                      that don't seem to use it?
+                                                            + ' -DZSTD_DISABLE_ASM'
+                                  ]
+    .ZstdOptions_x64ClangLinux  = .ZstdOptions_x64Linux
+    .ZstdOptions_x64OSX         = [
+                                    .ZstdCompilerOptions    = ' -O2'        // Compile with optimizations even in debug to improve performance
+
+                                                            // Disable inline asm - TODO:B Is this a significant perf gain for Linux vs other platforms
+                                                            //                      that don't seem to use it?
+                                                            + ' -DZSTD_DISABLE_ASM'
+                                  ]
+    .ZstdOptions_ARMOSX         = [
+                                    .ZstdCompilerOptions    = ' -O2'        // Compile with optimizations even in debug to improve performance
+                                  ]
+
+    // Library
+    //--------------------------------------------------------------------------
+    .ProjectConfigs = {}
+    ForEach( .BuildConfig in .BuildConfigs )
+    {
+        Using( .BuildConfig )
+
+        .OutputBase + '\$Platform$-$BuildConfigName$'
+
+        Using( ."ZstdOptions_$Platform$" )
+
+        Unity( '$ProjectName$-Unity-$Platform$-$BuildConfigName$' )
+        {
+            .UnityInputPattern          = '*.c'
+            .UnityInputPath             = {
+                                            '$ZstdBasePath$/common/'
+                                            '$ZstdBasePath$/compress/'
+                                            '$ZstdBasePath$/decompress/'
+                                          }
+            .UnityInputExcludedFiles    = {
+                                            '$ZstdBasePath$/common/debug.c'
+                                            '$ZstdBasePath$/common/threading.c'
+                                            '$ZstdBasePath$/compress/zstdmt_compress.c'
+                                          }
+            .UnityNumFiles              = 3
+            .UnityOutputPath            = '$OutputBase$/External/$ProjectName$/'
+        }
+
+        // Static Library
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        {
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
+
+            // Options
+            .CompilerOptions            = .CompilerOptionsC
+                                        + .ZstdIncludePaths
+                                        + .ZstdCompilerOptions
+
+                                        #if __WINDOWS__
+                                            // Remove flags that disable opimizations
+                                            - ' /Od'
+                                            - ' /RTC1'
+
+                                            // Disable clang-cl static analysis if enabled for this config
+                                            // (we won't fix warnings in 3rd party code)
+                                            - ' --analyze'
+                                        #else
+                                            - ' -O0'
+                                        #endif
+
+                                        // Disable warnings if using Clang. There are too many warnings in Zstd
+                                        // and they differ with every version of Clang
+                                        - ' -Wall'
+                                        - ' -Werror'
+                                        - ' -Wfatal-errors'
+                                        - ' -Wextra'
+                                        - ' -Wshadow'
+                                        - ' -Weverything'
+
+            // Output
+            .CompilerOutputPath         = '$OutputBase$/External/$ProjectName$/'
+        }
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$BuildConfigName$' }
+
+        #if __WINDOWS__
+            .ProjectConfig              = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = '$ProjectName$-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+        #if __OSX__
+            .ProjectConfig              = [ .Config = '$BuildConfigName$'   .Target = '$ProjectName$-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+    }
+
+    // Aliases
+    //--------------------------------------------------------------------------
+    CreateCommonAliases( .ProjectName )
+
+    // Visual Studio Project Generation
+    //--------------------------------------------------------------------------
+    #if __WINDOWS__
+        .ExtraOptions   = [
+                            .ProjectFiles = '../External/Zstd/Zstd.bff'
+                          ]
+        CreateVCXProject_Lib( .ProjectName, .ProjectPath, .ProjectConfigs, .ExtraOptions )
+    #endif
+
+    // XCode Project Generation
+    //--------------------------------------------------------------------------
+    #if __OSX__
+        XCodeProject( '$ProjectName$-xcodeproj' )
+        {
+            .ProjectOutput              = '../tmp/XCode/Projects/0_External/$ProjectName$.xcodeproj/project.pbxproj'
+            .ProjectInputPaths          = '$ProjectPath$/'
+            .ProjectBasePath            = '$ProjectPath$/'
+
+            .XCodeBuildWorkingDir       = '../../../../Code/'
+        }
+    #endif
+}

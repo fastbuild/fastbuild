@@ -19,30 +19,14 @@ class TestRemoveDir : public FBuildTest
 private:
     DECLARE_TESTS
 
-    void CreateNode() const;
     void RemoveDir() const;
 };
 
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestRemoveDir )
-    REGISTER_TEST( CreateNode )
     REGISTER_TEST( RemoveDir )
 REGISTER_TESTS_END
-
-// CreateNode
-//------------------------------------------------------------------------------
-void TestRemoveDir::CreateNode() const
-{
-    FBuild fb;
-    NodeGraph ng;
-
-    const RemoveDirNode * removeDirNode = ng.CreateRemoveDirNode( AStackString<>( "name" ) );
-
-    TEST_ASSERT( removeDirNode->GetType() == Node::REMOVE_DIR_NODE );
-    TEST_ASSERT( RemoveDirNode::GetTypeS() == Node::REMOVE_DIR_NODE );
-    TEST_ASSERT( AStackString<>( "RemoveDir" ) == removeDirNode->GetTypeName() );
-}
 
 // RemoveDir
 //------------------------------------------------------------------------------

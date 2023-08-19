@@ -189,5 +189,5 @@ function CreateVCXProject_Exe( .Name
         Alias( '$ProjectName$-OSX-$BuildConfigName$' ) { .Targets = '$ProjectName$-Exe-OSX-$BuildConfigName$' }
     }
 #endif
-        
+
 //------------------------------------------------------------------------------

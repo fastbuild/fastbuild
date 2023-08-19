@@ -43,7 +43,7 @@ REFLECT_END( CompilerNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilerNode::CompilerNode()
-    : Node( AString::GetEmpty(), Node::COMPILER_NODE, Node::FLAG_NONE )
+    : Node( Node::COMPILER_NODE )
     , m_AllowDistribution( true )
     , m_AllowResponseFile( false )
     , m_ForceResponseFile( false )
@@ -308,7 +308,7 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     {
         m_CompilerFamilyEnum = CLANG_CL;
         return true;
-    }    
+    }
     if ( m_CompilerFamilyString.EqualsI( "snc" ) )
     {
         m_CompilerFamilyEnum = SNC;

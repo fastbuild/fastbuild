@@ -7,6 +7,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
@@ -63,7 +64,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 170 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 171 };
 
     bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == NODE_GRAPH_CURRENT_VERSION; }
@@ -109,37 +110,26 @@ public:
     size_t GetNodeCount() const;
     const SettingsNode * GetSettings() const { return m_Settings; }
 
-    void RegisterNode( Node * n );
+    void RegisterNode( Node * n, const BFFToken * sourceToken );
 
     // create new nodes
-    CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
-    CopyDirNode * CreateCopyDirNode( const AString & nodeName );
-    RemoveDirNode * CreateRemoveDirNode( const AString & nodeName );
-    ExecNode * CreateExecNode( const AString & dstFileName );
-    FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
-    DirectoryListNode * CreateDirectoryListNode( const AString & name );
-    LibraryNode *   CreateLibraryNode( const AString & libraryName );
-    ObjectNode *    CreateObjectNode( const AString & objectName );
-    AliasNode *     CreateAliasNode( const AString & aliasName );
-    DLLNode *       CreateDLLNode( const AString & dllName );
-    ExeNode *       CreateExeNode( const AString & exeName );
-    UnityNode * CreateUnityNode( const AString & unityName );
-    CSNode * CreateCSNode( const AString & csAssemblyName );
-    TestNode * CreateTestNode( const AString & testOutput );
-    CompilerNode * CreateCompilerNode( const AString & name );
-    VSProjectBaseNode * CreateVCXProjectNode( const AString & name );
-    VSProjectBaseNode * CreateVSProjectExternalNode( const AString& name );
-    SLNNode * CreateSLNNode( const AString & name );
-    ObjectListNode * CreateObjectListNode( const AString & listName );
-    XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
-    SettingsNode * CreateSettingsNode( const AString & name );
-    ListDependenciesNode* CreateListDependenciesNode( const AString& name );
-    TextFileNode * CreateTextFileNode( const AString & name );
+    Node *      CreateNode( Node::Type type, AString && name );
+    Node *      CreateNode( Node::Type type,
+                            const AString & name,
+                            const BFFToken * sourceToken = nullptr );
+    template<class T>
+    T *         CreateNode( const AString & name,
+                            const BFFToken * sourceToken = nullptr )
+    {
+        return CreateNode( T::GetTypeS(), name, sourceToken )->template CastTo<T>();
+    }
 
     void DoBuildPass( Node * nodeToBuild );
 
     // Non-build operations that use the BuildPassTag can set it to a known value
     void SetBuildPassTagForAllNodes( uint32_t value ) const;
+
+    const BFFToken * FindNodeSourceToken( const Node * node ) const;
 
     static void CleanPath( AString & name, bool makeFullPath = true );
     static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
@@ -190,6 +180,8 @@ private:
                                  bool & movedDB ) const;
     uint32_t GetLibEnvVarHash() const;
 
+    void RegisterSourceToken( const Node * node, const BFFToken * sourceToken );
+
     // load/save helpers
     static void SerializeToText( Node * node, uint32_t depth, AString & outBuffer );
     static void SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer );
@@ -230,6 +222,8 @@ private:
         uint64_t    m_DataHash;
     };
     Array< UsedFile > m_UsedFiles;
+
+    Array< const BFFToken * > m_NodeSourceTokens;
 
     const SettingsNode * m_Settings;
 

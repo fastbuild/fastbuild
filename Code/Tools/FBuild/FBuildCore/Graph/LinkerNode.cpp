@@ -56,7 +56,7 @@ REFLECT_END( LinkerNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LinkerNode::LinkerNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_LinkerType( "auto" )
     , m_LinkerAllowResponseFile( false )
     , m_LinkerForceResponseFile( false )
@@ -366,7 +366,7 @@ LinkerNode::~LinkerNode()
         }
 
         // Show output if desired
-        const bool showCommandOutput = ( result != 0 ) || 
+        const bool showCommandOutput = ( result != 0 ) ||
                                        FBuild::Get().GetOptions().m_ShowCommandOutput;
         if ( showCommandOutput )
         {
@@ -1378,7 +1378,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // see if the file exists on disk at this location
     if ( LinkerNodeFileExistsCache::Get().FileExists( potentialNodeNameClean ) )
     {
-        node = nodeGraph.CreateFileNode( potentialNodeNameClean );
+        node = nodeGraph.CreateNode<FileNode>( potentialNodeNameClean, iter );
         libs.Add( node );
         found = true;
         FLOG_VERBOSE( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );
@@ -1519,7 +1519,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 
     // node not found - create a new FileNode, assuming we are
     // linking against an externally built library
-    node = nodeGraph.CreateFileNode( nodeName );
+    node = nodeGraph.CreateNode<FileNode>( nodeName, iter );
     nodes.Add( node );
     return true;
 }

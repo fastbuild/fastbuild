@@ -45,6 +45,7 @@ AdditionalSymbolSearchPaths
 AllowCaching
 AllowDistribution
 AllowResponseFile
+AndroidApkLocation
 ApplicationEnvironment
 ApplicationType
 ApplicationTypeRevision

@@ -12,6 +12,10 @@
 //------------------------------------------------------------------------------
 #define MAX_PATH 260
 
+// Forward Declarations
+//------------------------------------------------------------------------------
+class GetFilesHelper;
+
 // FileIO
 //------------------------------------------------------------------------------
 class FileIO
@@ -28,6 +32,8 @@ public:
                           const AString & wildCard,
                           bool recurse,
                           Array< AString > * results );
+    static void GetFiles( const AString & path,
+                          GetFilesHelper & helper );
     struct FileInfo
     {
         AString     m_Name;
@@ -88,6 +94,8 @@ private:
     #endif
 
     static void GetFilesRecurse( AString & path,
+                                 GetFilesHelper & helper );
+    static void GetFilesRecurse( AString & path,
                                  const AString & wildCard,
                                  Array< AString > * results );
     static void GetFilesNoRecurse( const char * path,
@@ -99,7 +107,32 @@ private:
     static void GetFilesNoRecurseEx( const char * path,
                                      const Array< AString > * patterns,
                                      Array< FileInfo > * results );
+
+    friend class GetFilesHelper;
     static bool IsMatch( const Array< AString > * patterns, const char * fileName );
+};
+
+//------------------------------------------------------------------------------
+class GetFilesHelper
+{
+public:
+    explicit GetFilesHelper( size_t sizeHint = 1024 );
+    explicit GetFilesHelper( const Array<AString> & patterns, size_t sizeHint = 1024 );
+    virtual ~GetFilesHelper();
+
+    // Default implementation can be extended or customized
+    [[nodiscard]] virtual bool  OnDirectory( const AString & dirPath );
+    [[nodiscard]] virtual bool  ShouldIncludeFile( const char * fileName );
+    virtual void                OnFile( FileIO::FileInfo && fileInfo );
+
+    // Access results
+    const Array<FileIO::FileInfo> & GetFiles() const { return m_Files; }
+    Array<FileIO::FileInfo> &       GetFiles() { return m_Files; }
+
+protected:
+    bool m_Recurse = true;
+    const Array<AString> * m_Patterns = nullptr;
+    Array<FileIO::FileInfo> m_Files;
 };
 
 //------------------------------------------------------------------------------

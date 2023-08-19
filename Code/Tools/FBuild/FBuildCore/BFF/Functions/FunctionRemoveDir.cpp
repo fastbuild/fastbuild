@@ -36,13 +36,14 @@ FunctionRemoveDir::FunctionRemoveDir()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionRemoveDir::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
-    if ( nodeGraph.FindNode( m_AliasForFunction ) )
+    if ( const Node * existingNode = nodeGraph.FindNode( m_AliasForFunction ) )
     {
-        Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
+        const BFFToken * existingToken = nodeGraph.FindNodeSourceToken( existingNode );
+        Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction, existingToken );
         return false;
     }
 
-    RemoveDirNode * removeDirNode = nodeGraph.CreateRemoveDirNode( m_AliasForFunction );
+    Node * removeDirNode = nodeGraph.CreateNode<RemoveDirNode>( m_AliasForFunction, funcStartIter );
 
     if ( !PopulateProperties( nodeGraph, funcStartIter, removeDirNode ) )
     {

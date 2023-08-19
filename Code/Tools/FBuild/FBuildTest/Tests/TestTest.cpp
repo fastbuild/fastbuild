@@ -20,7 +20,6 @@ class TestTest : public FBuildTest
 private:
     DECLARE_TESTS
 
-    void CreateNode() const;
     void Build() const;
     void Build_NoRebuild() const;
     void Fail_ReturnCode() const;
@@ -32,7 +31,6 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestTest )
-    REGISTER_TEST( CreateNode )
     REGISTER_TEST( Build )
     REGISTER_TEST( Build_NoRebuild )
     REGISTER_TEST( Fail_ReturnCode )
@@ -40,22 +38,6 @@ REGISTER_TESTS_BEGIN( TestTest )
     REGISTER_TEST( TimeOut )
     REGISTER_TEST( Exclusions )
 REGISTER_TESTS_END
-
-// CreateNode
-//------------------------------------------------------------------------------
-void TestTest::CreateNode() const
-{
-    FBuild fb;
-    NodeGraph ng;
-
-    AStackString<> outputPath;
-    NodeGraph::CleanPath( AStackString<>( "output.txt" ), outputPath );
-    const TestNode * testNode = ng.CreateTestNode( outputPath );
-
-    TEST_ASSERT( testNode->GetType() == Node::TEST_NODE );
-    TEST_ASSERT( TestNode::GetTypeS() == Node::TEST_NODE );
-    TEST_ASSERT( AStackString<>( "Test" ) == testNode->GetTypeName() );
-}
 
 // Build
 //------------------------------------------------------------------------------

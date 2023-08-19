@@ -477,10 +477,15 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1100_AlreadyDefined( const BFFToken * iter,
                                                  const Function * function,
-                                                 const AString & name )
+                                                 const AString & name,
+                                                 const BFFToken * previousDeclarationToken )
 {
     FormatError( iter, 1100u, function, "Target '%s' already defined.",
                                        name.Get() );
+    if ( previousDeclarationToken )
+    {
+        FormatError( previousDeclarationToken, 1100u, nullptr, "Previously declared here:" );
+    }
 }
 
 // Error_1101_MissingProperty
@@ -765,7 +770,7 @@
                                   "1234567890"
                                   "~`!@#$%^&*()-_+="
                                    "{[]}|\\"
-                                   ";:\"'" 
+                                   ";:\"'"
                                    "<,.>/?";
     bool printable = false;
     const char c = *iter->GetSourcePos();

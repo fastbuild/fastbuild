@@ -7,6 +7,7 @@
     //#define USING_GCC_4
     //#define USING_GCC_7
     #define USING_GCC_9
+    //#define USING_GCC_11
 #endif
 
 // Activate
@@ -23,6 +24,9 @@
     #endif
     #if USING_GCC_9
         #include "Linux/GCC9.bff"
+    #endif
+    #if USING_GCC_11
+        #include "Linux/GCC11.bff"
     #endif
 #endif
 

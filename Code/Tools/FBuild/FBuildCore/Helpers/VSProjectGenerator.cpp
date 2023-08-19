@@ -73,10 +73,9 @@ void VSProjectGenerator::AddFile( const AString & file )
 //------------------------------------------------------------------------------
 void VSProjectGenerator::AddFiles( const Array< AString > & files )
 {
-    const AString * const fEnd = files.End();
-    for ( const AString * fIt = files.Begin(); fIt!=fEnd; ++fIt )
+    for ( const AString & file : files )
     {
-        AddFile( *fIt );
+        AddFile( file );
     }
 }
 
@@ -115,12 +114,11 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     // Project Configurations
     {
         Write( "  <ItemGroup Label=\"ProjectConfigurations\">\n" );
-        const VSProjectConfig * const cEnd = configs.End();
-        for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
+        for ( const VSProjectConfig & config : configs )
         {
-            WriteF("    <ProjectConfiguration Include=\"%s|%s\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
-            WriteF("      <Configuration>%s</Configuration>\n", cIt->m_Config.Get() );
-            WriteF("      <Platform>%s</Platform>\n", cIt->m_Platform.Get() );
+            WriteF("    <ProjectConfiguration Include=\"%s|%s\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF("      <Configuration>%s</Configuration>\n", config.m_Config.Get() );
+            WriteF("      <Platform>%s</Platform>\n", config.m_Platform.Get() );
             Write( "    </ProjectConfiguration>\n" );
         }
         Write( "  </ItemGroup>\n" );
@@ -133,20 +131,19 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         {
             const AString & fileName = filePathPair.m_ProjectRelativePath;
 
-            const char * fileType = nullptr;
-            const VSProjectFileType * const end = fileTypes.End();
-            for ( const VSProjectFileType * it=fileTypes.Begin(); it!=end; ++it )
+            const char * fileTypeToUse = nullptr;
+            for ( const VSProjectFileType & fileType : fileTypes )
             {
-                if ( AString::MatchI( it->m_Pattern.Get(), fileName.Get() ) )
+                if ( AString::MatchI( fileType.m_Pattern.Get(), fileName.Get() ) )
                 {
-                    fileType = it->m_FileType.Get();
+                    fileTypeToUse = fileType.m_FileType.Get();
                     break;
                 }
             }
-            if ( fileType )
+            if ( fileTypeToUse )
             {
                 WriteF( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
-                WriteF( "        <FileType>%s</FileType>\n", fileType );
+                WriteF( "        <FileType>%s</FileType>\n", fileTypeToUse );
                 Write( "    </CustomBuild>\n" );
             }
             else
@@ -162,10 +159,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         Write("  <ItemGroup>\n" );
         {
             // Project References
-            const AString * const end = m_ProjectReferences.End();
-            for ( const AString *  it = m_ProjectReferences.Begin(); it != end; ++it )
+            for ( const AString & projectReference : m_ProjectReferences )
             {
-                AStackString<> proj( *it );
+                AStackString<> proj( projectReference );
                 const char * pipe = proj.Find( '|' );
                 if ( pipe )
                 {
@@ -183,10 +179,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         }
         {
             // References
-            const AString * const end = m_References.End();
-            for ( const AString * it = m_References.Begin(); it != end; ++it )
+            for ( const AString & reference : m_References )
             {
-                WriteF( "    <Reference Include=\"%s\" />\n", it->Get() );
+                WriteF( "    <Reference Include=\"%s\" />\n", reference.Get() );
             }
         }
         Write("  </ItemGroup>\n" );
@@ -236,30 +231,29 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // Configurations
     {
-        const VSProjectConfig * const cEnd = configs.End();
-        for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
+        for ( const VSProjectConfig & config : configs )
         {
-            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n", config.m_Config.Get(), config.m_Platform.Get() );
             Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
             Write( "    <UseDebugLibraries>false</UseDebugLibraries>\n" );
 
             // If a specific executable is specified, use that, otherwise try to auto-derive
             // the executable from the .Target
-            AStackString<> localDebuggerCommand( cIt->m_LocalDebuggerCommand );
+            AStackString<> localDebuggerCommand( config.m_LocalDebuggerCommand );
             if ( localDebuggerCommand.IsEmpty() )
             {
                 // Get the executable path and make it project-relative
-                const Node * debugTarget = ProjectGeneratorBase::FindExecutableDebugTarget( cIt->m_TargetNode );
+                const Node * debugTarget = ProjectGeneratorBase::FindExecutableDebugTarget( config.m_TargetNode );
                 if ( debugTarget )
                 {
                     ProjectGeneratorBase::GetRelativePath( projectBasePath, debugTarget->GetName(), localDebuggerCommand );
                 }
             }
 
-            WritePGItem( "PlatformToolset",                 cIt->m_PlatformToolset );
-            WritePGItem( "LocalDebuggerCommandArguments",   cIt->m_LocalDebuggerCommandArguments );
+            WritePGItem( "PlatformToolset",                 config.m_PlatformToolset );
+            WritePGItem( "LocalDebuggerCommandArguments",   config.m_LocalDebuggerCommandArguments );
             WritePGItem( "LocalDebuggerCommand",            localDebuggerCommand );
-            WritePGItem( "LocalDebuggerEnvironment",        cIt->m_LocalDebuggerEnvironment );
+            WritePGItem( "LocalDebuggerEnvironment",        config.m_LocalDebuggerEnvironment );
 
             Write( "  </PropertyGroup>\n" );
         }
@@ -274,10 +268,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // Property Sheets
     {
-        const VSProjectConfig * const cEnd = configs.End();
-        for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
+        for ( const VSProjectConfig & config : configs )
         {
-            WriteF("  <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF("  <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
             Write( "    <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />\n" );
             Write( "  </ImportGroup>\n" );
         }
@@ -288,34 +281,37 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // Property Group
     {
-        const VSProjectConfig * const cEnd = configs.End();
-        for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
+        for ( const VSProjectConfig & config : configs )
         {
-            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
 
-            if ( cIt->m_Keyword == "Linux" )
+            if ( config.m_Keyword == "Linux" )
             {
-                WritePGItem( "BuildCommandLine",                cIt->m_ProjectBuildCommand );
-                WritePGItem( "ReBuildCommandLine",              cIt->m_ProjectRebuildCommand );
-                WritePGItem( "CleanCommandLine",                cIt->m_ProjectCleanCommand );
+                WritePGItem( "BuildCommandLine",                config.m_ProjectBuildCommand );
+                WritePGItem( "ReBuildCommandLine",              config.m_ProjectRebuildCommand );
+                WritePGItem( "CleanCommandLine",                config.m_ProjectCleanCommand );
             }
             else
             {
-                WritePGItem( "NMakeBuildCommandLine",           cIt->m_ProjectBuildCommand );
-                WritePGItem( "NMakeReBuildCommandLine",         cIt->m_ProjectRebuildCommand );
-                WritePGItem( "NMakeCleanCommandLine",           cIt->m_ProjectCleanCommand );
+                WritePGItem( "NMakeBuildCommandLine",           config.m_ProjectBuildCommand );
+                WritePGItem( "NMakeReBuildCommandLine",         config.m_ProjectRebuildCommand );
+                WritePGItem( "NMakeCleanCommandLine",           config.m_ProjectCleanCommand );
+            }
+            if ( !config.m_AndroidApkLocation.IsEmpty() )
+            {
+                WritePGItem( "AndroidApkLocation",              config.m_AndroidApkLocation );
             }
 
-            WritePGItem( "NMakeOutput",                     cIt->m_Output );
+            WritePGItem( "NMakeOutput",                     config.m_Output );
             const ObjectListNode * oln = nullptr;
-            if ( cIt->m_PreprocessorDefinitions.IsEmpty() || cIt->m_IncludeSearchPath.IsEmpty() )
+            if ( config.m_PreprocessorDefinitions.IsEmpty() || config.m_IncludeSearchPath.IsEmpty() )
             {
-                oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( cIt->m_TargetNode );
+                oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( config.m_TargetNode );
             }
 
-            if ( cIt->m_PreprocessorDefinitions.IsEmpty() == false )
+            if ( config.m_PreprocessorDefinitions.IsEmpty() == false )
             {
-                WritePGItem( "NMakePreprocessorDefinitions",    cIt->m_PreprocessorDefinitions );
+                WritePGItem( "NMakePreprocessorDefinitions",    config.m_PreprocessorDefinitions );
             }
             else
             {
@@ -334,9 +330,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             {
                 ProjectGeneratorBase::ExtractIncludePaths( oln->GetCompilerOptions(), includePaths, forceIncludes, false );
             }
-            if ( cIt->m_IncludeSearchPath.IsEmpty() == false )
+            if ( config.m_IncludeSearchPath.IsEmpty() == false )
             {
-                WritePGItem( "NMakeIncludeSearchPath",          cIt->m_IncludeSearchPath );
+                WritePGItem( "NMakeIncludeSearchPath",          config.m_IncludeSearchPath );
             }
             else if ( oln )
             {
@@ -351,9 +347,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, nullptr, ";" );
                 WritePGItem( "NMakeIncludeSearchPath", includePathsStr );
             }
-            if ( cIt->m_ForcedIncludes.IsEmpty() == false )
+            if ( config.m_ForcedIncludes.IsEmpty() == false )
             {
-                WritePGItem( "NMakeForcedIncludes",             cIt->m_ForcedIncludes );
+                WritePGItem( "NMakeForcedIncludes",             config.m_ForcedIncludes );
             }
             else if ( oln )
             {
@@ -368,11 +364,11 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 ProjectGeneratorBase::ConcatIntellisenseOptions( forceIncludes, forceIncludePathsStr, nullptr, ";" );
                 WritePGItem( "NMakeForcedIncludes", forceIncludePathsStr );
             }
-            WritePGItem( "NMakeAssemblySearchPath",         cIt->m_AssemblySearchPath );
-            WritePGItem( "NMakeForcedUsingAssemblies",      cIt->m_ForcedUsingAssemblies );
-            if ( cIt->m_AdditionalOptions.IsEmpty() == false )
+            WritePGItem( "NMakeAssemblySearchPath",         config.m_AssemblySearchPath );
+            WritePGItem( "NMakeForcedUsingAssemblies",      config.m_ForcedUsingAssemblies );
+            if ( config.m_AdditionalOptions.IsEmpty() == false )
             {
-                WritePGItem( "AdditionalOptions",               cIt->m_AdditionalOptions );
+                WritePGItem( "AdditionalOptions",               config.m_AdditionalOptions );
             }
             else
             {
@@ -385,44 +381,43 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                     WritePGItem( "AdditionalOptions", additionalOptionsStr );
                 }
             }
-            WritePGItem( "Xbox360DebuggerCommand",          cIt->m_Xbox360DebuggerCommand );
-            WritePGItem( "DebuggerFlavor",                  cIt->m_DebuggerFlavor );
-            WritePGItem( "AumidOverride",                   cIt->m_AumidOverride );
-            WritePGItem( "LocalDebuggerWorkingDirectory",   cIt->m_LocalDebuggerWorkingDirectory );
-            WritePGItem( "IntDir",                          cIt->m_IntermediateDirectory );
-            WritePGItem( "OutDir",                          cIt->m_OutputDirectory );
-            WritePGItem( "PackagePath",                     cIt->m_PackagePath );
-            WritePGItem( "AdditionalSymbolSearchPaths",     cIt->m_AdditionalSymbolSearchPaths );
-            WritePGItem( "LayoutDir",                       cIt->m_LayoutDir );
-            WritePGItem( "LayoutExtensionFilter",           cIt->m_LayoutExtensionFilter );
-            WritePGItem( "RemoteDebuggerCommand",           cIt->m_RemoteDebuggerCommand );
-            WritePGItem( "RemoteDebuggerCommandArguments",  cIt->m_RemoteDebuggerCommandArguments );
-            WritePGItem( "RemoteDebuggerWorkingDirectory",  cIt->m_RemoteDebuggerWorkingDirectory );
+            WritePGItem( "Xbox360DebuggerCommand",          config.m_Xbox360DebuggerCommand );
+            WritePGItem( "DebuggerFlavor",                  config.m_DebuggerFlavor );
+            WritePGItem( "AumidOverride",                   config.m_AumidOverride );
+            WritePGItem( "LocalDebuggerWorkingDirectory",   config.m_LocalDebuggerWorkingDirectory );
+            WritePGItem( "IntDir",                          config.m_IntermediateDirectory );
+            WritePGItem( "OutDir",                          config.m_OutputDirectory );
+            WritePGItem( "PackagePath",                     config.m_PackagePath );
+            WritePGItem( "AdditionalSymbolSearchPaths",     config.m_AdditionalSymbolSearchPaths );
+            WritePGItem( "LayoutDir",                       config.m_LayoutDir );
+            WritePGItem( "LayoutExtensionFilter",           config.m_LayoutExtensionFilter );
+            WritePGItem( "RemoteDebuggerCommand",           config.m_RemoteDebuggerCommand );
+            WritePGItem( "RemoteDebuggerCommandArguments",  config.m_RemoteDebuggerCommandArguments );
+            WritePGItem( "RemoteDebuggerWorkingDirectory",  config.m_RemoteDebuggerWorkingDirectory );
             Write( "  </PropertyGroup>\n" );
         }
     }
 
     // ItemDefinition Groups
     {
-        const VSProjectConfig * const cEnd = configs.End();
-        for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
+        for ( const VSProjectConfig & config : configs )
         {
-            WriteF("  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF("  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
             Write( "    <BuildLog>\n" );
-            if ( !cIt->m_BuildLogFile.IsEmpty() )
+            if ( !config.m_BuildLogFile.IsEmpty() )
             {
-                WritePGItem( "Path",          cIt->m_BuildLogFile );
+                WritePGItem( "Path",          config.m_BuildLogFile );
             }
             else
             {
                 Write( "      <Path />\n" );
             }
             Write( "    </BuildLog>\n" );
-            if ( ( !cIt->m_DeploymentType.IsEmpty() ) || ( !cIt->m_DeploymentFiles.IsEmpty() ) )
+            if ( !config.m_DeploymentType.IsEmpty() || !config.m_DeploymentFiles.IsEmpty() )
             {
                 Write( "    <Deploy>\n" );
-                WritePGItem( "DeploymentType",          cIt->m_DeploymentType );
-                WritePGItem( "DeploymentFiles",         cIt->m_DeploymentFiles );
+                WritePGItem( "DeploymentType",          config.m_DeploymentType );
+                WritePGItem( "DeploymentFiles",         config.m_DeploymentFiles );
                 Write( "    </Deploy>\n" );
             }
             Write( "  </ItemDefinitionGroup>\n" );
@@ -591,10 +586,8 @@ void VSProjectGenerator::WritePGItem( const char * xmlTag, const AString & value
 void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & folder ) const
 {
     ASSERT( m_FilePathsCanonicalized );
-    const AString * const bEnd = m_BasePaths.End();
-    for ( const AString * bIt = m_BasePaths.Begin(); bIt != bEnd; ++bIt )
+    for ( const AString & basePath : m_BasePaths )
     {
-        const AString & basePath = *bIt;
         if ( fileName.BeginsWithI( basePath ) )
         {
             const char * begin = fileName.Get() + basePath.GetLength();

@@ -19,7 +19,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/RemoveDirNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 
 // Core
@@ -57,6 +59,7 @@ private:
     void DBVersionChanged() const;
     void FixupErrorPaths() const;
     void CyclicDependency() const;
+    void DBLocation() const;
 };
 
 // Register Tests
@@ -78,6 +81,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( DBVersionChanged )
     REGISTER_TEST( FixupErrorPaths )
     REGISTER_TEST( CyclicDependency )
+    REGISTER_TEST( DBLocation )
 REGISTER_TESTS_END
 
 // NodeTestHelper
@@ -88,8 +92,10 @@ class NodeTestHelper : public Node
     REFLECT_DECLARE( NodeTestHelper )
 public:
     NodeTestHelper()
-        : Node( AStackString<>( "dummy" ), Node::PROXY_NODE, 0 )
-    {}
+        : Node( Node::PROXY_NODE )
+    {
+        SetName( AStackString<>( "placeholder" ) );
+    }
     virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ ) override
     {
         ASSERT( false );
@@ -116,114 +122,41 @@ void TestGraph::TestNodeTypes() const
     FBuild fb;
     NodeGraph ng;
 
-    const FileNode * fn = ng.CreateFileNode( AStackString<>( "file" ) );
-    TEST_ASSERT( fn->GetType() == Node::FILE_NODE );
-    TEST_ASSERT( FileNode::GetTypeS() == Node::FILE_NODE );
-
-    {
-        #if defined( __WINDOWS__ )
-            const CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
-        #else
-            const CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "/usr/bin/gcc" ) );
-        #endif
-        TEST_ASSERT( cn->GetType() == Node::COMPILER_NODE );
-        TEST_ASSERT( AStackString<>( "Compiler" ) == cn->GetTypeName() );
-    }
-
-    {
-        #if defined( __WINDOWS__ )
-            const Node * n = ng.CreateCopyFileNode( AStackString<>( "c:\\dummy" ) );
-        #else
-            const Node * n = ng.CreateCopyFileNode( AStackString<>( "/dummy/dummy" ) );
-        #endif
-        TEST_ASSERT( n->GetType() == Node::COPY_FILE_NODE );
-        TEST_ASSERT( CopyFileNode::GetTypeS() == Node::COPY_FILE_NODE );
-        TEST_ASSERT( AStackString<>( "CopyFile" ) == n->GetTypeName() );
-    }
-
+    // Node names differ on Window vs other platforms due to paths etc
     #if defined( __WINDOWS__ )
-        const DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path\\|*.cpp|false|" ) );
+        #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString<> name( WINDOWS_PATH )
     #else
-        const DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path/|*.cpp|false|" ) );
+        #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString<> name( OTHER_PATH )
     #endif
-    TEST_ASSERT( dn->GetType() == Node::DIRECTORY_LIST_NODE );
-    TEST_ASSERT( DirectoryListNode::GetTypeS() == Node::DIRECTORY_LIST_NODE );
-    TEST_ASSERT( AStackString<>( "Directory" ) == dn->GetTypeName() );
 
-    {
-        #if defined( __WINDOWS__ )
-            const Node * n = ng.CreateExecNode( AStackString<>( "c:\\execdummy" ) );
-        #else
-            const Node * n = ng.CreateExecNode( AStackString<>( "/execdummy/execdummy" ) );
-        #endif
-        TEST_ASSERT( n->GetType() == Node::EXEC_NODE );
-        TEST_ASSERT( ExecNode::GetTypeS() == Node::EXEC_NODE );
-        TEST_ASSERT( AStackString<>( "Exec" ) == n->GetTypeName() );
-    }
-    {
-        #if defined( __WINDOWS__ )
-            const Node * n = ng.CreateLibraryNode( AStackString<>( "c:\\library.lib" ) );
-        #else
-            const Node * n = ng.CreateLibraryNode( AStackString<>( "/library/library.a" ) );
-        #endif
-        TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
-        TEST_ASSERT( LibraryNode::GetTypeS() == Node::LIBRARY_NODE );
-        TEST_ASSERT( AStackString<>( "Library" ) == n->GetTypeName() );
-    }
-    {
-        #if defined( __WINDOWS__ )
-            const Node * n = ng.CreateObjectNode( AStackString<>( "c:\\object.lib" ) );
-        #else
-            const Node * n = ng.CreateObjectNode( AStackString<>( "/library/object.o" ) );
-        #endif
-        TEST_ASSERT( n->GetType() == Node::OBJECT_NODE );
-        TEST_ASSERT( ObjectNode::GetTypeS() == Node::OBJECT_NODE );
-        TEST_ASSERT( AStackString<>( "Object" ) == n->GetTypeName() );
-    }
-    {
-        const Node * n = ng.CreateAliasNode( AStackString<>( "alias" ) );
-        TEST_ASSERT( n->GetType() == Node::ALIAS_NODE );
-        TEST_ASSERT( AliasNode::GetTypeS() == Node::ALIAS_NODE );
-        TEST_ASSERT( AStackString<>( "Alias" ) == n->GetTypeName() );
-    }
-    {
-        #if defined( __WINDOWS__ )
-            AStackString<> dllName( "c:\\lib.dll" );
-        #else
-            AStackString<> dllName( "/tmp/lib.so" );
-        #endif
-        const Node * n = ng.CreateDLLNode( dllName );
-        TEST_ASSERT( n->GetType() == Node::DLL_NODE );
-        TEST_ASSERT( DLLNode::GetTypeS() == Node::DLL_NODE );
-        TEST_ASSERT( AStackString<>( "DLL" ) == n->GetTypeName() );
-    }
-    {
-        #if defined( __WINDOWS__ )
-            AStackString<> exeName( "c:\\exe.exe" );
-        #else
-            AStackString<> exeName( "/tmp/exe.exe" );
-        #endif
-        const Node * n = ng.CreateExeNode( exeName );
-        TEST_ASSERT( n->GetType() == Node::EXE_NODE );
-        TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
-        TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );
-    }
-    {
-        const Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ) );
-        TEST_ASSERT( n->GetType() == Node::UNITY_NODE );
-        TEST_ASSERT( UnityNode::GetTypeS() == Node::UNITY_NODE );
-        TEST_ASSERT( AStackString<>( "Unity" ) == n->GetTypeName() );
-    }
-    {
-        #if defined( __WINDOWS__ )
-            const Node * n = ng.CreateCSNode( AStackString<>( "c:\\csharp.dll" ) );
-        #else
-            const Node * n = ng.CreateCSNode( AStackString<>( "/dummy/csharp.dll" ) );
-        #endif
-        TEST_ASSERT( n->GetType() == Node::CS_NODE);
-        TEST_ASSERT( CSNode::GetTypeS() == Node::CS_NODE );
-        TEST_ASSERT( AStackString<>( "C#" ) == n->GetTypeName() );
-    }
+    // Test each node can be created and type mappings are consistent
+    #define TEST_NODE( TYPE, TYPE_ENUM, FRIENDLY_TYPE, WINDOWS_PATH, OTHER_PATH ) \
+    { \
+        CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ); \
+        const TYPE * node = ng.CreateNode<TYPE>( name ); \
+        TEST_ASSERT( node->GetType() == Node::TYPE_ENUM ); \
+        TEST_ASSERT( TYPE::GetTypeS() == Node::TYPE_ENUM ); \
+        TEST_ASSERT( AStackString<>( FRIENDLY_TYPE ) == node->GetTypeName() ); \
+    } while( false )
+
+    // TODO:C - It would be nice to restructure this so that new nodes are automatically tested
+    TEST_NODE( FileNode,            FILE_NODE,          "File",     "file",             "file" );
+    TEST_NODE( CompilerNode,        COMPILER_NODE,      "Compiler", "c:\\cl.exe",       "/usr/bin/gcc" );
+    TEST_NODE( CopyFileNode,        COPY_FILE_NODE,     "CopyFile", "c:\\file",         "/path/file" );
+    TEST_NODE( DirectoryListNode,   DIRECTORY_LIST_NODE, "Directory",  "path\\|*.cpp|false|",     "path/|*.cpp|false|" );
+    TEST_NODE( ExecNode,            EXEC_NODE,          "Exec",     "c:\\exec",         "/path/exec" );
+    TEST_NODE( LibraryNode,         LIBRARY_NODE,       "Library",  "c:\\library.lib",  "/library/library.a" );
+    TEST_NODE( ObjectNode,          OBJECT_NODE,        "Object",   "c:\\object.obj",   "/path/object.a" );
+    TEST_NODE( AliasNode,           ALIAS_NODE,         "Alias",    "alias",            "alias" );
+    TEST_NODE( DLLNode,             DLL_NODE,           "DLL",      "c:\\lib.dll",      "/tmp/lib.so" );
+    TEST_NODE( ExeNode,             EXE_NODE,           "Exe",      "c:\\exe.exe",      "/tmp/exe.exe" );
+    TEST_NODE( UnityNode,           UNITY_NODE,         "Unity",    "unity",            "unity" );
+    TEST_NODE( CSNode,              CS_NODE,            "C#",       "c:\\csharp.dll",   "/path/csharp.dll" );
+    TEST_NODE( TestNode,            TEST_NODE,          "Test",     "c:\\output.txt",   "/path/output.txt" );
+    TEST_NODE( RemoveDirNode,       REMOVE_DIR_NODE,    "RemoveDir", "remove",   "remove" );
+
+    #undef TEST_NODE
+    #undef CHOOSE_NAME
 }
 
 // FileNode
@@ -238,7 +171,7 @@ void TestGraph::SingleFileNode() const
     TEST_ASSERT( ng.FindNode( testFileName ) == nullptr );
 
     // create the node, and make sure we can access it by name
-    FileNode * node = ng.CreateFileNode( testFileName );
+    FileNode * node = ng.CreateNode<FileNode>( testFileName );
     TEST_ASSERT( ng.FindNode( testFileName ) == node );
 
     TEST_ASSERT( fb.Build( node ) );
@@ -257,7 +190,7 @@ void TestGraph::SingleFileNodeMissing() const
 
     // make a node for a file that does not exist
     const AStackString<> testFileName( "ThisFileDoesNotExist.cpp" );
-    FileNode * node = ng.CreateFileNode( testFileName );
+    FileNode * node = ng.CreateNode<FileNode>( testFileName );
 
     // make sure build still passes
     // a missing file is not an error.  it would need to be required by something
@@ -291,7 +224,7 @@ void TestGraph::TestDirectoryListNode() const
                                    name );
 
     // create the node, and make sure we can access it by name
-    DirectoryListNode * node = ng.CreateDirectoryListNode( name );
+    DirectoryListNode * node = ng.CreateNode<DirectoryListNode>( name );
     node->m_Path = testFolder;
     node->m_Patterns = patterns;
     const BFFToken * token = nullptr;
@@ -1002,6 +935,44 @@ void TestGraph::CyclicDependency() const
         // and fails
         TEST_ASSERT( fBuild.Build( "all" ) == false );
         TEST_ASSERT( GetRecordedOutput().Find( "Error: Cyclic dependency detected" ) );
+    }
+}
+
+// DBLocation
+//------------------------------------------------------------------------------
+void TestGraph::DBLocation() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseLocation/fbuild.bff";
+    options.m_SaveDBOnCompletion = true;
+
+    AString dbFileDefaultLocation( "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseLocation/" );
+    AString dbFileExplicitLocation( "../tmp/Test/Graph/DatabaseLocation/GraphDB.fdb" );
+
+    // Build a target and let serialization save to default location
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        const AString & dbFile( fBuild.GetDependencyGraphFile() );
+        EnsureFileDoesNotExist( dbFile );
+
+        TEST_ASSERT( fBuild.Build( "TestTarget" ) );
+        TEST_ASSERT( PathUtils::PathBeginsWith( dbFile, dbFileDefaultLocation ) );
+    }
+
+    // Build a target and let serialization save to explicitly specified location
+    {
+        options.m_DBFile = dbFileExplicitLocation;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        const AString & dbFile( fBuild.GetDependencyGraphFile() );
+        EnsureFileDoesNotExist( dbFile );
+
+        TEST_ASSERT( fBuild.Build( "TestTarget" ) );
+        TEST_ASSERT( PathUtils::ArePathsEqual( dbFile, dbFileExplicitLocation ) );
     }
 }
 

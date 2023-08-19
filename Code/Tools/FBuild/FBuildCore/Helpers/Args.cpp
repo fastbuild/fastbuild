@@ -14,6 +14,8 @@
 // system
 #if defined( __OSX__ )
     #include <limits.h>
+#elif defined( __LINUX__ )
+    #include <unistd.h>
 #endif
 
 // CONSTRUCTOR
@@ -111,8 +113,10 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, Args
     #elif defined( __OSX__ )
         const uint32_t argLimit( ARG_MAX - 1 );
     #elif defined( __LINUX__ )
-        // On Linux it's problematic to reliably determine this, so we make a best guess
-        const uint32_t argLimit( ( 128 * 1024 ) - 1 );
+        // This doesn't account for some things that impact max arg length such
+        // as the size of the environment block, but it's better than using an
+        // arbitrary value
+        const uint32_t argLimit = static_cast<uint32_t>( sysconf( _SC_ARG_MAX ) );
     #endif
 
     // If the args exceed the cmd line limit, a response file is required

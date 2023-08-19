@@ -19,7 +19,6 @@ class TestExe : public FBuildTest
 private:
     DECLARE_TESTS
 
-    void CreateNode() const;
     void Build() const;
     void CheckValidExe() const;
     void Build_NoRebuild() const;
@@ -28,29 +27,10 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestExe )
-    REGISTER_TEST( CreateNode )
     REGISTER_TEST( Build )
     REGISTER_TEST( CheckValidExe )
     REGISTER_TEST( Build_NoRebuild )
 REGISTER_TESTS_END
-
-// CreateNode
-//------------------------------------------------------------------------------
-void TestExe::CreateNode() const
-{
-    FBuild fb;
-    NodeGraph ng;
-
-    #if defined( __WINDOWS__ )
-        AStackString<> exeName( "c:\\exe.exe" );
-    #else
-        AStackString<> exeName( "/tmp/exe.exe" );
-    #endif
-    const ExeNode * exeNode = ng.CreateExeNode( exeName );
-    TEST_ASSERT( exeNode->GetType() == Node::EXE_NODE );
-    TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
-    TEST_ASSERT( AStackString<>( "Exe" ) == exeNode->GetTypeName() );
-}
 
 // Build
 //------------------------------------------------------------------------------

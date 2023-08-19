@@ -47,7 +47,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/CRC32.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Profile/Profile.h"
@@ -122,12 +122,9 @@ REFLECT_END( Node )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Node::Node( const AString & name, Type type, uint8_t controlFlags )
+Node::Node( Type type )
 {
     m_Type = type;
-    m_ControlFlags = controlFlags;
-
-    SetName( name );
 
     // Compile time check to ensure name vector is in sync
     static_assert( sizeof( s_NodeTypeNames ) / sizeof(const char *) == NUM_NODE_TYPES, "s_NodeTypeNames item count doesn't match NUM_NODE_TYPES" );
@@ -139,7 +136,7 @@ Node::~Node() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool Node::DoDynamicDependencies( NodeGraph &, bool )
+/*virtual*/ bool Node::DoDynamicDependencies( NodeGraph & /*nodeGraph*/ )
 {
     return true;
 }
@@ -327,46 +324,6 @@ void Node::SetLastBuildTime( uint32_t ms )
     AtomicStoreRelaxed( &m_LastBuildTimeMs, ms );
 }
 
-// CreateNode
-//------------------------------------------------------------------------------
-/*static*/ Node * Node::CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name )
-{
-    switch ( nodeType )
-    {
-        case Node::PROXY_NODE:          ASSERT( false ); return nullptr;
-        case Node::COPY_FILE_NODE:      return nodeGraph.CreateCopyFileNode( name );
-        case Node::DIRECTORY_LIST_NODE: return nodeGraph.CreateDirectoryListNode( name );
-        case Node::EXEC_NODE:           return nodeGraph.CreateExecNode( name );
-        case Node::FILE_NODE:           return nodeGraph.CreateFileNode( name );
-        case Node::LIBRARY_NODE:        return nodeGraph.CreateLibraryNode( name );
-        case Node::OBJECT_NODE:         return nodeGraph.CreateObjectNode( name );
-        case Node::ALIAS_NODE:          return nodeGraph.CreateAliasNode( name );
-        case Node::EXE_NODE:            return nodeGraph.CreateExeNode( name );
-        case Node::CS_NODE:             return nodeGraph.CreateCSNode( name );
-        case Node::UNITY_NODE:          return nodeGraph.CreateUnityNode( name );
-        case Node::TEST_NODE:           return nodeGraph.CreateTestNode( name );
-        case Node::COMPILER_NODE:       return nodeGraph.CreateCompilerNode( name );
-        case Node::DLL_NODE:            return nodeGraph.CreateDLLNode( name );
-        case Node::VCXPROJECT_NODE:     return nodeGraph.CreateVCXProjectNode( name );
-        case Node::VSPROJEXTERNAL_NODE: return nodeGraph.CreateVSProjectExternalNode( name );
-        case Node::OBJECT_LIST_NODE:    return nodeGraph.CreateObjectListNode( name );
-        case Node::COPY_DIR_NODE:       return nodeGraph.CreateCopyDirNode( name );
-        case Node::SLN_NODE:            return nodeGraph.CreateSLNNode( name );
-        case Node::REMOVE_DIR_NODE:     return nodeGraph.CreateRemoveDirNode( name );
-        case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
-        case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
-        case Node::TEXT_FILE_NODE:      return nodeGraph.CreateTextFileNode( name );
-        case Node::LIST_DEPENDENCIES_NODE: return nodeGraph.CreateListDependenciesNode( name );
-        case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
-    }
-
-    #if defined( __GNUC__ ) || defined( _MSC_VER )
-        // GCC and incorrectly reports reaching end of non-void function (as of GCC 7.3.0)
-        // MSVC incorrectly reports reaching end of non-void function (as of VS 2017)
-        return nullptr;
-    #endif
-}
-
 // Load
 //------------------------------------------------------------------------------
 /*static*/ Node * Node::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
@@ -378,11 +335,11 @@ void Node::SetLastBuildTime( uint32_t ms )
     PROFILE_SECTION( Node::GetTypeName( (Type)nodeType ) );
 
     // Name of node
-    AStackString<> name;
+    AString name;
     VERIFY( stream.Read( name ) );
 
     // Create node
-    Node * n = CreateNode( nodeGraph, (Type)nodeType, name );
+    Node * n = nodeGraph.CreateNode( (Type)nodeType, Move( name ) );
     ASSERT( n );
 
     // Early out for FileNode
@@ -398,7 +355,7 @@ void Node::SetLastBuildTime( uint32_t ms )
     // Build time
     uint32_t lastTimeToBuild;
     VERIFY( stream.Read( lastTimeToBuild ) );
-    n->SetLastBuildTime( lastTimeToBuild );    
+    n->SetLastBuildTime( lastTimeToBuild );
 
     // Deserialize properties
     Deserialize( stream, n, *n->GetReflectionInfoV() );
@@ -756,10 +713,10 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // SetName
 //------------------------------------------------------------------------------
-void Node::SetName( const AString & name )
+void Node::SetName( AString && name )
 {
-    m_Name = name;
-    m_NameCRC = CRC32::CalcLower( name );
+    m_NameHash = CalcNameHash( name );
+    m_Name = Move( name );
 }
 
 // ReplaceDummyName
@@ -1088,19 +1045,29 @@ void Node::ReplaceDummyName( const AString & newName )
     NodeGraph::CleanPath( path, outFixedPath );
 }
 
+// CalcNameHash
+//------------------------------------------------------------------------------
+/*static*/ uint32_t Node::CalcNameHash( const AString & name )
+{
+    // xxHash3 returns a 64 bit hash and we use the lower 32 bits
+    AStackString<> nameLower( name );
+    nameLower.ToLower();
+    return static_cast<uint32_t>( xxHash3::Calc64( nameLower ) );
+}
+
 // CleanMessageToPreventMSBuildFailure
 //------------------------------------------------------------------------------
 /*static*/ void Node::CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg )
 {
     // Search for patterns that MSBuild detects and treats as errors:
-    // 
+    //
     //   <error|warning> <errorCode>: <message>
-    // 
+    //
     // and remove the colon so they are no longer detected:
-    // 
+    //
     //   <error|warning> <errorCode> <message>
-    // 
-    // These can be anywhere in the string, and are case and whitespace insensitive 
+    //
+    // These can be anywhere in the string, and are case and whitespace insensitive
     const char * pos = msg.Get();
     for ( ;; )
     {
@@ -1178,18 +1145,18 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
         // No - return build-wide environment
         return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
     }
-    
+
     // More than one caller could be retrieving the same env string
     // in some cases. For simplicity, we protect in all cases even
     // if we could avoid it as the mutex will not be heavily constested.
     MutexHolder mh( g_NodeEnvStringMutex );
-    
+
     // If we've previously built a custom env string, use it
     if ( inoutCachedEnvString )
     {
         return inoutCachedEnvString;
     }
-    
+
     // Caller owns the memory
     inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
     return inoutCachedEnvString;
@@ -1200,14 +1167,14 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
 void Node::RecordStampFromBuiltFile()
 {
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    
+
     // An external tool might fail to write a file. Higher level code checks for
     // that (see "missing despite success"), so we don't need to do anything here.
     if ( m_Stamp == 0 )
     {
         return;
     }
-    
+
     // On OS X, the 'ar' tool (for making libraries) appears to clamp the
     // modification time of libraries to whole seconds. On HFS/HFS+ file systems,
     // this doesn't matter because the resolution of the file system is 1 second.
@@ -1236,7 +1203,7 @@ void Node::RecordStampFromBuiltFile()
             {
                 // Set to current time
                 FileIO::SetFileLastWriteTimeToNow( m_Name );
-                
+
                 // Re-query the time from the file
                 m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
                 ASSERT( m_Stamp != 0 );

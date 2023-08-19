@@ -11,7 +11,7 @@ Settings {} // use Standard Environment
 
 ObjectList( 'ObjectList' )
 {
-    .CompilerInputFiles = { 
+    .CompilerInputFiles = {
                             '$TestRoot$/Data/TestCache/LightCache_IncludeHierarchy/Folder1/file.cpp'
                             '$TestRoot$/Data/TestCache/LightCache_IncludeHierarchy/Folder2/file.cpp'
                           }
