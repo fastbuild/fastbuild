@@ -613,15 +613,6 @@ void Server::FindNeedyClients()
     }
 
     PROFILE_FUNCTION;
-    
-    // determine job availability
-    int32_t availableJobs = (int32_t)WorkerThreadRemote::GetNumCPUsToUse();
-    if ( availableJobs == 0 )
-    {
-        return;
-    }
-    ++availableJobs; // over request to parallelize building/network transfers
-
 
     // determine job availability
     int32_t availableJobs = (int32_t)WorkerThreadRemote::GetNumCPUsToUse();
