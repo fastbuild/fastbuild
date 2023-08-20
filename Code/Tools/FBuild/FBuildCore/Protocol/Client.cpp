@@ -399,6 +399,12 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
             Process( connection, msg );
             break;
         }
+        case Protocol::MSG_CONNECTION_ACK:
+        {
+            const Protocol::MsgConnectionAck * msg = static_cast< const Protocol::MsgConnectionAck * >( imsg );
+            Process( connection, msg );
+            break;
+        }
         default:
         {
             // unknown message type
@@ -514,6 +520,29 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     PROFILE_SECTION( "MsgJobResultCompressed" );
     const bool compressed = true;
     ProcessJobResultCommon( connection, compressed, payload, payloadSize );
+}
+
+// Process( MsgConnectionAck )
+//------------------------------------------------------------------------------
+void Client::Process( const ConnectionInfo * connection, const Protocol::MsgConnectionAck * msg )
+{
+    PROFILE_SECTION( "MsgConnectionAck" );
+
+    ServerState * ss = (ServerState *)connection->GetUserData();
+    ASSERT( ss );
+
+    // The connection would be dropped and we would not get an ack if the major
+    // protocol version is mismatched.
+    ASSERT( msg->GetProtocolVersionMajor() == Protocol::PROTOCOL_VERSION_MAJOR );
+
+    // Take note of additional server info
+    ss->m_WorkerVersion.Store( msg->GetWorkerVersion() );
+    ss->m_ProtocolVersionMinor.Store( msg->GetProtocolVersionMinor() );
+    DIST_INFO( " - Worker %s is v%u.%u (protocol v%u.%u)\n", ss->m_RemoteName.Get(),
+                                                             (ss->m_WorkerVersion.Load() / 100U),
+                                                             (ss->m_WorkerVersion.Load() % 100U),
+                                                             Protocol::PROTOCOL_VERSION_MAJOR,
+                                                             ss->m_ProtocolVersionMinor.Load() );
 }
 
 // ProcessJobResultCommon

@@ -5,6 +5,10 @@
 //------------------------------------------------------------------------------
 #include "Protocol.h"
 
+// Tools/FBuild
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
+
+// Core
 #include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
@@ -36,6 +40,7 @@
             "RequestFile",
             "File",
             "JobResultCompressed",
+            "ConnectionAck",
         };
         static_assert( ( sizeof( msgNames ) / sizeof(const char *) ) == Protocol::NUM_MESSAGES, "msgNames item count doesn't match NUM_MESSAGES" );
 
@@ -113,6 +118,16 @@ Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )
     {
         AString::Copy( "Unavailable", m_HostName, 12 ); // inc terminator in copy
     }
+}
+
+// MsgConnectionAck
+//------------------------------------------------------------------------------
+Protocol::MsgConnectionAck::MsgConnectionAck()
+    : Protocol::IMessage( Protocol::MSG_CONNECTION_ACK, sizeof( MsgConnectionAck ), false )
+    , m_WorkerVersion( static_cast<uint16_t>( FBUILD_VERSION ) )
+    , m_ProtocolVersionMajor( PROTOCOL_VERSION_MAJOR )
+    , m_ProtocolVersionMinor( PROTOCOL_VERSION_MINOR )
+{
 }
 
 // MsgStatus
