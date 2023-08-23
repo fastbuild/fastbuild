@@ -14,6 +14,7 @@
     #include "Core/Env/WindowsHeader.h"
     #include <lmcons.h>
     #include <stdio.h>
+    #include <sysinfoapi.h>
 #endif
 
 #if defined( __LINUX__ ) || defined( __APPLE__ )
@@ -29,6 +30,8 @@
 
 #if defined( __APPLE__ )
     #include <mach-o/dyld.h>
+    #include <sys/types.h>
+    #include <sys/sysctl.h>
     extern "C"
     {
         int * _NSGetArgc( void );
@@ -38,7 +41,7 @@
 
 // GetNumProcessors
 //------------------------------------------------------------------------------
-/*static*/ uint32_t Env::GetNumProcessors()
+/*static*/ uint32_t Env::GetNumLogicalProcessors()
 {
     #if defined( __WINDOWS__ )
         // Default to NUMBER_OF_PROCESSORS
@@ -111,6 +114,54 @@
     #else
         #error Unknown platform
     #endif
+}
+/*static*/ int32_t Env::GetNumPhysicalProcessors()
+{
+    #if defined( __WINDOWS__ )
+        // Determine the buffer size and then allocate it
+        DWORD returnLength = 0;
+        if ( !GetLogicalProcessorInformationEx(RelationProcessorCore, nullptr, &returnLength)
+             && GetLastError() == ERROR_INSUFFICIENT_BUFFER )
+        {
+            PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX processors = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX)ALLOC( returnLength, alignof( SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX ) );
+            int32_t count = -1;
+            if ( GetLogicalProcessorInformationEx(RelationProcessorCore, (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX)processors, &returnLength) )
+            {
+                // This gives us one variably-sized entry per processor, so skip through it to count
+                DWORD remainingBytes = returnLength;
+                PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX current = processors;
+                count = 0;
+                for ( remainingBytes = returnLength; remainingBytes > 0; )
+                {
+
+                    if ( current->Relationship == RelationProcessorCore )
+                    {
+                        count++;
+                    }
+
+                    remainingBytes -= current->Size;
+                    current = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>( reinterpret_cast<char*>(current) + current->Size );
+                }
+            }
+
+            FREE( processors );
+
+            return count;
+        }
+    #elif defined( __APPLE__ )
+        int32_t numCpus = 0;
+        size_t valueSize = sizeof(numCpus);
+		if ( 0 == sysctlbyname("hw.physicalcpu", &numCpus, &valueSize, nullptr, 0) )
+		{
+			return numCpus;
+		}
+    #elif defined( __LINUX__ )
+        // No implementation
+    #else
+        #error Unknown platform
+    #endif
+
+    return -1;
 }
 
 // GetEnvVariable

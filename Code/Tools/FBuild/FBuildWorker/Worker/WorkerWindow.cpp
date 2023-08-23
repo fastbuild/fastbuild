@@ -130,7 +130,7 @@ WorkerWindow::WorkerWindow()
     m_ResourcesDropDown->Init( 498, 3, 150, 200 );
     {
         // add items
-        const uint32_t numProcessors = Env::GetNumProcessors();
+        const uint32_t numProcessors = Env::GetNumLogicalProcessors();
         AStackString<> buffer;
         for ( uint32_t i = 0; i < numProcessors; ++i )
         {
