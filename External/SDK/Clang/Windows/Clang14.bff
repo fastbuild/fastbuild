@@ -29,7 +29,8 @@
             Print( '----------------------------------------------------------------------' )
             Print( '- Unable to auto-detect Clang - please specify installation manually -' )
             Print( '----------------------------------------------------------------------' )
-            .Clang14_BasePath = .Set_Path_Here    // <-- Set path here
+            .Clang14_BasePath   = .Set_Path_Here    // <-- Set path here
+            .Clang14_Version    = .Set_Version_Here // <-- Set version here
         #endif
     #endif
 #endif
