@@ -298,7 +298,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     if ( msg->GetProtocolVersionMinor() >= 3 )
     {
         // Send Ack to client
-        Protocol::MsgConnectionAck ack;
+        const Protocol::MsgConnectionAck ack;
         ack.Send( connection );
     }
 }
