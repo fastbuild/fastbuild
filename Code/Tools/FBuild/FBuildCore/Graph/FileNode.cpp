@@ -12,6 +12,7 @@
 
 // Core
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 #include <string.h> // for strstr
@@ -68,128 +69,185 @@ void FileNode::HandleWarningsClangCl( Job * job, const AString & name, const ASt
     return HandleWarnings( job, name, data, clangWarningString );
 }
 
-struct StringRoamer
+struct SourceLocation final
 {
-    size_t index = 0;
-    size_t length = 0;
-    const char* position = nullptr;
-
-    bool ReadChar()
-    {
-        if (index >= length)
-        {
-            return false;
-        }
-        ++position;
-        ++index;
-        return true;
-    }
+    AString filename;
+    uint32_t lineNum;
 };
 
-// FindLineInSourceFile - Takes as parameter the preprocessed data and the error line number in the preprocessed file. Return the error line number in the source file.
+// FixSourceLocations - Modify input line numbers taking #line directives into account
 //------------------------------------------------------------------------------
-static void FindLineInSourceFile( Array<uint32_t> & lineNumbersPreprocessedFile, StringRoamer preprocessedDataRoamer, Array<uint32_t> & lineNumbersSourceFile )
+static void FixSourceLocations( Array< SourceLocation > & sourceLocs, const char* source, size_t sourceLen )
 {
-    uint32_t currentLine = 1;
-    uint32_t lastIncludeLine = 1;
-    uint32_t numberOfLastInclude = 0;
-
-    for (uint32_t lineNumber : lineNumbersPreprocessedFile)
+    for ( SourceLocation& sourceLoc : sourceLocs )
     {
-        while (currentLine < lineNumber)
-        {
-            char c = *(preprocessedDataRoamer.position);
-            if (c == '\n')
+        uint32_t currentLine = 1;
+        uint32_t lastIncludeLine = 1;
+        uint32_t numberOfLastInclude = 0;
+
+        const char* cursor = source;
+        const char* end = source + sourceLen;
+
+        auto ReadChar = [&] {
+            if ( cursor >= end )
             {
-                currentLine++;
+                return false;
             }
-            else if (c == '#')
+
+            ++cursor;
+            return true;
+        };
+
+        AStackString filename;
+
+        while ( currentLine < sourceLoc.lineNum )
+        {
+            char c = *cursor;
+            if ( c == '\n' )
             {
-                if (preprocessedDataRoamer.ReadChar()) 
+                ++currentLine;
+            }
+            else if ( c == '#' )
+            {
+                if ( ReadChar() )
                 {
-                    c = *(preprocessedDataRoamer.position);
+                    c = *cursor;
                 }
                 else
                 {
-                    FLOG_ERROR("Could not find the error line number in preprocessed file");
+                    FLOG_ERROR( "Could not find the error line number in preprocessed file" );
                     return;
                 }
+
                 // Avoid #pragma and # in instructions
-                if (c == ' ')
+                if ( c == ' ' )
                 {
                     lastIncludeLine = currentLine;
                     // Skip the empty space
-                    if (preprocessedDataRoamer.ReadChar())
+                    if ( ReadChar() )
                     {
-                        c = *(preprocessedDataRoamer.position);
+                        c = *cursor;
                     }
                     else
                     {
-                        FLOG_ERROR("Could not find the error line number in preprocessed file");
+                        FLOG_ERROR( "Could not find the error line number in preprocessed file" );
                         return;
                     }
+
                     // Find the number after the #
                     numberOfLastInclude = 0;
-                    while (c != ' ')
+                    while ( c != ' ' )
                     {
-                        // Do the conversion from char to uint
                         numberOfLastInclude = numberOfLastInclude * 10 + (c - '0');
-                        if (preprocessedDataRoamer.ReadChar())
+                        if ( ReadChar() )
                         {
-                            c = *(preprocessedDataRoamer.position);
+                            c = *cursor;
                         }
                         else
                         {
-                            FLOG_ERROR("Could not find the error line number in preprocessed file");
+                            FLOG_ERROR( "Could not find the error line number in preprocessed file" );
                             return;
                         }
                     }
+
+                    ++cursor; // skip ' '
+                    ASSERT(*cursor == '"');
+                    ++cursor; // skip '"'
+
+                    const char* filenameBegin = cursor;
+                    while (*cursor != '"')
+                    {
+                        ++cursor;
+                    }
+                    const char* filenameEnd = cursor;
+
+                    filename.Assign(filenameBegin, filenameEnd);
                 }
             }
-            else
+
+            if ( !ReadChar() )
             {
-                // Normal character part of token
-            }
-            if (!preprocessedDataRoamer.ReadChar())
-            {
-                FLOG_ERROR("Could not find the error line number in preprocessed file");
+                FLOG_ERROR( "Could not find the error line number in preprocessed file" );
                 return;
             }
         }
-        lineNumbersSourceFile.Append(lineNumber - (lastIncludeLine + 1) + numberOfLastInclude);
+
+        sourceLoc.lineNum = sourceLoc.lineNum - (lastIncludeLine + 1) + numberOfLastInclude;
+        PathUtils::FixupFilePath( filename );
+        sourceLoc.filename = filename;
     }
 
     return;
 }
 
-// HandleWarningsClangTidy
+// HandleDiagnosticsClangTidy
 //------------------------------------------------------------------------------
-void FileNode::HandleWarningsClangTidy( Job* job, const AString& name, const AString& data )
+void FileNode::HandleDiagnosticsClangTidy( Job* job, const AString& name, const AString& data )
 {
+    if ( data.IsEmpty() )
+    {
+        return;
+    }
+
     AString newWarningMessage;
     // Avoid the client who wants to print remote work to process again the error line number
     // This part of the function workaround this issue : https://github.com/llvm/llvm-project/issues/62405
     if ( ( job->GetDistributionState() == Job::DIST_NONE || job->GetDistributionState() == Job::DIST_BUILDING_LOCALLY ) )
     {
-        // Parse the warning message to get the error line numbers in preprocessed file
-        // The warning message looks like this : "path\to\the\file:errorLineNumber:errorColumnNumber: warning: description of what is wrong"
-        // There may be several concatenated warnings messages
-        // It works both on Windows and Unix systems
-        Array< AString > tokens;
-        data.Tokenize( tokens, ':' );
-        Array< uint32_t > indexes;
-        bool foundWarning = false;
-        for (uint32_t tokenIndex = 2; tokenIndex < tokens.GetSize(); tokenIndex++)
+
+        Array< AString > lines;
+        data.Tokenize( lines, '\n' );
+
+        Array< SourceLocation > sourceLocs;
+        Array< uint32_t > fixupLineIndices;
+        for (uint32_t i = 0; i < lines.GetSize(); ++i)
         {
+            // Parse the warning message to get the error line numbers in preprocessed file
+            // The warning message looks like this : "path\to\the\file:errorLineNumber:errorColumnNumber: warning: description of what is wrong"
+            // There may be several concatenated diagnostic messages
+            // It works both on Windows and Unix systems
+
+            AString& line = lines[i];
+
             // The error line number is just before the "warning" string which is not at the beginning
-            if (tokens[tokenIndex].Find("warning"))
+            const char* diagnosticBegin = nullptr;
+            diagnosticBegin = line.Find(": error:");
+            diagnosticBegin = diagnosticBegin ? diagnosticBegin : line.Find(": warning:");
+            diagnosticBegin = diagnosticBegin ? diagnosticBegin : line.Find(": note:");
+
+            if (diagnosticBegin != nullptr)
             {
-                foundWarning = true;
-                indexes.Append(tokenIndex - 2);
+                fixupLineIndices.Append(i);
+
+                // Skip column number
+                const char* cursor = diagnosticBegin - 1; // skip starting ':'
+                while (*cursor >= '0' && *cursor <= '9')
+                {
+                    --cursor;
+                }
+                ASSERT(*cursor == ':');
+                diagnosticBegin = cursor;
+                --cursor; // skip ':'
+
+                // Read the line number backwards
+                uint32_t lineNumber = 0;
+                uint32_t power = 1;
+                while (*cursor >= '0' && *cursor <= '9')
+                {
+                    uint32_t n = ( *cursor - uint32_t('0') );
+                    lineNumber += power * n;
+                    power *= 10;
+                    --cursor;
+                }
+                ASSERT(*cursor == ':');
+
+                sourceLocs.Append(SourceLocation{ AString(), lineNumber } );
+                // Remove original filename and line number from line, we will add it back later
+                line.Assign( diagnosticBegin, line.GetEnd() );
             }
         }
 
-        if ( foundWarning )
+        if ( !fixupLineIndices.IsEmpty() )
         {
             const char* preprocessedData = static_cast<const char*>( job->GetData() );
             size_t preprocessedDataSize = job->GetDataSize() - job->GetExtraDataSize();
@@ -202,52 +260,39 @@ void FileNode::HandleWarningsClangTidy( Job* job, const AString& name, const ASt
                 preprocessedDataSize = c.GetResultSize() - job->GetExtraDataSize();
             }
 
-            // Get the error line numbers and convert them to an integer
-            Array<uint32_t> errorLineNumbersInteger;
-            for (uint32_t index : indexes) {
-                AString& errorLineNumberString = tokens[index];
-                uint32_t errorLineNumberInteger = 0;
-                if (errorLineNumberString.Scan("%d", &errorLineNumberInteger) != 1)
-                {
-                    FLOG_ERROR("Error: could not convert the error line number from AString to int");
-                    return;
-                }
-                errorLineNumbersInteger.Append(errorLineNumberInteger);
-            }
+            FixSourceLocations( sourceLocs, preprocessedData, preprocessedDataSize );
 
-            // Read buffer to calculate the error line numbers from source file
-            Array<uint32_t> lineNumbersFromSourceFile;
-            StringRoamer preprocessedDataRoamer = { 0, preprocessedDataSize, preprocessedData };
-            FindLineInSourceFile(errorLineNumbersInteger, preprocessedDataRoamer, lineNumbersFromSourceFile);
-
-            // Modify error line numbers
-            uint32_t currentIndex = 0;
-            for (uint32_t index : indexes) {
-                tokens[index].Format("%d", lineNumbersFromSourceFile[currentIndex]);
-                currentIndex++;
-            }
-
-            // Reform the warning message
-            for (uint32_t tokenIndex = 0; tokenIndex < tokens.GetSize(); tokenIndex++)
+            for (uint32_t i = 0, j = 0; i < lines.GetSize(); ++i)
             {
-                newWarningMessage += tokens[tokenIndex];
-                // Does not add ":" after the last element of the message
-                if (tokenIndex < tokens.GetSize() - 1)
+                if ( j < fixupLineIndices.GetSize() && i == fixupLineIndices[j] )
                 {
+                    AString& filename = sourceLocs[j].filename;
+                    if ( !PathUtils::IsFullPath( filename ) )
+                    {
+                        filename = PathUtils::GetFullPath(filename);
+                    }
+                    newWarningMessage += filename;
                     newWarningMessage += ":";
+                    newWarningMessage.AppendFormat( "%d", sourceLocs[j].lineNum );
+
+                    ++j;
                 }
+                newWarningMessage += lines[i];
+                newWarningMessage += "\n";
             }
         }
     }
 
-    constexpr const char* clangTidyWarningString = " warning:";
     if ( newWarningMessage.IsEmpty() )
     {
+        constexpr const char* clangTidyWarningString = " warning:";
         return HandleWarnings( job, name, data, clangTidyWarningString );
     }
     else 
     {
-        return HandleWarnings( job, name, newWarningMessage, clangTidyWarningString );
+        constexpr const char* clangTidyErrorString = " error:";
+        const bool treatAsWarnings = newWarningMessage.Find(clangTidyErrorString) == nullptr;
+        DumpOutput( job, name, newWarningMessage, treatAsWarnings );
     }
 }
 

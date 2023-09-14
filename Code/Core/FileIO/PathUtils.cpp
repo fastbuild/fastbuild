@@ -6,6 +6,10 @@
 #include "PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
+#if defined( __WINDOWS__ )
+#include <windows.h>
+#endif
+
 // Exists
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::IsFolderPath( const AString & path )
@@ -290,4 +294,21 @@
     outRelativeFileName += pathB;
 }
 
+// GetFullPath
+//------------------------------------------------------------------------------
+/*static*/ AString PathUtils::GetFullPath( const AString & fileName )
+{
+#if defined( __WINDOWS__ )
+    char fullPath[MAX_PATH] = { 0 };
+    uint32_t size = GetFullPathName( fileName.Get(), MAX_PATH, fullPath, nullptr );
+    if (size == 0)
+    {
+        return AString{};
+    }
+
+    return AString{ fullPath, fullPath + size };
+#else
+#error TODO
+#endif
+}
 //------------------------------------------------------------------------------

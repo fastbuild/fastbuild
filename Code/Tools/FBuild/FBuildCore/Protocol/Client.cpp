@@ -822,7 +822,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         {
             if ( objectNode->IsWarningsAsErrorsMSVC() == false )
             {
-                FileNode::HandleWarningsClangTidy( job, objectNode->GetName(), msgBuffer );
+                FileNode::HandleDiagnosticsClangTidy( job, objectNode->GetName(), msgBuffer );
             }
         }
         else if ( objectNode->IsClang() || objectNode->IsGCC() )

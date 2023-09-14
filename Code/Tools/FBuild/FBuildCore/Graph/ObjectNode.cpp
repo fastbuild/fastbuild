@@ -2304,8 +2304,10 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
             {
                 if ( IsWarningsAsErrorsMSVC() == false )
                 {
-                    HandleWarningsClangTidy( job, GetName(), ch.GetErr() );
-                    HandleWarningsClangTidy( job, GetName(), ch.GetOut() );
+                    const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+                    const AString & sourceFile = objectNode->GetSourceFile()->GetName();
+                    // Ignore stderr that outputs the number of warnings generated and some help
+                    HandleDiagnosticsClangTidy( job, sourceFile, ch.GetOut() );
                     job->OwnData( nullptr, 0, false ); // Free compressed buffer
                 }
             }
@@ -2417,6 +2419,23 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
     #endif
 
+    bool isCompilerClangTidy = false;
+    if ( m_HandleOutput )
+    {
+        if (job->IsLocal())
+        {
+            isCompilerClangTidy = compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CLANG_TIDY;
+        }
+        else
+        {
+            const AString& file = job->GetToolManifest()->GetFiles()[0].GetName();
+            if (file.EndsWith("clang-tidy") || file.EndsWith("clang-tidy.exe"))
+            {
+                isCompilerClangTidy = true;
+            }
+        }
+    }
+
     if ( m_HandleOutput )
     {
         if ( job->IsLocal() && FBuild::Get().GetOptions().m_ShowCommandOutput )
@@ -2435,7 +2454,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         else
         {
             // output any errors (even if succeeded, there might be warnings)
-            if ( m_Err.IsEmpty() == false )
+            if ( m_Err.IsEmpty() == false && !isCompilerClangTidy ) // clang-tidy's stderr is not interesting
             {
                 const bool treatAsWarnings = true; // change msg formatting
                 DumpOutput( job, name, m_Err, treatAsWarnings );
@@ -2449,7 +2468,17 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // output 'stdout' which may contain errors for some compilers
         if ( m_HandleOutput )
         {
-            DumpOutput( job, name, m_Out );
+            if ( isCompilerClangTidy )
+            {
+                const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+                const Node * sourceFile = objectNode->GetSourceFile();
+
+                HandleDiagnosticsClangTidy( job, sourceFile->GetName(), m_Out);
+            }
+            else
+            {
+                DumpOutput(job, name, m_Out);
+            }
         }
 
         job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );
