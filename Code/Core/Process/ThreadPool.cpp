@@ -124,7 +124,7 @@ ThreadPool::ThreadPoolThread::ThreadPoolThread( uint32_t threadId,
     // Start thread
     AStackString<> threadName;
     threadName.Format( "ThreadPool_%02u", threadId );
-    m_Thread.Start( ThreadFuncWrapper, threadName.Get(), this );
+    m_Thread.Start( ThreadFuncWrapper, threadName.Get(), this, MEGABYTE );
 }
 
 //------------------------------------------------------------------------------
