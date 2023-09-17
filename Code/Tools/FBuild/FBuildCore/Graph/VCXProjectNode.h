@@ -26,6 +26,7 @@ public:
     AString m_ProjectBuildCommand;
     AString m_ProjectRebuildCommand;
     AString m_ProjectCleanCommand;
+    AString m_CompileFileCommand;
     AString m_Output;
     AString m_PreprocessorDefinitions;
     AString m_IncludeSearchPath;

@@ -1091,9 +1091,9 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
     // Check vcxproj
     {
         AStackString proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
-        TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\File.cpp\" />", "" ) == 1 );
-        TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\SubDir\\File.cpp\" />", "" ) == 1 );
-        TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );
+        TEST_ASSERT( proj.Replace( "<ClCompile Include=\"..\\ProjectSourceFiles\\File.cpp\" />", "" ) == 1 );
+        TEST_ASSERT( proj.Replace( "<ClCompile Include=\"..\\ProjectSourceFiles\\SubDir\\File.cpp\" />", "" ) == 1 );
+        TEST_ASSERT( proj.FindI( "<ClCompile " ) == nullptr );
     }
 
     // Check vcxproj.filters
@@ -1162,9 +1162,9 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
     // Check vcxproj
     {
         AStackString proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
-        TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"GeneratedCpp.cpp\" />", "" ) == 1 );
-        TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"SubDir\\GeneratedCpp.cpp\" />", "" ) == 1 );
-        TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );
+        TEST_ASSERT( proj.Replace( "<ClCompile Include=\"GeneratedCpp.cpp\" />", "" ) == 1 );
+        TEST_ASSERT( proj.Replace( "<ClCompile Include=\"SubDir\\GeneratedCpp.cpp\" />", "" ) == 1 );
+        TEST_ASSERT( proj.FindI( "<ClCompile " ) == nullptr );
     }
 
     // Check vcxproj.filters

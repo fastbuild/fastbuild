@@ -141,13 +141,13 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             }
             if ( fileTypeToUse )
             {
-                WriteF( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
+                WriteF( "    <ClCompile Include=\"%s\">\n", fileName.Get() );
                 WriteF( "        <FileType>%s</FileType>\n", fileTypeToUse );
-                Write( "    </CustomBuild>\n" );
+                Write( "    </ClCompile>\n" );
             }
             else
             {
-                WriteF( "    <CustomBuild Include=\"%s\" />\n", fileName.Get() );
+                WriteF( "    <ClCompile Include=\"%s\" />\n", fileName.Get() );
             }
         }
         Write( "  </ItemGroup>\n" );
@@ -431,6 +431,14 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WritePGItem( "DeploymentType", config.m_DeploymentType );
                 WritePGItem( "DeploymentFiles", config.m_DeploymentFiles );
                 Write( "    </Deploy>\n" );
+            }
+            if ( !config.m_CompileFileCommand.IsEmpty() )
+            {
+                AString compileFileCommand( config.m_CompileFileCommand );
+                compileFileCommand.Replace( "%1", "$(SelectedFiles)" );
+                Write( "    <NMakeCompile>\n" );
+            	WritePGItem( "NMakeCompileFileCommandLine", compileFileCommand );
+                Write( "    </NMakeCompile>\n" );
             }
             Write( "  </ItemDefinitionGroup>\n" );
         }
