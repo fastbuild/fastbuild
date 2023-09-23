@@ -1423,6 +1423,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
                        " - File: '%s'\n"
                        " - Key : %s\n",
                        m_Name.Get(), cacheFileName.Get() );
+            cache->FreeMemory( cacheData, cacheDataSize );
             return false;
         }
         const size_t uncompressedDataSize = buffer.GetDataSize();
@@ -1439,8 +1440,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         {
             if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
             {
-                cache->FreeMemory( cacheData, cacheDataSize );
                 FLOG_ERROR( "Failed to write local file during cache retrieval '%s'", fileNames[ i ].Get() );
+                cache->FreeMemory( cacheData, cacheDataSize );
                 return false;
             }
 
@@ -1450,8 +1451,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             // set the time on the local file
             if ( timeSetOK == false )
             {
-                cache->FreeMemory( cacheData, cacheDataSize );
                 FLOG_ERROR( "Failed to set timestamp after cache hit. Error: %s Target: '%s'", LAST_ERROR_STR, fileNames[ i ].Get() );
+                cache->FreeMemory( cacheData, cacheDataSize );
                 return false;
             }
         }
