@@ -171,19 +171,6 @@ void FileNode::HandleWarningsClangTidy( Job* job, const AString& name, const ASt
     // This part of the function workaround this issue : https://github.com/llvm/llvm-project/issues/62405
     if ( ( job->GetDistributionState() == Job::DIST_NONE || job->GetDistributionState() == Job::DIST_BUILDING_LOCALLY ) )
     {
-        // Get preprocessed file data in a buffer
-        const char* preprocessedData = static_cast<const char*>( job->GetData() );
-        size_t preprocessedDataSize = job->GetDataSize() - job->GetExtraDataSize();
-
-        // Handle compressed data
-        Compressor c; // scoped here so we can access decompression buffer
-        if ( job->IsDataCompressed() )
-        {
-            VERIFY( c.Decompress( preprocessedData ) );
-            preprocessedData = static_cast<const char*>( c.GetResult() );
-            preprocessedDataSize = c.GetResultSize() - job->GetExtraDataSize();
-        }
-
         // Parse the warning message to get the error line numbers in preprocessed file
         // The warning message looks like this : "path\to\the\file:errorLineNumber:errorColumnNumber: warning: description of what is wrong"
         // There may be several concatenated warnings messages
@@ -204,6 +191,17 @@ void FileNode::HandleWarningsClangTidy( Job* job, const AString& name, const ASt
 
         if ( foundWarning )
         {
+            const char* preprocessedData = static_cast<const char*>( job->GetData() );
+            size_t preprocessedDataSize = job->GetDataSize() - job->GetExtraDataSize();
+
+            Compressor c;
+            if ( job->IsDataCompressed() )
+            {
+                VERIFY( c.Decompress( preprocessedData ) );
+                preprocessedData = static_cast<const char*>( c.GetResult() );
+                preprocessedDataSize = c.GetResultSize() - job->GetExtraDataSize();
+            }
+
             // Get the error line numbers and convert them to an integer
             Array<uint32_t> errorLineNumbersInteger;
             for (uint32_t index : indexes) {
