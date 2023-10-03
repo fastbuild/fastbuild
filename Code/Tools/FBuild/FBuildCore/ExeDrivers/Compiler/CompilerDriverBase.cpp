@@ -134,6 +134,13 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
 {
 }
 
+// AddPreliminaryArgs_Common
+//------------------------------------------------------------------------------
+/*virtual*/ void CompilerDriverBase::AddPreliminaryArgs( bool /*isLocal*/,
+                                                         Args & /*outFullArgs*/ ) const
+{
+}
+
 // StripTokenWithArg
 //------------------------------------------------------------------------------
 /*static*/ bool CompilerDriverBase::StripTokenWithArg( const char * tokenToCheckFor,

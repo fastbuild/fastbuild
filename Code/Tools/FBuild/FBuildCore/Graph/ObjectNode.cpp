@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/Cache/ICache.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriverBase.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CL.h"
+#include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_ClangTidy.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CodeWarriorWii.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CUDA.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_GCCClang.h"
@@ -1776,6 +1777,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     driver->SetForceColoredDiagnostics( forceColoredDiagnostics );
     driver->SetUseSourceMapping( ( useSourceMapping && job->IsLocal() ) ? GetCompiler()->GetSourceMapping() : AString::GetEmpty() );
 
+    driver->AddPreliminaryArgs( job->IsLocal(), fullArgs );
+
     // Adjust args for as needed for the given compiler
     const size_t numTokens = tokens.GetSize();
     for ( size_t i = 0; i < numTokens; ++i )
@@ -1783,14 +1786,6 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // current token
         const AString & token = tokens[ i ];
         const AString & nextToken = ( i < ( numTokens - 1 ) ) ? tokens[ i + 1 ] : AString::GetEmpty();
-
-        if ( token.BeginsWith( "--config-file=" ) )
-        {
-            fullArgs += "--config-file=";
-            fullArgs += overrideSrcFile;
-            fullArgs += ".config.yaml ";
-            continue;
-        }
 
         // Handle Preprocessor args adjustment
         if ( ( pass == PASS_PREPROCESSOR_ONLY ) && driver->ProcessArg_PreprocessorOnly( token, i, nextToken, fullArgs ) )
@@ -2921,6 +2916,7 @@ void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
     else if ( flags.IsCUDANVCC() )                  { outDriver = FNEW( CompilerDriver_CUDA() ); }
     else if ( flags.IsCodeWarriorWii() )            { outDriver = FNEW( CompilerDriver_CodeWarriorWii() ); }
     else if ( flags.IsGreenHillsWiiU() )            { outDriver = FNEW( CompilerDriver_GreenHillsWiiU() ); }
+    else if ( flags.IsClangTidy() )                 { outDriver = FNEW( CompilerDriver_ClangTidy() ); }
     else                                            { outDriver = FNEW( CompilerDriver_Generic() ); }
 
     outDriver->Init( this, remoteSourceRoot );
