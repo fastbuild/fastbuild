@@ -136,6 +136,16 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 .PackagePath,                   // (optional) Path to package to debug
 .AdditionalSymbolSearchPaths,   // (optional) Additional symbol search paths for debugging
 .AndroidApkLocation             // (optional) Location of APK for Android Game Development Extension
+.AndroidDebugComponent          // (optional) Debug component for Android Game Development Extension         
+.AndroidDebugTarget             // (optional) Debug target for Android Game Development Extension
+.AndroidJdb                     // (optional) JDB for Android Game Development Extension
+.AndroidLldbPostAttachCommands  // (optional) LLDB post attach cmds for Android Game Development Extension
+.AndroidLldbStartupCommands     // (optional) LLDB startup cmds for Android Game Development Extension
+.AndroidPostApkInstallCommands  // (optional) Post APK install cmds for Android Game Development Extension
+.AndroidPreApkInstallCommands   // (optional) Pre APK install cmds for Android Game Development Extension
+.AndroidSymbolDirectories       // (optional) Symbol dirs for Android Game Development Extension
+.AndroidWaitForDebugger         // (optional) Wait for Debugger for Android Game Development Extension
+.LaunchFlags                    // (optional) Launch flags for Android Game Development Extension
 
 // Misc
 .PlatformToolset                // (optional) Specify PlatformToolset.
@@ -576,7 +586,37 @@ build configuration), but can be explicitily set via .LocalDebuggerCommand if de
       <p>Path to additional symbols to be used when debugging.</p>
 <hr>
       <p><b>AndroidApkLocation</b> - String - (Optional)</p>
-      <p>Location of APK for Android Game Development Extension</p>
+      <p>Location of APK for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidDebugComponent</b> - String - (Optional)</p>
+      <p>Debug component for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidDebugTarget</b> - String - (Optional)</p>
+      <p>Debug target for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidJdb</b> - String - (Optional)</p>
+      <p>JDB for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidLldbPostAttachCommands</b> - String - (Optional)</p>
+      <p>LLDB post attach commands for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidLldbStartupCommands</b> - String - (Optional)</p>
+      <p>LLDB startup commands for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidPostApkInstallCommands</b> - String - (Optional)</p>
+      <p>Post APK install commands for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidPreApkInstallCommands</b> - String - (Optional)</p>
+      <p>Pre APK install commands for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidSymbolDirectories</b> - String - (Optional)</p>
+      <p>Symbol dirs for Android Game Development Extension.</p>
+<hr>
+      <p><b>AndroidWaitForDebugger</b> - String - (Optional)</p>
+      <p>Wait for Debugger for Android Game Development Extension.</p>
+<hr>
+      <p><b>LaunchFlags</b> - String - (Optional)</p>
+      <p>Launch flags for Android Game Development Extension.</p>
 <hr>
 
       <p><b>PlatformToolset</b> - String - (Optional)</p>
