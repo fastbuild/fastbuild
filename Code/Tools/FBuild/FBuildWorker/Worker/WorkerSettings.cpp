@@ -31,14 +31,23 @@ WorkerSettings::WorkerSettings()
     , m_SettingsWriteTime( 0 )
     , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
 {
-    // half CPUs available to use by default
-    const uint32_t numCPUs = Env::GetNumProcessors();
-    m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
+    // default to using just the physical cores
+    const int32_t physicalProcessors = Env::GetNumPhysicalProcessors();
+    if ( physicalProcessors > 0 )
+    {
+        m_NumCPUsToUse = (uint32_t)physicalProcessors;
+    }
+    else
+    {
+        // half the logical CPUs available if we can't retrieve the physical cores
+        const uint32_t numCPUs = Env::GetNumLogicalProcessors();
+        m_NumCPUsToUse = Math::Max< uint32_t >(1, numCPUs / 2);
+    }
 
     Load();
 
     // handle CPU downgrade
-    m_NumCPUsToUse = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUse );
+    m_NumCPUsToUse = Math::Min( Env::GetNumLogicalProcessors(), m_NumCPUsToUse );
 }
 
 // DESTRUCTOR

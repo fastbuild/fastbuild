@@ -64,7 +64,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         #endif
         if ( token.BeginsWith( "-cpus=" ) )
         {
-            const int32_t numCPUs = (int32_t)Env::GetNumProcessors();
+            const int32_t numCPUs = (int32_t)Env::GetNumLogicalProcessors();
             int32_t num( 0 );
             if ( AString::ScanS( token.Get() + 6, "%i", &num ) == 1 )
             {

@@ -28,8 +28,16 @@ FBuildOptions::FBuildOptions()
     //m_ShowInfo = true; // uncomment this to enable spam when debugging
 #endif
 
-    // Default to NUMBER_OF_PROCESSORS
-    m_NumWorkerThreads = Env::GetNumProcessors();
+    // Default to physical cores, fall back to logical cores
+    const int32_t physicalProcessors = Env::GetNumPhysicalProcessors();
+    if ( physicalProcessors > 0 )
+    {
+        m_NumWorkerThreads = (uint32_t)physicalProcessors;
+    }
+    else
+    {
+        m_NumWorkerThreads = Env::GetNumLogicalProcessors();
+    }
 
     // Default working dir is the system working dir
     AStackString<> workingDir;
@@ -304,6 +312,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                     m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
                 #endif
                 continue;
+            }
+            else if ( thisArg == "-useallcores" )
+            {
+                m_NumWorkerThreads = Env::GetNumLogicalProcessors();
             }
             else if ( thisArg.BeginsWith( "-j" ) &&
                       ( thisArg.Scan( "-j%u", &m_NumWorkerThreads ) == 1 ) )

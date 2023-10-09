@@ -423,6 +423,16 @@ void FBuild::SaveDependencyGraph( MemoryStream & stream, const char* nodeGraphDB
         WorkerThread::CreateThreadLocalTmpDir();
     }
 
+    const int32_t numPhysicalCores = Env::GetNumPhysicalProcessors();
+    if ( numPhysicalCores > 0 )
+    {
+        OUTPUT( "Using %u local worker threads (detected %d physical cores, %u logical cores)\n", m_Options.m_NumWorkerThreads, numPhysicalCores, Env::GetNumLogicalProcessors() );
+    }
+    else
+    {
+        OUTPUT( "Using %u local worker threads (detected %u logical cores)\n", m_Options.m_NumWorkerThreads, Env::GetNumLogicalProcessors() );
+    }
+
     if ( BuildProfiler::IsValid() )
     {
         BuildProfiler::Get().StartMetricsGathering();

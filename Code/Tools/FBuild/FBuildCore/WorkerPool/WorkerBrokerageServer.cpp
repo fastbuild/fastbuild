@@ -150,7 +150,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                 buffer.AppendFormat( "IPv4 Address: %s\n", m_IPAddress.Get() );
 
                 // CPU Thresholds
-                static const uint32_t numProcessors = Env::GetNumProcessors();
+                static const uint32_t numProcessors = Env::GetNumLogicalProcessors();
                 buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
 
                 // Memory Threshold

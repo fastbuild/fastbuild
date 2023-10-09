@@ -28,7 +28,10 @@ public:
     static inline const char * GetPlatformName( Platform platform );
     static inline const char * GetPlatformName() { return GetPlatformName( GetPlatform() ); }
 
-    static uint32_t GetNumProcessors();
+    // Returns the number of logical processors (including hyperthreading cores)
+    static uint32_t GetNumLogicalProcessors();
+    // Returns the number of physical processors (cores) on the machine, or -1 if it can't be determined
+    static int32_t GetNumPhysicalProcessors();
 
     static bool GetEnvVariable( const char * envVarName, AString & envVarValue );
     static bool SetEnvVariable( const char * envVarName, const AString & envVarValue );
