@@ -28,6 +28,16 @@ public:
     static inline const char * GetPlatformName( Platform platform );
     static inline const char * GetPlatformName() { return GetPlatformName( GetPlatform() ); }
 
+    class ProcessorInfo
+    {
+    public:
+        ProcessorInfo();
+
+        uint32_t mNumCores = 0;     // Logical CPU cores
+        uint32_t mNumPCores = 0;    // "Performance" cores
+        uint32_t mNumECores = 0;    // "Efficiency" cores
+    };
+    static const ProcessorInfo& GetProcessorInfo();
     static uint32_t GetNumProcessors();
 
     static bool GetEnvVariable( const char * envVarName, AString & envVarValue );
