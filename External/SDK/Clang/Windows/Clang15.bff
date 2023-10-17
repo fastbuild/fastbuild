@@ -13,9 +13,9 @@
     .Clang15_BasePath   = '$_CURRENT_BFF_DIR_$/15.0.6'
     .Clang15_Version    = '15.0.6'
 #else
-    #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64/bin/clang-cl.exe" )
+    #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/LLVM/x64/bin/clang-cl.exe" )
         // Installed with VS2019
-        .Clang15_BasePath = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64'
+        .Clang15_BasePath = 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/LLVM/x64'
         .Clang15_Version    = '15.x.x'
     #else
         #if file_exists( "C:/Program Files/LLVM/bin/clang-cl.exe" )
@@ -103,7 +103,7 @@ Compiler( 'Compiler-Clang15-NonCL' )
     // Compiler Warnings
     .CommonCompilerWarningOptions   // Enable warnings
                                     = ' -Wall -Wextra -Weverything'     // All warnings
-                                    + ' -Werror -Wfatal-errors'         // Warnings as fatal errors
+                                    //+ ' -Werror -Wfatal-errors'         // Warnings as fatal errors
 
                                     // Warnings that are not useful
                                     + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]

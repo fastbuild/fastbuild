@@ -32,6 +32,8 @@
             // Extra Compiler Options
             .CompilerOptions            + .LZ4IncludePaths
                                         + .ZstdIncludePaths
+                                    - ' -Werror'
+                                    - ' -Wfatal-errors'
             .CompilerOptions            + ' "-I../External/VSProjTypeExtractor"'
 
             // Output

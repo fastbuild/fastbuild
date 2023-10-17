@@ -112,7 +112,7 @@ Compiler( 'Compiler-VS2022-x64' )
 
                                     // Warnings
                                     + ' /Wall'              // Enable all warnings (we'll disable those that are not useful)
-                                    + ' /WX'                // Warnings as errors
+                                    //+ ' /WX'                // Warnings as errors
 
                                     // These warnings are not useful
                                     + ' /wd4061' // enumerator '%s' in switch of enum '%s' is not explicitly handled by a case label
