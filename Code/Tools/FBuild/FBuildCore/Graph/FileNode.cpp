@@ -82,94 +82,66 @@ static void FixSourceLocations( Array< SourceLocation > & sourceLocs, const char
     for ( SourceLocation& sourceLoc : sourceLocs )
     {
         uint32_t currentLine = 1;
+        bool startOfLine = true;
         uint32_t lastIncludeLine = 1;
         uint32_t numberOfLastInclude = 0;
 
         const char* cursor = source;
         const char* end = source + sourceLen;
 
-        auto ReadChar = [&] {
-            if ( cursor >= end )
-            {
-                return false;
-            }
-
-            ++cursor;
-            return true;
-        };
-
         AStackString filename;
 
-        while ( currentLine < sourceLoc.lineNum )
+        while ( currentLine < sourceLoc.lineNum && cursor < end )
         {
-            char c = *cursor;
-            if ( c == '\n' )
+            if ( *cursor == '\n' )
             {
                 ++currentLine;
+                if ( *( cursor - 2 ) == '\r' )
+                {
+                    // somehow `clang-cl /E /C` emits double '\r' in comments and counts that as two lines
+                    ++currentLine;
+                }
+                startOfLine = true;
             }
-            else if ( c == '#' )
+            else
             {
-                if ( ReadChar() )
+                if (*cursor == '#' && startOfLine)
                 {
-                    c = *cursor;
-                }
-                else
-                {
-                    FLOG_ERROR( "Could not find the error line number in preprocessed file" );
-                    return;
-                }
+                    ++cursor; // skip '#'
 
-                // Avoid #pragma and # in instructions
-                if ( c == ' ' )
-                {
-                    lastIncludeLine = currentLine;
-                    // Skip the empty space
-                    if ( ReadChar() )
+                    // Avoid #pragma and # in instructions
+                    if (*cursor == ' ')
                     {
-                        c = *cursor;
-                    }
-                    else
-                    {
-                        FLOG_ERROR( "Could not find the error line number in preprocessed file" );
-                        return;
-                    }
+                        lastIncludeLine = currentLine;
+                        ++cursor; // skip ' '
 
-                    // Find the number after the #
-                    numberOfLastInclude = 0;
-                    while ( c != ' ' )
-                    {
-                        numberOfLastInclude = numberOfLastInclude * 10 + (c - '0');
-                        if ( ReadChar() )
+                        // Find the number after the #
+                        numberOfLastInclude = 0;
+                        while (*cursor != ' ')
                         {
-                            c = *cursor;
+                            numberOfLastInclude = numberOfLastInclude * 10 + (*cursor - '0');
+                            ++cursor;
                         }
-                        else
+
+                        ++cursor; // skip ' '
+                        ASSERT(*cursor == '"');
+                        ++cursor; // skip '"'
+
+                        const char* filenameBegin = cursor;
+                        while (*cursor != '"')
                         {
-                            FLOG_ERROR( "Could not find the error line number in preprocessed file" );
-                            return;
+                            ++cursor;
                         }
+                        const char* filenameEnd = cursor;
+
+                        filename.Assign(filenameBegin, filenameEnd);
                     }
-
-                    ++cursor; // skip ' '
-                    ASSERT(*cursor == '"');
-                    ++cursor; // skip '"'
-
-                    const char* filenameBegin = cursor;
-                    while (*cursor != '"')
-                    {
-                        ++cursor;
-                    }
-                    const char* filenameEnd = cursor;
-
-                    filename.Assign(filenameBegin, filenameEnd);
                 }
+
+				startOfLine = false;
             }
 
-            if ( !ReadChar() )
-            {
-                FLOG_ERROR( "Could not find the error line number in preprocessed file" );
-                return;
-            }
+			++cursor;
         }
 
         sourceLoc.lineNum = sourceLoc.lineNum - (lastIncludeLine + 1) + numberOfLastInclude;
