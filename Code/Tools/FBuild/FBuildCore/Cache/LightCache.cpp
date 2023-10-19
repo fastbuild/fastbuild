@@ -716,7 +716,7 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
         }
     }
 
-    if ( file == nullptr )
+    if ( file == nullptr || file->m_Exists == false )
     {
         // Include not found. This is ok because:
         // a) The file might not be needed. If the include is within an inactive part of the file
