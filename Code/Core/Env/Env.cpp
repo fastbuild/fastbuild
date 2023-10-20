@@ -81,7 +81,7 @@ Env::ProcessorInfo::ProcessorInfo()
         if ( cpuIdInfo[3] & ( 1 << 15 ) ) // Bit 15 in EDX
         {
             // Query core type
-            __cpuid( cpuIdInfo, 0x07 ); // Core Type
+            __cpuid( cpuIdInfo, 0x1A ); // Core Type
 
             // Determine if this core is a PCore or ECore by checking
             // the top 8 bits in EAX
