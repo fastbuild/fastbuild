@@ -752,7 +752,7 @@ void TestArray::SortBig() const
         }
 
         // Sort
-        Timer t;
+        const Timer t;
         bigArray.Sort();
         const float t1 = t.GetElapsed();
         CheckConsistency( bigArray );
@@ -783,7 +783,7 @@ void TestArray::SortBig() const
         TEST_MEMORY_SNAPSHOT(s1);
 
         // Sort
-        Timer t;
+        const Timer t;
         bigArray.Sort();
         const float t1 = t.GetElapsed();
         CheckConsistency( bigArray );

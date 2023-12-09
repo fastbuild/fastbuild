@@ -676,6 +676,7 @@ void Array< T >::Grow()
     const size_t currentCapacity = GetCapacity();
     const size_t size = GetSize();
     const size_t newCapacity = ( currentCapacity + ( currentCapacity >> 1 ) + 1 );
+    ASSERT( newCapacity <= CAPACITY_MASK );
     T * newMem = Allocate( newCapacity );
 
     T * src = m_Begin;
@@ -700,6 +701,7 @@ template < class T >
 T * Array< T >::Allocate( size_t numElements ) const
 {
     ASSERT( m_Resizeable );
+    ASSERT( numElements <= CAPACITY_MASK );
     constexpr size_t align = __alignof( T ) > sizeof( void * ) ? __alignof( T ) : sizeof( void * );
     return static_cast< T * >( ALLOC( sizeof( T ) * numElements, align ) );
 }

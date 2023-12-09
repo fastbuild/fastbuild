@@ -8,13 +8,13 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //
-#if file_exists( "2022/Community/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
+#if file_exists( "2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe" )
     //
-    // Use vendorized toolchain
+    // Use vendorized toolchain - v17.8.3
     //
     .VS2022_BasePath        = '$_CURRENT_BFF_DIR_$/2022/Community/VC'
-    .VS2022_Version         = '14.35.32215'
-    .VS2022_MSC_VER         = '1935'
+    .VS2022_Version         = '14.38.33130'
+    .VS2022_MSC_VER         = '1938'
 #else
     //
     // Use environment variable if available (VS Command Prompt)
@@ -24,25 +24,25 @@
         #import VCToolsVersion
         .VS2022_BasePath        = .VCINSTALLDIR
         .VS2022_Version         = .VCToolsVersion
-        .VS2022_MSC_VER         = '1935' // NOTE: This cannot be detected and may be incorrect
+        .VS2022_MSC_VER         = '1938' // NOTE: This cannot be detected and may be incorrect
     #else
         //
         // Use Visual Studio installation
         //
-        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
-            // v17.1.4
+        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe" )
+            // v17.8.3
             .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC'
-            .VS2022_Version         = '14.35.32215'
-            .VS2022_MSC_VER         = '1935'
+            .VS2022_Version         = '14.38.33130'
+            .VS2022_MSC_VER         = '1938'
         #else
             //
             // Use Visual Studio 2022 Enterprise installation (used by GitHub Actions)
             //
-            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
-                // v17.1.4
+            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe" )
+                // v17.8.3
                 .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC'
-                .VS2022_Version         = '14.35.32215'
-                .VS2022_MSC_VER         = '1935'
+                .VS2022_Version         = '14.38.33130'
+                .VS2022_MSC_VER         = '1938'
             #else
                 //
                 // Failed
@@ -113,6 +113,9 @@ Compiler( 'Compiler-VS2022-x64' )
                                     // Warnings
                                     + ' /Wall'              // Enable all warnings (we'll disable those that are not useful)
                                     + ' /WX'                // Warnings as errors
+
+                                    // These warnings need further investigation
+                                    + ' /wd5267' // definition of implicit copy constructor for '%s' is deprecated because it has a user-provided destructor
 
                                     // These warnings are not useful
                                     + ' /wd4061' // enumerator '%s' in switch of enum '%s' is not explicitly handled by a case label
@@ -230,6 +233,7 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd26492' // Don't use const_cast to cast away const or volatile (type.3).
                                     + ' /wd26493' // Don't use C-style casts (type.4).
                                     + ' /wd26826' // Don't use C-style variable arguments (f.55).
+                                    + ' /wd26831' // Allocation size might be the result of a numerical overflow.
 ]
 
 //------------------------------------------------------------------------------
