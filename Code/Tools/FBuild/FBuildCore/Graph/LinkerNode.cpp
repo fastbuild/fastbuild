@@ -924,25 +924,48 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
 
 // IsStartOfLinkerArg
 //------------------------------------------------------------------------------
-/*static*/ bool LinkerNode::IsStartOfLinkerArg( const AString & token, const char * arg )
+/*static*/ bool LinkerNode::IsStartOfLinkerArg( const AString & token, const char * arg, bool * foundLeadingQuote )
 {
     ASSERT( token.IsEmpty() == false );
 
-    // Args start with -
-    if ( token[0] != '-' )
+    const char * tokenString = token.Get();
+    uint32_t tokenLength = token.GetLength();
+
+    const bool hasLeadingQuote = token[ 0 ] == '"';
+    if ( foundLeadingQuote )
     {
-        return false;
+        *foundLeadingQuote = hasLeadingQuote;
+    }
+
+    // Args start with -
+    if ( hasLeadingQuote || tokenString[ 0 ] != '-' )
+    {
+        // But could be wrapped in quotes, so try again to see if we find one
+        if ( hasLeadingQuote && tokenLength > 1 )
+        {
+            ++tokenString;
+            --tokenLength;
+
+            if ( tokenString[ 0 ] != '-' )
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
 
     // Length check to early out
     const size_t argLen = AString::StrLen( arg );
-    if ( ( token.GetLength() - 1 ) < argLen )
+    if ( ( tokenLength - 1 ) < argLen )
     {
         return false; // token is too short
     }
 
     // Args are case-sensitive
-    return ( AString::StrNCmp( token.Get() + 1, arg, argLen ) == 0 );
+    return ( AString::StrNCmp( tokenString + 1, arg, argLen ) == 0 );
 }
 
 // EmitCompilationMessage
@@ -1248,8 +1271,8 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     {
         bool found = false;
 
-        // is the file a full path?
-        if ( ( itL->GetLength() > 2 ) && ( (*itL)[ 1 ] == ':' ) )
+        // is the file a full or relative path?
+        if ( PathUtils::IsFullPath( *itL ) || ( itL->Find( NATIVE_SLASH ) != nullptr ) || ( itL->Find( OTHER_SLASH ) != nullptr ) )
         {
             // check file exists in current location
             if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, AString::GetEmpty(), *itL, found ) )
@@ -1421,6 +1444,11 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
                                              bool canonicalizePath,
                                              bool isMSVC )
 {
+    AStackString<> tokenNoQuotes;
+
+    const char * tokenStart = it->Get();
+    const char * tokenEnd = it->GetEnd();
+
     // check for expected arg
     if ( isMSVC )
     {
@@ -1431,15 +1459,23 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     }
     else
     {
-        if ( LinkerNode::IsStartOfLinkerArg( *it, arg ) == false )
+        bool foundLeadingQuote;
+        if ( LinkerNode::IsStartOfLinkerArg( *it, arg, &foundLeadingQuote ) == false )
         {
             return false; // not our arg, not consumed
+        }
+
+        if ( foundLeadingQuote )
+        {
+            Args::StripQuotes( it->Get(), it->GetEnd(), tokenNoQuotes );
+            tokenStart = tokenNoQuotes.Get();
+            tokenEnd = tokenNoQuotes.GetEnd();
         }
     }
 
     // get remainder of token after arg
-    const char * valueStart = it->Get() + AString::StrLen( arg ) + 1;
-    const char * valueEnd = it->GetEnd();
+    const char * valueStart = tokenStart + AString::StrLen( arg ) + 1;
+    const char * valueEnd = tokenEnd;
 
     // if no remainder, arg value is next token
     if ( valueStart == valueEnd )
