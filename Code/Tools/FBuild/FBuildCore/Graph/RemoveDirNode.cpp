@@ -29,7 +29,6 @@ REFLECT_END( RemoveDirNode )
 //------------------------------------------------------------------------------
 RemoveDirNode::RemoveDirNode()
     : Node( Node::REMOVE_DIR_NODE )
-    , m_RemovePathsRecurse( true )
 {
     m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_RemovePatterns.EmplaceBack( "*" );
@@ -52,7 +51,7 @@ RemoveDirNode::RemoveDirNode()
                                               function,
                                               m_RemovePaths,
                                               m_RemoveExcludePaths,
-                                              m_RemoveExcludeFiles, // unused FilesToExclude
+                                              m_RemoveExcludeFiles,
                                               Array< AString >(), // unused ExcludePatterns
                                               m_RemovePathsRecurse,
                                               false, // Don't include read-only status in hash

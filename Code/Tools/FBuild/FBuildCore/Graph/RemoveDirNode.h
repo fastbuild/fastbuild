@@ -27,7 +27,7 @@ private:
 
     // Exposed Properties
     Array< AString >    m_RemovePaths;
-    bool                m_RemovePathsRecurse;
+    bool                m_RemovePathsRecurse = true;
     Array< AString >    m_RemovePatterns;
     Array< AString >    m_RemoveExcludePaths;
     Array< AString >    m_RemoveExcludeFiles;

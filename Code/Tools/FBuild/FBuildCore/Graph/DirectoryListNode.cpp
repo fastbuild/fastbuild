@@ -104,8 +104,6 @@ protected:
 //------------------------------------------------------------------------------
 DirectoryListNode::DirectoryListNode()
     : Node( Node::DIRECTORY_LIST_NODE )
-    , m_Recursive( true )
-    , m_IncludeReadOnlyStatusInHash( false )
 {
     m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_LastBuildTimeMs = 100;
@@ -115,21 +113,23 @@ DirectoryListNode::DirectoryListNode()
 //------------------------------------------------------------------------------
 /*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
-    // ensure name is correctly formatted
-    //   path|[patterns]|recursive|readonlyflag|[excludePath]
-    ASSERT( m_Name.BeginsWith( m_Path ) );
-    ASSERT( m_Name[ m_Path.GetLength() ] == '|' );
-    ASSERT( m_Patterns.IsEmpty() || ( m_Name.Find( m_Patterns[ 0 ].Get() ) == m_Name.Get() + m_Path.GetLength() + 1 ) );
-    ASSERT( ( m_Recursive && m_Name.Find( "|true|" ) ) ||
-            ( !m_Recursive && m_Name.Find( "|false|" ) ) );
-    ASSERT( ( m_IncludeReadOnlyStatusInHash && m_Name.Find( "|rw|" ) ) ||
-            ( !m_IncludeReadOnlyStatusInHash && m_Name.Find( "||" ) ) );
-
-    // paths must have trailing slash
-    ASSERT( m_Path.EndsWith( NATIVE_SLASH ) );
-
-    // make sure exclusion path has trailing slash if provided
     #if defined( ASSERTS_ENABLED )
+        // ensure name is correctly formatted
+        AStackString<> expectedName;
+        FormatName( m_Path,
+                    &m_Patterns,
+                    m_Recursive,
+                    m_IncludeReadOnlyStatusInHash,
+                    m_ExcludePaths,
+                    m_FilesToExclude,
+                    m_ExcludePatterns,
+                    expectedName );
+        ASSERT( m_Name == expectedName );
+
+        // paths must have trailing slash
+        ASSERT( m_Path.EndsWith( NATIVE_SLASH ) );
+
+        // make sure exclusion path has trailing slash if provided
         for ( const AString & excludePath : m_ExcludePaths )
         {
             ASSERT( excludePath.EndsWith( NATIVE_SLASH ) );
@@ -158,52 +158,25 @@ DirectoryListNode::~DirectoryListNode() = default;
     AStackString<> patternString;
     if ( patterns )
     {
-        const size_t numPatterns = patterns->GetSize();
-        for ( size_t i=0; i<numPatterns; ++i )
-        {
-            if ( i > 0 )
-            {
-                patternString += '<';
-            }
-            patternString += (*patterns)[ i ];
-        }
+        patternString.AppendList( *patterns, '<' );
     }
     result.Format( "%s|%s|%s|%s|", path.Get(),
                                   patternString.Get(),
                                   recursive ? "true" : "false",
                                   includeReadOnlyFlagInHash ? "rw" : "");
 
-    const AString * const end = excludePaths.End();
-    for ( const AString * it = excludePaths.Begin(); it!=end; ++it )
-    {
-        const AString & excludePath = *it;
-        ASSERT( excludePath.EndsWith( NATIVE_SLASH ) );
-        result += excludePath;
-        result += '<';
-    }
+    result.AppendList( excludePaths, '<' );
 
     if ( !excludeFiles.IsEmpty() )
     {
         result += '|';
-        const AString * const endFiles = excludeFiles.End();
-        for ( const AString * itFiles = excludeFiles.Begin(); itFiles != endFiles; ++itFiles )
-        {
-            const AString & excludedFile = *itFiles;
-            result += excludedFile;
-            result += '<';
-        }
+        result.AppendList( excludeFiles, '<' );
     }
 
     if ( !excludePatterns.IsEmpty() )
     {
         result += '|';
-        const AString * const endPatterns = excludePatterns.End();
-        for ( const AString * itPatterns = excludePatterns.Begin(); itPatterns != endPatterns; ++itPatterns )
-        {
-            const AString & excludedPattern = *itPatterns;
-            result += excludedPattern;
-            result += '<';
-        }
+        result.AppendList( excludePatterns, '<' );
     }
 }
 

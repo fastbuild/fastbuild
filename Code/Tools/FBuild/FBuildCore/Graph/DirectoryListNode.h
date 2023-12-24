@@ -52,8 +52,8 @@ private:
     Array< AString > m_ExcludePaths;
     Array< AString > m_FilesToExclude;
     Array< AString > m_ExcludePatterns;
-    bool m_Recursive;
-    bool m_IncludeReadOnlyStatusInHash;
+    bool m_Recursive = true;
+    bool m_IncludeReadOnlyStatusInHash = false;
 
     // Internal State
     Array< FileIO::FileInfo > m_Files;
