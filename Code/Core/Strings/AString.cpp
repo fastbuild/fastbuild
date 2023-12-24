@@ -620,6 +620,33 @@ AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
     return *this;
 }
 
+// AppendList
+//------------------------------------------------------------------------------
+AString & AString::AppendList( const Array<AString> & list, char separator )
+{
+    // Ignore empty lists explicitly to simplify logic below
+    if ( list.IsEmpty() )
+    {
+        return *this;
+    }
+
+    // Determine how many separators will be needed
+    size_t numSeparatorsRemaining = ( list.GetSize() - 1 );
+
+    // Append items with separators
+    for ( const AString & item : list )
+    {
+        Append( item );
+        if ( numSeparatorsRemaining > 0 )
+        {
+            Append( separator );
+            --numSeparatorsRemaining;
+        }
+    }
+
+    return *this;
+}
+
 // Replace ( char, char )
 //------------------------------------------------------------------------------
 uint32_t AString::Replace( char from, char to, uint32_t maxReplaces )

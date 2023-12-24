@@ -464,6 +464,17 @@ void TestAString::Concatenation() const
         a.Append( AStackString<>( "hello" ) );
         TEST_ASSERT( a == "hello" );
     }
+
+    // Arrays
+    {
+        AStackString<> a;
+        StackArray<AString> strings;
+        strings.EmplaceBack( "One" );
+        strings.EmplaceBack( "Two" );
+        strings.EmplaceBack( "Three" );
+        a.AppendList( strings );
+        TEST_ASSERT( a == "One,Two,Three" );
+    }
 }
 
 // EmbeddedNuls
