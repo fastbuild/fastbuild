@@ -35,10 +35,8 @@ MemPoolBlock::~MemPoolBlock()
     #endif
 
     // free pages
-    const void * const * end = m_Pages.End();
-    for ( void ** it = m_Pages.Begin(); it != end; ++it )
+    for ( void * page : m_Pages )
     {
-        void * page = *it;
         FREE( page );
     }
 }

@@ -105,11 +105,9 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     // clean up anything left over from previous runs
     Array< AString > files;
     FileIO::GetFiles( AStackString<>( "../tmp/Test/Distributed" ), AStackString<>( "*.*" ), true, &files );
-    const AString * iter = files.Begin();
-    const AString * const end = files.End();
-    for ( ; iter != end; ++iter )
+    for ( const AString & file : files )
     {
-        FileIO::FileDelete( iter->Get() );
+        FileIO::FileDelete( file.Get() );
     }
 
     if ( !shouldFail )

@@ -549,11 +549,8 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         filesToExcludeCleaned.Append( cleanPath );
     }
 
-    const AString * const  end = paths.End();
-    for ( const AString * it = paths.Begin(); it != end; ++it )
+    for ( const AString & path : paths )
     {
-        const AString & path = *it;
-
         // get node for the dir we depend on
         AStackString<> name;
         DirectoryListNode::FormatName( path,
@@ -702,10 +699,8 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                         const char * inputVarName,
                                         Dependencies & nodes )
 {
-    const AString * const  end = files.End();
-    for ( const AString * it = files.Begin(); it != end; ++it )
+    for ( const AString & file : files )
     {
-        const AString & file = *it;
         if (!GetFileNode( nodeGraph, iter, function, file, inputVarName, nodes ))
         {
             return false; // GetFileNode will have emitted an error
@@ -723,11 +718,8 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                               const char * inputVarName,
                                               Dependencies & nodes )
 {
-    const AString * const  end = objectLists.End();
-    for ( const AString * it = objectLists.Begin(); it != end; ++it )
+    for ( const AString & objectList : objectLists )
     {
-        const AString & objectList = *it;
-
         // get node for the dir we depend on
         Node * node = nodeGraph.FindNode( objectList );
         if ( node == nullptr )
@@ -858,11 +850,10 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     if ( n->GetType() == Node::ALIAS_NODE )
     {
         const AliasNode * an = n->CastTo< AliasNode >();
-        const Dependencies & aNodes = an->GetAliasedNodes();
-        for ( const Dependency * it = aNodes.Begin(); it != aNodes.End(); ++it )
+        for ( const Dependency & dep : an->GetAliasedNodes() )
         {
             // TODO:C by passing as string we'll be looking up again for no reason
-            const AString & subName = it->GetNode()->GetName();
+            const AString & subName = dep.GetNode()->GetName();
 
             if ( !GetNodeList( nodeGraph, iter, function, propertyName, subName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
             {

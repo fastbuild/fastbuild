@@ -193,12 +193,10 @@ XCodeProjectNode::~XCodeProjectNode() = default;
             for ( const FileIO::FileInfo & file : dln->GetFiles() )
             {
                 //filter the file by pattern
-                const AString * pit = m_PatternToExclude.Begin();
-                const AString * const pend = m_PatternToExclude.End();
                 bool keep = true;
-                for ( ; pit != pend; ++pit )
+                for ( const AString & pattern : m_PatternToExclude )
                 {
-                    if ( PathUtils::IsWildcardMatch( pit->Get(), file.m_Name.Get() ) )
+                    if ( PathUtils::IsWildcardMatch( pattern.Get(), file.m_Name.Get() ) )
                     {
                         keep = false;
                         break;

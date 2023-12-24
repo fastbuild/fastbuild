@@ -217,14 +217,12 @@ void JobQueueRemote::CancelJobsWithUserData( void * userData )
     // (we can't delete these now, so we let them complete and delete
     // them upon completion - see FinishedProcessingJob)
     MutexHolder mh( m_InFlightJobsMutex );
-    Job ** it = m_InFlightJobs.Begin();
-    while ( it != m_InFlightJobs.End() )
+    for ( Job * job : m_InFlightJobs )
     {
-        if ( ( *it )->GetUserData() == userData )
+        if ( job->GetUserData() == userData )
         {
-            ( *it )->SetUserData( nullptr );
+            job->SetUserData( nullptr );
         }
-        ++it;
     }
 }
 

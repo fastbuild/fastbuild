@@ -111,10 +111,9 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 {
     // Project Listings
 
-    const VSProjectBaseNode * const * projectsEnd = projects.End();
-    for( VSProjectBaseNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
+    for ( const VSProjectBaseNode * project : projects )
     {
-        AStackString<> projectPath( (*it)->GetName() );
+        const AString & projectPath = project->GetName();
 
         // get project base name only
         const char * lastSlash  = projectPath.FindLast( NATIVE_SLASH );
@@ -130,13 +129,13 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         #endif
 
         // retrieve projectGuid
-        AStackString<> projectGuid( (*it)->GetProjectGuid() );
+        AStackString<> projectGuid( project->GetProjectGuid() );
 
         // Visual Studio expects the GUID to be uppercase
         projectGuid.ToUpper();
 
         // retrieve projectTypeGuid
-        AStackString<> projectTypeGuid( (*it)->GetProjectTypeGuid() );
+        AStackString<> projectTypeGuid( project->GetProjectTypeGuid() );
 
         // Visual Studio expects the GUID to be uppercase
         projectTypeGuid.ToUpper();
@@ -146,11 +145,10 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 
         // Manage dependencies
         Array< AString > dependencyGUIDs( 64, true );
-        const AString & fullProjectPath = (*it)->GetName();
         for ( const SolutionDependency & deps : solutionDependencies )
         {
             // is the set of deps relevant to this project?
-            if ( !deps.m_Projects.Find( fullProjectPath ) )
+            if ( !deps.m_Projects.Find( projectPath ) )
             {
                 continue;
             }
@@ -184,7 +182,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         for ( const SolutionFolder & solutionFolder : solutionFolders )
         {
             // this has to be done here to have the same order of declaration (like visual)
-            if ( solutionFolder.m_Projects.Find( (*it)->GetName() ) )
+            if ( solutionFolder.m_Projects.Find( projectPath ) )
             {
                 // generate a guid for the solution folder
                 AStackString<> solutionFolderGuid;
@@ -286,12 +284,11 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
     Write( "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n" );
 
     // Solution Configurations
-    const SolutionConfig * const end = solutionConfigs.End();
-    for( const SolutionConfig * it = solutionConfigs.Begin() ; it != end ; ++it )
+    for ( const SolutionConfig & solutionConfig : solutionConfigs )
     {
         Write( "\t\t%s|%s = %s|%s\r\n",
-               it->m_SolutionConfig.Get(), it->m_SolutionPlatform.Get(),
-               it->m_SolutionConfig.Get(), it->m_SolutionPlatform.Get() );
+               solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
+               solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get() );
     }
 
     Write( "\tEndGlobalSection\r\n" );
@@ -377,22 +374,20 @@ void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProject
     Write( "\tGlobalSection(NestedProjects) = preSolution\r\n" );
 
     // Write every project to solution folder relationships
-    const AString * const solutionProjectsToFolderEnd = solutionProjectsToFolder.End();
-    for( const AString * it = solutionProjectsToFolder.Begin() ; it != solutionProjectsToFolderEnd ; ++it )
+    for ( const AString & folderRelationship : solutionProjectsToFolder )
     {
-        Write( "%s", it->Get() );
+        Write( "%s", folderRelationship.Get() );
     }
 
     // Write every intermediate path
-    const AString * const solutionFolderPathsEnd = solutionFolderPaths.End();
-    for( const AString * it = solutionFolderPaths.Begin() ; it != solutionFolderPathsEnd ; ++it )
+    for( const AString & solutionFolderPath : solutionFolderPaths )
     {
         // parse solution folder parent path
         AStackString<> solutionFolderParentGuid;
-        const char * lastSlash = it->FindLast( NATIVE_SLASH );
+        const char * lastSlash = solutionFolderPath.FindLast( NATIVE_SLASH );
         if ( lastSlash )
         {
-            AStackString<> solutionFolderParentPath( it->Get(), lastSlash );
+            AStackString<> solutionFolderParentPath( solutionFolderPath.Get(), lastSlash );
             VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderParentGuid, solutionFolderParentPath );
         }
 
@@ -400,7 +395,7 @@ void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProject
         {
             // generate a guid for the solution folder
             AStackString<> solutionFolderGuid;
-            VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, *it );
+            VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, solutionFolderPath );
 
             solutionFolderGuid.ToUpper();
             solutionFolderParentGuid.ToUpper();

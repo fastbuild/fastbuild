@@ -26,7 +26,7 @@ bool BFFFileExists::CheckFile( const AString & fileName )
     if ( found )
     {
         // Yes - return existing result
-        const size_t index = (size_t)( found - m_FileNames.Begin() );
+        const size_t index = m_FileNames.GetIndexOf( found );
         return m_FileExists[ index ];
     }
 

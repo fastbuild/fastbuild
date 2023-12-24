@@ -59,18 +59,13 @@ FunctionCopy::FunctionCopy()
     }
 
     // check sources are not paths
+    for ( const AString & srcFile : sources )
     {
-        const AString * const end = sources.End();
-        for ( const AString * it = sources.Begin(); it != end; ++it )
+        // source must be a file, not a  path
+        if ( PathUtils::IsFolderPath( srcFile ) )
         {
-            const AString & srcFile( *it );
-
-            // source must be a file, not a  path
-            if ( PathUtils::IsFolderPath( srcFile ) )
-            {
-                Error::Error_1105_PathNotAllowed( funcStartIter, this, ".Source", srcFile );
-                return false;
-            }
+            Error::Error_1105_PathNotAllowed( funcStartIter, this, ".Source", srcFile );
+            return false;
         }
     }
 
@@ -89,11 +84,10 @@ FunctionCopy::FunctionCopy()
     // get source node
     Array< Node * > srcNodes;
     {
-        const AString * const end = sources.End();
-        for ( const AString * it = sources.Begin(); it != end; ++it )
+        for ( const AString & source : sources )
         {
 
-            Node * srcNode = nodeGraph.FindNode( *it );
+            Node * srcNode = nodeGraph.FindNode( source );
             if ( srcNode )
             {
                 if ( GetSourceNodes( funcStartIter, srcNode, srcNodes ) == false )
@@ -104,7 +98,7 @@ FunctionCopy::FunctionCopy()
             else
             {
                 // source file not defined by use - assume an external file
-                srcNodes.Append( nodeGraph.CreateNode<FileNode>( *it, funcStartIter ) );
+                srcNodes.Append( nodeGraph.CreateNode<FileNode>( source, funcStartIter ) );
             }
         }
     }

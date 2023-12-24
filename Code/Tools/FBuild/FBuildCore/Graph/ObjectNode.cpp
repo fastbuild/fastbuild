@@ -288,14 +288,12 @@ ObjectNode::~ObjectNode()
     // convert includes to nodes
     m_DynamicDependencies.Clear();
     m_DynamicDependencies.SetCapacity( m_Includes.GetSize() );
-    for ( Array< AString >::ConstIter it = m_Includes.Begin();
-            it != m_Includes.End();
-            it++ )
+    for ( const AString & include : m_Includes )
     {
-        Node * fn = nodeGraph.FindNode( *it );
+        Node * fn = nodeGraph.FindNode( include );
         if ( fn == nullptr )
         {
-            fn = nodeGraph.CreateNode<FileNode>( *it );
+            fn = nodeGraph.CreateNode<FileNode>( include );
         }
         else if ( fn->IsAFile() == false )
         {
@@ -963,11 +961,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         Array< AString > tokens;
         args.Tokenize( tokens );
-        const AString * const end = tokens.End();
-        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        for ( const AString & token : tokens )
         {
-            const AString & token = *it;
-
             if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
                 if ( !flags.IsClangCl() ) // with clang-cl, Zi is an alias for /Z7, it does not produce PDBs

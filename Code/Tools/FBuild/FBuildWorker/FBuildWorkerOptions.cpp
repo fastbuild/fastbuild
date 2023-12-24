@@ -48,10 +48,8 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
     commandLine.Tokenize( tokens );
 
     // Check each token
-    const AString * const end = tokens.End();
-    for ( const AString * it = tokens.Begin(); it != end; ++it )
+    for ( const AString & token : tokens )
     {
-        const AString & token = *it;
         #if defined( __WINDOWS__ ) || defined( __OSX__ )
             if ( token == "-console" )
             {

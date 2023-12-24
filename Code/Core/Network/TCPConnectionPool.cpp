@@ -653,12 +653,9 @@ bool TCPConnectionPool::Broadcast( const void * data, size_t size )
 
     bool result = true;
 
-    ConnectionInfo ** it = m_Connections.Begin();
-    const ConnectionInfo * const * end = m_Connections.End();
-    while ( it < end )
+    for ( const ConnectionInfo * connection : m_Connections )
     {
-        result &= Send( *it, data, size );
-        it++;
+        result &= Send( connection, data, size );
     }
     return result;
 }

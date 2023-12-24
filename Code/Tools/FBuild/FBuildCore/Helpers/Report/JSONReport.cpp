@@ -471,11 +471,8 @@ void JSONReport::DoCPUTimeByItem( const FBuildStats & stats )
 
     // Result
     const Array< const Node * > & nodes = stats.GetNodesByTime();
-    for ( const Node ** it = nodes.Begin();
-          it != nodes.End();
-          ++ it )
+    for ( const Node * node : nodes )
     {
-        const Node * node = *it;
         const float time = ( (float)node->GetProcessingTime() * 0.001f ); // ms to s
         const char * type = node->GetTypeName();
         const char * name = node->GetName().Get();
