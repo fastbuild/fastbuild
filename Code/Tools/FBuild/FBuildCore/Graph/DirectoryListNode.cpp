@@ -39,11 +39,13 @@ public:
                                      const Array<AString> & excludePaths,
                                      const Array<AString> & filesToExclude,
                                      const Array<AString> & excludePatterns,
-                                     bool recurse )
+                                     bool recurse,
+                                     bool includeDirs )
         : GetFilesHelper( patterns )
         , m_ExcludePaths( excludePaths )
         , m_FilesToExclude( filesToExclude )
         , m_ExcludePatterns( excludePatterns )
+        , m_IncludeDirs( includeDirs )
     {
         m_Recurse = recurse;
     }
@@ -51,6 +53,11 @@ public:
     //--------------------------------------------------------------------------
     virtual bool OnDirectory( const AString & path ) override
     {
+        if ( m_IncludeDirs )
+        {
+            m_Directories.EmplaceBack( path );
+        }
+
         if ( m_Recurse == false )
         {
             return false;
@@ -93,11 +100,15 @@ public:
         m_Files.EmplaceBack( Move( info ) );
     }
 
+    Array<AString>& GetDirectories() { return m_Directories; }
+
     DirectoryListNodeGetFilesHelper& operator =(DirectoryListNodeGetFilesHelper&) = delete;
 protected:
     const Array<AString> & m_ExcludePaths;
     const Array<AString> & m_FilesToExclude;
     const Array<AString> & m_ExcludePatterns;
+    const bool m_IncludeDirs;
+    Array<AString> m_Directories;
 };
 
 // CONSTRUCTOR
@@ -120,6 +131,7 @@ DirectoryListNode::DirectoryListNode()
                     &m_Patterns,
                     m_Recursive,
                     m_IncludeReadOnlyStatusInHash,
+                    m_IncludeDirs,
                     m_ExcludePaths,
                     m_FilesToExclude,
                     m_ExcludePatterns,
@@ -149,33 +161,55 @@ DirectoryListNode::~DirectoryListNode() = default;
                                                const Array< AString > * patterns,
                                                bool recursive,
                                                bool includeReadOnlyFlagInHash,
+                                               bool includeDirs,
                                                const Array< AString > & excludePaths,
                                                const Array< AString > & excludeFiles,
                                                const Array< AString > & excludePatterns,
                                                AString & result )
 {
     ASSERT( path.EndsWith( NATIVE_SLASH ) );
-    AStackString<> patternString;
+
+    // Path and pattern
+    result = path;
+    result += '|';
     if ( patterns )
     {
-        patternString.AppendList( *patterns, '<' );
+        result.AppendList( *patterns, '<' );
+        result += '|';
     }
-    result.Format( "%s|%s|%s|%s|", path.Get(),
-                                  patternString.Get(),
-                                  recursive ? "true" : "false",
-                                  includeReadOnlyFlagInHash ? "rw" : "");
 
-    result.AppendList( excludePaths, '<' );
+    // Additional flags
+    if ( recursive )
+    {
+        result += 'r'; // Recursive
+    }
+    if ( includeReadOnlyFlagInHash )
+    {
+        result += 'w'; // Writable flag included in hash
+    }
+    if ( includeDirs )
+    {
+        result += 'd'; // Directories included in result
+    }
 
+    // Excluded paths
     if ( !excludeFiles.IsEmpty() )
     {
-        result += '|';
+        result += "|ePaths=";
+        result.AppendList( excludePaths, '<' );
+    }
+
+    // Excluded files
+    if ( !excludeFiles.IsEmpty() )
+    {
+        result += "|eFiles=";
         result.AppendList( excludeFiles, '<' );
     }
 
+    // Excluded patterns
     if ( !excludePatterns.IsEmpty() )
     {
-        result += '|';
+        result += "|ePatterns=";
         result.AppendList( excludePatterns, '<' );
     }
 }
@@ -193,11 +227,13 @@ DirectoryListNode::~DirectoryListNode() = default;
                                                 m_ExcludePaths,
                                                 m_FilesToExclude,
                                                 m_ExcludePatterns,
-                                                m_Recursive );
+                                                m_Recursive,
+                                                m_IncludeDirs );
         FileIO::GetFiles( m_Path, helper );
 
         // Transfer ownership of filtered list
         m_Files = Move( helper.GetFiles() );
+        m_Directories = Move( helper.GetDirectories() );
     }
 
     MakePrettyName();
@@ -217,7 +253,7 @@ DirectoryListNode::~DirectoryListNode() = default;
     }
 
     // Hash the directory listing to represent the discovered files
-    if ( m_Files.IsEmpty() )
+    if ( m_Files.IsEmpty() && m_Directories.IsEmpty() )
     {
         m_Stamp = 1; // Non-zero
     }
@@ -235,6 +271,11 @@ DirectoryListNode::~DirectoryListNode() = default;
                 ms.Write( file.IsReadOnly() );
             }
         }
+        for ( const AString & dir : m_Directories )
+        {
+            // additions and removals will change the hash
+            ms.WriteBuffer( dir.Get(), dir.GetLength() );
+        }
         m_Stamp = xxHash3::Calc64( ms.GetData(), ms.GetSize() );
     }
 
@@ -249,6 +290,14 @@ void DirectoryListNode::MakePrettyName()
     if (m_Recursive)
     {
         prettyName += " (recursive)";
+    }
+    if ( m_IncludeReadOnlyStatusInHash )
+    {
+        prettyName += " (incROStatus)";
+    }
+    if ( m_IncludeDirs )
+    {
+        prettyName += " (incDirs)";
     }
 
     const size_t numFiles = m_Files.GetSize();

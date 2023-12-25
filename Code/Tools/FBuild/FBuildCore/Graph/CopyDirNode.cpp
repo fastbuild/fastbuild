@@ -54,6 +54,7 @@ CopyDirNode::CopyDirNode()
                                               Array< AString >(),    // Unsupported: Excluded patterns
                                               m_SourcePathsRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_SourcePathsPattern,
                                               "SourcePaths",
                                               sourcePaths ) )

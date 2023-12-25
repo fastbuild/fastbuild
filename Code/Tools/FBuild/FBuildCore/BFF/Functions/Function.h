@@ -77,6 +77,7 @@ public:
                                           const Array< AString > & excludePatterns,
                                           bool recurse,
                                           bool includeReadOnlyStatusInHash,
+                                          bool includeDirs,
                                           const Array< AString > * patterns,
                                           const char * inputVarName,
                                           Dependencies & nodes );

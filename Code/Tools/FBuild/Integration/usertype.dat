@@ -202,11 +202,13 @@ Projects
 RemoteDebuggerCommand
 RemoteDebuggerCommandArguments
 RemoteDebuggerWorkingDirectory
+RemoveDirs
 RemoveExcludeFiles
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
 RemovePatterns
+RemoveRootDir
 RootNamespace
 SimpleDistributionMode
 SolutionBuildProject

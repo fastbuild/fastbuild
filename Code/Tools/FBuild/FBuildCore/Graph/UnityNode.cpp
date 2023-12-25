@@ -183,6 +183,7 @@ UnityNode::UnityNode()
                                               m_ExcludePatterns,
                                               m_InputPathRecurse,
                                               true, // Include Read-Only status change in hash
+                                              false, // Don't include directories
                                               &m_InputPattern,
                                               "UnityInputPath",
                                               dirNodes ) )

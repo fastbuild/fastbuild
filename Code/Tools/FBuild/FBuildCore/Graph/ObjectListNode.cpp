@@ -283,6 +283,7 @@ ObjectListNode::ObjectListNode()
                                               m_CompilerInputExcludePattern,
                                               m_CompilerInputPathRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_CompilerInputPattern,
                                               "CompilerInputPath",
                                               compilerInputPath ) )

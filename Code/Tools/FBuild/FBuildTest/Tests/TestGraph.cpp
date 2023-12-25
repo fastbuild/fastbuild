@@ -218,6 +218,7 @@ void TestGraph::TestDirectoryListNode() const
                                    &patterns,
                                    true, // recursive
                                    false, // Don't include read-only status in hash
+                                   false, // Don't include directories
                                    Array< AString >(), // excludePaths,
                                    Array< AString >(), // excludeFiles,
                                    Array< AString >(), // excludePatterns,

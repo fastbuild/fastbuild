@@ -11,11 +11,32 @@
 Using( .StandardEnvironment )
 Settings {}
 
-// RemoveDir
 //------------------------------------------------------------------------------
-RemoveDir( 'RemoveDir' )
+RemoveDir( 'RemoveDirRecurse' )
 {
     .RemovePaths = '$Out$/Test/RemoveDir/'
+}
+
+//------------------------------------------------------------------------------
+RemoveDir( 'RemoveDirNoRecurse' )
+{
+    .RemovePaths = '$Out$/Test/RemoveDir/'
+    .RemovePathsRecurse = false
+    .RemoveDirs = false
+}
+
+//------------------------------------------------------------------------------
+RemoveDir( 'RemoveDirNoRemoveDirs' )
+{
+    .RemovePaths = '$Out$/Test/RemoveDir/'
+    .RemoveDirs = false
+}
+
+//------------------------------------------------------------------------------
+RemoveDir( 'RemoveDirNoRemoveRootDir' )
+{
+    .RemovePaths = '$Out$/Test/RemoveDir/'
+    .RemoveRootDir = false
 }
 
 //------------------------------------------------------------------------------

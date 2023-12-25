@@ -528,6 +528,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                                     const Array< AString > & excludePatterns,
                                                     bool recurse,
                                                     bool includeReadOnlyStatusInHash,
+                                                    bool includeDirs,
                                                     const Array< AString > * patterns,
                                                     const char * inputVarName,
                                                     Dependencies & nodes )
@@ -557,6 +558,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                        patterns,
                                        recurse,
                                        includeReadOnlyStatusInHash,
+                                       includeDirs,
                                        excludePaths,
                                        filesToExcludeCleaned,
                                        excludePatterns,
@@ -572,6 +574,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                 dln->m_Patterns = *patterns;
             }
             dln->m_Recursive = recurse;
+            dln->m_IncludeDirs = includeDirs;
             dln->m_ExcludePaths = excludePaths;
             dln->m_FilesToExclude = filesToExcludeCleaned;
             dln->m_ExcludePatterns = excludePatterns;

@@ -20,6 +20,8 @@ REFLECT_NODE_BEGIN( RemoveDirNode, Node, MetaNone() )
     REFLECT_ARRAY( m_RemovePaths,               "RemovePaths",          MetaPath() )
     REFLECT_ARRAY( m_RemovePatterns,            "RemovePatterns",       MetaOptional() )
     REFLECT(       m_RemovePathsRecurse,        "RemovePathsRecurse",   MetaOptional() )
+    REFLECT(       m_RemoveDirs,                "RemoveDirs",           MetaOptional() )
+    REFLECT(       m_RemoveRootDir,             "RemoveRootDir",        MetaOptional() )
     REFLECT_ARRAY( m_RemoveExcludePaths,        "RemoveExcludePaths",   MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_RemoveExcludeFiles,        "RemoveExcludeFiles",   MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
@@ -55,6 +57,7 @@ RemoveDirNode::RemoveDirNode()
                                               Array< AString >(), // unused ExcludePatterns
                                               m_RemovePathsRecurse,
                                               false, // Don't include read-only status in hash
+                                              m_RemoveDirs,
                                               &m_RemovePatterns,
                                               "RemovePaths",
                                               fileListDeps ) )
@@ -88,35 +91,73 @@ RemoveDirNode::~RemoveDirNode() = default;
     // Iterate all the DirectoryListNodes
     for ( const Dependency & dep : m_StaticDependencies )
     {
-        // Grab the files
         const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
-        for ( const FileIO::FileInfo & fileInfo : files )
-        {
-            // source file (full path)
-            const AString & srcFile = fileInfo.m_Name;
 
-            // remove the file
-            if ( FileIO::FileDelete( srcFile.Get() ) == false )
+        // Delete files
+        for ( const FileIO::FileInfo & fileInfo : dln->GetFiles() )
+        {
+            if ( !FileDelete( fileInfo.m_Name ) )
             {
-                FLOG_ERROR( "Remove failed. Error: %s Target: '%s'", LAST_ERROR_STR, srcFile.Get() );
                 return NODE_RESULT_FAILED; // remove failed
             }
+        }
 
-            // we combine everything into one string to ensure it is contiguous in
-            // the output
-            AStackString<> output;
-            if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+        // Delete folders
+        if ( m_RemoveDirs )
+        {
+            for ( const AString & dir : dln->GetDirectories() )
             {
-                output += "Remove: ";
-                output += srcFile;
-                output += '\n';
-                FLOG_OUTPUT( output );
+                if ( !DirectoryDelete( dir ) )
+                {
+                    return NODE_RESULT_FAILED; // remove failed
+                }
+            }
+        }
+
+        // Delete root folder
+        if ( m_RemoveDirs && m_RemoveRootDir )
+        {
+            if ( !DirectoryDelete( dln->GetPath() ) )
+            {
+                return NODE_RESULT_FAILED; // remove failed
             }
         }
     }
 
     return NODE_RESULT_OK;
+}
+
+//------------------------------------------------------------------------------
+bool RemoveDirNode::FileDelete( const AString & file ) const
+{
+    // remove the file
+    if ( FileIO::FileDelete( file.Get() ) == false )
+    {
+        FLOG_ERROR( "Remove failed. Error: %s Target: '%s'", LAST_ERROR_STR, file.Get() );
+        return false;
+    }
+
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "Remove: %s\n", file.Get() );
+    }
+    return true;
+}
+
+//------------------------------------------------------------------------------
+bool RemoveDirNode::DirectoryDelete( const AString & dir ) const
+{
+    if ( FileIO::DirectoryDelete( dir ) == false )
+    {
+        FLOG_ERROR( "Remove failed. Error: %s Target: '%s'", LAST_ERROR_STR, dir.Get() );
+        return NODE_RESULT_FAILED; // remove failed
+    }
+
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "Remove: %s\n", dir.Get() );
+    }
+    return true;
 }
 
 //------------------------------------------------------------------------------

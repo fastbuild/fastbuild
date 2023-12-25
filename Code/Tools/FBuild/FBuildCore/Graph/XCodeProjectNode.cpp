@@ -118,6 +118,7 @@ XCodeProjectNode::XCodeProjectNode()
                                               m_PatternToExclude,
                                               m_ProjectInputPathsRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_ProjectAllowedFileExtensions,
                                               "ProjectInputPaths",
                                               dirNodes ) )
