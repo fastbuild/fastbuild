@@ -46,6 +46,8 @@ Compiler( 'Compiler-Clang12' )
 
     .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header'
+                                    + ' -std=c++11 $CommonCompilerOptions$'
 
     // Librarian
     .Librarian                      = '$Clang12_BasePath$/ar'

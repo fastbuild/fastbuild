@@ -43,6 +43,9 @@ Compiler( 'Compiler-Clang6' )
     .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header'
+                                    + ' -std=c++11 $CommonCompilerOptions$'
+                                    + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
 
     // Librarian
     .Librarian                      = '$Clang6_BasePath$/llvm-ar'
