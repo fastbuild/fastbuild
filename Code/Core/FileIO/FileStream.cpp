@@ -25,7 +25,9 @@
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #define INVALID_HANDLE_VALUE ( -1 )
 #endif
-#define FILESTREAM_READWRITE_SIZE ( 16 * MEGABYTE )
+#if defined( __WINDOWS__ )
+    #define FILESTREAM_WINDOWS_READWRITE_SIZE ( 16 * MEGABYTE )
+#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -205,7 +207,7 @@ bool FileStream::IsOpen() const
     do
     {
         const uint64_t remaining = ( bytesToRead - totalBytesRead );
-        const uint32_t tryToReadNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
+        const uint32_t tryToReadNow = ( remaining > FILESTREAM_WINDOWS_READWRITE_SIZE ) ? FILESTREAM_WINDOWS_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesReadNow = 0;
         if ( FALSE == ReadFile( (HANDLE)m_Handle,                           // _In_         HANDLE hFile,
                                 (char *)buffer + (size_t)totalBytesRead,    // _Out_        LPVOID lpBuffer,
@@ -222,7 +224,7 @@ bool FileStream::IsOpen() const
         totalBytesRead += bytesReadNow;
     } while ( totalBytesRead < bytesToRead );
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    totalBytesRead += read( m_Handle, buffer, bytesToRead );
+    totalBytesRead += static_cast<uint64_t>( read( m_Handle, buffer, bytesToRead ) );
 #else
     #error Unknown platform
 #endif
@@ -242,7 +244,7 @@ bool FileStream::IsOpen() const
     do
     {
         const uint64_t remaining = ( bytesToWrite - totalBytesWritten );
-        const uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
+        const uint32_t tryToWriteNow = ( remaining > FILESTREAM_WINDOWS_READWRITE_SIZE ) ? FILESTREAM_WINDOWS_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesWrittenNow = 0;
         if ( FALSE == WriteFile( (HANDLE)m_Handle,                              // _In_         HANDLE hFile,
                                  (const char *)buffer + (size_t)totalBytesWritten,    // _In_         LPCVOID lpBuffer,
@@ -255,7 +257,7 @@ bool FileStream::IsOpen() const
         totalBytesWritten += bytesWrittenNow;
     } while ( totalBytesWritten < bytesToWrite );
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    totalBytesWritten = write( m_Handle, buffer, bytesToWrite );
+    totalBytesWritten = static_cast<uint64_t>( write( m_Handle, buffer, bytesToWrite ) );
 #else
     #error Unknown platform
 #endif
@@ -289,7 +291,7 @@ bool FileStream::IsOpen() const
     VERIFY( SetFilePointerEx( (HANDLE)m_Handle, zeroPos, &newPos, FILE_CURRENT ) );
     return (uint64_t)newPos.QuadPart;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    return lseek( m_Handle, 0, SEEK_CUR );
+    return static_cast<uint64_t>( lseek( m_Handle, 0, SEEK_CUR ) );
 #else
     #error Unknown platform
 #endif
@@ -311,7 +313,7 @@ bool FileStream::IsOpen() const
     return true;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
     ASSERT( pos <= 0xFFFFFFFF ); // only support 4GB files for seek on OSX/IOS
-    lseek( m_Handle, pos, SEEK_SET );
+    lseek( m_Handle, static_cast<off_t>( pos ), SEEK_SET );
     return true; // TODO:MAC check EOF for consistency with windows
 #else
     #error Unknown platform

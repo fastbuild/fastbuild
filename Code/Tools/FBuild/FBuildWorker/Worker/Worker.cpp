@@ -115,7 +115,7 @@ int32_t Worker::Work()
     // Open GUI or setup console
     if ( InConsoleMode() )
     {
-        #if __WINDOWS__
+        #if defined( __WINDOWS__ )
             VERIFY( ::AllocConsole() );
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
             PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'freopen' is deprecated: This function or variable may be unsafe...

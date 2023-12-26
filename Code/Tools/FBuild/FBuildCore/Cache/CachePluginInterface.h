@@ -2,7 +2,7 @@
 //------------------------------------------------------------------------------
 #pragma once
 
-#if __WINDOWS__
+#if defined( __WINDOWS__ )
     #define STDCALL __stdcall
 #elif defined(__LINUX__) || defined(__OSX__)
     #define STDCALL

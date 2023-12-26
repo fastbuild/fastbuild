@@ -73,7 +73,7 @@ int64_t Timer::GetNow()
     #elif defined( __LINUX__ )
         timespec ts;
         VERIFY( clock_gettime( CLOCK_REALTIME, &ts ) == 0 );
-        return ( (uint64_t)ts.tv_sec * 1000000000ULL ) + (uint64_t)ts.tv_nsec;
+        return static_cast<int64_t>( ( (uint64_t)ts.tv_sec * 1000000000ULL ) + (uint64_t)ts.tv_nsec );
     #else
         #error Unknown platform
     #endif

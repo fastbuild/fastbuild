@@ -629,7 +629,7 @@ bool Process::ReadAllData( AString & outMem,
             if ( IsRunning() )
             {
                 // Check if timeout is hit
-                if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= timeOutMS ) )
+                if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= static_cast<float>( timeOutMS ) ) )
                 {
                     Terminate();
                     return false; // Timed out
@@ -757,10 +757,8 @@ bool Process::ReadAllData( AString & outMem,
 {
     #if defined( __WINDOWS__ )
         return ::GetCurrentProcessId();
-    #elif defined( __LINUX__ )
-        return ::getpid();
-    #elif defined( __OSX__ )
-        return ::getpid();
+    #else
+        return static_cast<uint32_t>( ::getpid() );
     #endif
 }
 

@@ -263,7 +263,7 @@ Env::ProcessorInfo::ProcessorInfo()
         }
     #else
         FILE* f = fopen( "/proc/self/cmdline", "rb" );
-        VERIFY( f != 0 );
+        ASSERT( f );
         char buffer[ 4096 ];
         for (;;)
         {
@@ -428,7 +428,7 @@ static bool IsStdOutRedirectedInternal()
     #if defined( __WINDOWS__ )
         return ::GetLastError();
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        return errno;
+        return static_cast<uint32_t>( errno );
     #else
         #error Unknown platform
     #endif

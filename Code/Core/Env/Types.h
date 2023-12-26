@@ -114,16 +114,18 @@ typedef signed int          int32_t;
     #define PRAGMA_DISABLE_POP_MSVC
 #endif
 #if defined( __clang__ )
-    #define PRAGMA_DISABLE_PUSH_CLANG( w )  __pragma( clang diagnostic push ) \
-                                            __pragma( clang diagnostic ignored w )
-    #define PRAGMA_DISABLE_POP_CLANG        __pragma( clang diagnostic pop )
+    #define PRAGMA_DO( p ) _Pragma( #p )
+    #define PRAGMA_DISABLE_PUSH_CLANG( w )  PRAGMA_DO( clang diagnostic push ) \
+                                            PRAGMA_DO( clang diagnostic ignored w )
+    #define PRAGMA_DISABLE_POP_CLANG        PRAGMA_DO( clang diagnostic pop )
 #else
     #define PRAGMA_DISABLE_PUSH_CLANG( w )
     #define PRAGMA_DISABLE_POP_CLANG
 #endif
 #if defined( __WINDOWS__ ) && defined( __clang__ )
-    #define PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( w ) PRAGMA_DISABLE_PUSH_CLANG( w )
-    #define PRAGMA_DISABLE_POP_CLANG_WINDOWS PRAGMA_DISABLE_POP_CLANG
+    #define PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( w )  __pragma( clang diagnostic push ) \
+                                                    __pragma( clang diagnostic ignored w )
+    #define PRAGMA_DISABLE_POP_CLANG_WINDOWS        __pragma( clang diagnostic pop )
 #else
     #define PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( w )
     #define PRAGMA_DISABLE_POP_CLANG_WINDOWS

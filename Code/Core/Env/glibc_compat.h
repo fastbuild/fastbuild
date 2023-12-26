@@ -6,7 +6,9 @@
 
 // Avoid "Fortify Source" checks
 //------------------------------------------------------------------------------
-#undef _FORTIFY_SOURCE
+#if defined( _FORTIFY_SOURCE )
+    #undef _FORTIFY_SOURCE
+#endif
 
 // Use older memcpy
 //------------------------------------------------------------------------------

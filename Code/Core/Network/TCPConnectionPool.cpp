@@ -608,7 +608,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
             const int result = WSASend( connection->m_Socket, sendBuffers, numSendBuffers, (LPDWORD)&sent, 0, nullptr, nullptr );
             if ( result == SOCKET_ERROR )
         #else
-            ssize_t sent = writev( connection->m_Socket, sendBuffers, numSendBuffers );
+            ssize_t sent = writev( connection->m_Socket, sendBuffers, static_cast<int32_t>( numSendBuffers ) );
             if ( sent <= 0 )
         #endif
         {
@@ -685,7 +685,11 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     uint32_t bytesToRead = 4;
     while ( bytesToRead > 0 )
     {
-        const int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, (int32_t)bytesToRead, 0 );
+        #if defined( __WINDOWS__ )
+            const int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, (int32_t)bytesToRead, 0 );
+        #else
+            const int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, static_cast<size_t>( bytesToRead ), 0 );
+        #endif
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
@@ -715,7 +719,11 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     char * dest = (char *)buffer;
     while ( bytesRemaining > 0 )
     {
-        int numBytes = (int)recv( ci->m_Socket, dest, (int32_t)bytesRemaining, 0 );
+        #if defined( __WINDOWS__ )
+            int numBytes = (int)recv( ci->m_Socket, dest, (int32_t)bytesRemaining, 0 );
+        #else
+            int numBytes = (int)recv( ci->m_Socket, dest, static_cast<size_t>( bytesRemaining ), 0 );
+        #endif
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
@@ -955,7 +963,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         // (modified by the select() function, so we must recreate it)
         fd_set set;
         FD_ZERO( &set );
-        FDSet( (uint32_t)ci->m_Socket, &set );
+        FDSet( ci->m_Socket, &set );
 
         // peek
         const int num = Select( ci->m_Socket + 1, &set, nullptr, nullptr, &timeout );
@@ -1079,7 +1087,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         // (modified by the select() function, so we must recreate it)
         fd_set readSet;
         FD_ZERO( &readSet );
-        FDSet( (uint32_t)ci->m_Socket, &readSet );
+        FDSet( ci->m_Socket, &readSet );
 
         const int num = Select( ci->m_Socket + 1, &readSet, nullptr, nullptr, &timeout );
         if ( num == 0 )
