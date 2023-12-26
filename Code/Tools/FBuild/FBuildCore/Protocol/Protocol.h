@@ -63,7 +63,7 @@ namespace Protocol
 
         NUM_MESSAGES            // leave last
     };
-};
+}
 
 #ifdef PROTOCOL_DEBUG_ENABLED
     const char * GetProtocolMessageDebugName( Protocol::MessageType msgType );
@@ -265,6 +265,6 @@ namespace Protocol
         MsgServerStatus();
     };
     static_assert( sizeof( MsgServerStatus ) == sizeof( IMessage ), "MsgServerStatus message has incorrect size" );
-};
+}
 
 //------------------------------------------------------------------------------

@@ -244,7 +244,7 @@ void TestDistributed::RemoteRaceSystemFailure()
 void TestDistributed::AnonymousNamespaces()
 {
     // Check that compiling multiple objects with identically named symbols
-    // in anonymouse namespaces don't cause link errors.  This is because
+    // in anonymous namespaces don't cause link errors.  This is because
     // the MS compiler uses the path to the cpp file being compiled to
     // generate the symbol name (it doesn't respect the #line directives)
     const char * target( "../tmp/Test/Distributed/AnonymousNamespaces/AnonymousNamespaces.lib" );
