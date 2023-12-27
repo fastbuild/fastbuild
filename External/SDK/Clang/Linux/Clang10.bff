@@ -64,10 +64,10 @@ Compiler( 'Compiler-Clang10' )
                                     + ' -Wno-shorten-64-to-32'          // implicit conversion loses integer precision: '%s' to '%s'
                                     + ' -Wno-weak-vtables'              // '%s has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit
 
-    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
+    .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
-                                    + ' -std=c++11 $CommonCompilerOptions$'
+                                    + ' -std=c++17 $CommonCompilerOptions$'
 
     // Librarian
     .Librarian                      = '$Clang10_BasePath$/llvm-ar'
