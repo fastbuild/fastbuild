@@ -31,6 +31,8 @@ private:
     static const char * const s_FileA;
     static const char * const s_PathB;
     static const char * const s_FileB;
+    static const char * const s_PathC;
+    static const char * const s_FileC;
 };
 
 // Static Data
@@ -39,6 +41,8 @@ private:
 /*static*/ const char * const TestRemoveDir::s_FileA = "../tmp/Test/RemoveDir/File";
 /*static*/ const char * const TestRemoveDir::s_PathB = "../tmp/Test/RemoveDir/SubDir/";
 /*static*/ const char * const TestRemoveDir::s_FileB = "../tmp/Test/RemoveDir/SubDir/File";
+/*static*/ const char * const TestRemoveDir::s_PathC = "../tmp/Test/RemoveDir/SubDir/SubDir/";
+/*static*/ const char * const TestRemoveDir::s_FileC = "../tmp/Test/RemoveDir/SubDir/SubDir/File";
 
 // Register Tests
 //------------------------------------------------------------------------------
@@ -72,6 +76,7 @@ void TestRemoveDir::RemoveDirRecurse() const
     // Check empty dirs have been removed
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathA ) ) == false );
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathB ) ) == false );
+    TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathC ) ) == false );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -98,13 +103,16 @@ void TestRemoveDir::RemoveDirNoRecurse() const
     // Check file in sub-directory was not removed
     StackArray<AString> files;
     FileIO::GetFiles( AStackString<>( s_PathA ), AStackString<>( "*" ), true, &files );
-    TEST_ASSERT( files.GetSize() == 1 );
+    TEST_ASSERT( files.GetSize() == 2 );
     files[ 0 ].Replace( '\\', '/' );
-    TEST_ASSERT( files[ 0 ] == s_FileB );
+    files[ 1 ].Replace( '\\', '/' );
+    TEST_ASSERT( files.Find( s_FileB ) );
+    TEST_ASSERT( files.Find( s_FileC ) );
 
     // Dirs should not have been removed as files still exist
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathA ) ) );
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathB ) ) );
+    TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathC ) ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -136,6 +144,7 @@ void TestRemoveDir::RemoveDirNoRemoveDirs() const
     // Dirs should not have been removed
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathA ) ) );
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathB ) ) );
+    TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathC ) ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -167,6 +176,7 @@ void TestRemoveDir::RemoveDirNoRemoveRootDir() const
     // Sub dirs should have been removed, but root dir should remain
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathA ) ) );
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathB ) ) == false );
+    TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathC ) ) == false );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -181,16 +191,19 @@ void TestRemoveDir::CreateFiles() const
     // Create folders and put files in them
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( s_PathA ) ) );
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( s_PathB ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( s_PathC ) ) );
     FileStream f;
     TEST_ASSERT( f.Open( s_FileA, FileStream::WRITE_ONLY ) );
     f.Close();
     TEST_ASSERT( f.Open( s_FileB, FileStream::WRITE_ONLY ) );
     f.Close();
+    TEST_ASSERT( f.Open( s_FileC, FileStream::WRITE_ONLY ) );
+    f.Close();
 
     // Check file are there
     Array< AString > files;
     FileIO::GetFiles( AStackString<>( s_PathA ), AStackString<>( "*" ), true, &files );
-    TEST_ASSERT( files.GetSize() == 2 );
+    TEST_ASSERT( files.GetSize() == 3 );
 }
 
 //------------------------------------------------------------------------------

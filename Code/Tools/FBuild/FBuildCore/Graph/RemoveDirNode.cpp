@@ -105,9 +105,10 @@ RemoveDirNode::~RemoveDirNode() = default;
         // Delete folders
         if ( m_RemoveDirs )
         {
-            for ( const AString & dir : dln->GetDirectories() )
+            const Array<AString> & dirs = dln->GetDirectories();
+            for ( int32_t i = static_cast<int32_t>( dirs.GetSize() - 1 ); i >= 0; --i )
             {
-                if ( !DirectoryDelete( dir ) )
+                if ( !DirectoryDelete( dirs[ static_cast<size_t>( i ) ] ) )
                 {
                     return NODE_RESULT_FAILED; // remove failed
                 }
