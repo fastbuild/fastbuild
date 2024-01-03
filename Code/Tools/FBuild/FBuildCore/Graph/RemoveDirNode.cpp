@@ -118,9 +118,14 @@ RemoveDirNode::~RemoveDirNode() = default;
         // Delete root folder
         if ( m_RemoveDirs && m_RemoveRootDir )
         {
-            if ( !DirectoryDelete( dln->GetPath() ) )
+            // Sub-directories come from a directory lists, so we know they
+            // exist, but the root may not exist
+            if ( FileIO::DirectoryExists( dln->GetPath() ) )
             {
-                return NODE_RESULT_FAILED; // remove failed
+                if ( !DirectoryDelete( dln->GetPath() ) )
+                {
+                    return NODE_RESULT_FAILED; // remove failed
+                }
             }
         }
     }

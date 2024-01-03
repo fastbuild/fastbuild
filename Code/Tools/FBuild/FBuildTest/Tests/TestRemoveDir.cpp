@@ -20,6 +20,7 @@ private:
     DECLARE_TESTS
 
     void RemoveDirRecurse() const;
+    void RemoveDirRecurseNoExist() const;
     void RemoveDirNoRecurse() const;
     void RemoveDirNoRemoveDirs() const;
     void RemoveDirNoRemoveRootDir() const;
@@ -48,6 +49,7 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestRemoveDir )
     REGISTER_TEST( RemoveDirRecurse )
+    REGISTER_TEST( RemoveDirRecurseNoExist )
     REGISTER_TEST( RemoveDirNoRecurse )
     REGISTER_TEST( RemoveDirNoRemoveDirs )
     REGISTER_TEST( RemoveDirNoRemoveRootDir )
@@ -77,6 +79,35 @@ void TestRemoveDir::RemoveDirRecurse() const
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathA ) ) == false );
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathB ) ) == false );
     TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( s_PathC ) ) == false );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode ( 1,     1,      Node::REMOVE_DIR_NODE );
+    CheckStatsTotal( 2,     2 );
+}
+
+// RemoveDirRecurseNoExist
+//------------------------------------------------------------------------------
+void TestRemoveDir::RemoveDirRecurseNoExist() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Ensure no files or directories exist
+    EnsureFileDoesNotExist( s_FileA );
+    EnsureFileDoesNotExist( s_FileB );
+    EnsureFileDoesNotExist( s_FileC );
+    EnsureDirDoesNotExist( s_PathC );
+    EnsureDirDoesNotExist( s_PathB );
+    EnsureDirDoesNotExist( s_PathA );
+
+    // Build and ensure no failures when there is nothing to delete
+    // (in particular the root dir not existing needs to be handled)
+    TEST_ASSERT( fBuild.Build( "RemoveDirRecurse" ) );
 
     // Check stats
     //               Seen,  Built,  Type

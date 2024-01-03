@@ -241,13 +241,22 @@ DirectoryListNode::~DirectoryListNode() = default;
     if ( FLog::ShowVerbose() )
     {
         AStackString<> buffer;
-        const size_t numFiles = m_Files.GetSize();
-        buffer.AppendFormat( "Dir: '%s' (found %u files)\n",
+        buffer.AppendFormat( "Dir: '%s' (%zu files)\n",
                              m_Name.Get(),
-                             (uint32_t)numFiles );
-        for ( size_t i=0; i<numFiles; ++i )
+                             m_Files.GetSize() );
+        for ( const FileIO::FileInfo & file : m_Files )
         {
-            buffer.AppendFormat( " - %s\n", m_Files[ i ].m_Name.Get() );
+            buffer.AppendFormat( " - %s\n", file.m_Name.Get() );
+        }
+        if ( m_IncludeDirs )
+        {
+            buffer.AppendFormat( "Dir: '%s' (%zu dirs)",
+                                 m_Name.Get(),
+                                 m_Directories.GetSize() );
+            for ( const AString & dir : m_Directories )
+            {
+                buffer.AppendFormat( " - %s\n", dir.Get() );
+            }
         }
         FLOG_VERBOSE( "%s", buffer.Get() );
     }
