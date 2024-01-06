@@ -74,6 +74,7 @@
                                           }
             .UnityNumFiles              = 3
             .UnityOutputPath            = '$OutputBase$/External/$ProjectName$/'
+            .UnityOutputPattern         = 'Unity*.c'
         }
 
         // Static Library
