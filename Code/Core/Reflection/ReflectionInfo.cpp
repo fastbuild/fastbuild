@@ -34,7 +34,14 @@ ReflectionInfo::~ReflectionInfo()
 {
     for ( ReflectedProperty * property : m_Properties )
     {
-        delete property;
+        if ( property->GetType() == PT_STRUCT )
+        {
+            delete static_cast<ReflectedPropertyStruct*>( property );
+        }
+        else
+        {
+            delete property;
+        }
     }
 
     const IMetaData * md = m_MetaDataChain;
