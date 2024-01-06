@@ -251,7 +251,7 @@ DirectoryListNode::~DirectoryListNode() = default;
         }
         if ( m_IncludeDirs )
         {
-            buffer.AppendFormat( "Dir: '%s' (%zu dirs)",
+            buffer.AppendFormat( "Dir: '%s' (%zu dirs)\n",
                                  m_Name.Get(),
                                  m_Directories.GetSize() );
             for ( const AString & dir : m_Directories )
