@@ -42,10 +42,13 @@ Compiler( 'Compiler-GCC' )
                                     + ' -Wextra'
                                     + ' -Wshadow'
 
-    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
+    .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
                                     + ' -fdiagnostics-color=auto'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header'
+                                    + ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
 
     // Librarian
     .Librarian                      = '/usr/bin/ar'

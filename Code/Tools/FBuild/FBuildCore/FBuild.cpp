@@ -569,14 +569,12 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     }
 
     // check if the environment var was already imported
-    const EnvironmentVarAndHash * it = m_ImportedEnvironmentVars.Begin();
-    const EnvironmentVarAndHash * const end = m_ImportedEnvironmentVars.End();
-    while ( it < end )
+    for ( const EnvironmentVarAndHash & envVar : m_ImportedEnvironmentVars )
     {
-        if ( it->GetName() == name )
+        if ( envVar.GetName() == name )
         {
             // check if imported environment changed since last import
-            if ( it->GetHash() != hash )
+            if ( envVar.GetHash() != hash )
             {
                 FLOG_ERROR( "Overwriting imported environment variable '%s' with a different value = '%s'",
                             name, value.Get() );
@@ -586,7 +584,6 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
             // skip registration when already imported with same hash value
             return true;
         }
-        it++;
     }
 
     // import new variable name with its hash value

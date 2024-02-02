@@ -597,6 +597,19 @@ Alias( 'All+Tests' )
         CreateVCXProject_Lib( 'SDKs', '../External/SDK/', .ProjectConfigs, .ExtraOptions )
     }
 
+    // 'Scripts' - Helper scripts
+    {
+        .ExtraOptions   = [ .ProjectAllowedFileExtensions = '*.py' ]
+        .ProjectConfigs = {}
+        ForEach( .BuildConfig in .BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
+            ^ProjectConfigs         + .ProjectConfig
+        }
+        CreateVCXProject_Lib( 'Scripts', '../Scripts/', .ProjectConfigs, .ExtraOptions )
+    }
+
     // 'UpdateSolution' - Regenerate projects/solutions
     {
         .ExtraOptions   = [ .ProjectInputPaths = {} ]
@@ -660,6 +673,11 @@ Alias( 'All+Tests' )
             .Path           = 'External'
             .Projects       = { 'LZ4-proj', 'SDKs-proj', 'xxHash-proj', 'Zstd-proj' }
         ]
+        .Folder_Scripts =
+        [
+            .Path           = 'Scripts'
+            .Projects       = { 'Scripts-proj' }
+        ]
         .Folder_Test =
         [
             .Path           = 'Test'
@@ -675,7 +693,7 @@ Alias( 'All+Tests' )
             .Path           = 'Apps'
             .Projects       = { 'FBuild-proj', 'FBuildWorker-proj' }
         ]
-        .SolutionFolders    = { .Folder_Config, .Folder_External, .Folder_Test, .Folder_Libs, .Folder_Apps }
+        .SolutionFolders    = { .Folder_Config, .Folder_External, .Folder_Scripts, .Folder_Test, .Folder_Libs, .Folder_Apps }
     }
 #endif
 
@@ -698,6 +716,7 @@ Alias( 'All+Tests' )
                                         'FBuildWorker-xcodeproj'
                                         'LZ4-xcodeproj'
                                         'OSUI-xcodeproj'
+                                        'Scripts-xcodeproj'
                                         'TestFramework-xcodeproj'
                                         'xxHash-xcodeproj'
                                         'Zstd-xcodeproj' }

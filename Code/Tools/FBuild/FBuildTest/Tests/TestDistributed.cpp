@@ -105,11 +105,9 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     // clean up anything left over from previous runs
     Array< AString > files;
     FileIO::GetFiles( AStackString<>( "../tmp/Test/Distributed" ), AStackString<>( "*.*" ), true, &files );
-    const AString * iter = files.Begin();
-    const AString * const end = files.End();
-    for ( ; iter != end; ++iter )
+    for ( const AString & file : files )
     {
-        FileIO::FileDelete( iter->Get() );
+        FileIO::FileDelete( file.Get() );
     }
 
     if ( !shouldFail )
@@ -246,7 +244,7 @@ void TestDistributed::RemoteRaceSystemFailure()
 void TestDistributed::AnonymousNamespaces()
 {
     // Check that compiling multiple objects with identically named symbols
-    // in anonymouse namespaces don't cause link errors.  This is because
+    // in anonymous namespaces don't cause link errors.  This is because
     // the MS compiler uses the path to the cpp file being compiled to
     // generate the symbol name (it doesn't respect the #line directives)
     const char * target( "../tmp/Test/Distributed/AnonymousNamespaces/AnonymousNamespaces.lib" );

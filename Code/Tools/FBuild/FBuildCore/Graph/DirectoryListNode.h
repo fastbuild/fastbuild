@@ -21,6 +21,7 @@ public:
 
     const AString & GetPath() const { return m_Path; }
     const Array< FileIO::FileInfo > & GetFiles() const { return m_Files; }
+    const Array<AString> & GetDirectories() const { return m_Directories; }
 
     static inline Node::Type GetTypeS() { return Node::DIRECTORY_LIST_NODE; }
 
@@ -32,6 +33,7 @@ public:
                             const Array< AString > * patterns,
                             bool recursive,
                             bool includeReadOnlyStatusInHash,
+                            bool includeDirs,
                             const Array< AString > & excludePaths,
                             const Array< AString > & excludeFiles,
                             const Array< AString > & excludePatterns,
@@ -52,11 +54,13 @@ private:
     Array< AString > m_ExcludePaths;
     Array< AString > m_FilesToExclude;
     Array< AString > m_ExcludePatterns;
-    bool m_Recursive;
-    bool m_IncludeReadOnlyStatusInHash;
+    bool m_Recursive = true;
+    bool m_IncludeReadOnlyStatusInHash = false;
+    bool m_IncludeDirs = false;
 
     // Internal State
     Array< FileIO::FileInfo > m_Files;
+    Array<AString> m_Directories;
     AString m_PrettyName;
 };
 

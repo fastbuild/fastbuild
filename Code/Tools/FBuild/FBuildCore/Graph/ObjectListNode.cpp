@@ -283,6 +283,7 @@ ObjectListNode::ObjectListNode()
                                               m_CompilerInputExcludePattern,
                                               m_CompilerInputPathRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_CompilerInputPattern,
                                               "CompilerInputPath",
                                               compilerInputPath ) )
@@ -361,15 +362,13 @@ ObjectListNode::~ObjectListNode() = default;
             const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
             const Array< FileIO::FileInfo > & files = dln->GetFiles();
             m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
-            for ( Array< FileIO::FileInfo >::Iter fIt = files.Begin();
-                    fIt != files.End();
-                    fIt++ )
+            for ( const FileIO::FileInfo & file : files )
             {
                 // Create the file node (or find an existing one)
-                Node * n = nodeGraph.FindNode( fIt->m_Name );
+                Node * n = nodeGraph.FindNode( file.m_Name );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateNode<FileNode>( fIt->m_Name );
+                    n = nodeGraph.CreateNode<FileNode>( file.m_Name );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -399,15 +398,12 @@ ObjectListNode::~ObjectListNode() = default;
             const UnityNode * un = dep.GetNode()->CastTo< UnityNode >();
 
             // unity files
-            const Array< AString > & unityFiles = un->GetUnityFileNames();
-            for ( Array< AString >::Iter it = unityFiles.Begin();
-                  it != unityFiles.End();
-                  it++ )
+            for ( const AString & unityFile : un->GetUnityFileNames() )
             {
-                Node * n = nodeGraph.FindNode( *it );
+                Node * n = nodeGraph.FindNode( unityFile );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateNode<FileNode>( *it );
+                    n = nodeGraph.CreateNode<FileNode>( unityFile );
                 }
                 else if ( n->IsAFile() == false )
                 {

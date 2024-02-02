@@ -8,6 +8,7 @@
 // Core
 #include <Core/Env/Env.h>
 #include <Core/Strings/AStackString.h>
+#include <Core/Tracing/Tracing.h>
 
 // TestEnv
 //------------------------------------------------------------------------------
@@ -17,6 +18,7 @@ private:
     DECLARE_TESTS
 
     void GetCommandLine() const;
+    void GetProcessorInfo() const;
     void GetExePath() const;
 };
 
@@ -24,6 +26,7 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestEnv )
     REGISTER_TEST( GetCommandLine )
+    REGISTER_TEST( GetProcessorInfo )
     REGISTER_TEST( GetExePath )
 REGISTER_TESTS_END
 
@@ -47,6 +50,17 @@ void TestEnv::GetExePath() const
     #else
         TEST_ASSERT( cmdLine.EndsWithI( "CoreTest" ) );
     #endif
+}
+
+// GetProcessorInfo
+//------------------------------------------------------------------------------
+void TestEnv::GetProcessorInfo() const
+{
+    const Env::ProcessorInfo& info = Env::GetProcessorInfo();
+    OUTPUT( "Num Cores: %u (PCores: %u + ECores: %u)\n",
+            info.mNumCores,
+            info.mNumPCores,
+            info.mNumECores );
 }
 
 //------------------------------------------------------------------------------

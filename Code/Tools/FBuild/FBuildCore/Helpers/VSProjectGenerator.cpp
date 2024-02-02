@@ -297,10 +297,17 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WritePGItem( "NMakeReBuildCommandLine",         config.m_ProjectRebuildCommand );
                 WritePGItem( "NMakeCleanCommandLine",           config.m_ProjectCleanCommand );
             }
-            if ( !config.m_AndroidApkLocation.IsEmpty() )
-            {
-                WritePGItem( "AndroidApkLocation",              config.m_AndroidApkLocation );
-            }
+            WritePGItem( "AndroidApkLocation",              config.m_AndroidApkLocation );
+            WritePGItem( "AndroidDebugComponent",           config.m_AndroidDebugComponent );
+            WritePGItem( "AndroidDebugTarget",              config.m_AndroidDebugTarget );
+            WritePGItem( "AndroidJdb",                      config.m_AndroidJdb );
+            WritePGItem( "AndroidLldbPostAttachCommands",   config.m_AndroidLldbPostAttachCommands );
+            WritePGItem( "AndroidLldbStartupCommands",      config.m_AndroidLldbStartupCommands );
+            WritePGItem( "AndroidPostApkInstallCommands",   config.m_AndroidPostApkInstallCommands );
+            WritePGItem( "AndroidPreApkInstallCommands",    config.m_AndroidPreApkInstallCommands );
+            WritePGItem( "AndroidSymbolDirectories",        config.m_AndroidSymbolDirectories );
+            WritePGItem( "AndroidWaitForDebugger",          config.m_AndroidWaitForDebugger );
+            WritePGItem( "LaunchFlags",                     config.m_LaunchFlags );
 
             WritePGItem( "NMakeOutput",                     config.m_Output );
             const ObjectListNode * oln = nullptr;

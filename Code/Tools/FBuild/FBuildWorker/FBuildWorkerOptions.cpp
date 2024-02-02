@@ -48,10 +48,8 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
     commandLine.Tokenize( tokens );
 
     // Check each token
-    const AString * const end = tokens.End();
-    for ( const AString * it = tokens.Begin(); it != end; ++it )
+    for ( const AString & token : tokens )
     {
-        const AString & token = *it;
         #if defined( __WINDOWS__ ) || defined( __OSX__ )
             if ( token == "-console" )
             {
@@ -159,7 +157,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 void FBuildWorkerOptions::ShowUsageError()
 {
     const char * msg = "FBuildWorker.exe - " FBUILD_VERSION_STRING "\n"
-                       "Copyright 2012-2023 Franta Fulin - https://www.fastbuild.org\n"
+                       "Copyright 2012-2024 Franta Fulin - https://www.fastbuild.org\n"
                        "\n"
                        "Command Line Options:\n"
                        "---------------------------------------------------------------------------\n"

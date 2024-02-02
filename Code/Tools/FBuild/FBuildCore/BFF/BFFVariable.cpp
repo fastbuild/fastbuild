@@ -292,8 +292,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
     {
         // Mismatched - is there a supported conversion?
 
-        const bool dstIsEmpty = ( varDst == nullptr ) ||
-                                ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && varDst->GetArrayOfStrings().IsEmpty() ) ||
+        const bool dstIsEmpty = ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && varDst->GetArrayOfStrings().IsEmpty() ) ||
                                 ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) && varDst->GetArrayOfStructs().IsEmpty() );
         const bool srcIsEmpty = ( ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && varSrc->GetArrayOfStrings().IsEmpty() ) ||
                                 ( ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) && varSrc->GetArrayOfStructs().IsEmpty() );

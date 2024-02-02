@@ -288,14 +288,12 @@ ObjectNode::~ObjectNode()
     // convert includes to nodes
     m_DynamicDependencies.Clear();
     m_DynamicDependencies.SetCapacity( m_Includes.GetSize() );
-    for ( Array< AString >::ConstIter it = m_Includes.Begin();
-            it != m_Includes.End();
-            it++ )
+    for ( const AString & include : m_Includes )
     {
-        Node * fn = nodeGraph.FindNode( *it );
+        Node * fn = nodeGraph.FindNode( include );
         if ( fn == nullptr )
         {
-            fn = nodeGraph.CreateNode<FileNode>( *it );
+            fn = nodeGraph.CreateNode<FileNode>( include );
         }
         else if ( fn->IsAFile() == false )
         {
@@ -963,11 +961,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         Array< AString > tokens;
         args.Tokenize( tokens );
-        const AString * const end = tokens.End();
-        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        for ( const AString & token : tokens )
         {
-            const AString & token = *it;
-
             if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
                 if ( !flags.IsClangCl() ) // with clang-cl, Zi is an alias for /Z7, it does not produce PDBs
@@ -1423,6 +1418,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
                        " - File: '%s'\n"
                        " - Key : %s\n",
                        m_Name.Get(), cacheFileName.Get() );
+            cache->FreeMemory( cacheData, cacheDataSize );
             return false;
         }
         const size_t uncompressedDataSize = buffer.GetDataSize();
@@ -1439,8 +1435,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         {
             if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
             {
-                cache->FreeMemory( cacheData, cacheDataSize );
                 FLOG_ERROR( "Failed to write local file during cache retrieval '%s'", fileNames[ i ].Get() );
+                cache->FreeMemory( cacheData, cacheDataSize );
                 return false;
             }
 
@@ -1450,8 +1446,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             // set the time on the local file
             if ( timeSetOK == false )
             {
-                cache->FreeMemory( cacheData, cacheDataSize );
                 FLOG_ERROR( "Failed to set timestamp after cache hit. Error: %s Target: '%s'", LAST_ERROR_STR, fileNames[ i ].Get() );
+                cache->FreeMemory( cacheData, cacheDataSize );
                 return false;
             }
         }

@@ -49,7 +49,7 @@ bool PosixMapMemory( const char * name,
 
     if ( create )
     {
-        VERIFY( ftruncate( *mapFile, length ) == 0 );
+        VERIFY( ftruncate( *mapFile, static_cast<off_t>( length ) ) == 0 );
     }
 
     *memory = mmap( nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, *mapFile, 0 );

@@ -21,8 +21,10 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define ID_TRAY_APP_ICON                5000
-#define IDI_TRAY_ICON                   102
+#if defined( __WINDOWS__ )
+    #define ID_TRAY_APP_ICON                5000
+    #define IDI_TRAY_ICON                   102
+#endif
 
 // OSX Functions
 //------------------------------------------------------------------------------

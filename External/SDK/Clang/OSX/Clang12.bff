@@ -44,8 +44,10 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
                                     + ' -Wno-implicit-exception-spec-mismatch' // Fires on our new/delete operator (Clang bug?)
 
-    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
+    .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header'
+                                    + ' -std=c++17 $CommonCompilerOptions$'
 
     // Librarian
     .Librarian                      = '$Clang12_BasePath$/ar'

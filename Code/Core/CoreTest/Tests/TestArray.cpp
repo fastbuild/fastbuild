@@ -6,7 +6,9 @@
 #include "TestFramework/TestGroup.h"
 
 #include "Core/Containers/Array.h"
+#include "Core/Math/Random.h"
 #include "Core/Strings/AString.h"
+#include "Core/Tracing/Tracing.h"
 
 // TestArray
 //------------------------------------------------------------------------------
@@ -37,6 +39,7 @@ private:
 
     void Sort() const;
     void SortDeref() const;
+    void SortBig() const;
 
     void Find() const;
     void FindDeref() const;
@@ -106,6 +109,7 @@ REGISTER_TESTS_BEGIN( TestArray )
 
     REGISTER_TEST( Sort )
     REGISTER_TEST( SortDeref )
+    REGISTER_TEST( SortBig )
 
     REGISTER_TEST( Find )
     REGISTER_TEST( FindDeref )
@@ -728,6 +732,76 @@ void TestArray::SortDeref() const
         TEST_ASSERT( *array[ 2 ] == "string100" );
     }
 }
+
+// SortBig
+//------------------------------------------------------------------------------
+void TestArray::SortBig() const
+{
+    Random r;
+
+    const uint32_t numItems = 1024 * 1024;
+
+    // Ints
+    {
+        // Generate a set of random integers
+        Array<uint32_t> bigArray;
+        bigArray.SetSize( numItems );
+        for ( uint32_t & element : bigArray )
+        {
+            element = r.GetRand();
+        }
+
+        // Sort
+        const Timer t;
+        bigArray.Sort();
+        const float t1 = t.GetElapsed();
+        CheckConsistency( bigArray );
+        OUTPUT( "SortBig 1, %2.3fs, %u\n", static_cast<double>( t1 ), numItems );
+
+        // Validate ordering
+        for ( uint32_t j = 1; j < bigArray.GetSize(); ++j )
+        {
+            TEST_ASSERT( bigArray[ j - 1 ] <= bigArray[ j ] );
+        }
+    }
+
+    // AString
+    {
+        // Generate a set of random strings
+        Array<AString> bigArray;
+        bigArray.SetSize( numItems );
+        for ( AString & element : bigArray )
+        {
+            element.SetReserved( 4 );
+            element.SetLength( r.GetRandIndex( 16 ) );
+            for ( char & c : element )
+            {
+                c = static_cast<char>( 32 + r.GetRandIndex( 127 - 32 ) );
+            }
+        }
+
+        TEST_MEMORY_SNAPSHOT(s1);
+
+        // Sort
+        const Timer t;
+        bigArray.Sort();
+        const float t1 = t.GetElapsed();
+        CheckConsistency( bigArray );
+
+        // Validate that no allocations were performed
+        // (all strings should have been moved)
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+
+        OUTPUT( "SortBig 2, %2.3fs, %u\n", static_cast<double>( t1 ), numItems );
+
+        // Validate ordering
+        for ( uint32_t j = 1; j < bigArray.GetSize(); ++j )
+        {
+            TEST_ASSERT( bigArray[ j - 1 ].Compare( bigArray[ j ] ) <= 0 );
+        }
+    }
+}
+
 
 // Find
 //------------------------------------------------------------------------------

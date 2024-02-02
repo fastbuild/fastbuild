@@ -54,6 +54,7 @@ CopyDirNode::CopyDirNode()
                                               Array< AString >(),    // Unsupported: Excluded patterns
                                               m_SourcePathsRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_SourcePathsPattern,
                                               "SourcePaths",
                                               sourcePaths ) )
@@ -99,16 +100,12 @@ CopyDirNode::~CopyDirNode() = default;
     {
         // Grab the files
         const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
-        const FileIO::FileInfo * const fEnd = files.End();
-        for ( const FileIO::FileInfo * fIt = files.Begin();
-              fIt != fEnd;
-              ++fIt )
+        for ( const FileIO::FileInfo & file : dln->GetFiles() )
         {
             // Create a CopyFileNode for each dynamically discovered file
 
             // source file (full path)
-            const AString & srcFile = fIt->m_Name;
+            const AString & srcFile = file.m_Name;
 
             // source file (relative to base path)
             const AStackString<> srcFileRel( srcFile.Get() + dln->GetPath().GetLength() );

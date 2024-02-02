@@ -1,4 +1,4 @@
-// Clang 11.x.x
+// Clang 17.x.x
 //------------------------------------------------------------------------------
 //
 // Detect Clang
@@ -8,20 +8,20 @@
 //  2) Part of a Visual Studio installation (Program Files)
 //  3) Default install location
 //
-#if file_exists( "11.0.0/bin/clang-cl.exe" )
+#if file_exists( "17.0.1/bin/clang-cl.exe" )
     // Vendorized
-    .Clang11_BasePath   = '$_CURRENT_BFF_DIR_$/11.0.0'
-    .Clang11_Version    = '11.0.0'
+    .Clang17_BasePath   = '$_CURRENT_BFF_DIR_$/17.0.1'
+    .Clang17_Version    = '17.0.1'
 #else
-    #if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64/bin/clang-cl.exe" )
-        // Installed with VS2019
-        .Clang11_BasePath = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64'
-        .Clang11_Version    = '11.x.x'
+    #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/LLVM/x64/bin/clang-cl.exe" )
+        // Installed with VS2022
+        .Clang17_BasePath = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/LLVM/x64'
+        .Clang17_Version    = '17.x.x'
     #else
         #if file_exists( "C:/Program Files/LLVM/bin/clang-cl.exe" )
             // Default Install
-            .Clang11_BasePath = 'C:/Program Files/LLVM'
-            .Clang11_Version    = '11.x.x'
+            .Clang17_BasePath = 'C:/Program Files/LLVM'
+            .Clang17_Version    = '17.x.x'
         #else
             //
             // Failed
@@ -29,20 +29,20 @@
             Print( '----------------------------------------------------------------------' )
             Print( '- Unable to auto-detect Clang - please specify installation manually -' )
             Print( '----------------------------------------------------------------------' )
-            .Clang11_BasePath   = .Set_Path_Here    // <-- Set path here
-            .Clang11_Version    = .Set_Version_Here // <-- Set version here
+            .Clang17_BasePath   = .Set_Path_Here    // <-- Set path here
+            .Clang17_Version    = .Set_Version_Here // <-- Set version here
         #endif
     #endif
 #endif
 
 // Print details of used version. TODO:C Move to Clang.bff
-Print( 'Using Clang $Clang11_Version$ from $Clang11_BasePath$' )
+Print( 'Using Clang $Clang17_Version$ from $Clang17_BasePath$' )
 
 // Compiler
 //------------------------------------------------------------------------------
-Compiler( 'Compiler-Clang11' )
+Compiler( 'Compiler-Clang17' )
 {
-    .Root                           = '$Clang11_BasePath$'
+    .Root                           = '$Clang17_BasePath$'
     .ExtraFiles                     = {
                                         '$Root$/bin/concrt140.dll'
                                         '$Root$/bin/msvcp140.dll'
@@ -62,9 +62,9 @@ Compiler( 'Compiler-Clang11' )
 
 // Compiler
 //------------------------------------------------------------------------------
-Compiler( 'Compiler-Clang11-NonCL' )
+Compiler( 'Compiler-Clang17-NonCL' )
 {
-    .Root                           = '$Clang11_BasePath$'
+    .Root                           = '$Clang17_BasePath$'
     .ExtraFiles                     = {
                                         '$Root$/bin/msvcp140.dll'
                                         '$Root$/bin/vcruntime140.dll'
@@ -92,13 +92,37 @@ Compiler( 'Compiler-Clang11-NonCL' )
     .Platform                       = 'x64Clang'
 
     // Librarian
-    .Librarian                      = '$Clang11_BasePath$\bin\llvm-ar.exe'
+    .Librarian                      = '$Clang17_BasePath$\bin\llvm-ar.exe'
     .LibrarianOptions               = '/c echo %1 > %2' // 'rc "%2" "%1"' // NOTE: output must come first
 
     // Linker
-    .Linker                         = '$Clang11_BasePath$\bin\lld-link.exe'
+    .Linker                         = '$Clang17_BasePath$\bin\lld-link.exe'
     .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
+
+    // Compiler Warnings
+    .CommonCompilerWarningOptions   // Enable warnings
+                                    = ' -Wall -Wextra -Weverything'     // All warnings
+                                    + ' -Werror -Wfatal-errors'         // Warnings as fatal errors
+
+                                    // Warnings that are not useful
+                                    + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
+                                    + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
+                                    + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
+                                    + ' -Wno-global-constructors'       // declaration requires a global destructor
+                                    + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
+                                    + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
+                                    + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'
+                                    + ' -Wno-gnu-line-marker'           // Clang complains about directives its own preprocessor generated
+                                    + ' -Wno-switch-enum'               // Allow the use of "default" labels (we keep -Wswitch to ensure all cases are handled)
+
+                                    // Warnings that fire but might be best to be fixed
+                                    + ' -Wno-cast-function-type-strict' // converts to incompatible function type
+                                    + ' -Wno-cast-qual'                 // cast from 'const %s *' to '%s *' drops const qualifier
+                                    + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
+                                    + ' -Wno-missing-noreturn'          // function '%s' could be declared with attribute 'noreturn'
+                                    + ' -Wno-old-style-cast'            // use of old-style cast
+                                    + ' -Wno-unsafe-buffer-usage'       // unsafe pointer arithmetic
 
     // File Extensions
     .LibExtension                   = '.a'
@@ -112,7 +136,7 @@ Compiler( 'Compiler-Clang11-NonCL' )
     Using( .ToolChain_Clang_Windows_Common )
 
     // Compiler Options
-    .Compiler                       = 'Compiler-Clang11'
+    .Compiler                       = 'Compiler-Clang17'
     .CommonCompilerOptions          = ' -c'                             // Compile only
                                     + ' /Z7'                            // Include debug info
 
@@ -123,29 +147,11 @@ Compiler( 'Compiler-Clang11-NonCL' )
                                     // x64
                                     + ' -m64'
 
-                                    // Enable warnings
-                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                                    + ' -Wextra'
-                                    + ' -Weverything'
-
                                     // No RTTI
                                     + ' /GR-'
 
-                                    // Warnings that are not useful
-                                    + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
-                                    + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
-                                    + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
-                                    + ' -Wno-global-constructors'       // declaration requires a global destructor
-                                    + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
-                                    + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
-                                    + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'
-
-                                    // Warnings that fire but might be best to be fixed
-                                    + ' -Wno-cast-qual'                 // cast from 'const %s *' to '%s *' drops const qualifier
-                                    + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
-                                    + ' -Wno-missing-noreturn'          // function '%s' could be declared with attribute 'noreturn'
-                                    + ' -Wno-old-style-cast'            // use of old-style cast
-                                    + ' -Wno-switch-enum'               // %u enumeration values not explicitly handled in switch: '%s', '%s'...
+                                    // Warnings
+                                    + .CommonCompilerWarningOptions
 
     .CompilerOptions                = ' /TP -o"%2" "%1" $CommonCompilerOptions$'
                                     + ' /std:c++17'                     // Enable c++17 features
@@ -164,7 +170,7 @@ Compiler( 'Compiler-Clang11-NonCL' )
     Using( .ToolChain_Clang_Windows_Common )
 
     // Compiler Options
-    .Compiler                       = 'Compiler-Clang11-NonCL'
+    .Compiler                       = 'Compiler-Clang17-NonCL'
     .CommonCompilerOptions          = ' -c'                             // Compile only
                                     + ' -g'                             // Include debug info
 
@@ -174,29 +180,11 @@ Compiler( 'Compiler-Clang11-NonCL' )
                                     // x64
                                     + ' -m64'
 
-                                    // Enable warnings
-                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                                    + ' -Wextra'
-                                    + ' -Weverything'
-
                                     // No RTTI
                                     + ' -fno-rtti'
 
-                                    // Warnings that are not useful
-                                    + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
-                                    + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
-                                    + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
-                                    + ' -Wno-global-constructors'       // declaration requires a global destructor
-                                    + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
-                                    + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
-                                    + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'
-
-                                    // Warnings that fire but might be best to be fixed
-                                    + ' -Wno-cast-qual'                 // cast from 'const %s *' to '%s *' drops const qualifier
-                                    + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
-                                    + ' -Wno-missing-noreturn'          // function '%s' could be declared with attribute 'noreturn'
-                                    + ' -Wno-old-style-cast'            // use of old-style cast
-                                    + ' -Wno-switch-enum'               // %u enumeration values not explicitly handled in switch: '%s', '%s'...
+                                    // Warnings
+                                    + .CommonCompilerWarningOptions
 
     .CompilerOptions                = ' -x c++ -o"%2" "%1" $CommonCompilerOptions$'
                                     + ' -std=c++17'                     // Enable c++17 features

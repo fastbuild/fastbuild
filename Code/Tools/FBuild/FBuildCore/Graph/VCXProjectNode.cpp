@@ -70,6 +70,16 @@ REFLECT_STRUCT_BEGIN_BASE( VSProjectConfigBase )
     REFLECT(        m_PackagePath,                  "PackagePath",                  MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_AdditionalSymbolSearchPaths,  "AdditionalSymbolSearchPaths",  MetaInheritFromOwner() + MetaOptional() )
     REFLECT(        m_AndroidApkLocation,           "AndroidApkLocation",           MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidDebugComponent,        "AndroidDebugComponent",        MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidDebugTarget,           "AndroidDebugTarget",           MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidJdb,                   "AndroidJdb",                   MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidLldbPostAttachCommands,    "AndroidLldbPostAttachCommands",    MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidLldbStartupCommands,   "AndroidLldbStartupCommands",   MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidPostApkInstallCommands,    "AndroidPostApkInstallCommands",    MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidPreApkInstallCommands, "AndroidPreApkInstallCommands", MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidSymbolDirectories,     "AndroidSymbolDirectories",     MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AndroidWaitForDebugger,       "AndroidWaitForDebugger",       MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_LaunchFlags,                  "LaunchFlags",                  MetaInheritFromOwner() + MetaOptional() )
 REFLECT_END( VSProjectConfigBase )
 
 REFLECT_STRUCT_BEGIN( VSProjectConfig, VSProjectConfigBase, MetaNone() )
@@ -188,6 +198,7 @@ VCXProjectNode::VCXProjectNode()
                                               m_ProjectPatternToExclude,
                                               m_ProjectInputPathsRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_ProjectAllowedFileExtensions,
                                               "ProjectInputPaths",
                                               dirNodes ) )

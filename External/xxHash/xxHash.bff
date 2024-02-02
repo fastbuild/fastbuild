@@ -1,6 +1,6 @@
 // xxHash
 //------------------------------------------------------------------------------
-.xxHashBasePath         = '../External/xxHash/0.8.1/'
+.xxHashBasePath         = '../External/xxHash/0.8.2/'
 .xxHashIncludePaths     = ' "-I$xxHashBasePath$"'
 {
     .ProjectName        = 'xxHash'

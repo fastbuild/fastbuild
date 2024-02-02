@@ -74,13 +74,10 @@ Client::~Client()
     DIST_INFO( "Disconnected: %s\n", ss->m_RemoteName.Get() );
     if ( ss->m_Jobs.IsEmpty() == false )
     {
-        Job ** it = ss->m_Jobs.Begin();
-        const Job * const * end = ss->m_Jobs.End();
-        while ( it != end )
+        for ( Job * job : ss->m_Jobs )
         {
-            FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", ss->m_RemoteName.Get(), (*it)->GetNode()->GetName().Get() );
-            JobQueue::Get().ReturnUnfinishedDistributableJob( *it );
-            ++it;
+            FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
+            JobQueue::Get().ReturnUnfinishedDistributableJob( job );
         }
         ss->m_Jobs.Clear();
     }
@@ -399,6 +396,12 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
             Process( connection, msg );
             break;
         }
+        case Protocol::MSG_CONNECTION_ACK:
+        {
+            const Protocol::MsgConnectionAck * msg = static_cast< const Protocol::MsgConnectionAck * >( imsg );
+            Process( connection, msg );
+            break;
+        }
         default:
         {
             // unknown message type
@@ -516,6 +519,29 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     ProcessJobResultCommon( connection, compressed, payload, payloadSize );
 }
 
+// Process( MsgConnectionAck )
+//------------------------------------------------------------------------------
+void Client::Process( const ConnectionInfo * connection, const Protocol::MsgConnectionAck * msg )
+{
+    PROFILE_SECTION( "MsgConnectionAck" );
+
+    ServerState * ss = (ServerState *)connection->GetUserData();
+    ASSERT( ss );
+
+    // The connection would be dropped and we would not get an ack if the major
+    // protocol version is mismatched.
+    ASSERT( msg->GetProtocolVersionMajor() == Protocol::PROTOCOL_VERSION_MAJOR );
+
+    // Take note of additional server info
+    ss->m_WorkerVersion.Store( msg->GetWorkerVersion() );
+    ss->m_ProtocolVersionMinor.Store( msg->GetProtocolVersionMinor() );
+    DIST_INFO( " - Worker %s is v%u.%u (protocol v%u.%u)\n", ss->m_RemoteName.Get(),
+                                                             (ss->m_WorkerVersion.Load() / 100U),
+                                                             (ss->m_WorkerVersion.Load() % 100U),
+                                                             Protocol::PROTOCOL_VERSION_MAJOR,
+                                                             ss->m_ProtocolVersionMinor.Load() );
+}
+
 // ProcessJobResultCommon
 //------------------------------------------------------------------------------
 void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isCompressed, const void * payload, size_t payloadSize )
@@ -599,7 +625,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         ss->m_Denylisted = true;
 
         // -distverbose message
-        const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
+        const size_t workerIndex = m_ServerList.GetIndexOf( ss );
         const AString & workerName = m_WorkerList[ workerIndex ];
         DIST_INFO( "Remote System Failure!\n"
                     " - Deny listed Worker: %s\n"
@@ -635,7 +661,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         }
 
         // Record information about worker
-        const uint32_t workerId = static_cast<uint32_t>( ss - m_ServerList.Begin() );
+        const uint32_t workerId = static_cast<uint32_t>( m_ServerList.GetIndexOf( ss ) );
         const int64_t start = receivedResultEndTime - (int64_t)( ( (double)buildTime / 1000 ) * (double)Timer::GetFrequency() );
         BuildProfiler::Get().RecordRemote( workerId,
                                            ss->m_RemoteName,
@@ -901,11 +927,9 @@ const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, ui
 
     MutexHolder mh( ss->m_Mutex );
 
-    for ( Job ** it = ss->m_Jobs.Begin();
-          it != ss->m_Jobs.End();
-          ++it )
+    for ( const Job * job : ss->m_Jobs )
     {
-        const Node * n = ( *it )->GetNode()->CastTo< ObjectNode >()->GetCompiler();
+        const Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
         const ToolManifest & m = n->CastTo< CompilerNode >()->GetManifest();
         if ( m.GetToolId() == toolId )
         {

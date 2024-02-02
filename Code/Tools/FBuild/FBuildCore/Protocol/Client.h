@@ -20,6 +20,7 @@ class MultiBuffer;
 namespace Protocol
 {
     class IMessage;
+    class MsgConnectionAck;
     class MsgJobResult;
     class MsgJobResultCompressed;
     class MsgRequestJob;
@@ -49,6 +50,7 @@ private:
     void Process( const ConnectionInfo * connection, const Protocol::MsgJobResultCompressed * msg, const void * payload, size_t payloadSize );
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestManifest * msg );
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestFile * msg );
+    void Process( const ConnectionInfo * connection, const Protocol::MsgConnectionAck * msg );
 
     void ProcessJobResultCommon( const ConnectionInfo * connection, bool isCompressed, const void * payload, size_t payloadSize );
 
@@ -80,6 +82,8 @@ private:
 
         const ConnectionInfo *  m_Connection;
         AString                 m_RemoteName;
+        Atomic<uint16_t>        m_WorkerVersion;
+        Atomic<uint8_t>         m_ProtocolVersionMinor;
 
         Mutex                   m_Mutex;
         const Protocol::IMessage * m_CurrentMessage;

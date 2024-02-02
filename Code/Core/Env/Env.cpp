@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Strings/AStackString.h"
 
@@ -35,6 +36,81 @@
         char *** _NSGetArgv( void );
     };
 #endif
+
+// Env::ProcessorInfo
+//------------------------------------------------------------------------------
+Env::ProcessorInfo::ProcessorInfo()
+{
+    PROFILE_FUNCTION;
+
+    // Detect total core count
+    mNumCores = GetNumProcessors();
+
+    // Detect Performance and Efficiency core breakdown
+#if defined( __WINDOWS__ )
+    // On systems with NUMA nodes, assume all cores are Performance cores
+    // and use the existing detection logic which can returns CPU counts
+    // greater than 64
+    ULONG numNUMANodes = 0;
+    VERIFY( GetNumaHighestNodeNumber( &numNUMANodes ) );
+    if ( numNUMANodes > 0 )
+    {
+        mNumPCores = mNumCores;
+        return;
+    }
+
+    // Introspect each core per Intel's guidance:
+    //  - https://www.intel.com/content/www/us/en/developer/articles/guide/12th-gen-intel-core-processor-gamedev-guide.html
+    // On AMD CPUs, all cores are detected as PCores currently as expected.
+    // If AMD starts shipping SKUs with ECores, this function may require additional updates/logic.
+
+    // Take note of the original affinity mask so we can restore it
+    const uint64_t originalAffinity = SetThreadAffinityMask( GetCurrentThread(), 0xFFFFFFFFFFFFFFFFULL );
+    ASSERT( originalAffinity );
+
+    // Iterate all the cores
+    for (uint32_t core = 0; core < mNumCores; ++core)
+    {
+        // Switch affinity to core so cpuid function returns info about that core
+        VERIFY( SetThreadAffinityMask( GetCurrentThread(), ( 1ULL << core ) ) != 0 );
+
+        // Check if the core is on a "hybrid part"
+        bool isECore = false;
+        int32_t cpuIdInfo[ 4 ];
+        __cpuid( cpuIdInfo, 0x07 ); // Hybrid Part
+        if ( cpuIdInfo[3] & ( 1 << 15 ) ) // Bit 15 in EDX
+        {
+            // Query core type
+            __cpuid( cpuIdInfo, 0x1A ); // Core Type
+
+            // Determine if this core is a PCore or ECore by checking
+            // the top 8 bits in EAX
+            if ( ( static_cast<uint32_t>( cpuIdInfo[0]) >> 24 ) == 0x20 ) // Intel Atom
+            {
+                isECore = true;
+            }
+        }
+
+        // Increment the appropriate core type
+        uint32_t& coreCount = ( isECore ? mNumECores : mNumPCores );
+        coreCount++;
+    }
+
+    // Restore original affinity
+    VERIFY( SetThreadAffinityMask( GetCurrentThread(), originalAffinity ) != 0 );
+#else
+    // TODO:LINUX TODO:OSX Implement for these platforms
+    mNumPCores = mNumCores;
+#endif
+}
+
+// GetProcessorInfo
+//------------------------------------------------------------------------------
+/*static*/ const Env::ProcessorInfo& Env::GetProcessorInfo()
+{
+    static ProcessorInfo sInfo; // Info is gathered on first call
+    return sInfo;
+}
 
 // GetNumProcessors
 //------------------------------------------------------------------------------
@@ -187,7 +263,7 @@
         }
     #else
         FILE* f = fopen( "/proc/self/cmdline", "rb" );
-        VERIFY( f != 0 );
+        ASSERT( f );
         char buffer[ 4096 ];
         for (;;)
         {
@@ -352,7 +428,7 @@ static bool IsStdOutRedirectedInternal()
     #if defined( __WINDOWS__ )
         return ::GetLastError();
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        return errno;
+        return static_cast<uint32_t>( errno );
     #else
         #error Unknown platform
     #endif

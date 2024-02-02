@@ -253,14 +253,18 @@ loop:
     #else
         va_list argsCopy;
         va_copy( argsCopy, args );
+        PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
         int len = vsnprintf( nullptr, 0, fmtString, argsCopy );
+        PRAGMA_DISABLE_POP_CLANG
         va_end( argsCopy );
         if ( len > ( (int)bufferSize - 1 ) )
         {
-            bufferSize = len + 1;
+            bufferSize = static_cast<size_t>( len ) + 1;
             buffer = (char *)ALLOC( bufferSize );
         }
+        PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
         VERIFY( vsnprintf( buffer, bufferSize, fmtString, args ) >= 0 );
+        PRAGMA_DISABLE_POP_CLANG
     #endif
 
     // keep the final result
@@ -616,6 +620,33 @@ AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
     va_end( args );
 
     Append( buffer );
+
+    return *this;
+}
+
+// AppendList
+//------------------------------------------------------------------------------
+AString & AString::AppendList( const Array<AString> & list, char separator )
+{
+    // Ignore empty lists explicitly to simplify logic below
+    if ( list.IsEmpty() )
+    {
+        return *this;
+    }
+
+    // Determine how many separators will be needed
+    size_t numSeparatorsRemaining = ( list.GetSize() - 1 );
+
+    // Append items with separators
+    for ( const AString & item : list )
+    {
+        Append( item );
+        if ( numSeparatorsRemaining > 0 )
+        {
+            Append( separator );
+            --numSeparatorsRemaining;
+        }
+    }
 
     return *this;
 }

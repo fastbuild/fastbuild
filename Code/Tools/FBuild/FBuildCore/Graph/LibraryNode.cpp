@@ -244,10 +244,8 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     // objects instead of the libs
     const bool objectsInsteadOfLibs = ( m_LibrarianFlags & LIB_FLAG_LIB ) ? false : true;
 
-    const AString * const end = tokens.End();
-    for ( const AString * it = tokens.Begin(); it!=end; ++it )
+    for ( const AString & token : tokens )
     {
-        const AString & token = *it;
         if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
@@ -369,10 +367,8 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         Array< AString > tokens;
         args.Tokenize( tokens );
 
-        const AString* const end = tokens.End();
-        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        for ( const AString & token : tokens )
         {
-            const AString& token = *it;
             if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
             {
                 flags |= LIB_FLAG_WARNINGS_AS_ERRORS_MSVC;

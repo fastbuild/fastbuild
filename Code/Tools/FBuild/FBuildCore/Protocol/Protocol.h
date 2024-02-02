@@ -32,7 +32,7 @@ namespace Protocol
 
     // Protocol Version
     enum : uint32_t { PROTOCOL_VERSION_MAJOR = 22 };    // Changes here make workers incompatible
-    enum : uint8_t  { PROTOCOL_VERSION_MINOR = 2 };     // Changes must be forwards and backwards compatible
+    enum : uint8_t  { PROTOCOL_VERSION_MINOR = 3 };     // Changes must be forwards and backwards compatible
 
     enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
 
@@ -55,11 +55,15 @@ namespace Protocol
         MSG_REQUEST_FILE        = 9, // Server -> Client : Ask client for a file
         MSG_FILE                = 10,// Server <- Client : Send a requested file
 
+        // v22.1 or later
         MSG_JOB_RESULT_COMPRESSED   = 11, // Server -> Client : Return completed job (compressed)
+
+        // v22.3 or later
+        MSG_CONNECTION_ACK      = 12,// Server -> Client : Handshake ack
 
         NUM_MESSAGES            // leave last
     };
-};
+}
 
 #ifdef PROTOCOL_DEBUG_ENABLED
     const char * GetProtocolMessageDebugName( Protocol::MessageType msgType );
@@ -113,6 +117,22 @@ namespace Protocol
         char            m_HostName[ 64 ];
     };
     static_assert( sizeof( MsgConnection ) == sizeof( IMessage ) + 76, "MsgConnection message has incorrect size" );
+
+    // MsgConnectionAck
+    //------------------------------------------------------------------------------
+    class MsgConnectionAck : public IMessage
+    {
+    public:
+        MsgConnectionAck();
+
+        uint16_t        GetWorkerVersion() const        { return m_WorkerVersion; }
+        uint8_t         GetProtocolVersionMajor() const { return m_ProtocolVersionMajor; }
+        uint8_t         GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
+    private:
+        uint16_t        m_WorkerVersion;
+        uint8_t         m_ProtocolVersionMajor;
+        uint8_t         m_ProtocolVersionMinor;
+    };
 
     // MsgStatus
     //------------------------------------------------------------------------------
@@ -245,6 +265,6 @@ namespace Protocol
         MsgServerStatus();
     };
     static_assert( sizeof( MsgServerStatus ) == sizeof( IMessage ), "MsgServerStatus message has incorrect size" );
-};
+}
 
 //------------------------------------------------------------------------------

@@ -183,6 +183,7 @@ UnityNode::UnityNode()
                                               m_ExcludePatterns,
                                               m_InputPathRecurse,
                                               true, // Include Read-Only status change in hash
+                                              false, // Don't include directories
                                               &m_InputPattern,
                                               "UnityInputPath",
                                               dirNodes ) )
@@ -429,16 +430,15 @@ UnityNode::~UnityNode()
         }
 
         // write allocation of includes for this unity file
-        const UnityFileAndOrigin * const end = filesInThisUnity.End();
         size_t numFilesActuallyIsolatedInThisUnity( 0 );
-        for ( const UnityFileAndOrigin * file = filesInThisUnity.Begin(); file != end; ++file )
+        for ( const UnityFileAndOrigin & file : filesInThisUnity )
         {
             // files which are modified can optionally be excluded from the unity
             bool isolateThisFile = false;
             if ( ( m_MaxIsolatedFiles == 0 ) || ( numIsolated <= m_MaxIsolatedFiles ) )
             {
                 // is the file writable?
-                if ( file->IsIsolated() )
+                if ( file.IsIsolated() )
                 {
                     isolateThisFile = true;
                 }
@@ -447,25 +447,25 @@ UnityNode::~UnityNode()
             if ( isolateThisFile )
             {
                 // disable compilation of this file (comment it out)
-                m_IsolatedFiles.EmplaceBack( file->GetName(), file->GetDirListOrigin() );
+                m_IsolatedFiles.EmplaceBack( file.GetName(), file.GetDirListOrigin() );
                 numFilesActuallyIsolatedInThisUnity++;
             }
             else if ( noUnity )
             {
                 // No unity makes us build all files individually
                 // We still generate the unity.cpp the same way to avoid changing it unnecessarily
-                m_IsolatedFiles.EmplaceBack( file->GetName(), file->GetDirListOrigin() );
+                m_IsolatedFiles.EmplaceBack( file.GetName(), file.GetDirListOrigin() );
             }
 
             // Get relative file path
             AStackString<> relativePath;
             if ( m_UseRelativePaths_Experimental )
             {
-                PathUtils::GetRelativePath( includeBasePath, file->GetName(), relativePath );
+                PathUtils::GetRelativePath( includeBasePath, file.GetName(), relativePath );
             }
 
             // write pragma showing cpp file being compiled to assist resolving compilation errors
-            AStackString<> buffer( m_UseRelativePaths_Experimental ? relativePath : file->GetName() );
+            AStackString<> buffer( m_UseRelativePaths_Experimental ? relativePath : file.GetName() );
             buffer.Replace( BACK_SLASH, FORWARD_SLASH ); // avoid problems with slashes in generated code
             #if defined( __LINUX__ )
                 output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
@@ -491,7 +491,7 @@ UnityNode::~UnityNode()
             }
             else
             {
-                output += file->GetName();
+                output += file.GetName();
             }
             output += "\"\r\n\r\n";
         }
@@ -636,14 +636,13 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
         }
     }
 
-    const Dependency * const sEnd = m_StaticDependencies.End();
-    for ( const Dependency * sIt = m_StaticDependencies.Begin(); sIt != sEnd; ++sIt )
+    for ( const Dependency & dep : m_StaticDependencies )
     {
-        const Node* node = sIt->GetNode();
+        const Node* node = dep.GetNode();
 
         if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            DirectoryListNode * dirNode = sIt->GetNode()->CastTo< DirectoryListNode >();
+            DirectoryListNode * dirNode = node->CastTo< DirectoryListNode >();
             const FileIO::FileInfo * const filesEnd = dirNode->GetFiles().End();
 
             // filter files in the dir list
@@ -667,7 +666,7 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
         }
         else if ( node->GetType() == Node::OBJECT_LIST_NODE )
         {
-            const ObjectListNode * objListNode = sIt->GetNode()->CastTo< ObjectListNode >();
+            const ObjectListNode * objListNode = node->CastTo< ObjectListNode >();
 
             // iterate all the files in the object list
             Array< AString > objListFiles;
@@ -759,7 +758,7 @@ void UnityNode::FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array<
         }
     }
 
-    files.SetSize( (uint64_t)( writeIt - files.Begin() ) );
+    files.SetSize( files.GetIndexOf( writeIt ) );
 }
 
 

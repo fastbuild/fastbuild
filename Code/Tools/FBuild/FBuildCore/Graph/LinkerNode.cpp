@@ -453,11 +453,8 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
     Array< AString > tokens( 1024, true );
     m_LinkerOptions.Tokenize( tokens );
 
-    const AString * const end = tokens.End();
-    for ( const AString * it = tokens.Begin(); it!=end; ++it )
+    for ( const AString & token : tokens )
     {
-        const AString & token = *it;
-
         // %1 -> InputFiles
         const char * found = token.Find( "%1" );
         if ( found )
@@ -768,10 +765,8 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         bool optLBRFlag = false;
         bool orderFlag = false;
 
-        const AString * const end = tokens.End();
-        for ( const AString * it=tokens.Begin(); it!=end; ++it )
+        for ( const AString & token : tokens )
         {
-            const AString & token = *it;
             if ( IsLinkerArg_MSVC( token, "DLL" ) )
             {
                 flags |= LinkerNode::LINK_FLAG_DLL;
@@ -855,10 +850,8 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         Array< AString > tokens;
         args.Tokenize( tokens );
 
-        const AString * const end = tokens.End();
-        for ( const AString * it=tokens.Begin(); it!=end; ++it )
+        for ( AString & token : tokens )
         {
-            AStackString<256> token( *it );
             token.ToLower();
 
             if ( ( token == "-shared" ) ||
@@ -1221,13 +1214,12 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     else
     {
         // filter specifically listed default libs
-        const AString * const endI = defaultLibsToIgnore.End();
-        for ( const AString * itI = defaultLibsToIgnore.Begin(); itI != endI; ++itI )
+        for ( const AString & defaultLibToIgnore : defaultLibsToIgnore )
         {
             const AString * const endD = defaultLibs.End();
             for ( AString * itD = defaultLibs.Begin(); itD != endD; ++itD )
             {
-                if ( itI->CompareI( *itD ) == 0 )
+                if ( defaultLibToIgnore.EqualsI( *itD ) )
                 {
                     defaultLibs.Erase( itD );
                     break;
@@ -1243,23 +1235,22 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     libPaths.Append( envLibPaths );
 
     // convert libs to nodes
-    const AString * const endL = libs.End();
-    for ( const AString * itL = libs.Begin(); itL != endL; ++itL )
+    for ( const AString & lib : libs )
     {
         bool found = false;
 
         // is the file a full path?
-        if ( ( itL->GetLength() > 2 ) && ( (*itL)[ 1 ] == ':' ) )
+        if ( ( lib.GetLength() > 2 ) && ( lib[ 1 ] == ':' ) )
         {
             // check file exists in current location
-            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, AString::GetEmpty(), *itL, found ) )
+            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, AString::GetEmpty(), lib, found ) )
             {
                 return false; // GetOtherLibrary will have emitted error
             }
         }
         else
         {
-            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, libPaths, *itL ) )
+            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, libPaths, lib ) )
             {
                 return false; // GetOtherLibrary will have emitted error
             }

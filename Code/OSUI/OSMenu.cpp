@@ -15,7 +15,9 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM 3000
+#if defined( __WINDOWS__ )
+    #define ID_TRAY_EXIT_CONTEXT_MENU_ITEM 3000
+#endif
 
 // OSX Functions
 //------------------------------------------------------------------------------

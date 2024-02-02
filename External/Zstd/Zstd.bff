@@ -11,12 +11,15 @@
                                     .ZstdCompilerOptions    = ' /wd4365'    // conversion from '%s' to '%s', signed/unsigned mismatch
                                                             + ' /wd4464'    // relative include path contains '..'
                                                             + ' /wd4574'    // '__has_attribute' is defined to be '0': did you mean to use '#if __has_attribute'?
+                                                            + ' /wd5262'    // implicit fall-through occurs here; are you missing a break statement?
                                                             + ' /wd6011'    // Dereferencing NULL pointer 'ptr'.
                                                             + ' /wd6239'    // (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
                                                             + ' /wd6293'    // Ill-defined for-loop:  counts down from minimum.
                                                             + ' /wd6326'    // Potential comparison of a constant with another constant.
+                                                            + ' /wd26408'   // Avoid malloc() and free(), prefer the nothrow version of new with delete (r.10).
                                                             + ' /wd26448'   // Consider using gsl::finally if final action is intended (gsl.util).
                                                             + ' /wd26462'   // The value pointed to by '%s' is assigned only once, mark it as a pointer to const
+                                                            + ' /wd26496'   // The variable '%s' does not change after construction, mark it as const (con.4).
                                                             + ' /wd26818'   // Switch statement does not cover all cases. Consider adding a 'default' label (es.79).
                                                             + ' /wd26819'   // Unannotated fallthrough between switch labels (es.78).
                                                             + ' /wd28251'   // Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
@@ -71,6 +74,7 @@
                                           }
             .UnityNumFiles              = 3
             .UnityOutputPath            = '$OutputBase$/External/$ProjectName$/'
+            .UnityOutputPattern         = 'Unity*.c'
         }
 
         // Static Library

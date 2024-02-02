@@ -35,14 +35,14 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestPathUtils::TestFixupFolderPath() const
 {
-    #define DOCHECK( before, after ) \
-    { \
-        AStackString<> path( before ); \
-        PathUtils::FixupFolderPath( path ); \
-        TEST_ASSERT( path == after ); \
-    }
-
     #if defined( __WINDOWS__ )
+        #define DOCHECK( before, after ) \
+        { \
+            AStackString<> path( before ); \
+            PathUtils::FixupFolderPath( path ); \
+            TEST_ASSERT( path == after ); \
+        }
+
         // standard windows path
         DOCHECK( "c:\\folder", "c:\\folder\\" )
 
@@ -51,9 +51,9 @@ void TestPathUtils::TestFixupFolderPath() const
 
         // UNC path double slash is preserved
         DOCHECK( "\\\\server\\folder", "\\\\server\\folder\\" )
-    #endif
 
-    #undef DOCHECK
+        #undef DOCHECK
+    #endif
 }
 
 // TestPathBeginsWith

@@ -997,7 +997,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     cost += nodeToBuild->GetLastBuildTime();
 
     // False positive "Unannotated fallthrough between switch labels" (VS 2019 v14.29.30037)
-    #if ( _MSC_VER < 1935 )
+    #if defined( _MSC_VER ) && ( _MSC_VER < 1935 )
         PRAGMA_DISABLE_PUSH_MSVC(26819)
     #endif
 
@@ -1092,7 +1092,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     }
 
     // False positive "Unannotated fallthrough between switch labels" (VS 2019 v14.29.30037)
-    #if ( _MSC_VER < 1935 )
+    #if defined( _MSC_VER ) && ( _MSC_VER < 1935 )
         PRAGMA_DISABLE_POP_MSVC // 26819
     #endif
 }

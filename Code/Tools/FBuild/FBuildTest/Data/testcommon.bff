@@ -20,42 +20,17 @@
 // Linux GCC
 //==============================================================================
 #if __LINUX__
-    .LinuxGCCToolChain =
-    [
-        Using( .ToolChain_GCC_Linux )
-
-        // TODO: Move this to ToolChain
-        .PCHOptions         = '-x c++-header'
-                            + .CompilerOptions
-                            + ' -std=c++11'                     // allow C++11 features
-                            + ' -Wno-invalid-offsetof'          // allow offset of members in non-POD types
-    ]
+    .LinuxGCCToolChain = .ToolChain_GCC_Linux
 #endif
 
 //==============================================================================
 // OSX Clang
 //==============================================================================
 #if __OSX__
-    .OSXClangToolChain =
-    [
-        Using( .ToolChain_Clang_OSX )
-
-        // TODO: Move this to ToolChain
-        .PCHOptions         = ' -x c++-header'
-                            + .CommonCompilerOptions
-                            + ' -std=c++11'
-    ]
+    .OSXClangToolChain = .ToolChain_Clang_OSX
 
     #if CLANG_SUPPORTS_ARMOSX
-        .ARMOSXClangToolChain =
-        [
-            Using( .ToolChain_Clang_ARMOSX )
-
-            // TODO: Move this to ToolChain
-            .PCHOptions         = ' -x c++-header'
-                                + .CommonCompilerOptions
-                                + ' -std=c++11'
-        ]
+        .ARMOSXClangToolChain = .ToolChain_Clang_ARMOSX
     #endif
 #endif
 

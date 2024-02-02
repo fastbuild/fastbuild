@@ -293,6 +293,14 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     cs->m_NumJobsAvailable.Store( msg->GetNumJobsAvailable() );
     cs->m_ProtocolVersionMinor = msg->GetProtocolVersionMinor();
     cs->m_HostName = msg->GetHostName();
+
+    // If Client is new enough, send an ack message
+    if ( msg->GetProtocolVersionMinor() >= 3 )
+    {
+        // Send Ack to client
+        const Protocol::MsgConnectionAck ack;
+        ack.Send( connection );
+    }
 }
 
 // Process( MsgStatus )

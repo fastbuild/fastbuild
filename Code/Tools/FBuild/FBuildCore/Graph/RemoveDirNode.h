@@ -25,9 +25,14 @@ public:
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
+    [[nodiscard]] bool FileDelete( const AString & file ) const;
+    [[nodiscard]] bool DirectoryDelete( const AString & dir ) const;
+
     // Exposed Properties
     Array< AString >    m_RemovePaths;
-    bool                m_RemovePathsRecurse;
+    bool                m_RemovePathsRecurse = true;
+    bool                m_RemoveDirs = true;
+    bool                m_RemoveRootDir = true;
     Array< AString >    m_RemovePatterns;
     Array< AString >    m_RemoveExcludePaths;
     Array< AString >    m_RemoveExcludeFiles;

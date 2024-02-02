@@ -95,12 +95,8 @@ FunctionUsing::FunctionUsing()
     }
 
     const BFFVariable * sameNameMember = nullptr;
-    const Array< const BFFVariable * > & members = v->GetStructMembers();
-    for ( const BFFVariable ** it = members.Begin();
-            it != members.End();
-            ++it )
+    for ( const BFFVariable * member : v->GetStructMembers() )
     {
-        const BFFVariable * member = ( *it );
         if ( ( sameNameMember == nullptr ) && ( parentScope == false ) && ( member->GetName() == v->GetName() ) )
         {
             // We have a struct member with the same name as the struct variable itself.

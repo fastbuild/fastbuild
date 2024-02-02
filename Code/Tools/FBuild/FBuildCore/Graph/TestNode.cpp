@@ -93,6 +93,7 @@ TestNode::TestNode()
                                               m_TestInputExcludePattern,
                                               m_TestInputPathRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_TestInputPattern,
                                               "TestInputPath",
                                               testInputPaths ) )

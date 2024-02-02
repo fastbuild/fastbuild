@@ -5,7 +5,7 @@ inputs:
   version:
     description: Version to download
     required: false
-    default: 1.09
+    default: "1.10"
 
 runs:
   using: composite
@@ -15,7 +15,7 @@ runs:
       run: |
         case "${{ runner.os }}" in
           Linux)   FN="FASTBuild-Linux-x64-v${{ inputs.version }}.zip"   FBUILD=fbuild ;;
-          macOS)   FN="FASTBuild-OSX-x64-v${{ inputs.version }}.zip"     FBUILD=FBuild ;;
+          macOS)   FN="FASTBuild-OSX-x64+ARM-v${{ inputs.version }}.zip" FBUILD=FBuild ;;
           Windows) FN="FASTBuild-Windows-x64-v${{ inputs.version }}.zip" FBUILD=FBuild.exe ;;
         esac
         curl -fL "https://fastbuild.org/downloads/v${{ inputs.version }}/${FN}" -o "${FN}"

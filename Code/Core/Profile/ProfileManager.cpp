@@ -240,14 +240,12 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     }
 
     // write all the events we have
-    const ProfileEventInfo * const end = infos.End();
     AStackString< 8192 > buffer;
     const double freqMul = ( (double)Timer::GetFrequencyInvFloatMS() * 1000.0 );
     if ( g_ProfileEventLog.IsOpen() )
     {
-        for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )
+        for ( const ProfileEventInfo & info : infos )
         {
-            const ProfileEventInfo & info = *it;
             uint64_t threadId = (uint64_t)info.m_ThreadId;
             char threadIsAsString[ 32 ];
 
@@ -319,9 +317,8 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
         }
     }
 
-    for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )
+    for ( ProfileEventInfo & info : infos )
     {
-        const ProfileEventInfo & info = *it;
         FDELETE[] info.m_Events;
     }
 }

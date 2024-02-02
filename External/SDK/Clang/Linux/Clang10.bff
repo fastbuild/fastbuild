@@ -38,11 +38,36 @@ Compiler( 'Compiler-Clang10' )
                                     // Enable warnings
                                     + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                                     + ' -Wextra'
-                                    + ' -Wshadow'
+                                    + ' -Weverything'
 
-    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
-                                    + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+                                    // Warnings that are not useful
+                                    + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
+                                    + ' -Wno-disabled-macro-expansion'  // disabled expansion of recursive macro
+                                    + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
+                                    + ' -Wno-global-constructors'       // declaration requires a global destructor
+                                    + ' -Wno-gnu-zero-variadic-macro-arguments' // token pasting of ',' and __VA_ARGS__ is a GNU extension
+                                    + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
+                                    + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
+                                    + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'
+                                    + ' -Wno-padded'                    // padding size of '%s' with %u bytes to alignment boundary
+                                    + ' -Wno-switch-enum'               // Allow the use of "default" labels (we keep -Wswitch to ensure all cases are handled)
+                                    + ' -Wno-documentation-unknown-command' // unknown command tag name
+
+                                    // Warnings that need fixing or further investigation
+                                    + ' -Wno-atomic-implicit-seq-cst'   // implicit use of sequentially-consistent atomic may incur stronger memory barriers than necessary
+                                    + ' -Wno-c++17-extensions'          // TODO: Use std-c++17
+                                    + ' -Wno-cast-align'                // cast from '%s' to '%s' increases required alignment from 1 to 4
+                                    + ' -Wno-cast-qual'                 // cast from 'const %s *' to '%s *' drops const qualifier
+                                    + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
+                                    + ' -Wno-missing-noreturn'          // function '%s' could be declared with attribute 'noreturn'
+                                    + ' -Wno-old-style-cast'            // use of old-style cast
+                                    + ' -Wno-shorten-64-to-32'          // implicit conversion loses integer precision: '%s' to '%s'
+                                    + ' -Wno-weak-vtables'              // '%s has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit
+
+    .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header'
+                                    + ' -std=c++17 $CommonCompilerOptions$'
 
     // Librarian
     .Librarian                      = '$Clang10_BasePath$/llvm-ar'

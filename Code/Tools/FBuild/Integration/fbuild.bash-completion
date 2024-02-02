@@ -15,7 +15,9 @@ _fbuild() {
 		-compdb
 		-config
 		-continueafterdbmove
+        -dbfile
 		-dist
+        -distcompressionlevel
 		-distverbose
 		-dot
 		-dotfull

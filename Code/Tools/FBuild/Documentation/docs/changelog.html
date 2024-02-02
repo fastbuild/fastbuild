@@ -27,6 +27,33 @@
 <h1>Changelog</h1>
 
 <div class='newsitemheader'>
+    v1.12&nbsp;<font color='#bbbbbb'>(2nd-Feb-2024)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>RemoveDir will remove directories as well as files by default</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix slow job processing with extremely large amounts of jobs</li>
+        <li>Fix spurious "Failed to spawn" errors when a build is being aborted</li>
+        <li>Restore full stack size for threads that call cache plugins (regression in v1.11)</li>
+        <li>Fix memory leak when a corrupt cache item is retrieved</li>
+        <li>Various documentation fixes (Thanks to Harrison Ting)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li><a href="options.html#distverbose">-distverbose</a> emits worker version info for v1.12 workers onwards</li>
+        <li><a href="functions/removedir.html">RemoveDir</a> removes dirs as well as files by default</li>
+        <li><a href="functions/removedir.html">RemoveDir</a> directory berhavior can be controlled with .RemoveDirs and .RemoveRootDir</li>
+        <li>Small performance improvement to various internal hashing operations</li>
+        <li><a href="functions/vcxproject.html">VCXProject</a> supports additional Android Game Development Extension options</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.11&nbsp;<font color='#bbbbbb'>(19th-Aug-2023)</font>
 </div>
 <div class='newsitembody'>
@@ -2417,6 +2444,6 @@ Fixes
     </div>
 
 
-    </div><div class='footer'>&copy; 2012-2023 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2024 Franta Fulin</div></div></div>
 </body>
 </html>

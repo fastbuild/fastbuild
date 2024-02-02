@@ -139,7 +139,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     // Remote Processing
     for ( const WorkerInfo & workerInfo : m_WorkerInfo )
     {
-        const uint32_t workedPid = (uint32_t)( &workerInfo - m_WorkerInfo.Begin() );
+        const uint32_t workedPid = static_cast<uint32_t>( m_WorkerInfo.GetIndexOf( &workerInfo ) );
         buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":%u,\"tid\":0,\"args\":{\"name\":\"Worker: %s\"}},", workedPid, workerInfo.m_WorkerName.Get() );
         for ( uint32_t i = 1000; i <= workerInfo.m_MaxThreadId; ++i )
         {

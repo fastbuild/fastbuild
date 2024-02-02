@@ -46,6 +46,15 @@ AllowCaching
 AllowDistribution
 AllowResponseFile
 AndroidApkLocation
+AndroidDebugComponent
+AndroidDebugTarget
+AndroidJdb
+AndroidLldbPostAttachCommands
+AndroidLldbStartupCommands
+AndroidPostApkInstallCommands
+AndroidPreApkInstallCommands
+AndroidSymbolDirectories
+AndroidWaitForDebugger
 ApplicationEnvironment
 ApplicationType
 ApplicationTypeRevision
@@ -125,6 +134,7 @@ IncludeSearchPath
 IntermediateDirectory
 Items
 Keyword
+LaunchFlags
 LayoutDir
 LayoutExtensionFilter
 Librarian
@@ -192,11 +202,13 @@ Projects
 RemoteDebuggerCommand
 RemoteDebuggerCommandArguments
 RemoteDebuggerWorkingDirectory
+RemoveDirs
 RemoveExcludeFiles
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
 RemovePatterns
+RemoveRootDir
 RootNamespace
 SimpleDistributionMode
 SolutionBuildProject

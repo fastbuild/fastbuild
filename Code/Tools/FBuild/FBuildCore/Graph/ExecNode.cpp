@@ -95,6 +95,7 @@ ExecNode::ExecNode()
                                               m_ExecInputExcludePattern,
                                               m_ExecInputPathRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_ExecInputPattern,
                                               "ExecInputPath",
                                               execInputPaths ) )
@@ -291,10 +292,8 @@ void ExecNode::GetFullArgs(AString & fullArgs) const
 
     AStackString<> quote("\"");
 
-    const AString * const end = tokens.End();
-    for (const AString * it = tokens.Begin(); it != end; ++it)
+    for ( const AString & token : tokens )
     {
-        const AString & token = *it;
         if (token.EndsWith("%1"))
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C

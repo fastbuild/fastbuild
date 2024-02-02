@@ -488,15 +488,14 @@ bool ToolManifest::GetSynchronizationStatus( uint32_t & syncDone, uint32_t & syn
     MutexHolder mh( m_Mutex );
 
     // is completely synchronized?
-    const ToolManifestFile * const end = m_Files.End();
-    for ( const ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
+    for ( const ToolManifestFile & file : m_Files )
     {
-        syncTotal += it->GetUncompressedContentSize();
-        if ( it->GetSyncState() == ToolManifestFile::SYNCHRONIZED )
+        syncTotal += file.GetUncompressedContentSize();
+        if ( file.GetSyncState() == ToolManifestFile::SYNCHRONIZED )
         {
-            syncDone += it->GetUncompressedContentSize();
+            syncDone += file.GetUncompressedContentSize();
         }
-        else if ( it->GetSyncState() == ToolManifestFile::SYNCHRONIZING )
+        else if ( file.GetSyncState() == ToolManifestFile::SYNCHRONIZING )
         {
             synching = true;
         }
@@ -523,12 +522,11 @@ void ToolManifest::CancelSynchronizingFiles()
     bool atLeastOneFileCancelled = false;
 
     // is completely synchronized?
-    const ToolManifestFile * const end = m_Files.End();
-    for ( ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
+    for ( ToolManifestFile & file : m_Files )
     {
-        if ( it->GetSyncState() == ToolManifestFile::SYNCHRONIZING )
+        if ( file.GetSyncState() == ToolManifestFile::SYNCHRONIZING )
         {
-            it->SetSyncState( ToolManifestFile::NOT_SYNCHRONIZED );
+            file.SetSyncState( ToolManifestFile::NOT_SYNCHRONIZED );
             atLeastOneFileCancelled = true;
         }
     }
@@ -658,10 +656,9 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     f.SetSyncState( ToolManifestFile::SYNCHRONIZED );
 
     // is completely synchronized?
-    const ToolManifestFile * const end = m_Files.End();
-    for ( const ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
+    for ( const ToolManifestFile & file : m_Files )
     {
-        if ( it->GetSyncState() != ToolManifestFile::SYNCHRONIZED )
+        if ( file.GetSyncState() != ToolManifestFile::SYNCHRONIZED )
         {
             // still some files to be received
             return true; // file stored ok

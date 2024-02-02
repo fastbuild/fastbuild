@@ -51,7 +51,6 @@ Process::Process( const volatile bool * mainAbortFlag,
     , m_ChildPID( -1 )
     , m_HasAlreadyWaitTerminated( false )
 #endif
-    , m_HasAborted( false )
     , m_MainAbortFlag( mainAbortFlag )
     , m_AbortFlag( abortFlag )
 {
@@ -474,7 +473,7 @@ int32_t Process::WaitForExit()
 
         DWORD exitCode = 0;
 
-        if ( m_HasAborted == false )
+        if ( HasAborted() == false )
         {
             // Don't wait if using jobs and the process has been aborted.
             // It will be killed along with the fbuild process if the TerminateProcess has failed for any reason and
@@ -582,13 +581,10 @@ bool Process::ReadAllData( AString & outMem,
     bool processExited = false;
     for ( ;; )
     {
-        const bool mainAbort = ( m_MainAbortFlag && AtomicLoadRelaxed( m_MainAbortFlag ) );
-        const bool abort = ( m_AbortFlag && AtomicLoadRelaxed( m_AbortFlag ) );
-        if ( abort || mainAbort )
+        if ( HasAborted() )
         {
             PROFILE_SECTION( "Abort" );
             KillProcessTree();
-            m_HasAborted = true;
             break;
         }
 
@@ -633,7 +629,7 @@ bool Process::ReadAllData( AString & outMem,
             if ( IsRunning() )
             {
                 // Check if timeout is hit
-                if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= timeOutMS ) )
+                if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= static_cast<float>( timeOutMS ) ) )
                 {
                     Terminate();
                     return false; // Timed out
@@ -761,11 +757,17 @@ bool Process::ReadAllData( AString & outMem,
 {
     #if defined( __WINDOWS__ )
         return ::GetCurrentProcessId();
-    #elif defined( __LINUX__ )
-        return ::getpid();
-    #elif defined( __OSX__ )
-        return ::getpid();
+    #else
+        return static_cast<uint32_t>( ::getpid() );
     #endif
+}
+
+// HasAborted
+//------------------------------------------------------------------------------
+bool Process::HasAborted() const
+{
+    return ( m_MainAbortFlag && AtomicLoadRelaxed( m_MainAbortFlag ) ) ||
+           ( m_AbortFlag && AtomicLoadRelaxed( m_AbortFlag ) );
 }
 
 // Terminate

@@ -8,13 +8,13 @@
 //  2) Specified via environment variables (VS Command Prompt)
 //  3) Part of a Visual Studio installation (Program Files)
 //
-#if file_exists( "2022/Community/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
+#if file_exists( "2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe" )
     //
-    // Use vendorized toolchain
+    // Use vendorized toolchain - v17.8.3
     //
     .VS2022_BasePath        = '$_CURRENT_BFF_DIR_$/2022/Community/VC'
-    .VS2022_Version         = '14.35.32215'
-    .VS2022_MSC_VER         = '1935'
+    .VS2022_Version         = '14.38.33130'
+    .VS2022_MSC_VER         = '1938'
 #else
     //
     // Use environment variable if available (VS Command Prompt)
@@ -24,25 +24,25 @@
         #import VCToolsVersion
         .VS2022_BasePath        = .VCINSTALLDIR
         .VS2022_Version         = .VCToolsVersion
-        .VS2022_MSC_VER         = '1935' // NOTE: This cannot be detected and may be incorrect
+        .VS2022_MSC_VER         = '1938' // NOTE: This cannot be detected and may be incorrect
     #else
         //
         // Use Visual Studio installation
         //
-        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
-            // v17.1.4
+        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe" )
+            // v17.8.3
             .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC'
-            .VS2022_Version         = '14.35.32215'
-            .VS2022_MSC_VER         = '1935'
+            .VS2022_Version         = '14.38.33130'
+            .VS2022_MSC_VER         = '1938'
         #else
             //
             // Use Visual Studio 2022 Enterprise installation (used by GitHub Actions)
             //
-            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.35.32215/bin/Hostx64/x64/cl.exe" )
-                // v17.1.4
+            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe" )
+                // v17.8.3
                 .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC'
-                .VS2022_Version         = '14.35.32215'
-                .VS2022_MSC_VER         = '1935'
+                .VS2022_Version         = '14.38.33130'
+                .VS2022_MSC_VER         = '1938'
             #else
                 //
                 // Failed
@@ -114,9 +114,11 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /Wall'              // Enable all warnings (we'll disable those that are not useful)
                                     + ' /WX'                // Warnings as errors
 
+                                    // These warnings need further investigation
+                                    + ' /wd5267' // definition of implicit copy constructor for '%s' is deprecated because it has a user-provided destructor
+
                                     // These warnings are not useful
                                     + ' /wd4061' // enumerator '%s' in switch of enum '%s' is not explicitly handled by a case label
-                                    + ' /wd4255' // '%s': no function prototype given: converting '()' to '(void)''
                                     + ' /wd4514' // '%s': unreferenced inline function has been removed
                                     + ' /wd4577' // 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed. Specify /EHsc
                                     + ' /wd4625' // '%s' : copy constructor was implicitly defined as deleted
@@ -186,12 +188,10 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /analyze:external-' // Disable analysis of external headers
 
                                     // To investigate: These warnings might be useful and should be checked
-                                    + ' /wd6553'  // The annotation for function 'RegOpenKeyExA' on _Param_(3) does not apply to a value type.
                                     + ' /wd26400' // Do not assign the result of an allocation or a function call with an owner<T> return value to a raw pointer, use owner<T> instead (i.11).
                                     + ' /wd26401' // Do not delete a raw pointer that is not an owner<T> (i.11).
                                     + ' /wd26430' // Symbol '%s' is not tested for nullness on all paths (f.23).: Lines: ...
                                     + ' /wd26432' // If you define or delete any default operation in the type '%s', define or delete them all (c.21).
-                                    + ' /wd26434' // Function '%s' hides a non-virtual function '%s' (c.128).
                                     + ' /wd26436' // The type '%s' with a virtual function needs either public virtual or protected non-virtual destructor (c.35).
                                     + ' /wd26438' // Avoid 'goto' (es.76).
                                     + ' /wd26451' // Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
@@ -201,9 +201,7 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd26491' // Don't use static_cast downcasts (type.2).
                                     + ' /wd26494' // Variable '%s' is uninitialized. Always initialize an object (type.5).
                                     + ' /wd26495' // Variable '%s' is uninitialized. Always initialize a member variable (type.6).
-                                    + ' /wd26456' // Operator '%s' hides a non-virtual operator '%s' (c.128).
                                     + ' /wd26497' // The function '%s' could be marked constexpr if compile-time evaluation is desired (f.4).
-                                    + ' /wd26812' // The enum type '%s' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
                                     + ' /wd26814' // The const variable '%s' can be computed at compile-time. Consider using constexpr (con.5).
 
                                     // These warnings are not useful. They either:
@@ -230,6 +228,7 @@ Compiler( 'Compiler-VS2022-x64' )
                                     + ' /wd26492' // Don't use const_cast to cast away const or volatile (type.3).
                                     + ' /wd26493' // Don't use C-style casts (type.4).
                                     + ' /wd26826' // Don't use C-style variable arguments (f.55).
+                                    + ' /wd26831' // Allocation size might be the result of a numerical overflow.
 ]
 
 //------------------------------------------------------------------------------

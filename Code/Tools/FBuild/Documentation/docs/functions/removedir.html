@@ -37,6 +37,8 @@ Deletes the contents of one or more directories.
   // Basic options
   .RemovePaths              // Directories to delete contents of
   .RemovePathsRecurse       // (optional) Recurse into sub-directories? (default: true)
+  .RemoveDirs               // (optional) Remove directories as well as files (default: true)
+  .RemoveRootDir            // (optional) Remove top-level directory (default: true)
 
   // Filtering options
   .RemovePatterns           // (optional) Wildcards of contents to delete (default: *)
@@ -79,6 +81,24 @@ can be ignored (.ExcludePaths and .ExcludeFiles) and files to be deleted can be 
   <p>Directories are scanned recursively by default. Recursion can be disabled.</p>
   Example:
 <div class='code'>.RemovePathsRecurse = false</div> 	  	  
+
+  <p><hr></p>
+  
+  <p><b>.RemoveDirs</b> - Bool - (Optional)</p>
+  <p>In addition to deleting files, directories are also deleted by default.
+  This can be disabled in order to leave empty directories untouched.</p>
+  Example:
+<div class='code'>.RemoveDirs = false</div>
+
+  <p><hr></p>
+  
+  <p><b>.RemoveRootDir</b> - Bool - (Optional)</p>
+  <p>Directories and sub-directories are deleted by default, including the top-level directory.
+  Deletion of the top level directory can be disabled, while leaving deletion of sub-directories
+  active.</p>
+  <p><b>NOTE:</b> .RemoveRootDir is ignored when .RemoveDirs is false.</p>
+  Example:
+<div class='code'>.RemoveRootDir = false</div>
 </div>
 	
 <!-- 
@@ -129,6 +149,6 @@ can be ignored (.ExcludePaths and .ExcludeFiles) and files to be deleted can be 
 <div class='code'>.PreBuildDependencies = 'DoStuff' // A previously defined target</div>
 </div>	
 	
-    </div><div class='footer'>&copy; 2012-2023 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2024 Franta Fulin</div></div></div>
 </body>
 </html>
