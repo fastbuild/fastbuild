@@ -494,12 +494,6 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         m_Targets.EmplaceBack( "all" );
     }
 
-    // When building multiple targets, try to build as much as possible
-    if ( m_Targets.GetSize() > 1 )
-    {
-        m_StopOnFirstError = false;
-    }
-
     // cache mode environment variable (if not supplied on cmd line)
     if ( ( m_UseCacheRead == false ) && ( m_UseCacheWrite == false ) )
     {

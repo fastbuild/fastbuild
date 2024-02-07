@@ -306,8 +306,14 @@ bool FBuild::Build( const Array< AString > & targets )
     // output per-target results
     for ( size_t i=0; i<targets.GetSize(); ++i )
     {
-        const bool nodeResult = ( deps[ i ].GetNode()->GetState() == Node::UP_TO_DATE );
-        OUTPUT( "FBuild: %s: %s\n", nodeResult ? "OK" : "Error: BUILD FAILED", targets[ i ].Get() );
+        const char * nodeStatus;
+        switch ( deps[ i ].GetNode()->GetState() )
+        {
+            case Node::State::UP_TO_DATE:   nodeStatus = "OK"; break;
+            case Node::State::FAILED:       nodeStatus = "Error: BUILD FAILED"; break;
+            default:                        nodeStatus = "Incomplete"; break;
+        }
+        OUTPUT( "FBuild: %s: %s\n", nodeStatus, targets[ i ].Get() );
     }
 
     return result;
