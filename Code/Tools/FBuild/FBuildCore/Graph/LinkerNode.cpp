@@ -245,7 +245,6 @@ LinkerNode::~LinkerNode()
         AString memErr;
         p.ReadAllData( memOut, memErr );
 
-        ASSERT( !p.IsRunning() );
         // Get result
         const int result = p.WaitForExit();
         if ( p.HasAborted() )
@@ -356,7 +355,6 @@ LinkerNode::~LinkerNode()
         AString memOut;
         AString memErr;
         stampProcess.ReadAllData( memOut, memErr );
-        ASSERT( !stampProcess.IsRunning() );
 
         // Get result
         const int result = stampProcess.WaitForExit();
