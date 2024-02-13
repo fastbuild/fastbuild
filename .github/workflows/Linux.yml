@@ -37,7 +37,7 @@ jobs:
     continue-on-error: ${{ matrix.can-fail || false }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/DownloadFBuild
 
