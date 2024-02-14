@@ -746,8 +746,10 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
 
         AStackString<> obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
         AStackString<> pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
+        AStackString<> pch_obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
         EnsureFileDoesNotExist( obj );
         EnsureFileDoesNotExist( pch );
+        EnsureFileDoesNotExist( pch_obj );
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
@@ -759,6 +761,7 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
 
         EnsureFileExists( obj );
         EnsureFileExists( pch );
+        EnsureFileExists( pch_obj );
 
         // Check stats
         //              Seen,   Built,  Type
