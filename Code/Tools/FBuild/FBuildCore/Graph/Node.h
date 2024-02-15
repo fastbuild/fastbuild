@@ -109,7 +109,6 @@ public:
         NODE_RESULT_FAILED      = 0,    // something went wrong building
         NODE_RESULT_NEED_SECOND_BUILD_PASS, // needs build called again
         NODE_RESULT_OK,                 // built ok
-        NODE_RESULT_OK_CACHE            // retrieved from the cache
     };
 
     enum State : uint8_t
