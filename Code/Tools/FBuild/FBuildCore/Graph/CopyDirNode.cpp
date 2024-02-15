@@ -188,7 +188,7 @@ CopyDirNode::~CopyDirNode() = default;
         m_Stamp = xxHash3::Calc64( &stamps[ 0 ], ( stamps.GetSize() * sizeof( uint64_t ) ) );
     }
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 //------------------------------------------------------------------------------

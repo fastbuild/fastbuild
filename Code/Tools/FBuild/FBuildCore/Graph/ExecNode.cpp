@@ -199,11 +199,11 @@ ExecNode::~ExecNode()
     {
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -215,7 +215,7 @@ ExecNode::~ExecNode()
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
     const bool buildFailed = ( result != m_ExecReturnCode );
 
@@ -232,7 +232,7 @@ ExecNode::~ExecNode()
     if ( buildFailed )
     {
         FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     if ( m_ExecUseStdOutAsOutput == true )
@@ -250,7 +250,7 @@ ExecNode::~ExecNode()
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // EmitCompilationMessage

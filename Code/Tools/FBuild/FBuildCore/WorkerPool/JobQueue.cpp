@@ -784,7 +784,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         if ( Node::EnsurePathExistsForFile( node->GetName() ) == false )
         {
             // error already output by EnsurePathExistsForFile
-            return Node::NODE_RESULT_FAILED;
+            return Node::BuildResult::eFailed;
         }
     }
 
@@ -792,7 +792,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     if ( FBuild::Get().GetOptions().m_FastCancel && FBuild::GetStopBuild() )
     {
         // When stopping build and fast cancel is active we simulate a build error with this node.
-        result = Node::NODE_RESULT_FAILED;
+        result = Node::BuildResult::eFailed;
     }
     else
     {
@@ -814,16 +814,16 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     switch ( result )
     {
-        case Node::NODE_RESULT_FAILED:
+        case Node::BuildResult::eFailed:
         {
             node->SetStatFlag( Node::STATS_FAILED );
             break;
         }
-        case Node::NODE_RESULT_NEED_SECOND_BUILD_PASS:
+        case Node::BuildResult::eNeedSecondPass:
         {
             break; // nothing to check
         }
-        case Node::NODE_RESULT_OK:
+        case Node::BuildResult::eOk:
         {
             // build completed ok, or retrieved from cache...
 
@@ -846,7 +846,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
                     if ( !FileIO::FileExists( node->GetName().Get() ) )
                     {
                         FLOG_ERROR( "File missing despite success for '%s'", node->GetName().Get() );
-                        result = Node::NODE_RESULT_FAILED;
+                        result = Node::BuildResult::eFailed;
                     }
                 }
             }
@@ -862,13 +862,13 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         const char * resultString = nullptr;
         switch ( result )
         {
-            case Node::NODE_RESULT_OK:
+            case Node::BuildResult::eOk:
             {
                 resultString = node->GetStatFlag( Node::STATS_CACHE_HIT ) ? "SUCCESS_CACHED" : "SUCCESS_COMPLETE";
                 break;
             }
-            case Node::NODE_RESULT_NEED_SECOND_BUILD_PASS:  resultString = "SUCCESS_PREPROCESSED";  break;
-            case Node::NODE_RESULT_FAILED:                  resultString = "FAILED";                break;
+            case Node::BuildResult::eNeedSecondPass:    resultString = "SUCCESS_PREPROCESSED";  break;
+            case Node::BuildResult::eFailed:            resultString = "FAILED";                break;
         }
 
         AStackString<> msgBuffer;

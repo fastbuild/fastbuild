@@ -214,13 +214,13 @@ ObjectNode::~ObjectNode()
     {
         if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
+            return BuildResult::eFailed; // HandleFileDeletion will have emitted an error
         }
         if ( IsMSVC() && IsCreatingPCH() )
         {
             if ( DoPreBuildFileDeletion( m_PCHObjectFileName ) == false )
             {
-                return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
+                return BuildResult::eFailed; // HandleFileDeletion will have emitted an error
             }
         }
     }
@@ -343,7 +343,7 @@ ObjectNode::~ObjectNode()
     const bool finalize( true );
     if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     EmitCompilationMessage( fullArgs, useDeoptimization );
@@ -352,7 +352,7 @@ ObjectNode::~ObjectNode()
     CompileHelper ch;
     if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) ) // use response file for MSVC
     {
-        return NODE_RESULT_FAILED; // SpawnCompiler has logged error
+        return BuildResult::eFailed; // SpawnCompiler has logged error
     }
 
     // Handle MSCL warnings if not already a failure
@@ -390,13 +390,13 @@ ObjectNode::~ObjectNode()
     // compiled ok, try to extract includes
     if ( ProcessIncludesMSCL( output, outputSize ) == false )
     {
-        return NODE_RESULT_FAILED; // ProcessIncludesMSCL will have emitted an error
+        return BuildResult::eFailed; // ProcessIncludesMSCL will have emitted an error
     }
 
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoBuildWithPreProcessor
@@ -412,7 +412,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     const Pass pass = useSimpleDist ? PASS_PREP_FOR_SIMPLE_DISTRIBUTION : PASS_PREPROCESSOR_ONLY;
     if ( !BuildArgs( job, fullArgs, pass, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // Try to use the light cache if enabled
@@ -441,7 +441,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
             if ( RetrieveFromCache( job ) )
             {
-                return NODE_RESULT_OK;
+                return BuildResult::eOk;
             }
 
             // Cache miss
@@ -465,13 +465,13 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     {
         if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
         {
-            return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
+            return BuildResult::eFailed; // BuildPreprocessedOutput will have emitted an error
         }
 
         // preprocessed ok, try to extract includes
         if ( ProcessIncludesWithPreProcessor( job ) == false )
         {
-            return NODE_RESULT_FAILED; // ProcessIncludesWithPreProcessor will have emitted an error
+            return BuildResult::eFailed; // ProcessIncludesWithPreProcessor will have emitted an error
         }
     }
 
@@ -479,7 +479,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     {
         if ( LoadStaticSourceFileForDistribution( fullArgs, job, useDeoptimization ) == false )
         {
-            return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
+            return BuildResult::eFailed; // BuildPreprocessedOutput will have emitted an error
         }
     }
 
@@ -498,7 +498,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
         if ( RetrieveFromCache( job ) )
         {
-            return NODE_RESULT_OK;
+            return BuildResult::eOk;
         }
     }
 
@@ -514,7 +514,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         job->OwnData( c.ReleaseResult(), compressedSize, true );
 
         // yes... re-queue for secondary build
-        return NODE_RESULT_NEED_SECOND_BUILD_PASS;
+        return BuildResult::eNeedSecondPass;
     }
 
     // can't do the work remotely, so do it right now
@@ -522,12 +522,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     const bool racingRemoteJob = false;
     const bool isFollowingLightCacheMiss = false;
     const Node::BuildResult result = DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, isFollowingLightCacheMiss );
-    if ( result != Node::NODE_RESULT_OK )
+    if ( result != BuildResult::eOk )
     {
         return result;
     }
 
-    return Node::NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoBuildWithPreProcessor2
@@ -611,7 +611,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     {
         if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
         {
-            return NODE_RESULT_FAILED; // WriteTmpFile will have emitted an error
+            return BuildResult::eFailed; // WriteTmpFile will have emitted an error
         }
 
         const bool showIncludes( false );
@@ -619,7 +619,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool finalize( true );
         if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize, tmpFileName ) )
         {
-            return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+            return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
     }
     else
@@ -629,7 +629,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool finalize( true );
         if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
-            return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+            return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
     }
 
@@ -680,7 +680,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
             job->GetBuildProfilerScope()->SetStepName( "Compile (Race Lost)" );
         }
 
-        return NODE_RESULT_FAILED; // BuildFinalOutput will have emitted error
+        return BuildResult::eFailed; // BuildFinalOutput will have emitted error
     }
 
     // record new file time
@@ -696,7 +696,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
     }
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoBuild_QtRCC
@@ -713,7 +713,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         Args fullArgs;
         if ( !BuildArgs( job, fullArgs, PASS_PREPROCESSOR_ONLY, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
-            return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+            return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
 
         EmitCompilationMessage( fullArgs, false );
@@ -721,7 +721,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         CompileHelper ch;
         if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
         {
-            return NODE_RESULT_FAILED; // compile has logged error
+            return BuildResult::eFailed; // compile has logged error
         }
 
         // get output
@@ -756,20 +756,20 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         Args fullArgs;
         if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
-            return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+            return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
 
         CompileHelper ch;
         if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
         {
-            return NODE_RESULT_FAILED; // compile has logged error
+            return BuildResult::eFailed; // compile has logged error
         }
     }
 
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoBuildOther
@@ -783,7 +783,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
     const bool finalize( true );
     if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     EmitCompilationMessage( fullArgs, useDeoptimization );
@@ -792,13 +792,13 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
     CompileHelper ch;
     if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
     {
-        return NODE_RESULT_FAILED; // compile has logged error
+        return BuildResult::eFailed; // compile has logged error
     }
 
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // ProcessIncludesMSCL

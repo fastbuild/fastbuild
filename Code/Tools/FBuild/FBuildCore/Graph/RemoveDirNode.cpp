@@ -98,7 +98,7 @@ RemoveDirNode::~RemoveDirNode() = default;
         {
             if ( !FileDelete( fileInfo.m_Name ) )
             {
-                return NODE_RESULT_FAILED; // remove failed
+                return BuildResult::eFailed; // remove failed
             }
         }
 
@@ -110,7 +110,7 @@ RemoveDirNode::~RemoveDirNode() = default;
             {
                 if ( !DirectoryDelete( dirs[ static_cast<size_t>( i ) ] ) )
                 {
-                    return NODE_RESULT_FAILED; // remove failed
+                    return BuildResult::eFailed; // remove failed
                 }
             }
         }
@@ -124,13 +124,13 @@ RemoveDirNode::~RemoveDirNode() = default;
             {
                 if ( !DirectoryDelete( dln->GetPath() ) )
                 {
-                    return NODE_RESULT_FAILED; // remove failed
+                    return BuildResult::eFailed; // remove failed
                 }
             }
         }
     }
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 //------------------------------------------------------------------------------

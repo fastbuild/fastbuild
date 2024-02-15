@@ -368,11 +368,11 @@ CompilerNode::~CompilerNode()
 {
     if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
     {
-        return Node::NODE_RESULT_FAILED; // Generate will have emitted error
+        return BuildResult::eFailed; // Generate will have emitted error
     }
 
     m_Stamp = m_Manifest.GetTimeStamp();
-    return Node::NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // GetEnvironmentString

@@ -239,7 +239,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 /*virtual*/ Node::BuildResult Node::DoBuild( Job * /*job*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
-    return Node::NODE_RESULT_FAILED;
+    return BuildResult::eFailed;
 }
 
 // DoBuild2
@@ -247,7 +247,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 /*virtual*/ Node::BuildResult Node::DoBuild2( Job * /*job*/, bool /*racingRemoteJob*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
-    return Node::NODE_RESULT_FAILED;
+    return BuildResult::eFailed;
 }
 
 // Finalize

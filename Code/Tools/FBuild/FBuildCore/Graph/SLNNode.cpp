@@ -296,13 +296,13 @@ SLNNode::~SLNNode() = default;
                                           m_SolutionFolders );
     if ( Save( sln, m_Name ) == false )
     {
-        return NODE_RESULT_FAILED; // Save will have emitted an error
+        return BuildResult::eFailed; // Save will have emitted an error
     }
 
     // Record stamp representing the contents of the files
     m_Stamp = xxHash3::Calc64( sln );
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // Save

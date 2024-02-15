@@ -185,7 +185,7 @@ LinkerNode::~LinkerNode()
 {
     if ( DoPreLinkCleanup() == false )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // Make sure the implib output directory exists
@@ -197,7 +197,7 @@ LinkerNode::~LinkerNode()
         if (EnsurePathExistsForFile(cleanPath) == false)
         {
             // EnsurePathExistsForFile will have emitted error
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
     }
 
@@ -205,7 +205,7 @@ LinkerNode::~LinkerNode()
     Args fullArgs;
     if ( !BuildArgs( fullArgs ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // use the exe launch dir as the working dir
@@ -233,11 +233,11 @@ LinkerNode::~LinkerNode()
         {
             if ( p.HasAborted() )
             {
-                return NODE_RESULT_FAILED;
+                return BuildResult::eFailed;
             }
 
             FLOG_ERROR( "Failed to spawn process '%s' for %s creation for '%s'", m_Linker.Get(), GetDLLOrExe(), GetName().Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // capture all of the stdout and stderr
@@ -249,7 +249,7 @@ LinkerNode::~LinkerNode()
         const int result = p.WaitForExit();
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // did the executable fail?
@@ -307,7 +307,7 @@ LinkerNode::~LinkerNode()
 
             // some other (genuine) linker failure
             FLOG_ERROR( "Failed to build %s. Error: %s Target: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
         else
         {
@@ -344,11 +344,11 @@ LinkerNode::~LinkerNode()
         {
             if ( stampProcess.HasAborted() )
             {
-                return NODE_RESULT_FAILED;
+                return BuildResult::eFailed;
             }
 
             FLOG_ERROR( "Failed to spawn process '%s' for '%s' stamping of '%s'", linkerStampExe->GetName().Get(), GetDLLOrExe(), GetName().Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // capture all of the stdout and stderr
@@ -360,7 +360,7 @@ LinkerNode::~LinkerNode()
         const int result = stampProcess.WaitForExit();
         if ( stampProcess.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // Show output if desired
@@ -376,7 +376,7 @@ LinkerNode::~LinkerNode()
         if ( result != 0 )
         {
             FLOG_ERROR( "Failed to stamp %s. Error: %s Target: '%s' StampExe: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get(), m_LinkerStampExe.Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // success!
@@ -385,7 +385,7 @@ LinkerNode::~LinkerNode()
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoPreLinkCleanup

@@ -179,7 +179,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     if ( !stream.Open( m_Name.Get(), FileStream::WRITE_ONLY ) )
     {
         FLOG_ERROR( "Could not open '%s' for write. Error: %s", GetName().Get(), LAST_ERROR_STR );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     const uint64_t nWritten = stream.WriteBuffer( fileContents.Get(), fileContents.GetLength() );
@@ -188,12 +188,12 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     if ( nWritten != fileContents.GetLength() )
     {
         FLOG_ERROR( "Failed to write to '%s'. Error: %s", GetName().Get(), LAST_ERROR_STR );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     Node::RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // EmitOutputMessage

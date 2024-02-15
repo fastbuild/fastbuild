@@ -64,11 +64,11 @@ AliasNode::~AliasNode() = default;
             {
                 // ... the build should fail
                 FLOG_ERROR( "Alias: %s\nFailed due to missing file: %s\n", GetName().Get(), n->GetName().Get() );
-                return Node::NODE_RESULT_FAILED;
+                return BuildResult::eFailed;
             }
         }
     }
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 //------------------------------------------------------------------------------

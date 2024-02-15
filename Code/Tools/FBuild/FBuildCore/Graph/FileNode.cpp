@@ -47,7 +47,7 @@ FileNode::~FileNode() = default;
     // NOTE: Not calling RecordStampFromBuiltFile as this is not a built file
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
     // Don't assert m_Stamp != 0 as input file might not exist
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // HandleWarningsMSVC

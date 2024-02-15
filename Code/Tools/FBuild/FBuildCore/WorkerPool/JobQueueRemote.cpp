@@ -317,7 +317,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     if ( Node::EnsurePathExistsForFile( node->GetName() ) == false )
     {
         // error already output by EnsurePathExistsForFile
-        return Node::NODE_RESULT_FAILED;
+        return Node::BuildResult::eFailed;
     }
 
     // Delete any left over PDB from a previous run (to be sure we have a clean pdb)
@@ -337,15 +337,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     // Ignore result if job was cancelled
     if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
     {
-        if ( result == Node::NODE_RESULT_FAILED )
+        if ( result == Node::BuildResult::eFailed )
         {
-            return Node::NODE_RESULT_FAILED;
+            return Node::BuildResult::eFailed;
         }
     }
 
     const uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
-    if ( result == Node::NODE_RESULT_FAILED )
+    if ( result == Node::BuildResult::eFailed )
     {
         // Locally we don't record the build time for failures as we
         // want to keep the last successful build time for job ordering.
@@ -360,7 +360,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     else
     {
         // build completed ok
-        ASSERT( result == Node::NODE_RESULT_OK );
+        ASSERT( result == Node::BuildResult::eOk );
 
         // record new build time
         node->SetLastBuildTime( timeTakenMS );
@@ -381,7 +381,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
             // read results into memory to send back to client
             if ( ReadResults( job ) == false )
             {
-                result = Node::NODE_RESULT_FAILED;
+                result = Node::BuildResult::eFailed;
             }
         }
     }
@@ -410,7 +410,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         job->GetMessagesForMonitorLog( msgBuffer );
 
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
-                      ( result == Node::NODE_RESULT_FAILED ) ? "ERROR" : "SUCCESS",
+                      ( result == Node::BuildResult::eFailed ) ? "ERROR" : "SUCCESS",
                       job->GetNode()->GetName().Get(),
                       msgBuffer.Get());
     }

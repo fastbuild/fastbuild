@@ -304,7 +304,7 @@ UnityNode::~UnityNode()
     // TODO:C Would be good to refactor things to avoid this special case
     if ( EnsurePathExistsForFile( m_OutputPath ) == false )
     {
-        return NODE_RESULT_FAILED; // EnsurePathExistsForFile will have emitted error
+        return BuildResult::eFailed; // EnsurePathExistsForFile will have emitted error
     }
 
     m_UnityFileNames.SetCapacity( m_NumUnityFilesToCreate );
@@ -314,7 +314,7 @@ UnityNode::~UnityNode()
 
     if ( !GetFiles( files ) )
     {
-        return NODE_RESULT_FAILED; // GetFiles will have emitted an error
+        return BuildResult::eFailed; // GetFiles will have emitted an error
     }
 
     FilterForceIsolated( files, m_IsolatedFiles );
@@ -323,7 +323,7 @@ UnityNode::~UnityNode()
     StackArray< AString > isolatedFilesFromList;
     if ( !GetIsolatedFilesFromList( isolatedFilesFromList ) )
     {
-        return NODE_RESULT_FAILED; // GetFiles will have emitted an error
+        return BuildResult::eFailed; // GetFiles will have emitted an error
     }
 
     // how many files should go in each unity file?
@@ -566,13 +566,13 @@ UnityNode::~UnityNode()
             if ( f.Open( unityName.Get(), FileStream::WRITE_ONLY ) == false )
             {
                 FLOG_ERROR( "Failed to create Unity file '%s'", unityName.Get() );
-                return NODE_RESULT_FAILED;
+                return BuildResult::eFailed;
             }
 
             if ( f.Write( output.Get(), output.GetLength() ) != output.GetLength() )
             {
                 FLOG_ERROR( "Error writing Unity file '%s'", unityName.Get() );
-                return NODE_RESULT_FAILED;
+                return BuildResult::eFailed;
             }
 
             f.Close();
@@ -603,7 +603,7 @@ UnityNode::~UnityNode()
     }
     m_FilesInfo.Destruct();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // Migrate

@@ -289,7 +289,7 @@ DirectoryListNode::~DirectoryListNode() = default;
         m_Stamp = xxHash3::Calc64( ms.GetData(), ms.GetSize() );
     }
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // MakePrettyName

@@ -310,7 +310,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     const AString & project = pg.GenerateVCXProj( m_Name, m_ProjectConfigs, m_ProjectFileTypes, m_ProjectProjectImports );
     if ( Save( project, m_Name ) == false )
     {
-        return NODE_RESULT_FAILED; // Save will have emitted an error
+        return BuildResult::eFailed; // Save will have emitted an error
     }
 
     // .vcxproj.filters
@@ -319,13 +319,13 @@ VCXProjectNode::~VCXProjectNode() = default;
     filterFile += ".filters";
     if ( Save( filters, filterFile ) == false )
     {
-        return NODE_RESULT_FAILED; // Save will have emitted an error
+        return BuildResult::eFailed; // Save will have emitted an error
     }
 
     // Record stamp representing the contents of the files
     m_Stamp = xxHash3::Calc64( project ) + xxHash3::Calc64( filters );
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // Save

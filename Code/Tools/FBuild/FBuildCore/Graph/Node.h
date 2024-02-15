@@ -104,11 +104,11 @@ public:
         STATS_FIRST_BUILD   = 0x100,// node has never been built before
     };
 
-    enum BuildResult
+    enum class BuildResult
     {
-        NODE_RESULT_FAILED      = 0,    // something went wrong building
-        NODE_RESULT_NEED_SECOND_BUILD_PASS, // needs build called again
-        NODE_RESULT_OK,                 // built ok
+        eFailed,            // something went wrong building
+        eNeedSecondPass,    // needs build called again
+        eOk,                // built ok
     };
 
     enum State : uint8_t
