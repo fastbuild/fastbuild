@@ -25,10 +25,7 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestFastCancel )
-    #if defined( __WINDOWS__ )
-        // TODO:LINUX TODO:OSX - Fix and enable this test
-        REGISTER_TEST( Cancel )
-    #endif
+    REGISTER_TEST( Cancel )
 REGISTER_TESTS_END
 
 // CancelHelperThread

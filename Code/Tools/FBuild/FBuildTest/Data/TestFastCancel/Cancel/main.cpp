@@ -51,7 +51,7 @@ bool LockSystemMutex( const char * name )
 
 // Spawn
 //------------------------------------------------------------------------------
-bool Spawn( const char * mutexId )
+bool Spawn( const char * exe, const char * mutexId )
 {
     // NOTE: This function doesn't cleanup failures to simplify the test
     //       (the process will be terminated anyway)
@@ -66,7 +66,7 @@ bool Spawn( const char * mutexId )
 
         // Prepare args
         char fullArgs[256];
-        sprintf_s( fullArgs, "\"FBuildTestCancel.exe\" %s", mutexId );
+        sprintf_s( fullArgs, "\"%s\" %s", exe, mutexId );
 
         // create the child
         LPPROCESS_INFORMATION processInfo;
@@ -86,7 +86,7 @@ bool Spawn( const char * mutexId )
         return true;
     #else
         // prepare args
-        const char * args[ 3 ] = { "FBuildTestCancel.exe", mutexId, nullptr };
+        const char * args[ 3 ] = { exe, mutexId, nullptr };
 
         // fork the process
         const pid_t childProcessPid = fork();
@@ -99,7 +99,7 @@ bool Spawn( const char * mutexId )
         if ( isChild )
         {
             // transfer execution to new executable
-            execv( executable, argV );
+            execv( const_cast<char *>( exe ), const_cast<char **>( args ) );
             exit( -1 ); // only get here if execv fails
         }
         else
@@ -143,7 +143,7 @@ int main( int argc, char ** argv )
     {
         char mutexIdString[2] = { ' ', 0 };
         mutexIdString[ 0 ] = (char)( '0' + mutexId + 1 );
-        if ( !Spawn( mutexIdString ) )
+        if ( !Spawn( argv[ 0 ], mutexIdString ) )
         {
             printf( "Failed to spawn child '%s'\n", mutexIdString );
             return 3;
