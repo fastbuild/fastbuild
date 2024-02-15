@@ -109,6 +109,16 @@ bool Spawn( const char * mutexId )
     #endif
 }
 
+// Sleep
+//------------------------------------------------------------------------------
+#if !defined( __WINDOWS__ )
+void Sleep( unsigned int milliseconds )
+{
+    // Provide API that matches Windows for convenience
+    usleep( milliseconds * 1000 );
+}
+#endif
+
 // Main
 //------------------------------------------------------------------------------
 int main( int argc, char ** argv )
@@ -140,30 +150,35 @@ int main( int argc, char ** argv )
         }
     }
 
-    // Aqcuire SystemMutex which test uses to check our lifetimes
-    const char * mutexNames[4] =
+    // Acquire SystemMutex which test uses to check our lifetimes
+    const char * const mutexNames[4] =
     {
         "FASTBuildFastCancelTest1",
         "FASTBuildFastCancelTest2",
         "FASTBuildFastCancelTest3",
         "FASTBuildFastCancelTest4"
     };
-    const char * mutexName = mutexNames[ mutexId - 1 ];
-    if ( LockSystemMutex( mutexName ) == false )
+    const char * const mutexName = mutexNames[ mutexId - 1 ];
+
+    // Try to acquire repeatedly to manage races with the test that
+    // is monitoring these processes
+    int tryCount = 0;
+    while ( LockSystemMutex( mutexName ) == false )
     {
-        printf( "Failed to acquire: %s\n", mutexName );
-        return 4;
+        ::Sleep( 1 );
+        ++tryCount;
+        if ( tryCount == 100 )
+        {
+            printf( "Failed to acquire: %s\n", mutexName );
+            return 4;
+        }
     }
 
     // Spin forever - test will terminate
     int count = 0;
     for (;;)
     {
-        #if defined( __WINDOWS__ )
-            ::Sleep( 1000 );
-        #else
-            usleep(ms * 1000);
-        #endif
+        ::Sleep( 1000 );
 
         // If we haven't been terminated in a sensible time frame
         // quit to avoid zombie processes. Useful when debugging

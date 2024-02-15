@@ -7,6 +7,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
+#include "Core/Math/Conversions.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
@@ -36,24 +37,23 @@ static uint32_t CancelHelperThread( void * )
 {
     const Timer t;
 
-    // Wait for spawned processes to own all mutexes
-    SystemMutex mutex1( "FASTBuildFastCancelTest1" );
-    SystemMutex mutex2( "FASTBuildFastCancelTest2" );
-    SystemMutex mutex3( "FASTBuildFastCancelTest3" );
+    // The Exec step in our test spawns a hierarchy of processes. When the leaf
+    // process of the tree is created, it acquires the final mutex
+    // "FASTBuildFastCancelTest4"
+    //
+    // If we can acquire that, the process has either not started or has failed in
+    // an unexpected way.
     SystemMutex mutex4( "FASTBuildFastCancelTest4" );
-    SystemMutex * mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
-    for ( SystemMutex * mutex : mutexes )
+    uint32_t sleepTimeMS = 1;
+    while ( mutex4.TryLock() == true )
     {
-        // if we acquired the lock, the child process is not yet spawned
-        while ( mutex->TryLock() == true )
-        {
-            // unlock so child can acquire
-            mutex->Unlock();
-
-            // Wait before trying again
-            Thread::Sleep( 10 );
-            TEST_ASSERT( t.GetElapsed() < 5.0f ); // Ensure test doesn't hang if broken
-        }
+        // unlock so child can acquire
+        mutex4.Unlock();
+    
+        // Wait before trying again, waiting longer each time up to a limit
+        Thread::Sleep( sleepTimeMS );
+        sleepTimeMS = Math::Min<uint32_t>( ( sleepTimeMS * 2 ), 128 );
+        TEST_ASSERT( t.GetElapsed() < 5.0f ); // Ensure test doesn't hang if broken
     }
 
     // Once we are here, all child processes have acquired locks and will wait forever
@@ -76,13 +76,6 @@ void TestFastCancel::Cancel() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    // We'll coordinate processes with these
-    SystemMutex mutex1( "FASTBuildFastCancelTest1" );
-    SystemMutex mutex2( "FASTBuildFastCancelTest2" );
-    SystemMutex mutex3( "FASTBuildFastCancelTest3" );
-    SystemMutex mutex4( "FASTBuildFastCancelTest4" );
-    SystemMutex * mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
-
     // Create thread that will abort build once all processes are spawned
     Thread thread;
     thread.Start( CancelHelperThread );
@@ -94,6 +87,11 @@ void TestFastCancel::Cancel() const
     thread.Join();
 
     // Ensure that processes were killed
+    SystemMutex mutex1( "FASTBuildFastCancelTest1" );
+    SystemMutex mutex2( "FASTBuildFastCancelTest2" );
+    SystemMutex mutex3( "FASTBuildFastCancelTest3" );
+    SystemMutex mutex4( "FASTBuildFastCancelTest4" );
+    SystemMutex * mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
     for ( SystemMutex * mutex : mutexes )
     {
         // We should be able to acquire each lock
