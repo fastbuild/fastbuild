@@ -156,7 +156,7 @@ bool RemoveDirNode::DirectoryDelete( const AString & dir ) const
     if ( FileIO::DirectoryDelete( dir ) == false )
     {
         FLOG_ERROR( "Remove failed. Error: %s Target: '%s'", LAST_ERROR_STR, dir.Get() );
-        return NODE_RESULT_FAILED; // remove failed
+        return false;
     }
 
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
