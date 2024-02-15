@@ -55,7 +55,6 @@ Compiler( 'Compiler-Clang14' )
 
                                     // Warnings that need fixing or further investigation
                                     + ' -Wno-atomic-implicit-seq-cst'   // implicit use of sequentially-consistent atomic may incur stronger memory barriers than necessary
-                                    + ' -Wno-c++17-extensions'          // TODO: Use std-c++17
                                     + ' -Wno-cast-align'                // cast from '%s' to '%s' increases required alignment from 1 to 4
                                     + ' -Wno-cast-qual'                 // cast from 'const %s *' to '%s *' drops const qualifier
                                     + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
