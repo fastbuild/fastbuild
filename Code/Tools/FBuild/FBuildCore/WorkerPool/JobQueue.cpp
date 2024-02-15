@@ -812,41 +812,45 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     const uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
-    if ( result == Node::NODE_RESULT_OK )
+    switch ( result )
     {
-        // record new build time only if built (i.e. if cached or failed, the time
-        // does not represent how long it takes to create this resource)
-        node->SetLastBuildTime( timeTakenMS );
-        node->SetStatFlag( Node::STATS_BUILT );
-        FLOG_VERBOSE( "-Build: %u ms\t%s", timeTakenMS, node->GetName().Get() );
-    }
-
-    if ( result == Node::NODE_RESULT_FAILED )
-    {
-        node->SetStatFlag( Node::STATS_FAILED );
-    }
-    else if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
-    {
-        // nothing to check
-    }
-    else
-    {
-        // build completed ok, or retrieved from cache...
-        ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_OK_CACHE ) );
-
-        // Check that the file is on disk as expected
-        if ( node->IsAFile() )
+        case Node::NODE_RESULT_FAILED:
         {
-            // (don't check existence of input files)
-            if ( node->GetType() != Node::FILE_NODE )
+            node->SetStatFlag( Node::STATS_FAILED );
+            break;
+        }
+        case Node::NODE_RESULT_NEED_SECOND_BUILD_PASS:
+        {
+            break; // nothing to check
+        }
+        case Node::NODE_RESULT_OK:
+        {
+            // build completed ok, or retrieved from cache...
+
+            if ( node->GetStatFlag( Node::STATS_CACHE_HIT ) == false )
             {
-                // ... ensure file exists (to detect builder logic problems)
-                if ( !FileIO::FileExists( node->GetName().Get() ) )
+                // record new build time only if built (i.e. if cached or failed, the time
+                // does not represent how long it takes to create this resource)
+                node->SetLastBuildTime( timeTakenMS );
+                node->SetStatFlag( Node::STATS_BUILT );
+                FLOG_VERBOSE( "-Build: %u ms\t%s", timeTakenMS, node->GetName().Get() );
+            }
+
+            // Check that the file is on disk as expected
+            if ( node->IsAFile() )
+            {
+                // (don't check existence of input files)
+                if ( node->GetType() != Node::FILE_NODE )
                 {
-                    FLOG_ERROR( "File missing despite success for '%s'", node->GetName().Get() );
-                    result = Node::NODE_RESULT_FAILED;
+                    // ... ensure file exists (to detect builder logic problems)
+                    if ( !FileIO::FileExists( node->GetName().Get() ) )
+                    {
+                        FLOG_ERROR( "File missing despite success for '%s'", node->GetName().Get() );
+                        result = Node::NODE_RESULT_FAILED;
+                    }
                 }
             }
+            break;
         }
     }
 
@@ -858,9 +862,12 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         const char * resultString = nullptr;
         switch ( result )
         {
-            case Node::NODE_RESULT_OK:                      resultString = "SUCCESS_COMPLETE";      break;
+            case Node::NODE_RESULT_OK:
+            {
+                resultString = node->GetStatFlag( Node::STATS_CACHE_HIT ) ? "SUCCESS_CACHED" : "SUCCESS_COMPLETE";
+                break;
+            }
             case Node::NODE_RESULT_NEED_SECOND_BUILD_PASS:  resultString = "SUCCESS_PREPROCESSED";  break;
-            case Node::NODE_RESULT_OK_CACHE:                resultString = "SUCCESS_CACHED";        break;
             case Node::NODE_RESULT_FAILED:                  resultString = "FAILED";                break;
         }
 

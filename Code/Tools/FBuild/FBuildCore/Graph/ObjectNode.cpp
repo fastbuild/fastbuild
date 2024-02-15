@@ -441,7 +441,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
             if ( RetrieveFromCache( job ) )
             {
-                return NODE_RESULT_OK_CACHE;
+                return NODE_RESULT_OK;
             }
 
             // Cache miss
@@ -498,7 +498,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
         if ( RetrieveFromCache( job ) )
         {
-            return NODE_RESULT_OK_CACHE;
+            return NODE_RESULT_OK;
         }
     }
 
