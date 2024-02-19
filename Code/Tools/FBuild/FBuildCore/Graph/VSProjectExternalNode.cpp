@@ -166,13 +166,13 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
                         else
                         {
                             VspteModuleWrapper::Instance()->Vspte_DeallocateProjDataCfgArray( &projData );
-                            FLOG_ERROR( "VSProjectExternalNode - Failed retrieving type Guid and / or config|platform pairs for external project '%s', please check the output or the log of the 'VSProjectExternal' module! Maybe explicitely providing the project data is required.", m_Name.Get() );
+                            FLOG_ERROR( "VSProjectExternalNode - Failed retrieving type Guid and / or config|platform pairs for external project '%s', please check the output or the log of the 'VSProjectExternal' module! Explicitly providing project data may be required.", m_Name.Get() );
                             return BuildResult::eFailed;
                         }
                     }
                     else
                     {
-                        FLOG_ERROR( "VSProjectExternalNode - Failed to load the external VSProjTypeExtractor module, please consult the 'VSProjectExternal' documentation! Maybe explicitely providing the project data is required." );
+                        FLOG_ERROR( "VSProjectExternalNode - Failed to load the external VSProjTypeExtractor module, please consult the 'VSProjectExternal' documentation! Explicitly providing project data may be required." );
                         return BuildResult::eFailed;
                     }
                 }

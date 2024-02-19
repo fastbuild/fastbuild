@@ -318,7 +318,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1035_ExcessiveDepthComplexity( const BFFToken * iter )
 {
-    FormatError( iter, 1035u, nullptr, "Excessive depth complexity when parsing BFFs. Check for resursive includes or simplify config." );
+    FormatError( iter, 1035u, nullptr, "Excessive depth complexity when parsing BFFs. Check for recursive includes or simplify config." );
 }
 
 // Error_1036_UnknownTokenInIfDirective
