@@ -92,7 +92,6 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = allowRace;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
@@ -188,7 +187,6 @@ void TestDistributed::RemoteRaceWinRemote()
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_NoLocalConsumptionOfRemoteJobs = true;
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
@@ -216,7 +214,6 @@ void TestDistributed::RemoteRaceSystemFailure()
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_NoLocalConsumptionOfRemoteJobs = true;
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     options.m_DistVerbose = true;
@@ -270,7 +267,6 @@ void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
@@ -298,7 +294,6 @@ void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
@@ -326,7 +321,6 @@ void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
@@ -354,7 +348,6 @@ void TestDistributed::WarningsAreCorrectlyReported_Clang() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
@@ -385,7 +378,6 @@ void TestDistributed::ShutdownMemoryLeak() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     // Init
@@ -447,7 +439,6 @@ void TestDistributed::TestZiDebugFormat() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
@@ -468,7 +459,6 @@ void TestDistributed::TestZiDebugFormat_Local() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
@@ -492,7 +482,6 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
