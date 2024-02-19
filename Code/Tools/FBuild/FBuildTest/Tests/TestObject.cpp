@@ -521,7 +521,6 @@ void TestObject::ClangExplicitLanguageType() const
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
-        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -566,7 +565,6 @@ void TestObject::ClangDependencyArgs() const
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
-        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -626,7 +624,6 @@ void TestObject::CLDependencyArgs() const
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
-        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -660,7 +657,6 @@ void TestObject::CLDependencyArgs() const
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = false;
         options.m_AllowLocalRace = true;
-        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );

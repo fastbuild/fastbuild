@@ -92,7 +92,6 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = allowRace;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -188,7 +187,6 @@ void TestDistributed::RemoteRaceWinRemote()
     options.m_NumWorkerThreads = 1;
     options.m_ForceCleanBuild = true;
     options.m_NoLocalConsumptionOfRemoteJobs = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -215,7 +213,6 @@ void TestDistributed::RemoteRaceSystemFailure()
     options.m_NumWorkerThreads = 1;
     options.m_ForceCleanBuild = true;
     options.m_NoLocalConsumptionOfRemoteJobs = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     options.m_DistVerbose = true;
     FBuild fBuild( options );
 
@@ -267,7 +264,6 @@ void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -294,7 +290,6 @@ void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -321,7 +316,6 @@ void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -348,7 +342,6 @@ void TestDistributed::WarningsAreCorrectlyReported_Clang() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -378,7 +371,6 @@ void TestDistributed::ShutdownMemoryLeak() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     // Init
     FBuild fBuild( options );
@@ -439,7 +431,6 @@ void TestDistributed::TestZiDebugFormat() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -459,7 +450,6 @@ void TestDistributed::TestZiDebugFormat_Local() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_ForceCleanBuild = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -482,7 +472,6 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
