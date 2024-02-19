@@ -90,7 +90,7 @@ void MemPoolBlock::Free( void * ptr )
     #endif
 }
 
-// AlocPage
+// AllocPage
 //------------------------------------------------------------------------------
 NO_INLINE bool MemPoolBlock::AllocPage()
 {

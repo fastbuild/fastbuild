@@ -94,7 +94,7 @@ bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * 
         }
     }
 
-    // Check we wrote as much as we originaly calculated
+    // Check we wrote as much as we originally calculated
     ASSERT( m_WriteStream->GetSize() == memSize );
     return true;
 }

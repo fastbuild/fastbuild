@@ -65,7 +65,7 @@ public:
     bool IsCurlyBracket( const char c ) const       { return ( m_Type == BFFTokenType::CurlyBracket ) && ( m_String[ 0 ] == c ); }
     bool IsSquareBracket( const char c ) const      { return ( m_Type == BFFTokenType::SquareBracket ) && ( m_String[ 0 ] == c ); }
     bool IsString() const                           { return ( m_Type == BFFTokenType::String ); }
-    bool IsBooelan() const                          { return ( m_Type == BFFTokenType::Boolean ); }
+    bool IsBoolean() const                          { return ( m_Type == BFFTokenType::Boolean ); }
     bool IsVariable() const                         { return ( m_Type == BFFTokenType::Variable ); }
     bool IsComma() const                            { return ( m_Type == BFFTokenType::Comma ); }
 

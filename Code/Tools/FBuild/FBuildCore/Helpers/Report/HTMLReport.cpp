@@ -387,7 +387,7 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
             const uint32_t  cStores     = ls->m_ObjectCount_CacheStores;
             const float     cStoreTime  = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
 
-            // start collapsable section
+            // start collapsible section
             if ( numOutput == 10 )
             {
                 DoToggleSection();
@@ -510,7 +510,7 @@ void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
         const char * type = node->GetTypeName();
         const char * name = node->GetName().Get();
 
-        // start collapsable section
+        // start collapsible section
         if ( numOutput == 10 )
         {
             DoToggleSection( (uint32_t)nodes.GetSize() - 10 );
@@ -574,7 +574,7 @@ void HTMLReport::DoCPUTimeByLibrary()
             continue;
         }
 
-        // start collapsable section
+        // start collapsible section
         if ( numOutput == 10 )
         {
             DoToggleSection();
@@ -658,7 +658,7 @@ void HTMLReport::DoIncludes()
             const uint32_t included = s.m_Count;
             const bool inPCH = s.m_InPCH;
 
-            // start collapsable section
+            // start collapsible section
             if ( numOutput == 10 )
             {
                 DoToggleSection( numIncludes - 10 );
@@ -675,7 +675,7 @@ void HTMLReport::DoIncludes()
 
         DoTableStop();
 
-        // end collpsable section
+        // end collapsible section
         if ( numOutput > 10 )
         {
             Write( "</details>\n" );

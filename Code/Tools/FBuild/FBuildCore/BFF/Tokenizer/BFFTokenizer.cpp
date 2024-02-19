@@ -470,7 +470,7 @@ bool BFFTokenizer::HandleVariable( const char * & pos, const char * /*end*/, con
     {
         // TODO:C Improve error
         const BFFToken error( file, pos, BFFTokenType::Invalid, AStackString<>( "???" ) );
-        Error::Error_1017_UnexepectedCharInVariableValue( &error );
+        Error::Error_1017_UnexpectedCharInVariableValue( &error );
         return false;
     }
 
@@ -970,7 +970,7 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
     }
     argsIter++;
 
-    // We must escape ^ and $ so they won't be interpretted as special chars
+    // We must escape ^ and $ so they won't be interpreted as special chars
     varValue.Replace( "^", "^^" );
     varValue.Replace( "$", "^$" );
 

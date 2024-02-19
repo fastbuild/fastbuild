@@ -27,7 +27,7 @@
 //------------------------------------------------------------------------------
 // An address with the MSB set is not a valid user-space address on Windows, Linux or OSX
 // We can take advantage of this to test if an allocation being freed is a bucket
-// allocation whether or not the SmallBlockAlloctor is initialized or not
+// allocation whether or not the SmallBlockAllocator is initialized or not
 #define MEM_BUCKETS_NOT_INITIALIZED (void *)( (uint64_t)1 << 63 )
 
 // Static Data
@@ -53,7 +53,7 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
         ASSERT( (size_t)s_BucketMemoryStart != (size_t)-1 );
     #endif
 
-    // Construct the bucket structures in the reservedspace
+    // Construct the bucket structures in the reserved space
     // (Done this way to avoid memory allocations which would be re-entrant)
     s_Buckets = reinterpret_cast< MemBucket * >( s_BucketMemBucketMemory );
     for ( size_t i = 0; i < BUCKET_NUM_BUCKETS; ++i )
@@ -73,7 +73,7 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
         AStackString<5120> buffer;
         static_assert( BUCKET_NUM_BUCKETS * 70 < 5120, "Not enough space for DumpStats" );
 
-        // Assumulate total stats as we loop
+        // Accumulate total stats as we loop
         uint32_t totalActive = 0;
         uint32_t totalActiveBytes = 0;
         uint32_t totalPeak = 0;
@@ -83,7 +83,7 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
         buffer += "    Size |      Num      Mem |      Num      Mem |   LifeTime\n";
         buffer += "-------------------------------------------------------------\n";
 
-        // Print info for eeach bucket
+        // Print info for each bucket
         for ( uint32_t i = 0; i < BUCKET_NUM_BUCKETS; ++i )
         {
             const MemBucket & bucket = s_Buckets[ i ];
@@ -136,7 +136,7 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
     // Can bucket satisfy alignment requirement?
     if ( bucket.m_BlockAlignment < align )
     {
-        return nullptr; // Can't satify alignment
+        return nullptr; // Can't satisfy alignment
     }
 
     void* ptr;
@@ -163,7 +163,7 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
 bool SmallBlockAllocator::Free( void * ptr )
 {
     // Determine if this allocation belongs to the buckets
-    // Even if the buckets have nevere been initialized, this is safe
+    // Even if the buckets have never been initialized, this is safe
     // as it will result in a page index out of bounds since for any valid
     // pointer as no allocation can validly be outside of the user mode address space.
     const size_t pageIndex = (size_t)( ( (char *)ptr - (char *)s_BucketMemoryStart ) / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );

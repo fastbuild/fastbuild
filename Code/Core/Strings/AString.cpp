@@ -119,7 +119,7 @@ AString::~AString()
         // a) NOT be pointing to the shared global string
         ASSERT( m_Contents != s_EmptyString );
         // b) NOT be pointing to an internal buffer
-        // Depending on the memory alloctor, it could be valid to have an allocation
+        // Depending on the memory allocator, it could be valid to have an allocation
         // immediately after the string itself, so we can't have an assert for this
         FREE( m_Contents );
     }

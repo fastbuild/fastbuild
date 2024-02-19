@@ -36,7 +36,7 @@ public:
     static void SetThreadName( const char * threadName );
 
 private:
-    // when a thread is finished with an event buffer (full or forced syncrhonization)
+    // when a thread is finished with an event buffer (full or forced synchronization)
     // it's passed to the ProfileManager to
     friend struct ProfileEventBuffer;
     static void PushThreadEvents( const ProfileEvent * events, size_t num, const char * threadName );

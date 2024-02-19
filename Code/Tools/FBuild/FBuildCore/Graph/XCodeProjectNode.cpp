@@ -270,7 +270,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         }
 
         // Create the plist
-        const AString & output = g.GenerateUserSchemeMangementPList();
+        const AString & output = g.GenerateUserSchemeManagementPList();
 
         // Write to disk if missing (not written if different as this could stomp user settings)
         AStackString<> plist;

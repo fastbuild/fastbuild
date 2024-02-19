@@ -1549,7 +1549,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // a previously declared external file?
     if ( node->GetType() == Node::FILE_NODE )
     {
-        // can link directy against it
+        // can link directly against it
         nodes.Add( node );
         return true;
     }
@@ -1565,7 +1565,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // an external executable?
     if ( node->GetType() == Node::EXEC_NODE )
     {
-        // depend on ndoe - will use exe output at build time
+        // depend on node - will use exe output at build time
         nodes.Add( node );
         return true;
     }

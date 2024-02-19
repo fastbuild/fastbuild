@@ -1116,7 +1116,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
     }
 
-    // check for cacheability/distributability for non-MSVC
+    // check for cachability/distributability for non-MSVC
     if ( flags.IsClang() ||
          flags.IsGCC() ||
          flags.IsSNC() ||
@@ -1987,7 +1987,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             const char* workBuffer = outputBuffer;
             ASSERT( workBuffer[ outputBufferSize ] == '\0' );
 
-            // First scan the buffer to find all occurences of the enums.
+            // First scan the buffer to find all occurrences of the enums.
             // This will then let us resize the buffer to the appropriate size.
             // Keeping the found enums let us avoid searching for them twice.
             uint32_t nbrEnumsFound = 0;
@@ -2298,7 +2298,7 @@ ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool
 //------------------------------------------------------------------------------
 ObjectNode::CompileHelper::~CompileHelper() = default;
 
-// CompilHelper::SpawnCompiler
+// CompileHelper::SpawnCompiler
 //------------------------------------------------------------------------------
 Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                                                             const AString & name,
@@ -2532,7 +2532,7 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             }
 
             // If the compiler crashed (Internal Compiler Error), treat this
-            // as a system error so it will be retried, since it can alse be
+            // as a system error so it will be retried, since it can also be
             // the result of faulty hardware.
             if ( stdOut.Find( "C1001" ) )
             {
@@ -2738,8 +2738,8 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     // file by checking the directives left by the preprocessor, as described here:
     //  - https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
     //
-    // Be removing the "push" flags the preprocesser adds (1) when leaving the main cpp
-    // file and entering an inluded file only for the Unity, the compiler thinks
+    // Be removing the "push" flags the preprocessor adds (1) when leaving the main cpp
+    // file and entering an included file only for the Unity, the compiler thinks
     // the included files are the top-level files and applies analysis the same way
     // as when they are built outside of Unity.
     //

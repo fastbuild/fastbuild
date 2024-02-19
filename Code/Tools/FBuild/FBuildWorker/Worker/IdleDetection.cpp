@@ -124,8 +124,8 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
         m_LastTimeBusy = ( userTime + kernTime );
     }
 
-    // if the total CPU time is below the idle theshold, we don't need to
-    // check to know acurately what the cpu use of FASTBuild is
+    // if the total CPU time is below the idle threshold, we don't need to
+    // check to know accurately what the cpu use of FASTBuild is
     if ( m_CPUUsageTotal < (float)idleThresholdPercent )
     {
         idleCurrent = 1.0f;
@@ -332,7 +332,7 @@ void IdleDetection::UpdateProcessList()
                     }
                     else
                     {
-                        // gracefully handle failure to open proces
+                        // gracefully handle failure to open process
                         // maybe it closed before we got to it
                     }
                 }

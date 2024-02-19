@@ -197,8 +197,8 @@ void TestAString::AStackStringConstructors() const
     }
     {
         // AStackString<> from AString
-        AString astring( "hello" );
-        AStackString<> fromAString( astring );
+        AString aString( "hello" );
+        AStackString<> fromAString( aString );
         TEST_ASSERT( fromAString.GetLength() == 5 );
         TEST_ASSERT( fromAString.GetReserved() >= 5 );
         TEST_ASSERT( fromAString.IsEmpty() == false );
@@ -232,7 +232,7 @@ void TestAString::AStackStringOverflow() const
         TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
     }
     {
-        // concetentation of string longer than buffer
+        // concatenation of string longer than buffer
         AStackString< 8 > string;
         string += "01234567890123456789";
         TEST_ASSERT( string.GetLength() == 20 );

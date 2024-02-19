@@ -612,7 +612,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 //------------------------------------------------------------------------------
 /*virtual*/ void Node::Migrate( const Node & oldNode )
 {
-    // Transfer the stamp used to detemine if the node has changed
+    // Transfer the stamp used to determine if the node has changed
     m_Stamp = oldNode.m_Stamp;
 
     // Transfer previous build costs used for progress estimates
@@ -1148,7 +1148,7 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
 
     // More than one caller could be retrieving the same env string
     // in some cases. For simplicity, we protect in all cases even
-    // if we could avoid it as the mutex will not be heavily constested.
+    // if we could avoid it as the mutex will not be heavily contested.
     MutexHolder mh( g_NodeEnvStringMutex );
 
     // If we've previously built a custom env string, use it

@@ -142,7 +142,7 @@ NodeGraph::~NodeGraph()
             // Failed due to moved DB?
             if ( res == LoadResult::LOAD_ERROR_MOVED )
             {
-                // Is moving considerd fatal?
+                // Is moving considered fatal?
                 if ( FBuild::Get().GetOptions().m_ContinueAfterDBMove == false )
                 {
                     // Corrupt DB or other fatal problem
@@ -530,7 +530,7 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
     }
     for ( const Node * node : m_AllNodes )
     {
-        // Save depdendencies, but not for FileNodes which have none
+        // Save dependencies, but not for FileNodes which have none
         if ( node->GetType() != Node::FILE_NODE )
         {
             Node::SaveDependencies( stream, node );
@@ -731,7 +731,7 @@ void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
             outBuffer += style;
         }
 
-        // Temrinate the line
+        // Terminate the line
         outBuffer += '\n';
     }
 }
@@ -807,7 +807,7 @@ void NodeGraph::RegisterSourceToken( const Node * node, const BFFToken * sourceT
     // Where available, record the source token for the node
     if ( sourceToken )
     {
-        // Ammortize array growth in parallel with m_AllNodes
+        // Amortize array growth in parallel with m_AllNodes
         m_NodeSourceTokens.SetCapacity( m_AllNodes.GetCapacity() );
 
         // Nobody should have added this before
@@ -884,7 +884,7 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name )
 Node * NodeGraph::CreateNode( Node::Type type, const AString & name, const BFFToken * sourceToken )
 {
     // Where possible callers should call the move version to transfer ownership
-    // of strings, but calers don't always have a string to transfer so this
+    // of strings, but callers don't always have a string to transfer so this
     // helper can be called in those situations
     AString nameCopy;
 
@@ -977,7 +977,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
         }
     }
 
-    // Check for cyclice dependencies discoverable only at runtime
+    // Check for cyclic dependencies discoverable only at runtime
     if ( CheckForCyclicDependencies( nodeToBuild ) )
     {
         FBuild::AbortBuild();
@@ -1029,7 +1029,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
                  nodeToBuild->DetermineNeedToBuildStatic() )
             {
                 // Explicitly mark node in a way that will result in it rebuilding should
-                // we cancel the build before builing this node
+                // we cancel the build before building this node
                 if ( nodeToBuild->m_Stamp == 0 )
                 {
                     // Note that this is the first time we're building (since Node can't check
@@ -1154,7 +1154,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
             ++numberNodesFailed;
             if ( stopOnFirstError )
             {
-                // propogate failure state to this node
+                // propagate failure state to this node
                 nodeToBuild->SetState( Node::FAILED );
                 break;
             }
@@ -1418,14 +1418,14 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
             {
                 if ( d > node->GetName().GetLength() - fullPath.GetLength() )
                 {
-                    continue; // completly different <=> d deletions
+                    continue; // completely different <=> d deletions
                 }
             }
             else
             {
                 if ( d > fullPath.GetLength() - node->GetName().GetLength() )
                 {
-                    continue; // completly different <=> d deletions
+                    continue; // completely different <=> d deletions
                 }
             }
 
@@ -1557,7 +1557,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
     // in flight and no jobs about to be added from the last sweep.
     //
     // Some of these things depend on timing, so this check could conceivably run
-    // when not stuck, but it will never falsly detect a cyclic dependency.
+    // when not stuck, but it will never falsely detect a cyclic dependency.
     //
 
     // Early out if the root node is being processed
@@ -1895,7 +1895,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         Dependencies newDeps( oldDeps.GetSize() );
         for ( const Dependency & oldDep : oldDeps )
         {
-            // See if the depenceny already exists in the new DB
+            // See if the dependency already exists in the new DB
             const Node * oldDepNode = oldDep.GetNode();
             Node * newDepNode = FindNodeInternal( oldDepNode->GetName() );
 

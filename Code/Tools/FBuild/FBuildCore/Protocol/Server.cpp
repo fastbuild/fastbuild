@@ -373,7 +373,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                 const bool isSynchronizing = ( manifest->GetUserData() != nullptr );
                 if ( isSynchronizing )
                 {
-                    // We just need to wait for syncrhonization to complete
+                    // We just need to wait for synchronization to complete
                 }
                 else
                 {

@@ -557,7 +557,7 @@ void TestCopy::MissingTrailingSlash() const
     // Parsing should fail
     TEST_ASSERT( fBuild.Initialize() == false );
 
-    // Ensure the explcit error for this case is reported (not a generic one about
+    // Ensure the explicit error for this case is reported (not a generic one about
     // the target already being defined)
     TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1400" ) );
 }

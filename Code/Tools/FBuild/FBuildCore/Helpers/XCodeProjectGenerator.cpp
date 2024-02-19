@@ -46,9 +46,9 @@ const AString & XCodeProjectGenerator::GeneratePBXProj()
     return m_Tmp;
 }
 
-// GenerateUserSchemeMangementPList
+// GenerateUserSchemeManagementPList
 //------------------------------------------------------------------------------
-const AString & XCodeProjectGenerator::GenerateUserSchemeMangementPList()
+const AString & XCodeProjectGenerator::GenerateUserSchemeManagementPList()
 {
     // preallocate to avoid re-allocations
     m_Tmp.SetReserved( MEGABYTE );

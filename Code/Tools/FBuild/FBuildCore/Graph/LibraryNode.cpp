@@ -125,7 +125,7 @@ LibraryNode::~LibraryNode()
 {
     if ( ObjectListNode::GatherDynamicDependencies( nodeGraph ) == false )
     {
-        return false; // GatherDynamicDependencies will have emited an error
+        return false; // GatherDynamicDependencies will have emitted an error
     }
 
     // .LibrarianAdditionalInputs

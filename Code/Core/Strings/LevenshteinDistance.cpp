@@ -72,16 +72,16 @@ static uint32_t LevenshteinDistanceImpl( const char * str1, uint32_t len1,
     for ( uint32_t x = 1 ; x <= len2; x++ )
     {
         column[ 0 ] = x;
-        for ( uint32_t y = 1, lastdiag = x - 1 ; y <= len1 ; y++ )
+        for ( uint32_t y = 1, lastDiag = x - 1 ; y <= len1 ; y++ )
         {
-            const uint32_t olddiag = column[ y ];
+            const uint32_t oldDiag = column[ y ];
 
             const uint32_t a = column[y] + 1;
             const uint32_t b = column[y - 1] + 1;
-            const uint32_t c = lastdiag + ( CharEqual<CASE_SENSITIVE>()( str1[y - 1], str2[x - 1] ) ? 0 : 1 );
+            const uint32_t c = lastDiag + ( CharEqual<CASE_SENSITIVE>()( str1[y - 1], str2[x - 1] ) ? 0 : 1 );
             column[ y ] = ( ( a < b ) ? ( a < c ? a : c ) : ( b < c ? b : c ) );
 
-            lastdiag = olddiag;
+            lastDiag = oldDiag;
         }
     }
 

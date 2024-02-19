@@ -251,7 +251,7 @@ protected:
     Type                m_Type;                     // Node type. **Set by constructor**
     mutable uint16_t    m_StatsFlags = 0;           // Stats recorded in the current build
     mutable uint32_t    m_BuildPassTag = 0;         // Prevent multiple recursions into the same node during a single sweep
-    uint64_t            m_Stamp = 0;                // "Stamp" representing this node for dependency comparissons
+    uint64_t            m_Stamp = 0;                // "Stamp" representing this node for dependency comparisons
     uint8_t             m_ControlFlags = FLAG_NONE; // Control build behavior special cases - Set by constructor
     bool                m_Hidden = false;           // Hidden from -showtargets?
     // Note: Unused 2 bytes here

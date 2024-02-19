@@ -37,7 +37,7 @@
     }
 #endif
 
-// IsDebugerAttached
+// IsDebuggerAttached
 //------------------------------------------------------------------------------
 bool IsDebuggerAttached()
 {

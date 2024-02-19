@@ -251,7 +251,7 @@ void TestLinker::IncrementalLinking_MSVC() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestLinker/IncrementalLinking_MSVC/fbuild.bff";
-    options.m_ShowCommandOutput = true; // Show linker output so we can check analyze /VERBOSE outptut
+    options.m_ShowCommandOutput = true; // Show linker output so we can check analyze /VERBOSE output
 
     // Files
     const char * dbFile     = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/fbuild.fdb";
@@ -322,7 +322,7 @@ void TestLinker::IncrementalLinking_MSVC() const
 
         const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
-        // Should see incremental linking messsages..
+        // Should see incremental linking messages..
         TEST_ASSERT( output.Find( "modules have changed since prior linking" ) );
 
         // .. but should not be a full link

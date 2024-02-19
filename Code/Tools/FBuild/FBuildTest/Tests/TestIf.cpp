@@ -144,7 +144,7 @@ void TestIf::IfFunctionBool() const
     TEST_EXP_TRUE( ".Bool = true", "false != .Bool" );
     TEST_EXP_FALSE( ".Bool = true", ".Bool != .Bool" );
 
-    // Compound Exps
+    // Compound expressions
     TEST_EXP_TRUE( ".True = true\n .False = false", ".True && true || .False" );
 
     TEST_EXP_TRUE( ".True = true\n .False = false", "true && .True && true || !false || .False" );

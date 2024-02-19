@@ -1426,7 +1426,7 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
                                        const ReflectedProperty & property,
                                        const BFFVariable * variable ) const
 {
-    // Get the destionation
+    // Get the destination
     const ReflectedPropertyStruct & dstStructs = static_cast< const ReflectedPropertyStruct & >( property );
     ASSERT( dstStructs.IsArray() );
 
@@ -1508,7 +1508,7 @@ bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
             }
             else
             {
-                // If not found, check for inheritence from containing frame
+                // If not found, check for inheritance from containing frame
                 if ( property.HasMetaData<Meta_InheritFromOwner>() )
                 {
                     var = BFFStackFrame::GetVar( propertyName );

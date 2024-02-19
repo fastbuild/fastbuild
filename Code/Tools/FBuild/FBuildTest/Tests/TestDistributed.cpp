@@ -378,7 +378,7 @@ void TestDistributed::ShutdownMemoryLeak() const
 
     // NOTE: No remote server created so jobs stay in m_DistributableJobs_Available queue
 
-    // Create thread that will abort build to simulate Crtl+C or other external stop
+    // Create thread that will abort build to simulate Ctrl+C or other external stop
     class Helper
     {
     public:
@@ -486,7 +486,7 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
 //------------------------------------------------------------------------------
 void TestDistributed::CleanMessageToPreventMSBuildFailure() const
 {
-    // Error should be indentical except for a single remove colon
+    // Error should be identical except for a single remove colon
     {
         const AStackString<> in( "C:\\Windows\\TEMP\\.fbuild.tmp\\0x00000000\\"
                                  "core_1018\\F436D72E\\Module.MergeActors.cpp :"

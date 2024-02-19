@@ -374,7 +374,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
         // did we hit the end of a line?
         if ( IsAtEndOfLine( pos ) )
         {
-            // line is entirely whitepace
+            // line is entirely whitespace
             SkipLineEnd( pos );
             continue;
         }
@@ -944,7 +944,7 @@ void LightCache::AddError( IncludedFile * file,
     m_Errors.Append( finalBuffer );
 }
 
-// SkipWhitepspace
+// SkipWhitespace
 //------------------------------------------------------------------------------
 /*static*/ void LightCache::SkipWhitespace( const char * & pos )
 {
@@ -1004,7 +1004,7 @@ void LightCache::AddError( IncludedFile * file,
     ASSERT( ( c == '"' ) || ( c == '<' ) );
     ++pos;
 
-    // Determing expected end char
+    // Determine expected end char
     const char endChar = ( c == '"' ) ? '"' : '>';
 
     // Find end char

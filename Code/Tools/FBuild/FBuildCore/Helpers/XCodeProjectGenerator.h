@@ -33,9 +33,9 @@ public:
     const AString & GetProjectName() const { return m_ProjectName; }
 
     // NOTE: These return pointers to shared storage. User must not hold
-    // refrences simultaneously.
+    // references simultaneously.
     const AString & GeneratePBXProj();
-    const AString & GenerateUserSchemeMangementPList();
+    const AString & GenerateUserSchemeManagementPList();
     const AString & GenerateXCScheme();
 
 private:

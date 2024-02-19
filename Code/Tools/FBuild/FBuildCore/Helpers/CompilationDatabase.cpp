@@ -135,7 +135,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
         }
         else
         {
-            // For other ndoes, fallback to the name of the node
+            // For other nodes, fallback to the name of the node
             ctx.m_CompilerEscaped = compilerNode->GetName();
         }
     }

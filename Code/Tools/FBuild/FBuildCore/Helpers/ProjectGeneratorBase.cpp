@@ -83,7 +83,7 @@ void ProjectGeneratorBase::GetProjectRelativePath_Deprecated( const AString & fi
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::Folder * ProjectGeneratorBase::GetFolderFor( const AString & path )
 {
-    // Get the path exluding the file file or dir
+    // Get the path excluding the file file or dir
     const char * lastSlash = path.FindLast( NATIVE_SLASH );
     if ( ( lastSlash == nullptr ) || ( lastSlash == path.Get() ) )
     {

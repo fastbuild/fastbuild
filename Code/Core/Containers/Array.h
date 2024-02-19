@@ -22,7 +22,7 @@ public:
     explicit Array( const Array< T > & other );
     explicit Array( Array< T > && other );
     explicit Array( const T * otherBegin, const T * otherEnd );
-    explicit Array( size_t initialCapacity, bool resizeable = false );
+    explicit Array( size_t initialCapacity, bool resizable = false );
     ~Array();
 
     void Destruct();
@@ -110,7 +110,7 @@ protected:
     uint32_t    m_Size;
     uint32_t    m_CapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
-        bool    m_Resizeable;
+        bool    m_Resizable;
     #endif
 };
 
@@ -122,7 +122,7 @@ Array< T >::Array()
     , m_Size( 0 )
     , m_CapacityAndFlags( 0 )
     #if defined( ASSERTS_ENABLED )
-        , m_Resizeable( true )
+        , m_Resizable( true )
     #endif
 {
 }
@@ -135,7 +135,7 @@ Array< T >::Array( const Array< T > & other )
     , m_Size( 0 )
     , m_CapacityAndFlags( 0 )
     #if defined( ASSERTS_ENABLED )
-        , m_Resizeable( true )
+        , m_Resizable( true )
     #endif
 {
     *this = other;
@@ -147,7 +147,7 @@ template < class T >
 Array< T >::Array( Array< T > && other )
 {
     #if defined( ASSERTS_ENABLED )
-        m_Resizeable = true;
+        m_Resizable = true;
     #endif
 
     // If memory cannot be freed it cannot be moved
@@ -185,12 +185,12 @@ Array< T >::Array( const T * otherBegin, const T * otherEnd )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 template < class T >
-Array< T >::Array( size_t initialCapacity, bool resizeable )
+Array< T >::Array( size_t initialCapacity, bool resizable )
 {
     if ( initialCapacity )
     {
         #if defined( ASSERTS_ENABLED )
-            m_Resizeable = true; // allow initial allocation
+            m_Resizable = true; // allow initial allocation
         #endif
         m_Begin = Allocate( initialCapacity );
         m_Size = 0;
@@ -203,9 +203,9 @@ Array< T >::Array( size_t initialCapacity, bool resizeable )
         m_CapacityAndFlags = 0;
     }
     #if defined( ASSERTS_ENABLED )
-        m_Resizeable = resizeable;
+        m_Resizable = resizable;
     #else
-        (void)resizeable;
+        (void)resizable;
     #endif
 }
 
@@ -364,19 +364,19 @@ void Array< T >::Swap( Array< T > & other )
     const uint32_t tmpSize = m_Size;
     const uint32_t tmpCapacityAndFlags = m_CapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
-        const bool tmpResizeable = m_Resizeable;
+        const bool tmpResizable = m_Resizable;
     #endif
     m_Begin = other.m_Begin;
     m_Size = other.m_Size;
     m_CapacityAndFlags = other.m_CapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
-        m_Resizeable = other.m_Resizeable;
+        m_Resizable = other.m_Resizable;
     #endif
     other.m_Begin = tmpBegin;
     other.m_Size = tmpSize;
     other.m_CapacityAndFlags = tmpCapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
-        other.m_Resizeable = tmpResizeable;
+        other.m_Resizable = tmpResizable;
     #endif
 }
 
@@ -670,7 +670,7 @@ Array< T > & Array< T >::operator = ( Array< T > && other )
 template < class T >
 void Array< T >::Grow()
 {
-    ASSERT( m_Resizeable );
+    ASSERT( m_Resizable );
 
     // grow by 1.5 times (but at least by one)
     const size_t currentCapacity = GetCapacity();
@@ -700,7 +700,7 @@ void Array< T >::Grow()
 template < class T >
 T * Array< T >::Allocate( size_t numElements ) const
 {
-    ASSERT( m_Resizeable );
+    ASSERT( m_Resizable );
     ASSERT( numElements <= CAPACITY_MASK );
     constexpr size_t align = __alignof( T ) > sizeof( void * ) ? __alignof( T ) : sizeof( void * );
     return static_cast< T * >( ALLOC( sizeof( T ) * numElements, align ) );

@@ -350,7 +350,7 @@ ObjectListNode::~ObjectListNode() = default;
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
 
-    // Handle converting all static inputs into dynamic onces (i.e. cpp->obj)
+    // Handle converting all static inputs into dynamic ones (i.e. cpp->obj)
     for ( size_t i=m_ObjectListInputStartIndex; i<m_ObjectListInputEndIndex; ++i )
     {
         const Dependency & dep = m_StaticDependencies[ i ];
@@ -662,7 +662,7 @@ void ObjectListNode::GetObjectFileName( const AString & fileName, const AString 
     lastDot = lastDot && ( lastDot > lastSlash ) ? lastDot : fileName.GetEnd();
 
     // if source comes from a directory listing, use path relative to dirlist base
-    // to replicate the folder hierearchy in the output
+    // to replicate the folder hierarchy in the output
     AStackString<> subPath;
     if ( baseDir.IsEmpty() == false )
     {

@@ -202,7 +202,7 @@ void TestUnity::DetectDeletedUnityFiles() const
     // Build
     FBuildTestOptions options;
     options.m_ShowBuildReason = true;
-    BuildGenerate( options, false ); // don't laod DB
+    BuildGenerate( options, false ); // don't load DB
 
     EnsureFileExists( "../tmp/Test/Unity/Unity1.cpp" );
     EnsureFileExists( "../tmp/Test/Unity/Unity2.cpp" );
@@ -593,7 +593,7 @@ void TestUnity::LinkMultiple() const
 //------------------------------------------------------------------------------
 void TestUnity::LinkMultiple_InputFiles() const
 {
-    // Same as LinkMultiple but with files explicitily specified instead o
+    // Same as LinkMultiple but with files explicitly specified instead o
     // discovering them via directory listings
 
     // Code files generated/used by this test
@@ -767,7 +767,7 @@ void TestUnity::SortFiles() const
         Array< FileIO::FileInfo * >             m_HelperFileInfos;
     };
 
-    // Helper marcos to reduce boilerplate code
+    // Helper macros to reduce boilerplate code
     #define SORT( ... )                                                         \
     do {                                                                           \
         const char * const inputs[] = { __VA_ARGS__ };                          \
@@ -924,7 +924,7 @@ void TestUnity::CacheUsingRelativePaths() const
             TEST_ASSERT( f.Open( objFileA ) );
             buffer.SetLength( (uint32_t)f.GetFileSize() );
             TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-            buffer.Replace( (char)0, ' ' ); // Make string seaches simpler
+            buffer.Replace( (char)0, ' ' ); // Make string searches simpler
         }
 
         // Check __FILE__ paths are relative

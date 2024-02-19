@@ -193,7 +193,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     {
         if ( !file.DoBuild() )
         {
-            return false; // DoBuild will have emitted an rrror
+            return false; // DoBuild will have emitted an error
         }
     }
 
@@ -517,7 +517,7 @@ void ToolManifest::CancelSynchronizingFiles()
         return;
     }
 
-    // If we have syncrhonized the manifest then it should be impossible to
+    // If we have synchronized the manifest then it should be impossible to
     // get here unless we're cancelling synchronization of some files
     bool atLeastOneFileCancelled = false;
 

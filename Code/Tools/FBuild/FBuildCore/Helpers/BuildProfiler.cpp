@@ -228,7 +228,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
 //------------------------------------------------------------------------------
 void BuildProfiler::MetricsUpdate()
 {
-    // Preiodically record interesting metrics
+    // Periodically record interesting metrics
     const uint32_t updateIntervalMS = 100;
     for ( ;; )
     {

@@ -145,7 +145,7 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
                          " /FaTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//asm/file.asm"
                          " /sourceDependencies Tools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//srcDeps/file.json");
 
-    // Getthe paths
+    // Get the paths
     AStackString<> pdbPath, asmPath, sourceDependenciesPath;
     FunctionObjectList::GetExtraOutputPaths( args, pdbPath, asmPath, sourceDependenciesPath );
 
@@ -233,7 +233,7 @@ void TestObjectList::ObjectListChaining_Bad() const
     //
     // NOTE: This setup has some fundamental problems and should generally not be used.
     //       For example, deletion of a file in the source directory won't remove the
-    //       interemediate file and copies of the stale file can still occur, and/or
+    //       intermediate file and copies of the stale file can still occur, and/or
     //       cause build failures.
     //
     // The preferred mechanism is to chain ObjectLists together via .CompileInputObjectList

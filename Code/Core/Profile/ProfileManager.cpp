@@ -75,7 +75,7 @@ struct ProfileEventBuffer
 
     size_t          m_CurrentDepth;
 
-    // keep an exapanding buffer of events
+    // keep an expanding buffer of events
     ProfileEvent *  m_Begin;
     ProfileEvent *  m_Current;
     ProfileEvent *  m_MaxEnd;

@@ -26,7 +26,7 @@ private:
     DECLARE_TESTS
 
     void TestGetSet() const;
-    void TestInheritence() const;
+    void TestInheritance() const;
     void MetaData() const;
     void ArraySize() const;
 };
@@ -35,7 +35,7 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestReflection )
     REGISTER_TEST( TestGetSet )
-    REGISTER_TEST( TestInheritence )
+    REGISTER_TEST( TestInheritance )
     REGISTER_TEST( MetaData )
     REGISTER_TEST( ArraySize )
 REGISTER_TESTS_END
@@ -167,7 +167,7 @@ void TestReflection::TestGetSet() const
     #undef CHECK
 }
 
-// TestInheritence
+// TestInheritance
 //------------------------------------------------------------------------------
 class BaseClass : public Object
 {
@@ -193,9 +193,9 @@ REFLECT_BEGIN( DerivedClass, BaseClass, MetaNone() )
     REFLECT( m_B, "b", MetaNone() )
 REFLECT_END( DerivedClass )
 
-void TestReflection::TestInheritence() const
+void TestReflection::TestInheritance() const
 {
-    // Create an object with inheritence
+    // Create an object with inheritance
     DerivedClass obj;
 
     // Set property on class

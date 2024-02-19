@@ -74,7 +74,7 @@ uint64_t MemoryStream::WriteBuffer( IOStream & stream, uint64_t bytesToWrite )
 {
     if ( ( m_End + bytesToWrite ) > m_MaxEnd )
     {
-        GrowToAccomodate( bytesToWrite );
+        GrowToAccommodate( bytesToWrite );
     }
 
     // Read directly into end of buffer
@@ -99,7 +99,7 @@ uint64_t MemoryStream::WriteBuffer( const void * buffer, uint64_t bytesToWrite )
 {
     if ( ( m_End + bytesToWrite ) > m_MaxEnd )
     {
-        GrowToAccomodate( bytesToWrite );
+        GrowToAccommodate( bytesToWrite );
     }
 
     memcpy( m_End, buffer, (size_t)bytesToWrite );
@@ -139,12 +139,12 @@ uint64_t MemoryStream::GetFileSize() const
     return GetSize();
 }
 
-// Grow
+// GrowToAccommodate
 //------------------------------------------------------------------------------
-void MemoryStream::GrowToAccomodate( uint64_t bytesToAccomodate )
+void MemoryStream::GrowToAccommodate( uint64_t bytesToAccommodate )
 {
     // grow by at least MinGrowth
-    size_t newCapacity = (size_t)( m_MaxEnd - m_Begin ) + Math::Max<size_t>( (size_t)bytesToAccomodate, m_MinGrowth );
+    size_t newCapacity = (size_t)( m_MaxEnd - m_Begin ) + Math::Max<size_t>( (size_t)bytesToAccommodate, m_MinGrowth );
     char * oldBegin = m_Begin;
     char * oldEnd = m_End;
     m_Begin = (char *)ALLOC( newCapacity );

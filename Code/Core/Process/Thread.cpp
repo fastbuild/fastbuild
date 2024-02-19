@@ -175,7 +175,7 @@ uint32_t Thread::Join()
         // Wait for thread to finish
         VERIFY( WaitForSingleObject( m_Handle, INFINITE ) == WAIT_OBJECT_0 );
 
-        // Ge teturn code
+        // Get return code
         DWORD ret = 0;
         VERIFY( ::GetExitCodeThread( m_Handle, (LPDWORD)&ret ) );
         VERIFY( ::CloseHandle( m_Handle ) );

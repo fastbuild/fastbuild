@@ -321,7 +321,7 @@ void JobQueue::QueueDistributableJob( Job * job )
 
         m_DistributableJobs_Available.Append( job );
 
-        // Jobs that have been preprocsssed and are ready to be distributed are
+        // Jobs that have been preprocessed and are ready to be distributed are
         // added here. The order of completion of preprocessing doesn't correlate
         // with the remining cost of compilation (and is often the reverse).
         // We re-sort the distributable jobs when adding new ones to ensure the
@@ -470,7 +470,7 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId,
                 }
             }
 
-            // Did cancallation work? It can fail if we try to cancel after build has finished
+            // Did cancellation work? It can fail if we try to cancel after build has finished
             // but before we finish processing the job
             if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY )
             {

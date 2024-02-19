@@ -56,7 +56,7 @@ private:
     void Terminate();
 
     #if defined( __WINDOWS__ )
-        // This messyness is to avoid including windows.h in this file
+        // This messiness is to avoid including windows.h in this file
         inline struct _PROCESS_INFORMATION & GetProcessInfo() const
         {
             return (_PROCESS_INFORMATION &)m_ProcessInfo;

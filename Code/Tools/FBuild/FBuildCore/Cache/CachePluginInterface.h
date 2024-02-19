@@ -37,7 +37,7 @@ using CacheOutputFunc = void (STDCALL*)( const char * message );
 //      cacheRead   - is -cacheread enabled for this build
 //      cacheWrite  - is -cachewrite enabled for this build
 //      cacheVerbose- is -cacheverbose enabled for this build
-//      userConfig  - user provided confuguration string (from .CachePluginDLLConfig)
+//      userConfig  - user provided configuration string (from .CachePluginDLLConfig)
 // Out: bool        - (return) success.  If false is returned, cache will be disabled
 using CacheInitExFunc = bool (STDCALL *)( const char * cachePath,
                                           bool cacheRead,
@@ -63,10 +63,10 @@ using CachePublishFunc = bool (STDCALL *)( const char * cacheId, const void * da
 
 // CacheRetrieve (Required)
 //------------------------------------------------------------------------------
-// Retrieve a previously stored item.  Returns true on succes.
+// Retrieve a previously stored item.  Returns true on success.
 //
 // In:  cacheId  - string name of cache entry.
-// Out: data     - on success, retreived data
+// Out: data     - on success, retrieved data
 //      dataSize - on success, size in bytes of retrieved data
 using CacheRetrieveFunc = bool (STDCALL *)( const char * cacheId, void * & data, unsigned long long & dataSize );
 

@@ -219,7 +219,7 @@ void Job::GetMessagesForLog( AString & buffer ) const
 //------------------------------------------------------------------------------
 /*static*/ void Job::GetMessagesForLog( const Array< AString > & messages, AString & outBuffer )
 {
-    // Ensure the output buffer is presized
+    // Ensure the output buffer is pre-sized
     // (errors can sometimes be very large so we want to avoid re-allocs)
     uint32_t size( 0 );
     for ( const AString & msg : messages )
@@ -228,7 +228,7 @@ void Job::GetMessagesForLog( AString & buffer ) const
     }
     outBuffer.SetReserved( size ); // Will be safely ignored if smaller than already reserved
 
-    // Concat the errors
+    // Concatenate the errors
     for( const AString & msg : messages )
     {
         outBuffer += msg;
@@ -245,7 +245,7 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
         return;
     }
 
-    // concat all messages
+    // Concatenate all messages
     GetMessagesForMonitorLog( m_Messages, buffer );
 }
 
@@ -253,7 +253,7 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
 //------------------------------------------------------------------------------
 /*static*/ void Job::GetMessagesForMonitorLog( const Array< AString > & messages, AString & outBuffer )
 {
-    // concat all messages
+    // Concatenate all messages
     GetMessagesForLog( messages, outBuffer );
 
     // Escape some characters to simplify parsing in the log

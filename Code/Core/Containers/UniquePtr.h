@@ -43,7 +43,7 @@ public:
     // acquire a new pointer
     void                        operator = ( T * newPtr ) { DELETOR::Delete( m_Pointer ); m_Pointer = newPtr; }
 
-    // manually intiate deletion
+    // manually initiate deletion
     void                        Destroy() { DELETOR::Delete( m_Pointer ); m_Pointer = nullptr; }
 
     // free the pointer without deleting it

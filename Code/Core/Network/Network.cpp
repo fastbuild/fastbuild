@@ -148,7 +148,7 @@
     PROFILE_FUNCTION;
 
     // Fast path for "localhost". Although we have a fast path for detecting ip4
-    // format adresses, it can still take several ms to call
+    // format addresses, it can still take several ms to call
     if ( hostName == "127.0.0.1" )
     {
         return 0x0100007f;

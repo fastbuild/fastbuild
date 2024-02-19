@@ -285,7 +285,7 @@ void TestBFFParsing::ExistsDirective() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::IncludeDirective() const
 {
-    // Invalid incldue directives
+    // Invalid include directives
     TEST_PARSE_FAIL( "#include",                        "Error #1031" );
     TEST_PARSE_FAIL( "#include BLAH",                   "Error #1031" );
     TEST_PARSE_FAIL( "#once\n#include \"test.bff\" X",  "Error #1045 - Extraneous token(s)" );
@@ -1052,7 +1052,7 @@ void TestBFFParsing::FunctionHeaders() const
                      "    .Source = 'src2'\n"
                      "    .Dest = 'dst2'\n"
                      "}\n",     "#1100 - Copy() - Target 'X' already defined." );
-    // - Unexpexted function header
+    // - Unexpected function header
     TEST_PARSE_FAIL( "Settings( 'Bad' )\n"
                      "{}",      "#1021 - Settings() - Unexpected Function header." );
     TEST_PARSE_FAIL( ".Name= 'X'\n"

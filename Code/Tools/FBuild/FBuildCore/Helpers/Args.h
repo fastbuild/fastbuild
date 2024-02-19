@@ -19,7 +19,7 @@ class AString;
 //------------------------------------------------------------------------------
 enum class ArgsResponseFileMode : uint32_t
 {
-    NEVER,          // Don't use a reponse file under any circumstances
+    NEVER,          // Don't use a response file under any circumstances
     IF_NEEDED,      // Use a response file if args are long enough to require it
     ALWAYS,         // Force the use of a response file no matter what
 };

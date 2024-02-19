@@ -518,7 +518,7 @@ void FBuild::SaveDependencyGraph( MemoryStream & stream, const char* nodeGraphDB
     }
 
     // even if the build has failed, we can still save the graph.
-    // This is desireable because:
+    // This is desirable because:
     // - it will save parsing the bff next time
     // - it will record the items that did build, so they won't build again
     if ( m_Options.m_SaveDBOnCompletion )
@@ -673,7 +673,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
     // recalculate progress estimate?
     if ( ( timeNow - m_LastProgressCalcTime ) >= CALC_FREQUENCY )
     {
-        PROFILE_SECTION( "CalcPogress" );
+        PROFILE_SECTION( "CalcProgress" );
 
         FBuildStats & bs = m_BuildStats;
         bs.m_NodeTimeProgressms = 0;

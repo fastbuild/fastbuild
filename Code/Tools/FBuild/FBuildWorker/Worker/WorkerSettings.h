@@ -37,7 +37,7 @@ public:
 
     // Start minimized
     void SetStartMinimized( bool startMinimized );
-    inline bool GetStartMinimzed() const { return m_StartMinimized; }
+    inline bool GetStartMinimized() const { return m_StartMinimized; }
 
     // Time settings were last changed/written to disk
     uint64_t GetSettingsWriteTime() const { return m_SettingsWriteTime; }

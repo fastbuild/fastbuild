@@ -345,7 +345,7 @@ void ExecNode::GetFullArgs(AString & fullArgs) const
 void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AString & post) const
 {
     bool first = true; // Handle comma separation
-    for ( size_t i=1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (exectuable)
+    for ( size_t i=1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (executable)
     {
         const Dependency & dep = m_StaticDependencies[ i ];
         const Node * n = dep.GetNode();

@@ -616,7 +616,7 @@ void TestGraph::DBLocationChanged() const
         TEST_ASSERT( FileIO::FileCopy( dbFile1, dbFile2 ) );
     }
 
-    // Moving a DB should result in a messsage and a failed build
+    // Moving a DB should result in a message and a failed build
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile2 ) == false );
@@ -761,7 +761,7 @@ void TestGraph::BFFDirtied() const
         TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check fail test after a longtime
     }
 
-    // Modity BFF (make it empty)
+    // Modify BFF (make it empty)
     {
         FileStream fs;
         TEST_ASSERT( fs.Open( copyOfBFF, FileStream::WRITE_ONLY ) );
@@ -898,7 +898,7 @@ void TestGraph::FixupErrorPaths() const
 //------------------------------------------------------------------------------
 void TestGraph::CyclicDependency() const
 {
-    // Statically defined cyclice dependencies are detected at BFF parse time,
+    // Statically defined cyclic dependencies are detected at BFF parse time,
     // but additional ones can be created at build time, so have to be detected
     // at build time.
     //

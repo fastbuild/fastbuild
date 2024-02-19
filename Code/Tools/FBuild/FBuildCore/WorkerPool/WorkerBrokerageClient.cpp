@@ -69,7 +69,7 @@ void WorkerBrokerageClient::FindWorkers( Array< AString > & outWorkerList )
         }
     }
 
-    // presize
+    // pre-size
     if ( ( outWorkerList.GetSize() + results.GetSize() ) > outWorkerList.GetCapacity() )
     {
         outWorkerList.SetCapacity( outWorkerList.GetSize() + results.GetSize() );
