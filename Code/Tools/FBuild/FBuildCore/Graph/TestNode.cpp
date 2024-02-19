@@ -189,7 +189,7 @@ const char * TestNode::GetEnvironmentString() const
     {
         if ( p.HasAborted() )
         {
-            return BuildResult::eFailed;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
@@ -205,7 +205,7 @@ const char * TestNode::GetEnvironmentString() const
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return BuildResult::eFailed;
+        return BuildResult::eAborted;
     }
 
     if ( ( timedOut == true ) || ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )

@@ -350,9 +350,14 @@ ObjectNode::~ObjectNode()
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) ) // use response file for MSVC
+    const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                       GetName(),
+                                                       GetCompiler(),
+                                                       GetCompiler()->GetExecutable(),
+                                                       fullArgs );
+    if ( result != Node::BuildResult::eOk )
     {
-        return BuildResult::eFailed; // SpawnCompiler has logged error
+        return result; // SpawnCompiler logs error for eFailed case
     }
 
     // Handle MSCL warnings if not already a failure
@@ -463,9 +468,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
     if ( pass == PASS_PREPROCESSOR_ONLY )
     {
-        if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
+        const BuildResult result = BuildPreprocessedOutput( fullArgs, job, useDeoptimization );
+        if ( result != BuildResult::eOk )
         {
-            return BuildResult::eFailed; // BuildPreprocessedOutput will have emitted an error
+            return result; // BuildPreprocessedOutput will have emitted an error for eFailed
         }
 
         // preprocessed ok, try to extract includes
@@ -657,7 +663,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
     #endif
 
-    const bool result = BuildFinalOutput( job, fullArgs );
+    const BuildResult result = BuildFinalOutput( job, fullArgs );
 
     // cleanup temp file
     if ( tmpFileName.IsEmpty() == false )
@@ -671,7 +677,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         FileIO::DirectoryDelete( tmpDirectoryName );
     }
 
-    if ( result == false )
+    if ( result != BuildResult::eOk )
     {
         // If the failure is forced due to a local cancellation, mark up the profiler
         // state so we can see that
@@ -680,7 +686,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
             job->GetBuildProfilerScope()->SetStepName( "Compile (Race Lost)" );
         }
 
-        return BuildResult::eFailed; // BuildFinalOutput will have emitted error
+        return result; // BuildFinalOutput will have emitted error for eFailed
     }
 
     // record new file time
@@ -719,9 +725,14 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         EmitCompilationMessage( fullArgs, false );
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+        const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                           GetName(),
+                                                           GetCompiler(),
+                                                           GetCompiler()->GetExecutable(),
+                                                           fullArgs );
+        if ( result != Node::BuildResult::eOk )
         {
-            return BuildResult::eFailed; // compile has logged error
+            return result; // SpawnCompiler logs error for eFailed case
         }
 
         // get output
@@ -760,9 +771,14 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         }
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+        const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                           GetName(),
+                                                           GetCompiler(),
+                                                           GetCompiler()->GetExecutable(),
+                                                           fullArgs );
+        if ( result != Node::BuildResult::eOk )
         {
-            return BuildResult::eFailed; // compile has logged error
+            return result; // SpawnCompiler logs error for eFailed case
         }
     }
 
@@ -790,9 +806,14 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+    const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                       GetName(),
+                                                       GetCompiler(),
+                                                       GetCompiler()->GetExecutable(),
+                                                       fullArgs );
+    if ( result != Node::BuildResult::eOk )
     {
-        return BuildResult::eFailed; // compile has logged error
+        return result; // SpawnCompiler logs error for eFailed case
     }
 
     // record new file time
@@ -1852,7 +1873,7 @@ void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre,
 
 // BuildPreprocessedOutput
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const
+Node::BuildResult ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const
 {
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
     EmitCompilationMessage( fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor );
@@ -1860,10 +1881,12 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
     // spawn the process
     CompileHelper ch( false ); // don't handle output (we'll do that)
     // TODO:A Add checks in BuildArgs for length of dedicated preprocessor
-    if ( !ch.SpawnCompiler( job, GetName(),
-         useDedicatedPreprocessor ? GetDedicatedPreprocessor() : GetCompiler(),
-         useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable() : GetCompiler()->GetExecutable(),
-         fullArgs ) )
+    const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                       GetName(),
+                                                       useDedicatedPreprocessor ? GetDedicatedPreprocessor() : GetCompiler(),
+                                                       useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable() : GetCompiler()->GetExecutable(),
+                                                       fullArgs );
+    if ( result != Node::BuildResult::eOk )
     {
         // only output errors in failure case
         // (as preprocessed output goes to stdout, normal logging is pushed to
@@ -1883,13 +1906,13 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
             }
         }
 
-        return false; // SpawnCompiler will have emitted error
+        return result; // SpawnCompiler logs error for eFailed case
     }
 
     // take a copy of the output because ReadAllData uses huge buffers to avoid re-sizing
     TransferPreprocessedData( ch.GetOut().Get(), ch.GetOut().GetLength(), job );
 
-    return true;
+    return BuildResult::eOk;
 }
 
 // LoadStaticSourceFileForDistribution
@@ -2166,7 +2189,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 
 // BuildFinalOutput
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
+Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 {
     // Use the remotely synchronized compiler if building remotely
     AStackString<> compiler;
@@ -2184,7 +2207,13 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 
     // spawn the process
     CompileHelper ch( true, job->GetAbortFlagPointer() );
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), compiler, fullArgs, workingDir.IsEmpty() ? nullptr : workingDir.Get() ) )
+    const Node::BuildResult result = ch.SpawnCompiler( job,
+                                     GetName(),
+                                     GetCompiler(),
+                                     compiler,
+                                     fullArgs,
+                                     workingDir.IsEmpty() ? nullptr : workingDir.Get() );
+    if ( result != Node::BuildResult::eOk )
     {
         // did spawn fail, or did we spawn and fail to compile?
         if ( ch.GetResult() != 0 )
@@ -2201,7 +2230,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
             }
         }
 
-        return false; // compile has logged error
+        return result; // SpawnCompiler logs error for eFailed case
     }
     else
     {
@@ -2253,7 +2282,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
         }
     }
 
-    return true;
+    return BuildResult::eOk;
 }
 
 // CompileHelper::CONSTRUCTOR
@@ -2271,12 +2300,12 @@ ObjectNode::CompileHelper::~CompileHelper() = default;
 
 // CompilHelper::SpawnCompiler
 //------------------------------------------------------------------------------
-bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
-                                               const AString & name,
-                                               const CompilerNode * compilerNode,
-                                               const AString & compiler,
-                                               const Args & fullArgs,
-                                               const char * workingDir )
+Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
+                                                            const AString & name,
+                                                            const CompilerNode * compilerNode,
+                                                            const AString & compiler,
+                                                            const Args & fullArgs,
+                                                            const char * workingDir )
 {
     const char * environmentString = nullptr;
     if ( ( job->IsLocal() == false ) && ( job->GetToolManifest() ) )
@@ -2296,12 +2325,12 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     {
         if ( m_Process.HasAborted() )
         {
-            return false;
+            return BuildResult::eAborted;
         }
 
         job->Error( "Failed to spawn process. Error: %s Target: '%s'\n", LAST_ERROR_STR, name.Get() );
         job->OnSystemError();
-        return false;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -2311,7 +2340,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     m_Result = m_Process.WaitForExit();
     if ( m_Process.HasAborted() )
     {
-        return false;
+        return BuildResult::eAborted;
     }
 
     // Handle special types of failures
@@ -2375,10 +2404,10 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
         job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );
 
-        return false;
+        return BuildResult::eFailed;
     }
 
-    return true;
+    return BuildResult::eOk;
 }
 
 // HandleSystemFailures

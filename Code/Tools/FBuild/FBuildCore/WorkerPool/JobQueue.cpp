@@ -152,9 +152,11 @@ JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool ) :
         m_MainThreadSemaphore(),
     #endif
     m_CompletedJobs( 1024, true ),
-    m_CompletedJobsFailed( 1024, true ),
+    m_CompletedJobsAborted( 64, true ),
+    m_CompletedJobsFailed( 64, true ),
     m_CompletedJobs2( 1024, true ),
-    m_CompletedJobsFailed2( 1024, true ),
+    m_CompletedJobsAborted2( 64, true ),
+    m_CompletedJobsFailed2( 64, true ),
     m_Workers( numWorkerThreads, false )
 {
     PROFILE_FUNCTION;
@@ -276,6 +278,7 @@ bool JobQueue::HasPendingCompletedJobs() const
 {
     MutexHolder mh( m_CompletedJobsMutex );
     return ( m_CompletedJobs.IsEmpty() == false ) ||
+           ( m_CompletedJobsAborted.IsEmpty() == false ) ||
            ( m_CompletedJobs2.IsEmpty() == false );
 }
 
@@ -542,103 +545,90 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
     {
         MutexHolder m( m_CompletedJobsMutex );
         m_CompletedJobs2.Swap( m_CompletedJobs );
+        m_CompletedJobsAborted2.Swap( m_CompletedJobsAborted );
         m_CompletedJobsFailed2.Swap( m_CompletedJobsFailed );
     }
 
-    // completed jobs
-    for ( Job * job : m_CompletedJobs2 )
+    // Process results
+    Array< Job * > * jobArrays[] = { &m_CompletedJobs2,
+                                     &m_CompletedJobsAborted2,
+                                     &m_CompletedJobsFailed2 };
+    for ( Array< Job * > * jobArray : jobArrays )
     {
-        Node * n = job->GetNode();
-        if ( n->Finalize( nodeGraph ) )
-        {
-            n->SetState( Node::UP_TO_DATE );
-        }
-        else
-        {
-            n->SetState( Node::FAILED );
-        }
+        const bool completedJob = ( jobArray == &m_CompletedJobs2 );
+        const bool failedJob = ( jobArray == &m_CompletedJobsFailed2 );
 
-        // Free normal jobs
-        if ( job->GetDistributionState() == Job::DIST_NONE )
+        for ( Job * job : *jobArray )
         {
-            FDELETE job;
-            continue;
-        }
+            Node * n = job->GetNode();
 
-        // Distributed jobs
-        {
-            MutexHolder mh( m_DistributedJobsMutex );
+            if ( completedJob )
+            {
+                // Finalize completed jobs
+                if ( n->Finalize( nodeGraph ) )
+                {
+                    n->SetState( Node::UP_TO_DATE );
+                }
+                else
+                {
+                    n->SetState( Node::FAILED );
+                }
+            }
+            else if ( failedJob )
+            {
+                // Mark failed jobs
+                n->SetState( Node::FAILED );
+            }
 
-            const Job::DistributionState distState = job->GetDistributionState();
-
-            // Normal local or remote compilation of distributable job?
-            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) ||
-                 ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
-                 ( distState == Job::DIST_RACE_WON_REMOTELY ) )
+            // Free normal jobs
+            if ( job->GetDistributionState() == Job::DIST_NONE )
             {
                 FDELETE job;
                 continue;
             }
 
-            // If racing and the remote job is returned, it attempts a cancellation.
-            // While waiting for cancellation, it's possible for the local job to have completed
-            // and be ready to be finialized in this function. If we get here in that state,
-            // the remote job is waiting on cancellation and we can unblock it and free the job.
-            if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+            // Distributed jobs
             {
-                // Remove the job from the in progress queue. The remote result
-                // which is waiting on the cancellation will know the job has been handled.
-                VERIFY( m_DistributableJobs_InProgress.FindAndErase( job ) );
-                FDELETE job;
-                continue;
+                MutexHolder mh( m_DistributedJobsMutex );
+
+                const Job::DistributionState distState = job->GetDistributionState();
+
+                // Normal local or remote compilation of distributable job?
+                if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) ||
+                     ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
+                     ( distState == Job::DIST_RACE_WON_REMOTELY ) )
+                {
+                    FDELETE job;
+                    continue;
+                }
+
+                // TODO:B Seems unusual that we only have this logic for completed jobs
+                if ( completedJob )
+                {
+                    // If racing and the remote job is returned, it attempts a cancellation.
+                    // While waiting for cancellation, it's possible for the local job to have completed
+                    // and be ready to be finalized in this function. If we get here in that state,
+                    // the remote job is waiting on cancellation and we can unblock it and free the job.
+                    if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+                    {
+                        // Remove the job from the in progress queue. The remote result
+                        // which is waiting on the cancellation will know the job has been handled.
+                        VERIFY( m_DistributableJobs_InProgress.FindAndErase( job ) );
+                        FDELETE job;
+                        continue;
+                    }
+                }
+
+                // Local race, won locally
+                ASSERTM( distState == Job::DIST_RACING, "got: %u", distState );
+                job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
+
+                // We can't delete the job yet, because it's still in use by the remote
+                // job. It will be freed when the remote job completes
             }
-
-            // Local race, won locally
-            ASSERTM( distState == Job::DIST_RACING, "got: %u", distState );
-            job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
-
-            // We can't delete the job yet, because it's still in use by the remote
-            // job. It will be freed when the remote job completes
         }
+        jobArray->Clear();
     }
-    m_CompletedJobs2.Clear();
-
-    // failed jobs
-    for ( Job * job : m_CompletedJobsFailed2 )
-    {
-        job->GetNode()->SetState( Node::FAILED );
-
-        // Free normal jobs
-        if ( job->GetDistributionState() == Job::DIST_NONE )
-        {
-            FDELETE job;
-            continue;
-        }
-
-        // Distributed jobs
-        {
-            MutexHolder mh( m_DistributedJobsMutex );
-
-            const Job::DistributionState distState = job->GetDistributionState();
-
-            // Normal local or remote compilation of distributable job?
-            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) ||
-                 ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
-                 ( distState == Job::DIST_RACE_WON_REMOTELY ) )
-            {
-                FDELETE job;
-                continue;
-            }
-
-            // Local race, won locally
-            ASSERT( distState == Job::DIST_RACING );
-            job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
-
-            // We can't delete the job yet, because it's still in use by the remote
-            // job. It will be freed when the remote job completes
-        }
-    }
-    m_CompletedJobsFailed2.Clear();
 }
 
 // MainThreadWait
@@ -674,9 +664,14 @@ Job * JobQueue::GetJobToProcess()
 
 // FinishedProcessingJob (Worker Thread)
 //------------------------------------------------------------------------------
-void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJob )
+void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool wasARemoteJob )
 {
     ASSERT( job->GetNode()->GetState() == Node::BUILDING );
+
+    // Only the following results are expected (eNeedSecondPass handles elsewhere)
+    ASSERT( ( result == Node::BuildResult::eOk ) ||
+            ( result == Node::BuildResult::eAborted ) ||
+            ( result == Node::BuildResult::eFailed ) );
 
     if ( wasARemoteJob )
     {
@@ -695,7 +690,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             ASSERT( *(job->GetAbortFlagPointer()) == true );
 
             // Did local job actually get cancelled?
-            if ( success == false )
+            if ( result != Node::BuildResult::eOk )
             {
                 // Allow remote job to win race
                 job->SetDistributionState( Job::DIST_RACE_WON_REMOTELY );
@@ -738,13 +733,12 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     {
         MutexHolder m( m_CompletedJobsMutex );
-        if ( success )
+        switch ( result )
         {
-            m_CompletedJobs.Append( job );
-        }
-        else
-        {
-            m_CompletedJobsFailed.Append( job );
+            case Node::BuildResult::eOk:                m_CompletedJobs.Append( job ); break;
+            case Node::BuildResult::eAborted:           m_CompletedJobsAborted.Append( job ); break;
+            case Node::BuildResult::eNeedSecondPass:    ASSERT( false ); break;
+            case Node::BuildResult::eFailed:            m_CompletedJobsFailed.Append( job ); break;
         }
     }
 
@@ -819,6 +813,10 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             node->SetStatFlag( Node::STATS_FAILED );
             break;
         }
+        case Node::BuildResult::eAborted:
+        {
+            break;
+        }
         case Node::BuildResult::eNeedSecondPass:
         {
             break; // nothing to check
@@ -867,6 +865,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
                 resultString = node->GetStatFlag( Node::STATS_CACHE_HIT ) ? "SUCCESS_CACHED" : "SUCCESS_COMPLETE";
                 break;
             }
+            case Node::BuildResult::eAborted:           resultString = "ABORTED"; break;
             case Node::BuildResult::eNeedSecondPass:    resultString = "SUCCESS_PREPROCESSED";  break;
             case Node::BuildResult::eFailed:            resultString = "FAILED";                break;
         }

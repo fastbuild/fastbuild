@@ -171,7 +171,7 @@ void WorkerThread::WaitForStop()
         }
         else
         {
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::BuildResult::eFailed ), false );
+            JobQueue::Get().FinishedProcessingJob( job, result, false );
         }
 
         return true; // did some work
@@ -191,7 +191,7 @@ void WorkerThread::WaitForStop()
                 FBuild::OnBuildError();
             }
 
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::BuildResult::eFailed ), true ); // returning a remote job
+            JobQueue::Get().FinishedProcessingJob( job, result, true ); // returning a remote job
 
             return true; // did some work
         }
@@ -215,7 +215,7 @@ void WorkerThread::WaitForStop()
                 }
             }
 
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::BuildResult::eFailed ), true ); // returning a remote job
+            JobQueue::Get().FinishedProcessingJob( job, result, true ); // returning a remote job
 
             return true; // did some work
         }

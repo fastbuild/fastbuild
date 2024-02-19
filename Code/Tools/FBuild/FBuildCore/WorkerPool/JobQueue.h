@@ -76,7 +76,7 @@ private:
     Job *       GetJobToProcess();
     Job *       GetDistributableJobToRace();
     static Node::BuildResult DoBuild( Job * job );
-    void        FinishedProcessingJob( Job * job, bool result, bool wasARemoteJob );
+    void        FinishedProcessingJob( Job * job, Node::BuildResult result, bool wasARemoteJob );
 
     void        QueueDistributableJob( Job * job );
 
@@ -112,10 +112,12 @@ private:
     // completed jobs
     mutable Mutex       m_CompletedJobsMutex;
     Array< Job * >      m_CompletedJobs;
+    Array< Job * >      m_CompletedJobsAborted;
     Array< Job * >      m_CompletedJobsFailed;
 
     // we have pair of arrays to enable a swap, avoiding locking the mutex too long
     Array< Job * >      m_CompletedJobs2;
+    Array< Job * >      m_CompletedJobsAborted2;
     Array< Job * >      m_CompletedJobsFailed2;
 
     Array< WorkerThread * > m_Workers;

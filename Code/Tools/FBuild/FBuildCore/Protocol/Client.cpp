@@ -850,7 +850,9 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         Node::DumpOutput( nullptr, failureOutput, nullptr );
     }
 
-    JobQueue::Get().FinishedProcessingJob( job, result, true ); // remote job
+    JobQueue::Get().FinishedProcessingJob( job,
+                                           result ? Node::BuildResult::eOk : Node::BuildResult::eFailed,
+                                           true ); // remote job
 }
 
 // Process( MsgRequestManifest )

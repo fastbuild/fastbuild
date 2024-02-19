@@ -19,14 +19,85 @@ class TestFastCancel : public FBuildTest
 private:
     DECLARE_TESTS
 
+    template<uint32_t SEED>
+    void BuildFailure() const;
     void Cancel() const;
 };
 
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestFastCancel )
+    REGISTER_TEST( BuildFailure<0> )
+    REGISTER_TEST( BuildFailure<1> )
+    REGISTER_TEST( BuildFailure<2> )
+    REGISTER_TEST( BuildFailure<3> )
+    REGISTER_TEST( BuildFailure<4> )
+    REGISTER_TEST( BuildFailure<5> )
+    REGISTER_TEST( BuildFailure<6> )
+    REGISTER_TEST( BuildFailure<7> )
     REGISTER_TEST( Cancel )
 REGISTER_TESTS_END
+
+//------------------------------------------------------------------------------
+template<uint32_t SEED>
+void TestFastCancel::BuildFailure() const
+{
+    // Check that builds with failures are finalized correctly
+    // under a variety of conditions
+
+    // Derive individual settings from the seed
+    const bool allowFastCancel = ( ( SEED & 0x1 ) != 0 ); // Can in-flight tasks be aborted?
+    const bool stopOnError = ( ( SEED & 0x2 ) != 0 ); // Stop building after encountering an error?
+    const bool reverseOrder = ( ( SEED & 0x4 ) != 0 ); // Reverse order of targets
+
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestFastCancel/BuildFailure/fbuild.bff";
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_ShowSummary = false; // Reduce build output spam
+    options.m_FastCancel = allowFastCancel;
+    options.m_StopOnFirstError = stopOnError;
+
+    // Flip order of targets passed on command line - results should be
+    // independent of this
+    Array<AString> targets;
+    if ( reverseOrder )
+    {
+        targets.EmplaceBack( "b" );
+        targets.EmplaceBack( "a" );
+    }
+    else
+    {
+        targets.EmplaceBack( "a" );
+        targets.EmplaceBack( "b" );
+    }
+
+    // Init
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Start build and check it failed as expected
+    TEST_ASSERT( fBuild.Build( targets ) == false );
+
+    // Item 'a' should always fail (contains a compile error)
+    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: a" ) );
+
+    // Item 'b' might succeed, but could be aborted depending on settings and
+    // other factors
+    if constexpr ( stopOnError == false )
+    {
+        // If we don't stop on errors, 'a' should always compile because it is
+        // unrelated to 'b'
+        TEST_ASSERT( GetRecordedOutput().Find( "FBuild: OK: b" ) );
+    }
+    else
+    {
+        // For multithreaded builds, thread scheduling and other timing is
+        // non-deterministic, so 'b' may or may not complete, but it should
+        // never fail
+        TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Incomplete: b" ) ||
+                     GetRecordedOutput().Find( "FBuild: OK: b" ) );
+    }
+}
 
 // CancelHelperThread
 //------------------------------------------------------------------------------
@@ -79,7 +150,7 @@ void TestFastCancel::Cancel() const
 
     // Start build and check it was aborted
     TEST_ASSERT( fBuild.Build( "Cancel" ) == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: Cancel" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Incomplete: Cancel" ) );
 
     thread.Join();
 

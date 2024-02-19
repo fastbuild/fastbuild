@@ -705,24 +705,25 @@ void Server::FinalizeCompletedJobs()
     PROFILE_FUNCTION;
 
     JobQueueRemote & jcr = JobQueueRemote::Get();
-    while ( Job * job = jcr.GetCompletedJob() )
+    Node::BuildResult result;
+    while ( Job * job = jcr.GetCompletedJob( result ) )
     {
-        // get associated connection
-        ClientState * cs = (ClientState *)job->GetUserData();
-
+        // Jobs that ended in a useful state are reported to the Client
+        // Other jobs (like those that were cancelled) are not
+        if ( ( result == Node::BuildResult::eOk ) || ( result == Node::BuildResult::eFailed ) )
         {
+            // get associated connection
+            ClientState * cs = (ClientState *)job->GetUserData();
+
             MutexHolder mh( m_ClientListMutex );
 
             const bool connectionStillActive = ( m_ClientList.Find( cs ) != nullptr );
             if ( connectionStillActive )
             {
-                const Node::State result = job->GetNode()->GetState();
-                ASSERT( ( result == Node::UP_TO_DATE ) || ( result == Node::FAILED ) );
-
                 MemoryStream ms;
                 ms.Write( job->GetJobId() );
                 ms.Write( job->GetNode()->GetName() );
-                ms.Write( result == Node::UP_TO_DATE );
+                ms.Write( result == Node::BuildResult::eOk );
                 ms.Write( job->GetSystemErrorCount() > 0 );
                 ms.Write( job->GetMessages() );
                 ms.Write( job->GetNode()->GetLastBuildTime() );

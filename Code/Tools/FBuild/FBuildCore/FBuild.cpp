@@ -306,13 +306,7 @@ bool FBuild::Build( const Array< AString > & targets )
     // output per-target results
     for ( size_t i=0; i<targets.GetSize(); ++i )
     {
-        const char * nodeStatus;
-        switch ( deps[ i ].GetNode()->GetState() )
-        {
-            case Node::State::UP_TO_DATE:   nodeStatus = "OK"; break;
-            case Node::State::FAILED:       nodeStatus = "Error: BUILD FAILED"; break;
-            default:                        nodeStatus = "Incomplete"; break;
-        }
+        const char * const nodeStatus = GetFinalStatus( deps[ i ].GetNode() );
         OUTPUT( "FBuild: %s: %s\n", nodeStatus, targets[ i ].Get() );
     }
 
@@ -920,6 +914,86 @@ uint32_t FBuild::GetNumWorkerConnections() const
 {
     MutexHolder mh( m_ClientLifetimeMutex );
     return (uint32_t)( m_Client ? m_Client->GetNumConnections() : 0 );
+}
+
+// GetFinalStatus
+//------------------------------------------------------------------------------
+const char * FBuild::GetFinalStatus( const Node * node )
+{
+    PROFILE_FUNCTION;
+
+    // Determine if a given target is "OK", "FAILED" or "Incomplete"
+
+    // Prepare nodes for recursive sweep
+    m_DependencyGraph->SetBuildPassTagForAllNodes( eFindFailureNotProcessed );
+
+    // Check the top level target for failures or completion already noted
+    // during the build, and if that's indeterminate (due to cancellation for
+    // example), recursively examine deps to determine status
+    switch ( node->GetState() )
+    {
+        case Node::State::UP_TO_DATE:   return "OK";
+        case Node::State::FAILED:       return "Error: BUILD FAILED";
+        default:
+        {
+            // Search dependencies recursively for failures
+            if ( GetFinalStatusFailure( node->GetPreBuildDependencies() ) ||
+                 GetFinalStatusFailure( node->GetStaticDependencies() ) ||
+                 GetFinalStatusFailure( node->GetDynamicDependencies() ) )
+            {
+                return "Error: BUILD FAILED";
+            }
+
+            // No dependencies have failed, so target is incomplete
+            return "Incomplete";
+        }
+    }
+}
+
+// GetFinalStatusFailure
+//------------------------------------------------------------------------------
+bool FBuild::GetFinalStatusFailure( const Dependencies & deps ) const
+{
+    for ( const Dependency & dep : deps )
+    {
+        const Node * node = dep.GetNode();
+
+        // Skip already seen nodes. This greatly improves performance by avoiding
+        // redundant tree traversals.
+        // (Additionally this handles cyclic dependencies - while those are
+        //  detected and reported as errors, during shutdown we'll still go
+        //  through this code path)
+        if ( node->GetBuildPassTag() == eFindFailureProcessed )
+        {
+            continue;
+        }
+        node->SetBuildPassTag( eFindFailureProcessed );
+
+        // If a dependency fails, the target will fail eventually even if it
+        // has not yet failed
+        if ( node->GetState() == Node::State::FAILED )
+        {
+            return true; // Bubble up the failure
+        }
+
+        // If a target is completed successfully, siblings may still cause
+        // failures so this alone doesn't determine success
+        if ( node->GetState() == Node::State::UP_TO_DATE )
+        {
+            continue; // Skip completed subtrees as no failures can exist below
+        }
+
+        // Recurse into dependencies
+        if ( GetFinalStatusFailure( node->GetPreBuildDependencies() ) ||
+             GetFinalStatusFailure( node->GetStaticDependencies() ) ||
+             GetFinalStatusFailure( node->GetDynamicDependencies() ) )
+        {
+            return true; // Bubble up the failure
+        }
+    }
+
+    // No failures found
+    return false;
 }
 
 //------------------------------------------------------------------------------

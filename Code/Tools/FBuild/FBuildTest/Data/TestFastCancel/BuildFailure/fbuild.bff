@@ -1,0 +1,24 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    // Standard settings
+}
+
+ObjectList( 'a' )
+{
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestFastCancel/BuildFailure/a.cpp'
+    .CompilerOutputPath     = '$Out$/Test/TestFastCancel/BuildFailure/'
+}
+
+ObjectList( 'b' )
+{
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestFastCancel/BuildFailure/b.cpp'
+    .CompilerOutputPath     = '$Out$/Test/TestFastCancel/BuildFailure/'
+}
+
+Alias( 'all' )
+{
+    .Targets = { 'a', 'b' }
+}

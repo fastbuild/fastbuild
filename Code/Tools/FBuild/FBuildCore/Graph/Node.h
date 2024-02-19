@@ -107,6 +107,7 @@ public:
     enum class BuildResult
     {
         eFailed,            // something went wrong building
+        eAborted,           // interrupted due to build termination
         eNeedSecondPass,    // needs build called again
         eOk,                // built ok
     };

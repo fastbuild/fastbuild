@@ -199,7 +199,7 @@ ExecNode::~ExecNode()
     {
         if ( p.HasAborted() )
         {
-            return BuildResult::eFailed;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
@@ -215,7 +215,7 @@ ExecNode::~ExecNode()
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return BuildResult::eFailed;
+        return BuildResult::eAborted;
     }
     const bool buildFailed = ( result != m_ExecReturnCode );
 

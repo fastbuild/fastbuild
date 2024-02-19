@@ -119,6 +119,15 @@ protected:
 
     void UpdateBuildStatus( const Node * node );
 
+    // Retrieve status of targets on build end
+    enum : uint32_t
+    {
+        eFindFailureNotProcessed    = 0,
+        eFindFailureProcessed       = 1,
+    };
+    const char * GetFinalStatus( const Node * node );
+    bool GetFinalStatusFailure( const Dependencies & deps ) const;
+
     static bool s_StopBuild;
     static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild
 

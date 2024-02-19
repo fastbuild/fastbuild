@@ -182,7 +182,7 @@ LibraryNode::~LibraryNode()
     {
         if ( p.HasAborted() )
         {
-            return BuildResult::eFailed;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process for Library creation for '%s'", GetName().Get() );
@@ -198,7 +198,7 @@ LibraryNode::~LibraryNode()
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return BuildResult::eFailed;
+        return BuildResult::eAborted;
     }
 
     // did the executable fail?

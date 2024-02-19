@@ -193,7 +193,7 @@ CSNode::~CSNode() = default;
     {
         if ( p.HasAborted() )
         {
-            return BuildResult::eFailed;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
@@ -209,7 +209,7 @@ CSNode::~CSNode() = default;
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return BuildResult::eFailed;
+        return BuildResult::eAborted;
     }
 
     const bool ok = ( result == 0 );

@@ -233,7 +233,7 @@ LinkerNode::~LinkerNode()
         {
             if ( p.HasAborted() )
             {
-                return BuildResult::eFailed;
+                return BuildResult::eAborted;
             }
 
             FLOG_ERROR( "Failed to spawn process '%s' for %s creation for '%s'", m_Linker.Get(), GetDLLOrExe(), GetName().Get() );
@@ -249,7 +249,7 @@ LinkerNode::~LinkerNode()
         const int result = p.WaitForExit();
         if ( p.HasAborted() )
         {
-            return BuildResult::eFailed;
+            return BuildResult::eAborted;
         }
 
         // did the executable fail?
@@ -344,7 +344,7 @@ LinkerNode::~LinkerNode()
         {
             if ( stampProcess.HasAborted() )
             {
-                return BuildResult::eFailed;
+                return BuildResult::eAborted;
             }
 
             FLOG_ERROR( "Failed to spawn process '%s' for '%s' stamping of '%s'", linkerStampExe->GetName().Get(), GetDLLOrExe(), GetName().Get() );
@@ -360,7 +360,7 @@ LinkerNode::~LinkerNode()
         const int result = stampProcess.WaitForExit();
         if ( stampProcess.HasAborted() )
         {
-            return BuildResult::eFailed;
+            return BuildResult::eAborted;
         }
 
         // Show output if desired
