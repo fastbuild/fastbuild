@@ -447,6 +447,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     const ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
     const bool includePDB = node->IsUsingPDB();
     const bool usingStaticAnalysis = node->IsUsingStaticAnalysisMSVC();
+    const bool usingClangTimeTrace = node->IsUsingClangTimeTrace();
 
     // Determine list of files to send
 
@@ -471,6 +472,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         AStackString<> xmlFileName;
         node->GetNativeAnalysisXMLPath( xmlFileName );
         fileNames.Append( xmlFileName );
+    }
+
+    // 4. JSON file produced by -ftime-trace (optional)
+    //-----------------------------------------------
+    if ( usingClangTimeTrace )
+    {
+        AStackString<> jsonFileName;
+        node->GetTimeTraceJsonName( jsonFileName );
+        fileNames.Append( jsonFileName );
     }
 
     MultiBuffer mb;

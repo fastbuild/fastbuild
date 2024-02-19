@@ -1,0 +1,33 @@
+//
+// Check Cache interactions with clang time trace
+//
+//------------------------------------------------------------------------------
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers        = { "127.0.0.1" }
+}
+
+//
+// Compile with -ftime-trace
+//
+ObjectList( 'TimeTrace' )
+{
+    #if __WINDOWS__
+        Using( .ToolChain_Clang_Windows )
+    #endif
+    #if __LINUX__
+        Using( .ToolChain_Clang_Linux )
+    #endif
+    #if __OSX__
+        #if __ARM64__
+            Using( .ToolChain_Clang_ARMOSX )
+        #else
+            Using( .ToolChain_Clang_OSX )
+        #endif
+    #endif
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCache/Clang_Time_Trace/file.cpp' }
+    .CompilerOutputPath = '$Out$/Test/Cache/Clang_Time_Trace/TimeTrace/'
+    .CompilerOptions    + ' -ftime-trace'
+}

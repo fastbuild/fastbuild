@@ -1020,6 +1020,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                     flags.Set( CompilerFlags::FLAG_STATIC_ANALYSIS_MSVC );
                 }
             }
+            else if ( flags.IsClangCl() && IsCompilerArg_MSVC( token, "ftime-trace" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_CLANG_TIME_TRACE );
+            }
         }
 
         // 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
@@ -1107,6 +1111,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                         objectiveC = true;
                     }
                 }
+            }
+            else if ( flags.IsClang() && token == "-ftime-trace" )
+            {
+                flags.Set( CompilerFlags::FLAG_CLANG_TIME_TRACE );
             }
         }
 
@@ -1308,6 +1316,20 @@ void ObjectNode::GetNativeAnalysisXMLPath( AString& outXMLFileName ) const
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
     outXMLFileName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
     outXMLFileName += ".nativecodeanalysis.xml";
+}
+
+// GetTimeTraceJsonName
+// -----------------------------------------------------------------------------
+void ObjectNode::GetTimeTraceJsonName( AString& jsonFileName ) const
+{
+    ASSERT( IsUsingClangTimeTrace() );
+    const AString& sourceName = m_Name;
+
+    // We remove last extension to add the json extension instead
+    const char* extPos = sourceName.FindLast( '.' );
+    jsonFileName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
+    jsonFileName += ".json";
+
 }
 
 // GetGCNOPath
@@ -1686,6 +1708,14 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         AStackString<> xmlFileName;
         GetNativeAnalysisXMLPath( xmlFileName );
         outFileNames.Append( xmlFileName );
+    }
+
+    // JSON files produced by -ftime-trace option
+    if ( objectNode->m_CompilerFlags.IsUsingClangTimeTrace() )
+    {
+        AStackString<> jsonFileName;
+        objectNode->GetTimeTraceJsonName( jsonFileName );
+        outFileNames.Append( jsonFileName );
     }
 
     // Gcov coverage adds extra file

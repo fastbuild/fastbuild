@@ -781,6 +781,14 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                 result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
             }
 
+            // 4. JSON file (optional)
+            if ( result && on->IsUsingClangTimeTrace() )
+            {
+                AStackString<> jsonFileName;
+                on->GetTimeTraceJsonName( jsonFileName );
+                result = WriteFileToDisk( jsonFileName, mb, fileIndex++ );
+            }
+
             if ( result )
             {
                 // record new file time
