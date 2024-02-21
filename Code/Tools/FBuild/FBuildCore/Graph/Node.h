@@ -197,7 +197,7 @@ protected:
     friend class WorkerThread;
     friend class CompilationDatabase;
 
-    void SetName( AString && name );
+    void SetName( AString && name, uint32_t nameHashHint = 0 );
 
     void ReplaceDummyName( const AString & newName );
 

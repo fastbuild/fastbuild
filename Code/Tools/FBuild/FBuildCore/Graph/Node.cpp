@@ -332,14 +332,14 @@ void Node::SetLastBuildTime( uint32_t ms )
     uint8_t nodeType;
     VERIFY( stream.Read( nodeType ) );
 
-    PROFILE_SECTION( Node::GetTypeName( (Type)nodeType ) );
-
     // Name of node
     AString name;
     VERIFY( stream.Read( name ) );
+    uint32_t nameHash;
+    VERIFY( stream.Read( nameHash ) );
 
     // Create node
-    Node * n = nodeGraph.CreateNode( (Type)nodeType, Move( name ) );
+    Node * n = nodeGraph.CreateNode( (Type)nodeType, Move( name ), nameHash );
     ASSERT( n );
 
     // Early out for FileNode
@@ -399,6 +399,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 
     // Save Name
     stream.Write( node->m_Name );
+    stream.Write( node->m_NameHash );
 
     // FileNodes don't need most things serialized:
     // - their stamp is obtained every build, so doesn't need saving
@@ -713,9 +714,10 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // SetName
 //------------------------------------------------------------------------------
-void Node::SetName( AString && name )
+void Node::SetName( AString && name, uint32_t nameHashHint )
 {
-    m_NameHash = CalcNameHash( name );
+    ASSERT( ( nameHashHint == 0 ) || ( nameHashHint == CalcNameHash( name ) ) );
+    m_NameHash = nameHashHint ? nameHashHint : CalcNameHash( name );
     m_Name = Move( name );
 }
 

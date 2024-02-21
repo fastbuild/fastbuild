@@ -419,7 +419,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
         // Load each node
         const Node * const n = Node::Load( *this, stream );
         ASSERT( m_AllNodes[ i ] == n ); // Array is populated as loaded
-        n->SetBuildPassTag( i ); // Store index for dependency deserialization
+        (void)n;
     }
     for ( Node * node : m_AllNodes )
     {
@@ -753,7 +753,7 @@ void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
 Node * NodeGraph::FindNode( const AString & nodeName ) const
 {
     // try to find node 'as is'
-    Node * n = FindNodeInternal( nodeName );
+    Node * n = FindNodeInternal( nodeName, 0 );
     if ( n )
     {
         return n;
@@ -762,7 +762,7 @@ Node * NodeGraph::FindNode( const AString & nodeName ) const
     // the expanding to a full path
     AStackString< 1024 > fullPath;
     CleanPath( nodeName, fullPath );
-    return FindNodeInternal( fullPath );
+    return FindNodeInternal( fullPath, 0 );
 }
 
 // FindNodeExact (AString &)
@@ -770,7 +770,7 @@ Node * NodeGraph::FindNode( const AString & nodeName ) const
 Node * NodeGraph::FindNodeExact( const AString & nodeName ) const
 {
     // try to find node 'as is'
-    return FindNodeInternal( nodeName );
+    return FindNodeInternal( nodeName, 0 );
 }
 
 // GetNodeByIndex
@@ -827,7 +827,7 @@ void NodeGraph::RegisterSourceToken( const Node * node, const BFFToken * sourceT
 
 // CreateNode
 //------------------------------------------------------------------------------
-Node * NodeGraph::CreateNode( Node::Type type, AString && name )
+Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHashHint )
 {
     ASSERT( Thread::IsMainThread() );
 
@@ -872,7 +872,7 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name )
     ASSERT( !node->IsAFile() || IsCleanPath( name ) );
 
     // Store name and track new node
-    node->SetName( Move( name ) );
+    node->SetName( Move( name ), nameHashHint );
     AddNode( node );
 
     return node;
@@ -903,7 +903,7 @@ Node * NodeGraph::CreateNode( Node::Type type, const AString & name, const BFFTo
         nameCopy = name;
     }
 
-    Node * node = CreateNode( type, Move( nameCopy ) );
+    Node * node = CreateNode( type, Move( nameCopy ), 0 );
 
     RegisterSourceToken( node, sourceToken );
 
@@ -918,7 +918,7 @@ void NodeGraph::AddNode( Node * node )
 
     ASSERT( node );
 
-    ASSERT( FindNodeInternal( node->GetName() ) == nullptr ); // node name must be unique
+    ASSERT( FindNodeInternal( node->GetName(), node->GetNameHash() ) == nullptr ); // node name must be unique
 
     // track in NodeMap
     const uint32_t crc = Node::CalcNameHash( node->GetName() );
@@ -1365,11 +1365,12 @@ const BFFToken * NodeGraph::FindNodeSourceToken( const Node * node ) const
 
 // FindNodeInternal
 //------------------------------------------------------------------------------
-Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
+Node * NodeGraph::FindNodeInternal( const AString & name, uint32_t nameHashHint ) const
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( ( nameHashHint == 0 ) || ( nameHashHint == Node::CalcNameHash( name ) ) );
 
-    const uint32_t hash = Node::CalcNameHash( fullPath );
+    const uint32_t hash = nameHashHint ? nameHashHint : Node::CalcNameHash( name );
     const size_t key = ( hash & m_NodeMapMaxKey );
 
     Node * n = m_NodeMap[ key ];
@@ -1377,7 +1378,7 @@ Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
     {
         if ( n->GetNameHash() == hash )
         {
-            if ( n->GetName().EqualsI( fullPath ) )
+            if ( n->GetName().EqualsI( name ) )
             {
                 return n;
             }
@@ -1833,12 +1834,12 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     {
         // Use the node passed in (if calling code already knows it saves us a lookup)
         oldNode = oldNodeHint;
-        ASSERT( oldNode == oldNodeGraph.FindNodeInternal( newNode.GetName() ) );
+        ASSERT( oldNode == oldNodeGraph.FindNodeInternal( newNode.GetName(), newNode.GetNameHash() ) );
     }
     else
     {
         // Find the old node
-        oldNode = oldNodeGraph.FindNodeInternal( newNode.GetName() );
+        oldNode = oldNodeGraph.FindNodeInternal( newNode.GetName(), newNode.GetNameHash() );
         if ( oldNode == nullptr )
         {
             // The newNode has no equivalent in the old DB.
@@ -1897,7 +1898,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         {
             // See if the dependency already exists in the new DB
             const Node * oldDepNode = oldDep.GetNode();
-            Node * newDepNode = FindNodeInternal( oldDepNode->GetName() );
+            Node * newDepNode = FindNodeInternal( oldDepNode->GetName(), oldDepNode->GetNameHash() );
 
             // If the dependency exists, but has changed type, then dependencies
             // cannot be transferred.
@@ -1912,7 +1913,9 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             else
             {
                 // Create the dependency
-                newDepNode = CreateNode( oldDepNode->GetType(), oldDepNode->GetName() );
+                newDepNode = CreateNode( oldDepNode->GetType(),
+                                         Move( AString( oldDepNode->GetName() ) ),
+                                         oldDepNode->GetNameHash() );
                 ASSERT( newDepNode );
                 newDeps.Add( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
 

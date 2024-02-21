@@ -64,7 +64,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 174 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 175 };
 
     bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == NODE_GRAPH_CURRENT_VERSION; }
@@ -113,7 +113,9 @@ public:
     void RegisterNode( Node * n, const BFFToken * sourceToken );
 
     // create new nodes
-    Node *      CreateNode( Node::Type type, AString && name );
+    Node *      CreateNode( Node::Type type,
+                            AString && name,
+                            uint32_t nameHashHint = 0 );
     Node *      CreateNode( Node::Type type,
                             const AString & name,
                             const BFFToken * sourceToken = nullptr );
@@ -161,7 +163,7 @@ private:
     static bool CheckForCyclicDependenciesRecurse( const Dependencies & dependencies,
                                                    Array< const Node * > & dependencyStack );
 
-    Node * FindNodeInternal( const AString & fullPath ) const;
+    Node * FindNodeInternal( const AString & name, uint32_t nameHashHint ) const;
 
     struct NodeWithDistance
     {

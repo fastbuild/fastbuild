@@ -254,7 +254,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
         const AString & target = targets[ i ];
 
         // get the node being requested (search for exact match, to find aliases etc first)
-        Node * node = m_DependencyGraph->FindNodeInternal( target );
+        Node * node = m_DependencyGraph->FindNodeInternal( target, 0 );
         if ( node == nullptr )
         {
             // failed to find the node, try looking for a fully pathed equivalent
