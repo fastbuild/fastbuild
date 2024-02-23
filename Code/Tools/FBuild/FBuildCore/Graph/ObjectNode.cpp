@@ -1655,8 +1655,9 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
 
     const ObjectNode * objectNode = node->CastTo< ObjectNode >();
 
-    // MSVC precompiled headers have an extra file
-    if ( objectNode->m_CompilerFlags.IsCreatingPCH() && objectNode->m_CompilerFlags.IsMSVC() )
+    // MSVC precompiled headers have an extra file (as does clang in "cl" mode)
+    if ( objectNode->m_CompilerFlags.IsCreatingPCH() && 
+         ( objectNode->m_CompilerFlags.IsMSVC() || objectNode->m_CompilerFlags.IsClangCl() ) )
     {
         // .pch.obj
         outFileNames.Append( m_PCHObjectFileName );

@@ -61,7 +61,7 @@ Executable( "PCHTest" )
 // Clang for Windows
 //
 #if __WINDOWS__
-    ObjectList( "PCHTestClang-Windows" )
+    ObjectList( 'PCHTestClang-lib' )
     {
         Using( .ToolChain_Clang_Windows )
 
@@ -82,5 +82,18 @@ Executable( "PCHTest" )
 
         .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders\PCHUser.cpp"
         .CompilerOutputPath = "$Out$\Test\PrecompiledHeaders\Clang-Windows\"
+    }
+
+    //
+    // Link objects to ensure no debug info related mismatches
+    //
+    Executable( "PCHTestClang-Windows" )
+    {
+        #if __WINDOWS__
+            .LinkerOptions      + ' /ENTRY:main'
+        #endif
+
+        .LinkerOutput       = '$Out$/Test/PrecompiledHeaders/Clang-Windows/PCHTest.exe'
+        .Libraries          = { 'PCHTestClang-lib' }
     }
 #endif
