@@ -293,8 +293,8 @@ void TestGraph::TestSerialization() const
         fs1.Open( dbFile1 );
         fs2.Open( dbFile2 );
         TEST_ASSERT( fs1.GetFileSize() == fs2.GetFileSize() ); // size should be the same
-        UniquePtr< char > buffer1( (char *)ALLOC( MEGABYTE ) );
-        UniquePtr< char > buffer2( (char *)ALLOC( MEGABYTE ) );
+        UniquePtr< char, FreeDeletor > buffer1( (char *)ALLOC( MEGABYTE ) );
+        UniquePtr< char, FreeDeletor > buffer2( (char *)ALLOC( MEGABYTE ) );
         uint32_t remaining = (uint32_t)fs1.GetFileSize();
         while ( remaining > 0 )
         {

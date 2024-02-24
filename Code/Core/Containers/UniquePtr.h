@@ -26,7 +26,7 @@ public:
 
 // UniquePtr
 //------------------------------------------------------------------------------
-template < class T, class DELETOR = FreeDeletor >
+template <class T, class DELETOR = DeleteDeletor>
 class UniquePtr
 {
 public:
@@ -46,8 +46,8 @@ public:
     // manually initiate deletion
     void                        Destroy() { DELETOR::Delete( m_Pointer ); m_Pointer = nullptr; }
 
-    // free the pointer without deleting it
-    [[nodiscard]] T *           Release() { T * ptr = m_Pointer; m_Pointer = nullptr; return ptr; }
+    // release ownership of pointer without deleting it
+    [[nodiscard]] T *           ReleaseOwnership() { T * ptr = m_Pointer; m_Pointer = nullptr; return ptr; }
 private:
     T * m_Pointer;
 };

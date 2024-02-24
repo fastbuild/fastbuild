@@ -133,7 +133,7 @@ void TestCompressor::CompressObjFile() const
 void TestCompressor::CompressHelper( const char * fileName ) const
 {
     // read some test data into a file
-    UniquePtr< void > data;
+    UniquePtr< void, FreeDeletor > data;
     size_t dataSize;
     {
         FileStream fs;
@@ -169,7 +169,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         uint64_t compressedSize = 0;
 
         // Compression speed
-        UniquePtr< Compressor, DeleteDeletor > c;
+        UniquePtr<Compressor> c;
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Compress
@@ -224,7 +224,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         uint64_t compressedSize = 0;
 
         // Compression speed
-        UniquePtr< Compressor, DeleteDeletor > c;
+        UniquePtr<Compressor> c;
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Compress
@@ -267,7 +267,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 //------------------------------------------------------------------------------
 void TestCompressor::TestHeaderValidity() const
 {
-    UniquePtr< uint32_t > buffer( (uint32_t *)ALLOC( 1024 ) );
+    UniquePtr< uint32_t, FreeDeletor > buffer( (uint32_t *)ALLOC( 1024 ) );
     memset( buffer.Get(), 0, 1024 );
     Compressor c;
     uint32_t * data = (uint32_t *)buffer.Get();

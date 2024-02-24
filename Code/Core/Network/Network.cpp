@@ -86,7 +86,7 @@
         VERIFY( GetAdaptersInfo( nullptr, &adapterInfoSize ) == ERROR_BUFFER_OVERFLOW );
 
         // Allocate the buffer
-        UniquePtr<IP_ADAPTER_INFO> buffer( static_cast<IP_ADAPTER_INFO *>( ALLOC( adapterInfoSize ) ) );
+        UniquePtr<IP_ADAPTER_INFO, FreeDeletor> buffer( static_cast<IP_ADAPTER_INFO *>( ALLOC( adapterInfoSize ) ) );
 
         // Fill the buffer
         VERIFY( GetAdaptersInfo( buffer.Get(), &adapterInfoSize ) == ERROR_SUCCESS );

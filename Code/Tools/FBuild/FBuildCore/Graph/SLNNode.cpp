@@ -331,7 +331,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
         else
         {
             // check content
-            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr< char, FreeDeletor > mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "SLN - Failed to read '%s'", fileName.Get() );

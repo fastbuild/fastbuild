@@ -1225,7 +1225,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     const AString & compilerOptions = ShouldUseDeoptimization() ? m_CompilerOptionsDeoptimized : m_CompilerOptions;
 
     // Prepare args for remote worker
-    UniquePtr<CompilerDriverBase, DeleteDeletor> driver;
+    UniquePtr<CompilerDriverBase> driver;
     CreateDriver( m_CompilerFlags, AString::GetEmpty(), driver );
     Array< AString > tokens( 1024, true );
     compilerOptions.Tokenize( tokens );
@@ -1777,7 +1777,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 
     const bool forceColoredDiagnostics = ( flags.IsDiagnosticsColorAuto() && ( Env::IsStdOutRedirected() == false ) );
 
-    UniquePtr<CompilerDriverBase, DeleteDeletor> driver;
+    UniquePtr<CompilerDriverBase> driver;
     CreateDriver( flags, job->GetRemoteSourceRoot(), driver );
 
     driver->SetOverrideSourceFile( overrideSrcFile );
@@ -1935,14 +1935,14 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
         return false;
     }
     const uint32_t contentSize = (uint32_t)fs.GetFileSize();
-    UniquePtr< void > mem( ALLOC( contentSize ) );
+    UniquePtr< void, FreeDeletor > mem( ALLOC( contentSize ) );
     if ( fs.Read( mem.Get(), contentSize ) != contentSize )
     {
         FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest\n", fileName.Get() );
         return false;
     }
 
-    job->OwnData( mem.Release(), contentSize );
+    job->OwnData( mem.ReleaseOwnership(), contentSize );
 
     return true;
 }
@@ -2224,10 +2224,10 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
             // for remote jobs, we must serialize the errors to return with the job
             if ( job->IsLocal() == false )
             {
-                UniquePtr< char > mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
+                UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
                 memcpy( mem.Get(), ch.GetOut().Get(), ch.GetOut().GetLength() );
                 memcpy( mem.Get() + ch.GetOut().GetLength(), ch.GetErr().Get(), ch.GetErr().GetLength() );
-                job->OwnData( mem.Release(), ( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
+                job->OwnData( mem.ReleaseOwnership(), ( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
             }
         }
 
@@ -2855,7 +2855,7 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
 //------------------------------------------------------------------------------
 void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
                                const AString & remoteSourceRoot,
-                               UniquePtr<CompilerDriverBase, DeleteDeletor> & outDriver ) const
+                               UniquePtr<CompilerDriverBase> & outDriver ) const
 {
     if      ( flags.IsMSVC() || flags.IsClangCl() ) { outDriver = FNEW( CompilerDriver_CL( flags.IsClangCl() ) ); }
     else if ( flags.IsClang() || flags.IsGCC() )    { outDriver = FNEW( CompilerDriver_GCCClang( flags.IsClang() ) ); }

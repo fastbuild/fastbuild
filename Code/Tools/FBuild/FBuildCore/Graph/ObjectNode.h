@@ -240,7 +240,7 @@ private:
 
     void CreateDriver( ObjectNode::CompilerFlags flags,
                        const AString & remoteSourceRoot,
-                       UniquePtr<CompilerDriverBase, DeleteDeletor> & outDriver ) const;
+                       UniquePtr<CompilerDriverBase> & outDriver ) const;
 
     friend class FunctionObjectList;
 

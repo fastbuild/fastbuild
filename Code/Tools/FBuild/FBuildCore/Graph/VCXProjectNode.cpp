@@ -354,7 +354,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
         else
         {
             // check content
-            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr< char, FreeDeletor > mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "VCXProject - Failed to read '%s'", fileName.Get() );

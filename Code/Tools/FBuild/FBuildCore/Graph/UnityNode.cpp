@@ -536,7 +536,7 @@ UnityNode::~UnityNode()
                 else
                 {
                     // files the same size - are the contents the same?
-                    UniquePtr< char > mem( (char *)ALLOC( fileSize ) );
+                    UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( fileSize ) );
                     if ( f.Read( mem.Get(), fileSize ) != fileSize )
                     {
                         // problem reading file - try to write it again

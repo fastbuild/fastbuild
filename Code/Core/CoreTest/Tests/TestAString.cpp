@@ -245,7 +245,7 @@ void TestAString::AStackStringOverflow() const
 void TestAString::BigString() const
 {
     // create a massive string
-    UniquePtr< char > mem( (char *)ALLOC( ( 10 * MEGABYTE ) + 1 ) );
+    UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( ( 10 * MEGABYTE ) + 1 ) );
     memset( mem.Get(), 'a', 10 * MEGABYTE );
     mem.Get()[ 10 * MEGABYTE ] = '\000';
 

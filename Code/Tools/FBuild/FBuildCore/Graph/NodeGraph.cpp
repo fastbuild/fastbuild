@@ -244,7 +244,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
 
     // Read it into memory to avoid lots of tiny disk accesses
     const size_t fileSize = (size_t)fs.GetFileSize();
-    UniquePtr< char > memory( (char *)ALLOC( fileSize ) );
+    UniquePtr< char, FreeDeletor > memory( (char *)ALLOC( fileSize ) );
     if ( fs.ReadBuffer( memory.Get(), fileSize ) != fileSize )
     {
         FLOG_ERROR( "Could not read Database. Error: %s File: '%s'", LAST_ERROR_STR, nodeGraphDBFile );
@@ -305,7 +305,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
         }
 
         const size_t size = (size_t)fs.GetFileSize();
-        UniquePtr< void > mem( ALLOC( size ) );
+        UniquePtr< void, FreeDeletor > mem( ALLOC( size ) );
         if ( fs.Read( mem.Get(), size ) != size )
         {
             return LoadResult::LOAD_ERROR; // error reading
@@ -334,7 +334,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
     // environment
     uint32_t envStringSize = 0;
     VERIFY( stream.Read( envStringSize ) );
-    UniquePtr< char > envString;
+    UniquePtr< char, FreeDeletor > envString;
     AStackString<> libEnvVar;
     if ( envStringSize > 0 )
     {
