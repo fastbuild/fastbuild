@@ -522,7 +522,13 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
             else
             {
                 // something went wrong storing the file
-                FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n", fileId, toolId );
+                AStackString<> fileName;
+                manifest->GetRemoteFilePath( fileId, fileName );
+                FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n"
+                           " - %s\n",
+                           fileId,
+                           toolId,
+                           fileName.Get() );
             }
 
             Disconnect( connection );
