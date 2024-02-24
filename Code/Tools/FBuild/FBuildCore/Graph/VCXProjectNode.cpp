@@ -308,7 +308,7 @@ VCXProjectNode::~VCXProjectNode() = default;
 
     // .vcxproj
     const AString & project = pg.GenerateVCXProj( m_Name, m_ProjectConfigs, m_ProjectFileTypes, m_ProjectProjectImports );
-    if ( Save( project, m_Name ) == false )
+    if ( ProjectGeneratorBase::WriteIfDifferent( "VCXProject", project, m_Name ) == false )
     {
         return BuildResult::eFailed; // Save will have emitted an error
     }
@@ -317,7 +317,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     const AString & filters = pg.GenerateVCXProjFilters( m_Name );
     AStackString<> filterFile( m_Name );
     filterFile += ".filters";
-    if ( Save( filters, filterFile ) == false )
+    if ( ProjectGeneratorBase::WriteIfDifferent( "VCXProject", filters, filterFile ) == false )
     {
         return BuildResult::eFailed; // Save will have emitted an error
     }
@@ -326,78 +326,6 @@ VCXProjectNode::~VCXProjectNode() = default;
     m_Stamp = xxHash3::Calc64( project ) + xxHash3::Calc64( filters );
 
     return BuildResult::eOk;
-}
-
-// Save
-//------------------------------------------------------------------------------
-bool VCXProjectNode::Save( const AString & content, const AString & fileName ) const
-{
-    bool needToWrite = false;
-
-    FileStream old;
-    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
-    {
-        needToWrite = true;
-    }
-    else if ( old.Open( fileName.Get(), FileStream::READ_ONLY ) == false )
-    {
-        needToWrite = true;
-    }
-    else
-    {
-        // files differ in size?
-        const size_t oldFileSize = (size_t)old.GetFileSize();
-        if ( oldFileSize != content.GetLength() )
-        {
-            needToWrite = true;
-        }
-        else
-        {
-            // check content
-            UniquePtr< char, FreeDeletor > mem( ( char *)ALLOC( oldFileSize ) );
-            if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
-            {
-                FLOG_ERROR( "VCXProject - Failed to read '%s'", fileName.Get() );
-                return false;
-            }
-
-            // compare content
-            if ( memcmp( mem.Get(), content.Get(), oldFileSize ) != 0 )
-            {
-                needToWrite = true;
-            }
-        }
-
-        // ensure we are closed, so we can open again for write if needed
-        old.Close();
-    }
-
-    // only save if missing or new
-    if ( needToWrite == false )
-    {
-        return true; // nothing to do.
-    }
-
-    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
-    {
-        FLOG_OUTPUT( "VCXProj: %s\n", fileName.Get() );
-    }
-
-    // actually write
-    FileStream f;
-    if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
-    {
-        FLOG_ERROR( "VCXProject - Failed to open file. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
-    if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
-    {
-        FLOG_ERROR( "VCXProject - Error writing file. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
-    f.Close();
-
-    return true;
 }
 
 // PostLoad
