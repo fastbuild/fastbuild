@@ -69,21 +69,36 @@ void TestFileIO::FileExists() const
     AStackString<> path;
     GenerateTempFileName( path );
 
-    // ensure doesn't exist
-    FileIO::FileDelete( path.Get() ); // delete in case left over from previous test run
-    TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
+    // File
+    {
+        // ensure doesn't exist
+        FileIO::FileDelete( path.Get() ); // delete in case left over from previous test run
+        TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
 
-    // create it
-    FileStream f;
-    TEST_ASSERT( f.Open( path.Get(), FileStream::WRITE_ONLY ) == true );
-    f.Close();
+        // create it
+        FileStream f;
+        TEST_ASSERT( f.Open( path.Get(), FileStream::WRITE_ONLY ) == true );
+        f.Close();
 
-    // ensure exists
-    TEST_ASSERT( FileIO::FileExists( path.Get() ) == true );
+        // ensure exists
+        TEST_ASSERT( FileIO::FileExists( path.Get() ) == true );
 
-    // clean up
-    TEST_ASSERT( FileIO::FileDelete( path.Get() ) == true );
-    TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
+        // clean up
+        TEST_ASSERT( FileIO::FileDelete( path.Get() ) == true );
+        TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
+    }
+
+    // Folder
+    {
+        // Create a directory
+        AStackString<> dirPath( path );
+        dirPath += "_dir";
+        FileIO::DirectoryCreate( dirPath );
+        TEST_ASSERT( FileIO::DirectoryExists( dirPath ) );
+
+        // Ensure FileExists returns false if passed the directory path
+        TEST_ASSERT( FileIO::FileExists( dirPath.Get() ) == false );
+    }
 }
 
 // FileDelete
