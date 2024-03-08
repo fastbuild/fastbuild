@@ -52,6 +52,17 @@ private:
     void MoveConstructorHelper() const;
     template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class SRC_CAST = SRC>
     void MoveAssignmentHelper() const;
+    void CheckTokenize( const char * originalString,
+                        char splitChar,
+                        const char * expectedToken1 = nullptr,
+                        const char * expectedToken2 = nullptr,
+                        const char * expectedToken3 = nullptr, 
+                        const char * expectedToken4 = nullptr ) const;
+    void CheckTokenize( const char * originalString,
+                        const char * expectedToken1 = nullptr,
+                        const char * expectedToken2 = nullptr,
+                        const char * expectedToken3 = nullptr, 
+                        const char * expectedToken4 = nullptr ) const;
 };
 
 // Register Tests
@@ -724,103 +735,33 @@ void TestAString::Format() const
 void TestAString::Tokenize() const
 {
     // empty
-    {
-        Array< AString > tokens;
-        AString::GetEmpty().Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 0 );
-    }
+    CheckTokenize( "" );
 
     // one token
-    {
-        Array< AString > tokens;
-        AStackString<> input( "one_token" );
-        input.Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 1 );
-        TEST_ASSERT( tokens[ 0 ] == "one_token" );
-    }
+    CheckTokenize( "one_token", "one_token" );
 
     // multiple tokens
-    {
-        Array< AString > tokens;
-        AStackString<> input( "this is four tokens" );
-        input.Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 4 );
-        TEST_ASSERT( tokens[ 0 ] == "this" );
-        TEST_ASSERT( tokens[ 1 ] == "is" );
-        TEST_ASSERT( tokens[ 2 ] == "four" );
-        TEST_ASSERT( tokens[ 3 ] == "tokens" );
-    }
+    CheckTokenize( "this is four tokens", "this", "is", "four", "tokens" );
 
-    // leading whitespace
-    {
-        Array< AString > tokens;
-        AStackString<> input( "     token" );
-        input.Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 1 );
-        TEST_ASSERT( tokens[ 0 ] == "token" );
-    }
-
-    // trailing whitespace
-    {
-        Array< AString > tokens;
-        AStackString<> input( "token      " );
-        input.Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 1 );
-        TEST_ASSERT( tokens[ 0 ] == "token" );
-    }
-
-    // multiple whitespaces
-    {
-        Array< AString > tokens;
-        AStackString<> input( "   lots  of      spaces   " );
-        input.Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 3 );
-        TEST_ASSERT( tokens[ 0 ] == "lots" );
-        TEST_ASSERT( tokens[ 1 ] == "of" );
-        TEST_ASSERT( tokens[ 2 ] == "spaces" );
-    }
+    // whitespace
+    CheckTokenize( "     token", "token" );
+    CheckTokenize( "token      ", "token" );
+    CheckTokenize( "   lots  of      spaces   ", "lots", "of", "spaces" );
 
     // single quotes
-    {
-        Array< AString > tokens;
-        AStackString<> input( "this is 'only three tokens'" );
-        input.Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 3 );
-        TEST_ASSERT( tokens[ 0 ] == "this" );
-        TEST_ASSERT( tokens[ 1 ] == "is" );
-        TEST_ASSERT( tokens[ 2 ] == "'only three tokens'" );
-    }
+    CheckTokenize( "this is 'only three tokens'", "this", "is", "'only three tokens'" );
 
     // double quotes
-    {
-        Array< AString > tokens;
-        AStackString<> input( "this is \"only three tokens\"" );
-        input.Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 3 );
-        TEST_ASSERT( tokens[ 0 ] == "this" );
-        TEST_ASSERT( tokens[ 1 ] == "is" );
-        TEST_ASSERT( tokens[ 2 ] == "\"only three tokens\"" );
-    }
+    CheckTokenize( "this is \"only three tokens\"", "this", "is", "\"only three tokens\"" );
+
+    // quotes inside string
+    CheckTokenize( "this is -DARG=\"a b\"", "this", "is", "-DARG=\"a b\"" );
 
     // mixed quotes
-    {
-        Array< AString > tokens;
-        AStackString<> input( "'on token with an \" in it'" );
-        input.Tokenize( tokens );
-        TEST_ASSERT( tokens.GetSize() == 1 );
-        TEST_ASSERT( tokens[ 0 ] == "'on token with an \" in it'" );
-    }
+    CheckTokenize( "'one token with an \" in it'", "'one token with an \" in it'" );
 
     // alternate split char
-    {
-        Array< AString > tokens;
-        AStackString<> input( "c:\\path\\path;d:\\path;e:\\" );
-        input.Tokenize( tokens, ';' );
-        TEST_ASSERT( tokens.GetSize() == 3 );
-        TEST_ASSERT( tokens[ 0 ] == "c:\\path\\path" );
-        TEST_ASSERT( tokens[ 1 ] == "d:\\path" );
-        TEST_ASSERT( tokens[ 2 ] == "e:\\" );
-    }
+    CheckTokenize( "c:\\path\\path;d:\\path;e:\\", ';', "c:\\path\\path", "d:\\path", "e:\\" );
 }
 
 // PatternMatch
@@ -1124,6 +1065,43 @@ void TestAString::MoveAssignment() const
     // Moves from stack to AString need re-allocation and copy
     MoveAssignmentHelper<AStackString<>, AString,        1             >();
     MoveAssignmentHelper<AStackString<>, AString,        1,     AString>(); // Src as AString, behave the same
+}
+
+// CheckTokenize
+//------------------------------------------------------------------------------
+void TestAString::CheckTokenize( const char * originalString,
+                                 char splitChar, 
+                                 const char * expectedToken1,
+                                 const char * expectedToken2,
+                                 const char * expectedToken3,
+                                 const char * expectedToken4 ) const
+{
+    // Tokenize
+    StackArray< AString > tokens;
+    AStackString<>( originalString ).Tokenize( tokens, splitChar );
+
+    // Check expected count
+    const size_t numExpected = static_cast<size_t>( expectedToken1 ? 1 : 0 )
+                             + static_cast<size_t>( expectedToken2 ? 1 : 0 )
+                             + static_cast<size_t>( expectedToken3 ? 1 : 0 )
+                             + static_cast<size_t>( expectedToken4 ? 1 : 0 );
+    TEST_ASSERT( tokens.GetSize() == numExpected );
+
+    // Check tokens contain expected values
+    TEST_ASSERT( ( expectedToken1 == nullptr ) || ( tokens[ 0 ] == expectedToken1 ) );
+    TEST_ASSERT( ( expectedToken2 == nullptr ) || ( tokens[ 1 ] == expectedToken2 ) );
+    TEST_ASSERT( ( expectedToken3 == nullptr ) || ( tokens[ 2 ] == expectedToken3 ) );
+    TEST_ASSERT( ( expectedToken4 == nullptr ) || ( tokens[ 3 ] == expectedToken4 ) );
+}
+
+//------------------------------------------------------------------------------
+void TestAString::CheckTokenize( const char * originalString,
+                                 const char * expectedToken1,
+                                 const char * expectedToken2,
+                                 const char * expectedToken3, 
+                                 const char * expectedToken4 ) const
+{
+    CheckTokenize( originalString, ' ', expectedToken1, expectedToken2, expectedToken3, expectedToken4 );
 }
 
 //------------------------------------------------------------------------------
