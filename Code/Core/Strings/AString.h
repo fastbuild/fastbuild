@@ -102,6 +102,7 @@ public:
     [[nodiscard]] static int32_t    ScanS( const char * buffer, MSVC_SAL_SCANF const char * fmtString, ... ) SCAN_STRING( 2, 3 );
 
     void                        Tokenize( Array< AString > & tokens, char splitChar = ' ' ) const;
+    static void                 RemoveQuotes( Array< AString > & inoutTokens );
 
     // transformations
     uint32_t                    Replace( char from, char to, uint32_t maxReplaces = 0 );

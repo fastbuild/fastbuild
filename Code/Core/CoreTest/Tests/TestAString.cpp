@@ -52,12 +52,14 @@ private:
     void MoveConstructorHelper() const;
     template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class SRC_CAST = SRC>
     void MoveAssignmentHelper() const;
+    template<bool REMOVE_QUOTES = false>
     void CheckTokenize( const char * originalString,
                         char splitChar,
                         const char * expectedToken1 = nullptr,
                         const char * expectedToken2 = nullptr,
                         const char * expectedToken3 = nullptr, 
                         const char * expectedToken4 = nullptr ) const;
+    template<bool REMOVE_QUOTES = false>
     void CheckTokenize( const char * originalString,
                         const char * expectedToken1 = nullptr,
                         const char * expectedToken2 = nullptr,
@@ -748,17 +750,29 @@ void TestAString::Tokenize() const
     CheckTokenize( "token      ", "token" );
     CheckTokenize( "   lots  of      spaces   ", "lots", "of", "spaces" );
 
-    // single quotes
-    CheckTokenize( "this is 'only three tokens'", "this", "is", "'only three tokens'" );
-
     // double quotes
-    CheckTokenize( "this is \"only three tokens\"", "this", "is", "\"only three tokens\"" );
+    CheckTokenize<false>( R"(this is "only three tokens")", "this", "is", R"("only three tokens")" );
+    CheckTokenize<true>(  R"(this is "only three tokens")", "this", "is", "only three tokens" );
 
     // quotes inside string
-    CheckTokenize( "this is -DARG=\"a b\"", "this", "is", "-DARG=\"a b\"" );
+    CheckTokenize<false>( R"(this is -DARG="a b")", "this", "is", R"(-DARG="a b")" );
+    CheckTokenize<true>(  R"(this is -DARG="a b")", "this", "is", R"(-DARG=a b)" );
 
-    // mixed quotes
-    CheckTokenize( "'one token with an \" in it'", "'one token with an \" in it'" );
+    // escaped quotes
+    CheckTokenize<false>( R"(-D=\")", R"(-D=\")" );
+    CheckTokenize<true>(  R"(-D=\")", R"(-D=")" );
+    CheckTokenize<false>( R"(-D=\" -D2)", R"(-D=\")", R"(-D2)" );
+    CheckTokenize<true>(  R"(-D=\" -D2)", R"(-D=")",  R"(-D2)" );
+    CheckTokenize<false>( R"("-D=   \"   ")", R"("-D=   \"   ")" );
+    CheckTokenize<true>(  R"("-D=   \"   ")", R"(-D=   "   )" );
+    CheckTokenize<false>( R"("-D=\" string \"  ")", R"("-D=\" string \"  ")" );
+    CheckTokenize<true>(  R"("-D=\" string \"  ")", R"(-D=" string "  )" );
+    CheckTokenize<false>( R"(\")", R"(\")" );
+    CheckTokenize<true>(  R"(\")", R"(")" );
+
+    // malformed - ensure unterminated quotes are correctly handled
+    CheckTokenize<false>( R"(-X=")" , R"(-X=")" );
+    CheckTokenize<true>(  R"(-X=")" , R"(-X=)" );
 
     // alternate split char
     CheckTokenize( "c:\\path\\path;d:\\path;e:\\", ';', "c:\\path\\path", "d:\\path", "e:\\" );
@@ -1069,6 +1083,7 @@ void TestAString::MoveAssignment() const
 
 // CheckTokenize
 //------------------------------------------------------------------------------
+template<bool REMOVE_QUOTES>
 void TestAString::CheckTokenize( const char * originalString,
                                  char splitChar, 
                                  const char * expectedToken1,
@@ -1079,6 +1094,10 @@ void TestAString::CheckTokenize( const char * originalString,
     // Tokenize
     StackArray< AString > tokens;
     AStackString<>( originalString ).Tokenize( tokens, splitChar );
+    if constexpr ( REMOVE_QUOTES )
+    {
+        AString::RemoveQuotes( tokens );
+    }
 
     // Check expected count
     const size_t numExpected = static_cast<size_t>( expectedToken1 ? 1 : 0 )
@@ -1094,14 +1113,21 @@ void TestAString::CheckTokenize( const char * originalString,
     TEST_ASSERT( ( expectedToken4 == nullptr ) || ( tokens[ 3 ] == expectedToken4 ) );
 }
 
+// CheckTokenize
 //------------------------------------------------------------------------------
+template<bool REMOVE_QUOTES>
 void TestAString::CheckTokenize( const char * originalString,
                                  const char * expectedToken1,
                                  const char * expectedToken2,
                                  const char * expectedToken3, 
                                  const char * expectedToken4 ) const
 {
-    CheckTokenize( originalString, ' ', expectedToken1, expectedToken2, expectedToken3, expectedToken4 );
+    CheckTokenize<REMOVE_QUOTES>( originalString,
+                                  ' ',
+                                  expectedToken1,
+                                  expectedToken2,
+                                  expectedToken3,
+                                  expectedToken4 );
 }
 
 //------------------------------------------------------------------------------

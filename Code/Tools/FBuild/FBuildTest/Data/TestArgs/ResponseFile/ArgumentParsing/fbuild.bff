@@ -1,0 +1,23 @@
+
+#include "../../../testcommon.bff"
+
+Using( .StandardEnvironment )
+
+// Common settings
+ObjectList( 'ObjectList' )
+{
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/ArgumentParsing/main.cpp'
+    .CompilerOutputPath = '$Out$/Test/Args/ResponseFile/ArgumentParsing/'
+}
+
+Executable( 'Exe' )
+{
+    .Libraries          = 'ObjectList'
+    .LinkerOutput       = '$Out$/Test/Args/ResponseFile/ArgumentParsing/Exe.exe'
+
+    #if __WINDOWS__
+        .LinkerOptions      + ' kernel32.lib'
+                            + .CRTLibs_Static
+                            + ' /SUBSYSTEM:CONSOLE'
+    #endif
+}
