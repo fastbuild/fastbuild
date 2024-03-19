@@ -23,6 +23,17 @@ class Node;
 class ReflectionInfo;
 class CompilerNode;
 
+// GetNodeListOptions
+//------------------------------------------------------------------------------
+class GetNodeListOptions
+{
+public:
+    bool m_AllowCopyDirNodes = false;
+    bool m_AllowUnityNodes = false;
+    bool m_AllowRemoveDirNodes = false;
+    bool m_AllowCompilerNodes = false;
+};
+
 // Function
 //------------------------------------------------------------------------------
 class Function
@@ -105,20 +116,20 @@ public:
                              const char * propertyName,
                              const Array< AString > & nodeNames,
                              Dependencies & nodes,
-                             bool allowCopyDirNodes = false,
-                             bool allowUnityNodes = false,
-                             bool allowRemoveDirNodes = false,
-                             bool allowCompilerNodes = false );
+                             const GetNodeListOptions & options = GetNodeListOptions() );
     static bool GetNodeList( NodeGraph & nodeGraph,
                              const BFFToken * iter,
                              const Function * function,
                              const char * propertyName,
                              const AString & nodeName,
                              Dependencies & nodes,
-                             bool allowCopyDirNodes = false,
-                             bool allowUnityNodes = false,
-                             bool allowRemoveDirNodes = false,
-                             bool allowCompilerNodes = false );
+                             const GetNodeListOptions & options = GetNodeListOptions() );
+    static bool GetNodeList( const BFFToken * iter,
+                             const Function * function,
+                             const char * propertyName,
+                             Node * node,
+                             Dependencies & nodes,
+                             const GetNodeListOptions & options = GetNodeListOptions() );
 
 protected:
     AString     m_Name;
@@ -135,10 +146,7 @@ protected:
                       const char * name,
                       Dependencies & nodes,
                       bool required = false,
-                      bool allowCopyDirNodes = false,
-                      bool allowUnityNodes = false,
-                      bool allowRemoveDirNodes = false,
-                      bool allowCompilerNodes = false ) const;
+                      const GetNodeListOptions & options = GetNodeListOptions() ) const;
 
     // helpers to get properties
     bool GetString( const BFFToken * iter, const BFFVariable * & var, const char * name, bool required = false ) const;
