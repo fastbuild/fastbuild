@@ -194,7 +194,7 @@ DirectoryListNode::~DirectoryListNode() = default;
     }
 
     // Excluded paths
-    if ( !excludeFiles.IsEmpty() )
+    if ( !excludePaths.IsEmpty() )
     {
         result += "|ePaths=";
         result.AppendList( excludePaths, '<' );

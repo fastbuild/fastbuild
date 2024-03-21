@@ -48,7 +48,7 @@ private:
 
     // Reflected Properties
     friend class Function; // TODO:C Remove
-    friend class TestGraph; // TODO:C Remove
+    friend class TestDirectoryList; // TODO:C Remove
     AString m_Path;
     Array< AString > m_Patterns;
     Array< AString > m_ExcludePaths;

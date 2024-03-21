@@ -49,7 +49,6 @@ private:
     void TestCleanPathPartial() const;
     void SingleFileNode() const;
     void SingleFileNodeMissing() const;
-    void TestDirectoryListNode() const;
     void TestSerialization() const;
     void TestDeepGraph() const;
     void TestNoStopOnFirstError() const;
@@ -71,7 +70,6 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( TestCleanPathPartial )
     REGISTER_TEST( SingleFileNode )
     REGISTER_TEST( SingleFileNodeMissing )
-    REGISTER_TEST( TestDirectoryListNode )
     REGISTER_TEST( TestSerialization )
     REGISTER_TEST( TestDeepGraph )
     REGISTER_TEST( TestNoStopOnFirstError )
@@ -196,64 +194,6 @@ void TestGraph::SingleFileNodeMissing() const
     // a missing file is not an error.  it would need to be required by something
     // (like an objectNode which would handle the failure itself)
     TEST_ASSERT( fb.Build( node ) == true );
-}
-
-// TestDirectoryListNode
-//------------------------------------------------------------------------------
-void TestGraph::TestDirectoryListNode() const
-{
-    FBuild fb;
-    NodeGraph ng;
-
-    // Generate a valid DirectoryListNode name
-    AStackString<> name;
-    #if defined( __WINDOWS__ )
-        const AStackString<> testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
-    #else
-        const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
-    #endif
-    Array< AString > patterns;
-    patterns.EmplaceBack( "library.*" );
-    DirectoryListNode::FormatName( testFolder,
-                                   &patterns,
-                                   true, // recursive
-                                   false, // Don't include read-only status in hash
-                                   false, // Don't include directories
-                                   Array< AString >(), // excludePaths,
-                                   Array< AString >(), // excludeFiles,
-                                   Array< AString >(), // excludePatterns,
-                                   name );
-
-    // create the node, and make sure we can access it by name
-    DirectoryListNode * node = ng.CreateNode<DirectoryListNode>( name );
-    node->m_Path = testFolder;
-    node->m_Patterns = patterns;
-    const BFFToken * token = nullptr;
-    TEST_ASSERT( node->Initialize( ng, token, nullptr ) );
-    TEST_ASSERT( ng.FindNode( name ) == node );
-
-    TEST_ASSERT( fb.Build( node ) );
-
-    // make sure we got the expected results
-    TEST_ASSERT( node->GetFiles().GetSize() == 2 );
-    #if defined( __WINDOWS__ )
-        const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
-        const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
-    #else
-        const char * fileName1 = "Data/TestGraph/library.cpp";
-        const char * fileName2 = "Data/TestGraph/library.o";
-    #endif
-
-    // returned order depends on file system
-    if ( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName1 ) )
-    {
-        TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName2 ) );
-    }
-    else
-    {
-        TEST_ASSERT( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName2 ) );
-        TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName1 ) );
-    }
 }
 
 // TestSerialization
