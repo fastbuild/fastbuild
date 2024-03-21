@@ -34,7 +34,7 @@ public:
     // Show/Update UI (blocks)
     void Work();
 
-    void SetStatus( const AString & hostName, const AString & statusText );
+    void SetStatus( const AString & hostName, const AString & ipAddress, const AString & statusText );
     void SetWorkerState( size_t index, const AString & hostName, const AString & status );
 
     const OSMenu * GetMenu() const { return m_Menu; }
