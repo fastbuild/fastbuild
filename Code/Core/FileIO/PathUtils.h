@@ -51,6 +51,7 @@ public:
     static void GetRelativePath( const AString & basePath,
                                  const AString & fileName,
                                  AString & outRelativeFileName );
+    static AString GetFullPath( const AString& fileName );
 };
 
 //------------------------------------------------------------------------------

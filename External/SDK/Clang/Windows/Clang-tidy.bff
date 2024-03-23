@@ -1,0 +1,34 @@
+// Clang-tidy
+//------------------------------------------------------------------------------
+//
+// Detect Clang-tidy
+//
+// We search in the following locations, in order of preference:
+//  1) Part of a Visual Studio installation (Program Files)
+//  2) Default install location
+//
+#if file_exists( "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64/bin/clang-tidy.exe" )
+    // Installed with VS2019
+    .ClangTidy_BasePath = 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/LLVM/x64'
+#else
+    #if file_exists( "C:/Program Files/LLVM/bin/clang-tidy.exe" )
+        // Default Install
+        .ClangTidy_BasePath = 'C:/Program Files/LLVM'
+    #else
+        //
+        // Failed
+        //
+        Print( '----------------------------------------------------------------------' )
+        Print( '- Unable to auto-detect Clang-tidy - please specify installation manually -' )
+        Print( '----------------------------------------------------------------------' )
+        .ClangTidy_BasePath = .Set_Path_Here    // <-- Set path here
+    #endif
+#endif
+
+// Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-ClangTidy' )
+{
+    .Root                           = '$ClangTidy_BasePath$'
+    .Executable                     = '$Root$\bin\clang-tidy.exe'
+}

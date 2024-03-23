@@ -45,3 +45,17 @@ ObjectList( 'WarningsAreCorrectlyReported-Clang' )
     .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/Warning.cpp'
     .CompilerOutputPath     + 'Clang/'
 }
+
+// clang-tidy
+//------------------------------------------------------------------------------
+ObjectList( 'WarningsAreCorrectlyReported-ClangTidy')
+{
+    Using(.ToolChain_Clang_Windows)
+    .Preprocessor = .Compiler
+    .PreprocessorOptions = .CompilerOptions
+    .Compiler = 'Compiler-ClangTidy'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/Warning.cpp'
+    .CompilerOutputPath + 'ClangTidy/'
+    .ClangTidyConfigurationFile = 'Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/.clang-tidy'
+    .CompilerOptions = '--config-file=Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/.clang-tidy --quiet "%1" -- "%2"'
+}

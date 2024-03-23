@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/Cache/ICache.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriverBase.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CL.h"
+#include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_ClangTidy.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CodeWarriorWii.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CUDA.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_GCCClang.h"
@@ -77,6 +78,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
+    REFLECT( m_ClangTidyConfigurationFile,          "ClangTidyConfigurationFile",       MetaOptional() + MetaFile() )
 
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
@@ -237,7 +239,7 @@ ObjectNode::~ObjectNode()
     const bool useCache = ShouldUseCache();
     const bool useDist = m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
     const bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
-    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
+    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsClangTidy() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -671,6 +673,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         FileIO::FileDelete( tmpFileName.Get() );
     }
 
+    if ( job->GetExtraDataSize() != 0 )
+    {
+        tmpFileName += ".config.yaml";
+        FileIO::FileDelete( tmpFileName.Get() );
+    }
+
     // cleanup temp directory
     if ( tmpDirectoryName.IsEmpty() == false )
     {
@@ -863,7 +871,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     {
         const char * output = (char *)job->GetData();
-        size_t outputSize = job->GetDataSize();
+        size_t outputSize = job->GetDataSize() - job->GetExtraDataSize();
 
         // Unlike most compilers, VBCC writes preprocessed output to a file
         ConstMemoryStream vbccMemoryStream;
@@ -959,6 +967,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         case CompilerNode::CompilerFamily::MSVC:            flags.Set( CompilerFlags::FLAG_MSVC );              break;
         case CompilerNode::CompilerFamily::CLANG:           flags.Set( CompilerFlags::FLAG_CLANG );             break;
         case CompilerNode::CompilerFamily::CLANG_CL:        flags.Set( CompilerFlags::FLAG_CLANG_CL );          break;
+        case CompilerNode::CompilerFamily::CLANG_TIDY:      flags.Set( CompilerFlags::FLAG_CLANG_TIDY );        break;
         case CompilerNode::CompilerFamily::GCC:             flags.Set( CompilerFlags::FLAG_GCC );               break;
         case CompilerNode::CompilerFamily::SNC:             flags.Set( CompilerFlags::FLAG_SNC );               break;
         case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags.Set( CompilerFlags::CODEWARRIOR_WII );        break;
@@ -974,7 +983,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
 
     // Check MS compiler options
-    if ( flags.IsMSVC() || flags.IsClangCl() )
+    if ( flags.IsMSVC() || flags.IsClangCl() || flags.IsClangTidy() )
     {
         bool usingCLR = false;
         bool usingWinRT = false;
@@ -1785,6 +1794,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     driver->SetForceColoredDiagnostics( forceColoredDiagnostics );
     driver->SetUseSourceMapping( ( useSourceMapping && job->IsLocal() ) ? GetCompiler()->GetSourceMapping() : AString::GetEmpty() );
 
+    driver->AddPreliminaryArgs( job->IsLocal(), fullArgs );
+
     // Adjust args for as needed for the given compiler
     const size_t numTokens = tokens.GetSize();
     for ( size_t i = 0; i < numTokens; ++i )
@@ -1956,6 +1967,26 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
     const size_t outputBufferSize = dataSize;
     size_t newBufferSize = outputBufferSize;
     char * bufferCopy = nullptr;
+    AString extraBuffer;
+
+    const AString& clangTidyConfigureFilePath = job->GetNode()->CastTo<ObjectNode>()->GetClangTidyConfigurationFile();
+    if ( !clangTidyConfigureFilePath.IsEmpty() )
+    {
+        FileStream configFile;
+        if ( configFile.Open( clangTidyConfigureFilePath.Get() ) == false )
+        {
+            FLOG_ERROR( "Error: could not open file at '%s'", clangTidyConfigureFilePath.Get() );
+            return;
+        }
+        extraBuffer.SetLength( (uint32_t)configFile.GetFileSize() );
+        if ( configFile.ReadBuffer( extraBuffer.Get(), extraBuffer.GetLength() ) != extraBuffer.GetLength() )
+        {
+            FLOG_ERROR( "Error: could not read file at '%s'", clangTidyConfigureFilePath.Get() );
+            return;
+        }
+        job->SetExtraDataSize( extraBuffer.GetLength() );
+        configFile.Close();
+    }
 
     #if defined( __WINDOWS__ )
         // VS 2012 sometimes generates corrupted code when preprocessing an already preprocessed file when it encounters
@@ -2054,12 +2085,17 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
         else
     #endif
     {
-        bufferCopy = (char *)ALLOC( newBufferSize + 1 ); // null terminator for include parser
+        bufferCopy = (char*)ALLOC( newBufferSize + extraBuffer.GetLength() + 1 ); // null terminator for include parser
         memcpy( bufferCopy, outputBuffer, newBufferSize );
         bufferCopy[ newBufferSize ] = 0; // null terminator for include parser
+        if ( !clangTidyConfigureFilePath.IsEmpty() )
+        {
+            memcpy( bufferCopy + newBufferSize + 1, extraBuffer.Get(), extraBuffer.GetLength() );
+        }
     }
 
-    job->OwnData( bufferCopy, newBufferSize );
+    job->OwnData( bufferCopy, newBufferSize + extraBuffer.GetLength() );
+
 }
 
 // WriteTmpFile
@@ -2168,7 +2204,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
             return false;
         }
     }
-    if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
+    if ( tmpFile.Write( dataToWrite, dataToWriteSize - job->GetExtraDataSize() ) != dataToWriteSize - job->GetExtraDataSize() )
     {
         job->Error( "Failed to write to temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
         job->OnSystemError();
@@ -2178,9 +2214,38 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 
     FileIO::WorkAroundForWindowsFilePermissionProblem( tmpFileName );
 
+    if ( job->GetExtraDataSize() != 0 )
+    {
+        FileStream tmpConfigFile;
+        AStackString<> configFileName;
+        configFileName += tmpDirectory;
+        configFileName += sourceFile->GetName().FindLast(NATIVE_SLASH) + 1;
+        configFileName += ".config.yaml";
+        if ( WorkerThread::CreateTempFile( configFileName, tmpConfigFile ) == false )
+        {
+            FileIO::WorkAroundForWindowsFilePermissionProblem( configFileName, FileStream::WRITE_ONLY, 10 ); // 10s max wait
+
+            // Try again
+            if ( WorkerThread::CreateTempFile( configFileName, tmpConfigFile ) == false )
+            {
+                job->Error( "Failed to create temp config file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, configFileName.Get(), GetName().Get() );
+                job->OnSystemError();
+                return NODE_RESULT_FAILED;
+            }
+        }
+        if ( tmpConfigFile.Write( (uint8_t*)dataToWrite + dataToWriteSize - job->GetExtraDataSize() + 1, job->GetExtraDataSize()) != job->GetExtraDataSize() )
+        {
+            job->Error( "Failed to write to temp config file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, configFileName.Get(), GetName().Get() );
+            job->OnSystemError();
+            return NODE_RESULT_FAILED;
+        }
+        tmpConfigFile.Close();
+        FileIO::WorkAroundForWindowsFilePermissionProblem( configFileName );
+    }
+
     // On remote workers, free compressed buffer as we don't need it anymore
     // This reduces memory consumed on the remote worker.
-    if ( job->IsLocal() == false )
+    if ( !IsClangTidy() && job->IsLocal() == false )
     {
         job->OwnData( nullptr, 0, false ); // Free compressed buffer
     }
@@ -2260,6 +2325,17 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
                     HandleWarningsClangGCC( job, GetName(), ch.GetOut() );
                 }
             }
+            else if ( IsClangTidy() )
+            {
+                if ( IsWarningsAsErrorsMSVC() == false )
+                {
+                    const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+                    const AString & sourceFile = objectNode->GetSourceFile()->GetName();
+                    // Ignore stderr that outputs the number of warnings generated and some help
+                    HandleDiagnosticsClangTidy( job, sourceFile, ch.GetOut() );
+                    job->OwnData( nullptr, 0, false ); // Free compressed buffer
+                }
+            }
         }
 
         // Special case for clang static analysis which doesn't write any
@@ -2268,7 +2344,7 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
         // error
         if ( ch.GetResult() == 0 )
         {
-            if ( IsClang() || IsClangCl() )
+            if ( IsClang() || IsClangCl() || IsClangTidy() )
             {
                 if ( FileIO::FileExists( GetName().Get() ) == false )
                 {
@@ -2368,6 +2444,23 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
     #endif
 
+    bool isCompilerClangTidy = false;
+    if ( m_HandleOutput )
+    {
+        if (job->IsLocal())
+        {
+            isCompilerClangTidy = compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CLANG_TIDY;
+        }
+        else
+        {
+            const AString& file = job->GetToolManifest()->GetFiles()[0].GetName();
+            if (file.EndsWith("clang-tidy") || file.EndsWith("clang-tidy.exe"))
+            {
+                isCompilerClangTidy = true;
+            }
+        }
+    }
+
     if ( m_HandleOutput )
     {
         if ( job->IsLocal() && FBuild::Get().GetOptions().m_ShowCommandOutput )
@@ -2386,7 +2479,7 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         else
         {
             // output any errors (even if succeeded, there might be warnings)
-            if ( m_Err.IsEmpty() == false )
+            if ( m_Err.IsEmpty() == false && !isCompilerClangTidy ) // clang-tidy's stderr is not interesting
             {
                 const bool treatAsWarnings = true; // change msg formatting
                 DumpOutput( job, name, m_Err, treatAsWarnings );
@@ -2400,7 +2493,17 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // output 'stdout' which may contain errors for some compilers
         if ( m_HandleOutput )
         {
-            DumpOutput( job, name, m_Out );
+            if ( isCompilerClangTidy )
+            {
+                const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+                const Node * sourceFile = objectNode->GetSourceFile();
+
+                HandleDiagnosticsClangTidy( job, sourceFile->GetName(), m_Out);
+            }
+            else
+            {
+                DumpOutput(job, name, m_Out);
+            }
         }
 
         job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );
@@ -2682,6 +2785,7 @@ ArgsResponseFileMode ObjectNode::GetResponseFileMode() const
              IsSNC() ||
              IsClang() ||
              IsClangCl() ||
+             IsClangTidy() ||
              IsCodeWarriorWii() ||
              IsGreenHillsWiiU() )
         {
@@ -2866,6 +2970,7 @@ void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
     else if ( flags.IsCUDANVCC() )                  { outDriver = FNEW( CompilerDriver_CUDA() ); }
     else if ( flags.IsCodeWarriorWii() )            { outDriver = FNEW( CompilerDriver_CodeWarriorWii() ); }
     else if ( flags.IsGreenHillsWiiU() )            { outDriver = FNEW( CompilerDriver_GreenHillsWiiU() ); }
+    else if ( flags.IsClangTidy() )                 { outDriver = FNEW( CompilerDriver_ClangTidy() ); }
     else                                            { outDriver = FNEW( CompilerDriver_Generic() ); }
 
     outDriver->Init( this, remoteSourceRoot );

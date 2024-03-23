@@ -815,6 +815,13 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                 FileNode::HandleWarningsClangCl( job, objectNode->GetName(), msgBuffer );
             }
         }
+        else if ( objectNode->IsClangTidy() )
+        {
+            if ( objectNode->IsWarningsAsErrorsMSVC() == false )
+            {
+                FileNode::HandleDiagnosticsClangTidy( job, objectNode->GetName(), msgBuffer );
+            }
+        }
         else if ( objectNode->IsClang() || objectNode->IsGCC() )
         {
             if ( objectNode->IsWarningsAsErrorsClangGCC() == false )

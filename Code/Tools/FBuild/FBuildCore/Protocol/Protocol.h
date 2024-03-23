@@ -31,7 +31,7 @@ namespace Protocol
     enum : uint16_t { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
 
     // Protocol Version
-    enum : uint32_t { PROTOCOL_VERSION_MAJOR = 22 };    // Changes here make workers incompatible
+    enum : uint32_t { PROTOCOL_VERSION_MAJOR = 22 + 1 };    // Changes here make workers incompatible
     enum : uint8_t  { PROTOCOL_VERSION_MINOR = 3 };     // Changes must be forwards and backwards compatible
 
     enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
