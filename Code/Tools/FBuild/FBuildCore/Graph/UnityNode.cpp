@@ -145,7 +145,8 @@ bool UnityNode::UnityFileAndOrigin::operator < ( const UnityFileAndOrigin & othe
         return ( sortOrder < 0 );
     }
 
-    if ( filenameLen != otherFilenameLen ) {
+    if ( filenameLen != otherFilenameLen )
+    {
         return ( filenameLen < otherFilenameLen ); // Shorter path goes first, like for directories
     }
     else
