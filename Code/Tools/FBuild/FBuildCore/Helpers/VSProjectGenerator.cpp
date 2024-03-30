@@ -588,7 +588,7 @@ void VSProjectGenerator::WritePGItem( const char * xmlTag, const AString & value
 
     // Escape value
     AStackString<> escapedValue;
-    for ( char c : value )
+    for ( const char c : value )
     {
         switch ( c )
         {
