@@ -448,7 +448,7 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
     PROFILE_FUNCTION;
 
     // split into tokens
-    Array< AString > tokens( 1024, true );
+    StackArray<AString, 512> tokens;
     m_LinkerOptions.Tokenize( tokens );
 
     for ( const AString & token : tokens )
@@ -747,14 +747,14 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
 //------------------------------------------------------------------------------
 /*static*/ uint32_t LinkerNode::DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args )
 {
+    // Parse args for some other flags
+    StackArray<AString, 512> tokens;
+    args.Tokenize( tokens );
+
     uint32_t flags = DetermineLinkerTypeFlags( linkerType, linkerName );
 
     if ( flags & LINK_FLAG_MSVC )
     {
-        // Parse args for some other flags
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-
         bool debugFlag = false;
         bool incrementalFlag = false;
         bool incrementalNoFlag = false;
@@ -844,10 +844,6 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
     }
     else
     {
-        // Parse args for some other flags
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-
         for ( AString & token : tokens )
         {
             token.ToLower();
@@ -1023,7 +1019,7 @@ ArgsResponseFileMode LinkerNode::GetResponseFileMode() const
 void LinkerNode::GetImportLibName( const AString & args, AString & importLibName ) const
 {
     // split to individual tokens
-    Array< AString > tokens;
+    StackArray<AString, 512> tokens;
     args.Tokenize( tokens );
 
     const AString * const end = tokens.End();
@@ -1063,19 +1059,19 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
                                                bool msvc )
 {
     // split to individual tokens
-    Array< AString > tokens;
+    StackArray<AString, 512> tokens;
     args.Tokenize( tokens );
 
     bool ignoreAllDefaultLibs = false;
     bool isBstatic = false; // true while -Bstatic option is active
-    Array< AString > defaultLibsToIgnore( 8, true );
-    Array< AString > defaultLibs( 16, true );
-    Array< AString > libs( 16, true );
-    Array< AString > dashlDynamicLibs( 16, true );
-    Array< AString > dashlStaticLibs( 16, true );
-    Array< AString > dashlFiles( 16, true );
-    Array< AString > libPaths( 16, true );
-    Array< AString > envLibPaths( 32, true );
+    StackArray<AString> defaultLibsToIgnore;
+    StackArray<AString> defaultLibs;
+    StackArray<AString> libs;
+    StackArray<AString> dashlDynamicLibs;
+    StackArray<AString> dashlStaticLibs;
+    StackArray<AString> dashlFiles;
+    StackArray<AString> libPaths;
+    StackArray<AString> envLibPaths;
 
     // extract lib path from system if present
     AStackString< 1024 > libVar;
