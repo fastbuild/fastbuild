@@ -585,7 +585,21 @@ void VSProjectGenerator::WritePGItem( const char * xmlTag, const AString & value
     {
         return;
     }
-    WriteF( "    <%s>%s</%s>\n", xmlTag, value.Get(), xmlTag );
+
+    // Escape value
+    AStackString<> escapedValue;
+    for ( char c : value )
+    {
+        switch ( c )
+        {
+            case '>':   escapedValue += "&gt;";     break;
+            case '<':   escapedValue += "&lt;";     break;
+            case '&':   escapedValue += "&amp;";    break;
+            default:    escapedValue += c;          break;
+        }
+    }
+
+    WriteF( "    <%s>%s</%s>\n", xmlTag, escapedValue.Get(), xmlTag );
 }
 
 // GetFolderPath
