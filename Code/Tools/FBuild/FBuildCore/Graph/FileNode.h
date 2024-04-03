@@ -22,6 +22,7 @@ public:
     static void HandleWarningsMSVC( Job * job, const AString & name, const AString & data );
     static void HandleWarningsClangCl( Job * job, const AString & name, const AString & data );
     static void HandleWarningsClangGCC( Job * job, const AString & name, const AString & data );
+    static void HandleDiagnosticsClangTidy( Job* job, const AString& name, const AString& data );
 protected:
     friend class ObjectNode;
     virtual BuildResult DoBuild( Job * job ) override;

@@ -1,0 +1,7 @@
+Checks: '-*,cppcoreguidelines-init-variables'
+WarningsAsErrors: ''
+AnalyzeTemporaryDtors: false
+FormatStyle: none
+CheckOptions:
+...
+

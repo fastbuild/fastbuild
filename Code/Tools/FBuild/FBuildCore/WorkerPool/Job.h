@@ -47,6 +47,9 @@ public:
     inline void     SetUserData( void * data )  { m_UserData = data; }
     inline void *   GetUserData() const         { return m_UserData; }
 
+    inline size_t   GetExtraDataSize() const { return m_ExtraDataSize; }
+    inline void     SetExtraDataSize( uint32_t size ) { m_ExtraDataSize = size; }
+
     inline void             SetToolManifest( ToolManifest * manifest )  { m_ToolManifest = manifest; }
     inline ToolManifest *   GetToolManifest() const                     { return m_ToolManifest; }
 
@@ -107,6 +110,7 @@ public:
 private:
     uint32_t            m_JobId             = 0;
     uint32_t            m_DataSize          = 0;
+    uint32_t            m_ExtraDataSize     = 0;
     Node *              m_Node              = nullptr;
     void *              m_Data              = nullptr;
     void *              m_UserData          = nullptr;

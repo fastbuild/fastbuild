@@ -53,6 +53,7 @@ public:
     virtual void AddAdditionalArgs_Preprocessor( Args & outFullArgs ) const;
     virtual void AddAdditionalArgs_Common( bool isLocal,
                                            Args & outFullArgs ) const;
+    virtual void AddPreliminaryArgs( bool isLocal, Args & outFullArgs ) const;
 
     // Locally modify args before passing to remote worker
     virtual bool ProcessArg_PreparePreprocessedForRemote( const AString & token,
