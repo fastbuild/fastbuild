@@ -118,7 +118,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // + or - operator
-        if ( token->IsOperator( "+" ) || token->IsOperator( "-" ) )
+        if ( token->IsOperator( '+' ) || token->IsOperator( '-' ) )
         {
             // concatenation to/subtraction from last used variable
             if ( ParseUnnamedVariableModification( iter ) == false )

@@ -490,7 +490,7 @@ static bool ParseOperator( const Function * function,
         op = BoolOperator::OP_LESS_THAN_OR_EQUAL;
     }
     // <  (must be checked after <=)
-    else if ( iter->IsOperator( "<" ) )
+    else if ( iter->IsOperator( '<' ) )
     {
         op = BoolOperator::OP_LESS_THAN;
     }
@@ -500,7 +500,7 @@ static bool ParseOperator( const Function * function,
         op = BoolOperator::OP_GREATER_THAN_OR_EQUAL;
     }
     // >  (must be checked after >=)
-    else if ( iter->IsOperator( ">" ) )
+    else if ( iter->IsOperator( '>' ) )
     {
         op = BoolOperator::OP_GREATER_THAN;
     }
@@ -693,7 +693,7 @@ static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange &
 //------------------------------------------------------------------------------
 static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
 {
-    if ( !iter->IsOperator( "!" ) )
+    if ( !iter->IsOperator( '!' ) )
     {
         Error::Error_1070_UnexpectedOperator( iter.GetCurrent(), function );
         return false;
