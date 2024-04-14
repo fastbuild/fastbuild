@@ -66,7 +66,7 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_SmoothedProgressTarget( 0.0f )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
-    , m_ImportedEnvironmentVars( 0, true )
+    , m_ImportedEnvironmentVars( 0 )
 {
     #ifdef DEBUG_CRT_MEMORY_USAGE
         _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF |
@@ -236,7 +236,7 @@ bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );
 
-    Array< AString > targets( 1, false );
+    Array< AString > targets( 1 );
     targets.Append( target );
     return Build( targets );
 }
@@ -266,7 +266,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
             FLOG_ERROR( "Unknown build target '%s'", target.Get() );
 
             // Gets the 5 targets with minimal distance to user input
-            Array< NodeGraph::NodeWithDistance > nearestNodes( 5, false );
+            Array< NodeGraph::NodeWithDistance > nearestNodes( 5 );
             m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
 
             if ( false == nearestNodes.IsEmpty() )

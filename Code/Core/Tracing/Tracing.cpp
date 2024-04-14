@@ -165,8 +165,8 @@
 Tracing::Callbacks::Callbacks()
     : m_CallbacksMutex()
     , m_InCallbackDispatch( false )
-    , m_CallbacksDebugSpam( 2, true )
-    , m_CallbacksOutput( 2, true )
+    , m_CallbacksDebugSpam( 2 )
+    , m_CallbacksOutput( 2 )
 {
     // Callbacks can now be modified or dispatched
     s_Valid = true;

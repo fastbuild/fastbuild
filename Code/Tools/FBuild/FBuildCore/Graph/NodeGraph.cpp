@@ -81,8 +81,8 @@ bool NodeGraphHeader::IsValid() const
 //------------------------------------------------------------------------------
 NodeGraph::NodeGraph( unsigned nodeMapHashBits )
 : m_NodeMapMaxKey( ( 1u << nodeMapHashBits ) - 1u )
-, m_AllNodes( 1024, true )
-, m_UsedFiles( 16, true )
+, m_AllNodes( 1024 )
+, m_UsedFiles( 16 )
 , m_Settings( nullptr )
 {
     ASSERT( nodeMapHashBits > 0 && nodeMapHashBits < 32 );

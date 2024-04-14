@@ -196,7 +196,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
     {
         const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
 
-        Array< AString > files( 256, true );
+        Array< AString > files( 256 );
         if ( !FileIO::GetFiles( m_BrokerageRoots[ 0 ],
                                 AStackString<>( "*" ),
                                 false,

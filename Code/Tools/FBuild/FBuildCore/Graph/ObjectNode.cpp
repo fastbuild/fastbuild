@@ -740,7 +740,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         output.Replace( '\r', '\n' ); // Normalize all carriage line endings
 
         // split into lines
-        Array< AString > lines( 256, true );
+        Array< AString > lines( 256 );
         output.Tokenize( lines, '\n' );
 
         m_Includes.Clear();
@@ -1227,7 +1227,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // Prepare args for remote worker
     UniquePtr<CompilerDriverBase> driver;
     CreateDriver( m_CompilerFlags, AString::GetEmpty(), driver );
-    Array< AString > tokens( 1024, true );
+    Array< AString > tokens( 1024 );
     compilerOptions.Tokenize( tokens );
     Args fullArgs;
 
@@ -1445,7 +1445,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         const size_t uncompressedDataSize = buffer.GetDataSize();
         const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
 
-        Array< AString > fileNames( 4, false );
+        Array< AString > fileNames( 4 );
         fileNames.Append( m_Name );
 
         GetExtraCacheFilePaths( job, fileNames );
@@ -1531,7 +1531,7 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
     PROFILE_FUNCTION;
 
     // Get list of files
-    Array< AString > fileNames( 4, false );
+    Array< AString > fileNames( 4 );
     fileNames.Append( m_Name );
     GetExtraCacheFilePaths( job, fileNames );
 
@@ -1745,7 +1745,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 {
     PROFILE_FUNCTION;
 
-    Array< AString > tokens( 1024, true );
+    Array< AString > tokens( 1024 );
 
     const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
     if ( useDedicatedPreprocessor )
@@ -1983,7 +1983,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
 
         if ( doVS2012Fixup )
         {
-            Array< const char * > enumsFound( 2048, true );
+            Array< const char * > enumsFound( 2048 );
             const char BUGGY_CODE[] = "enum ";
             const char* workBuffer = outputBuffer;
             ASSERT( workBuffer[ outputBufferSize ] == '\0' );

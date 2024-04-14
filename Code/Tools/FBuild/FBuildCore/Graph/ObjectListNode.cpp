@@ -562,7 +562,7 @@ ObjectListNode::~ObjectListNode() = default;
     }
     else
     {
-        Array< uint64_t > stamps( m_DynamicDependencies.GetSize(), false );
+        Array< uint64_t > stamps( m_DynamicDependencies.GetSize() );
         for ( const Dependency & dep : m_DynamicDependencies )
         {
             const ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();

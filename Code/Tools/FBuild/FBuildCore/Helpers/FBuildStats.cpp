@@ -40,7 +40,7 @@ FBuildStats::FBuildStats()
     , m_TotalLocalCPUTimeMS( 0 )
     , m_TotalRemoteCPUTimeMS( 0 )
     , m_RootNode( nullptr )
-    , m_NodesByTime( 100 * 1000, true )
+    , m_NodesByTime( 100 * 1000 )
 {}
 
 // CONSTRUCTOR - FBuildStats::Stats

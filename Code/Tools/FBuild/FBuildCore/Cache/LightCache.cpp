@@ -159,7 +159,7 @@ private:
     }
     void Grow( size_t elts )
     {
-        Array< IncludedFile * > dest( elts, true );
+        Array< IncludedFile * > dest( elts );
         dest.SetSize( elts );
         for ( IncludedFile * & elt : dest )
         {
@@ -188,7 +188,7 @@ private:
     }
 
     // m_Buckets must always be a size that is a power of 2
-    Array< IncludedFile * > m_Buckets{ LIGHTCACHE_DEFAULT_BUCKET_SIZE, true };
+    Array< IncludedFile * > m_Buckets{ LIGHTCACHE_DEFAULT_BUCKET_SIZE };
     size_t m_Elts = 0;
 };
 
@@ -247,9 +247,9 @@ static IncludedFileBucket g_AllIncludedFiles[ LIGHTCACHE_NUM_BUCKETS ];
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LightCache::LightCache()
-    : m_IncludePaths( 32, true )
-    , m_AllIncludedFiles( 2048, true )
-    , m_IncludeStack( 32, true )
+    : m_IncludePaths( 32 )
+    , m_AllIncludedFiles( 2048 )
+    , m_IncludeStack( 32 )
 {
 }
 
@@ -317,7 +317,7 @@ bool LightCache::Hash( ObjectNode * node,
 
     // Create final hash and return includes
     const size_t numIncludes = m_AllIncludedFiles.GetSize();
-    Array< uint64_t > hashes( numIncludes * 2, false );
+    Array< uint64_t > hashes( numIncludes * 2 );
     outIncludes.SetCapacity( numIncludes );
     for ( const IncludedFile * file : m_AllIncludedFiles )
     {

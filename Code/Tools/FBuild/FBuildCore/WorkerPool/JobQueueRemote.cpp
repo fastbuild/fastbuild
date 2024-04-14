@@ -27,11 +27,11 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
-    m_PendingJobs( 1024, true ),
-    m_CompletedJobs( 1024, true ),
-    m_CompletedJobsFailed( 64, true ),
-    m_CompletedJobsAborted( 64, true ),
-    m_Workers( numWorkerThreads, false )
+    m_PendingJobs( 1024 ),
+    m_CompletedJobs( 1024 ),
+    m_CompletedJobsFailed( 64 ),
+    m_CompletedJobsAborted( 64 ),
+    m_Workers( numWorkerThreads )
 {
     WorkerThread::InitTmpDir( true ); // remote == true
 

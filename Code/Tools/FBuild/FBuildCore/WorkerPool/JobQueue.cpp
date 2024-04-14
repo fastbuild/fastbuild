@@ -144,20 +144,20 @@ Job * JobSubQueue::RemoveJob()
 //------------------------------------------------------------------------------
 JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool ) :
     m_NumLocalJobsActive( 0 ),
-    m_DistributableJobs_Available( 1024, true ),
-    m_DistributableJobs_InProgress( 1024, true ),
+    m_DistributableJobs_Available( 1024 ),
+    m_DistributableJobs_InProgress( 1024 ),
     #if defined( __WINDOWS__ )
         m_MainThreadSemaphore( 1 ), // On Windows, take advantage of signalling limit
     #else
         m_MainThreadSemaphore(),
     #endif
-    m_CompletedJobs( 1024, true ),
-    m_CompletedJobsAborted( 64, true ),
-    m_CompletedJobsFailed( 64, true ),
-    m_CompletedJobs2( 1024, true ),
-    m_CompletedJobsAborted2( 64, true ),
-    m_CompletedJobsFailed2( 64, true ),
-    m_Workers( numWorkerThreads, false )
+    m_CompletedJobs( 1024 ),
+    m_CompletedJobsAborted( 64 ),
+    m_CompletedJobsFailed( 64 ),
+    m_CompletedJobs2( 1024 ),
+    m_CompletedJobsAborted2( 64 ),
+    m_CompletedJobsFailed2( 64 ),
+    m_Workers( numWorkerThreads )
 {
     PROFILE_FUNCTION;
 

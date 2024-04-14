@@ -1802,14 +1802,14 @@ bool FileIO::FileInfo::IsReadOnly() const
 // GetFilesHelper CONSTRUCTOR
 //------------------------------------------------------------------------------
 GetFilesHelper::GetFilesHelper( size_t sizeHint )
-    : m_Files( sizeHint, true )
+    : m_Files( sizeHint )
 {
 }
 
 //------------------------------------------------------------------------------
 GetFilesHelper::GetFilesHelper( const Array<AString> & patterns, size_t sizeHint )
     : m_Patterns( &patterns )
-    , m_Files( sizeHint, true )
+    , m_Files( sizeHint )
 {
 }
 

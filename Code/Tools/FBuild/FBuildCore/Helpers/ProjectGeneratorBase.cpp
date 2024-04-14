@@ -30,8 +30,8 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::ProjectGeneratorBase()
-    : m_Folders( 128, true )
-    , m_Files( 4096, true )
+    : m_Folders( 128 )
+    , m_Files( 4096 )
 {
     m_RootFolder = FNEW( Folder );
     m_Folders.Append( m_RootFolder );

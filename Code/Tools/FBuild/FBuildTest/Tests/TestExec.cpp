@@ -305,7 +305,7 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // build
-    Array< AString > targets( 2, false );
+    Array< AString > targets( 2 );
     targets.EmplaceBack( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" );
     targets.EmplaceBack( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" );
     TEST_ASSERT( !fBuild.Build( targets ) );

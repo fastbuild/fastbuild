@@ -147,7 +147,7 @@ ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
 //------------------------------------------------------------------------------
 TCPConnectionPool::TCPConnectionPool()
     : m_ListenConnection( nullptr )
-    , m_Connections( 8, true )
+    , m_Connections( 8 )
     , m_ShuttingDown( false )
 {
 }

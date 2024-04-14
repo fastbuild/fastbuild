@@ -322,7 +322,7 @@ bool Process::Spawn( const char * executable,
         argVector.Append( nullptr ); // argv must have be nullptr terminated
 
         // prepare environment
-        Array< const char* > envVector( 8, true );
+        Array< const char* > envVector( 8 );
         if ( environment )
         {
             // Iterate double-null terminated string vector

@@ -322,7 +322,7 @@ void TestProjectGeneration::TestFunction_Speed() const
     Random r( 1234567 ); // Deterministic seed
     const size_t numFiles = 5000;
     const size_t maxSubDirDepth = 8;
-    Array< AString > files( numFiles, false );
+    Array< AString > files( numFiles );
     for ( size_t i = 0; i < numFiles; ++i )
     {
         AStackString<> fileName( baseDir );

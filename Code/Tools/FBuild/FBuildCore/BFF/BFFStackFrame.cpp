@@ -19,7 +19,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFStackFrame::BFFStackFrame()
-    : m_Variables( 32, true )
+    : m_Variables( 32 )
 {
     // hook into top of stack chain
     m_Next = s_StackHead;

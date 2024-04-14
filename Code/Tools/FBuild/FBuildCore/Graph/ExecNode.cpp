@@ -287,7 +287,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 void ExecNode::GetFullArgs(AString & fullArgs) const
 {
     // split into tokens
-    Array< AString > tokens(1024, true);
+    Array< AString > tokens( 1024 );
     m_ExecArguments.Tokenize(tokens);
 
     AStackString<> quote("\"");

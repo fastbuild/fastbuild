@@ -144,20 +144,20 @@ bool UnityNode::UnityFileAndOrigin::operator < ( const UnityFileAndOrigin & othe
 UnityNode::UnityNode()
     : Node( Node::UNITY_NODE )
     , m_InputPathRecurse( true )
-    , m_InputPattern( 1, true )
-    , m_Files( 0, true )
+    , m_InputPattern( 1 )
+    , m_Files( 0 )
     , m_OutputPath()
     , m_OutputPattern( "Unity*.cpp" )
     , m_NumUnityFilesToCreate( 1 )
     , m_PrecompiledHeader()
-    , m_PathsToExclude( 0, true )
-    , m_FilesToExclude( 0, true )
+    , m_PathsToExclude( 0 )
+    , m_FilesToExclude( 0 )
     , m_IsolateWritableFiles( false )
     , m_MaxIsolatedFiles( 0 )
-    , m_ExcludePatterns( 0, true )
+    , m_ExcludePatterns( 0 )
     , m_UseRelativePaths_Experimental( false )
-    , m_IsolatedFiles( 0, true )
-    , m_UnityFileNames( 0, true )
+    , m_IsolatedFiles( 0 )
+    , m_UnityFileNames( 0 )
 {
     m_InputPattern.EmplaceBack( "*.cpp" );
     m_LastBuildTimeMs = 100; // higher default than a file node
@@ -310,7 +310,7 @@ UnityNode::~UnityNode()
     m_UnityFileNames.SetCapacity( m_NumUnityFilesToCreate );
 
     // get the files
-    Array< UnityFileAndOrigin > files( 4096, true );
+    Array< UnityFileAndOrigin > files( 4096 );
 
     if ( !GetFiles( files ) )
     {
@@ -342,7 +342,7 @@ UnityNode::~UnityNode()
     AString output;
     output.SetReserved( 32 * 1024 );
 
-    Array< uint64_t > stamps( m_NumUnityFilesToCreate, false );
+    Array< uint64_t > stamps( m_NumUnityFilesToCreate );
 
     // Includes will be relative to root
     AStackString<> includeBasePath;
@@ -382,7 +382,7 @@ UnityNode::~UnityNode()
         // for floating point imprecision
 
         // determine allocation of includes for this unity file
-        Array< UnityFileAndOrigin > filesInThisUnity( 256, true );
+        Array< UnityFileAndOrigin > filesInThisUnity( 256 );
         uint32_t numIsolated( 0 );
         const bool lastUnity = ( i == ( m_NumUnityFilesToCreate - 1 ) );
         while ( ( remainingInThisUnity > 0.0f ) || lastUnity )

@@ -30,7 +30,7 @@
 //------------------------------------------------------------------------------
 Server::Server( uint32_t numThreadsInJobQueue )
     : m_ShouldExit( false )
-    , m_ClientList( 32, true )
+    , m_ClientList( 32 )
 {
     m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
 
@@ -121,7 +121,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     jqr.CancelJobsWithUserData( cs );
 
     // check if any tool chain was being sync'd from this Client
-    Array< ToolManifest * > cancelledManifests( 0, true );
+    Array< ToolManifest * > cancelledManifests;
     {
         MutexHolder manifestMH( m_ToolManifestsMutex );
         for ( ToolManifest * tm : m_Tools )

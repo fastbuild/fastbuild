@@ -44,7 +44,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Report::Report()
-    : m_LibraryStats( 512, true )
+    : m_LibraryStats( 512 )
 {
     // pre-allocate a large string for output
     m_Output.SetReserved( MEGABYTE );

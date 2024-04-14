@@ -961,7 +961,7 @@ Client::ServerState::ServerState()
     : m_Connection( nullptr )
     , m_CurrentMessage( nullptr )
     , m_NumJobsAvailable( 0 )
-    , m_Jobs( 16, true )
+    , m_Jobs( 16 )
     , m_Denylisted( false )
 {
     m_DelayTimer.Start( 999.0f );

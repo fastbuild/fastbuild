@@ -124,7 +124,6 @@ OSWindow::OSWindow( void * hInstance )
     #if defined( __WINDOWS__ )
         , m_HInstance( hInstance )
     #endif
-    , m_ChildWidgets( 0, true )
 {
     #if defined( __WINDOWS__ )
         // Obtain the executable HINSTANCE if not explicitly provided

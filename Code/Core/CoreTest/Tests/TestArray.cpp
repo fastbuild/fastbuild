@@ -230,7 +230,7 @@ void TestArray::Construct_Range() const
 void TestArray::Construct_WithCapacity() const
 {
     {
-        Array<uint32_t> array( 3, true ); // resizable
+        Array<uint32_t> array( 3 ); // resizable
         CheckConsistency( array );
         TEST_ASSERT( array.GetSize() == 0 );
         TEST_ASSERT( array.GetCapacity() == 3 );
@@ -239,7 +239,7 @@ void TestArray::Construct_WithCapacity() const
     }
 
     {
-        Array<uint32_t> array( 3, false ); // fixed capacity
+        Array<uint32_t> array( 3 ); // fixed capacity
         CheckConsistency( array );
         TEST_ASSERT( array.GetSize() == 0 );
         TEST_ASSERT( array.GetCapacity() == 3 );
@@ -2102,7 +2102,7 @@ void TestArray::MoveAssignment() const
 //------------------------------------------------------------------------------
 void TestArray::MoveWhenGrowing() const
 {
-    Array<AString> array( 4, true );
+    Array<AString> array( 4 );
     array.Append( AString( "string1" ) );
     array.Append( AString( "string2" ) );
     array.Append( AString( "string3" ) );
@@ -2128,7 +2128,7 @@ void TestArray::MoveWhenGrowing() const
 void TestArray::MoveAppend() const
 {
     AString string( "string4" );
-    Array<AString> array( 1, false );
+    Array<AString> array( 1 );
 
     // Take note of memory state before
     TEST_MEMORY_SNAPSHOT( s1 );
@@ -2146,7 +2146,7 @@ void TestArray::MoveAppend() const
 void TestArray::MoveSetCapacity() const
 {
     // Create array with something in it
-    Array<AString> array( 1, true );
+    Array<AString> array( 1 );
     array.Append( AString( "string1" ) );
 
     // Take note of memory state before
@@ -2165,7 +2165,7 @@ void TestArray::MoveSetCapacity() const
 void TestArray::MovePopFront() const
 {
     // Create array with something in it
-    Array<AString> array( 2, false );
+    Array<AString> array( 2 );
     array.Append( AString( "string1" ) );
     array.Append( AString( "string2string2" ) ); // Larger than string 1
 
@@ -2185,7 +2185,7 @@ void TestArray::MovePopFront() const
 void TestArray::MoveErase() const
 {
     // Create array with something in it
-    Array<AString> array( 2, false );
+    Array<AString> array( 2 );
     array.Append( AString( "string1" ) );
     array.Append( AString( "string2string2" ) ); // Larger than string 1
 

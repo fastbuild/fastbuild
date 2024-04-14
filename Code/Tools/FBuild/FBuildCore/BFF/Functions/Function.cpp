@@ -61,7 +61,7 @@
 
 // Static
 //------------------------------------------------------------------------------
-/*static*/ Array<const Function *> g_Functions( 25, false );
+/*static*/ Array<const Function *> g_Functions( 25 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -534,7 +534,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     // Since they can be used sensibly by matching just the end
     // of a path, assume they are relative to the working dir.
     // TODO:C Move this during bff parsing when everything is using reflection
-    Array< AString > filesToExcludeCleaned( filesToExclude.GetSize(), true );
+    Array< AString > filesToExcludeCleaned( filesToExclude.GetSize() );
     for ( const AString& file : filesToExclude )
     {
         AStackString<> cleanPath;
