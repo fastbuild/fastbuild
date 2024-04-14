@@ -492,7 +492,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     // Take note of the results compression level so we know to expect
     // compressed results
-    job->SetResultCompressionLevel( resultCompressionLevel );
+    const bool allowZstdUse = true; // We can accept Zstd results
+    job->SetResultCompressionLevel( resultCompressionLevel, allowZstdUse );
 
     {
         PROFILE_SECTION( "SendJob" );

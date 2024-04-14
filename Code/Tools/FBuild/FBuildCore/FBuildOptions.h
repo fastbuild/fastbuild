@@ -68,7 +68,7 @@ public:
     bool        m_CacheInfo                         = false;
     bool        m_CacheVerbose                      = false;
     uint32_t    m_CacheTrim                         = 0;
-    int16_t     m_CacheCompressionLevel             = -1; // See Compressor.h
+    int16_t     m_CacheCompressionLevel             = 1; // See Compressor.h
 
     // Distributed Compilation
     bool        m_AllowDistributed                  = false;

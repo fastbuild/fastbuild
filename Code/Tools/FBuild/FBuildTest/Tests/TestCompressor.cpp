@@ -100,14 +100,8 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 
     // decompress
     Compressor d;
-    if ( useZstd )
-    {
-        TEST_ASSERT( d.DecompressZstd( compressedMem ) );
-    }
-    else
-    {
-        TEST_ASSERT( d.Decompress( compressedMem ) );
-    }
+    TEST_ASSERT( d.Decompress( compressedMem ) );
+
     const size_t decompressedSize = d.GetResultSize();
     TEST_ASSERT( decompressedSize == size );
     TEST_ASSERT( memcmp( data, d.GetResult(), size ) == 0 );
@@ -241,7 +235,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
             // Decompress
             const Timer t2;
             Compressor d;
-            TEST_ASSERT( d.DecompressZstd( c.Get()->GetResult() ) );
+            TEST_ASSERT( d.Decompress( c.Get()->GetResult() ) );
             TEST_ASSERT( d.GetResultSize() == dataSize );
             decompressTimeTaken += (double)t2.GetElapsedMS();
 

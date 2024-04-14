@@ -342,7 +342,12 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
 
         Job * job = FNEW( Job( ms ) );
         job->SetUserData( cs );
-        job->SetResultCompressionLevel( msg->GetResultCompressionLevel() );
+
+        // Take not of client support requirements
+        // - Zstd suport can become unconditional if protocol compatibility is broken
+        static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22 );
+        const bool allowZstdUse = ( cs->m_ProtocolVersionMinor >= 4 );
+        job->SetResultCompressionLevel( msg->GetResultCompressionLevel(), allowZstdUse );
 
         // Get ToolId
         const uint64_t toolId = msg->GetToolId();

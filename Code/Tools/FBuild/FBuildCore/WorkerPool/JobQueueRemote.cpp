@@ -485,7 +485,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     const int32_t compressionLevel = job->GetResultCompressionLevel();
     if ( compressionLevel != 0 )
     {
-        mb.Compress( compressionLevel );
+        mb.Compress( compressionLevel, job->GetAllowZstdUse() );
     }
 
     // transfer data to job

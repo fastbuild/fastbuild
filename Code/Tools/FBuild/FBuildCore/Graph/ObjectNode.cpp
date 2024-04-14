@@ -1569,7 +1569,18 @@ void ObjectNode::WriteToCache_FromUncompressedData( Job * job,
     const Timer t;
     const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
     Compressor c;
-    c.Compress(uncompressedData, uncompressedDataSize, FBuild::Get().GetOptions().m_CacheCompressionLevel );
+    const int16_t compressionLevel = FBuild::Get().GetOptions().m_CacheCompressionLevel;
+    if (compressionLevel <= 0)
+    {
+        // Use LZ4 for low compression levels (level < 0)
+        // This call also handles disabled compression (level 0)
+        c.Compress(uncompressedData, uncompressedDataSize, compressionLevel );
+    }
+    else
+    {
+        // Use Ztd for higher compression levels (level > 0)
+        c.CompressZstd(uncompressedData, uncompressedDataSize, compressionLevel );
+    }
     const uint32_t compressionTime = ( (uint32_t)t.GetElapsedMS() - startCompress );
 
     WriteToCache_FromCompressedData( job,

@@ -76,8 +76,13 @@ public:
     void                SetRemoteThreadIndex( uint16_t threadIndex )    { m_RemoteThreadIndex = threadIndex; }
     uint16_t            GetRemoteThreadIndex() const                    { return m_RemoteThreadIndex; }
 
-    void                SetResultCompressionLevel( int16_t compressionLevel )   { m_ResultCompressionLevel = compressionLevel; }
-    int16_t             GetResultCompressionLevel() const                       { return m_ResultCompressionLevel; }
+    void                SetResultCompressionLevel( int16_t compressionLevel, bool allowZstdUse )
+    {
+        m_ResultCompressionLevel = compressionLevel;
+        m_AllowZstdUse = allowZstdUse;
+    }
+    int16_t             GetResultCompressionLevel() const   { return m_ResultCompressionLevel; }
+    bool                GetAllowZstdUse() const             { return m_AllowZstdUse; }
 
     enum DistributionState : uint8_t
     {
@@ -122,6 +127,7 @@ private:
     BuildProfilerScope * m_BuildProfilerScope = nullptr;    // Additional context when profiling a build
     ToolManifest *      m_ToolManifest      = nullptr;
     int16_t             m_ResultCompressionLevel = 0; // Compression level of returned results
+    bool                m_AllowZstdUse = false; // Can client accept Zstd results?
 
     Array< AString >    m_Messages;
 
