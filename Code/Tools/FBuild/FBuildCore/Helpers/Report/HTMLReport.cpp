@@ -342,7 +342,7 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
         }
         const uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
-        Array< PieItem > pieItems( 3, false );
+        Array< PieItem > pieItems( 3 );
         pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
         pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, (uint32_t)0xFFCC88 );
         pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, (uint32_t)0x88FF88 );
@@ -387,7 +387,7 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
             const uint32_t  cStores     = ls->m_ObjectCount_CacheStores;
             const float     cStoreTime  = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
 
-            // start collapsable section
+            // start collapsible section
             if ( numOutput == 10 )
             {
                 DoToggleSection();
@@ -425,7 +425,7 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
     DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
 
     // Summary Pie Chart
-    Array< PieItem > items( 32, true );
+    Array< PieItem > items( 32 );
 
     for ( size_t i=0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
     {
@@ -510,7 +510,7 @@ void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
         const char * type = node->GetTypeName();
         const char * name = node->GetName().Get();
 
-        // start collapsable section
+        // start collapsible section
         if ( numOutput == 10 )
         {
             DoToggleSection( (uint32_t)nodes.GetSize() - 10 );
@@ -574,7 +574,7 @@ void HTMLReport::DoCPUTimeByLibrary()
             continue;
         }
 
-        // start collapsable section
+        // start collapsible section
         if ( numOutput == 10 )
         {
             DoToggleSection();
@@ -630,7 +630,7 @@ void HTMLReport::DoIncludes()
         GetIncludeFilesRecurse( incStatsMap, library );
 
         // flatten and sort by usage
-        Array< const IncludeStats * > incStats( 10 * 1024, true );
+        Array< const IncludeStats * > incStats( 10 * 1024 );
         incStatsMap.Flatten( incStats );
         incStats.SortDeref();
 
@@ -658,7 +658,7 @@ void HTMLReport::DoIncludes()
             const uint32_t included = s.m_Count;
             const bool inPCH = s.m_InPCH;
 
-            // start collapsable section
+            // start collapsible section
             if ( numOutput == 10 )
             {
                 DoToggleSection( numIncludes - 10 );
@@ -675,7 +675,7 @@ void HTMLReport::DoIncludes()
 
         DoTableStop();
 
-        // end collpsable section
+        // end collapsible section
         if ( numOutput > 10 )
         {
             Write( "</details>\n" );

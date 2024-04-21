@@ -87,8 +87,6 @@ public:
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
-    bool Save( const AString & content, const AString & fileName ) const;
-
     bool                    GatherProject( NodeGraph & nodeGraph,
                                            const Function * function,
                                            const BFFToken * iter,

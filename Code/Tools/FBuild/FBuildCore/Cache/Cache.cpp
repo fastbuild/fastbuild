@@ -1,7 +1,7 @@
 // Cache - Default cache implementation
 //------------------------------------------------------------------------------
 
-// Incldues
+// Includes
 //------------------------------------------------------------------------------
 #include "Cache.h"
 
@@ -157,11 +157,11 @@ public:
     if ( cacheFile.Open( fullPath.Get(), FileStream::READ_ONLY ) )
     {
         const size_t cacheFileSize = (size_t)cacheFile.GetFileSize();
-        UniquePtr< char > mem( (char *)ALLOC( cacheFileSize ) );
+        UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( cacheFileSize ) );
         if ( cacheFile.Read( mem.Get(), cacheFileSize ) == cacheFileSize )
         {
             dataSize = cacheFileSize;
-            data = mem.Release();
+            data = mem.ReleaseOwnership();
             return true;
         }
     }

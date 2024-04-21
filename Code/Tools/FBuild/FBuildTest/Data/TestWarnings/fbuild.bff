@@ -17,11 +17,7 @@ Settings {}
 // Disable warnings as errors to confirm that we still see warnings
 #if __WINDOWS__
     .CompilerOptions            - '/WX'
-#endif
-#if __LINUX__
-    .CompilerOptions            - '-Werror'
-#endif
-#if __OSX__
+#else
     .CompilerOptions            - '-Werror'
 #endif
 

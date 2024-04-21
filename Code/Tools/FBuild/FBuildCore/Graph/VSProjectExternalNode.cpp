@@ -81,7 +81,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
         if ( timeStamp == 0 )
         {
             FLOG_ERROR( "VSProjectExternalNode - External project file '%s' does not exist", m_Name.Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // Did the file change?
@@ -95,7 +95,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
                 if ( fs.Open( m_Name.Get(), FileStream::READ_ONLY ) == false )
                 {
                     FLOG_ERROR( "VSProjectExternalNode - Failed to open external project file '%s'", m_Name.Get() );
-                    return NODE_RESULT_FAILED;
+                    return BuildResult::eFailed;
                 }
 
                 // load project file into a string for parsing the project Guid
@@ -105,7 +105,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
                 if ( fs.ReadBuffer( extProjFileAsString.Get(), fileSize ) != fileSize )
                 {
                     FLOG_ERROR( "VSProjectExternalNode - Failed to read external project file '%s'", m_Name.Get() );
-                    return NODE_RESULT_FAILED;
+                    return BuildResult::eFailed;
                 }
 
                 // parse Project GUID from string buffer
@@ -114,7 +114,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
                 if ( ( strPGStart == nullptr ) || ( strPGEnd == nullptr ) )
                 {
                     FLOG_ERROR( "VSProjectExternalNode - Failed to extract <ProjectGuid> project file '%s'", m_Name.Get() );
-                    return NODE_RESULT_FAILED;
+                    return BuildResult::eFailed;
                 }
                 m_ProjectGuid.Assign( strPGStart + 13, strPGEnd ); // +13 to trim <ProjectGuid>
 
@@ -166,14 +166,14 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
                         else
                         {
                             VspteModuleWrapper::Instance()->Vspte_DeallocateProjDataCfgArray( &projData );
-                            FLOG_ERROR( "VSProjectExternalNode - Failed retrieving type Guid and / or config|platform pairs for external project '%s', please check the output or the log of the 'VSProjectExternal' module! Maybe explicitely providing the project data is required.", m_Name.Get() );
-                            return NODE_RESULT_FAILED;
+                            FLOG_ERROR( "VSProjectExternalNode - Failed retrieving type Guid and / or config|platform pairs for external project '%s', please check the output or the log of the 'VSProjectExternal' module! Explicitly providing project data may be required.", m_Name.Get() );
+                            return BuildResult::eFailed;
                         }
                     }
                     else
                     {
-                        FLOG_ERROR( "VSProjectExternalNode - Failed to load the external VSProjTypeExtractor module, please consult the 'VSProjectExternal' documentation! Maybe explicitely providing the project data is required." );
-                        return NODE_RESULT_FAILED;
+                        FLOG_ERROR( "VSProjectExternalNode - Failed to load the external VSProjTypeExtractor module, please consult the 'VSProjectExternal' documentation! Explicitly providing project data may be required." );
+                        return BuildResult::eFailed;
                     }
                 }
             #endif
@@ -186,7 +186,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // CopyConfigs

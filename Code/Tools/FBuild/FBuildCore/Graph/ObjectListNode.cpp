@@ -350,7 +350,7 @@ ObjectListNode::~ObjectListNode() = default;
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
 
-    // Handle converting all static inputs into dynamic onces (i.e. cpp->obj)
+    // Handle converting all static inputs into dynamic ones (i.e. cpp->obj)
     for ( size_t i=m_ObjectListInputStartIndex; i<m_ObjectListInputEndIndex; ++i )
     {
         const Dependency & dep = m_StaticDependencies[ i ];
@@ -562,7 +562,7 @@ ObjectListNode::~ObjectListNode() = default;
     }
     else
     {
-        Array< uint64_t > stamps( m_DynamicDependencies.GetSize(), false );
+        Array< uint64_t > stamps( m_DynamicDependencies.GetSize() );
         for ( const Dependency & dep : m_DynamicDependencies )
         {
             const ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
@@ -572,7 +572,7 @@ ObjectListNode::~ObjectListNode() = default;
         m_Stamp = xxHash3::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
     }
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // GetInputFiles
@@ -662,7 +662,7 @@ void ObjectListNode::GetObjectFileName( const AString & fileName, const AString 
     lastDot = lastDot && ( lastDot > lastSlash ) ? lastDot : fileName.GetEnd();
 
     // if source comes from a directory listing, use path relative to dirlist base
-    // to replicate the folder hierearchy in the output
+    // to replicate the folder hierarchy in the output
     AStackString<> subPath;
     if ( baseDir.IsEmpty() == false )
     {

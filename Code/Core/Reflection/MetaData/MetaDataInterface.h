@@ -1,4 +1,4 @@
-// MetaDaatInterface.h
+// MetaDataInterface.h
 //------------------------------------------------------------------------------
 #pragma once
 

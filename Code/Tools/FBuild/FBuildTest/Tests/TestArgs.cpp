@@ -10,6 +10,9 @@
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 
+// Core
+#include "Core/Process/Process.h"
+
 // TestArgs
 //------------------------------------------------------------------------------
 class TestArgs : public FBuildTest
@@ -26,12 +29,17 @@ private:
     void ResponseFile_Always_Short() const;
     void ResponseFile_Always_Long() const;
     void ResponseFile_CommandLineQuoting() const;
+    void ArgumentParsing() const;
 
     // Helpers
     void Check( ArgsResponseFileMode mode,
                 bool longArgs,
                 bool expectedResult,
                 bool expectResponseFileToBeUsed ) const;
+
+    void CheckParsing( const char * commandLine,
+                       const char * arg1 = nullptr,
+                       const char * arg2 = nullptr ) const;
 
     // Some constants for re-use between tests
     const AString mExeName{ "ExeName" };
@@ -50,6 +58,7 @@ REGISTER_TESTS_BEGIN( TestArgs )
     REGISTER_TEST( ResponseFile_Always_Short )
     REGISTER_TEST( ResponseFile_Always_Long )
     REGISTER_TEST( ResponseFile_CommandLineQuoting )
+    REGISTER_TEST( ArgumentParsing )
 REGISTER_TESTS_END
 
 // Unused
@@ -175,6 +184,77 @@ void TestArgs::Check( ArgsResponseFileMode mode,
     // Check if response file was used
     const bool responseFileWasUsed = ( args.GetFinalArgs().Find( '@' ) != nullptr );
     TEST_ASSERT( responseFileWasUsed == expectResponseFileToBeUsed );
+}
+
+//------------------------------------------------------------------------------
+void TestArgs::ArgumentParsing() const
+{
+    // Build executable we'll invoke
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/ArgumentParsing/fbuild.bff";
+
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "Exe" ) );
+
+    // Empty
+    CheckParsing( "" );
+
+    // Multiple args
+    CheckParsing( "-aaa -bbb", "-aaa", "-bbb" );
+
+    // Quoted args
+    CheckParsing( R"(-aaa "-DARG")", "-aaa", "-DARG" );
+    CheckParsing( R"(-aaa -D"ARG")", "-aaa", "-DARG" );
+
+    // Escaped quotes
+    CheckParsing( R"(-aaa -D\"ARG\")",   "-aaa", R"(-D"ARG")" );
+    CheckParsing( R"(-aaa "-D\"ARG\"")", "-aaa", R"(-D"ARG")" );
+    
+    // Spaces inside quotes
+    CheckParsing( R"("-DTHING=\"   \"")", R"(-DTHING="   ")" );
+}
+
+// CheckParsing
+//------------------------------------------------------------------------------
+void TestArgs::CheckParsing( const char * commandLine,
+                             const char * arg1,
+                             const char * arg2 ) const
+{
+    // Invoke previously built exe which echoes back commands
+    Process p;
+    TEST_ASSERT( p.Spawn( "../tmp/Test/Args/ResponseFile/ArgumentParsing/Exe.exe",
+                 commandLine,
+                 nullptr, // working dir
+                 nullptr ) ); // environment
+
+    // Capture the output
+    AStackString<> out;
+    AStackString<> err;
+    TEST_ASSERT( p.ReadAllData( out, err ) );
+    TEST_ASSERT( p.WaitForExit() == 0 );
+
+    // Normalize windows line endings
+    #if defined( __WINDOWS__ )
+        out.Replace( "\r\n", "\n" );
+    #endif
+
+    // Generate expected results
+    AStackString<> expected;
+    const size_t numArgsExpected = static_cast<size_t>( arg1 ? 1 : 0 )
+                                 + static_cast<size_t>( arg2 ? 1 : 0 );
+    expected.Format( "%zu\n", numArgsExpected );
+    if ( arg1 )
+    {
+        expected.AppendFormat( "%s\n", arg1 );
+    }
+    if ( arg2 )
+    {
+        expected.AppendFormat( "%s\n", arg2 );
+    }
+
+    // Compare echoed result with what we expect
+    TEST_ASSERT( out == expected );
 }
 
 //------------------------------------------------------------------------------

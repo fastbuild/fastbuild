@@ -1,4 +1,4 @@
-// TestSempahore.cpp
+// TestSemaphore.cpp
 //------------------------------------------------------------------------------
 
 // Includes
@@ -104,9 +104,9 @@ void TestSemaphore::WaitTimeout() const
 #if defined( __WINDOWS__ )
     void TestSemaphore::MaxCount() const
     {
-        // Only Windows supports a signall count limit for Semaphores
+        // Only Windows supports a signal count limit for Semaphores
 
-        // Create sempahore with a max count
+        // Create semaphore with a max count
         Semaphore s( 1 );
 
         // Signal with individual calls

@@ -90,7 +90,7 @@ TextFileNode::~TextFileNode() = default;
     if ( !stream.Open( GetName().Get(), FileStream::WRITE_ONLY ) )
     {
         FLOG_ERROR( "Could not open '%s' for writing", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
     const uint64_t nWritten = stream.WriteBuffer( textFileContents.Get(), textFileContents.GetLength() );
     stream.Close();
@@ -98,12 +98,12 @@ TextFileNode::~TextFileNode() = default;
     if ( nWritten != textFileContents.GetLength() )
     {
         FLOG_ERROR( "Failed to write all to '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     Node::RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // EmitCompilationMessage

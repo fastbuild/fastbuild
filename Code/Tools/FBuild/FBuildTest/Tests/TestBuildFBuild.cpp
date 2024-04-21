@@ -85,7 +85,7 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
 void TestBuildFBuild::BuildClean() const
 {
     // delete files from previous runs
-    Array< AString > files( 1024, true );
+    Array< AString > files( 1024 );
     FileIO::GetFiles( AStackString<>( "../tmp/Test/BuildFBuild" ), AStackString<>( "*" ), true, &files );
     for ( const AString & file : files )
     {

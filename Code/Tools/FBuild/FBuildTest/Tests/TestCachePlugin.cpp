@@ -132,7 +132,7 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
         FBuild f( options );
         TEST_ASSERT( f.Initialize() );
 
-        // sotre a copy of the cache params
+        // store a copy of the cache params
         cachePath = f.GetSettings()->GetCachePath();
         cachePluginDLL = f.GetSettings()->GetCachePluginDLL();
         TEST_ASSERT( !cachePath.IsEmpty() );

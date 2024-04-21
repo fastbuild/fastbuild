@@ -239,7 +239,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 /*virtual*/ Node::BuildResult Node::DoBuild( Job * /*job*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
-    return Node::NODE_RESULT_FAILED;
+    return BuildResult::eFailed;
 }
 
 // DoBuild2
@@ -247,7 +247,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 /*virtual*/ Node::BuildResult Node::DoBuild2( Job * /*job*/, bool /*racingRemoteJob*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
-    return Node::NODE_RESULT_FAILED;
+    return BuildResult::eFailed;
 }
 
 // Finalize
@@ -332,14 +332,14 @@ void Node::SetLastBuildTime( uint32_t ms )
     uint8_t nodeType;
     VERIFY( stream.Read( nodeType ) );
 
-    PROFILE_SECTION( Node::GetTypeName( (Type)nodeType ) );
-
     // Name of node
     AString name;
     VERIFY( stream.Read( name ) );
+    uint32_t nameHash;
+    VERIFY( stream.Read( nameHash ) );
 
     // Create node
-    Node * n = nodeGraph.CreateNode( (Type)nodeType, Move( name ) );
+    Node * n = nodeGraph.CreateNode( (Type)nodeType, Move( name ), nameHash );
     ASSERT( n );
 
     // Early out for FileNode
@@ -399,6 +399,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 
     // Save Name
     stream.Write( node->m_Name );
+    stream.Write( node->m_NameHash );
 
     // FileNodes don't need most things serialized:
     // - their stamp is obtained every build, so doesn't need saving
@@ -612,7 +613,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 //------------------------------------------------------------------------------
 /*virtual*/ void Node::Migrate( const Node & oldNode )
 {
-    // Transfer the stamp used to detemine if the node has changed
+    // Transfer the stamp used to determine if the node has changed
     m_Stamp = oldNode.m_Stamp;
 
     // Transfer previous build costs used for progress estimates
@@ -713,9 +714,10 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // SetName
 //------------------------------------------------------------------------------
-void Node::SetName( AString && name )
+void Node::SetName( AString && name, uint32_t nameHashHint )
 {
-    m_NameHash = CalcNameHash( name );
+    ASSERT( ( nameHashHint == 0 ) || ( nameHashHint == CalcNameHash( name ) ) );
+    m_NameHash = nameHashHint ? nameHashHint : CalcNameHash( name );
     m_Name = Move( name );
 }
 
@@ -1126,7 +1128,12 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
     m_PreBuildDependencies.SetCapacity( preBuildDependencyNames.GetSize() );
 
     // Expand
-    if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preBuildDependencyNames, m_PreBuildDependencies, true, true, true, true ) )
+    GetNodeListOptions options;
+    options.m_AllowCopyDirNodes = true;
+    options.m_AllowUnityNodes = true;
+    options.m_AllowRemoveDirNodes = true;
+    options.m_AllowCompilerNodes = true;
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preBuildDependencyNames, m_PreBuildDependencies, options ) )
     {
         return false; // GetNodeList will have emitted an error
     }
@@ -1148,7 +1155,7 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
 
     // More than one caller could be retrieving the same env string
     // in some cases. For simplicity, we protect in all cases even
-    // if we could avoid it as the mutex will not be heavily constested.
+    // if we could avoid it as the mutex will not be heavily contested.
     MutexHolder mh( g_NodeEnvStringMutex );
 
     // If we've previously built a custom env string, use it

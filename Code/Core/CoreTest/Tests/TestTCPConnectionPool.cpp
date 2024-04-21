@@ -219,7 +219,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
 
     // a big piece of data, initialized to some known pattern
     const size_t maxSendSize( 1024 * 1024 * 10 );
-    UniquePtr< char > data( (char *)ALLOC( maxSendSize ) );
+    UniquePtr< char, FreeDeletor > data( (char *)ALLOC( maxSendSize ) );
     for ( size_t i = 0; i < maxSendSize; ++i )
     {
         data.Get()[ i ] = (char)i;
@@ -313,7 +313,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     const ConnectionInfo * ci = (const ConnectionInfo *)userData;
     TCPConnectionPool & client = ci->GetTCPConnectionPool();
     // send lots of data to slow server
-    UniquePtr< char > mem( (char *)ALLOC( 10 * MEGABYTE ) );
+    UniquePtr< char , FreeDeletor > mem( (char *)ALLOC( 10 * MEGABYTE ) );
     memset( mem.Get(), 0, 10 * MEGABYTE );
     for ( size_t i = 0; i < 1000; ++i )
     {

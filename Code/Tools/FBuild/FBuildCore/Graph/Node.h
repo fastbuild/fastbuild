@@ -104,12 +104,12 @@ public:
         STATS_FIRST_BUILD   = 0x100,// node has never been built before
     };
 
-    enum BuildResult
+    enum class BuildResult
     {
-        NODE_RESULT_FAILED      = 0,    // something went wrong building
-        NODE_RESULT_NEED_SECOND_BUILD_PASS, // needs build called again
-        NODE_RESULT_OK,                 // built ok
-        NODE_RESULT_OK_CACHE            // retrieved from the cache
+        eFailed,            // something went wrong building
+        eAborted,           // interrupted due to build termination
+        eNeedSecondPass,    // needs build called again
+        eOk,                // built ok
     };
 
     enum State : uint8_t
@@ -197,7 +197,7 @@ protected:
     friend class WorkerThread;
     friend class CompilationDatabase;
 
-    void SetName( AString && name );
+    void SetName( AString && name, uint32_t nameHashHint = 0 );
 
     void ReplaceDummyName( const AString & newName );
 
@@ -251,7 +251,7 @@ protected:
     Type                m_Type;                     // Node type. **Set by constructor**
     mutable uint16_t    m_StatsFlags = 0;           // Stats recorded in the current build
     mutable uint32_t    m_BuildPassTag = 0;         // Prevent multiple recursions into the same node during a single sweep
-    uint64_t            m_Stamp = 0;                // "Stamp" representing this node for dependency comparissons
+    uint64_t            m_Stamp = 0;                // "Stamp" representing this node for dependency comparisons
     uint8_t             m_ControlFlags = FLAG_NONE; // Control build behavior special cases - Set by constructor
     bool                m_Hidden = false;           // Hidden from -showtargets?
     // Note: Unused 2 bytes here

@@ -92,8 +92,6 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = allowRace;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -188,9 +186,7 @@ void TestDistributed::RemoteRaceWinRemote()
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_NoLocalConsumptionOfRemoteJobs = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -216,9 +212,7 @@ void TestDistributed::RemoteRaceSystemFailure()
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_NoLocalConsumptionOfRemoteJobs = true;
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     options.m_DistVerbose = true;
     FBuild fBuild( options );
 
@@ -270,8 +264,6 @@ void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -298,8 +290,6 @@ void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -326,8 +316,6 @@ void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -354,8 +342,6 @@ void TestDistributed::WarningsAreCorrectlyReported_Clang() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -385,8 +371,6 @@ void TestDistributed::ShutdownMemoryLeak() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
     // Init
     FBuild fBuild( options );
@@ -394,7 +378,7 @@ void TestDistributed::ShutdownMemoryLeak() const
 
     // NOTE: No remote server created so jobs stay in m_DistributableJobs_Available queue
 
-    // Create thread that will abort build to simulate Crtl+C or other external stop
+    // Create thread that will abort build to simulate Ctrl+C or other external stop
     class Helper
     {
     public:
@@ -429,7 +413,7 @@ void TestDistributed::ShutdownMemoryLeak() const
 
     // Start build and check it was aborted
     TEST_ASSERT( fBuild.Build( "ShutdownMemoryLeak" ) == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Incomplete: ShutdownMemoryLeak" ) );
 
     thread.Join();
 
@@ -447,8 +431,6 @@ void TestDistributed::TestZiDebugFormat() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -468,8 +450,6 @@ void TestDistributed::TestZiDebugFormat_Local() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -492,8 +472,6 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
@@ -508,7 +486,7 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
 //------------------------------------------------------------------------------
 void TestDistributed::CleanMessageToPreventMSBuildFailure() const
 {
-    // Error should be indentical except for a single remove colon
+    // Error should be identical except for a single remove colon
     {
         const AStackString<> in( "C:\\Windows\\TEMP\\.fbuild.tmp\\0x00000000\\"
                                  "core_1018\\F436D72E\\Module.MergeActors.cpp :"

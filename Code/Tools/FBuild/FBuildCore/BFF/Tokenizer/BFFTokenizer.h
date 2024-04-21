@@ -28,7 +28,7 @@ public:
     // Process bff file hierarchy from a root file
     bool TokenizeFromFile( const AString & fileName );
 
-    // Preocess from an buffer in memory (for tests)
+    // Process from a buffer in memory (for tests)
     bool TokenizeFromString( const AString & fileName, const AString & fileContents );
 
     // Access results

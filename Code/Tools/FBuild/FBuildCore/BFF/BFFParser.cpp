@@ -93,7 +93,7 @@ bool BFFParser::ParseFromString( const char * fileName, const char * fileContent
 //------------------------------------------------------------------------------
 bool BFFParser::Parse( BFFTokenRange & iter )
 {
-    // Check for excessive depth (deeply recusive function calls for example)
+    // Check for excessive depth (deeply recursive function calls for example)
     if ( BFFStackFrame::GetDepth() >= 128 )
     {
         Error::Error_1035_ExcessiveDepthComplexity( iter.GetCurrent() );
@@ -118,7 +118,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // + or - operator
-        if ( token->IsOperator( "+" ) || token->IsOperator( "-" ) )
+        if ( token->IsOperator( '+' ) || token->IsOperator( '-' ) )
         {
             // concatenation to/subtraction from last used variable
             if ( ParseUnnamedVariableModification( iter ) == false )
@@ -214,7 +214,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         ASSERT( iter->GetValueString().EndsWith( *pos ) );
         ASSERT( iter->GetValueString().GetLength() >= 4 ); // at least one char inside: ."x"
 
-        // unescape and subsitute embedded variables
+        // unescape and substitute embedded variables
         AStackString<> value;
         if ( PerformVariableSubstitutions( iter, value ) == false )
         {
@@ -252,7 +252,7 @@ bool BFFParser::ParseUnnamedVariableModification( BFFTokenRange & iter )
     // have we assigned a variable before?
     if ( varName.IsEmpty() )
     {
-        Error::Error_1011_UnnamedModifcationMustFollowAssignment( iter.GetCurrent() );
+        Error::Error_1011_UnnamedModificationMustFollowAssignment( iter.GetCurrent() );
         return false;
     }
 
@@ -391,7 +391,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         }
         return StoreVariableInt( varName, opToken, newVal, frame );
     }
-    else if ( rhsToken->IsBooelan() )
+    else if ( rhsToken->IsBoolean() )
     {
         // find existing
         const BFFVariable * var = BFFStackFrame::GetVar( varName, frame );
@@ -423,7 +423,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         return StoreVariableToVariable( varName, rhsToken, opToken, frame );
     }
 
-    Error::Error_1017_UnexepectedCharInVariableValue( rhsToken );
+    Error::Error_1017_UnexpectedCharInVariableValue( rhsToken );
     return false;
 }
 
@@ -642,7 +642,7 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
     {
         // Get parameter
         if ( argsIter->IsString() ||
-             argsIter->IsBooelan() ||
+             argsIter->IsBoolean() ||
              argsIter->IsNumber() )
         {
             // Literal value
@@ -689,7 +689,7 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
         const BFFToken * arg = arguments[ i ];
         if ( arg->IsString() )
         {
-            // unescape and subsitute embedded variables
+            // unescape and substitute embedded variables
             AStackString< 2048 > value;
             if ( PerformVariableSubstitutions( arg, value ) == false )
             {
@@ -697,7 +697,7 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
             }
             BFFStackFrame::SetVarString( argName, *arg, value, &frame );
         }
-        else if ( arg->IsBooelan() )
+        else if ( arg->IsBoolean() )
         {
             BFFStackFrame::SetVarBool( argName, *arg, arg->GetBoolean(), &frame );
         }
@@ -832,7 +832,7 @@ bool BFFParser::StoreVariableString( const AString & name,
     ASSERT( rhsString->IsString() );
     ASSERT( opToken->IsOperator() );
 
-    // unescape and subsitute embedded variables
+    // unescape and substitute embedded variables
     AStackString< 2048 > value;
     if ( PerformVariableSubstitutions( rhsString, value ) == false )
     {
@@ -912,7 +912,7 @@ bool BFFParser::StoreVariableString( const AString & name,
         // make sure types are compatible
         if ( ( var == nullptr ) || var->IsString() )
         {
-            // OK - asigning to a new variable or to a string
+            // OK - assigning to a new variable or to a string
             BFFStackFrame::SetVarString( name, *opToken, value, frame );
             return true;
         }
@@ -1031,7 +1031,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             // a string
             AStackString< 2048 > elementValue;
 
-            // unescape and subsitute embedded variables
+            // unescape and substitute embedded variables
             if ( PerformVariableSubstitutions( iter.GetCurrent(), elementValue ) == false )
             {
                 return false;

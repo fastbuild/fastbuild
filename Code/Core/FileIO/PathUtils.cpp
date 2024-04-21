@@ -117,7 +117,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void PathUtils::EnsureTrailingSlash( AString & path )
 {
-    // check for exsiting slash
+    // check for existing slash
     const size_t pathLen = path.GetLength();
     if ( pathLen > 0 )
     {

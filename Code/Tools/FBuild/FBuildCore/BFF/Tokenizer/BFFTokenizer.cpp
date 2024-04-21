@@ -463,18 +463,16 @@ bool BFFTokenizer::HandleVariable( const char * & pos, const char * /*end*/, con
         }
     }
 
-    const AStackString<> variableName( variableStart, pos );
-
-    // If variable name is missing
-    if ( variableName.GetLength() <= 1 ) // includes '.' or '^'
+    // If variable name is missing (. or ^ and at least 1 char)
+    if ( ( pos - variableStart ) < 2 )
     {
         // TODO:C Improve error
         const BFFToken error( file, pos, BFFTokenType::Invalid, AStackString<>( "???" ) );
-        Error::Error_1017_UnexepectedCharInVariableValue( &error );
+        Error::Error_1017_UnexpectedCharInVariableValue( &error );
         return false;
     }
 
-    m_Tokens.EmplaceBack( file, variableStart, BFFTokenType::Variable, variableName );
+    m_Tokens.EmplaceBack( file, variableStart, BFFTokenType::Variable, variableStart, pos );
     return true;
 }
 
@@ -970,7 +968,7 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
     }
     argsIter++;
 
-    // We must escape ^ and $ so they won't be interpretted as special chars
+    // We must escape ^ and $ so they won't be interpreted as special chars
     varValue.Replace( "^", "^^" );
     varValue.Replace( "$", "^$" );
 

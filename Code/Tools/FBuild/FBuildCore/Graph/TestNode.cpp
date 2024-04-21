@@ -189,11 +189,11 @@ const char * TestNode::GetEnvironmentString() const
     {
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -205,7 +205,7 @@ const char * TestNode::GetEnvironmentString() const
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return NODE_RESULT_FAILED;
+        return BuildResult::eAborted;
     }
 
     if ( ( timedOut == true ) || ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )
@@ -229,20 +229,20 @@ const char * TestNode::GetEnvironmentString() const
     if ( fs.Open( GetName().Get(), FileStream::WRITE_ONLY ) == false )
     {
         FLOG_ERROR( "Failed to open test output file '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
     if ( ( ( memOut.IsEmpty() == false ) && ( fs.Write( memOut.Get(), memOut.GetLength() ) != memOut.GetLength() ) ) ||
          ( ( memErr.IsEmpty() == false ) && ( fs.Write( memErr.Get(), memErr.GetLength() ) != memErr.GetLength() ) ) )
     {
         FLOG_ERROR( "Failed to write test output file '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
     fs.Close();
 
     // did the test fail?
     if ( ( timedOut == true ) || ( result != 0 ) )
     {
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // test passed
@@ -250,7 +250,7 @@ const char * TestNode::GetEnvironmentString() const
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // EmitCompilationMessage

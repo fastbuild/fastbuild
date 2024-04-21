@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VSProjectBaseNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VSProjectExternalNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -178,7 +179,7 @@ SLNNode::SLNNode()
 
     // Gather all Project references and canonicalize project names
     //------------------------------------------------------------------------------
-    Array< VSProjectBaseNode * > projects( m_SolutionProjects.GetSize(), true );
+    Array< VSProjectBaseNode * > projects( m_SolutionProjects.GetSize() );
     // SolutionProjects
     if ( !GatherProjects( nodeGraph, function, iter, ".SolutionProjects", m_SolutionProjects, projects ) )
     {
@@ -275,7 +276,7 @@ SLNNode::~SLNNode() = default;
     SLNGenerator sg;
 
     // projects
-    Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize(), false );
+    Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize() );
     for ( const Dependency & dep : m_StaticDependencies )
     {
         const Node * node = dep.GetNode();
@@ -294,89 +295,16 @@ SLNNode::~SLNNode() = default;
                                           projects,
                                           m_SolutionDependencies,
                                           m_SolutionFolders );
-    if ( Save( sln, m_Name ) == false )
+    if ( ProjectGeneratorBase::WriteIfDifferent( "SLN", sln, m_Name ) == false )
     {
-        return NODE_RESULT_FAILED; // Save will have emitted an error
+        return BuildResult::eFailed; // Save will have emitted an error
     }
 
     // Record stamp representing the contents of the files
     m_Stamp = xxHash3::Calc64( sln );
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
-
-// Save
-//------------------------------------------------------------------------------
-bool SLNNode::Save( const AString & content, const AString & fileName ) const
-{
-    bool needToWrite = false;
-
-    FileStream old;
-    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
-    {
-        needToWrite = true;
-    }
-    else if ( old.Open( fileName.Get(), FileStream::READ_ONLY ) == false )
-    {
-        needToWrite = true;
-    }
-    else
-    {
-        // files differ in size?
-        const size_t oldFileSize = (size_t)old.GetFileSize();
-        if ( oldFileSize != content.GetLength() )
-        {
-            needToWrite = true;
-        }
-        else
-        {
-            // check content
-            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
-            if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
-            {
-                FLOG_ERROR( "SLN - Failed to read '%s'", fileName.Get() );
-                return false;
-            }
-
-            // compare content
-            if ( memcmp( mem.Get(), content.Get(), oldFileSize ) != 0 )
-            {
-                needToWrite = true;
-            }
-        }
-
-        // ensure we are closed, so we can open again for write if needed
-        old.Close();
-    }
-
-    // only save if missing or ner
-    if ( needToWrite == false )
-    {
-        return true; // nothing to do.
-    }
-
-    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
-    {
-        FLOG_OUTPUT( "SLN: %s\n", fileName.Get() );
-    }
-
-    // actually write
-    FileStream f;
-    if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
-    {
-        FLOG_ERROR( "SLN - Failed to open file for write. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
-    if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
-    {
-        FLOG_ERROR( "SLN - Error writing file. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
-    f.Close();
-
-    return true;
-}
-
 // GatherProject
 //------------------------------------------------------------------------------
 bool SLNNode::GatherProject( NodeGraph & nodeGraph,

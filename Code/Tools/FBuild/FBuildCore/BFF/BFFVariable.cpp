@@ -106,7 +106,7 @@ BFFVariable::BFFVariable( const AString & name,
                           const Array< const BFFVariable * > & values )
     : m_Name( name )
     , m_Type( VAR_STRUCT )
-    , m_SubVariables( values.GetSize(), true )
+    , m_SubVariables( values.GetSize() )
     , m_Token( token )
 {
     SetValueStruct( values );
@@ -132,7 +132,7 @@ BFFVariable::BFFVariable( const AString & name,
                           VarType type ) // type for disambiguation
     : m_Name( name )
     , m_Type( VAR_ARRAY_OF_STRUCTS )
-    , m_SubVariables( structs.GetSize(), true )
+    , m_SubVariables( structs.GetSize() )
     , m_Token( token )
 {
     // type for disambiguation only - sanity check it's the right type
@@ -196,7 +196,7 @@ void BFFVariable::SetValueStruct( const Array< const BFFVariable * > & values )
 
     // build list of new members, but don't touch old ones yet to gracefully
     // handle self-assignment
-    Array< BFFVariable * > newVars( values.GetSize(), false );
+    Array< BFFVariable * > newVars( values.GetSize() );
 
     m_Type = VAR_STRUCT;
     for ( const BFFVariable * var : values )
@@ -242,7 +242,7 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
 
     // build list of new members, but don't touch old ones yet to gracefully
     // handle self-assignment
-    Array< BFFVariable * > newVars( values.GetSize(), false );
+    Array< BFFVariable * > newVars( values.GetSize() );
 
     m_Type = VAR_ARRAY_OF_STRUCTS;
     for ( const BFFVariable * var : values)

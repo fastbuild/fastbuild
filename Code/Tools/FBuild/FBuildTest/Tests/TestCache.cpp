@@ -39,6 +39,7 @@ private:
     void LightCache_ImportDirective() const;
     void LightCache_ForceInclude() const;
     void LightCache_SourceDependencies() const;
+    void LightCache_ResponseFile() const;
 
     // MSVC Static Analysis tests
     const char* const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -84,6 +85,7 @@ REGISTER_TESTS_BEGIN( TestCache )
         REGISTER_TEST( LightCache_ImportDirective )
         REGISTER_TEST( LightCache_ForceInclude )
         REGISTER_TEST( LightCache_SourceDependencies )
+        REGISTER_TEST( LightCache_ResponseFile )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
 
@@ -879,6 +881,35 @@ void TestCache::LightCache_SourceDependencies() const
 
     // Check for expected error in output (from -cacheverbose)
     TEST_ASSERT( GetRecordedOutput().Find( "LightCache is incompatible with -sourceDependencies" ) );
+}
+
+// LightCache_ResponseFile
+//------------------------------------------------------------------------------
+void TestCache::LightCache_ResponseFile() const
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_ResponseFile/fbuild.bff";
+
+    // Build
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+    // Ensure cache we stored using the LightCache
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumCacheStores == 1 );
+    TEST_ASSERT( objStats.m_NumLightCache == 1 );
+
+    // Get the discovered dependencies and ensure the include was found
+    // This ensures that the include paths in the args are correctly processed
+    // even when response files are in use
+    StackArray<const Node *> nodes;
+    fBuild.GetNodesOfType( Node::OBJECT_NODE, nodes );
+    TEST_ASSERT( nodes.GetSize() == 1 );
+    const Dependencies & deps = nodes[ 0 ]->GetDynamicDependencies();
+    TEST_ASSERT( deps.GetSize() == 2 ); // main cpp plus include
+    TEST_ASSERT( deps[ 1 ].GetNode()->GetName().EndsWith( "include.h") );
 }
 
 // Analyze_MSVC_WarningsOnly_Write

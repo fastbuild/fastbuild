@@ -30,7 +30,7 @@
 //------------------------------------------------------------------------------
 Server::Server( uint32_t numThreadsInJobQueue )
     : m_ShouldExit( false )
-    , m_ClientList( 32, true )
+    , m_ClientList( 32 )
 {
     m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
 
@@ -121,7 +121,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     jqr.CancelJobsWithUserData( cs );
 
     // check if any tool chain was being sync'd from this Client
-    Array< ToolManifest * > cancelledManifests( 0, true );
+    Array< ToolManifest * > cancelledManifests;
     {
         MutexHolder manifestMH( m_ToolManifestsMutex );
         for ( ToolManifest * tm : m_Tools )
@@ -342,7 +342,12 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
 
         Job * job = FNEW( Job( ms ) );
         job->SetUserData( cs );
-        job->SetResultCompressionLevel( msg->GetResultCompressionLevel() );
+
+        // Take not of client support requirements
+        // - Zstd suport can become unconditional if protocol compatibility is broken
+        static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22 );
+        const bool allowZstdUse = ( cs->m_ProtocolVersionMinor >= 4 );
+        job->SetResultCompressionLevel( msg->GetResultCompressionLevel(), allowZstdUse );
 
         // Get ToolId
         const uint64_t toolId = msg->GetToolId();
@@ -373,7 +378,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                 const bool isSynchronizing = ( manifest->GetUserData() != nullptr );
                 if ( isSynchronizing )
                 {
-                    // We just need to wait for syncrhonization to complete
+                    // We just need to wait for synchronization to complete
                 }
                 else
                 {
@@ -522,7 +527,13 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
             else
             {
                 // something went wrong storing the file
-                FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n", fileId, toolId );
+                AStackString<> fileName;
+                manifest->GetRemoteFilePath( fileId, fileName );
+                FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n"
+                           " - %s\n",
+                           fileId,
+                           toolId,
+                           fileName.Get() );
             }
 
             Disconnect( connection );
@@ -705,24 +716,25 @@ void Server::FinalizeCompletedJobs()
     PROFILE_FUNCTION;
 
     JobQueueRemote & jcr = JobQueueRemote::Get();
-    while ( Job * job = jcr.GetCompletedJob() )
+    Node::BuildResult result;
+    while ( Job * job = jcr.GetCompletedJob( result ) )
     {
-        // get associated connection
-        ClientState * cs = (ClientState *)job->GetUserData();
-
+        // Jobs that ended in a useful state are reported to the Client
+        // Other jobs (like those that were cancelled) are not
+        if ( ( result == Node::BuildResult::eOk ) || ( result == Node::BuildResult::eFailed ) )
         {
+            // get associated connection
+            ClientState * cs = (ClientState *)job->GetUserData();
+
             MutexHolder mh( m_ClientListMutex );
 
             const bool connectionStillActive = ( m_ClientList.Find( cs ) != nullptr );
             if ( connectionStillActive )
             {
-                const Node::State result = job->GetNode()->GetState();
-                ASSERT( ( result == Node::UP_TO_DATE ) || ( result == Node::FAILED ) );
-
                 MemoryStream ms;
                 ms.Write( job->GetJobId() );
                 ms.Write( job->GetNode()->GetName() );
-                ms.Write( result == Node::UP_TO_DATE );
+                ms.Write( result == Node::BuildResult::eOk );
                 ms.Write( job->GetSystemErrorCount() > 0 );
                 ms.Write( job->GetMessages() );
                 ms.Write( job->GetNode()->GetLastBuildTime() );

@@ -280,6 +280,7 @@ FBuildTestOptions::FBuildTestOptions()
     // Override defaults
     m_ShowSummary = true; // required to generate stats for node count checks
     m_Profile = true; // Ensure "-profile" option is exercised
+    m_EnableMonitor = true; // Make sure monitor code paths are tested
 
     // Ensure any distributed compilation tests use the test port
     m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;

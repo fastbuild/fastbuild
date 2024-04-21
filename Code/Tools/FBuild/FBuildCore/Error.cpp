@@ -111,9 +111,9 @@
     FormatError( iter, 1010u, nullptr, "Unknown construct." );
 }
 
-// Error_1011_UnnamedModifcationMustFollowAssignment
+// Error_1011_UnnamedModificationMustFollowAssignment
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1011_UnnamedModifcationMustFollowAssignment( const BFFToken * iter )
+/*static*/ void Error::Error_1011_UnnamedModificationMustFollowAssignment( const BFFToken * iter )
 {
     FormatError( iter, 1011u, nullptr, "Unnamed modification must follow a variable assignment in the same scope." );
 }
@@ -149,18 +149,18 @@
     FormatError( iter, 1015u, nullptr, "Unknown Function." );
 }
 
-// Error_1016_UnexepectedCharFollowingVariableName
+// Error_1016_UnexpectedCharFollowingVariableName
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1016_UnexepectedCharFollowingVariableName( const BFFToken * iter )
+/*static*/ void Error::Error_1016_UnexpectedCharFollowingVariableName( const BFFToken * iter )
 {
     AStackString<> buffer;
     GetChar( iter, buffer );
     FormatError( iter, 1016u, nullptr, "Unexpected character '%s' following variable name. (Expected operator)", buffer.Get() );
 }
 
-// Error_1017_UnexepectedCharInVariableValue
+// Error_1017_UnexpectedCharInVariableValue
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1017_UnexepectedCharInVariableValue( const BFFToken * iter )
+/*static*/ void Error::Error_1017_UnexpectedCharInVariableValue( const BFFToken * iter )
 {
     AStackString<> buffer;
     GetChar( iter, buffer );
@@ -318,7 +318,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1035_ExcessiveDepthComplexity( const BFFToken * iter )
 {
-    FormatError( iter, 1035u, nullptr, "Excessive depth complexity when parsing BFFs. Check for resursive includes or simplify config." );
+    FormatError( iter, 1035u, nullptr, "Excessive depth complexity when parsing BFFs. Check for recursive includes or simplify config." );
 }
 
 // Error_1036_UnknownTokenInIfDirective

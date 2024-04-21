@@ -300,32 +300,29 @@ bool Process::Spawn( const char * executable,
         #endif
 
         // prepare args
-        Array< AString > splitArgs( 64, true );
-        Array< const char * > argVector( 64, true );
+        StackArray<AString, 64> splitArgs;
+        StackArray<const char *, 64> argVector;
         argVector.Append( executable ); // first arg is exe name
         if ( args )
         {
             // Tokenize
-            AStackString<> argCopy( args );
-            argCopy.Tokenize( splitArgs );
+            AStackString<>( args ).Tokenize( splitArgs );
+
+            // Remove quotes from split args. Unlike Windows, on Linux/OSX we're
+            // passing the arg vector essentially directly to the process and
+            // it's not split/de-quoted by the API used for process spawning
+            AString::RemoveQuotes( splitArgs );
 
             // Build Vector
-            for ( AString & arg : splitArgs )
+            for ( const AString & arg : splitArgs )
             {
-                if ( arg.BeginsWith( '"' ) && arg.EndsWith( '"' ) )
-                {
-                    // strip quotes
-                    arg.SetLength( arg.GetLength() - 1 ); // trim end quote
-                    argVector.Append( arg.Get() + 1 ); // skip start quote
-                    continue;
-                }
                 argVector.Append( arg.Get() ); // leave arg as-is
             }
         }
         argVector.Append( nullptr ); // argv must have be nullptr terminated
 
         // prepare environment
-        Array< const char* > envVector( 8, true );
+        Array< const char* > envVector( 8 );
         if ( environment )
         {
             // Iterate double-null terminated string vector

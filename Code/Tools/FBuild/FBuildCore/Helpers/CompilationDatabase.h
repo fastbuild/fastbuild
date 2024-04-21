@@ -44,8 +44,6 @@ protected:
     static void HandleInputFile( const AString & inputFile, const AString & baseDir, void * userData );
     void HandleInputFile( const AString & inputFile, const AString & baseDir, ObjectListContext * ctx );
 
-    static void Unquote( AString & string );
-
     AString m_Output;
     AString m_DirectoryEscaped;
 };

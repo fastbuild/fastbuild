@@ -57,7 +57,6 @@ WorkerThreadRemote::~WorkerThreadRemote()
 
             // process the work
             const Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
-            ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_FAILED ) );
 
             {
                 MutexHolder mh( m_CurrentJobMutex );
@@ -67,7 +66,7 @@ WorkerThreadRemote::~WorkerThreadRemote()
             // Take note of the thread used to build the job
             job->SetRemoteThreadIndex( WorkerThread::GetThreadIndex() );
 
-            JobQueueRemote::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ) );
+            JobQueueRemote::Get().FinishedProcessingJob( job, result );
 
             // loop again to get another job
             continue;

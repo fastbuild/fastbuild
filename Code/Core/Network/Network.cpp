@@ -86,7 +86,7 @@
         VERIFY( GetAdaptersInfo( nullptr, &adapterInfoSize ) == ERROR_BUFFER_OVERFLOW );
 
         // Allocate the buffer
-        UniquePtr<IP_ADAPTER_INFO> buffer( static_cast<IP_ADAPTER_INFO *>( ALLOC( adapterInfoSize ) ) );
+        UniquePtr<IP_ADAPTER_INFO, FreeDeletor> buffer( static_cast<IP_ADAPTER_INFO *>( ALLOC( adapterInfoSize ) ) );
 
         // Fill the buffer
         VERIFY( GetAdaptersInfo( buffer.Get(), &adapterInfoSize ) == ERROR_SUCCESS );
@@ -148,7 +148,7 @@
     PROFILE_FUNCTION;
 
     // Fast path for "localhost". Although we have a fast path for detecting ip4
-    // format adresses, it can still take several ms to call
+    // format addresses, it can still take several ms to call
     if ( hostName == "127.0.0.1" )
     {
         return 0x0100007f;

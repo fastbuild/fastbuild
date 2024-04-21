@@ -52,7 +52,7 @@ void TestMemPoolBlock::TestAllocs() const
     MemPoolBlock block( blockSize, blockAlignment );
 
     // allocate every size upto the block size
-    Array< void * > allocs( blockSize + 1, false );
+    Array< void * > allocs( blockSize + 1 );
     for ( size_t i = 0; i <= blockSize; ++i )
     {
         void * mem = block.Alloc();
@@ -101,7 +101,7 @@ void TestMemPoolBlock::TestSpeed()
 
     // System Allocator
     {
-        Array< void * > allocs( numAllocs, false );
+        Array< void * > allocs( numAllocs );
         const Timer t1;
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
@@ -124,7 +124,7 @@ void TestMemPoolBlock::TestSpeed()
 
     // Alloc
     {
-        Array< void * > allocs( numAllocs, false );
+        Array< void * > allocs( numAllocs );
         const Timer t2;
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
@@ -143,7 +143,7 @@ void TestMemPoolBlock::TestSpeed()
 
     // MemPoolBlock
     {
-        Array< void * > allocs( numAllocs, false );
+        Array< void * > allocs( numAllocs );
         const Timer t3;
         {
             MemPoolBlock block( allocSize, 4 );

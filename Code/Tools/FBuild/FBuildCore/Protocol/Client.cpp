@@ -459,10 +459,10 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     // Reset the Available Jobs count for this worker. This ensures that we send
     // another status update message to communicate new jobs becoming available.
     // Without this, we might return to the same count as before requesting the
-    // current job, resuling in a missed update message.
+    // current job, resulting in a missed update message.
     ss->m_NumJobsAvailable = 0;
 
-    // if tool is explicity specified, get the id of the tool manifest
+    // if tool is explicitly specified, get the id of the tool manifest
     const Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
     const ToolManifest & manifest = n->CastTo< CompilerNode >()->GetManifest();
     const uint64_t toolId = manifest.GetToolId();
@@ -492,7 +492,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     // Take note of the results compression level so we know to expect
     // compressed results
-    job->SetResultCompressionLevel( resultCompressionLevel );
+    const bool allowZstdUse = true; // We can accept Zstd results
+    job->SetResultCompressionLevel( resultCompressionLevel, allowZstdUse );
 
     {
         PROFILE_SECTION( "SendJob" );
@@ -850,7 +851,9 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         Node::DumpOutput( nullptr, failureOutput, nullptr );
     }
 
-    JobQueue::Get().FinishedProcessingJob( job, result, true ); // remote job
+    JobQueue::Get().FinishedProcessingJob( job,
+                                           result ? Node::BuildResult::eOk : Node::BuildResult::eFailed,
+                                           true ); // remote job
 }
 
 // Process( MsgRequestManifest )
@@ -959,7 +962,7 @@ Client::ServerState::ServerState()
     : m_Connection( nullptr )
     , m_CurrentMessage( nullptr )
     , m_NumJobsAvailable( 0 )
-    , m_Jobs( 16, true )
+    , m_Jobs( 16 )
     , m_Denylisted( false )
 {
     m_DelayTimer.Start( 999.0f );

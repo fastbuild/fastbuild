@@ -163,7 +163,7 @@ inline void Dependencies::Add( Node * node )
 {
     if ( GetSize() == GetCapacity() )
     {
-        GrowCapacity(); // Ammortized capacity growth
+        GrowCapacity(); // Amortized capacity growth
     }
     Dependency * newDep = &GetDependencies( m_DependencyList )[ m_DependencyList->m_Size++ ];
     INPLACE_NEW (newDep) Dependency( node );
@@ -175,7 +175,7 @@ inline void Dependencies::Add( Node * node, uint64_t stamp, bool isWeak )
 {
     if ( GetSize() == GetCapacity() )
     {
-        GrowCapacity(); // Ammortized capacity growth
+        GrowCapacity(); // Amortized capacity growth
     }
     Dependency * newDep = &GetDependencies( m_DependencyList )[ m_DependencyList->m_Size++ ];
     INPLACE_NEW (newDep) Dependency( node, stamp, isWeak );
@@ -192,7 +192,7 @@ inline void Dependencies::Add( const Dependencies & deps )
         const size_t requiredCapacity = ( GetSize() + numDepsToAdd );
         if ( requiredCapacity > GetCapacity() )
         {
-            GrowCapacity( requiredCapacity ); // Expact to exact capacity
+            GrowCapacity( requiredCapacity ); // Expand to exact capacity
         }
 
         // Add elements

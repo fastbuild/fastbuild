@@ -399,7 +399,7 @@ void TestObject::CacheUsingRelativePaths() const
             TEST_ASSERT( f.Open( objFileA ) );
             buffer.SetLength( (uint32_t)f.GetFileSize() );
             TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-            buffer.Replace( (char)0, ' ' ); // Make string seaches simpler
+            buffer.Replace( (char)0, ' ' ); // Make string searches simpler
         }
 
         // Check __FILE__ paths are relative
@@ -484,7 +484,7 @@ void TestObject::SourceMapping() const
             TEST_ASSERT( f.Open( objFile ) );
             buffer.SetLength( (uint32_t)f.GetFileSize() );
             TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-            buffer.Replace( (char)0, ' ' ); // Make string seaches simpler
+            buffer.Replace( (char)0, ' ' ); // Make string searches simpler
         }
 
         TEST_ASSERT( buffer.Find( "/fastbuild-test-mapping" ) );
@@ -521,7 +521,6 @@ void TestObject::ClangExplicitLanguageType() const
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
-        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -539,7 +538,7 @@ void TestObject::ClangExplicitLanguageType() const
 //------------------------------------------------------------------------------
 void TestObject::ClangDependencyArgs() const
 {
-    // Ensure explicitly depedency options are removed from the second pass of
+    // Ensure explicitly dependency options are removed from the second pass of
     // compilation. Some integrations (like Unreal) use these commands and process
     // the output.
     const char* const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangDependencyArgs/fbuild.bff";
@@ -566,7 +565,6 @@ void TestObject::ClangDependencyArgs() const
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
-        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -626,7 +624,6 @@ void TestObject::CLDependencyArgs() const
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
-        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -660,7 +657,6 @@ void TestObject::CLDependencyArgs() const
         options.m_AllowDistributed = true;
         options.m_NoLocalConsumptionOfRemoteJobs = false;
         options.m_AllowLocalRace = true;
-        options.m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );

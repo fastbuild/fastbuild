@@ -159,7 +159,7 @@ REGISTER_TESTS_BEGIN( TestNodeReflection )
     REGISTER_TEST( MetaPath_ArrayOfStrings_Required_EmptyElement )
 REGISTER_TESTS_END
 
-// Helper classese
+// Helper classes
 //------------------------------------------------------------------------------
 
 // BaseNode

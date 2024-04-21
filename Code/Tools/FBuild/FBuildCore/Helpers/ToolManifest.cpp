@@ -68,7 +68,7 @@ ToolManifestFile::~ToolManifestFile()
 ToolManifest::ToolManifest()
     : m_ToolId( 0 )
     , m_TimeStamp( 0 )
-    , m_Files( 0, true )
+    , m_Files( 0 )
     , m_Synchronized( false )
     , m_RemoteEnvironmentString( nullptr )
     , m_UserData( nullptr )
@@ -80,7 +80,7 @@ ToolManifest::ToolManifest()
 ToolManifest::ToolManifest( uint64_t toolId )
     : m_ToolId( toolId )
     , m_TimeStamp( 0 )
-    , m_Files( 0, true )
+    , m_Files( 0 )
     , m_Synchronized( false )
     , m_RemoteEnvironmentString( nullptr )
     , m_UserData( nullptr )
@@ -193,7 +193,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     {
         if ( !file.DoBuild() )
         {
-            return false; // DoBuild will have emitted an rrror
+            return false; // DoBuild will have emitted an error
         }
     }
 
@@ -362,7 +362,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         FileIO::SetFileLastWriteTimeToNow( localFile );
 
         // is this file already present?
-        UniquePtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
+        UniquePtr<FileStream> fileStream( FNEW( FileStream ) );
         FileStream & f = *( fileStream.Get() );
         if ( f.Open( localFile.Get() ) == false )
         {
@@ -372,7 +372,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         {
             continue; // file is not complete
         }
-        UniquePtr< char > mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
+        UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
         if ( f.Read( mem.Get(), (size_t)f.GetFileSize() ) != f.GetFileSize() )
         {
             continue; // problem reading file
@@ -383,7 +383,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         }
 
         // file present and ok
-        m_Files[ i ].SetFileLock( fileStream.Release() ); // NOTE: keep file open to prevent deletions
+        m_Files[ i ].SetFileLock( fileStream.ReleaseOwnership() ); // NOTE: keep file open to prevent deletions
         m_Files[ i ].SetSyncState( ToolManifestFile::SYNCHRONIZED );
         numFilesAlreadySynchronized++;
     }
@@ -517,7 +517,7 @@ void ToolManifest::CancelSynchronizingFiles()
         return;
     }
 
-    // If we have syncrhonized the manifest then it should be impossible to
+    // If we have synchronized the manifest then it should be impossible to
     // get here unless we're cancelling synchronization of some files
     bool atLeastOneFileCancelled = false;
 
@@ -645,14 +645,14 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     #endif
 
     // open read-only
-    UniquePtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
+    UniquePtr<FileStream> fileStream( FNEW( FileStream ) );
     if ( fileStream.Get()->Open( fileName.Get(), FileStream::READ_ONLY ) == false )
     {
         return false; // FAILED
     }
 
     // This file is now synchronized
-    f.SetFileLock( fileStream.Release() ); // NOTE: Keep file open to prevent deletion
+    f.SetFileLock( fileStream.ReleaseOwnership() ); // NOTE: Keep file open to prevent deletion
     f.SetSyncState( ToolManifestFile::SYNCHRONIZED );
 
     // is completely synchronized?
@@ -745,14 +745,14 @@ bool ToolManifestFile::LoadFile( void * & uncompressedContent, uint32_t & uncomp
         return false;
     }
     uncompressedContentSize = (uint32_t)fs.GetFileSize();
-    UniquePtr< void > mem( ALLOC( uncompressedContentSize ) );
+    UniquePtr< void, FreeDeletor > mem( ALLOC( uncompressedContentSize ) );
     if ( fs.Read( mem.Get(), uncompressedContentSize ) != uncompressedContentSize )
     {
         FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest\n", m_Name.Get() );
         return false;
     }
 
-    uncompressedContent = mem.Release();
+    uncompressedContent = mem.ReleaseOwnership();
 
     return true;
 }

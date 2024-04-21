@@ -83,14 +83,15 @@
 {
     PROFILE_FUNCTION;
 #if defined( __WINDOWS__ )
-    // see if we can get attributes
     const DWORD attributes = GetFileAttributes( fileName );
-    if ( attributes == INVALID_FILE_ATTRIBUTES )
+    if ( attributes != INVALID_FILE_ATTRIBUTES )
     {
-        return false;
+        if ( ( attributes & FILE_ATTRIBUTE_DIRECTORY ) == 0 )
+        {
+            return true; // exists and is NOT a folder
+        }
     }
-    return true; // note this might not be file!
-#elif defined( __LINUX__ ) || defined( __APPLE__ )
+#else
     struct stat st;
     if ( lstat( fileName, &st ) == 0 )
     {
@@ -99,10 +100,8 @@
             return true; // exists and is NOT a folder
         }
     }
-    return false;
-#else
-    #error Unknown platform
 #endif
+    return false;
 }
 
 // Delete directory
@@ -1803,14 +1802,14 @@ bool FileIO::FileInfo::IsReadOnly() const
 // GetFilesHelper CONSTRUCTOR
 //------------------------------------------------------------------------------
 GetFilesHelper::GetFilesHelper( size_t sizeHint )
-    : m_Files( sizeHint, true )
+    : m_Files( sizeHint )
 {
 }
 
 //------------------------------------------------------------------------------
 GetFilesHelper::GetFilesHelper( const Array<AString> & patterns, size_t sizeHint )
     : m_Patterns( &patterns )
-    , m_Files( sizeHint, true )
+    , m_Files( sizeHint )
 {
 }
 

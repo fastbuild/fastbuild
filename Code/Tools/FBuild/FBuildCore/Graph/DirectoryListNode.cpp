@@ -194,7 +194,7 @@ DirectoryListNode::~DirectoryListNode() = default;
     }
 
     // Excluded paths
-    if ( !excludeFiles.IsEmpty() )
+    if ( !excludePaths.IsEmpty() )
     {
         result += "|ePaths=";
         result.AppendList( excludePaths, '<' );
@@ -289,7 +289,7 @@ DirectoryListNode::~DirectoryListNode() = default;
         m_Stamp = xxHash3::Calc64( ms.GetData(), ms.GetSize() );
     }
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // MakePrettyName

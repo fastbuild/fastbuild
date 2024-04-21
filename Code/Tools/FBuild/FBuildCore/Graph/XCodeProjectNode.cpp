@@ -247,7 +247,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         const AString & output = g.GeneratePBXProj();
         if ( ProjectGeneratorBase::WriteIfDifferent( "XCodeProj", output, m_Name ) == false )
         {
-            return Node::NODE_RESULT_FAILED; // WriteIfDifferent will have emitted an error
+            return BuildResult::eFailed; // WriteIfDifferent will have emitted an error
         }
 
         // Combine hash
@@ -266,11 +266,11 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         if ( Env::GetLocalUserName( userName ) == false )
         {
             FLOG_ERROR( "Failed to determine username for '%s'", m_Name.Get() );
-            return Node::NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // Create the plist
-        const AString & output = g.GenerateUserSchemeMangementPList();
+        const AString & output = g.GenerateUserSchemeManagementPList();
 
         // Write to disk if missing (not written if different as this could stomp user settings)
         AStackString<> plist;
@@ -281,7 +281,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         #endif
         if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, plist ) == false )
         {
-            return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
+            return BuildResult::eFailed; // WriteIfMissing will have emitted an error
         }
 
         // Combine hash
@@ -302,7 +302,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         #endif
         if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, xcscheme ) == false )
         {
-            return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
+            return BuildResult::eFailed; // WriteIfMissing will have emitted an error
         }
 
         // Combine hash
@@ -312,7 +312,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     // Record stamp representing the contents of the files
     m_Stamp = stamp;
 
-    return Node::NODE_RESULT_OK;
+    return Node::BuildResult::eOk;
 }
 
 // PostLoad

@@ -15,6 +15,13 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
+// Defines
+//------------------------------------------------------------------------------
+#define COMPDB_COMMON_ARGS "\"-c\", " \
+                           "\"-Ipath with spaces\", " \
+                           "\"-DSTRING_DEFINE=\\\"foobar\\\"\", " \
+                           "\"-DSTRING_DEFINE_SPACES=\\\"foo bar\\\"\","
+
 // TestCompilationDatabase
 //------------------------------------------------------------------------------
 class TestCompilationDatabase : public FBuildTest
@@ -37,21 +44,11 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestCompilationDatabase )
     REGISTER_TEST( JSONEscape )
-    REGISTER_TEST( Unquote )
     REGISTER_TEST( TestObjectListInputFile )
     REGISTER_TEST( TestObjectListInputPath )
     REGISTER_TEST( TestUnityInputFile )
     REGISTER_TEST( TestUnityInputPath )
 REGISTER_TESTS_END
-
-// TestCompilationDatabase
-//------------------------------------------------------------------------------
-class CompilationDatabaseTestWrapper : public CompilationDatabase
-{
-public:
-    static void JSONEscape( AString & string ) { JSON::Escape( string ); }
-    static void Unquote( AString & string )    { CompilationDatabase::Unquote( string ); }
-};
 
 // JSONEscape
 //------------------------------------------------------------------------------
@@ -60,7 +57,7 @@ void TestCompilationDatabase::JSONEscape() const
     #define CHECK_JSONESCAPE( str, result ) \
     { \
         AStackString<> string( str ); \
-        CompilationDatabaseTestWrapper::JSONEscape( string ); \
+        JSON::Escape( string ); \
         TEST_ASSERT( string == result ); \
     }
 
@@ -74,32 +71,6 @@ void TestCompilationDatabase::JSONEscape() const
     #undef CHECK_JSONESCAPE
 }
 
-// Unquote
-//------------------------------------------------------------------------------
-void TestCompilationDatabase::Unquote() const
-{
-    #define CHECK_UNQUOTE( str, result ) \
-    { \
-        AStackString<> string( str ); \
-        CompilationDatabaseTestWrapper::Unquote( string ); \
-        TEST_ASSERT( string == result ); \
-    }
-
-    CHECK_UNQUOTE( "", "" )
-    CHECK_UNQUOTE( "\"\"", "" )
-    CHECK_UNQUOTE( "''", "" )
-    CHECK_UNQUOTE( "\"foo\"", "foo" )
-    CHECK_UNQUOTE( "'foo'", "foo" )
-    CHECK_UNQUOTE( "f\"o\"o", "foo" )
-    CHECK_UNQUOTE( "f'o'o", "foo" )
-    CHECK_UNQUOTE( "\"''\"", "''" )
-    CHECK_UNQUOTE( "'\"\"'", "\"\"" )
-    CHECK_UNQUOTE( "\"foo\"_\"bar\"", "foo_bar" )
-    CHECK_UNQUOTE( "'foo'_'bar'", "foo_bar" )
-
-    #undef CHECK_UNQUOTE
-}
-
 // TestObjectListInputFile
 //------------------------------------------------------------------------------
 void TestCompilationDatabase::TestObjectListInputFile() const
@@ -110,7 +81,7 @@ void TestCompilationDatabase::TestObjectListInputFile() const
         "    \"directory\": \"{WORKDIR}\",\n"
         "    \"file\": \"{TESTDIR}file.cpp\",\n"
         "    \"output\": \"{OUTDIR}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang.exe\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
+        "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
         "  }\n"
         "]\n"
     );
@@ -126,7 +97,7 @@ void TestCompilationDatabase::TestObjectListInputPath() const
         "    \"directory\": \"{WORKDIR}\",\n"
         "    \"file\": \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\",\n"
         "    \"output\": \"{OUTDIR}subdir{SLASH}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang.exe\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
+        "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
         "  }\n"
         "]\n"
     );
@@ -142,7 +113,7 @@ void TestCompilationDatabase::TestUnityInputFile() const
         "    \"directory\": \"{WORKDIR}\",\n"
         "    \"file\": \"{TESTDIR}file.cpp\",\n"
         "    \"output\": \"{OUTDIR}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang.exe\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
+        "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
         "  }\n"
         "]\n"
     );
@@ -158,7 +129,7 @@ void TestCompilationDatabase::TestUnityInputPath() const
         "    \"directory\": \"{WORKDIR}\",\n"
         "    \"file\": \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\",\n"
         "    \"output\": \"{OUTDIR}subdir{SLASH}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang.exe\", \"-c\", \"-Ipath with spaces\", \"-DSTRING_DEFINE=\\\"foobar\\\"\", \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
+        "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
         "  }\n"
         "]\n"
     );
@@ -207,10 +178,10 @@ void TestCompilationDatabase::DoTest( const char * bffFile, const char * target,
     AStackString<> slash;
     slash = NATIVE_SLASH_STR;
 
-    CompilationDatabaseTestWrapper::JSONEscape( workDir );
-    CompilationDatabaseTestWrapper::JSONEscape( testDir );
-    CompilationDatabaseTestWrapper::JSONEscape( outDir );
-    CompilationDatabaseTestWrapper::JSONEscape( slash );
+    JSON::Escape( workDir );
+    JSON::Escape( testDir );
+    JSON::Escape( outDir );
+    JSON::Escape( slash );
 
     result.Replace( "{WORKDIR}", workDir.Get() );
     result.Replace( "{TESTDIR}", testDir.Get() );
@@ -219,3 +190,4 @@ void TestCompilationDatabase::DoTest( const char * bffFile, const char * target,
 }
 
 //------------------------------------------------------------------------------
+#undef COMPDB_COMMON_ARGS

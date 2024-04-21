@@ -36,7 +36,7 @@ public:
     virtual uint64_t GetFileSize() const override;
 
 private:
-    NO_INLINE void GrowToAccomodate( uint64_t bytesToAccomodate );
+    NO_INLINE void GrowToAccommodate( uint64_t bytesToAccomodate );
 
     char *          m_Begin;
     char *          m_End;

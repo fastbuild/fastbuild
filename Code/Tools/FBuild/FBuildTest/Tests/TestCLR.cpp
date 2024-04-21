@@ -114,7 +114,7 @@ void TestCLR::Test() const
 
     EnsureFileDoesNotExist( "../tmp/Test/CLR/clr.lib" );
 
-    FBuildStats stats = Build( options, false, "CLR-Target" ); // dont' use DB
+    FBuildStats stats = Build( options, false, "CLR-Target" ); // don't use DB
 
     EnsureFileExists( "../tmp/Test/CLR/clr.lib" );
 
@@ -157,7 +157,7 @@ void TestCLR::TestCache() const
 
     EnsureFileDoesNotExist( "../tmp/Test/CLR/clr.lib" );
 
-    FBuildStats stats = Build( options, false, "CLR-Target" ); // dont' use DB
+    FBuildStats stats = Build( options, false, "CLR-Target" ); // don't use DB
 
     EnsureFileExists( "../tmp/Test/CLR/clr.lib" );
 
@@ -182,7 +182,7 @@ void TestCLR::TestParallelBuild() const
 
     EnsureFileDoesNotExist( "../tmp/Test/CLR/clrmulti.lib" );
 
-    FBuildStats stats = Build( options, false, "CLR-Parallel-Target" ); // dont' use DB
+    FBuildStats stats = Build( options, false, "CLR-Parallel-Target" ); // don't use DB
 
     EnsureFileExists( "../tmp/Test/CLR/clrmulti.lib" );
 

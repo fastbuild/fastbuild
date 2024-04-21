@@ -135,7 +135,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
         }
         else
         {
-            // For other ndoes, fallback to the name of the node
+            // For other nodes, fallback to the name of the node
             ctx.m_CompilerEscaped = compilerNode->GetName();
         }
     }
@@ -144,6 +144,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
 
     // Prepare arguments: tokenize, remove problematic arguments, remove extra quoting and escape.
     node->GetCompilerOptions().Tokenize( ctx.m_ArgumentsEscaped );
+    AString::RemoveQuotes( ctx.m_ArgumentsEscaped );
     for ( size_t i = 0; i < ctx.m_ArgumentsEscaped.GetSize(); ++i )
     {
         AString & argument = ctx.m_ArgumentsEscaped[ i ];
@@ -155,7 +156,6 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
             ctx.m_ArgumentsEscaped.EraseIndex( i-- );
             continue;
         }
-        Unquote( argument );
         JSON::Escape( argument );
     }
 
@@ -229,43 +229,5 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
     }
     m_Output += "]\n  },\n";
 }
-
-// Unquote
-//------------------------------------------------------------------------------
-/*static*/ void CompilationDatabase::Unquote( AString & string )
-{
-    const char * src = string.Get();
-    const char * end = string.GetEnd();
-    char * dst = string.Get();
-
-    char quoteChar = 0;
-    for ( ; src < end; ++src )
-    {
-        const char c = *src;
-        if ( ( c == '"' ) || ( c == '\'' ) )
-        {
-            if ( quoteChar == 0 )
-            {
-                // opening quote, ignore it
-                quoteChar = c;
-                continue;
-            }
-            else if ( quoteChar == c )
-            {
-                // closing quote, ignore it
-                quoteChar = 0;
-                continue;
-            }
-            else
-            {
-                // quote of the 'other' type - consider as part of token
-            }
-        }
-        *dst++ = c;
-    }
-
-    string.SetLength( (uint32_t)( dst - string.Get() ) );
-}
-
 
 //------------------------------------------------------------------------------

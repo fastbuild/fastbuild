@@ -185,7 +185,7 @@ LinkerNode::~LinkerNode()
 {
     if ( DoPreLinkCleanup() == false )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // Make sure the implib output directory exists
@@ -197,7 +197,7 @@ LinkerNode::~LinkerNode()
         if (EnsurePathExistsForFile(cleanPath) == false)
         {
             // EnsurePathExistsForFile will have emitted error
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
     }
 
@@ -205,7 +205,7 @@ LinkerNode::~LinkerNode()
     Args fullArgs;
     if ( !BuildArgs( fullArgs ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // use the exe launch dir as the working dir
@@ -233,11 +233,11 @@ LinkerNode::~LinkerNode()
         {
             if ( p.HasAborted() )
             {
-                return NODE_RESULT_FAILED;
+                return BuildResult::eAborted;
             }
 
             FLOG_ERROR( "Failed to spawn process '%s' for %s creation for '%s'", m_Linker.Get(), GetDLLOrExe(), GetName().Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // capture all of the stdout and stderr
@@ -245,12 +245,11 @@ LinkerNode::~LinkerNode()
         AString memErr;
         p.ReadAllData( memOut, memErr );
 
-        ASSERT( !p.IsRunning() );
         // Get result
         const int result = p.WaitForExit();
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eAborted;
         }
 
         // did the executable fail?
@@ -308,7 +307,7 @@ LinkerNode::~LinkerNode()
 
             // some other (genuine) linker failure
             FLOG_ERROR( "Failed to build %s. Error: %s Target: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
         else
         {
@@ -345,24 +344,23 @@ LinkerNode::~LinkerNode()
         {
             if ( stampProcess.HasAborted() )
             {
-                return NODE_RESULT_FAILED;
+                return BuildResult::eAborted;
             }
 
             FLOG_ERROR( "Failed to spawn process '%s' for '%s' stamping of '%s'", linkerStampExe->GetName().Get(), GetDLLOrExe(), GetName().Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // capture all of the stdout and stderr
         AString memOut;
         AString memErr;
         stampProcess.ReadAllData( memOut, memErr );
-        ASSERT( !stampProcess.IsRunning() );
 
         // Get result
         const int result = stampProcess.WaitForExit();
         if ( stampProcess.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eAborted;
         }
 
         // Show output if desired
@@ -378,7 +376,7 @@ LinkerNode::~LinkerNode()
         if ( result != 0 )
         {
             FLOG_ERROR( "Failed to stamp %s. Error: %s Target: '%s' StampExe: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get(), m_LinkerStampExe.Get() );
-            return NODE_RESULT_FAILED;
+            return BuildResult::eFailed;
         }
 
         // success!
@@ -387,7 +385,7 @@ LinkerNode::~LinkerNode()
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoPreLinkCleanup
@@ -450,7 +448,7 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
     PROFILE_FUNCTION;
 
     // split into tokens
-    Array< AString > tokens( 1024, true );
+    StackArray<AString, 512> tokens;
     m_LinkerOptions.Tokenize( tokens );
 
     for ( const AString & token : tokens )
@@ -749,14 +747,14 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
 //------------------------------------------------------------------------------
 /*static*/ uint32_t LinkerNode::DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args )
 {
+    // Parse args for some other flags
+    StackArray<AString, 512> tokens;
+    args.Tokenize( tokens );
+
     uint32_t flags = DetermineLinkerTypeFlags( linkerType, linkerName );
 
     if ( flags & LINK_FLAG_MSVC )
     {
-        // Parse args for some other flags
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-
         bool debugFlag = false;
         bool incrementalFlag = false;
         bool incrementalNoFlag = false;
@@ -846,10 +844,6 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
     }
     else
     {
-        // Parse args for some other flags
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-
         for ( AString & token : tokens )
         {
             token.ToLower();
@@ -1025,7 +1019,7 @@ ArgsResponseFileMode LinkerNode::GetResponseFileMode() const
 void LinkerNode::GetImportLibName( const AString & args, AString & importLibName ) const
 {
     // split to individual tokens
-    Array< AString > tokens;
+    StackArray<AString, 512> tokens;
     args.Tokenize( tokens );
 
     const AString * const end = tokens.End();
@@ -1065,19 +1059,19 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
                                                bool msvc )
 {
     // split to individual tokens
-    Array< AString > tokens;
+    StackArray<AString, 512> tokens;
     args.Tokenize( tokens );
 
     bool ignoreAllDefaultLibs = false;
     bool isBstatic = false; // true while -Bstatic option is active
-    Array< AString > defaultLibsToIgnore( 8, true );
-    Array< AString > defaultLibs( 16, true );
-    Array< AString > libs( 16, true );
-    Array< AString > dashlDynamicLibs( 16, true );
-    Array< AString > dashlStaticLibs( 16, true );
-    Array< AString > dashlFiles( 16, true );
-    Array< AString > libPaths( 16, true );
-    Array< AString > envLibPaths( 32, true );
+    StackArray<AString> defaultLibsToIgnore;
+    StackArray<AString> defaultLibs;
+    StackArray<AString> libs;
+    StackArray<AString> dashlDynamicLibs;
+    StackArray<AString> dashlStaticLibs;
+    StackArray<AString> dashlFiles;
+    StackArray<AString> libPaths;
+    StackArray<AString> envLibPaths;
 
     // extract lib path from system if present
     AStackString< 1024 > libVar;
@@ -1551,7 +1545,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // a previously declared external file?
     if ( node->GetType() == Node::FILE_NODE )
     {
-        // can link directy against it
+        // can link directly against it
         nodes.Add( node );
         return true;
     }
@@ -1567,7 +1561,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // an external executable?
     if ( node->GetType() == Node::EXEC_NODE )
     {
-        // depend on ndoe - will use exe output at build time
+        // depend on node - will use exe output at build time
         nodes.Add( node );
         return true;
     }

@@ -159,19 +159,19 @@ void WorkerThread::WaitForStop()
         // process the work
         const Node::BuildResult result = JobQueue::DoBuild( job );
 
-        if ( result == Node::NODE_RESULT_FAILED )
+        if ( result == Node::BuildResult::eFailed )
         {
             FBuild::OnBuildError();
         }
 
-        if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
+        if ( result == Node::BuildResult::eNeedSecondPass )
         {
             // Only distributable jobs have two passes, and the 2nd pass is always distributable
             JobQueue::Get().QueueDistributableJob( job );
         }
         else
         {
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), false );
+            JobQueue::Get().FinishedProcessingJob( job, result, false );
         }
 
         return true; // did some work
@@ -186,12 +186,12 @@ void WorkerThread::WaitForStop()
             // process the work
             const Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
 
-            if ( result == Node::NODE_RESULT_FAILED )
+            if ( result == Node::BuildResult::eFailed )
             {
                 FBuild::OnBuildError();
             }
 
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
+            JobQueue::Get().FinishedProcessingJob( job, result, true ); // returning a remote job
 
             return true; // did some work
         }
@@ -206,7 +206,7 @@ void WorkerThread::WaitForStop()
             // process the work
             const Node::BuildResult result = JobQueueRemote::DoBuild( job, true );
 
-            if ( result == Node::NODE_RESULT_FAILED )
+            if ( result == Node::BuildResult::eFailed )
             {
                 // Ignore error if cancelling due to a remote race win
                 if ( job->GetDistributionState() != Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
@@ -215,7 +215,7 @@ void WorkerThread::WaitForStop()
                 }
             }
 
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
+            JobQueue::Get().FinishedProcessingJob( job, result, true ); // returning a remote job
 
             return true; // did some work
         }

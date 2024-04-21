@@ -51,7 +51,7 @@ public:
                                             const Function * function,
                                             const AString & unknownVariableName );
     static void Error_1010_UnknownConstruct( const BFFToken * iter );
-    static void Error_1011_UnnamedModifcationMustFollowAssignment( const BFFToken * iter );
+    static void Error_1011_UnnamedModificationMustFollowAssignment( const BFFToken * iter );
     static void Error_1012_UnexpectedEndOfFile( const BFFToken * iter );
     static void Error_1013_UnexpectedCharInVariableName( const BFFToken * iter,
                                                        const Function * function );
@@ -59,8 +59,8 @@ public:
                                                 uint32_t length,
                                                 uint32_t maxLength );
     static void Error_1015_UnknownFunction( const BFFToken * iter );
-    static void Error_1016_UnexepectedCharFollowingVariableName( const BFFToken * iter );
-    static void Error_1017_UnexepectedCharInVariableValue( const BFFToken * iter );
+    static void Error_1016_UnexpectedCharFollowingVariableName( const BFFToken * iter );
+    static void Error_1017_UnexpectedCharInVariableValue( const BFFToken * iter );
     static void Error_1018_IntegerValueCouldNotBeParsed( const BFFToken * iter );
     static void Error_1020_FunctionCanOnlyBeInvokedOnce( const BFFToken * iter,
                                                        const Function * function );

@@ -40,7 +40,7 @@ IdleDetection::IdleDetection()
     , m_IsIdleCurrent( 0.0f )
     , m_IdleSmoother( 0 )
     , m_IdleFloatSmoother( 0 )
-    , m_ProcessesInOurHierarchy( 32, true )
+    , m_ProcessesInOurHierarchy( 32 )
     , m_LastTimeIdle( 0 )
     , m_LastTimeBusy( 0 )
 {
@@ -124,8 +124,8 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
         m_LastTimeBusy = ( userTime + kernTime );
     }
 
-    // if the total CPU time is below the idle theshold, we don't need to
-    // check to know acurately what the cpu use of FASTBuild is
+    // if the total CPU time is below the idle threshold, we don't need to
+    // check to know accurately what the cpu use of FASTBuild is
     if ( m_CPUUsageTotal < (float)idleThresholdPercent )
     {
         idleCurrent = 1.0f;
@@ -198,7 +198,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
         // First line should be system totals
         if ( procStat.BeginsWithI( "cpu" ) )
         {
-            Array< uint32_t > values( 10, true );
+            Array< uint32_t > values( 10 );
             const char * pos = procStat.Get() + 4; // skip "cpu "
             for ( ;; )
             {
@@ -262,7 +262,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
         if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pi.m_PID ).Get(),
                                    processInfo ) )
         {
-            Array< AString > tokens( 32, true );
+            Array< AString > tokens( 32 );
             processInfo.Tokenize( tokens, ' ' );
             if ( tokens.GetSize() >= 15 )
             {
@@ -332,7 +332,7 @@ void IdleDetection::UpdateProcessList()
                     }
                     else
                     {
-                        // gracefully handle failure to open proces
+                        // gracefully handle failure to open process
                         // maybe it closed before we got to it
                     }
                 }
@@ -409,7 +409,7 @@ void IdleDetection::UpdateProcessList()
                 }
 
                 // Item index 3 (0-based) is the parent PID
-                Array< AString > tokens( 32, true );
+                Array< AString > tokens( 32 );
                 processInfo.Tokenize( tokens, ' ' );
                 const uint32_t parentPID = strtoul( tokens[ 3 ].Get(), nullptr, 10 );
 

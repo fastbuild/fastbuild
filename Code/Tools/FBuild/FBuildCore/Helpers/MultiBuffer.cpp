@@ -94,7 +94,7 @@ bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * 
         }
     }
 
-    // Check we wrote as much as we originaly calculated
+    // Check we wrote as much as we originally calculated
     ASSERT( m_WriteStream->GetSize() == memSize );
     return true;
 }
@@ -157,13 +157,20 @@ bool MultiBuffer::ExtractFile( size_t index, const AString& fileName ) const
 
 // Compress
 //------------------------------------------------------------------------------
-void MultiBuffer::Compress( int32_t compressionLevel )
+void MultiBuffer::Compress( int32_t compressionLevel, bool allowZstdUse )
 {
     ASSERT( m_WriteStream ); // Data needs to be populated
 
     // Compress the data
     Compressor c;
-    c.Compress( m_WriteStream->GetData(), m_WriteStream->GetSize(), compressionLevel );
+    if ( allowZstdUse )
+    {
+        c.CompressZstd( m_WriteStream->GetData(), m_WriteStream->GetSize(), compressionLevel );
+    }
+    else
+    {
+        c.Compress( m_WriteStream->GetData(), m_WriteStream->GetSize(), compressionLevel );
+    }
 
     // Transfer compressed results
     const size_t compressedSize = c.GetResultSize();

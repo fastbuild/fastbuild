@@ -48,7 +48,7 @@ void TestHash::CompareHashTimes_Large() const
     #else
         const size_t dataSize( 64 * 1024 * 1024 );
     #endif
-    UniquePtr< uint64_t > data( (uint64_t *)ALLOC( dataSize ) );
+    UniquePtr< uint64_t, FreeDeletor > data( (uint64_t *)ALLOC( dataSize ) );
     for ( size_t i = 0; i < dataSize / sizeof( uint64_t ); ++i )
     {
         data.Get()[ i ] = ( (uint64_t)r.GetRand() << 32 ) | (uint64_t)r.GetRand();
@@ -148,7 +148,7 @@ void TestHash::CompareHashTimes_Large() const
 void TestHash::CompareHashTimes_Small() const
 {
     // some different strings to hash
-    Array< AString > strings( 32, true );
+    Array< AString > strings( 32 );
     strings.EmplaceBack( " " );
     strings.EmplaceBack( "shOrt" );
     strings.EmplaceBack( "MediumstringMediumstring123456789" );

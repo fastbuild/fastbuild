@@ -120,7 +120,7 @@ def prepare_output_folders(version):
             os.mkdir(OUTPUT_ROOT)
         if not os.path.exists(f'{OUTPUT_ROOT}/{version}'):
             os.mkdir(f'{OUTPUT_ROOT}/{version}')
-        print_ok()
+        print_ok(f'{OUTPUT_ROOT}/{version}')
     except:
         print_fail('FAIL', 'Directory creation failed')
         return False
@@ -182,6 +182,7 @@ def get_files_recurse(base_path, out_files):
                file.endswith('.d') or \
                file.endswith('.fdb') or \
                file.endswith('.pyc') or \
+               file == 'compile_commands.json' or \
                file == 'fbuild_profile.json' or \
                file == 'profile.json':
                continue;

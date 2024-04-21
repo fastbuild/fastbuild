@@ -124,10 +124,9 @@ OSWindow::OSWindow( void * hInstance )
     #if defined( __WINDOWS__ )
         , m_HInstance( hInstance )
     #endif
-    , m_ChildWidgets( 0, true )
 {
     #if defined( __WINDOWS__ )
-        // Obtain the executable HINSTANCE if not explictily provided
+        // Obtain the executable HINSTANCE if not explicitly provided
         if ( m_HInstance == nullptr )
         {
             m_HInstance = GetModuleHandle( nullptr );
@@ -265,7 +264,7 @@ void OSWindow::StartMessagePump()
     #if defined( __WINDOWS__ )
         for ( ;; )
         {
-            // Wait for a messsage
+            // Wait for a message
             MSG msg;
             const BOOL bRet = GetMessage( &msg, nullptr, 0, 0 );
 

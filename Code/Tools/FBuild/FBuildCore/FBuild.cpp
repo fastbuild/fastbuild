@@ -66,7 +66,7 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_SmoothedProgressTarget( 0.0f )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
-    , m_ImportedEnvironmentVars( 0, true )
+    , m_ImportedEnvironmentVars( 0 )
 {
     #ifdef DEBUG_CRT_MEMORY_USAGE
         _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF |
@@ -236,7 +236,7 @@ bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );
 
-    Array< AString > targets( 1, false );
+    Array< AString > targets( 1 );
     targets.Append( target );
     return Build( targets );
 }
@@ -254,7 +254,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
         const AString & target = targets[ i ];
 
         // get the node being requested (search for exact match, to find aliases etc first)
-        Node * node = m_DependencyGraph->FindNodeInternal( target );
+        Node * node = m_DependencyGraph->FindNodeInternal( target, 0 );
         if ( node == nullptr )
         {
             // failed to find the node, try looking for a fully pathed equivalent
@@ -266,7 +266,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
             FLOG_ERROR( "Unknown build target '%s'", target.Get() );
 
             // Gets the 5 targets with minimal distance to user input
-            Array< NodeGraph::NodeWithDistance > nearestNodes( 5, false );
+            Array< NodeGraph::NodeWithDistance > nearestNodes( 5 );
             m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
 
             if ( false == nearestNodes.IsEmpty() )
@@ -306,8 +306,8 @@ bool FBuild::Build( const Array< AString > & targets )
     // output per-target results
     for ( size_t i=0; i<targets.GetSize(); ++i )
     {
-        const bool nodeResult = ( deps[ i ].GetNode()->GetState() == Node::UP_TO_DATE );
-        OUTPUT( "FBuild: %s: %s\n", nodeResult ? "OK" : "Error: BUILD FAILED", targets[ i ].Get() );
+        const char * const nodeStatus = GetFinalStatus( deps[ i ].GetNode() );
+        OUTPUT( "FBuild: %s: %s\n", nodeStatus, targets[ i ].Get() );
     }
 
     return result;
@@ -518,7 +518,7 @@ void FBuild::SaveDependencyGraph( MemoryStream & stream, const char* nodeGraphDB
     }
 
     // even if the build has failed, we can still save the graph.
-    // This is desireable because:
+    // This is desirable because:
     // - it will save parsing the bff next time
     // - it will record the items that did build, so they won't build again
     if ( m_Options.m_SaveDBOnCompletion )
@@ -673,7 +673,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
     // recalculate progress estimate?
     if ( ( timeNow - m_LastProgressCalcTime ) >= CALC_FREQUENCY )
     {
-        PROFILE_SECTION( "CalcPogress" );
+        PROFILE_SECTION( "CalcProgress" );
 
         FBuildStats & bs = m_BuildStats;
         bs.m_NodeTimeProgressms = 0;
@@ -914,6 +914,86 @@ uint32_t FBuild::GetNumWorkerConnections() const
 {
     MutexHolder mh( m_ClientLifetimeMutex );
     return (uint32_t)( m_Client ? m_Client->GetNumConnections() : 0 );
+}
+
+// GetFinalStatus
+//------------------------------------------------------------------------------
+const char * FBuild::GetFinalStatus( const Node * node )
+{
+    PROFILE_FUNCTION;
+
+    // Determine if a given target is "OK", "FAILED" or "Incomplete"
+
+    // Prepare nodes for recursive sweep
+    m_DependencyGraph->SetBuildPassTagForAllNodes( eFindFailureNotProcessed );
+
+    // Check the top level target for failures or completion already noted
+    // during the build, and if that's indeterminate (due to cancellation for
+    // example), recursively examine deps to determine status
+    switch ( node->GetState() )
+    {
+        case Node::State::UP_TO_DATE:   return "OK";
+        case Node::State::FAILED:       return "Error: BUILD FAILED";
+        default:
+        {
+            // Search dependencies recursively for failures
+            if ( GetFinalStatusFailure( node->GetPreBuildDependencies() ) ||
+                 GetFinalStatusFailure( node->GetStaticDependencies() ) ||
+                 GetFinalStatusFailure( node->GetDynamicDependencies() ) )
+            {
+                return "Error: BUILD FAILED";
+            }
+
+            // No dependencies have failed, so target is incomplete
+            return "Incomplete";
+        }
+    }
+}
+
+// GetFinalStatusFailure
+//------------------------------------------------------------------------------
+bool FBuild::GetFinalStatusFailure( const Dependencies & deps ) const
+{
+    for ( const Dependency & dep : deps )
+    {
+        const Node * node = dep.GetNode();
+
+        // Skip already seen nodes. This greatly improves performance by avoiding
+        // redundant tree traversals.
+        // (Additionally this handles cyclic dependencies - while those are
+        //  detected and reported as errors, during shutdown we'll still go
+        //  through this code path)
+        if ( node->GetBuildPassTag() == eFindFailureProcessed )
+        {
+            continue;
+        }
+        node->SetBuildPassTag( eFindFailureProcessed );
+
+        // If a dependency fails, the target will fail eventually even if it
+        // has not yet failed
+        if ( node->GetState() == Node::State::FAILED )
+        {
+            return true; // Bubble up the failure
+        }
+
+        // If a target is completed successfully, siblings may still cause
+        // failures so this alone doesn't determine success
+        if ( node->GetState() == Node::State::UP_TO_DATE )
+        {
+            continue; // Skip completed subtrees as no failures can exist below
+        }
+
+        // Recurse into dependencies
+        if ( GetFinalStatusFailure( node->GetPreBuildDependencies() ) ||
+             GetFinalStatusFailure( node->GetStaticDependencies() ) ||
+             GetFinalStatusFailure( node->GetDynamicDependencies() ) )
+        {
+            return true; // Bubble up the failure
+        }
+    }
+
+    // No failures found
+    return false;
 }
 
 //------------------------------------------------------------------------------

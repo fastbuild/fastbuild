@@ -29,6 +29,7 @@ private:
     void Build_ExecCommand_ExpectedFailures() const;
     void Build_ExecEnvCommand() const;
     void Exclusions() const;
+    void PreBuildDependencies() const;
 };
 
 // Register Tests
@@ -43,6 +44,7 @@ REGISTER_TESTS_BEGIN( TestExec )
     REGISTER_TEST( Build_ExecCommand_ExpectedFailures )
     REGISTER_TEST( Build_ExecEnvCommand )
     REGISTER_TEST( Exclusions )
+    REGISTER_TEST( PreBuildDependencies )
 REGISTER_TESTS_END
 
 // Helpers
@@ -305,7 +307,7 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // build
-    Array< AString > targets( 2, false );
+    Array< AString > targets( 2 );
     targets.EmplaceBack( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" );
     targets.EmplaceBack( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" );
     TEST_ASSERT( !fBuild.Build( targets ) );
@@ -367,6 +369,18 @@ void TestExec::Exclusions() const
         TEST_ASSERT( testNode->GetDynamicDependencies().GetSize() == 1 );
         TEST_ASSERT( testNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "FileB.txt" ) );
     }
+}
+
+//------------------------------------------------------------------------------
+void TestExec::PreBuildDependencies() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/PreBuildDependencies/prebuilddependencies.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( "Exec" ) );
 }
 
 //------------------------------------------------------------------------------

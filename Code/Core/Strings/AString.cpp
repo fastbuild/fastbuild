@@ -119,7 +119,7 @@ AString::~AString()
         // a) NOT be pointing to the shared global string
         ASSERT( m_Contents != s_EmptyString );
         // b) NOT be pointing to an internal buffer
-        // Depending on the memory alloctor, it could be valid to have an allocation
+        // Depending on the memory allocator, it could be valid to have an allocation
         // immediately after the string itself, so we can't have an assert for this
         FREE( m_Contents );
     }
@@ -305,8 +305,8 @@ int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... ) const
 //------------------------------------------------------------------------------
 void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
 {
-    Array< const char * > tokenStarts;
-    Array< const char * > tokenEnds;
+    StackArray<const char *, 64> tokenStarts;
+    StackArray<const char *, 64> tokenEnds;
 
     const char * pos = Get();
     const char * end = GetEnd();
@@ -329,21 +329,30 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
 
         // hit a quote?
         const char c = *pos;
-        if ( ( c == '"' ) || ( c == '\'' ) )
+        if ( c == '"' )
         {
             if ( quoteChar == 0 )
             {
                 // opening quote
                 quoteChar = c;
             }
-            else if ( quoteChar == c )
-            {
-                // closing quote
-                quoteChar = 0;
-            }
             else
             {
-                // quote of the 'other' type - consider as part of token
+                // closing quote
+                ASSERT( quoteChar == c );
+                quoteChar = 0;
+            }
+        }
+        else if ( c == '\\' ) // Escape char
+        {
+            // skip over escaped quotes
+            if ( ( pos + 1 ) < end )
+            {
+                const char nextChar = pos[ 1 ];
+                if ( nextChar == '"' )
+                {
+                    ++pos;
+                }
             }
         }
         else if ( c == splitChar )
@@ -385,6 +394,63 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
     for ( size_t i = 0; i < numTokens; ++i )
     {
         tokens[ i ].Assign( tokenStarts[ i ], tokenEnds[ i ] );
+    }
+}
+
+// RemoveQuotes
+//------------------------------------------------------------------------------
+/*static*/ void AString::RemoveQuotes( Array< AString > & inoutTokens )
+{
+    for ( AString & token : inoutTokens )
+    {
+        // Remove quotes in-place
+        char * src = token.Get();
+        char * dst = token.Get();
+        const char * const end = token.GetEnd();
+        char quoteChar = 0;
+        while ( src < end )
+        {
+            const char c = *src;
+            if ( c == '"' )
+            {
+                if ( quoteChar == 0 )
+                {
+                    // opening quote - remove from output
+                    quoteChar = c;
+                    ++src;
+                    continue;
+                }
+                else
+                {
+                    // closing quote
+                    ASSERT( quoteChar == c );
+                    quoteChar = 0;
+                    ++src;
+                    continue; // Remove quote from token
+                }
+            }
+            else if ( c == '\\' ) // Escape char
+            {
+                // collapse escaped quotes
+                if ( ( src + 1 ) < end )
+                {
+                    const char nextChar = src[ 1 ];
+                    if ( nextChar == '"' )
+                    {
+                        // Replace escaped char with quote
+                        src += 2;
+                        *dst = nextChar;
+                        ++dst;
+                        continue;
+                    }
+                }
+            }
+
+            *dst = *src;
+            ++dst;
+            ++src;
+        }
+        token.SetLength( static_cast<uint32_t>( dst - token.Get() ) );
     }
 }
 

@@ -30,8 +30,8 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::ProjectGeneratorBase()
-    : m_Folders( 128, true )
-    , m_Files( 4096, true )
+    : m_Folders( 128 )
+    , m_Files( 4096 )
 {
     m_RootFolder = FNEW( Folder );
     m_Folders.Append( m_RootFolder );
@@ -83,7 +83,7 @@ void ProjectGeneratorBase::GetProjectRelativePath_Deprecated( const AString & fi
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::Folder * ProjectGeneratorBase::GetFolderFor( const AString & path )
 {
-    // Get the path exluding the file file or dir
+    // Get the path excluding the file file or dir
     const char * lastSlash = path.FindLast( NATIVE_SLASH );
     if ( ( lastSlash == nullptr ) || ( lastSlash == path.Get() ) )
     {
@@ -219,7 +219,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         else
         {
             // check content
-            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr< char, FreeDeletor > mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "%s - Failed to read '%s'", generatorId, fileName.Get() );

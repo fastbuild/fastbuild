@@ -20,7 +20,7 @@
     {
         const char c = *pos;
 
-        // congrol character?
+        // control character?
         if ( c <= 0x1F )
         {
             // escape with backslash if possible

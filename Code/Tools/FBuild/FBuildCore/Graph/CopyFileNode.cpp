@@ -63,13 +63,13 @@ CopyFileNode::~CopyFileNode() = default;
     if ( FileIO::FileCopy( GetSourceNode()->GetName().Get(), m_Name.Get() ) == false )
     {
         FLOG_ERROR( "Copy failed. Error: %s Target: '%s'", LAST_ERROR_STR, GetName().Get() );
-        return NODE_RESULT_FAILED; // copy failed
+        return BuildResult::eFailed; // copy failed
     }
 
     if ( FileIO::SetReadOnly( m_Name.Get(), false ) == false )
     {
         FLOG_ERROR( "Copy read-only flag set failed. Error: %s Target: '%s'", LAST_ERROR_STR, GetName().Get() );
-        return NODE_RESULT_FAILED; // failed to remove read-only
+        return BuildResult::eFailed; // failed to remove read-only
     }
 
     // Ensure the dst file's "last modified" time is equal to or newer than the source
@@ -83,12 +83,12 @@ CopyFileNode::~CopyFileNode() = default;
         {
             FLOG_ERROR( "Copy set last write time failed. Error: %s Target: '%s'", LAST_ERROR_STR, GetName().Get() );
             m_Stamp = 0;
-            return NODE_RESULT_FAILED; // failed to set the time
+            return BuildResult::eFailed; // failed to set the time
         }
         dstStamp = srcStamp;
     }
     m_Stamp = dstStamp;
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // EmitCompilationMessage

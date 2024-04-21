@@ -223,11 +223,11 @@ private:
     };
     bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
-    bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
+    BuildResult BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     bool LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
     bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
-    bool BuildFinalOutput( Job * job, const Args & fullArgs ) const;
+    BuildResult BuildFinalOutput( Job * job, const Args & fullArgs ) const;
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
     bool ShouldUseDeoptimization() const;
@@ -240,7 +240,7 @@ private:
 
     void CreateDriver( ObjectNode::CompilerFlags flags,
                        const AString & remoteSourceRoot,
-                       UniquePtr<CompilerDriverBase, DeleteDeletor> & outDriver ) const;
+                       UniquePtr<CompilerDriverBase> & outDriver ) const;
 
     friend class FunctionObjectList;
 
@@ -251,12 +251,12 @@ private:
         ~CompileHelper();
 
         // start compilation
-        bool SpawnCompiler( Job * job,
-                            const AString & name,
-                            const CompilerNode * compilerNode,
-                            const AString & compiler,
-                            const Args & fullArgs,
-                            const char * workingDir = nullptr );
+        Node::BuildResult SpawnCompiler( Job * job,
+                                         const AString & name,
+                                         const CompilerNode * compilerNode,
+                                         const AString & compiler,
+                                         const Args & fullArgs,
+                                         const char * workingDir = nullptr );
 
         // determine overall result
         inline int                      GetResult() const { return m_Result; }

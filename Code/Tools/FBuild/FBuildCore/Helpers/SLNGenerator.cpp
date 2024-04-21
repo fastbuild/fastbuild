@@ -45,8 +45,8 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
     const char * lastSlash = solutionFile.FindLast( NATIVE_SLASH );
     AStackString<> solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
 
-    Array< AString > solutionProjectsToFolder( projects.GetSize(), true );
-    Array< AString > solutionFolderPaths( solutionFolders.GetSize(), true );
+    Array< AString > solutionProjectsToFolder( projects.GetSize() );
+    Array< AString > solutionFolderPaths( solutionFolders.GetSize() );
 
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
@@ -144,7 +144,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
                projectTypeGuid.Get(), projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
 
         // Manage dependencies
-        Array< AString > dependencyGUIDs( 64, true );
+        Array< AString > dependencyGUIDs( 64 );
         for ( const SolutionDependency & deps : solutionDependencies )
         {
             // is the set of deps relevant to this project?

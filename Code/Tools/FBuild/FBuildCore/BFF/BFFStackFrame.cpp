@@ -19,7 +19,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFStackFrame::BFFStackFrame()
-    : m_Variables( 32, true )
+    : m_Variables( 32 )
 {
     // hook into top of stack chain
     m_Next = s_StackHead;
@@ -43,7 +43,7 @@ BFFStackFrame::~BFFStackFrame()
     }
     else
     {
-        // If part of chain, resore parent to head
+        // If part of chain, restore parent to head
         ASSERT( m_OldHeadToRestore == nullptr );
         s_StackHead = m_Next;
     }

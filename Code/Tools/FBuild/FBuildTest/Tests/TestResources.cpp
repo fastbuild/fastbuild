@@ -51,7 +51,7 @@ void TestResources::BuildResource() const
     // make sure all output files are as expected
     EnsureFileExists( binRes );
 
-    // spawn exe which does a runtime check that the resource is availble
+    // spawn exe which does a runtime check that the resource is available
     Process p;
     TEST_ASSERT( p.Spawn( "../tmp/Test/Resources/exe.exe", nullptr, nullptr, nullptr ) );
     const int ret = p.WaitForExit();

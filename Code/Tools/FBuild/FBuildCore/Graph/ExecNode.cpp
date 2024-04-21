@@ -199,11 +199,11 @@ ExecNode::~ExecNode()
     {
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -215,7 +215,7 @@ ExecNode::~ExecNode()
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return NODE_RESULT_FAILED;
+        return BuildResult::eAborted;
     }
     const bool buildFailed = ( result != m_ExecReturnCode );
 
@@ -232,7 +232,7 @@ ExecNode::~ExecNode()
     if ( buildFailed )
     {
         FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     if ( m_ExecUseStdOutAsOutput == true )
@@ -250,7 +250,7 @@ ExecNode::~ExecNode()
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // EmitCompilationMessage
@@ -287,7 +287,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 void ExecNode::GetFullArgs(AString & fullArgs) const
 {
     // split into tokens
-    Array< AString > tokens(1024, true);
+    Array< AString > tokens( 1024 );
     m_ExecArguments.Tokenize(tokens);
 
     AStackString<> quote("\"");
@@ -345,7 +345,7 @@ void ExecNode::GetFullArgs(AString & fullArgs) const
 void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AString & post) const
 {
     bool first = true; // Handle comma separation
-    for ( size_t i=1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (exectuable)
+    for ( size_t i=1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (executable)
     {
         const Dependency & dep = m_StaticDependencies[ i ];
         const Node * n = dep.GetNode();

@@ -127,7 +127,7 @@ template < typename T, typename VarOrLiteral >
 bool Is( const VarOrLiteral * token );
 
 template <>
-bool Is<Bool, BFFToken>( const BFFToken * token ) { return ( token != nullptr ) && token->IsBooelan(); }
+bool Is<Bool, BFFToken>( const BFFToken * token ) { return ( token != nullptr ) && token->IsBoolean(); }
 
 template <>
 bool Is<Number, BFFToken>( const BFFToken * token ) { return ( token != nullptr ) && token->IsNumber(); }
@@ -157,7 +157,7 @@ template < typename T, typename VarOrLiteral >
 typename T::ReturnType Get( const VarOrLiteral & varOrToken );
 
 template <>
-Bool::ReturnType Get<Bool, BFFToken>( const BFFToken & token ) { ASSERT( token.IsBooelan() ); return token.GetBoolean(); }
+Bool::ReturnType Get<Bool, BFFToken>( const BFFToken & token ) { ASSERT( token.IsBoolean() ); return token.GetBoolean(); }
 
 template <>
 Number::ReturnType Get<Number, BFFToken>( const BFFToken & token ) { ASSERT( token.IsNumber() ); return token.GetValueInt(); }
@@ -265,7 +265,7 @@ public:
             else
             {
                 const BFFVariable::VarType tokenVarType =
-                    m_Token.IsBooelan() ? BFFVariable::VarType::VAR_BOOL :
+                    m_Token.IsBoolean() ? BFFVariable::VarType::VAR_BOOL :
                     m_Token.IsNumber() ? BFFVariable::VarType::VAR_INT :
                     m_Token.IsString() ? BFFVariable::VarType::VAR_STRING :
                     BFFVariable::VarType::VAR_ANY;
@@ -393,7 +393,7 @@ static bool CompareStrings( const Function * function, const AString & lhs, cons
         case BoolOperator::OP_IN:
         case BoolOperator::OP_NOT_IN:
         {
-            ASSERT( false ); // Should be hanlded in another function.
+            ASSERT( false ); // Should be handled in another function.
             return false;
         }
         case BoolOperator::OP_AND:
@@ -490,7 +490,7 @@ static bool ParseOperator( const Function * function,
         op = BoolOperator::OP_LESS_THAN_OR_EQUAL;
     }
     // <  (must be checked after <=)
-    else if ( iter->IsOperator( "<" ) )
+    else if ( iter->IsOperator( '<' ) )
     {
         op = BoolOperator::OP_LESS_THAN;
     }
@@ -500,7 +500,7 @@ static bool ParseOperator( const Function * function,
         op = BoolOperator::OP_GREATER_THAN_OR_EQUAL;
     }
     // >  (must be checked after >=)
-    else if ( iter->IsOperator( ">" ) )
+    else if ( iter->IsOperator( '>' ) )
     {
         op = BoolOperator::OP_GREATER_THAN;
     }
@@ -693,7 +693,7 @@ static bool ParseUnaryBooleanOperand( const Function * function, BFFTokenRange &
 //------------------------------------------------------------------------------
 static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
 {
-    if ( !iter->IsOperator( "!" ) )
+    if ( !iter->IsOperator( '!' ) )
     {
         Error::Error_1070_UnexpectedOperator( iter.GetCurrent(), function );
         return false;

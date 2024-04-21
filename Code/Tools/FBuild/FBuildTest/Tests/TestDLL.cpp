@@ -70,7 +70,7 @@ void TestDLL::TestSingleDLL() const
     TEST_ASSERT( fBuild.Build( dll ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetSingleDLLDBFileName() ) );
 
-    // make sure all output files are as expecter
+    // make sure all output files are as expected
     EnsureFileExists( dll );
 
     // Check stats
@@ -122,7 +122,7 @@ void TestDLL::TestTwoDLLs() const
     TEST_ASSERT( fBuild.Build( dllB ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetTwoDLLsDBFileName() ) );
 
-    // make sure all output files are as expecter
+    // make sure all output files are as expected
     EnsureFileExists( dllA );
     EnsureFileExists( dllB );
 
@@ -220,7 +220,7 @@ void TestDLL::TestDLLWithPCH() const
     TEST_ASSERT( fBuild.Build( dllPCH ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetDLLWithPCHDBFileName() ) );
 
-    // make sure all output files are as expecter
+    // make sure all output files are as expected
     EnsureFileExists( dllPCH );
 
     // Check stats
@@ -272,7 +272,7 @@ void TestDLL::TestExeWithDLL() const
     TEST_ASSERT( fBuild.Build( exe ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetExeWithDLLDBFileName() ) );
 
-    // make sure all output files are as expecter
+    // make sure all output files are as expected
     EnsureFileExists( exe );
 
     // Check stats

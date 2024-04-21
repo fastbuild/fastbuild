@@ -31,11 +31,12 @@ AliasNode::AliasNode()
 /*virtual*/ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     Dependencies targets( 32 );
-    const bool allowCopyDirNodes = true;
-    const bool allowUnityNodes = true;
-    const bool allowRemoveDirNodes = true;
-    const bool allowCompilerNodes = true;
-    if ( !Function::GetNodeList( nodeGraph, iter, function, ".Targets", m_Targets, targets, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
+    GetNodeListOptions options;
+    options.m_AllowCopyDirNodes = true;
+    options.m_AllowUnityNodes = true;
+    options.m_AllowRemoveDirNodes = true;
+    options.m_AllowCompilerNodes = true;
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".Targets", m_Targets, targets, options ) )
     {
         return false; // GetNodeList will have emitted an error
     }
@@ -64,11 +65,11 @@ AliasNode::~AliasNode() = default;
             {
                 // ... the build should fail
                 FLOG_ERROR( "Alias: %s\nFailed due to missing file: %s\n", GetName().Get(), n->GetName().Get() );
-                return Node::NODE_RESULT_FAILED;
+                return BuildResult::eFailed;
             }
         }
     }
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 //------------------------------------------------------------------------------

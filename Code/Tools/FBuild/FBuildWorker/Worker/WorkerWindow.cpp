@@ -158,10 +158,10 @@ WorkerWindow::WorkerWindow()
 
     #if defined( __WINDOWS__ )
         // Display the window and minimize it if needed
-        if ( WorkerSettings::Get().GetStartMinimzed() )
+        if ( WorkerSettings::Get().GetStartMinimized() )
         {
             UpdateWindow( (HWND)GetHandle() );
-            ToggleMinimized(); // minimze
+            ToggleMinimized(); // minimize
         }
         else
         {
@@ -247,7 +247,7 @@ void WorkerWindow::Work()
         ToggleMinimized();
     #endif
 
-    return true; // Stop window closeing (since we already handled it)
+    return true; // Stop window closing (since we already handled it)
 }
 
 // OnQuit

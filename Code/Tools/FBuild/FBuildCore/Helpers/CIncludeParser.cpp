@@ -19,10 +19,10 @@
 //------------------------------------------------------------------------------
 CIncludeParser::CIncludeParser()
     : m_LastCRC1( 0 )
-    , m_CRCs1( 4096, true )
+    , m_CRCs1( 4096 )
     , m_LastCRC2( 0 )
-    , m_CRCs2( 4096, true )
-    , m_Includes( 4096, true )
+    , m_CRCs2( 4096 )
+    , m_Includes( 4096 )
 #ifdef DEBUG
     , m_NonUniqueCount( 0 )
 #endif
@@ -250,7 +250,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 
 // Parse
 //------------------------------------------------------------------------------
-// TODO:C - restructure function to avoid use of gotos
+// TODO:C - restructure function to avoid use of goto
 PRAGMA_DISABLE_PUSH_MSVC(26051) // Function with irreducible control flow graph.
 bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
                                             size_t compilerOutputSize )

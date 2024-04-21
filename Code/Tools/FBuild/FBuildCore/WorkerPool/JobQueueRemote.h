@@ -28,7 +28,7 @@ public:
 
     // main thread calls these
     void QueueJob( Job * job );
-    Job * GetCompletedJob();
+    Job * GetCompletedJob( Node::BuildResult & outResult );
     void CancelJobsWithUserData( void * userData );
 
     // handle shutting down
@@ -51,7 +51,7 @@ private:
     friend class WorkerThreadRemote;
     Job *       GetJobToProcess();
     static Node::BuildResult DoBuild( Job * job, bool racingRemoteJob );
-    void        FinishedProcessingJob( Job * job, bool result );
+    void        FinishedProcessingJob( Job * job, Node::BuildResult result );
 
     // internal helpers
     static bool ReadResults( Job * job );
@@ -63,6 +63,7 @@ private:
     Mutex               m_CompletedJobsMutex;
     Array< Job * >      m_CompletedJobs;
     Array< Job * >      m_CompletedJobsFailed;
+    Array< Job * >      m_CompletedJobsAborted;
 
     Semaphore           m_MainThreadSemaphore;
     Semaphore           m_WorkerThreadSemaphore;

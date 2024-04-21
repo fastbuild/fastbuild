@@ -20,13 +20,14 @@ public:
     // compressionLevel:
     //   < 0 : use LZ4, with values directly mapping to "acceleration level"
     //  == 0 : disable compression
-    //   > 0 : use LZ4HC, with values direcly mapping to "compression level"
+    //   > 0 : use LZ4HC, with values directly mapping to "compression level"
     bool Compress( const void * data, size_t dataSize, int32_t compressionLevel = -1 ); // -1 = default LZ4 compression level
-    bool Decompress( const void * data );
 
     // Zstd
     bool CompressZstd( const void * data, size_t dataSize, int32_t compressionLevel = -1 ); // -1 = default Zstd compression level
-    bool DecompressZstd( const void * data );
+
+    // Decompress (handled all formats including uncompressed)
+    bool Decompress( const void * data );
 
     const void *    GetResult() const       { return m_Result; }
     size_t          GetResultSize() const   { return m_ResultSize; }
@@ -34,6 +35,12 @@ public:
     inline void *   ReleaseResult()         { void * r = m_Result; m_Result = nullptr; m_ResultSize = 0; return r; }
 
 private:
+    enum CompressionType : uint32_t
+    {
+        eUncompressed   = 0,
+        eLZ4            = 1,
+        eZstd           = 2,
+    };
     struct Header
     {
         uint32_t m_CompressionType;

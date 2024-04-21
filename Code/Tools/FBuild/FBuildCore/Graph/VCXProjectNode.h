@@ -132,8 +132,6 @@ private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void PostLoad( NodeGraph & nodeGraph ) override;
 
-    bool Save( const AString & content, const AString & fileName ) const;
-
     // VSProjectBaseNode interface
     virtual const AString & GetProjectTypeGuid() const override;
 

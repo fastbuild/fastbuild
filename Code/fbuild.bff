@@ -99,13 +99,7 @@ Settings
 ]
 .Fuzzer_Config =
 [
-    #if !USING_CLANG_3
-        // These options are valid for Clang >= 6.0.0:
-        .CompilerOptions                = ' -fsanitize=fuzzer-no-link'
-    #else
-        // These options are valid for Clang < 6.0.0:
-        .CompilerOptions                = ' -fsanitize-coverage=trace-pc-guard,trace-cmp'
-    #endif
+    .CompilerOptions                = ' -fsanitize=fuzzer-no-link'
     .CompilerOptionsC               = .CompilerOptions
 ]
 
@@ -461,10 +455,7 @@ Alias( 'Exes' )
 .PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
-.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release' }
-#if !USING_CLANG_3
-                               + { 'ASan', 'MSan', 'TSan' }
-#endif
+.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release', 'ASan', 'MSan', 'TSan' }
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
 #if CLANG_SUPPORTS_ARMOSX
     .PlatformConfigs_ARMOSX         = { 'Debug', 'Profile', 'Release' }

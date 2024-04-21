@@ -13,7 +13,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFMacros::BFFMacros()
-: m_Tokens(8, true)
+    : m_Tokens( 8 )
 {
 }
 
@@ -89,7 +89,7 @@ bool BFFMacros::Undefine( const AString & token )
     AString * const defined = m_Tokens.Find( token );
     if ( defined == nullptr )
     {
-        // trying to remove an unexisting or predefined token :
+        // trying to remove a non-existent or predefined token :
         return false;
     }
     else

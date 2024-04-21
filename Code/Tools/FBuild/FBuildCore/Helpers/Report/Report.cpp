@@ -44,7 +44,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Report::Report()
-    : m_LibraryStats( 512, true )
+    : m_LibraryStats( 512 )
 {
     // pre-allocate a large string for output
     m_Output.SetReserved( MEGABYTE );
@@ -182,7 +182,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
         case Node::OBJECT_LIST_NODE: isLibrary = true; break;
         case Node::CS_NODE:
         {
-            isLibrary = node->GetName().EndsWithI( ".dll" ); // TODO:C - robustify this (could have an aribtrary extension)
+            isLibrary = node->GetName().EndsWithI( ".dll" ); // TODO:C - robustify this (could have an arbitrary extension)
             break;
         }
         default: break; // not a library
@@ -306,7 +306,7 @@ Report::IncludeStatsMap::~IncludeStatsMap()
 //------------------------------------------------------------------------------
 Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 {
-    // caculate table entry
+    // calculate table entry
     const uint32_t hash = node->GetNameHash();
     const uint32_t key = ( hash & 0xFFFF );
     IncludeStats * item = m_Table[ key ];
@@ -329,7 +329,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 //------------------------------------------------------------------------------
 Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 {
-    // caculate table entry
+    // calculate table entry
     const uint32_t hash = node->GetNameHash();
     const uint32_t key = ( hash & 0xFFFF );
 

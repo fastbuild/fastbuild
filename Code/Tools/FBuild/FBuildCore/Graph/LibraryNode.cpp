@@ -125,7 +125,7 @@ LibraryNode::~LibraryNode()
 {
     if ( ObjectListNode::GatherDynamicDependencies( nodeGraph ) == false )
     {
-        return false; // GatherDynamicDependencies will have emited an error
+        return false; // GatherDynamicDependencies will have emitted an error
     }
 
     // .LibrarianAdditionalInputs
@@ -153,7 +153,7 @@ LibraryNode::~LibraryNode()
     {
         if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
+            return BuildResult::eFailed; // HandleFileDeletion will have emitted an error
         }
     }
 
@@ -161,7 +161,7 @@ LibraryNode::~LibraryNode()
     Args fullArgs;
     if ( !BuildArgs( fullArgs ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // use the exe launch dir as the working dir
@@ -182,11 +182,11 @@ LibraryNode::~LibraryNode()
     {
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process for Library creation for '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -198,7 +198,7 @@ LibraryNode::~LibraryNode()
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return NODE_RESULT_FAILED;
+        return BuildResult::eAborted;
     }
 
     // did the executable fail?
@@ -215,7 +215,7 @@ LibraryNode::~LibraryNode()
         }
 
         FLOG_ERROR( "Failed to build Library. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
     else
     {
@@ -230,14 +230,14 @@ LibraryNode::~LibraryNode()
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // BuildArgs
 //------------------------------------------------------------------------------
 bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
-    Array< AString > tokens( 1024, true );
+    Array< AString > tokens( 1024 );
     m_LibrarianOptions.Tokenize( tokens );
 
     // When merging libs for non-MSVC toolchains, merge the source

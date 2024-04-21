@@ -27,10 +27,11 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
-    m_PendingJobs( 1024, true ),
-    m_CompletedJobs( 1024, true ),
-    m_CompletedJobsFailed( 1024, true ),
-    m_Workers( numWorkerThreads, false )
+    m_PendingJobs( 1024 ),
+    m_CompletedJobs( 1024 ),
+    m_CompletedJobsFailed( 64 ),
+    m_CompletedJobsAborted( 64 ),
+    m_Workers( numWorkerThreads )
 {
     WorkerThread::InitTmpDir( true ); // remote == true
 
@@ -152,7 +153,7 @@ void JobQueueRemote::QueueJob( Job * job )
 
 // GetCompletedJob
 //------------------------------------------------------------------------------
-Job * JobQueueRemote::GetCompletedJob()
+Job * JobQueueRemote::GetCompletedJob( Node::BuildResult & outResult )
 {
     MutexHolder m( m_CompletedJobsMutex );
 
@@ -162,6 +163,7 @@ Job * JobQueueRemote::GetCompletedJob()
         Job * job = m_CompletedJobs[ 0 ];
         m_CompletedJobs.PopFront();
         job->GetNode()->SetState( Node::UP_TO_DATE );
+        outResult = Node::BuildResult::eOk;
         return job;
     }
 
@@ -171,6 +173,16 @@ Job * JobQueueRemote::GetCompletedJob()
         Job * job = m_CompletedJobsFailed[ 0 ];
         m_CompletedJobsFailed.PopFront();
         job->GetNode()->SetState( Node::FAILED );
+        outResult = Node::BuildResult::eFailed;
+        return job;
+    }
+
+    // aborted jobs
+    if ( !m_CompletedJobsAborted.IsEmpty() )
+    {
+        Job * job = m_CompletedJobsAborted[ 0 ];
+        m_CompletedJobsAborted.PopFront();
+        outResult = Node::BuildResult::eAborted;
         return job;
     }
 
@@ -250,7 +262,7 @@ Job * JobQueueRemote::GetJobToProcess()
 
 // FinishedProcessingJob (Worker Thread)
 //------------------------------------------------------------------------------
-void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
+void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result )
 {
     // remove from in-flight
     {
@@ -270,13 +282,12 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     // push to appropriate completion queue
     {
         MutexHolder m( m_CompletedJobsMutex );
-        if ( success )
+        switch ( result )
         {
-            m_CompletedJobs.Append( job );
-        }
-        else
-        {
-            m_CompletedJobsFailed.Append( job );
+            case Node::BuildResult::eFailed:            m_CompletedJobsFailed.Append( job ); break;
+            case Node::BuildResult::eAborted:           m_CompletedJobsAborted.Append( job );break;
+            case Node::BuildResult::eNeedSecondPass:    ASSERT( false ); break;
+            case Node::BuildResult::eOk:                m_CompletedJobs.Append( job ); break;
         }
     }
 
@@ -317,7 +328,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     if ( Node::EnsurePathExistsForFile( node->GetName() ) == false )
     {
         // error already output by EnsurePathExistsForFile
-        return Node::NODE_RESULT_FAILED;
+        return Node::BuildResult::eFailed;
     }
 
     // Delete any left over PDB from a previous run (to be sure we have a clean pdb)
@@ -337,52 +348,63 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     // Ignore result if job was cancelled
     if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
     {
-        if ( result == Node::NODE_RESULT_FAILED )
+        if ( result == Node::BuildResult::eFailed )
         {
-            return Node::NODE_RESULT_FAILED;
+            return Node::BuildResult::eFailed;
         }
     }
 
     const uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
-    if ( result == Node::NODE_RESULT_FAILED )
+    switch ( result )
     {
-        // Locally we don't record the build time for failures as we
-        // want to keep the last successful build time for job ordering.
-        // If building remotely, we want to return the time taken however.
-        if ( job->IsLocal() == false )
+        case Node::BuildResult::eFailed:
+        case Node::BuildResult::eAborted:
         {
-            node->SetLastBuildTime( timeTakenMS );
+            // Locally we don't record the build time for failures as we
+            // want to keep the last successful build time for job ordering.
+            // If building remotely, we want to return the time taken however.
+            if ( job->IsLocal() == false )
+            {
+                node->SetLastBuildTime( timeTakenMS );
+            }
+
+            if ( result == Node::BuildResult::eFailed )
+            {
+                node->SetStatFlag( Node::STATS_FAILED );
+            }
+            break;
         }
-
-        node->SetStatFlag( Node::STATS_FAILED );
-    }
-    else
-    {
-        // build completed ok
-        ASSERT( result == Node::NODE_RESULT_OK );
-
-        // record new build time
-        node->SetLastBuildTime( timeTakenMS );
-        node->SetStatFlag( Node::STATS_BUILT );
-
-        #ifdef DEBUG
-            if ( job->IsLocal() )
-            {
-                // we should have recorded the new file time for remote job we built locally
-                ASSERT( node->m_Stamp == FileIO::GetFileLastWriteTime(node->GetName()) );
-            }
-        #endif
-
-
-        // TODO:A Also read into job if cache is being used
-        if ( job->IsLocal() == false )
+        case Node::BuildResult::eNeedSecondPass:
         {
-            // read results into memory to send back to client
-            if ( ReadResults( job ) == false )
+            ASSERT( false ); // Remote jobs cannot request second passes
+            break;
+        }
+        case Node::BuildResult::eOk:
+        {
+            // record new build time
+            node->SetLastBuildTime( timeTakenMS );
+            node->SetStatFlag( Node::STATS_BUILT );
+
+            #ifdef DEBUG
+                if ( job->IsLocal() )
+                {
+                    // we should have recorded the new file time for remote job we built locally
+                    ASSERT( node->m_Stamp == FileIO::GetFileLastWriteTime(node->GetName()) );
+                }
+            #endif
+
+
+            // TODO:A Also read into job if cache is being used
+            if ( job->IsLocal() == false )
             {
-                result = Node::NODE_RESULT_FAILED;
+                // read results into memory to send back to client
+                if ( ReadResults( job ) == false )
+                {
+                    result = Node::BuildResult::eFailed;
+                }
             }
+            break;
         }
     }
 
@@ -410,7 +432,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         job->GetMessagesForMonitorLog( msgBuffer );
 
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
-                      ( result == Node::NODE_RESULT_FAILED ) ? "ERROR" : "SUCCESS",
+                      ( result == Node::BuildResult::eFailed ) ? "ERROR" : "SUCCESS",
                       job->GetNode()->GetName().Get(),
                       msgBuffer.Get());
     }
@@ -463,7 +485,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     const int32_t compressionLevel = job->GetResultCompressionLevel();
     if ( compressionLevel != 0 )
     {
-        mb.Compress( compressionLevel );
+        mb.Compress( compressionLevel, job->GetAllowZstdUse() );
     }
 
     // transfer data to job
