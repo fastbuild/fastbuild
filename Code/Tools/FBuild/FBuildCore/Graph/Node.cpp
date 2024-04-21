@@ -1133,7 +1133,7 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
     options.m_AllowUnityNodes = true;
     options.m_AllowRemoveDirNodes = true;
     options.m_AllowCompilerNodes = true;
-    if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preBuildDependencyNames, m_PreBuildDependencies ) )
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preBuildDependencyNames, m_PreBuildDependencies, options ) )
     {
         return false; // GetNodeList will have emitted an error
     }
