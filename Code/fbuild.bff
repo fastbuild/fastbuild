@@ -310,8 +310,8 @@ Settings
 #if __WINDOWS__
     .ProjectCommon =
     [
-        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -cache ^$(ProjectName)-^$(Configuration)'
-        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -cache -clean ^$(ProjectName)-^$(Configuration)'
+        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs -dist -monitor -cache ^$(ProjectName)-^$(Configuration)'
+        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs -dist -monitor -cache -clean ^$(ProjectName)-^$(Configuration)'
         .OutputDirectory            = '^$(SolutionDir)\Temp'
         .IntermediateDirectory      = '^$(SolutionDir)\Temp'
         .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'
@@ -610,8 +610,8 @@ Alias( 'All+Tests' )
             Using( .BuildConfig )
             .ProjectConfig          = [
                                         Using( .'Project_$Platform$_$BuildConfigName$' )
-                                        .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
-                                        .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
+                                        .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild solution -vs'
+                                        .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild solution -vs -clean'
                                       ]
             ^ProjectConfigs         + .ProjectConfig
         }

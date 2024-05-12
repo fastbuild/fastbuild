@@ -133,8 +133,8 @@ function CreateVCXProject_Lib( .Name
             // For the 'UpdateSolution' we still want that to work normally (not via WSL)
             If( .Name != 'UpdateSolution' ) // TODO:C Find a better way to manage this special case
             {
-                ^ProjectBuildCommand            = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -wsl C:\Windows\System32\wsl.exe --cd C:\p4\depot\Code /mnt/c/p4/depot/Code/fbuild-linux -ide -fixuperrorpaths -dist -monitor -cache ^$(ProjectName)-x64^$(Configuration)'
-                ^ProjectRebuildCommand          = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -wsl C:\Windows\System32\wsl.exe --cd C:\p4\depot\Code /mnt/c/p4/depot/Code/fbuild-linux -ide -fixuperrorpaths -dist -monitor -cache -clean ^$(ProjectName)-x64^$(Configuration)'
+                ^ProjectBuildCommand            = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -wsl C:\Windows\System32\wsl.exe --cd C:\p4\depot\Code /mnt/c/p4/depot/Code/fbuild-linux -ide -fixuperrorpaths -dist -monitor -cache ^$(ProjectName)-x64^$(Configuration)'
+                ^ProjectRebuildCommand          = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -wsl C:\Windows\System32\wsl.exe --cd C:\p4\depot\Code /mnt/c/p4/depot/Code/fbuild-linux -ide -fixuperrorpaths -dist -monitor -cache -clean ^$(ProjectName)-x64^$(Configuration)'
             }
         ]
         If( .Ignore == false )
