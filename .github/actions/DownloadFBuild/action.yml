@@ -5,7 +5,7 @@ inputs:
   version:
     description: Version to download
     required: false
-    default: "1.11"
+    default: "1.13"
 
 runs:
   using: composite
