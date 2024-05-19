@@ -685,7 +685,16 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             // Defines
             {
                 Array< AString > defines;
-                ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, true );
+                ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, false );
+
+                // Escape quotes and slashes
+                for ( AString & define : defines )
+                {
+                    AStackString<> escapedDefine;
+                    EscapeDefine( define, escapedDefine );
+                    define = escapedDefine;
+                }
+
                 WriteArray( 4, "GCC_PREPROCESSOR_DEFINITIONS", defines );
             }
 
@@ -878,6 +887,27 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
         }
     }
 }
+
+// EscapeDefine
+//------------------------------------------------------------------------------
+void XCodeProjectGenerator::EscapeDefine( const AString & define,
+                                          AString & outEscapedDefine ) const
+{
+    for ( const char c : define )
+    {
+        switch ( c )
+        {
+            case '"':   outEscapedDefine += "\\\"";   break;
+            case '\\':  outEscapedDefine += "\\\\";    break;
+            default:
+            {
+                outEscapedDefine += c;
+                break;
+            }
+        }
+    }
+}
+
 
 // ProcessFileName
 //------------------------------------------------------------------------------
