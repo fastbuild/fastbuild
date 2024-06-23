@@ -577,7 +577,7 @@ ObjectListNode::~ObjectListNode() = default;
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const
+void ObjectListNode::GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & outInputs ) const
 {
     for ( const Dependency & dep : m_DynamicDependencies )
     {
@@ -592,17 +592,17 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             {
                 if ( on->IsMSVC() || on->IsClangCl() )
                 {
-                    fullArgs += pre;
-                    fullArgs += on->GetPCHObjectName();
-                    fullArgs += post;
-                    fullArgs.AddDelimiter();
-                    continue;
+                    // PCH files should only be included once
+                    if ( outInputs.Find( on->GetPCHObjectName() ) == nullptr )
+                    {
+                        outInputs.EmplaceBack( on->GetPCHObjectName() );
+                    }
                 }
                 else
                 {
                     // Clang/GCC/SNC don't have an object to link for a pch
-                    continue;
                 }
+                continue;
             }
         }
 
@@ -613,7 +613,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
 
             // insert all the objects in the object list
             const ObjectListNode * oln = n->CastTo< ObjectListNode >();
-            oln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            oln->GetInputFiles( objectsInsteadOfLibs, outInputs );
             continue;
         }
 
@@ -624,15 +624,12 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
 
             // insert all the objects in the object list
             const LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            ln->GetInputFiles( objectsInsteadOfLibs, outInputs );
             continue;
         }
 
         // normal object
-        fullArgs += pre;
-        fullArgs += n->GetName();
-        fullArgs += post;
-        fullArgs.AddDelimiter();
+        outInputs.EmplaceBack( n->GetName() );
     }
 }
 
