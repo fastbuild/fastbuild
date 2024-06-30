@@ -1232,7 +1232,10 @@ const BFFToken * NodeGraph::FindNodeSourceToken( const Node * node ) const
 
         // build the start of the path
         cleanPath = workingDir;
-        cleanPath += NATIVE_SLASH;
+        if ( cleanPath.IsEmpty() == false )
+        {
+            cleanPath += NATIVE_SLASH;
+        }
 
         // concatenate
         uint32_t len = cleanPath.GetLength();
