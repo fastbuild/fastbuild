@@ -888,18 +888,28 @@ void TestGraph::DBLocation() const
     options.m_SaveDBOnCompletion = true;
 
     AString dbFileDefaultLocation( "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseLocation/" );
+    AString dbFileDefaultLocationFullPath( dbFileDefaultLocation );
+#if defined( __WINDOWS__ )
+    dbFileDefaultLocationFullPath += "fbuild.windows.fdb";
+#elif defined( __LINUX__ )
+    dbFileDefaultLocationFullPath += "fbuild.linux.fdb";
+#elif defined( __OSX__ )
+    dbFileDefaultLocationFullPath += "fbuild.osx.fdb";
+#endif
     AString dbFileExplicitLocation( "../tmp/Test/Graph/DatabaseLocation/GraphDB.fdb" );
+
+    EnsureFileDoesNotExist( dbFileDefaultLocationFullPath );
+    EnsureFileDoesNotExist( dbFileExplicitLocation );
 
     // Build a target and let serialization save to default location
     {
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        const AString & dbFile( fBuild.GetDependencyGraphFile() );
-        EnsureFileDoesNotExist( dbFile );
+        TEST_ASSERT( fBuild.GetDependencyGraphFile() == dbFileDefaultLocationFullPath );
 
         TEST_ASSERT( fBuild.Build( "TestTarget" ) );
-        TEST_ASSERT( PathUtils::PathBeginsWith( dbFile, dbFileDefaultLocation ) );
+        EnsureFileExists( dbFileDefaultLocationFullPath );
     }
 
     // Build a target and let serialization save to explicitly specified location
@@ -914,6 +924,7 @@ void TestGraph::DBLocation() const
 
         TEST_ASSERT( fBuild.Build( "TestTarget" ) );
         TEST_ASSERT( PathUtils::ArePathsEqual( dbFile, dbFileExplicitLocation ) );
+        EnsureFileExists( dbFileDefaultLocationFullPath );
     }
 }
 
