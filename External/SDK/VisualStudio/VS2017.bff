@@ -63,6 +63,26 @@
 
 .VS2017_ToolchainPath   = '$VS2017_BasePath$/Tools/MSVC/$VS2017_Version$'
 
+// user-defined VS2017 installation
+#if exists(my_VS_BasePath)
+    #import my_VS_BasePath
+    #define my_VS_BasePathImported
+    .VS2017_BasePath = .my_VS_BasePath
+#endif
+#if !my_VS_BasePathImported
+    .my_VS_BasePath = .VS2017_BasePath
+#endif
+
+// user-defined VS2017 buildtools version
+#if exists(my_VS_Version)
+    #import my_VS_Version
+    #define my_VS_VersionImported
+    .VS2017_Version = .my_VS_Version
+#endif
+#if !my_VS_VersionImported
+    .my_VS_Version = .VS2017_Version
+#endif
+
 // X64 Compiler
 //------------------------------------------------------------------------------
 Compiler( 'Compiler-VS2017-x64' )

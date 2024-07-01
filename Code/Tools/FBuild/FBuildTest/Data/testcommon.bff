@@ -44,6 +44,10 @@
         #import TMP
         .Environment        = { 'PATH=$VS_PATH$',
                                 'TMP=$TMP$',
+                                'my_VS_BasePath=$my_VS_BasePath$', ; propagate these overridables to subsequent processes
+                                'my_VS_Version=$my_VS_Version$',
+                                'my_Win_SDKBasePath=$my_Win_SDKBasePath$',
+                                'my_Win_SDKVersion=$my_Win_SDKVersion$',
                                 'SystemRoot=C:\Windows' }
         .CachePath          = '$TMP$\.fbuild.cache'
         Using( .VisualStudioToolChain_X64 )

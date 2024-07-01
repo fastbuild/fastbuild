@@ -32,6 +32,26 @@
     #endif
 #endif
 
+// user-defined Windows10 SDK installation
+#if exists(my_Win_SDKBasePath)
+    #import my_Win_SDKBasePath
+    #define my_Win_SDKBasePathImported
+    .Windows10_SDKBasePath = .my_Win_SDKBasePath
+#endif
+#if !my_Win_SDKBasePathImported
+    .my_Win_SDKBasePath = .Windows10_SDKBasePath
+#endif
+
+// user-defined Windows10 SDK version
+#if exists(my_Win_SDKVersion)
+    #import my_Win_SDKVersion
+    #define my_Win_SDKVersionImported
+    .Windows10_SDKVersion = .my_Win_SDKVersion
+#endif
+#if !my_Win_SDKVersionImported
+    .my_Win_SDKVersion = .Windows10_SDKVersion
+#endif
+
 // Defines
 //------------------------------------------------------------------------------
 .WindowsSDK_Defines             = ' -DWIN32_LEAN_AND_MEAN'
@@ -93,6 +113,10 @@
     .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/x64"'
                                     + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x64"'
                                     + ' /MACHINE:X64'
+
+    .Windows_SDKBasePath            = .Windows10_SDKBasePath
+    .Windows_SDKVersion             = .Windows10_SDKVersion
+    .Win_SDKVersion_HumanReadable   = '10'
 ]
 Compiler( 'ResourceCompiler-Windows10' )
 {
