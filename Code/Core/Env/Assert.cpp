@@ -85,7 +85,7 @@ bool IsDebuggerAttached()
         const uint32_t BUFFER_SIZE( 4096 );
         char buffer[ BUFFER_SIZE ];
         #if defined( __APPLE__ ) || defined( __LINUX__ )
-            sprintf( buffer,
+            snprintf( buffer, BUFFER_SIZE,
         #else
             sprintf_s( buffer, BUFFER_SIZE,
         #endif
