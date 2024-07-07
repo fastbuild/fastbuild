@@ -102,6 +102,7 @@ protected:
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
     Array< AString >    m_PreBuildDependencyNames;
+    AString             m_ConcurrencyGroupName;
 
     // Internal State
     AString             m_PrecompiledHeaderName;

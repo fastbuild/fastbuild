@@ -227,6 +227,22 @@ public:
     static void Error_1504_CSAssemblyRequiresACSharpCompiler( const BFFToken * iter,
                                                               const Function * function );
 
+    // 1600-1699 : Concurrency Group Errors
+    //------------------------------------------------------------------------------
+    static void Error_1600_TooManyConcurrencyGroups( const BFFToken * iter,
+                                                     const Function * function,
+                                                     uint32_t numGroups,
+                                                     uint32_t maxGroups );
+    static void Error_1601_ConcurrencyGroupAlreadyDefined( const BFFToken * iter,
+                                                           const Function * function,
+                                                           const AString & groupName );
+    static void Error_1602_ConcurrencyGroupHasNoLimits( const BFFToken * iter,
+                                                        const Function * function,
+                                                        const AString & groupName );
+    static void Error_1603_UnknownConcurrencyGroup( const BFFToken * iter,
+                                                    const Function * function,
+                                                    const AString & groupName );
+
     // 1900-1999 : User-generate errors
     //------------------------------------------------------------------------------
     static void Error_1999_UserError( const BFFToken * iter,

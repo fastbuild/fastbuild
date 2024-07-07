@@ -59,6 +59,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_ConcurrencyGroupName,                "ConcurrencyGroupName",             MetaOptional() )
 
     // Internal State
     REFLECT( m_PrecompiledHeaderName,               "PrecompiledHeaderName",            MetaHidden() )
@@ -72,6 +73,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_ObjectListInputEndIndex,             "ObjectListInputEndIndex",          MetaHidden() )
     REFLECT( m_CompilerFlags.m_Flags,               "ObjFlags",                         MetaHidden() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "ObjFlagsPreprocessor",             MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex,               "ConcurrencyGroupIndex",            MetaHidden() )
 REFLECT_END( ObjectListNode )
 
 // ObjectListNode
@@ -92,6 +94,12 @@ ObjectListNode::ObjectListNode()
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
         return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
+    // .ConcurrencyGroupName
+    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    {
+        return false; // InitializeConcurrencyGroup will have emitted an error
     }
 
     // .Compiler
@@ -796,6 +804,8 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
     node->m_OwnerObjectList = m_Name;
+    node->m_ConcurrencyGroupName = m_ConcurrencyGroupName;
+    node->m_ConcurrencyGroupIndex = m_ConcurrencyGroupIndex;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

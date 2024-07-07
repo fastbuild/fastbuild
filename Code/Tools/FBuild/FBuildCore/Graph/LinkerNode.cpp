@@ -44,6 +44,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_LinkerStampExeArgs,              "LinkerStampExeArgs",           MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
+    REFLECT( m_ConcurrencyGroupName,            "ConcurrencyGroupName",         MetaOptional() )
 
     // Internal State
     REFLECT( m_Libraries2StartIndex,            "Libraries2StartIndex",         MetaHidden() )
@@ -51,6 +52,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_AssemblyResourcesStartIndex,     "AssemblyResourcesStartIndex",  MetaHidden() )
     REFLECT( m_AssemblyResourcesNum,            "AssemblyResourcesNum",         MetaHidden() )
     REFLECT( m_ImportLibName,                   "ImportLibName",                MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex,           "ConcurrencyGroupIndex",        MetaHidden() )
 REFLECT_END( LinkerNode )
 
 // CONSTRUCTOR
@@ -72,6 +74,12 @@ LinkerNode::LinkerNode()
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
         return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
+    // .ConcurrencyGroupName
+    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    {
+        return false; // InitializeConcurrencyGroup will have emitted an error
     }
 
     // .Linker

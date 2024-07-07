@@ -9,10 +9,12 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
+#include "Core/Mem/MemInfo.h"
 #include "Core/Strings/AStackString.h"
 
 // Defines
@@ -32,7 +34,17 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
+    REFLECT_ARRAY_OF_STRUCT( m_ConcurrencyGroups, "ConcurrencyGroups", ConcurrencyGroup, MetaOptional() )
 REFLECT_END( SettingsNode )
+
+REFLECT_STRUCT_BEGIN_BASE( ConcurrencyGroup )
+    REFLECT(        m_ConcurrencyGroupName,     "ConcurrencyGroupName",     MetaNone() )
+    REFLECT(        m_ConcurrencyLimit,         "ConcurrencyLimit",         MetaOptional() )
+    REFLECT(        m_ConcurrencyPerJobMiB,     "ConcurrencyPerJobMiB",     MetaOptional() )
+
+    REFLECT(        m_Index,                    "Index",                    MetaHidden() )
+    REFLECT(        m_Limit,                    "Limit",                    MetaHidden() )
+REFLECT_END( ConcurrencyGroup )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -48,7 +60,7 @@ SettingsNode::SettingsNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool SettingsNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // using a cache plugin?
     if ( m_CachePluginDLL.IsEmpty() == false )
@@ -61,6 +73,15 @@ SettingsNode::SettingsNode()
     {
         ProcessEnvironment( m_Environment );
     }
+
+    // ConcurrencyGroups
+    if ( InitializeConcurrencyGroups( iter, function ) == false )
+    {
+        return false;
+    }
+
+    // Register self
+    nodeGraph.SetSettings( *this );
 
     return true;
 }
@@ -114,6 +135,28 @@ const AString & SettingsNode::GetCachePluginDLLConfig() const
     return m_CachePluginDLLConfig;
 }
 
+// GetConcurrencyGroup
+//------------------------------------------------------------------------------
+const ConcurrencyGroup * SettingsNode::GetConcurrencyGroup( const AString & groupName ) const
+{
+    for (const ConcurrencyGroup & group : m_ConcurrencyGroups )
+    {
+        // Names are case insensitive
+        if ( group.GetName().EqualsI( groupName ) )
+        {
+            return &group;
+        }
+    }
+    return nullptr;
+}
+
+// GetConcurrencyGroup
+//------------------------------------------------------------------------------
+const ConcurrencyGroup & SettingsNode::GetConcurrencyGroup( uint8_t index ) const
+{
+    return m_ConcurrencyGroups[ index ];
+}
+
 // ProcessEnvironment
 //------------------------------------------------------------------------------
 void SettingsNode::ProcessEnvironment( const Array< AString > & envStrings ) const
@@ -152,6 +195,114 @@ void SettingsNode::ProcessEnvironment( const Array< AString > & envStrings ) con
     *dst = '\000';
 
     FBuild::Get().SetEnvironmentString( envString.Get(), size, libEnvVar );
+}
+
+// InitializeConcurrencyGroups
+//------------------------------------------------------------------------------
+bool SettingsNode::InitializeConcurrencyGroups( const BFFToken * iter,
+                                                const Function * function )
+{
+    // Enforce limit on number of groups.
+    // Each group adds a small overhead to job processing and too many groups
+    // may indicate misuse of the feature.
+    if ( m_ConcurrencyGroups.GetSize() > eMaxConcurrencyGroups )
+    {
+        Error::Error_1600_TooManyConcurrencyGroups( iter,
+                                                    function,
+                                                    static_cast<uint32_t>( m_ConcurrencyGroups.GetSize() ),
+                                                    eMaxConcurrencyGroups );
+        return false;
+    }
+
+    // Insert "special "default" group for jobs with no concurrency limit
+    Array<ConcurrencyGroup> groups( m_ConcurrencyGroups.GetSize() + 1 );
+    groups.EmplaceBack().SetLimit( ConcurrencyGroup::eUnlimited );
+    groups.Append( m_ConcurrencyGroups );
+    m_ConcurrencyGroups.Swap( groups );
+
+    // If no user groups are specified, there's nothing left to do
+    if ( m_ConcurrencyGroups.GetSize() == 1 )
+    {
+        return true;
+    }
+
+    // Obtain physically addressable memory
+    // TODO:C Ideally this would be re-evaluated if the installed memory in the
+    //        system changes.
+    SystemMemInfo sysMeminfo;
+    MemInfo::GetSystemInfo( sysMeminfo );
+
+    // Initialize groups
+    for ( ConcurrencyGroup & group : m_ConcurrencyGroups )
+    {
+        // Assign index
+        const uint8_t index = static_cast<uint8_t>( m_ConcurrencyGroups.GetIndexOf( &group ) );
+        group.SetIndex( index );
+
+        // Ensure valid configuration
+        if ( index == 0 )
+        {
+            continue; // Group zero is unlimited
+        }
+
+        // Check for duplicate names
+        for ( const ConcurrencyGroup & otherGroup : m_ConcurrencyGroups )
+        {
+            // Check groups before this one
+            if ( &otherGroup == &group )
+            {
+                break;
+            }
+
+            // Names are case insensitive
+            if ( otherGroup.GetName().EqualsI( group.GetName() ) )
+            {
+                Error::Error_1601_ConcurrencyGroupAlreadyDefined( iter,
+                                                                  function,
+                                                                  group.GetName() );
+                return false;
+            }
+        }
+
+        // Memory limit?
+        uint32_t memoryLimit = ConcurrencyGroup::eUnlimited;
+        if ( group.GetMemoryBasedLimit() > 0 )
+        {
+            // Determine system memory based limit, but always allow 1 job
+            memoryLimit = ( sysMeminfo.mTotalPhysMiB / group.GetMemoryBasedLimit() );
+            memoryLimit = Math::Max( memoryLimit, 1U );
+        }
+
+        // Job limit?
+        uint32_t jobLimit = ConcurrencyGroup::eUnlimited;
+        if ( group.GetJobBasedLimit() > 0 )
+        {
+            jobLimit = group.GetJobBasedLimit();
+        }
+
+        // Determine final limit
+        const uint32_t limit = Math::Min( memoryLimit, jobLimit );
+        group.SetLimit( limit );
+
+        // A limit of some kind must be specified
+        if ( limit == ConcurrencyGroup::eUnlimited )
+        {
+            Error::Error_1602_ConcurrencyGroupHasNoLimits( iter,
+                                                           function,
+                                                           group.GetName() );
+            return false;
+        }
+
+        FLOG_VERBOSE( "Concurrency Group: '%s'\n"
+                      " - Limit: %u\n"
+                      " - MiB  : %u\n"
+                      " - Final: %u\n",
+                      group.GetName().Get(),
+                      group.GetJobBasedLimit(),
+                      group.GetMemoryBasedLimit(),
+                      group.GetLimit() );
+    }
+    return true;
 }
 
 //------------------------------------------------------------------------------

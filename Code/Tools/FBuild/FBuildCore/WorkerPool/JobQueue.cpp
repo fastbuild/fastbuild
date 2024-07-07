@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 
 #include "Core/Time/Timer.h"
@@ -264,9 +265,19 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
                             uint32_t & numJobsDist,
                             uint32_t & numJobsDistActive ) const
 {
+    ASSERT( Thread::IsMainThread() );
+
+    // If ConcurrencyGroups are in use, sum up the number of delayed
+    // jobs to include in the total "numJobs"
+    uint32_t numPendingJobs = 0;
+    for (const ConcurrencyGroupState& groupState : m_ConcurrencyGroupsState)
+    {
+        numPendingJobs += static_cast<uint32_t>(groupState.m_LocalJobs_Staging.GetSize());
+    }
+
     MutexHolder m( m_DistributedJobsMutex );
 
-    numJobs = m_LocalJobs_Available.GetCount();
+    numJobs = m_LocalJobs_Available.GetCount() + numPendingJobs;
     numJobsDist = (uint32_t)m_DistributableJobs_Available.GetSize();
     numJobsActive = AtomicLoadRelaxed( &m_NumLocalJobsActive );
     numJobsDistActive = (uint32_t)m_DistributableJobs_InProgress.GetSize();
@@ -291,22 +302,102 @@ void JobQueue::AddJobToBatch( Node * node )
     // mark as building
     node->SetState( Node::BUILDING );
 
-    m_LocalJobs_Staging.Append( node );
+    // Determine the concurrency group for this job
+    const uint8_t groupIndex = node->GetConcurrencyGroupIndex();
+
+    // Ensure the staging queue exists if this is the first time we're seeing
+    // a job in that group
+    if ( m_ConcurrencyGroupsState.GetSize() <= groupIndex )
+    {
+        m_ConcurrencyGroupsState.SetSize( groupIndex + 1U );
+    }
+
+    // Enqueue job in ConcurrencyGroup
+    m_ConcurrencyGroupsState[ groupIndex ].m_LocalJobs_Staging.Append( node );
 }
 
 // FlushJobBatch (Main Thread)
 //------------------------------------------------------------------------------
-void JobQueue::FlushJobBatch()
+void JobQueue::FlushJobBatch( const SettingsNode & settings )
 {
-    if ( m_LocalJobs_Staging.IsEmpty() )
-    {
-        return;
-    }
+    // Flush jobs gathered during the dependency graph sweeps into the JobQueue
+    // while respecting Concurrency Groups.
 
-    // Make the jobs available
-    m_LocalJobs_Available.QueueJobs( m_LocalJobs_Staging );
-    m_WorkerThreadSemaphore.Signal( (uint32_t)m_LocalJobs_Staging.GetSize() );
-    m_LocalJobs_Staging.Clear();
+    const uint32_t numWorkerThreads = FBuild::Get().GetOptions().m_NumWorkerThreads;
+
+    for ( ConcurrencyGroupState & groupState : m_ConcurrencyGroupsState )
+    {
+        // If there are no jobs to flush in this concurrency group
+        // we have nothing to do.
+        if ( groupState.m_LocalJobs_Staging.IsEmpty() )
+        {
+            continue;
+        }
+
+        // Get the ConcurrencyGroup
+        const uint8_t groupIndex = static_cast<uint8_t>( m_ConcurrencyGroupsState.GetIndexOf( &groupState ) );
+        const ConcurrencyGroup & group = settings.GetConcurrencyGroup( groupIndex );
+
+        // Every ConcurrencyGroup specifies a limit (otherwise it should not
+        // exist), including the default group (index 0).
+        ASSERT( group.GetLimit() > 0 );
+        uint32_t maxJobs = group.GetLimit();
+        
+        // If the ThreadPool constrains the number of tasks below the
+        // requirements of the ConcurrencyGroup we don't need to throttle
+        // flushing jobs. This reduces scheduling latency slightly for
+        // these tasks.
+        if ( maxJobs >= numWorkerThreads )
+        {
+            maxJobs = ConcurrencyGroup::eUnlimited;
+        }
+
+        // If the limit has already been reached, we cannot queue any more
+        // jobs in this ConcurrencyGroup
+        if ( groupState.m_ActiveJobs >= maxJobs )
+        {
+            continue;
+        }
+
+        // Queue as many new jobs as possible to reach the concurrency limit
+        const uint32_t maxJobsToQueue = ( maxJobs - groupState.m_ActiveJobs );
+
+        // Make the jobs available
+        if ( maxJobsToQueue >= groupState.m_LocalJobs_Staging.GetSize() )
+        {
+            // Flush all jobs
+            const uint32_t numJobs = static_cast<uint32_t>( groupState.m_LocalJobs_Staging.GetSize() );
+            m_LocalJobs_Available.QueueJobs( groupState.m_LocalJobs_Staging );
+            m_WorkerThreadSemaphore.Signal( numJobs );
+            groupState.m_LocalJobs_Staging.Clear();
+            groupState.m_ActiveJobs += numJobs;
+        }
+        else
+        {
+            // Flush jobs to reach limit, taking jobs from tail of queue to
+            // flush highest priority jobs first
+            StackArray<Node *> jobs;
+            jobs.Append( ( groupState.m_LocalJobs_Staging.End() - maxJobsToQueue ),
+                         groupState.m_LocalJobs_Staging.End() );
+            m_LocalJobs_Available.QueueJobs( jobs );
+            m_WorkerThreadSemaphore.Signal( maxJobsToQueue );
+            groupState.m_LocalJobs_Staging.SetSize( groupState.m_LocalJobs_Staging.GetSize() - maxJobsToQueue );
+            groupState.m_ActiveJobs += maxJobsToQueue;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+bool JobQueue::HasJobsToFlush() const
+{
+    for ( const ConcurrencyGroupState & groupState : m_ConcurrencyGroupsState )
+    {
+        if ( groupState.m_LocalJobs_Staging.IsEmpty() == false )
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 // QueueDistributableJob
@@ -561,6 +652,10 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
         for ( Job * job : *jobArray )
         {
             Node * n = job->GetNode();
+
+            // Update ConcurrencyGroup active task counts
+            const uint8_t groupIndex = n->GetConcurrencyGroupIndex();
+            m_ConcurrencyGroupsState[ groupIndex ].m_ActiveJobs -= 1;
 
             if ( completedJob )
             {

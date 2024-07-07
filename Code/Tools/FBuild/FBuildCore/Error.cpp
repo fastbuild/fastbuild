@@ -744,6 +744,48 @@
     FormatError( iter, 1504u, function, "CSAssembly requires a C# Compiler." );
 }
 
+// Error_1600_TooManyConcurrencyGroups
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1600_TooManyConcurrencyGroups( const BFFToken * iter,
+                                                            const Function * function,
+                                                            uint32_t numGroups,
+                                                            uint32_t maxGroups )
+{
+    FormatError( iter, 1600u, function, "Too many Concurrency Groups %u (max %u)."
+                                      , numGroups
+                                      , maxGroups );
+}
+
+// Error_1601_ConcurrencyGroupAlreadyDefined
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1601_ConcurrencyGroupAlreadyDefined( const BFFToken * iter,
+                                                                  const Function * function,
+                                                                  const AString & groupName )
+{
+    FormatError( iter, 1601u, function, "Concurrency Group '%s' already defined."
+                                      , groupName.Get() );
+}
+
+// Error_1602_ConcurrencyGroupHasNoLimits
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1602_ConcurrencyGroupHasNoLimits( const BFFToken * iter,
+                                                               const Function * function,
+                                                               const AString & groupName )
+{
+    FormatError( iter, 1602u, function, "Concurrency Group '%s' has no limits defined."
+                                      , groupName.Get() );
+}
+
+// Error_1603_UnknownConcurrencyGroup
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1603_UnknownConcurrencyGroup( const BFFToken * iter,
+                                                           const Function * function,
+                                                           const AString & groupName )
+{
+    FormatError( iter, 1603u, function, "Unknown Concurrency Group '%s'."
+                                      , groupName.Get() );
+}
+
 // Error_1999_UserError
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1999_UserError( const BFFToken * iter,

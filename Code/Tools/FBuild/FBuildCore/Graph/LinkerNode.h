@@ -108,6 +108,7 @@ protected:
     AString             m_LinkerStampExeArgs;
     Array< AString >    m_PreBuildDependencyNames;
     Array< AString >    m_Environment;
+    AString             m_ConcurrencyGroupName;
 
     // Internal State
     uint32_t            m_Libraries2StartIndex          = 0;

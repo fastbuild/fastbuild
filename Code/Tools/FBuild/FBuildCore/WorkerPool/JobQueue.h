@@ -15,6 +15,7 @@
 //------------------------------------------------------------------------------
 class Node;
 class Job;
+class SettingsNode;
 class ThreadPool;
 class WorkerThread;
 
@@ -50,8 +51,8 @@ public:
 
     // main thread calls these
     void AddJobToBatch( Node * node );  // Add new job to the staging queue
-    void FlushJobBatch();               // Sort and flush the staging queue
-    bool HasJobsToFlush() const { return ( m_LocalJobs_Staging.IsEmpty() == false ); }
+    void FlushJobBatch( const SettingsNode & settings ); // Sort and flush the staging queue
+    bool HasJobsToFlush() const;
     void FinalizeCompletedJobs( NodeGraph & nodeGraph );
     void MainThreadWait( uint32_t maxWaitMS );
 
@@ -95,7 +96,13 @@ private:
     Semaphore           m_WorkerThreadSemaphore;
 
     // Jobs available for local processing
-    Array< Node * >     m_LocalJobs_Staging;
+    class ConcurrencyGroupState
+    {
+    public:
+        Array<Node *>       m_LocalJobs_Staging; // Jobs ready to be made available
+        uint32_t            m_ActiveJobs = 0; // Jobs made available for processing
+    };
+    Array<ConcurrencyGroupState>    m_ConcurrencyGroupsState;
     JobSubQueue         m_LocalJobs_Available;
 
     // Jobs in progress locally

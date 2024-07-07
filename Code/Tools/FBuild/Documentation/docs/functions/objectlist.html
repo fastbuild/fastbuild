@@ -74,6 +74,7 @@ Builds a list of objects, typically for later input into a Library, Executable o
   ; Additional options
   .PreBuildDependencies     ; (optional) Force targets to be built before this ObjectList (Rarely needed,
                             ; but useful when a ObjectList relies on generated code).
+  .ConcurrencyGroupName     ; (optional) Concurrency Group for this task
   .Hidden                   ; (optional) Hide a target from -showtargets (default false)
 }
 </div>

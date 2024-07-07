@@ -93,6 +93,10 @@ CompilerOutputKeepBaseExtension
 CompilerOutputPath
 CompilerOutputPrefix
 CompilerReferences
+ConcurrencyGroupName
+ConcurrencyGroups
+ConcurrencyLimit
+ConcurrencyPerJobMiB
 Condition
 Config
 CustomEnvironmentVariables
