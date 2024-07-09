@@ -175,7 +175,7 @@ Compiler( 'Compiler-VS2022-x64' )
 [
     .VS_Version                     = .VS2022_Version
     .VS_Version_HumanReadable       = '2022'
-    .VS_SolutionVersion             = '16.0.28701.123'
+    .VS_SolutionVersion             = '17'
     .MSC_VER                        = .VS2022_MSC_VER
     .VS_ToolchainPath               = .VS2022_ToolchainPath
     .ToolChain_VS_Windows_X64       = .ToolChain_VS2022_Windows_X64
