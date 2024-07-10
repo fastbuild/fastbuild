@@ -32,7 +32,8 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
     m_MinimumFreeMemoryMiB( 0 ),
     m_ConsoleMode( false ),
-    m_PeriodicRestart( false )
+    m_PeriodicRestart( false ),
+    m_PreferHostName( false )
 {
     #ifdef __LINUX__
         m_ConsoleMode = true; // Only console mode supported on Linux
@@ -144,6 +145,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
                 continue;
             }
         #endif
+        else if ( token == "-preferhostname" )
+        {
+            m_PreferHostName = true;
+            continue;
+        }
 
         ShowUsageError();
         return false;
@@ -181,6 +187,8 @@ void FBuildWorkerOptions::ShowUsageError()
                        "        (Windows) Don't spawn a sub-process worker copy.\n"
                        " -periodicrestart\n"
                        "        Worker will restart every 4 hours.\n"
+                       " -preferhostname\n"
+                       "        Broker filename will be the hostname instead of the IP Address.\n"
                        "---------------------------------------------------------------------------\n"
                        ;
 
