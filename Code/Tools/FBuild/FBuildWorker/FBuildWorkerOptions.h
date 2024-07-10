@@ -9,10 +9,10 @@
 
 // Core
 #include "Core/Env/Types.h"
+#include "Core/Strings/AString.h"
 
 // Forward Declaration
 //------------------------------------------------------------------------------
-class AString;
 
 // FBuildWorkerOptions
 //------------------------------------------------------------------------------
@@ -27,6 +27,7 @@ public:
     #if defined( __WINDOWS__ )
         bool m_IsSubprocess;    // Process is child? (Internal)
         bool m_UseSubprocess;   // Should we launch a sub-process?
+        AString m_BaseExe;
     #endif
 
     // resource usage
