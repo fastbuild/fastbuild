@@ -357,7 +357,7 @@ template < class U >
 T * Array< T >::Find( const U & obj ) const
 {
     T * pos = m_Begin;
-    T * endPos = pos + m_Size;
+    const T * endPos = pos + m_Size;
     while ( pos < endPos )
     {
         if ( *pos == obj )
@@ -452,7 +452,7 @@ template < class T >
 template < class U >
 void Array< T >::Append( const Array< U > & other )
 {
-    U* endPos = other.End();
+    const U* endPos = other.End();
     for ( U* it = other.Begin(); it != endPos; ++it )
     {
         Append( *it );
