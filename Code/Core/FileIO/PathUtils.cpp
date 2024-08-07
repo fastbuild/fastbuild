@@ -290,4 +290,39 @@
     outRelativeFileName += pathB;
 }
 
+// GetBaseName
 //------------------------------------------------------------------------------
+
+/* static */ void PathUtils::GetBaseName( const AString& pathName, AString& baseName )
+{
+    const char* slashPos = nullptr;
+    if ( nullptr != ( slashPos = pathName.FindLast( NATIVE_SLASH ) ) )
+        baseName = slashPos + 1;
+    else
+        baseName = pathName.Get();
+}
+
+// GetDirectoryName
+//------------------------------------------------------------------------------
+
+/* static */ void PathUtils::GetDirectoryName( const AString& pathName, AString& dirName )
+{
+    const char* slashPos = nullptr;
+    if ( pathName.EndsWith( NATIVE_SLASH ) )
+    {
+        dirName = pathName;
+        return;
+    }
+    if ( nullptr != ( slashPos = pathName.FindLast( NATIVE_SLASH ) ) )
+        dirName = AString( pathName.begin(), slashPos + 1 );
+    else
+        dirName = AString::GetEmpty();
+}
+
+// JoinPath
+//------------------------------------------------------------------------------
+
+/* static */ void PathUtils::JoinPath( AString& pathName, const AString& baseName ) {
+    EnsureTrailingSlash( pathName );
+    pathName += baseName;
+}

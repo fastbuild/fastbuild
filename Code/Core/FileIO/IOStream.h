@@ -92,3 +92,32 @@ bool IOStream::Write( const Array< T > & a )
 }
 
 //------------------------------------------------------------------------------
+
+inline uint64_t WriteStringRaw( const AString& s ) { return WriteBuffer( s.begin(), s.GetLength() ); }
+
+// Write several strings into IOStream.
+//------------------------------------------------------------------------------
+template < typename T0 = AString, typename... T >
+bool WriteV( const T0& part0, const T&... parts )
+{
+    bool rc = true;
+    rc = rc && Write( part0 );
+    if constexpr( sizeof...( parts ) > 0 ) {
+        rc = rc && WriteV( parts... );
+    }
+    return rc;
+}
+
+// Write several raw strings into IOStream (raw - means no length information will be stored in the stream)
+//------------------------------------------------------------------------------
+template < typename T0 = AString, typename... T >
+uint64_t WriteRawV( const T0& part0, const T&... parts )
+{
+    uint64_t rc = 0;
+    rc += WriteStringRaw( part0 );
+    if constexpr( sizeof...( parts ) > 0 ) {
+        rc += WriteRawV( parts... );
+    }
+    return rc;
+}
+//------------------------------------------------------------------------------

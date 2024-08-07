@@ -6,6 +6,10 @@
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
 
+// Forward Declarations
+//------------------------------------------------------------------------------
+class AString;
+
 // Random
 //------------------------------------------------------------------------------
 class Random
@@ -21,6 +25,9 @@ public:
 
     // random number from 0 to RAND_MAX
     uint32_t GetRand();
+
+    // random number from 0 to RAND_MAX
+    uint32_t GetRandString( AString& s );
 
     // random float from 0.0f to 1.0f
     float GetRandFloat()
