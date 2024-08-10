@@ -151,7 +151,7 @@ bool UnityNode::UnityFileAndOrigin::operator < ( const UnityFileAndOrigin & othe
     }
     else
     {
-        return 0;
+        return false;
     }
 }
 
