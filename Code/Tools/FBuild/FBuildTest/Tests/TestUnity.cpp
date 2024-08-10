@@ -800,6 +800,10 @@ void TestUnity::SortFiles() const
     SORT( "b.cpp", "A.cpp" );
     TEST( "A.cpp", "b.cpp" );
 
+    // Files whose paths are each other's substrings are sorted
+    SORT( "a/a.cpp", "a/a.c", "a/a.cp" );
+    TEST( "a/a.c", "a/a.cp", "a/a.cpp" );
+
     // Files in same dir
     SORT( "a/B.cpp", "a/a.cpp" );
     TEST( "a/a.cpp", "a/B.cpp" );
