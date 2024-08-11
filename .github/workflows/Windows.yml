@@ -19,9 +19,6 @@ jobs:
           - cfg: Build & Tests
             vs: 2019
             os: windows-2019
-          - cfg: Build & Tests
-            vs: 2017
-            os: windows-2019
           - cfg: Analyze
             vs: 2022
             os: windows-2022
