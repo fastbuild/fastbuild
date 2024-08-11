@@ -214,7 +214,8 @@ void JSONReport::DoCPUTimeByType(const FBuildStats& stats)
             Write( "\"Cache Hits\": \"-\",\n\t\t\t" );
         }
 
-        const float percent = ( items[ i ].m_Value / total ) * 100.0f;
+        const float percent = (total > 0.0f) ? ( items[ i ].m_Value / total ) * 100.0f
+                                             : 0.0f;
         Write( "\"Percentage\": %.1f", (double)percent );
 
         Write( "\n\t\t" );
@@ -376,15 +377,15 @@ void JSONReport::DoCacheStats( const FBuildStats & /*stats*/ )
 
             numOutput++;
         }
+
+        // end cache stats
+        Write( "\n\t\t ]" );
+        Write( "\n\t}" );
     }
     else
     {
         Write( "\t}" );
     }
-
-    // end library stats
-    Write( "\n\t\t ]" );
-    Write( "\n\t}" );
 }
 
 // DoCPUTimeByLibrary
