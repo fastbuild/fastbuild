@@ -295,11 +295,15 @@
 
 /* static */ void PathUtils::GetBaseName( const AString& pathName, AString& baseName )
 {
-    const char* slashPos = nullptr;
-    if ( nullptr != ( slashPos = pathName.FindLast( NATIVE_SLASH ) ) )
+    if ( const char * slashPos = pathName.FindLast( NATIVE_SLASH ) )
+    {
         baseName = slashPos + 1;
+    }
     else
-        baseName = pathName.Get();
+    {
+        baseName = pathName;
+    }
+
 }
 
 // GetDirectoryName
@@ -307,16 +311,19 @@
 
 /* static */ void PathUtils::GetDirectoryName( const AString& pathName, AString& dirName )
 {
-    const char* slashPos = nullptr;
     if ( pathName.EndsWith( NATIVE_SLASH ) )
     {
         dirName = pathName;
         return;
     }
-    if ( nullptr != ( slashPos = pathName.FindLast( NATIVE_SLASH ) ) )
-        dirName = AString( pathName.begin(), slashPos + 1 );
+    if ( const char * slashPos = pathName.FindLast( NATIVE_SLASH ) )
+    {
+        dirName.Assign( pathName.Get(), slashPos + 1 ); // Include slash
+    }
     else
-        dirName = AString::GetEmpty();
+    {
+        dirName.Clear();
+    }
 }
 
 // JoinPath

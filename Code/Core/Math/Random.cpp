@@ -26,15 +26,4 @@ uint32_t Random::GetRand()
     return( (uint32_t)( m_Seed / ( ( CORE_RAND_MAX + 1 ) * 2 ) ) % ( CORE_RAND_MAX + 1 ) );
 }
 
-// GetRandString
-//------------------------------------------------------------------------------
-uint32_t Random::GetRandString( AString& str )
-{
-    uint32_t rand_num = GetRand();
-    AStackString<128> buf;
-    snprintf( buf.Get(), buf.GetLength(), "%x", rand_num );
-    str.Assign( buf );
-    return rand_num;
-}
-
 //------------------------------------------------------------------------------
