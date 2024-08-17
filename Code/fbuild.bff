@@ -69,6 +69,19 @@ Settings
 
     .BuildConfigName                = 'Release'
 ]
+#if __WINDOWS__
+    .ASanDLLs                       = {}
+    .ASan_Config_MSVC =
+    [
+        .CompilerOptions                = ' -DRELEASE'
+                                        + ' /fsanitize=address'
+        .CompilerOptionsC               = .CompilerOptions
+        .LinkerOptions                  = ' libvcasan.lib'
+                                        + ' legacy_stdio_wide_specifiers.lib'
+        .ASanDLLs                       = { '$VS_ToolchainPath$/bin/Hostx64/x64/clang_rt.asan_dynamic-x86_64.dll' }
+        .BuildConfigName                = 'ASan'
+    ]
+#endif
 .ASan_Config =
 [
     .CompilerOptions                = ' -DRELEASE'
@@ -183,7 +196,7 @@ Settings
                                 + .Profile_Config
                                 + .Profile_Optimizations_MSVC
     .X64ASanConfig              = .X64BaseConfig
-                                + .ASan_Config
+                                + .ASan_Config_MSVC
                                 + .Release_Optimizations_MSVC
     .X64TSanConfig              = .X64BaseConfig
                                 + .TSan_Config
