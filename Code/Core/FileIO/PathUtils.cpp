@@ -330,6 +330,9 @@
 //------------------------------------------------------------------------------
 
 /* static */ void PathUtils::JoinPath( AString& pathName, const AString& baseName ) {
-    EnsureTrailingSlash( pathName );
+    if ( !pathName.IsEmpty() )
+    {
+        EnsureTrailingSlash( pathName );
+    }
     pathName += baseName;
 }
