@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 #include "PathUtils.h"
 #include "Core/Strings/AStackString.h"
+#include <string.h>
 
 // Exists
 //------------------------------------------------------------------------------
@@ -330,9 +331,289 @@
 //------------------------------------------------------------------------------
 
 /* static */ void PathUtils::JoinPath( AString& pathName, const AString& baseName ) {
-    if ( !pathName.IsEmpty() )
-    {
-        EnsureTrailingSlash( pathName );
-    }
+    EnsureTrailingSlash( pathName );
     pathName += baseName;
+}
+
+
+// One of the major problem we have to overcome for Distributed ThinLTO project is that path names on the local machine
+// that serve as module ids and that are hardcoded in the summary index files do not match remote directory file path names.
+// FASTBuild doesn't run compilation jobs on a virtual file system (like chroot or docker), instead it is using a real file
+// system and in general case we cannot map file paths from the local file system to the remote file system.
+
+// Luckily, almost always for Distributed ThinLTO path names are relative
+// to the project directory. The idea is, that if all the files have one common ancestor node in the local file system and
+// all the file paths are relative, then we can create a sub directory on the remote machine that
+// would mimic the location of the local files. In this case, the module ids for Distributed ThinLTO
+// will stay the same.
+//
+// The purpose of the code below is to implement a simpified virtual file system to write there all the paths that participate
+// in the DTLTO whenever possible (e.g. it cannot be done if we have absolute paths).
+namespace dtlto
+{
+
+// CompareFileName
+//------------------------------------------------------------------------------
+// Compares two file names (C-style strings) in a case-insensitive manner on Windows
+// and case-sensitive manner on Linux.
+static int CompareFileName( const char * nameA,
+                            const char * nameB )
+{
+#ifdef __WINDOWS__
+    return ::_stricmp( nameA, nameB );
+#endif
+#ifdef __LINUX__
+    return ::strcmp( nameA, nameB );
+#endif
+}
+
+// CompareFileName
+//------------------------------------------------------------------------------
+// Compares two file names (AString objects) by converting them to C-style strings
+// and using the appropriate comparison function based on the operating system.
+static int CompareFileName( const AString & nameA,
+                            const AString & nameB )
+{
+    return CompareFileName( nameA.Get(), nameB.Get() );
+}
+
+struct DirectoryNode;
+
+// FileNode
+//------------------------------------------------------------------------------
+// Represents a file node in a directory structure. Contains information about
+// the file's name, and a pointer to its parent directory node.
+struct FileNode
+{
+protected:
+    DirectoryNode * parent = nullptr; // Pointer to the parent directory node
+    AString name;                     // Name of the file
+
+public:
+    // Default constructor
+    FileNode() = default;
+
+    // Initializes the file node with the given name.
+    FileNode( const AString & file_name )
+        : name( file_name )
+    {}
+
+    // GetParent
+    //------------------------------------------------------------------------------
+    // Returns a pointer to the parent directory node.
+    DirectoryNode * GetParent() const
+    {
+        return parent;
+    }
+
+    // SetParent
+    //------------------------------------------------------------------------------
+    // Sets the parent directory node.
+    void SetParent( DirectoryNode * parent_ptr )
+    {
+        parent = parent_ptr;
+    }
+
+    // GetName
+    //------------------------------------------------------------------------------
+    // Returns the name of the file.
+    const AString & GetName() const
+    {
+        return name;
+    }
+
+    // CompareName
+    //------------------------------------------------------------------------------
+    // Compares the name of this file node with another file name.
+    int CompareName( const AString & file_name ) const
+    {
+        return CompareFileName( name, file_name );
+    }
+};
+
+
+// DirectoryNode
+//------------------------------------------------------------------------------
+// Represents a directory node in a directory structure. Contains information about
+// the directory's name, parent directory, child directories, and files.
+struct DirectoryNode
+{
+protected:
+    DirectoryNode * parent = nullptr; // Pointer to the parent directory node
+    Array< DirectoryNode * > childs;  // Array of child directory nodes
+    AString name;                     // Name of the directory
+    Array< FileNode > files;          // Array of file nodes in the directory
+
+public:
+    // Default constructor
+    DirectoryNode() = default;
+
+    // Initializes the directory node with the given name.
+    DirectoryNode( const AString & dir_name )
+        : parent( nullptr ),
+          name( dir_name )
+    {}
+
+    // Deletes all child directory nodes and clears the name, files, and childs arrays.
+    virtual ~DirectoryNode()
+    {
+        for ( DirectoryNode * dir : GetChilds() )
+        {
+            if ( dir )
+                delete dir;
+        }
+        name.Clear();
+        files.Clear();
+        childs.Clear();
+    }
+
+    // CompareName
+    //------------------------------------------------------------------------------
+    // Compares the name of this directory node with another directory name using the
+    // CompareFileName function.
+    int CompareName( const AString & dir_name ) const
+    {
+        return CompareFileName( name, dir_name );
+    }
+
+    // GetName
+    //------------------------------------------------------------------------------
+    // Returns the name of the directory.
+    const AString & GetName() const
+    {
+        return name;
+    }
+
+    // GetParent
+    //------------------------------------------------------------------------------
+    // Returns a pointer to the parent directory node (const version).
+    const DirectoryNode * GetParent() const
+    {
+        return parent;
+    }
+
+    // SetParent
+    //------------------------------------------------------------------------------
+    // Sets the parent directory node.
+    void SetParent( DirectoryNode * parent_ptr )
+    {
+        parent = parent_ptr;
+    }
+
+    // GetFiles
+    //------------------------------------------------------------------------------
+    // Returns a reference to the array of file nodes in the directory (const version).
+    const Array< FileNode > & GetFiles() const
+    {
+        return files;
+    }
+
+    // GetParent
+    //------------------------------------------------------------------------------
+    // Returns a pointer to the parent directory node.
+    DirectoryNode * GetParent()
+    {
+        return parent;
+    }
+
+    // GetChilds
+    //------------------------------------------------------------------------------
+    // Returns a reference to the array of child directory nodes.
+    Array< DirectoryNode * > & GetChilds()
+    {
+        return childs;
+    }
+
+    // GetFiles
+    //------------------------------------------------------------------------------
+    // Returns a reference to the array of file nodes in the directory.
+    Array< FileNode > & GetFiles()
+    {
+        return files;
+    }
+
+    // FindFile
+    //------------------------------------------------------------------------------
+    // Finds a file node in the directory by its name. Returns a pointer to the file
+    // node if found, otherwise returns nullptr.
+    FileNode * FindFile( const AString & file_name )
+    {
+        for ( FileNode & file : GetFiles() )
+        {
+            if ( 0 == file.CompareName( file_name ) )
+            {
+                return &file;
+            }
+        }
+        return nullptr;
+    }
+
+    FileNode * AddFile( const AString & file_name )
+    {
+        FileNode * file_node;
+        if ( nullptr != ( file_node = FindFile( file_name ) ) )
+            return file_node;
+        FileNode fileNode( file_name);
+        fileNode.SetParent( this );
+        GetFiles().Append( fileNode );
+        return FindFile( file_name );
+    }
+
+    // FindChildDirectory
+    //------------------------------------------------------------------------------
+    // Finds a child directory node by its name. Returns a pointer to the child directory
+    // node if found, otherwise returns nullptr.
+    DirectoryNode * FindChildDirectory( const AString & dir_name )
+    {
+        for ( DirectoryNode * dir : GetChilds() )
+        {
+            if ( 0 == dir->CompareName( dir_name ) )
+                return dir;
+        }
+        return nullptr;
+    }
+
+    // Create
+    //------------------------------------------------------------------------------
+    // Creates a new directory node with the given name and sets its parent
+    // directory. Returns a pointer to the created directory node.
+    static DirectoryNode * Create( const AString & node_name,
+                                   DirectoryNode * parent_node = nullptr )
+    {
+        DirectoryNode * dir_node = new DirectoryNode( node_name );
+        if ( !dir_node )
+            return nullptr;
+        dir_node->SetParent( parent_node );
+        return dir_node;
+    }
+
+    // Create
+    //------------------------------------------------------------------------------
+    // Creates a new directory node with the given name (C-style string) and
+    // sets its parent directory. Returns a pointer to the created directory node.
+    static DirectoryNode * Create( const char * name,
+                                   DirectoryNode * parent_node = nullptr )
+    {
+        AString node_name( name );
+        return Create( node_name, parent_node );
+    }
+
+    // AddChildDirectory
+    //------------------------------------------------------------------------------
+    // Adds a child directory node to the directory. If a child directory with the same
+    // name already exists, returns a pointer to the existing child directory node.
+    // Otherwise, creates a new child directory node, sets its parent to this directory,
+    // and appends it to the childs array.
+    DirectoryNode * AddChildDirectory( const AString & dir_name )
+    {
+        DirectoryNode * child_dir = nullptr;
+        if ( nullptr != ( child_dir = FindChildDirectory( dir_name ) ) )
+            return child_dir;
+        child_dir = Create( dir_name, this );
+        if ( !child_dir )
+            return nullptr;
+        GetChilds().Append( child_dir );
+        return child_dir;
+    }
+};
 }
