@@ -5,6 +5,8 @@
 //------------------------------------------------------------------------------
 #include "PathUtils.h"
 #include "Core/Strings/AStackString.h"
+
+#include <ctype.h>
 #include <string.h>
 
 // Exists
@@ -616,4 +618,346 @@ public:
         return child_dir;
     }
 };
+
+// PathParts
+//------------------------------------------------------------------------------
+// Represents the parts/components) of a path, including directories, file name, and flags
+// indicating whether the path is a directory and whether path is absolute.
+struct PathParts
+{
+    Array< AString > dirs; // Array of directory parts
+    AString name;          // File name part
+
+    bool is_dir = false;       // Flag indicating if the path is a directory
+    bool is_absolute = false;  // Flag indicating if the path is absolute
+
+    // GetDirsSize
+    //------------------------------------------------------------------------------
+    // Returns the number of directory parts in the path.
+    size_t GetDirsSize() const
+    {
+        return dirs.GetSize();
+    }
+
+    // GetDirsPart
+    //------------------------------------------------------------------------------
+    // Returns the directory part at the specified index. If the index is out of bounds,
+    // returns an empty string.
+    const AString & GetDirsPart( size_t idx ) const
+    {
+        return ( idx < GetDirsSize() ) ? dirs[ idx ] : AString::GetEmpty();
+    }
+
+    // AddDirsPart
+    //------------------------------------------------------------------------------
+    // Adds a directory part to the path. If the input string is not null and not empty,
+    // it is appended to the dirs array.
+    void AddDirsPart( const char * s )
+    {
+        if ( s && *s != '\0' )
+        {
+            AString str( s );
+            dirs.Append( str );
+        }
+    }
+
+    // GetFileName
+    //------------------------------------------------------------------------------
+    // Returns the file name part of the path.
+    const AString & GetFileName() const
+    {
+        return name;
+    }
+
+    // SetAbsolute
+    //------------------------------------------------------------------------------
+    // Sets "is_absolute" flag.
+    void SetAbsolute()
+    {
+        is_absolute = true;
+    }
+
+    // SetFileName
+    //------------------------------------------------------------------------------
+    // Sets the file name part of the path and marks the path as not a directory.
+    void SetFileName( const AString & file_name )
+    {
+        name = file_name;
+        is_dir = false;
+    }
+
+    // SetFileName
+    //------------------------------------------------------------------------------
+    // Sets the file name part of the path using a C-style string and marks the path
+    // as not a directory.
+    void SetFileName( const char * file_name )
+    {
+        AString s( file_name );
+        SetFileName( s );
+    }
+
+    // IsAbsolute
+    //------------------------------------------------------------------------------
+    // Returns true if "is_absolute" flag is set, false otherwise.
+    bool IsAbsolute() const
+    {
+        return is_absolute;
+    }
+};
+
+#define IS_SLASH( __c ) ( ( ( __c ) == NATIVE_SLASH ) || ( ( __c ) == OTHER_SLASH ) )
+
+// BeginsWithSlash
+//------------------------------------------------------------------------------
+// Checks if the given C-style string begins with a slash (either NATIVE_SLASH or OTHER_SLASH).
+// Returns true if the string begins with a slash, false otherwise.
+bool BeginsWithSlash( const char * s )
+{
+    if ( !s )
+        return false;
+    if ( ::strlen( s ) < 1 )
+        return false;
+    return IS_SLASH( *s );
+}
+
+// IsSlash
+//------------------------------------------------------------------------------
+// Returns true if the character is a slash, false otherwise.
+bool IsSlash( char c )
+{
+    bool yes = IS_SLASH( c );
+    return yes;
+}
+
+// IsDot
+//------------------------------------------------------------------------------
+// Checks if the given AString object represents a single dot (".").
+// Returns true if the string is a single dot, false otherwise.
+bool IsDot( const AString & s )
+{
+    if ( s.GetLength() != 1 )
+        return false;
+    return s[ 0 ] == '.';
+}
+
+// IsDoubleDot
+//------------------------------------------------------------------------------
+// Checks if the given AString object represents a double dot ("..").
+// Returns true if the string is a double dot, false otherwise.
+bool IsDoubleDot( const AString & s )
+{
+    if ( s.GetLength() != 2 )
+        return false;
+    return s[ 0 ] == '.' && s[ 1 ] == '.';
+}
+
+#ifdef __WINDOWS__
+// IsRootPath (Windows)
+//------------------------------------------------------------------------------
+// Checks if the given C-style string represents a root path on Windows.
+// Returns true if the string is a root path, false otherwise.
+bool IsRootPath( const char * s )
+{
+    if ( !s )
+        return false;
+    if ( ::strlen( s ) < 1 )
+        return false;
+    if ( BeginsWithSlash( s ) )
+        return true;
+    if ( ::strlen( s ) < 3 )
+        return false;
+    bool yes = ( isalpha( s[ 0 ] ) && s[ 1 ] == ':' && IsSlash( s[ 2 ] ) );
+    return yes;
+}
+#endif
+
+#ifdef __LINUX__
+// IsRootPath (Linux)
+//------------------------------------------------------------------------------
+// Checks if the given C-style string represents a root path on Linux.
+// Returns true if the string is a root path, false otherwise.
+bool IsRootPath( const char * s )
+{
+    if ( !s )
+        return false;
+    return IsSlash( *s );
+}
+#endif
+
+// ParsePath
+//------------------------------------------------------------------------------
+// Parses the given path into its components (directories and file name) and stores
+// them in the provided PathParts object. The isFile parameter indicates whether the
+// path represents a file.
+void ParsePath( const AString & path,
+                bool isFile,
+                PathParts & path_parts )
+{
+    // ReadStream
+    //------------------------------------------------------------------------------
+    // Helper class to read characters from a string and manage the current position.
+    struct ReadStream
+    {
+        AString s;            // The input string
+        size_t cur_pos = 0;   // Current position in the string
+        size_t top = 0, bottom = 0; // Top and bottom bounds of the string
+
+        // Constructor
+        // Initializes the ReadStream with the given input string.
+        ReadStream( const AString & in )
+            : s( in ),
+              cur_pos( 0 ),
+              top( 0 )
+        {
+            bottom = s.GetLength() == 0 ? 0 : s.GetLength() - 1;
+        }
+
+        // GetLength
+        //------------------------------------------------------------------------------
+        // Returns the length of the input string.
+        size_t GetLength() const
+        {
+            return s.GetLength();
+        }
+
+        // IsPosInRange
+        //------------------------------------------------------------------------------
+        // Checks if the current position is within the bounds of the string.
+        // Returns true if the position is in range, false otherwise.
+        bool IsPosInRange()
+        {
+            return cur_pos < GetLength();
+        }
+
+        // GetPos
+        //------------------------------------------------------------------------------
+        // Returns the current position in the string.
+        size_t GetPos() const
+        {
+            return cur_pos;
+        }
+
+        // GetPrevPos
+        //------------------------------------------------------------------------------
+        // Returns the previous position in the string.
+        size_t GetPrevPos() const
+        {
+            return ( GetPos() == 0 ) ? 0 : GetPos() - 1;
+        }
+
+        // GetPtr
+        //------------------------------------------------------------------------------
+        // Returns a pointer to the character at the specified index in the string.
+        const char * GetPtr( size_t idx = 0 ) const
+        {
+            return s.Get() + idx;
+        }
+
+        // GetCurPtr
+        //------------------------------------------------------------------------------
+        // Returns a pointer to the current position in the string.
+        const char * GetCurPtr() const
+        {
+            return GetPtr( GetPos() );
+        }
+
+        // Get
+        //------------------------------------------------------------------------------
+        // Returns the character at the current position and advances the position.
+        // If the position is out of range, returns '\0'.
+        char Get()
+        {
+            return IsPosInRange() ? s[ cur_pos++ ] : '\0';
+        }
+
+        // UnGet
+        //------------------------------------------------------------------------------
+        // Moves the position back by one and returns the character at the new position.
+        // If the position is at the beginning, returns '\0'.
+        char UnGet()
+        {
+            return ( GetPos() == 0 ) ? '\0' : s[ --cur_pos ];
+        }
+
+        // ReplaceChar
+        //------------------------------------------------------------------------------
+        // Replaces the character at the specified index with the given character.
+        // Returns the original character at the specified index.
+        char ReplaceChar( size_t idx,
+                          char ch )
+        {
+            if ( idx <= GetLength() )
+            {
+                char chp = s[ idx ];
+                s[ idx ] = ch;
+                return chp;
+            }
+            return '\0';
+        }
+    };
+
+    ReadStream rs( path );
+    char ch;
+    const char * part_ptr = rs.GetPtr();
+
+    if ( IsRootPath( part_ptr ) )
+    {
+#ifdef __WINDOWS__
+        if ( BeginsWithSlash( part_ptr ) )
+        {
+            rs.Get(); // skip over slash.
+            path_parts.AddDirsPart( NATIVE_SLASH_STR );
+        }
+        else
+        {
+            rs.ReplaceChar( 2, '\0' );
+            path_parts.AddDirsPart( part_ptr ); // add a part before slash
+            rs.Get();                           // skip over device letter.
+            rs.Get();                           // skip over ':'.
+            rs.Get();                           // skip over slash.
+        }
+#endif
+#ifdef __LINUX__
+        rs.Get(); // skip over slash.
+        path_parts.AddDirsPart( NATIVE_SLASH_STR );
+#endif
+        path_parts.SetAbsolute();
+        part_ptr = rs.GetCurPtr(); // now part_ptr points to a symbol after slash.
+    }
+
+    while ( ( ch = rs.Get() ) != '\0' )
+    {
+        switch ( ch )
+        {
+        case NATIVE_SLASH:
+        case OTHER_SLASH:
+            rs.ReplaceChar( rs.GetPrevPos(), '\0' ); // replace slash for zero.
+            path_parts.AddDirsPart( part_ptr );      // added a part before slash
+            part_ptr = rs.GetCurPtr();               // now part_ptr points to a symbol after slash.
+            break;
+        case '.':
+            // if pattern ../
+            if ( rs.Get() != '.' )
+            {
+                rs.UnGet();
+                break;
+            }
+            if ( !IsSlash( rs.Get() ) )
+            {
+                rs.UnGet();
+                rs.UnGet();
+                break;
+            }
+            path_parts.AddDirsPart( ".." );
+            part_ptr = rs.GetCurPtr(); // now part_ptr points to a symbol after slash.
+            break;
+
+        default: break;
+        }
+    }
+    if ( isFile )
+        path_parts.SetFileName( part_ptr );
+    else
+        path_parts.AddDirsPart( part_ptr );
+}
 }
