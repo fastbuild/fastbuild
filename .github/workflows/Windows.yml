@@ -44,6 +44,11 @@ jobs:
         run: |
           'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\LLVM\x64\bin\clang.exe' --version
 
+      - name: Print environment variables
+        if: matrix.os == 'windows-2022'
+        run: |
+          set
+
       - name: Configure fbuild.bff
         run: |
           # Inject "#define CI_BUILD" into root configs to activate CI logic.
