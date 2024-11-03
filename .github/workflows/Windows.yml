@@ -47,7 +47,7 @@ jobs:
       - name: Print VS version info
         if: matrix.os == 'windows-2022'
         run: |
-          dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\"
+          dir 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\'
 
       - name: Configure fbuild.bff
         run: |
