@@ -127,6 +127,18 @@ int Main( const AString & args )
     int ret;
     {
         Worker worker( args, options.m_ConsoleMode, options.m_PeriodicRestart );
+
+        AStackString<> ipAddressEnvOverride;
+        if ( !options.m_OverrideIPAddress.IsEmpty() )
+        {
+            worker.SetIPAddressOverride( options.m_OverrideIPAddress );
+        }
+        else if ( Env::GetEnvVariable( "FASTBUILD_WORKER_IP_ADDRESS", ipAddressEnvOverride ) &&
+                  !ipAddressEnvOverride.IsEmpty() )
+        {
+            worker.SetIPAddressOverride( ipAddressEnvOverride );
+        }
+
         if ( options.m_OverrideCPUAllocation )
         {
             WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );
