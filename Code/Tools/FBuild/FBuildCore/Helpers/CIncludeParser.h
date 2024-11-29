@@ -7,6 +7,8 @@
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
+#include "Core/Strings/AStackString.h"
+#include "Core/Process/Mutex.h"
 
 // CIncludeParser class
 //------------------------------------------------------------------------------
@@ -28,6 +30,8 @@ public:
         inline size_t GetNonUniqueCount() const { return m_NonUniqueCount; }
     #endif
 
+    static bool DetectMS_ShowIncludesMarker( const AString & compiler );
+
 private:
     static void ParseToNextLineStartingWithHash( const char * & pos );
 
@@ -44,6 +48,10 @@ private:
     #ifdef DEBUG
         size_t m_NonUniqueCount;    // number of include directives seen
     #endif
+
+    static AStackString< 256 >  ms_ShowIncludesMarker;
+    static bool                 ms_ShowIncludesMarkerDetected;
+    static Mutex                ms_ShowIncludesMarkerMutex;
 };
 
 //------------------------------------------------------------------------------
