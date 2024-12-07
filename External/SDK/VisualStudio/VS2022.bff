@@ -41,8 +41,8 @@
             #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.41.34120/bin/Hostx64/x64/cl.exe" )
                 // v17.10.3
                 .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC'
-                .VS2022_Version         = '14.41.34120'
-                .VS2022_MSC_VER         = '1941'
+                .VS2022_Version         = '14.42.34433'
+                .VS2022_MSC_VER         = '1942'
             #else
                 //
                 // Failed
