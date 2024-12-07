@@ -17,7 +17,8 @@ public:
     {
         READ_ONLY                     = 0x1,
         WRITE_ONLY                    = 0x2,
-        TEMP                          = 0x4,
+        OPEN_OR_CREATE_READ_WRITE     = 0x4,
+        TEMP                          = 0x8,
         NO_RETRY_ON_SHARING_VIOLATION = 0x80,
     };
 
@@ -41,6 +42,7 @@ public:
         // Set on already open file via handle (Windows only)
         bool SetLastWriteTime( uint64_t lastWriteTime );
     #endif
+    bool Truncate();
 
 private:
     #if defined( __WINDOWS__ )

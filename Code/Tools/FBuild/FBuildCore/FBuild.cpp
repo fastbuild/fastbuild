@@ -346,7 +346,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
     // try to open the file
     FileStream fileStream;
-    if ( fileStream.Open( nodeGraphDBFile, FileStream::WRITE_ONLY ) == false )
+    if ( fileStream.Open( nodeGraphDBFile, FileStream::OPEN_OR_CREATE_READ_WRITE ) == false )
     {
         // failing to open the dep graph for saving is a serious problem
         FLOG_ERROR( "Failed to open DepGraph for saving '%s'", nodeGraphDBFile );
@@ -359,7 +359,9 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
         FLOG_ERROR( "Saving DepGraph FAILED!" );
         return false;
     }
-    fileStream.Close();
+
+    // Truncate if new data is smaller than old data    
+    fileStream.Truncate();
 
     FLOG_VERBOSE( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );
     return true;
