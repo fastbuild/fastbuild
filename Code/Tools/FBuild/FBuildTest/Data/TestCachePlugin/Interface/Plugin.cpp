@@ -5,14 +5,7 @@
 //------------------------------------------------------------------------------
 #include <stdio.h>
 
-// The FASTBuild DLL Interface
-//------------------------------------------------------------------------------
-#if defined(__WINDOWS__)
-#define CACHEPLUGIN_DLL_EXPORT __declspec(dllexport)
-#elif defined(__LINUX__) || defined(__APPLE__)
-#define CACHEPLUGIN_DLL_EXPORT
-#endif
-
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/Cache/CachePluginInterface.h"
 
 // System

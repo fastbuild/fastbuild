@@ -697,7 +697,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
         {
             // Get path to file
             AStackString<> fileName;
-            GetRemoteFilePath( fileId, fileName );
+            GetRemoteFilePath( static_cast<uint32_t>( fileId ), fileName );
 
             // Make modification time now
             FileIO::SetFileLastWriteTimeToNow( fileName );

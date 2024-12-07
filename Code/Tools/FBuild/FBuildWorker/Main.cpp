@@ -28,7 +28,7 @@
 // Global Data
 //------------------------------------------------------------------------------
 // only allow 1 worker per system
-SystemMutex g_OneProcessMutex( "Global\\FBuildWorker" );
+static SystemMutex g_OneProcessMutex( "Global\\FBuildWorker" );
 
 // Functions
 //------------------------------------------------------------------------------
