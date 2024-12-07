@@ -932,7 +932,9 @@ void TestUnity::CacheUsingRelativePaths() const
         }
 
         // Check __FILE__ paths are relative
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) );
+        // Slash direction changed in Clang 18.x.x from forward slash to backslash
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) ||
+                     buffer.Find( "FILE_MACRO_START_1(.\\Subdir/Header.h)FILE_MACRO_END_1" ) );
         #if defined( __WINDOWS__ )
             TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(.\\File.cpp)FILE_MACRO_END_2" ) );
         #else

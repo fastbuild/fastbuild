@@ -124,6 +124,7 @@ Compiler( 'Compiler-Clang19-NonCL' )
                                     + ' -Wno-switch-default'            // Don't require default: when all cases are already handled
 
                                     // Warnings that fire but might be best to be fixed
+                                    + ' -Wno-anon-enum-enum-conversion' // conversions between unrelated anonymous enums
                                     + ' -Wno-cast-function-type-strict' // converts to incompatible function type
                                     + ' -Wno-cast-qual'                 // cast from 'const %s *' to '%s *' drops const qualifier
                                     + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
