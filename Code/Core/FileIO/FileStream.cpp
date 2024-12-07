@@ -381,7 +381,7 @@ bool FileStream::Truncate()
     #elif defined( __APPLE__ )
         return ( ftruncate( m_Handle, static_cast<off_t>( Tell() ) ) == 0 );
     #else
-        return ( ftruncate64( m_Handle, Tell() ) == 0 );
+        return ( ftruncate64( m_Handle, static_cast<off_t>( Tell() ) ) == 0 );
     #endif
 }
 
