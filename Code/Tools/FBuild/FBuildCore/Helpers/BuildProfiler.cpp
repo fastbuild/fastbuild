@@ -212,7 +212,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
                    (uint64_t)( (double)saveStart * freqMul ),
                    (uint64_t)( (double)(saveEnd - saveStart) * freqMul ),
                    Event::LOCAL_MACHINE_ID,
-                   0 );
+                   0u );
     return( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() );
 }
 

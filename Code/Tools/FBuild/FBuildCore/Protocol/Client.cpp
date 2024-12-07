@@ -28,7 +28,7 @@
 //------------------------------------------------------------------------------
 #define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 0.1f )
 #define CONNECTION_REATTEMPT_DELAY_TIME ( 10.0f )
-#define SYSTEM_ERROR_ATTEMPT_COUNT ( 3 )
+#define SYSTEM_ERROR_ATTEMPT_COUNT ( 3u )
 #define DIST_INFO( ... ) do { if ( m_DetailedLogging ) { FLOG_OUTPUT( __VA_ARGS__ ); } } while( false )
 
 // CONSTRUCTOR
