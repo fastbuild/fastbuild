@@ -20,6 +20,8 @@
     //#define USING_CLANG_14
     //#define USING_CLANG_15
     #define USING_CLANG_17
+    //#define USING_CLANG_18
+    //#define USING_CLANG_19
 #endif
 
 // Activate
@@ -52,7 +54,7 @@
 #if __WINDOWS__
     #if CI_BUILD
         #if USING_VS2022
-            #define USING_CLANG_17
+            #define USING_CLANG_18
         #else
             #define USING_CLANG_11
         #endif
@@ -77,6 +79,12 @@
     #endif
     #if USING_CLANG_17
         #include "Windows/Clang17.bff"
+    #endif
+    #if USING_CLANG_18
+        #include "Windows/Clang18.bff"
+    #endif
+    #if USING_CLANG_19
+        #include "Windows/Clang19.bff"
     #endif
 #endif
 
