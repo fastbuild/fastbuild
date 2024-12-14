@@ -26,6 +26,14 @@
     #include <mach/mach_host.h>
 #endif
 
+// Handle GCC -ffreestanding environment
+#if defined(__STDC_HOSTED__) && (__STDC_HOSTED__ == 0)
+    extern "C"
+    {
+        uint64_t strtoul(const char * nptr, char ** endptr, int32_t base);
+    }
+#endif
+
 // Defines
 //------------------------------------------------------------------------------
 #define IDLE_CHECK_DELAY_SECONDS ( 0.1f )

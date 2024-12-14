@@ -16,6 +16,15 @@
 // System
 #include <stdlib.h>
 
+// Handle GCC -ffreestanding environment
+#if defined(__STDC_HOSTED__) && (__STDC_HOSTED__ == 0)
+    extern "C"
+    {
+        void* malloc(size_t size);
+        void free(void * ptr);
+    }
+#endif
+
 // TestSmallBlockAllocator
 //------------------------------------------------------------------------------
 class TestSmallBlockAllocator : public TestGroup
