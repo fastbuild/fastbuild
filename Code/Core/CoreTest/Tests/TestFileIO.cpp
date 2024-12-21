@@ -19,6 +19,7 @@
 #include "Core/Tracing/Tracing.h"
 
 // system
+#include <string.h>
 #if defined( __LINUX__ )
     #include <unistd.h>
 #endif
