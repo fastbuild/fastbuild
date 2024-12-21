@@ -29,11 +29,6 @@ OK_GLIBC_VERSIONS   = [
                         'GLIBC_2.3.3 ',
                         'GLIBC_2.6 ',
                         'GLIBC_2.10 ',
-                        'GLIBC_2.14 ',
-                        'GLIBC_2.17 ',
-                        'GLIBC_2.33 ',      # TODO: Fix dependency
-                        'GLIBC_2.34 ',      # TODO: Fix dependency
-                        'GLIBC_2.38 ',      # TODO: Fix dependency
                         'GLIBCXX_3.4 ',     # TODO: Fix dependency
                       ]
 
