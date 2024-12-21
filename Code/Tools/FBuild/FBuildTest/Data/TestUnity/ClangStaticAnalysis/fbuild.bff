@@ -43,9 +43,8 @@ ObjectList( 'Compile' )
 ObjectList( 'Compile-InjectHeader' )
 {
     #if __WINDOWS__ // Using clang-cl on Windows
-        .CompilerOptions                = ' "/FICore/Env/glibc_compat.h" $CompilerOptions$'
-                                        + ' -Wno-reserved-id-macro'
+        .CompilerOptions                = ' "/FITools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/injected.h" $CompilerOptions$'
     #else
-        .CompilerOptions                = ' -include Core/Env/glibc_compat.h $CompilerOptions$'
+        .CompilerOptions                = ' -include Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/injected.h $CompilerOptions$'
     #endif
 }
