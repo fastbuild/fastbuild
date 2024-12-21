@@ -624,6 +624,7 @@ void TestFileIO::CreateOrOpenReadWritePerf() const
     // causing the file to be truncated or grow on each iteration
     const uint32_t maxDataLen = ( 16 * 1024 * 1024 );
     UniquePtr<uint8_t, FreeDeletor> data( static_cast<uint8_t*>( ALLOC( maxDataLen ) ) );
+    memset( data.Get(), 0, maxDataLen );
 
     // Repeat operation several times to get performance info
     const size_t numRepeats = 8;
