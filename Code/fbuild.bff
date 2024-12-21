@@ -122,7 +122,7 @@ Settings
 #if __WINDOWS__
     .Debug_Optimizations_MSVC =
     [
-        .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
+        .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy-'
         .CompilerOptionsC               = .CompilerOptions
     ]
     .Analyze_Optimizations_MSVC =
@@ -133,7 +133,7 @@ Settings
     ]
     .Profile_Optimizations_MSVC =
     [
-        .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
+        .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /Zo'
         .CompilerOptionsC               = .CompilerOptions
         .LinkerOptions                  = ' /OPT:REF,ICF'
     ]

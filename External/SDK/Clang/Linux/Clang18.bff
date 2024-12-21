@@ -68,9 +68,11 @@ Compiler( 'Compiler-Clang18' )
                                     + ' -Wno-weak-vtables'              // '%s has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit
 
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -fno-rtti'      // No RTTI
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -fno-rtti'      // No RTTI
 
     // Librarian
     .Librarian                      = '$Clang18_BasePath$/llvm-ar'
