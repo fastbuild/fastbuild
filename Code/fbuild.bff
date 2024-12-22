@@ -73,7 +73,7 @@ Settings
     .ASanDLLs                       = {}
     .ASan_Config_MSVC =
     [
-        .CompilerOptions                = ' -DRELEASE'
+        .CompilerOptions                = ' -DRELEASE -D__ASAN__'
                                         + ' /fsanitize=address'
         .CompilerOptionsC               = .CompilerOptions
         .LinkerOptions                  = ' libvcasan.lib'
@@ -84,7 +84,7 @@ Settings
 #endif
 .ASan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__ASAN__'
                                     + ' -fsanitize=address -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
@@ -93,7 +93,7 @@ Settings
 ]
 .MSan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__MSAN__'
                                     + ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=memory -L../External/MSan'
@@ -102,7 +102,7 @@ Settings
 ]
 .TSan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__TSAN__'
                                     + ' -fsanitize=thread'
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions

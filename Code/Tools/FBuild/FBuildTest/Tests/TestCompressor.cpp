@@ -157,7 +157,11 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     for ( const int32_t compressionLevel : compressionLevels )
     {
         // compress/decompress the data several times to get more stable throughput value
+#if defined( __ASAN__ ) || defined( __TSAN__ ) || defined( __MSAN__ )
+        const uint32_t numRepeats = 1; // Slow sanitizer configs do only 1 pass
+#else
         const uint32_t numRepeats = 4; // Increase to get more consistent numbers
+#endif
         double compressTimeTaken = 0.0;
         double decompressTimeTaken = 0.0;
         uint64_t compressedSize = 0;
@@ -212,7 +216,11 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     for ( const int32_t compressionLevel : zStdCompressionLevels )
     {
         // compress/decompress the data several times to get more stable throughput value
+#if defined( __ASAN__ ) || defined( __TSAN__ ) || defined( __MSAN__ )
+        const uint32_t numRepeats = 1; // Slow sanitizer configs do only 1 pass
+#else
         const uint32_t numRepeats = 4; // Increase to get more consistent numbers
+#endif
         double compressTimeTaken = 0.0;
         double decompressTimeTaken = 0.0;
         uint64_t compressedSize = 0;
