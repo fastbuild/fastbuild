@@ -350,8 +350,8 @@ void XCodeProjectGenerator::WriteFiles()
 
         AStackString<> processedShortName;
         AStackString<> processedFullPath;
-        ProcessFileName( shortName, processedShortName );
-        ProcessFileName( fullPath, processedFullPath );
+        ProcessString( shortName, processedShortName );
+        ProcessString( fullPath, processedFullPath );
 
         Write( "\t\t1111111111111111%08u /* %s */ = {isa = PBXFileReference;%s lastKnownFileType = %s; name = %s; path = %s; sourceTree = \"<group>\"; };\n",
                file->m_SortedIndex,
@@ -691,7 +691,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                 for ( AString & define : defines )
                 {
                     AStackString<> escapedDefine;
-                    EscapeDefine( define, escapedDefine );
+                    ProcessString( define, escapedDefine );
                     define = escapedDefine;
                 }
 
@@ -888,35 +888,13 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
     }
 }
 
-// EscapeDefine
+// ProcessString
 //------------------------------------------------------------------------------
-void XCodeProjectGenerator::EscapeDefine( const AString & define,
-                                          AString & outEscapedDefine ) const
+/*static*/ void XCodeProjectGenerator::ProcessString( const AString & fileName,
+                                                      AString & outString )
 {
-    for ( const char c : define )
-    {
-        switch ( c )
-        {
-            case '"':   outEscapedDefine += "\\\"";   break;
-            case '\\':  outEscapedDefine += "\\\\";    break;
-            default:
-            {
-                outEscapedDefine += c;
-                break;
-            }
-        }
-    }
-}
-
-
-// ProcessFileName
-//------------------------------------------------------------------------------
-/*static*/ void XCodeProjectGenerator::ProcessFileName( const AString & fileName,
-                                                        AString & outFileName )
-{
-    // Filenames are quoted when certain characters are present. Additionally,
+    // Strings are quoted when certain characters are present. Additionally,
     // certain characters are escaped.
-    // The rules for this appear to be different to other strings.
 
     bool needsQuotes = false;
     for ( const char c : fileName )
@@ -930,7 +908,7 @@ void XCodeProjectGenerator::EscapeDefine( const AString & define,
              ( c == '.' ) ||
              ( c == '/' ) )
         {
-            outFileName += c;
+            outString += c;
             continue;
         }
 
@@ -938,8 +916,8 @@ void XCodeProjectGenerator::EscapeDefine( const AString & define,
         if ( ( c == '\\' ) || ( c == '"' ) )
         {
             // Escape
-            outFileName += '\\';
-            outFileName += c;
+            outString += '\\';
+            outString += c;
 
             // When there is an escaped character, the string is quoted
             needsQuotes = true;
@@ -948,7 +926,7 @@ void XCodeProjectGenerator::EscapeDefine( const AString & define,
 
         // All other characters require the string be quoted, but are not escaped
         needsQuotes = true;
-        outFileName += c;
+        outString += c;
     }
 
     // Surround with quotes if needed
@@ -956,9 +934,9 @@ void XCodeProjectGenerator::EscapeDefine( const AString & define,
     {
         AStackString<> tmp;
         tmp += '\"';
-        tmp += outFileName;
+        tmp += outString;
         tmp += '\"';
-        outFileName = tmp;
+        outString = tmp;
     }
 }
 
