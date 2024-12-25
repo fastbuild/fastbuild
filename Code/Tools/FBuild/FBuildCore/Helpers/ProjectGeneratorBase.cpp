@@ -490,16 +490,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
     Array< AString > tokens;
     compilerArgs.Tokenize( tokens );
+    AString::RemoveQuotes( tokens );
 
     for ( size_t i=0; i<tokens.GetSize(); ++i )
     {
-        AString & token = tokens[ i ];
-
-        // strip quotes around token, e.g:    "-IFolder/Folder"
-        if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) )
-        {
-            token.Assign( token.Get() + 1, token.GetEnd() - 1 );
-        }
+        const AString & token = tokens[ i ];
 
         AStackString<> optionBody;
 
