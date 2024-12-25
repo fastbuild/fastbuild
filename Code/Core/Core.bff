@@ -12,9 +12,6 @@
         Using( .BuildConfig )
         .OutputBase + '\$Platform$-$BuildConfigName$'
 
-        // MemTracker is built by iteself to control init order
-        .MemTrackerFile                 = 'Core/Mem/MemTracker.cpp'
-
         // Unity
         //--------------------------------------------------------------------------
         Unity( '$ProjectName$-Unity-$Platform$-$BuildConfigName$' )
@@ -23,7 +20,6 @@
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
             .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
             .UnityInputExcludePath      = '$ProjectPath$/CoreTest/' // Exclude Tests
-            .UnityInputExcludedFiles    = .MemTrackerFile
         }
 
         // Library
@@ -32,7 +28,6 @@
         {
             // Input
             .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
-            .CompilerInputFiles         = .MemTrackerFile
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'

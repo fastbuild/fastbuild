@@ -45,8 +45,8 @@
         static void DisableOnThread();
         static void EnableOnThread();
 
-        static void Reset();
-        static void DumpAllocations();
+        static bool HasAllocationsInRange( uint32_t startingId, uint32_t endingId );
+        static void DumpAllocations( uint32_t startingId, uint32_t endingId );
 
         static inline uint32_t GetCurrentAllocationCount() { return s_AllocationCount; }
         static inline uint32_t GetCurrentAllocationId() { return s_Id; }
@@ -62,6 +62,7 @@
         };
     private:
         static void Init();
+        static void DumpLeaksAtExit();
 
         static Mutex & GetMutex() { return reinterpret_cast< Mutex & >( s_Mutex ); }
 

@@ -6,12 +6,6 @@
 #include "MemTracker.h"
 #include "Core/Env/Types.h"
 
-#if defined( __WINDOWS__ )
-    PRAGMA_DISABLE_PUSH_MSVC( 4073 ) // initializers put in library initialization area
-    #pragma init_seg(lib)
-    PRAGMA_DISABLE_POP_MSVC
-#endif
-
 //------------------------------------------------------------------------------
 #if defined( MEMTRACKER_ENABLED )
     // Includes
@@ -22,16 +16,8 @@
     #include "Core/Tracing/Tracing.h"
 
     // system
+    #include <stdlib.h> // for atexit
     #include <memory.h> // for memset
-
-    // GlobalData
-    //------------------------------------------------------------------------------
-    class LeakDumper { public: ~LeakDumper() { MemTracker::DumpAllocations(); } };
-    #if defined( __WINDOWS__ ) && !defined( __clang__ )
-        static LeakDumper g_LeakDumper;
-    #else
-        static LeakDumper g_LeakDumper __attribute__((init_priority(101)));
-    #endif
 
     // Static Data
     //------------------------------------------------------------------------------
@@ -163,9 +149,35 @@
         --g_MemTrackerDisabledOnThisThread;
     }
 
+    // HasAllocationsInRange
+    //------------------------------------------------------------------------------
+    /*static*/ bool MemTracker::HasAllocationsInRange( uint32_t startingId, uint32_t endingId )
+    {
+        if ( s_AllocationCount  == 0 )
+        {
+            return false;
+        }
+
+        for ( size_t i=0; i<ALLOCATION_HASH_SIZE; ++i )
+        {
+            Allocation * a = s_AllocationHashTable[ i ];
+            while ( a )
+            {
+                const uint32_t id     = a->m_Id;
+                if ( ( id > startingId ) && ( id <= endingId ) )
+                {
+                    return true;
+                }
+                a = a->m_Next;
+            }
+        }
+
+        return false;
+    }
+
     // DumpAllocations
     //------------------------------------------------------------------------------
-    /*static*/ void MemTracker::DumpAllocations()
+    /*static*/ void MemTracker::DumpAllocations( uint32_t startingId, uint32_t endingId )
     {
         if ( s_Enabled == false )
         {
@@ -206,6 +218,11 @@
             while ( a )
             {
                 const uint32_t id     = a->m_Id;
+                if ( ( id <= startingId ) || ( id > endingId ) )
+                {
+                    a = a->m_Next;
+                    continue;
+                }
                 const uint64_t addr   = (size_t)a->m_Ptr;
                 const uint64_t size   = a->m_Size;
 
@@ -235,34 +252,6 @@
         OUTPUT( "--------------------------------------------------------------------\n" );
     }
 
-    // Reset
-    //------------------------------------------------------------------------------
-    /*static*/ void MemTracker::Reset()
-    {
-        MutexHolder mh( GetMutex() );
-
-        ++g_MemTrackerDisabledOnThisThread;
-
-        // free all allocation tracking
-        for ( size_t i=0; i<ALLOCATION_HASH_SIZE; ++i )
-        {
-            Allocation * a = s_AllocationHashTable[ i ];
-            while ( a )
-            {
-                s_Allocations->Free( a );
-                --s_AllocationCount;
-                a = a->m_Next;
-            }
-            s_AllocationHashTable[ i ] = nullptr;
-        }
-
-        ASSERT( s_AllocationCount == 0 );
-
-        s_Id = 0;
-
-        --g_MemTrackerDisabledOnThisThread;
-    }
-
     // Init
     //------------------------------------------------------------------------------
     /*static*/ void MemTracker::Init()
@@ -280,6 +269,9 @@
             return;
         }
 
+        // Register leak detection
+        atexit( MemTracker::DumpLeaksAtExit );
+
         // construct primary mutex in-place
         INPLACE_NEW ( &GetMutex() ) Mutex;
 
@@ -293,6 +285,19 @@
         MemoryBarrier();
 
         s_Initialized = true;
+    }
+
+    // DumpLeaksAtExit
+    //------------------------------------------------------------------------------
+    /*static*/ void MemTracker::DumpLeaksAtExit()
+    {
+        const uint32_t startId = 0;
+        const uint32_t endId = 0xFFFFFFFF;
+        if ( HasAllocationsInRange( startId, endId ) )
+        {
+            DumpAllocations( startId, endId );
+            exit( 99 );
+        }
     }
 
 //------------------------------------------------------------------------------
