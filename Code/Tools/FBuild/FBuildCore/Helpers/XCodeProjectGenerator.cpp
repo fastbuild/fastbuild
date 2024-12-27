@@ -686,15 +686,6 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             {
                 Array< AString > defines;
                 ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, false );
-
-                // Escape quotes and slashes
-                for ( AString & define : defines )
-                {
-                    AStackString<> escapedDefine;
-                    ProcessString( define, escapedDefine );
-                    define = escapedDefine;
-                }
-
                 WriteArray( 4, "GCC_PREPROCESSOR_DEFINITIONS", defines );
             }
 
@@ -786,30 +777,6 @@ void XCodeProjectGenerator::WriteFooter()
            pbxProjectGUID.Get() );
 }
 
-// ShouldQuoteString
-//------------------------------------------------------------------------------
-bool XCodeProjectGenerator::ShouldQuoteString( const AString & value ) const
-{
-    if ( value.IsEmpty() )
-    {
-        return true;
-    }
-    for ( size_t i = 0; i < value.GetLength(); ++i )
-    {
-        const char c = value[ i ];
-        if ( ( c == ' ' ) ||
-             ( c == '"' ) ||
-             ( c == '?' ) ||
-             ( c == '-' ) ||
-             ( c == '+' ) ||
-             ( c == '=' ) )
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
 // WriteString
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteString( uint32_t indentDepth,
@@ -824,10 +791,9 @@ void XCodeProjectGenerator::WriteString( uint32_t indentDepth,
     }
 
     // Empty strings and strings with spaces are quoted
-    const char quoteString = ShouldQuoteString( value );
-    const char * const formatString = quoteString ? "%s%s = \"%s\";\n"
-                                                  : "%s%s = %s;\n";
-    Write( formatString, tabs.Get(), propertyName, value.Get() );
+    AStackString<> processedValue;
+    ProcessString( value, processedValue );
+    Write( "%s%s = %s;\n", tabs.Get(), propertyName, processedValue.Get() );
 }
 
 // WriteArray
@@ -857,10 +823,9 @@ void XCodeProjectGenerator::WriteArray( uint32_t indentDepth,
     for ( const AString & value : values )
     {
         // Empty strings and strings with spaces are quoted
-        const char quoteString = ShouldQuoteString( value );
-        const char * const formatString = quoteString ? "%s\t\"%s\",\n"
-                                                      : "%s\t%s,\n";
-        Write( formatString, tabs.Get(), value.Get() );
+        AStackString<> processedValue;
+        ProcessString( value, processedValue );
+        Write( "%s\t%s,\n", tabs.Get(), processedValue.Get() );
     }
     Write( "%s);\n", tabs.Get() );
 }
@@ -890,14 +855,21 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
 
 // ProcessString
 //------------------------------------------------------------------------------
-/*static*/ void XCodeProjectGenerator::ProcessString( const AString & fileName,
+/*static*/ void XCodeProjectGenerator::ProcessString( const AString & string,
                                                       AString & outString )
 {
     // Strings are quoted when certain characters are present. Additionally,
     // certain characters are escaped.
+    
+    // Emptry strings are quoted
+    if ( string.IsEmpty() )
+    {
+        outString = "\"\"";
+        return;
+    }
 
     bool needsQuotes = false;
-    for ( const char c : fileName )
+    for ( const char c : string )
     {
         // These characters are not escaped and don't require the string be quoted
         if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||
