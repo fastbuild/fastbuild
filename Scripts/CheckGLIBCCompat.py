@@ -29,7 +29,6 @@ OK_GLIBC_VERSIONS   = [
                         'GLIBC_2.3.3 ',
                         'GLIBC_2.6 ',
                         'GLIBC_2.10 ',
-                        'GLIBCXX_3.4 ',     # TODO: Fix dependency
                       ]
 
 # print_header

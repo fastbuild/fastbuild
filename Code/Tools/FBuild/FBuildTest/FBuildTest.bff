@@ -29,9 +29,6 @@
             // Input (Unity)
             .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
 
-            // Extra Compiler Options
-            .CompilerOptions            + .UseExceptions // Test framework uses exceptions
-
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
         }
