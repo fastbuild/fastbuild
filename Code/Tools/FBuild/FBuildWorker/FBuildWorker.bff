@@ -119,7 +119,7 @@
 
                 .LinkerStampExe             = '/bin/bash'
                 .ExtractDebugInfo           = 'objcopy --only-keep-debug $LinkerOutput$ $LinkerOutput$.debug'
-                .StripDebugInfo             = 'objcopy --strip-debug $LinkerOutput$'
+                .StripDebugInfo             = 'objcopy --strip-unneeded $LinkerOutput$'
                 .AddDebugLink               = 'objcopy --add-gnu-debuglink $LinkerOutput$.debug $LinkerOutput$'
                 .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$ && $AddDebugLink$"'
             #endif
