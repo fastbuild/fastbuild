@@ -62,6 +62,7 @@ Compiler( 'Compiler-Clang8' )
     // Linker
     .Linker                         = '$Clang8_BasePath$/clang++'
     .LinkerOptions                  = '"%1" -o "%2" -g'
+                                    + ' -Wl,-dead_strip'
                                     + ' -mmacosx-version-min=10.7'
                                     + ' -stdlib=libc++'
 

@@ -81,6 +81,12 @@
                 .AddDebugLink               = 'objcopy --add-gnu-debuglink $LinkerOutput$.debug $LinkerOutput$'
                 .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$ && $AddDebugLink$"'
             #endif
+            #if __OSX__
+                .LinkerStampExe             = '/bin/bash'
+                .ExtractDebugInfo           = 'dsymutil -o $LinkerOutput$.dSYM $LinkerOutput$'
+                .StripDebugInfo             = 'strip -x $LinkerOutput$'
+                .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$"'
+            #endif
         }
         #if __WINDOWS__
             Copy( '$ProjectName$-Copy-$Platform$-$BuildConfigName$' )

@@ -58,6 +58,7 @@ Compiler( 'Compiler-Clang12' )
     // Linker
     .Linker                         = '$Clang12_BasePath$/clang++'
     .LinkerOptions                  = '"%1" -o "%2" -g'
+                                    + ' -Wl,-dead_strip'
 
     // File Extensions
     .LibExtension                   = '.a'
