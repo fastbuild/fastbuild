@@ -33,6 +33,14 @@
                 .ExecExecutable             = .Linker
                 .ExecInput                  = 'Tools/FBuild/Icons/16x16_blue.png'
                 .ExecArguments              = '-r -o "%2" -sectcreate binary trayicon "%1"'
+                If( .Platform == 'x64OSX' )
+                {
+                    ^ExecArguments              + ' -arch x86_64'
+                }
+                If( .Platform == 'ARMOSX' )
+                {
+                    ^ExecArguments              + ' -arch arm64'
+                }
                 .ExecOutput                 = '$OutputBase$/$ProjectName$/16x16_blue.o'
             }
         #endif

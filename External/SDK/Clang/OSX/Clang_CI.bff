@@ -57,6 +57,7 @@ Compiler( 'Compiler-Clang12' )
     // Linker
     .Linker                         = 'CLANGXX_BINARY'
     .LinkerOptions                  = '"%1" -o "%2" -g'
+                                    + ' -Wl,-fatal_warnings'
                                     + ' -Wl,-dead_strip'
 
     // File Extensions
