@@ -29,6 +29,7 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -g'             // Generate debug info
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
+                                    + ' -mmacosx-version-min=10.7'
 
                                     // Include paths
                                     + ' -I./'
@@ -59,6 +60,7 @@ Compiler( 'Compiler-Clang12' )
     .LinkerOptions                  = '"%1" -o "%2" -g'
                                     + ' -Wl,-fatal_warnings'
                                     + ' -Wl,-dead_strip'
+                                    + ' -mmacosx-version-min=10.7'
 
     // File Extensions
     .LibExtension                   = '.a'
