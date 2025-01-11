@@ -79,6 +79,10 @@ jobs:
         if: ${{ matrix.cfg == 'Build & Tests' }}
         run: ${FBUILD_PATH} -nostoponerror -j1 -summary Tests
 
+      - name: Compat
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: python3 ../Scripts/CheckGLIBCCompat.py 
+
       - name: ASan
         if: ${{ matrix.cfg == 'ASan' }}
         run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
