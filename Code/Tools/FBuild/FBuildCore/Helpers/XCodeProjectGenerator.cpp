@@ -674,12 +674,29 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                xcBuildConfigurationGUID.Get(), config->m_Config.Get() );
 
         Write( "\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;\n" );
-
-        // TODO:B Can this (and other warning settings) be derived from the compiler options automatically?
-        Write( "\t\t\t\tCLANG_CXX_LANGUAGE_STANDARD = \"gnu++0x\";\n" );
-
+        
         // Find target from which to extract Intellisense options
         const ObjectListNode * oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( config->m_TargetNode );
+        
+        // Languages Standard
+        AStackString<> languageStandard( "gnu++0x" );
+        if ( oln )
+        {
+            StackArray< AString > extraOptions;
+            ProjectGeneratorBase::ExtractAdditionalOptions( oln->GetCompilerOptions(), extraOptions );
+            for ( const AString & option : extraOptions )
+            {
+                // Extract "<value>" from "-std=<value>"
+                if ( option.BeginsWith( "-std=" ) )
+                {
+                    languageStandard = ( option.Get() + 5 );
+                }
+                
+                // TODO:B Can other warning settings be derived from the compiler options automatically?
+            }
+        }
+        Write( "\t\t\t\tCLANG_CXX_LANGUAGE_STANDARD = \"%s\";\n", languageStandard.Get() );
+        
         if ( oln )
         {
             // Defines
