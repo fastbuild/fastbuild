@@ -26,6 +26,56 @@
 
 <h1>Changelog</h1>
 
+
+<div class='newsitemheader'>
+    v1.14&nbsp;<font color='#bbbbbb'>(12th-Jan-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>Settings exposes <a href="functions/settings.html">ConcurrencyGroups</a> allowing additional parallelism constraints</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Ensure PCH object files are inputs to linking at most once</li>
+        <li>Unity deterministically sorts files in same directory that are substring matches (Thanks to Michal Kawalec)</li>
+        <li>-report=json output is no longer corrupt when not using the cache</li>
+        <li>nans no longer emitted in -report=json for extremely fast builds</li>
+        <li>[Linux] Eliminate several dependencies on glibc 2.17 and 2.33 (Thanks to dummyunit)</li>
+        <li>[Linux] Ensure compatibility with glibc 2.10 (Thanks to dummyunit)</li> 
+        <li>Project Generation</li>
+        <ul>
+            <li>XCode project generation handles defines with quotes and slashes</li>
+            <li>Fix handling of quoted defines in Intellisense/CodeSense</li>
+            <li>Fix handling of various strings in XCode project generation</li>
+        </ul>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Add additional safety checks to decompression</li>
+        <li>Reduce database disk write time</li>
+        <li>Compiler() manifests provide extended error info when failing to open/read files</li>
+        <li>[OSX] Shrink FBuild and FBuildWorker binary size</li>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Distributed compression performance improved slightly (~5%)</li>
+        </ul>
+        <li>Caching</li>        
+        <ul>
+           <li>Cache decompression performance improved slightly at defaults (~5%)</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li>Xcode projects have CLANG_CXX_LANGUAGE_STANDARD set automatically</li>
+        </ul>
+    </ul>
+</div>
+
+
 <div class='newsitemheader'>
     v1.13&nbsp;<font color='#bbbbbb'>(21st-Apr-2024)</font>
 </div>
