@@ -28,9 +28,6 @@
             // Input (Unity)
             .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
 
-            // Extra Compiler Options
-            .CompilerOptions            + .UseExceptions // Test framework uses exceptions
-
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
         }
@@ -74,7 +71,22 @@
                 .LinkerOptions                  + ' -pthread -lrt'
             #endif
         }
-        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$BuildConfigName$' }
+        #if __WINDOWS__
+            Copy( '$ProjectName$-Copy-$Platform$-$BuildConfigName$' )
+            {
+                .Source     = .ASanDLLs
+                .Dest       = '$OutputBase$/$ProjectPath$/'
+            }
+        #endif
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' )
+        {
+            .Targets    = {
+                            #if __WINDOWS__
+                                '$ProjectName$-Copy-$Platform$-$BuildConfigName$'
+                            #endif
+                            '$ProjectName$-Exe-$Platform$-$BuildConfigName$'
+                          }
+        }
         ^'Targets_$Platform$_$BuildConfigName$' + { '$ProjectName$-$Platform$-$BuildConfigName$' }
 
         // Run Test

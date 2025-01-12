@@ -256,7 +256,14 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             }
 
             // concatenate files, unquoted
-            GetInputFiles( fullArgs, pre, AString::GetEmpty(), objectsInsteadOfLibs );
+            StackArray<AString> inputs;
+            GetInputFiles( objectsInsteadOfLibs, inputs );
+            for ( const AString & input: inputs )
+            {
+                fullArgs += pre;
+                fullArgs += input;
+                fullArgs.AddDelimiter();
+            }
         }
         else if ( token.EndsWith( "\"%1\"" ) )
         {
@@ -265,7 +272,15 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             AStackString<> post( "\"" );
 
             // concatenate files, quoted
-            GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            StackArray<AString> inputs;
+            GetInputFiles( objectsInsteadOfLibs, inputs );
+            for ( const AString & input: inputs )
+            {
+                fullArgs += pre;
+                fullArgs += input;
+                fullArgs += post;
+                fullArgs.AddDelimiter();
+            }
         }
         else if ( token.EndsWith( "%2" ) )
         {

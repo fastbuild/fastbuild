@@ -14,11 +14,14 @@ jobs:
       matrix:
         include:
           - cfg: Build & Tests
+            vs: 2022
+            os: windows-2022
+          - cfg: Build & Tests
             vs: 2019
             os: windows-2019
-          - cfg: Build & Tests
-            vs: 2017
-            os: windows-2019
+          - cfg: Analyze
+            vs: 2022
+            os: windows-2022
           - cfg: Analyze
             vs: 2019
             os: windows-2019
@@ -31,9 +34,23 @@ jobs:
 
       - uses: ./.github/actions/DownloadFBuild
 
-      - name: Configure fbuild.bff
+      - name: Print embedded clang version from vs2019
+        if: matrix.os == 'windows-2019'
         run: |
           'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\LLVM\x64\bin\clang.exe' --version
+
+      - name: Print embedded clang version from vs2022
+        if: matrix.os == 'windows-2022'
+        run: |
+          'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\LLVM\x64\bin\clang.exe' --version
+
+      - name: Print VS version info
+        if: matrix.os == 'windows-2022'
+        run: |
+          dir 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\'
+
+      - name: Configure fbuild.bff
+        run: |
           # Inject "#define CI_BUILD" into root configs to activate CI logic.
           sed -i -e "1i\\
           #define CI_BUILD

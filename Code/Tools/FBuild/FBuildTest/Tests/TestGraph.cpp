@@ -23,6 +23,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
@@ -106,6 +107,14 @@ public:
 REFLECT_BEGIN( NodeTestHelper, Node, MetaNone() )
 REFLECT_END( NodeTestHelper )
 
+// FileNodeTestHelper
+//------------------------------------------------------------------------------
+class FileNodeTestHelper : public FileNode
+{
+public:
+    using FileNode::DoBuild;
+};
+
 // EmptyGraph
 //------------------------------------------------------------------------------
 void TestGraph::EmptyGraph() const
@@ -161,39 +170,46 @@ void TestGraph::TestNodeTypes() const
 //------------------------------------------------------------------------------
 void TestGraph::SingleFileNode() const
 {
-    FBuild fb;
     NodeGraph ng;
 
     // make sure a node of the name we are going to use doesn't exist
-    const AStackString<> testFileName( "SimpleLibrary/library.cpp" );
+    const AStackString<> testFileName( "Tools/FBuild/FBuildTest/Data/TestGraph/library.cpp" );
     TEST_ASSERT( ng.FindNode( testFileName ) == nullptr );
 
     // create the node, and make sure we can access it by name
     FileNode * node = ng.CreateNode<FileNode>( testFileName );
     TEST_ASSERT( ng.FindNode( testFileName ) == node );
 
-    TEST_ASSERT( fb.Build( node ) );
+    // Manually build a single node
+    Job j( node );
+    PRAGMA_DISABLE_PUSH_MSVC(4946) // reinterpret_cast used between related classes
+    FileNodeTestHelper * helper = reinterpret_cast<FileNodeTestHelper *>( node );
+    PRAGMA_DISABLE_POP_MSVC
+    TEST_ASSERT( helper->DoBuild( &j ) == Node::BuildResult::eOk );
+
+    // Found file should have a non-zero stamp
+    TEST_ASSERT( node->GetStamp() != 0 );
 }
 
 // FileNode
 //------------------------------------------------------------------------------
 void TestGraph::SingleFileNodeMissing() const
 {
-    // suppress error output for this test (as the errors are expected)
-    FBuildOptions options;
-    options.m_ShowErrors = false;
-
-    FBuild fb( options );
     NodeGraph ng;
 
     // make a node for a file that does not exist
     const AStackString<> testFileName( "ThisFileDoesNotExist.cpp" );
     FileNode * node = ng.CreateNode<FileNode>( testFileName );
 
-    // make sure build still passes
-    // a missing file is not an error.  it would need to be required by something
-    // (like an objectNode which would handle the failure itself)
-    TEST_ASSERT( fb.Build( node ) == true );
+    // Manually build a single node
+    Job j( node );
+    PRAGMA_DISABLE_PUSH_MSVC(4946) // reinterpret_cast used between related classes
+    FileNodeTestHelper * helper = reinterpret_cast<FileNodeTestHelper *>( node );
+    PRAGMA_DISABLE_POP_MSVC
+    TEST_ASSERT( helper->DoBuild( &j ) == Node::BuildResult::eOk );
+    
+    // Missing file should have a zero stamp
+    TEST_ASSERT( node->GetStamp() == 0 );
 }
 
 // TestSerialization
@@ -888,18 +904,28 @@ void TestGraph::DBLocation() const
     options.m_SaveDBOnCompletion = true;
 
     AString dbFileDefaultLocation( "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseLocation/" );
+    AString dbFileDefaultLocationFullPath( dbFileDefaultLocation );
+#if defined( __WINDOWS__ )
+    dbFileDefaultLocationFullPath += "fbuild.windows.fdb";
+#elif defined( __LINUX__ )
+    dbFileDefaultLocationFullPath += "fbuild.linux.fdb";
+#elif defined( __OSX__ )
+    dbFileDefaultLocationFullPath += "fbuild.osx.fdb";
+#endif
     AString dbFileExplicitLocation( "../tmp/Test/Graph/DatabaseLocation/GraphDB.fdb" );
+
+    EnsureFileDoesNotExist( dbFileDefaultLocationFullPath );
+    EnsureFileDoesNotExist( dbFileExplicitLocation );
 
     // Build a target and let serialization save to default location
     {
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        const AString & dbFile( fBuild.GetDependencyGraphFile() );
-        EnsureFileDoesNotExist( dbFile );
+        TEST_ASSERT( fBuild.GetDependencyGraphFile() == dbFileDefaultLocationFullPath );
 
         TEST_ASSERT( fBuild.Build( "TestTarget" ) );
-        TEST_ASSERT( PathUtils::PathBeginsWith( dbFile, dbFileDefaultLocation ) );
+        EnsureFileExists( dbFileDefaultLocationFullPath );
     }
 
     // Build a target and let serialization save to explicitly specified location
@@ -914,6 +940,7 @@ void TestGraph::DBLocation() const
 
         TEST_ASSERT( fBuild.Build( "TestTarget" ) );
         TEST_ASSERT( PathUtils::ArePathsEqual( dbFile, dbFileExplicitLocation ) );
+        EnsureFileExists( dbFileDefaultLocationFullPath );
     }
 }
 

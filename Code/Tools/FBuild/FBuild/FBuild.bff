@@ -77,12 +77,33 @@
 
                 .LinkerStampExe             = '/bin/bash'
                 .ExtractDebugInfo           = 'objcopy --only-keep-debug $LinkerOutput$ $LinkerOutput$.debug'
-                .StripDebugInfo             = 'objcopy --strip-debug $LinkerOutput$'
+                .StripDebugInfo             = 'objcopy --strip-unneeded $LinkerOutput$'
                 .AddDebugLink               = 'objcopy --add-gnu-debuglink $LinkerOutput$.debug $LinkerOutput$'
                 .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$ && $AddDebugLink$"'
             #endif
+            #if __OSX__
+                .LinkerStampExe             = '/bin/bash'
+                .ExtractDebugInfo           = 'dsymutil -o $LinkerOutput$.dSYM $LinkerOutput$'
+                .StripDebugInfo             = 'strip -x $LinkerOutput$'
+                .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$"'
+            #endif
         }
-        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$BuildConfigName$' }
+        #if __WINDOWS__
+            Copy( '$ProjectName$-Copy-$Platform$-$BuildConfigName$' )
+            {
+                .Source     = .ASanDLLs
+                .Dest       = '$OutputBase$/$ProjectPath$/'
+            }
+        #endif
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' )
+        {
+            .Targets    = {
+                            #if __WINDOWS__
+                                '$ProjectName$-Copy-$Platform$-$BuildConfigName$'
+                            #endif
+                            '$ProjectName$-Exe-$Platform$-$BuildConfigName$'
+                          }
+        }
         ^'Targets_$Platform$_$BuildConfigName$' + { '$ProjectName$-$Platform$-$BuildConfigName$' }
 
         #if __WINDOWS__

@@ -98,7 +98,7 @@ void OSDropDown::SetSelectedItem( size_t index )
     #if defined( __WINDOWS__ )
         SendMessage( (HWND)m_Handle, CB_SETCURSEL, (WPARAM)uint32_t( index ), (LPARAM)0 );
     #elif defined( __OSX__ )
-        DropDownOSX_SetSelectedItem( this, index );
+        DropDownOSX_SetSelectedItem( this, static_cast<uint32_t>( index ) );
     #else
         (void)index;
     #endif

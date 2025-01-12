@@ -55,7 +55,7 @@ Defines the execution of an executable as a test.</p>
    // Additional options
   .PreBuildDependencies    // (optional) Force targets to be built before this Test (Rarely needed,
                            // but useful when Test relies on externally generated files).
-
+  .ConcurrencyGroupName    // (optional) Concurrency Group for this task
   .Environment             // (optional) Environment variables to use for local build
                            // If set, linker uses this environment
                            // If not set, linker uses .Environment from your Settings node
@@ -105,6 +105,11 @@ Defines the execution of an executable as a test.</p>
 	  <p>One or more nodes which must be built before this test is executed.</p>
 	  <p>The .PreBuildDependencies option ensures the specified targets are up-to-date before the
 	  Test() is executed.</p>
+      
+      <hr>
+      
+      <p><b>.ConcurrencyGroupName</b> - String - (Optional)</p>
+      <p>A Concurrency Group can optionally be specified to constrain concurrent task execution.</p>
 
       <hr>
 
@@ -127,6 +132,6 @@ Test( 'MyCoreTests-Run' )
 </div>
     </div>
 
-    </div><div class='footer'>&copy; 2012-2024 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
 </body>
 </html>

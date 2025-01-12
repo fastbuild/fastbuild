@@ -133,10 +133,26 @@ bool UnityNode::UnityFileAndOrigin::operator < ( const UnityFileAndOrigin & othe
     }
 
     // Sort by name in directory
-    const size_t sortLen = Math::Min( GetName().GetLength() - m_LastSlashIndex, other.GetName().GetLength() - other.m_LastSlashIndex );
+    const size_t filenameLen = GetName().GetLength() - m_LastSlashIndex;
+    const size_t otherFilenameLen = other.GetName().GetLength() - other.m_LastSlashIndex;
+    const size_t sortLen = Math::Min( filenameLen, otherFilenameLen );
     const char * a = GetName().Get() + m_LastSlashIndex;
     const char * b = other.GetName().Get() + other.m_LastSlashIndex;
-    return ( AString::StrNCmpI( a, b, sortLen ) < 0 );
+    const int32_t sortOrder = AString::StrNCmpI( a, b, sortLen );
+
+    if ( sortOrder != 0 )
+    {
+        return ( sortOrder < 0 );
+    }
+
+    if ( filenameLen != otherFilenameLen )
+    {
+        return ( filenameLen < otherFilenameLen ); // Shorter path goes first, like for directories
+    }
+    else
+    {
+        return false;
+    }
 }
 
 // CONSTRUCTOR

@@ -37,7 +37,7 @@ The executable will be run if the outputfile is out of date (with respect to the
 {
   .ExecExecutable         ; Executable to run
   .ExecInput              ; (optional) Input file(s) to pass to executable
-  .ExecInputPath          ; (optional) Path to find files in
+  .ExecInputPath          ; (optional) Path(s) to find files in
   .ExecInputPattern       ; (optional) Pattern(s) to use when finding files (default *.*)
   .ExecInputPathRecurse   ; (optional) Recurse into dirs when finding files (default true)
   .ExecInputExcludePath   ; (optional) Path(s) to exclude
@@ -54,7 +54,7 @@ The executable will be run if the outputfile is out of date (with respect to the
   ; Additional options
   .PreBuildDependencies   ; (optional) Force targets to be built before this Exec (Rarely needed,
                           ; but useful when Exec relies on externally generated files).
-
+  .ConcurrencyGroupName   ; (optional) Concurrency Group for this task
   .Environment            ; (optional) Environment variables used when running the executable
                           ; If not set, uses .Environment from your Settings node
 }
@@ -73,6 +73,6 @@ The executable will be run if the outputfile is out of date (with respect to the
 
 
 
-    </div><div class='footer'>&copy; 2012-2024 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
 </body>
 </html>

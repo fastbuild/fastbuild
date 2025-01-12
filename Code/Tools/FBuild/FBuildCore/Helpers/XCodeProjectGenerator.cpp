@@ -350,8 +350,8 @@ void XCodeProjectGenerator::WriteFiles()
 
         AStackString<> processedShortName;
         AStackString<> processedFullPath;
-        ProcessFileName( shortName, processedShortName );
-        ProcessFileName( fullPath, processedFullPath );
+        ProcessString( shortName, processedShortName );
+        ProcessString( fullPath, processedFullPath );
 
         Write( "\t\t1111111111111111%08u /* %s */ = {isa = PBXFileReference;%s lastKnownFileType = %s; name = %s; path = %s; sourceTree = \"<group>\"; };\n",
                file->m_SortedIndex,
@@ -674,18 +674,35 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                xcBuildConfigurationGUID.Get(), config->m_Config.Get() );
 
         Write( "\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;\n" );
-
-        // TODO:B Can this (and other warning settings) be derived from the compiler options automatically?
-        Write( "\t\t\t\tCLANG_CXX_LANGUAGE_STANDARD = \"gnu++0x\";\n" );
-
+        
         // Find target from which to extract Intellisense options
         const ObjectListNode * oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( config->m_TargetNode );
+        
+        // Languages Standard
+        AStackString<> languageStandard( "gnu++0x" );
+        if ( oln )
+        {
+            StackArray< AString > extraOptions;
+            ProjectGeneratorBase::ExtractAdditionalOptions( oln->GetCompilerOptions(), extraOptions );
+            for ( const AString & option : extraOptions )
+            {
+                // Extract "<value>" from "-std=<value>"
+                if ( option.BeginsWith( "-std=" ) )
+                {
+                    languageStandard = ( option.Get() + 5 );
+                }
+                
+                // TODO:B Can other warning settings be derived from the compiler options automatically?
+            }
+        }
+        Write( "\t\t\t\tCLANG_CXX_LANGUAGE_STANDARD = \"%s\";\n", languageStandard.Get() );
+        
         if ( oln )
         {
             // Defines
             {
                 Array< AString > defines;
-                ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, true );
+                ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, false );
                 WriteArray( 4, "GCC_PREPROCESSOR_DEFINITIONS", defines );
             }
 
@@ -777,30 +794,6 @@ void XCodeProjectGenerator::WriteFooter()
            pbxProjectGUID.Get() );
 }
 
-// ShouldQuoteString
-//------------------------------------------------------------------------------
-bool XCodeProjectGenerator::ShouldQuoteString( const AString & value ) const
-{
-    if ( value.IsEmpty() )
-    {
-        return true;
-    }
-    for ( size_t i = 0; i < value.GetLength(); ++i )
-    {
-        const char c = value[ i ];
-        if ( ( c == ' ' ) ||
-             ( c == '"' ) ||
-             ( c == '?' ) ||
-             ( c == '-' ) ||
-             ( c == '+' ) ||
-             ( c == '=' ) )
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
 // WriteString
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteString( uint32_t indentDepth,
@@ -815,10 +808,9 @@ void XCodeProjectGenerator::WriteString( uint32_t indentDepth,
     }
 
     // Empty strings and strings with spaces are quoted
-    const char quoteString = ShouldQuoteString( value );
-    const char * const formatString = quoteString ? "%s%s = \"%s\";\n"
-                                                  : "%s%s = %s;\n";
-    Write( formatString, tabs.Get(), propertyName, value.Get() );
+    AStackString<> processedValue;
+    ProcessString( value, processedValue );
+    Write( "%s%s = %s;\n", tabs.Get(), propertyName, processedValue.Get() );
 }
 
 // WriteArray
@@ -848,10 +840,9 @@ void XCodeProjectGenerator::WriteArray( uint32_t indentDepth,
     for ( const AString & value : values )
     {
         // Empty strings and strings with spaces are quoted
-        const char quoteString = ShouldQuoteString( value );
-        const char * const formatString = quoteString ? "%s\t\"%s\",\n"
-                                                      : "%s\t%s,\n";
-        Write( formatString, tabs.Get(), value.Get() );
+        AStackString<> processedValue;
+        ProcessString( value, processedValue );
+        Write( "%s\t%s,\n", tabs.Get(), processedValue.Get() );
     }
     Write( "%s);\n", tabs.Get() );
 }
@@ -879,17 +870,23 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
     }
 }
 
-// ProcessFileName
+// ProcessString
 //------------------------------------------------------------------------------
-/*static*/ void XCodeProjectGenerator::ProcessFileName( const AString & fileName,
-                                                        AString & outFileName )
+/*static*/ void XCodeProjectGenerator::ProcessString( const AString & string,
+                                                      AString & outString )
 {
-    // Filenames are quoted when certain characters are present. Additionally,
+    // Strings are quoted when certain characters are present. Additionally,
     // certain characters are escaped.
-    // The rules for this appear to be different to other strings.
+    
+    // Emptry strings are quoted
+    if ( string.IsEmpty() )
+    {
+        outString = "\"\"";
+        return;
+    }
 
     bool needsQuotes = false;
-    for ( const char c : fileName )
+    for ( const char c : string )
     {
         // These characters are not escaped and don't require the string be quoted
         if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||
@@ -900,7 +897,7 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
              ( c == '.' ) ||
              ( c == '/' ) )
         {
-            outFileName += c;
+            outString += c;
             continue;
         }
 
@@ -908,8 +905,8 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
         if ( ( c == '\\' ) || ( c == '"' ) )
         {
             // Escape
-            outFileName += '\\';
-            outFileName += c;
+            outString += '\\';
+            outString += c;
 
             // When there is an escaped character, the string is quoted
             needsQuotes = true;
@@ -918,7 +915,7 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
 
         // All other characters require the string be quoted, but are not escaped
         needsQuotes = true;
-        outFileName += c;
+        outString += c;
     }
 
     // Surround with quotes if needed
@@ -926,9 +923,9 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
     {
         AStackString<> tmp;
         tmp += '\"';
-        tmp += outFileName;
+        tmp += outString;
         tmp += '\"';
-        outFileName = tmp;
+        outString = tmp;
     }
 }
 

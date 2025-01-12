@@ -346,8 +346,8 @@ void TestAString::ClearAndFreeMemory() const
         TEST_ASSERT( str.GetReserved() == 0 );
 
         // Check 1 alloc occurred but is no longer active
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
-        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0u )
     }
     // AString never used
     {
@@ -372,8 +372,8 @@ void TestAString::ClearAndFreeMemory() const
         TEST_ASSERT( str.GetReserved() > 0 ); // Stack reservation can be retained
 
         // Check no allocs occurred
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
-        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0u )
     }
     // AStackString never used
     {
@@ -399,8 +399,8 @@ void TestAString::ClearAndFreeMemory() const
         TEST_ASSERT( str.GetReserved() == 0 ); // Stack reservation can't be retained
 
         // Check 1 alloc occurred but is no longer active
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
-        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0u )
     }
 }
 
@@ -1058,7 +1058,7 @@ void TestAString::MoveAssignmentHelper() const
         }
 
         // Check should be no more active allocs in total, even if some allocs occurred
-        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0u )
     }
 }
 

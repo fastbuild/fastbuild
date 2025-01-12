@@ -1141,6 +1141,39 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
     return true;
 }
 
+// InitializeConcurrencyGroup
+//------------------------------------------------------------------------------
+bool Node::InitializeConcurrencyGroup( NodeGraph & nodeGraph,
+                                       const BFFToken * iter,
+                                       const Function * function,
+                                       const AString & concurrencyGroupName )
+{
+    // If no ConcurrencyGroup is specified, feature is not in use
+    if ( concurrencyGroupName.IsEmpty() )
+    {
+        return true;
+    }
+
+    // Get the ConcurrencyGroup by name
+    const ConcurrencyGroup * group = nullptr;
+    const SettingsNode* settings = nodeGraph.GetSettings();
+    if ( settings )
+    {
+        group = settings->GetConcurrencyGroup( concurrencyGroupName );
+    }
+
+    // Report an error if it was not defined
+    if ( group == nullptr )
+    {
+        Error::Error_1603_UnknownConcurrencyGroup( iter, function, concurrencyGroupName );
+        return false;
+    }
+
+    // Store the inndex
+    m_ConcurrencyGroupIndex = group->GetIndex();
+    return true;
+}
+
 // GetEnvironmentString
 //------------------------------------------------------------------------------
 /*static*/ const char * Node::GetEnvironmentString( const Array< AString > & envVars,

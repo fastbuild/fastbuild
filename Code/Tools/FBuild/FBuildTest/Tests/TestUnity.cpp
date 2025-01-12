@@ -800,6 +800,10 @@ void TestUnity::SortFiles() const
     SORT( "b.cpp", "A.cpp" );
     TEST( "A.cpp", "b.cpp" );
 
+    // Files whose paths are each other's substrings are sorted
+    SORT( "a/a.cpp", "a/a.c", "a/a.cp" );
+    TEST( "a/a.c", "a/a.cp", "a/a.cpp" );
+
     // Files in same dir
     SORT( "a/B.cpp", "a/a.cpp" );
     TEST( "a/a.cpp", "a/B.cpp" );
@@ -928,7 +932,9 @@ void TestUnity::CacheUsingRelativePaths() const
         }
 
         // Check __FILE__ paths are relative
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) );
+        // Slash direction changed in Clang 18.x.x from forward slash to backslash
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) ||
+                     buffer.Find( "FILE_MACRO_START_1(.\\Subdir/Header.h)FILE_MACRO_END_1" ) );
         #if defined( __WINDOWS__ )
             TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(.\\File.cpp)FILE_MACRO_END_2" ) );
         #else

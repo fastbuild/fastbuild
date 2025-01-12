@@ -31,6 +31,7 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -g'             // Generate debug info
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
+                                    + ' -mmacosx-version-min=10.7'
 
                                     // Include paths
                                     + ' -I./'
@@ -45,9 +46,11 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -Wno-implicit-exception-spec-mismatch' // Fires on our new/delete operator (Clang bug?)
 
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -fno-rtti'      // No RTTI
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -fno-rtti'      // No RTTI
 
     // Librarian
     .Librarian                      = '$Clang12_BasePath$/ar'
@@ -56,6 +59,9 @@ Compiler( 'Compiler-Clang12' )
     // Linker
     .Linker                         = '$Clang12_BasePath$/clang++'
     .LinkerOptions                  = '"%1" -o "%2" -g'
+                                    + ' -Wl,-fatal_warnings'
+                                    + ' -Wl,-dead_strip'
+                                    + ' -mmacosx-version-min=10.7'
 
     // File Extensions
     .LibExtension                   = '.a'

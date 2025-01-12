@@ -55,8 +55,8 @@ protected:
     bool BuildArgs( Args & fullArgs ) const;
     void GetInputFiles( const AString & token, Args & fullArgs ) const;
     void GetInputFiles( Args & fullArgs, uint32_t startIndex, uint32_t endIndex, const AString & pre, const AString & post ) const;
-    void GetInputFiles( Node * n, Args & fullArgs, const AString & pre, const AString & post ) const;
-    void GetAssemblyResourceFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
+    void GetInputFiles( Node * n, Array<AString> & outInputs ) const;
+    void GetAssemblyResourceFiles( Array<AString> & outInputs ) const;
     void EmitCompilationMessage( const Args & fullArgs ) const;
     void EmitStampMessage() const;
 
@@ -108,6 +108,7 @@ protected:
     AString             m_LinkerStampExeArgs;
     Array< AString >    m_PreBuildDependencyNames;
     Array< AString >    m_Environment;
+    AString             m_ConcurrencyGroupName;
 
     // Internal State
     uint32_t            m_Libraries2StartIndex          = 0;

@@ -35,7 +35,7 @@ public:
 
     const char * GetObjExtension() const;
 
-    void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const;
+    void GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & outInputs ) const;
     void GetInputFiles( Array< AString > & files ) const;
 
     inline const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
@@ -102,6 +102,7 @@ protected:
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
     Array< AString >    m_PreBuildDependencyNames;
+    AString             m_ConcurrencyGroupName;
 
     // Internal State
     AString             m_PrecompiledHeaderName;

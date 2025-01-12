@@ -26,6 +26,121 @@
 
 <h1>Changelog</h1>
 
+
+<div class='newsitemheader'>
+    v1.14&nbsp;<font color='#bbbbbb'>(12th-Jan-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>Settings exposes <a href="functions/settings.html">ConcurrencyGroups</a> allowing additional parallelism constraints</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Ensure PCH object files are inputs to linking at most once</li>
+        <li>Unity deterministically sorts files in same directory that are substring matches (Thanks to Michal Kawalec)</li>
+        <li>-report=json output is no longer corrupt when not using the cache</li>
+        <li>nans no longer emitted in -report=json for extremely fast builds</li>
+        <li>[Linux] Eliminate several dependencies on glibc 2.17 and 2.33 (Thanks to dummyunit)</li>
+        <li>[Linux] Ensure compatibility with glibc 2.10 (Thanks to dummyunit)</li> 
+        <li>Project Generation</li>
+        <ul>
+            <li>XCode project generation handles defines with quotes and slashes</li>
+            <li>Fix handling of quoted defines in Intellisense/CodeSense</li>
+            <li>Fix handling of various strings in XCode project generation</li>
+        </ul>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Add additional safety checks to decompression</li>
+        <li>Reduce database disk write time</li>
+        <li>Compiler() manifests provide extended error info when failing to open/read files</li>
+        <li>[OSX] Shrink FBuild and FBuildWorker binary size</li>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Distributed compression performance improved slightly (~5%)</li>
+        </ul>
+        <li>Caching</li>        
+        <ul>
+           <li>Cache decompression performance improved slightly at defaults (~5%)</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li>Xcode projects have CLANG_CXX_LANGUAGE_STANDARD set automatically</li>
+        </ul>
+    </ul>
+</div>
+
+
+<div class='newsitemheader'>
+    v1.13&nbsp;<font color='#bbbbbb'>(21st-Apr-2024)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version has changed</li>
+        <li>Workers are forwards/backwards compatible, but new workers are required to see all performance gains.</li>
+        <li>Behavior Changes</li>
+        <ul>
+            <li><b>Arg processing</b> has been overhauled for correctness and consistency; fixes may invalidate previous work-arounds</li>
+            <li>Failed/aborted <b>multi-target builds</b> now behave as single target builds, stopping as soon as possible.<br>
+                <a href="options.html#nostoponerror">-nostoponerror</a> can still be used to build as much before failing.</li>
+            <li><b>Cache compression</b> defaults and algorithms have changed</li>
+        </ul>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Caching</li>        
+        <ul>
+            <li>Clang-CL on Windows stores/retrieves pch.obj when needed (Thanks to poljak181)</li>
+            <li>LightCache finds dependencies correctly when response files are used</li>
+        </ul>
+        <li>Args Processing</li>
+        <ul>
+            <li>Escaped quotes are correctly handled in process arguments</li>
+            <li>Quotes are properly tokenized regardless of quote position</li>
+            <li>Args with quotes and spaces are correctly tokenized</li>
+            <li>[OSX][Linux] Args with quotes are handled correctly when spawning processes</li>
+            <li><a href="options.html#compdb">-compdb</a> correctly handles escaped quotes in arguments</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li><a href="functions/vsprojectexternal.html">VCXProject</a> generation correctly escapes &amp;, &lt; and &gt; in all properties</li>
+            <li>Fix typo in build-time errors regarding <a href="functions/vsprojectexternal.html">VSProjectExternal</a> config problems</li>
+        </ul>
+        <li>Fix typo in Error 1035 regarding exessive depth complexity</li>
+        <li>[Windows] Directories ignored when checking FileExists (consistent with OSX &amp; Linux)</li>
+        <li>Ensure different dir listings on same folder respect exclude paths (v1.12 regression)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Distributed compilation return bandwidth reduced ~40% with new defaults</li>
+            <li>Improved message for "Failed to store fileId" errors in FBuildWorker</li>
+        </ul>
+        <li>Caching</li>        
+        <ul>
+            <li>Cache storage space reduced by ~40% with new defaults</li>
+            <li>Cache hit/store bandwidth reduced by ~40% with new defaults</li>            
+        </ul>
+        <li>Other Performance</li>
+        <ul>
+            <li>Optimize startup time by avoiding unnecessary work during DB loading</li>
+            <li>Optimize startup time after bff edits by avoiding unnecessary work during DB migration</li>
+            <li>Small optimization to bff parsing when handling aliases</li>
+            <li>Improve bff parsing performance slightly for Linker/DLL items</li>
+        </ul>        
+        <li>Build stop on failure/abort behavior for multiple targets matches one target builds</li>
+        <li>Build output now differentiates "Failure" from "Incomplete" for multiple targets</li>
+    </ul>
+</div>
+
 <div class='newsitemheader'>
     v1.13&nbsp;<font color='#bbbbbb'>(21st-Apr-2024)</font>
 </div>
@@ -2509,6 +2624,6 @@ Fixes
     </div>
 
 
-    </div><div class='footer'>&copy; 2012-2024 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
 </body>
 </html>

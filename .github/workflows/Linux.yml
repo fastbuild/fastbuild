@@ -25,7 +25,6 @@ jobs:
             gcc: 10
             clang: 12
             os: ubuntu-20.04
-            can-fail: true
           - cfg: TSan
             gcc: 10
             clang: 12
@@ -79,6 +78,10 @@ jobs:
         # -j1 on CI nodes avoids timeouts (CI nodes have only 2 cores)
         if: ${{ matrix.cfg == 'Build & Tests' }}
         run: ${FBUILD_PATH} -nostoponerror -j1 -summary Tests
+
+      - name: Compat
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: python3 ../Scripts/CheckGLIBCCompat.py 
 
       - name: ASan
         if: ${{ matrix.cfg == 'ASan' }}

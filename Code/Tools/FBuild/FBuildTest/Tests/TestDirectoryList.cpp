@@ -7,6 +7,7 @@
 
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
 #include "Core/Containers/Array.h"
@@ -35,7 +36,6 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestDirectoryList::Build() const
 {
-    FBuild fb;
     NodeGraph ng;
 
     // Generate a valid DirectoryListNode name
@@ -65,7 +65,8 @@ void TestDirectoryList::Build() const
     TEST_ASSERT( node->Initialize( ng, token, nullptr ) );
     TEST_ASSERT( ng.FindNode( name ) == node );
 
-    TEST_ASSERT( fb.Build( node ) );
+    Job j( node );
+    TEST_ASSERT( node->DoBuild( &j ) == Node::BuildResult::eOk );
 
     // make sure we got the expected results
     TEST_ASSERT( node->GetFiles().GetSize() == 2 );

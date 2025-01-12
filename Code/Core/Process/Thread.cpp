@@ -8,6 +8,7 @@
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Strings/AString.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -148,13 +149,13 @@ void Thread::Start( ThreadEntryFunction func,
         {
             stackSizeBytes = PTHREAD_STACK_MIN;
         }
-        pthread_t h( 0 );
+        pthread_t h( INVALID_THREAD_ID );
         pthread_attr_t threadAttr;
         VERIFY( pthread_attr_init( &threadAttr ) == 0 );
         VERIFY( pthread_attr_setstacksize( &threadAttr, stackSizeBytes ) == 0 );
         VERIFY( pthread_attr_setdetachstate( &threadAttr, PTHREAD_CREATE_JOINABLE ) == 0 );
         VERIFY( pthread_create( &h, &threadAttr, ThreadStartInfo::ThreadStartFunction, &info ) == 0 );
-        ASSERT( h != (pthread_t)0 );
+        ASSERT( h != (pthread_t)INVALID_THREAD_ID );
     #else
         #error Unknown platform
     #endif

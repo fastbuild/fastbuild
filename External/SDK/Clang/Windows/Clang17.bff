@@ -18,19 +18,25 @@
         .Clang17_BasePath = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/LLVM/x64'
         .Clang17_Version    = '17.x.x'
     #else
-        #if file_exists( "C:/Program Files/LLVM/bin/clang-cl.exe" )
-            // Default Install
-            .Clang17_BasePath = 'C:/Program Files/LLVM'
+        #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/LLVM/x64/bin/clang-cl.exe" )
+            // Installed with VS2022
+            .Clang17_BasePath = 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/LLVM/x64'
             .Clang17_Version    = '17.x.x'
         #else
-            //
-            // Failed
-            //
-            Print( '----------------------------------------------------------------------' )
-            Print( '- Unable to auto-detect Clang - please specify installation manually -' )
-            Print( '----------------------------------------------------------------------' )
-            .Clang17_BasePath   = .Set_Path_Here    // <-- Set path here
-            .Clang17_Version    = .Set_Version_Here // <-- Set version here
+            #if file_exists( "C:/Program Files/LLVM/bin/clang-cl.exe" )
+                // Default Install
+                .Clang17_BasePath = 'C:/Program Files/LLVM'
+                .Clang17_Version    = '17.x.x'
+            #else
+                //
+                // Failed
+                //
+                Print( '----------------------------------------------------------------------' )
+                Print( '- Unable to auto-detect Clang - please specify installation manually -' )
+                Print( '----------------------------------------------------------------------' )
+                .Clang17_BasePath   = .Set_Path_Here    // <-- Set path here
+                .Clang17_Version    = .Set_Version_Here // <-- Set version here
+            #endif
         #endif
     #endif
 #endif

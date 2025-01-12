@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Concurrency Groups</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='../home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>Concurrency Groups</h1>
+    <div id='alias' class='newsitemheader'>
+      Overview
+    </div>
+    <div class='newsitembody'>
+      <p>
+FASTBuild automatically utilizes available CPU cores and parallelizes
+work where possible given the constraints of dependencies between tasks.
+While global concurrency can be controlled with the
+<a href="../options.html#jx">-j</a> option, in some cases more
+fine-grained control is useful or desirable.<br>
+<br>
+For example:<br>
+<ul>
+  <li><b>Linkers</b> - Some linkers with certain codebases or options
+  can use very large amounts of memory such that system memory may be
+  exhausted when multiple link operations occur in parallel.</li>
+  <li><b>Tests</b> - Running tests may rely on exclusive access to
+  resources, such as network sockets, development hardware or file
+  system structures. Running such tests concurrently may cause failures.</li>
+  <li><b>Compilers</b> - Some compilers with certain codebases or options
+  may use very large amounts of memory, exhausting system memory if run
+  concurrently. Special options such as Static Analysis can often
+  significantly increase memory usage.</li>
+  <li><b>Old Toolchains</b> - Some toolchains may not be possible to run
+  concurrently due to assumptions about being run in a single threaded
+  environment.</li>
+  <li><b>External Processes</b> - Invocation of external processes or
+  scripts may not suppport being run concurrently.</li>
+</ul>
+<p>In the above cases, limiting concurrency between related tasks can be
+useful while still allowing other tasks to be scheduled in an unconstrained
+manner. Concurrency Groups allow such tasks to be constrained.</p>
+<p><b>NOTE:</b> Concurrency Groups by their very nature limit build parallelism.
+Additionally, each Concurrency Group adds a small overhead to all job
+scheduling. As such, Concurrency Groups should be used sparingly and as few
+groups as possible should be used.</p>
+</div>
+
+    <div id='alias' class='newsitemheader'>Defining Concurrency Groups</div>
+    <div class='newsitembody'>
+<p>Concurrency Groups are named objects, specified globally via the <a href="../functions/settings.html">Settings</a> function. Each group is later referenced in tasks that should be in said group via .ConcurrencyGroupName.</p>
+<p>
+<b>Concurrency Limit</b>
+<p>A Concurrency Group can define a .ConcurrencyLimit in order to cap the
+number of tasks in the group that can be run in parallel. For example,
+to limit concurrency to a single task:</p>
+<div class='code'>Settings
+{
+    .Group =
+    [
+        .ConcurrencyGroupName   = 'TestExecution'
+        .ConcurrencyLimit       = 1
+    ]
+    .ConcurrencyGroups = { .Group }
+}
+</div>
+
+<b>Concurrency Job Memory Limit</b><br>
+<p>A Concurrency Group can define a .ConcurrencyPerJobMiB value in order to
+cap the number of tasks in the group based on the physical memory of the host.
+For example to limit concurrency assuming 2GiB per-task is required:</p>
+<div class='code'>Settings
+{
+    .Group =
+    [
+        .ConcurrencyGroupName   = 'Linker'
+        .ConcurrencyPerJobMiB   = 2048
+    ]
+    .ConcurrencyGroups = { .Group }
+}
+</div>
+<p>This constraint can be useful when dealing with tasks that need to run
+on a variety of systems which may have differening capabilities such that
+a fixed limit would unnecssarily pessimize for some users.</p>
+
+<b>Multiple Constraints</b><br>
+</p>Concurrency constraints can be combined, limiting by both absolute
+count as well as memory requirements as in the following example:</p>
+<div class='code'>Settings
+{
+    .Group =
+    [
+        .ConcurrencyGroupName   = 'Example'
+        .ConcurrencyLimit       = 4
+        .ConcurrencyPerJobMiB   = 2048
+    ]
+    .ConcurrencyGroups = { .Group }
+}
+</div>
+<p>The lesser of the two constraints at any given time will be utilized to
+limit concurrency appropriately.</p>
+</div>
+
+    <div id='alias' class='newsitemheader'>Using Concurrency Groups</div>
+    <div class='newsitembody'>
+<p>Tasks which support Concurrency Groups expose a .ConcurrencyGroupName
+property which can be set to reference a previously defined Concurrency
+Group. For example:</p>
+   <div class='code'>Test( 'Test-Run-$Config$' )
+{
+    .ConcurrencyGroupName   = 'TestExecution'
+</div>
+<p>Tasks withing a given group will respect the concurrency constraits
+of that group.</p>
+</div>
+
+    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
+</body>
+</html>

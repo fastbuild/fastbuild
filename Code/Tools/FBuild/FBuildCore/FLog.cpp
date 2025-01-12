@@ -27,9 +27,8 @@
     // TODO:LINUX TODO:MAC Clean up this _itoa_s mess
     void _itoa_s( int value, char * buffer, int bufferSize, int base )
     {
-        (void)bufferSize;
         ASSERT( base == 10 ); (void)base;
-        sprintf( buffer, "%i", value );
+        snprintf( buffer, static_cast<size_t>(bufferSize), "%i", value );
     }
 #endif
 

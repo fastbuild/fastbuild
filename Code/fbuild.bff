@@ -69,9 +69,22 @@ Settings
 
     .BuildConfigName                = 'Release'
 ]
+#if __WINDOWS__
+    .ASanDLLs                       = {}
+    .ASan_Config_MSVC =
+    [
+        .CompilerOptions                = ' -DRELEASE -D__ASAN__'
+                                        + ' /fsanitize=address'
+        .CompilerOptionsC               = .CompilerOptions
+        .LinkerOptions                  = ' libvcasan.lib'
+                                        + ' legacy_stdio_wide_specifiers.lib'
+        .ASanDLLs                       = { '$VS_ToolchainPath$/bin/Hostx64/x64/clang_rt.asan_dynamic-x86_64.dll' }
+        .BuildConfigName                = 'ASan'
+    ]
+#endif
 .ASan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__ASAN__'
                                     + ' -fsanitize=address -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
@@ -80,7 +93,7 @@ Settings
 ]
 .MSan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__MSAN__'
                                     + ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=memory -L../External/MSan'
@@ -89,7 +102,7 @@ Settings
 ]
 .TSan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__TSAN__'
                                     + ' -fsanitize=thread'
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
@@ -109,7 +122,7 @@ Settings
 #if __WINDOWS__
     .Debug_Optimizations_MSVC =
     [
-        .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
+        .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy-'
         .CompilerOptionsC               = .CompilerOptions
     ]
     .Analyze_Optimizations_MSVC =
@@ -120,7 +133,7 @@ Settings
     ]
     .Profile_Optimizations_MSVC =
     [
-        .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
+        .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /Zo'
         .CompilerOptionsC               = .CompilerOptions
         .LinkerOptions                  = ' /OPT:REF,ICF'
     ]
@@ -183,7 +196,7 @@ Settings
                                 + .Profile_Config
                                 + .Profile_Optimizations_MSVC
     .X64ASanConfig              = .X64BaseConfig
-                                + .ASan_Config
+                                + .ASan_Config_MSVC
                                 + .Release_Optimizations_MSVC
     .X64TSanConfig              = .X64BaseConfig
                                 + .TSan_Config
@@ -310,8 +323,8 @@ Settings
 #if __WINDOWS__
     .ProjectCommon =
     [
-        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -cache ^$(ProjectName)-^$(Configuration)'
-        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -cache -clean ^$(ProjectName)-^$(Configuration)'
+        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs -dist -monitor -cache ^$(ProjectName)-^$(Configuration)'
+        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs -dist -monitor -cache -clean ^$(ProjectName)-^$(Configuration)'
         .OutputDirectory            = '^$(SolutionDir)\Temp'
         .IntermediateDirectory      = '^$(SolutionDir)\Temp'
         .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'
@@ -610,8 +623,8 @@ Alias( 'All+Tests' )
             Using( .BuildConfig )
             .ProjectConfig          = [
                                         Using( .'Project_$Platform$_$BuildConfigName$' )
-                                        .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
-                                        .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
+                                        .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild solution -vs'
+                                        .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild solution -vs -clean'
                                       ]
             ^ProjectConfigs         + .ProjectConfig
         }

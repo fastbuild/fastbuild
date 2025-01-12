@@ -210,10 +210,14 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
     {
         // Store a pointer to the SettingsNode as defined by the BFF, or create a
         // default instance if needed.
-        const AStackString<> settingsNodeName( "$$Settings$$" );
-        const Node * settingsNode = FindNode( settingsNodeName );
-        m_Settings = settingsNode ? settingsNode->CastTo<SettingsNode>()
-                                  : CreateNode<SettingsNode>( settingsNodeName, &BFFToken::GetBuiltInToken() ); // Create a default
+        if ( m_Settings == nullptr )
+        {
+            // Create a default
+            const AStackString<> settingsNodeName(  "$$Settings$$" );
+            SettingsNode * settingsNode = CreateNode<SettingsNode>( settingsNodeName, &BFFToken::GetBuiltInToken() );
+            settingsNode->Initialize( *this, &BFFToken::GetBuiltInToken(), nullptr );
+            ASSERT( m_Settings ); // SettingsNode registers itself
+        }
 
         // Parser will populate m_UsedFiles
         const Array<BFFFile *> & usedFiles = bffParser.GetUsedFiles();
@@ -789,6 +793,13 @@ size_t NodeGraph::GetNodeCount() const
     return m_AllNodes.GetSize();
 }
 
+//------------------------------------------------------------------------------
+void NodeGraph::SetSettings( const SettingsNode & settings )
+{
+    ASSERT( m_Settings == nullptr ); // Should only be called once
+    m_Settings = &settings;
+}
+
 // RegisterNode
 //------------------------------------------------------------------------------
 void NodeGraph::RegisterNode( Node * node, const BFFToken * sourceToken )
@@ -984,7 +995,8 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
     }
 
     // Make available all the jobs we discovered in this pass
-    JobQueue::Get().FlushJobBatch();
+    ASSERT( m_Settings );
+    JobQueue::Get().FlushJobBatch( *m_Settings );
 }
 
 // BuildRecurse
@@ -1232,7 +1244,10 @@ const BFFToken * NodeGraph::FindNodeSourceToken( const Node * node ) const
 
         // build the start of the path
         cleanPath = workingDir;
-        cleanPath += NATIVE_SLASH;
+        if ( cleanPath.IsEmpty() == false )
+        {
+            cleanPath += NATIVE_SLASH;
+        }
 
         // concatenate
         uint32_t len = cleanPath.GetLength();

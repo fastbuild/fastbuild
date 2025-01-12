@@ -6,6 +6,7 @@
 #include "TestFramework/TestGroup.h"
 
 // Core
+#include "Core/Containers/UniquePtr.h"
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
 #endif
@@ -15,8 +16,10 @@
 #include "Core/Process/Process.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Tracing/Tracing.h"
 
 // system
+#include <string.h>
 #if defined( __LINUX__ )
     #include <unistd.h>
 #endif
@@ -39,6 +42,8 @@ private:
     #if defined( __WINDOWS__ )
         void NormalizeWindowsPathCasing() const;
     #endif
+    void CreateOrOpenReadWrite() const;
+    void CreateOrOpenReadWritePerf() const;
 
     // Helpers
     mutable Random m_Random;
@@ -59,6 +64,8 @@ REGISTER_TESTS_BEGIN( TestFileIO )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( NormalizeWindowsPathCasing )
     #endif
+    REGISTER_TEST( CreateOrOpenReadWrite )
+    REGISTER_TEST( CreateOrOpenReadWritePerf )
 REGISTER_TESTS_END
 
 // FileExists
@@ -531,5 +538,135 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
         #undef CHECK_NORMALIZATION
     }
 #endif
+
+//------------------------------------------------------------------------------
+void TestFileIO::CreateOrOpenReadWrite() const
+{
+    // generate a process unique file path
+    AStackString<> path;
+    GenerateTempFileName( path );
+
+    // Make sure file does not exist (handle potential previous failed runs)
+    FileIO::FileDelete( path.Get() );
+    TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
+
+    // Ensure file is created when it doesn't exist
+    uint64_t fileSize = 0;
+    {
+        FileStream f;
+        TEST_ASSERT( f.Open( path.Get(), FileStream::FileMode::OPEN_OR_CREATE_READ_WRITE ) );
+
+        // Write some content
+        TEST_ASSERT( f.Write( path ) );
+        fileSize = f.GetFileSize();
+        TEST_ASSERT( fileSize >= path.GetLength() ); // String length plus content
+        TEST_ASSERT( fileSize == f.Tell() );
+
+        // Read it back
+        AStackString<> pathCopy;
+        TEST_ASSERT( f.Seek( 0 ) );
+        TEST_ASSERT( f.Read( pathCopy ) );
+        TEST_ASSERT( path == pathCopy );
+    }
+
+    // Ensure file is opened in read write mode if it does exist
+    {
+        FileStream f;
+        TEST_ASSERT( f.Open( path.Get(), FileStream::FileMode::OPEN_OR_CREATE_READ_WRITE ) );
+
+        // File should not be truncated (previous content should exist)
+        TEST_ASSERT( f.GetFileSize() == fileSize );
+
+        // File pointer should be at start of file
+        TEST_ASSERT( f.Tell() == 0 );
+
+        // Read content
+        AStackString<> pathCopy;
+        TEST_ASSERT( f.Read( pathCopy ) );
+        TEST_ASSERT( path == pathCopy );
+
+        // Write new content, extending file
+        const uint32_t value = 0xF00DF00D;
+        TEST_ASSERT( f.Write( value ) );
+        TEST_ASSERT( f.GetFileSize() == ( fileSize + sizeof( value ) ) );
+
+        // Read back new content
+        uint32_t valueCopy = 0;
+        TEST_ASSERT( f.Seek( 0 ) );
+        TEST_ASSERT( f.Read( pathCopy ) );
+        TEST_ASSERT( f.Read( valueCopy ) );
+        TEST_ASSERT( pathCopy == path );
+        TEST_ASSERT( valueCopy == value );
+
+        // Seek back and truncate file
+        TEST_ASSERT( f.Seek( 0 ) );
+        TEST_ASSERT( f.Write( value ) );
+        TEST_ASSERT( f.Truncate() );
+        TEST_ASSERT( f.Tell() == sizeof( uint32_t ) );
+        TEST_ASSERT( f.GetFileSize() == sizeof( uint32_t ) );
+
+        // Read back truncated content
+        TEST_ASSERT( f.Seek( 0 ) );
+        TEST_ASSERT( f.Seek( valueCopy ) );
+        TEST_ASSERT( valueCopy == value );
+    }
+    
+    FileIO::FileDelete( path.Get() );
+}
+
+//------------------------------------------------------------------------------
+void TestFileIO::CreateOrOpenReadWritePerf() const
+{
+    // generate a process unique file path
+    AStackString<> path;
+    GenerateTempFileName( path );
+
+    // Allocate a buffer. Each iteration will write a different subset of this
+    // causing the file to be truncated or grow on each iteration
+    const uint32_t maxDataLen = ( 16 * 1024 * 1024 );
+    UniquePtr<uint8_t, FreeDeletor> data( static_cast<uint8_t*>( ALLOC( maxDataLen ) ) );
+    memset( data.Get(), 0, maxDataLen );
+
+    // Repeat operation several times to get performance info
+    const size_t numRepeats = 8;
+
+    // Truncate on open
+    float t1 = 0.0f;
+    {
+        Random r( 0x5EED5EED );
+        const Timer t;
+        for ( size_t i = 0; i < numRepeats; ++i )
+        {
+            const uint32_t dataLen = r.GetRandIndex( maxDataLen );
+            FileStream f;
+            TEST_ASSERT( f.Open( path.Get(), FileStream::WRITE_ONLY ) );
+            TEST_ASSERT( f.Tell() == 0 );
+            TEST_ASSERT( f.WriteBuffer( data.Get(), dataLen ) == dataLen );
+        }
+        t1 = t.GetElapsed();
+    }
+
+    // Truncate when done
+    float t2 = 0.0f;
+    {
+        Random r( 0x5EED5EED );
+        const Timer t;
+        for ( size_t i = 0; i < numRepeats; ++i )
+        {
+            const uint32_t dataLen = r.GetRandIndex( maxDataLen );
+            FileStream f;
+            TEST_ASSERT( f.Open( path.Get(), FileStream::OPEN_OR_CREATE_READ_WRITE ) );
+            TEST_ASSERT( f.Tell() == 0 );
+            TEST_ASSERT( f.WriteBuffer( data.Get(), dataLen ) == dataLen );
+            TEST_ASSERT( f.Truncate() );
+        }
+        t2 = t.GetElapsed();
+    }
+
+    FileIO::FileDelete( path.Get() );
+
+    OUTPUT(" Truncate on Open : %2.5f s\n", static_cast<double>( t1 ) );
+    OUTPUT(" Truncate on Close: %2.5f s\n", static_cast<double>( t2 ) );
+}
 
 //------------------------------------------------------------------------------

@@ -463,14 +463,32 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
     {
         if ( token.Find( "NMakePreprocessorDefinitions" ) )
         {
-            TEST_ASSERT( token.Find( "INTELLISENSE_DEFINE" ) );
-            TEST_ASSERT( token.Find( "INTELLISENSE_SPACE_DEFINE" ) );
-            TEST_ASSERT( token.Find( "INTELLISENSE_SLASH_DEFINE" ) );
-            TEST_ASSERT( token.Find( "INTELLISENSE_SLASH_SPACE_DEFINE" ) );
-            TEST_ASSERT( token.Find( "INTELLISENSE_QUOTED_DEFINE" ) );
-            TEST_ASSERT( token.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE" ) );
-            TEST_ASSERT( token.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE" ) );
-            TEST_ASSERT( token.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE" ) );
+            // Split the define string back into its constituent parts
+            AStackString<> copy(token);
+            while (copy.BeginsWith(' ')) { copy.Trim( 1, 0 ); }
+            while (copy.EndsWith(' ')) { copy.Trim( 0, 1 ); }
+            copy.Replace("<NMakePreprocessorDefinitions>", "");
+            copy.Replace("</NMakePreprocessorDefinitions>", "");
+            StackArray<AString> defines;
+            copy.Tokenize(defines, ';');
+
+            // Check the expected items are found
+            TEST_ASSERT( defines.Find( "INTELLISENSE_DEFINE" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_SPACE_DEFINE" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_SLASH_DEFINE" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_SLASH_SPACE_DEFINE" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_QUOTED_DEFINE1" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE1" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE1" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE1" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_QUOTED_DEFINE2" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE2" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE2" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE2" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_\"ESCAPED QUOTED WITH SPACES\"_DEFINE" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_\"ESCAPED QUOTED WITH SPACES\"_SPACE_DEFINE" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_\"ESCAPED QUOTED WITH SPACES\"_SLASH_DEFINE" ) );
+            TEST_ASSERT( defines.Find( "INTELLISENSE_\"ESCAPED QUOTED WITH SPACES\"_SLASH_SPACE_DEFINE" ) );
             definesOk = true;
         }
         else if ( token.Find( "<NMakeIncludeSearchPath>" ) )
@@ -502,7 +520,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
                 }
             }
 
-            TEST_ASSERT( includes.GetSize() == 40 );
+            TEST_ASSERT( includes.GetSize() == 41 );
             TEST_ASSERT( includes[  0 ] == "Intellisense\\Include\\Path" );
             TEST_ASSERT( includes[  1 ] == "Intellisense\\Include\\Space\\Path" );
             TEST_ASSERT( includes[  2 ] == "Intellisense\\Include\\Slash\\Path" );
@@ -511,38 +529,39 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( includes[  5 ] == "Intellisense\\Include\\Quoted\\Space\\Path" );
             TEST_ASSERT( includes[  6 ] == "Intellisense\\Include\\Quoted\\Slash\\Path" );
             TEST_ASSERT( includes[  7 ] == "Intellisense\\Include\\Quoted\\Slash\\Space\\Path" );
-            TEST_ASSERT( includes[  8 ] == "Intellisense\\SystemInclude\\Path" );
-            TEST_ASSERT( includes[  9 ] == "Intellisense\\SystemInclude\\Space\\Path" );
-            TEST_ASSERT( includes[ 10 ] == "Intellisense\\SystemInclude\\Quoted\\Path" );
-            TEST_ASSERT( includes[ 11 ] == "Intellisense\\SystemInclude\\Quoted\\Space\\Path" );
-            TEST_ASSERT( includes[ 12 ] == "Intellisense\\SystemAfterInclude\\Path" );
-            TEST_ASSERT( includes[ 13 ] == "Intellisense\\SystemAfterInclude\\Space\\Path" );
-            TEST_ASSERT( includes[ 14 ] == "Intellisense\\SystemAfterInclude\\Quoted\\Path" );
-            TEST_ASSERT( includes[ 15 ] == "Intellisense\\SystemAfterInclude\\Quoted\\Space\\Path" );
-            TEST_ASSERT( includes[ 16 ] == "Intellisense\\MSVCInclude\\Path" );
-            TEST_ASSERT( includes[ 17 ] == "Intellisense\\MSVCInclude\\Space\\Path" );
-            TEST_ASSERT( includes[ 18 ] == "Intellisense\\MSVCInclude\\Slash\\Path" );
-            TEST_ASSERT( includes[ 19 ] == "Intellisense\\MSVCInclude\\Slash\\Space\\Path" );
-            TEST_ASSERT( includes[ 20 ] == "Intellisense\\MSVCInclude\\Quoted\\Path" );
-            TEST_ASSERT( includes[ 21 ] == "Intellisense\\MSVCInclude\\Quoted\\Space\\Path" );
-            TEST_ASSERT( includes[ 22 ] == "Intellisense\\MSVCInclude\\Quoted\\Slash\\Path" );
-            TEST_ASSERT( includes[ 23 ] == "Intellisense\\MSVCInclude\\Quoted\\Slash\\Space\\Path" );
-            TEST_ASSERT( includes[ 24 ] == "Intellisense\\DirAfterInclude\\Path" );
-            TEST_ASSERT( includes[ 25 ] == "Intellisense\\DirAfterInclude\\Space\\Path" );
-            TEST_ASSERT( includes[ 26 ] == "Intellisense\\DirAfterInclude\\Quoted\\Path" );
-            TEST_ASSERT( includes[ 27 ] == "Intellisense\\DirAfterInclude\\Quoted\\Space\\Path" );
-            TEST_ASSERT( includes[ 28 ] == "Intellisense\\QuoteInclude\\Path" );
-            TEST_ASSERT( includes[ 29 ] == "Intellisense\\QuoteInclude\\Space\\Path" );
-            TEST_ASSERT( includes[ 30 ] == "Intellisense\\QuoteInclude\\Quoted\\Path" );
-            TEST_ASSERT( includes[ 31 ] == "Intellisense\\QuoteInclude\\Quoted\\Space\\Path" );
-            TEST_ASSERT( includes[ 32 ] == "Intellisense\\MSVCExternalInclude\\Path" );
-            TEST_ASSERT( includes[ 33 ] == "Intellisense\\MSVCExternalInclude\\Space\\Path" );
-            TEST_ASSERT( includes[ 34 ] == "Intellisense\\MSVCExternalInclude\\Slash\\Path" );
-            TEST_ASSERT( includes[ 35 ] == "Intellisense\\MSVCExternalInclude\\Slash\\Space\\Path" );
-            TEST_ASSERT( includes[ 36 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Path" );
-            TEST_ASSERT( includes[ 37 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Space\\Path" );
-            TEST_ASSERT( includes[ 38 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Slash\\Path" );
-            TEST_ASSERT( includes[ 39 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[  8 ] == "Intellisense\\Include\\With Spaces\\Quoted\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[  9 ] == "Intellisense\\SystemInclude\\Path" );
+            TEST_ASSERT( includes[ 10 ] == "Intellisense\\SystemInclude\\Space\\Path" );
+            TEST_ASSERT( includes[ 11 ] == "Intellisense\\SystemInclude\\Quoted\\Path" );
+            TEST_ASSERT( includes[ 12 ] == "Intellisense\\SystemInclude\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 13 ] == "Intellisense\\SystemAfterInclude\\Path" );
+            TEST_ASSERT( includes[ 14 ] == "Intellisense\\SystemAfterInclude\\Space\\Path" );
+            TEST_ASSERT( includes[ 15 ] == "Intellisense\\SystemAfterInclude\\Quoted\\Path" );
+            TEST_ASSERT( includes[ 16 ] == "Intellisense\\SystemAfterInclude\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 17 ] == "Intellisense\\MSVCInclude\\Path" );
+            TEST_ASSERT( includes[ 18 ] == "Intellisense\\MSVCInclude\\Space\\Path" );
+            TEST_ASSERT( includes[ 19 ] == "Intellisense\\MSVCInclude\\Slash\\Path" );
+            TEST_ASSERT( includes[ 20 ] == "Intellisense\\MSVCInclude\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[ 21 ] == "Intellisense\\MSVCInclude\\Quoted\\Path" );
+            TEST_ASSERT( includes[ 22 ] == "Intellisense\\MSVCInclude\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 23 ] == "Intellisense\\MSVCInclude\\Quoted\\Slash\\Path" );
+            TEST_ASSERT( includes[ 24 ] == "Intellisense\\MSVCInclude\\Quoted\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[ 25 ] == "Intellisense\\DirAfterInclude\\Path" );
+            TEST_ASSERT( includes[ 26 ] == "Intellisense\\DirAfterInclude\\Space\\Path" );
+            TEST_ASSERT( includes[ 27 ] == "Intellisense\\DirAfterInclude\\Quoted\\Path" );
+            TEST_ASSERT( includes[ 28 ] == "Intellisense\\DirAfterInclude\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 29 ] == "Intellisense\\QuoteInclude\\Path" );
+            TEST_ASSERT( includes[ 30 ] == "Intellisense\\QuoteInclude\\Space\\Path" );
+            TEST_ASSERT( includes[ 31 ] == "Intellisense\\QuoteInclude\\Quoted\\Path" );
+            TEST_ASSERT( includes[ 32 ] == "Intellisense\\QuoteInclude\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 33 ] == "Intellisense\\MSVCExternalInclude\\Path" );
+            TEST_ASSERT( includes[ 34 ] == "Intellisense\\MSVCExternalInclude\\Space\\Path" );
+            TEST_ASSERT( includes[ 35 ] == "Intellisense\\MSVCExternalInclude\\Slash\\Path" );
+            TEST_ASSERT( includes[ 36 ] == "Intellisense\\MSVCExternalInclude\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[ 37 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Path" );
+            TEST_ASSERT( includes[ 38 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 39 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Slash\\Path" );
+            TEST_ASSERT( includes[ 40 ] == "Intellisense\\MSVCExternalInclude\\Quoted\\Slash\\Space\\Path" );
 
             includesOk = true;
         }
@@ -575,7 +594,7 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     buffer.Tokenize( tokens, '\n' );
 
     // Check
-    const size_t NUM_DEFINES = 8;
+    const size_t NUM_DEFINES = 16;
     bool definesOk[ NUM_DEFINES ] = {};
     Array< AString > includes;
     bool inDefineSection = false;
@@ -617,6 +636,14 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
             if ( token.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE" ) )         { definesOk[ 5 ] = true; }
             if ( token.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE" ) )         { definesOk[ 6 ] = true; }
             if ( token.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE" ) )   { definesOk[ 7 ] = true; }
+            if ( token.Find( "INTELLISENSE_QUOTED_DEFINE2" ) )              { definesOk[ 8 ] = true; }
+            if ( token.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE2" ) )        { definesOk[ 9 ] = true; }
+            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE2" ) )        { definesOk[ 10 ] = true; }
+            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE2" ) )  { definesOk[ 11 ] = true; }
+            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_DEFINE\"" ) ) { definesOk[ 12 ] = true; }
+            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SPACE_DEFINE\"" ) ) { definesOk[ 13 ] = true; }
+            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SLASH_DEFINE\"" ) ) { definesOk[ 14 ] = true; }
+            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SLASH_SPACE_DEFINE\"" ) ) { definesOk[ 15 ] = true; }
             continue;
         }
 
@@ -652,7 +679,7 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
         TEST_ASSERT( definesOk[ i ] );
     }
 
-    TEST_ASSERT( includes.GetSize() == 40 );
+    TEST_ASSERT( includes.GetSize() == 41 );
     TEST_ASSERT( includes[  0 ] == "Intellisense/Include/Path" );
     TEST_ASSERT( includes[  1 ] == "Intellisense/Include/Space/Path" );
     TEST_ASSERT( includes[  2 ] == "Intellisense/Include/Slash/Path" );
@@ -661,38 +688,39 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     TEST_ASSERT( includes[  5 ] == "Intellisense/Include/Quoted/Space/Path" );
     TEST_ASSERT( includes[  6 ] == "Intellisense/Include/Quoted/Slash/Path" );
     TEST_ASSERT( includes[  7 ] == "Intellisense/Include/Quoted/Slash/Space/Path" );
-    TEST_ASSERT( includes[  8 ] == "Intellisense/SystemInclude/Path" );
-    TEST_ASSERT( includes[  9 ] == "Intellisense/SystemInclude/Space/Path" );
-    TEST_ASSERT( includes[ 10 ] == "Intellisense/SystemInclude/Quoted/Path" );
-    TEST_ASSERT( includes[ 11 ] == "Intellisense/SystemInclude/Quoted/Space/Path" );
-    TEST_ASSERT( includes[ 12 ] == "Intellisense/SystemAfterInclude/Path" );
-    TEST_ASSERT( includes[ 13 ] == "Intellisense/SystemAfterInclude/Space/Path" );
-    TEST_ASSERT( includes[ 14 ] == "Intellisense/SystemAfterInclude/Quoted/Path" );
-    TEST_ASSERT( includes[ 15 ] == "Intellisense/SystemAfterInclude/Quoted/Space/Path" );
-    TEST_ASSERT( includes[ 16 ] == "Intellisense/MSVCInclude/Path" );
-    TEST_ASSERT( includes[ 17 ] == "Intellisense/MSVCInclude/Space/Path" );
-    TEST_ASSERT( includes[ 18 ] == "Intellisense/MSVCInclude/Slash/Path" );
-    TEST_ASSERT( includes[ 19 ] == "Intellisense/MSVCInclude/Slash/Space/Path" );
-    TEST_ASSERT( includes[ 20 ] == "Intellisense/MSVCInclude/Quoted/Path" );
-    TEST_ASSERT( includes[ 21 ] == "Intellisense/MSVCInclude/Quoted/Space/Path" );
-    TEST_ASSERT( includes[ 22 ] == "Intellisense/MSVCInclude/Quoted/Slash/Path" );
-    TEST_ASSERT( includes[ 23 ] == "Intellisense/MSVCInclude/Quoted/Slash/Space/Path" );
-    TEST_ASSERT( includes[ 24 ] == "Intellisense/DirAfterInclude/Path" );
-    TEST_ASSERT( includes[ 25 ] == "Intellisense/DirAfterInclude/Space/Path" );
-    TEST_ASSERT( includes[ 26 ] == "Intellisense/DirAfterInclude/Quoted/Path" );
-    TEST_ASSERT( includes[ 27 ] == "Intellisense/DirAfterInclude/Quoted/Space/Path" );
-    TEST_ASSERT( includes[ 28 ] == "Intellisense/QuoteInclude/Path" );
-    TEST_ASSERT( includes[ 29 ] == "Intellisense/QuoteInclude/Space/Path" );
-    TEST_ASSERT( includes[ 30 ] == "Intellisense/QuoteInclude/Quoted/Path" );
-    TEST_ASSERT( includes[ 31 ] == "Intellisense/QuoteInclude/Quoted/Space/Path" );
-    TEST_ASSERT( includes[ 32 ] == "Intellisense/MSVCExternalInclude/Path" );
-    TEST_ASSERT( includes[ 33 ] == "Intellisense/MSVCExternalInclude/Space/Path" );
-    TEST_ASSERT( includes[ 34 ] == "Intellisense/MSVCExternalInclude/Slash/Path" );
-    TEST_ASSERT( includes[ 35 ] == "Intellisense/MSVCExternalInclude/Slash/Space/Path" );
-    TEST_ASSERT( includes[ 36 ] == "Intellisense/MSVCExternalInclude/Quoted/Path" );
-    TEST_ASSERT( includes[ 37 ] == "Intellisense/MSVCExternalInclude/Quoted/Space/Path" );
-    TEST_ASSERT( includes[ 38 ] == "Intellisense/MSVCExternalInclude/Quoted/Slash/Path" );
-    TEST_ASSERT( includes[ 39 ] == "Intellisense/MSVCExternalInclude/Quoted/Slash/Space/Path" );
+    TEST_ASSERT( includes[  8 ] == "Intellisense/Include/With Spaces/Quoted/Slash/Space/Path" );
+    TEST_ASSERT( includes[  9 ] == "Intellisense/SystemInclude/Path" );
+    TEST_ASSERT( includes[ 10 ] == "Intellisense/SystemInclude/Space/Path" );
+    TEST_ASSERT( includes[ 11 ] == "Intellisense/SystemInclude/Quoted/Path" );
+    TEST_ASSERT( includes[ 12 ] == "Intellisense/SystemInclude/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 13 ] == "Intellisense/SystemAfterInclude/Path" );
+    TEST_ASSERT( includes[ 14 ] == "Intellisense/SystemAfterInclude/Space/Path" );
+    TEST_ASSERT( includes[ 15 ] == "Intellisense/SystemAfterInclude/Quoted/Path" );
+    TEST_ASSERT( includes[ 16 ] == "Intellisense/SystemAfterInclude/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 17 ] == "Intellisense/MSVCInclude/Path" );
+    TEST_ASSERT( includes[ 18 ] == "Intellisense/MSVCInclude/Space/Path" );
+    TEST_ASSERT( includes[ 19 ] == "Intellisense/MSVCInclude/Slash/Path" );
+    TEST_ASSERT( includes[ 20 ] == "Intellisense/MSVCInclude/Slash/Space/Path" );
+    TEST_ASSERT( includes[ 21 ] == "Intellisense/MSVCInclude/Quoted/Path" );
+    TEST_ASSERT( includes[ 22 ] == "Intellisense/MSVCInclude/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 23 ] == "Intellisense/MSVCInclude/Quoted/Slash/Path" );
+    TEST_ASSERT( includes[ 24 ] == "Intellisense/MSVCInclude/Quoted/Slash/Space/Path" );
+    TEST_ASSERT( includes[ 25 ] == "Intellisense/DirAfterInclude/Path" );
+    TEST_ASSERT( includes[ 26 ] == "Intellisense/DirAfterInclude/Space/Path" );
+    TEST_ASSERT( includes[ 27 ] == "Intellisense/DirAfterInclude/Quoted/Path" );
+    TEST_ASSERT( includes[ 28 ] == "Intellisense/DirAfterInclude/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 29 ] == "Intellisense/QuoteInclude/Path" );
+    TEST_ASSERT( includes[ 30 ] == "Intellisense/QuoteInclude/Space/Path" );
+    TEST_ASSERT( includes[ 31 ] == "Intellisense/QuoteInclude/Quoted/Path" );
+    TEST_ASSERT( includes[ 32 ] == "Intellisense/QuoteInclude/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 33 ] == "Intellisense/MSVCExternalInclude/Path" );
+    TEST_ASSERT( includes[ 34 ] == "Intellisense/MSVCExternalInclude/Space/Path" );
+    TEST_ASSERT( includes[ 35 ] == "Intellisense/MSVCExternalInclude/Slash/Path" );
+    TEST_ASSERT( includes[ 36 ] == "Intellisense/MSVCExternalInclude/Slash/Space/Path" );
+    TEST_ASSERT( includes[ 37 ] == "Intellisense/MSVCExternalInclude/Quoted/Path" );
+    TEST_ASSERT( includes[ 38 ] == "Intellisense/MSVCExternalInclude/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 39 ] == "Intellisense/MSVCExternalInclude/Quoted/Slash/Path" );
+    TEST_ASSERT( includes[ 40 ] == "Intellisense/MSVCExternalInclude/Quoted/Slash/Space/Path" );
 }
 
 // VCXProj_DefaultConfigs

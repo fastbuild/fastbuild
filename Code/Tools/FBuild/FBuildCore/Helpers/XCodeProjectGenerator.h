@@ -57,7 +57,6 @@ private:
     void WriteConfigurationList();
     void WriteFooter();
 
-    bool ShouldQuoteString( const AString & value ) const;
     void WriteString( uint32_t indentDepth,
                       const char * propertyName,
                       const AString & value );
@@ -66,7 +65,7 @@ private:
                      const Array<AString> & values );
     void EscapeArgument( const AString & arg,
                          AString & outEscapedArgument ) const;
-    static void ProcessFileName( const AString & fileName, AString & outFileName );
+    static void ProcessString( const AString & string, AString & outString );
 
     // Additional Input Data
     AString             m_ProjectName;

@@ -49,9 +49,11 @@ Compiler( 'Compiler-Clang8' )
 
 
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -fno-rtti'      // No RTTI
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -fno-rtti'      // No RTTI
 
     // Librarian
     .Librarian                      = '$Clang8_BasePath$/ar'
@@ -60,6 +62,8 @@ Compiler( 'Compiler-Clang8' )
     // Linker
     .Linker                         = '$Clang8_BasePath$/clang++'
     .LinkerOptions                  = '"%1" -o "%2" -g'
+                                    + ' -Wl,-fatal_warnings'
+                                    + ' -Wl,-dead_strip'
                                     + ' -mmacosx-version-min=10.7'
                                     + ' -stdlib=libc++'
 

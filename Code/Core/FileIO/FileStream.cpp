@@ -76,6 +76,12 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
             shareMode           |= FILE_SHARE_READ; // allow other readers
             creationDisposition |= CREATE_ALWAYS; // overwrite existing
         }
+        else if ( ( fileMode & OPEN_OR_CREATE_READ_WRITE ) != 0 )
+        {
+            desiredAccess       |= ( GENERIC_READ | GENERIC_WRITE );
+            shareMode           |= FILE_SHARE_READ; // allow other readers
+            creationDisposition |= OPEN_ALWAYS; // open or create
+        }
         else
         {
             ASSERT( false ); // must specify an access mode
@@ -135,6 +141,10 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
         else if ( ( fileMode & WRITE_ONLY ) != 0 )
         {
             flags |= ( O_WRONLY | O_CREAT | O_TRUNC );
+        }
+        else if ( ( fileMode & OPEN_OR_CREATE_READ_WRITE ) != 0 )
+        {
+            flags |= ( O_RDWR | O_CREAT );
         }
         else
         {
@@ -361,5 +371,18 @@ bool FileStream::IsOpen() const
         return true;
     }
 #endif
+
+// Truncate
+//------------------------------------------------------------------------------
+bool FileStream::Truncate()
+{
+    #if defined( __WINDOWS__ )
+        return ( SetEndOfFile( m_Handle ) != FALSE );
+    #elif defined( __APPLE__ )
+        return ( ftruncate( m_Handle, static_cast<off_t>( Tell() ) ) == 0 );
+    #else
+        return ( ftruncate64( m_Handle, static_cast<off_t>( Tell() ) ) == 0 );
+    #endif
+}
 
 //------------------------------------------------------------------------------

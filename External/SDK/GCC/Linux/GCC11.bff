@@ -45,10 +45,12 @@ Compiler( 'Compiler-GCC11' )
 
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+                                    + ' -fno-rtti'      // No RTTI
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+                                    + ' -fno-rtti'      // No RTTI
 
     // Librarian
     .Librarian                      = '$GCC11_BasePath$/x86_64-linux-gnu-ar'

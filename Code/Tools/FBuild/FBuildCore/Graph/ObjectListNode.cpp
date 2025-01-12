@@ -59,6 +59,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_ConcurrencyGroupName,                "ConcurrencyGroupName",             MetaOptional() )
 
     // Internal State
     REFLECT( m_PrecompiledHeaderName,               "PrecompiledHeaderName",            MetaHidden() )
@@ -72,6 +73,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_ObjectListInputEndIndex,             "ObjectListInputEndIndex",          MetaHidden() )
     REFLECT( m_CompilerFlags.m_Flags,               "ObjFlags",                         MetaHidden() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "ObjFlagsPreprocessor",             MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex,               "ConcurrencyGroupIndex",            MetaHidden() )
 REFLECT_END( ObjectListNode )
 
 // ObjectListNode
@@ -92,6 +94,12 @@ ObjectListNode::ObjectListNode()
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
         return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
+    // .ConcurrencyGroupName
+    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    {
+        return false; // InitializeConcurrencyGroup will have emitted an error
     }
 
     // .Compiler
@@ -577,7 +585,7 @@ ObjectListNode::~ObjectListNode() = default;
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const
+void ObjectListNode::GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & outInputs ) const
 {
     for ( const Dependency & dep : m_DynamicDependencies )
     {
@@ -592,17 +600,17 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             {
                 if ( on->IsMSVC() || on->IsClangCl() )
                 {
-                    fullArgs += pre;
-                    fullArgs += on->GetPCHObjectName();
-                    fullArgs += post;
-                    fullArgs.AddDelimiter();
-                    continue;
+                    // PCH files should only be included once
+                    if ( outInputs.Find( on->GetPCHObjectName() ) == nullptr )
+                    {
+                        outInputs.EmplaceBack( on->GetPCHObjectName() );
+                    }
                 }
                 else
                 {
                     // Clang/GCC/SNC don't have an object to link for a pch
-                    continue;
                 }
+                continue;
             }
         }
 
@@ -613,7 +621,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
 
             // insert all the objects in the object list
             const ObjectListNode * oln = n->CastTo< ObjectListNode >();
-            oln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            oln->GetInputFiles( objectsInsteadOfLibs, outInputs );
             continue;
         }
 
@@ -624,15 +632,12 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
 
             // insert all the objects in the object list
             const LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            ln->GetInputFiles( objectsInsteadOfLibs, outInputs );
             continue;
         }
 
         // normal object
-        fullArgs += pre;
-        fullArgs += n->GetName();
-        fullArgs += post;
-        fullArgs.AddDelimiter();
+        outInputs.EmplaceBack( n->GetName() );
     }
 }
 
@@ -799,6 +804,8 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
     node->m_OwnerObjectList = m_Name;
+    node->m_ConcurrencyGroupName = m_ConcurrencyGroupName;
+    node->m_ConcurrencyGroupIndex = m_ConcurrencyGroupIndex;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

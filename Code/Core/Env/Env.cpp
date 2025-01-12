@@ -26,6 +26,11 @@
 
 #if defined( __LINUX__ )
     #include <linux/limits.h>
+    extern "C"
+    {
+        char* getenv(const char * name);
+        int32_t setenv(const char * name, const char * value, int32_t overwrite);
+    }
 #endif
 
 #if defined( __APPLE__ )

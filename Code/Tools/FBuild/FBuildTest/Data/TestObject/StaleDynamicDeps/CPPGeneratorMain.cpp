@@ -26,7 +26,7 @@ int main(int argc, const char** argv)
 
     // Generate CPP file which includes header file
     char buffer[1024];
-    sprintf(buffer, "#include \"%s\"\n", input);
+    snprintf( buffer, sizeof(buffer), "#include \"%s\"\n", input );
 
     // Create output
     {

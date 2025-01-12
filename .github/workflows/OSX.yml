@@ -14,7 +14,7 @@ jobs:
       matrix:
         include:
           - cfg: Build & Tests
-            os: macos-11
+            os: macos-13
 
     name: OSX (${{ matrix.cfg }})
     runs-on: ${{ matrix.os }}

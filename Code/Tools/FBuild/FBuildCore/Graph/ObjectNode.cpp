@@ -77,6 +77,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
+    REFLECT( m_ConcurrencyGroupName,                "ConcurrencyGroupName",             MetaOptional() )
 
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
@@ -90,6 +91,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
     REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
     REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex,               "ConcurrencyGroupIndex",            MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -112,6 +114,8 @@ ObjectNode::ObjectNode()
     {
         return false; // InitializePreBuildDependencies will have emitted an error
     }
+    
+    // NOTE: ConcurrencyGroup set directly by ObjectList or Library
 
     // .Compiler
     CompilerNode * compiler( nullptr );
@@ -2152,7 +2156,13 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     Compressor c; // scoped here so we can access decompression buffer
     if ( job->IsDataCompressed() )
     {
-        VERIFY( c.Decompress( dataToWrite ) );
+        if( c.Decompress( dataToWrite ) == false )
+        {
+            // Decompression failure would indicate a bug
+            job->Error( "Decompression failed. Target: '%s'", GetName().Get() );
+            job->OnSystemError();
+            return false;
+        }
         dataToWrite = c.GetResult();
         dataToWriteSize = c.GetResultSize();
     }

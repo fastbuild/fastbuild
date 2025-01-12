@@ -4,17 +4,12 @@
 
 // Select desired Visual Studio version
 //------------------------------------------------------------------------------
-//#define USING_VS2017
 //#define USING_VS2019
 #define USING_VS2022
 
 // Activate
 //------------------------------------------------------------------------------
 .VisualStudioSettings = []
-#if USING_VS2017
-    #include "VS2017.bff"
-    .VisualStudioSettings = .VisualStudioSettings_VS2017
-#endif
 #if USING_VS2019
     #include "VS2019.bff"
     .VisualStudioSettings = .VisualStudioSettings_VS2019

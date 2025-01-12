@@ -1,9 +1,8 @@
 //
-// An simple executable to run
+// A simple executable to run
 //
-#include <iostream>
-#include <fstream>
-#include <string>
+#include <stdio.h>
+#include <string.h>
 
 int main(int argc, char *argv[], char *[])
 {
@@ -13,18 +12,18 @@ int main(int argc, char *argv[], char *[])
         const char * arg = argv[i];
 
         // Make a new filename based on the input
-        std::string outFileName = arg;
-        outFileName += ".out";
+        char filename[ 1024 ] = { 0 };
+        strcat( filename, arg );
+        strcat( filename, ".out" );
 
         // Touch the file
-        std::ofstream file;
-        file.open(outFileName);
-        file << "T";
-        file.close();
+        FILE * file = fopen( filename, "wb" );
+        fwrite( "T", 1, 1, file );
+        fclose( file );
 
         // Generate some output
         // on STDOUT based on the arguments too
-        std::cout << "Touched: " << outFileName << std::endl;
+        printf( "Touched: %s\n", filename );
     }
 
     return argc - 1;

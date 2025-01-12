@@ -44,6 +44,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_LinkerStampExeArgs,              "LinkerStampExeArgs",           MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
+    REFLECT( m_ConcurrencyGroupName,            "ConcurrencyGroupName",         MetaOptional() )
 
     // Internal State
     REFLECT( m_Libraries2StartIndex,            "Libraries2StartIndex",         MetaHidden() )
@@ -51,6 +52,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_AssemblyResourcesStartIndex,     "AssemblyResourcesStartIndex",  MetaHidden() )
     REFLECT( m_AssemblyResourcesNum,            "AssemblyResourcesNum",         MetaHidden() )
     REFLECT( m_ImportLibName,                   "ImportLibName",                MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex,           "ConcurrencyGroupIndex",        MetaHidden() )
 REFLECT_END( LinkerNode )
 
 // CONSTRUCTOR
@@ -72,6 +74,12 @@ LinkerNode::LinkerNode()
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
         return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
+    // .ConcurrencyGroupName
+    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    {
+        return false; // InitializeConcurrencyGroup will have emitted an error
     }
 
     // .Linker
@@ -481,8 +489,15 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
             {
                 AStackString<> pre( token.Get(), found );
                 AStackString<> post( found + 2, token.GetEnd() );
-                GetAssemblyResourceFiles( fullArgs, pre, post );
-                fullArgs.AddDelimiter();
+                StackArray<AString> inputs;
+                GetAssemblyResourceFiles( inputs );
+                for ( const AString & input: inputs )
+                {
+                    fullArgs += pre;
+                    fullArgs += input;
+                    fullArgs += post;
+                    fullArgs.AddDelimiter();
+                }
                 continue;
             }
 
@@ -577,73 +592,68 @@ void LinkerNode::GetInputFiles( const AString & token, Args & fullArgs ) const
 void LinkerNode::GetInputFiles( Args & fullArgs, uint32_t startIndex, uint32_t endIndex, const AString & pre, const AString & post ) const
 {
     // Regular inputs are after linker and before AssemblyResources
+    StackArray<AString> inputs;
     const Dependency * start = m_StaticDependencies.Begin() + startIndex;
     const Dependency * end = m_StaticDependencies.Begin() + endIndex;
     for ( const Dependency * i = start; i != end; ++i )
     {
-        Node * n( i->GetNode() );
-        GetInputFiles( n, fullArgs, pre, post );
+        GetInputFiles( i->GetNode(), inputs );
+    }
+
+    // Add the inputs
+    for ( const AString & input : inputs )
+    {
+        fullArgs += pre;
+        fullArgs += input;
+        fullArgs += post;
+        fullArgs.AddDelimiter();
     }
 }
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, const AString & post ) const
+void LinkerNode::GetInputFiles( Node * n, Array<AString> & outInputs ) const
 {
     if ( n->GetType() == Node::LIBRARY_NODE )
     {
-        const bool linkObjectsInsteadOfLibs = m_LinkerLinkObjects;
-
-        if ( linkObjectsInsteadOfLibs )
+        if ( m_LinkerLinkObjects )
         {
             const LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post, linkObjectsInsteadOfLibs );
+            ln->GetInputFiles( m_LinkerLinkObjects, outInputs );
         }
         else
         {
             // not building a DLL, so link the lib directly
-            fullArgs += pre;
-            fullArgs += n->GetName();
-            fullArgs += post;
+            outInputs.EmplaceBack( n->GetName() );
         }
     }
     else if ( n->GetType() == Node::OBJECT_LIST_NODE )
     {
-        const bool linkObjectsInsteadOfLibs = m_LinkerLinkObjects;
-
         const ObjectListNode * ol = n->CastTo< ObjectListNode >();
-        ol->GetInputFiles( fullArgs, pre, post, linkObjectsInsteadOfLibs );
+        ol->GetInputFiles( m_LinkerLinkObjects, outInputs );
     }
     else if ( n->GetType() == Node::DLL_NODE )
     {
         // for a DLL, link to the import library
         const DLLNode * dllNode = n->CastTo< DLLNode >();
-        AStackString<> importLibName;
-        dllNode->GetImportLibName( importLibName );
-        fullArgs += pre;
-        fullArgs += importLibName;
-        fullArgs += post;
+        dllNode->GetImportLibName( outInputs.EmplaceBack() );
     }
     else if ( n->GetType() == Node::COPY_FILE_NODE )
     {
         const CopyFileNode * copyNode = n->CastTo< CopyFileNode >();
         Node * srcNode = copyNode->GetSourceNode();
-        GetInputFiles( srcNode, fullArgs, pre, post );
+        GetInputFiles( srcNode, outInputs );
     }
     else
     {
         // link anything else directly
-        fullArgs += pre;
-        fullArgs += n->GetName();
-        fullArgs += post;
+        outInputs.EmplaceBack( n->GetName() );
     }
-
-    fullArgs.AddDelimiter();
 }
 
 // GetAssemblyResourceFiles
 //------------------------------------------------------------------------------
-void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre, const AString & post ) const
+void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
 {
     const Dependency * start = m_StaticDependencies.Begin() + m_AssemblyResourcesStartIndex;
     const Dependency * end = start + m_AssemblyResourcesNum;
@@ -654,21 +664,18 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         if ( n->GetType() == Node::OBJECT_LIST_NODE )
         {
             const ObjectListNode * oln = n->CastTo< ObjectListNode >();
-            oln->GetInputFiles( fullArgs, pre, post, false );
+            oln->GetInputFiles( false, outInputs );
             continue;
         }
 
         if ( n->GetType() == Node::LIBRARY_NODE )
         {
             const LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post, false );
+            ln->GetInputFiles( false, outInputs );
             continue;
         }
 
-        fullArgs += pre;
-        fullArgs += n->GetName();
-        fullArgs += post;
-        fullArgs.AddDelimiter();
+        outInputs.EmplaceBack( n->GetName() );
     }
 }
 

@@ -37,9 +37,11 @@ REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecAlways,               "ExecAlways",               MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
+    REFLECT(        m_ConcurrencyGroupName,     "ConcurrencyGroupName",     MetaOptional() )
 
     // Internal State
     REFLECT(        m_NumExecInputFiles,        "NumExecInputFiles",        MetaHidden() )
+    REFLECT(        m_ConcurrencyGroupIndex,    "ConcurrencyGroupIndex",    MetaHidden() )
 REFLECT_END( ExecNode )
 
 // CONSTRUCTOR
@@ -66,6 +68,12 @@ ExecNode::ExecNode()
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
         return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
+    // .ConcurrencyGroupName
+    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    {
+        return false; // InitializeConcurrencyGroup will have emitted an error
     }
 
     // .ExecExecutable

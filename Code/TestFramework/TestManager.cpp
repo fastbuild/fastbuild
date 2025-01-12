@@ -8,7 +8,6 @@
 
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
-#include "Core/Mem/MemTracker.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
@@ -194,9 +193,11 @@ void TestManager::TestBegin( TestGroup * testGroup, const char * testName )
     // Flush the output to ensure that name of the test will be logged in case the test will crash the whole binary.
     fflush( stdout );
 
+    // Note allocation state before test is run
     #ifdef MEMTRACKER_ENABLED
-        MemTracker::Reset();
+        m_CurrentTestAllocationId = MemTracker::GetCurrentAllocationId();
     #endif
+
     m_Timer.Start();
 
     #ifdef PROFILING_ENABLED
@@ -215,8 +216,8 @@ void TestManager::TestEnd()
     info.m_TestGroup->PostTest( true );
 
     #ifdef MEMTRACKER_ENABLED
-        // Get allocation count here (before profiling, which can cause allocations)
-        const uint32_t posAllocationCount = MemTracker::GetCurrentAllocationCount();
+        // Get allocation state here (before profiling, which can cause allocations)
+        const uint32_t postAllocationId = MemTracker::GetCurrentAllocationId();
     #endif
 
     // Flush profiling info (track time taken as part of test)
@@ -230,11 +231,12 @@ void TestManager::TestEnd()
     info.m_TimeTaken = timeTaken;
 
     #ifdef MEMTRACKER_ENABLED
-        if ( posAllocationCount != 0 )
+        const bool hasLeaks = MemTracker::HasAllocationsInRange( m_CurrentTestAllocationId, postAllocationId );
+        if ( hasLeaks )
         {
             info.m_MemoryLeaks = true;
             OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
-            MemTracker::DumpAllocations();
+            MemTracker::DumpAllocations( m_CurrentTestAllocationId, postAllocationId );
             if ( IsDebuggerAttached() )
             {
                 TEST_ASSERT( false && "Memory leaks detected" );

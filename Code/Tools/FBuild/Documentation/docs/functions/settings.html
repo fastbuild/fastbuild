@@ -47,10 +47,76 @@ Defines global FASTBuild settings.
   .Workers                          // (optional) Fixed list of workers if not using automatic discovery
   .WorkerConnectionLimit            // (optional) Limit number of connected workers (default: 15)
   .DistributableJobMemoryLimitMiB   // (optional) Limit memory used locally to prep jobs (default: 2048)
+  
+  // Concurrency Groups
+  .ConcurrencyGroups                // (optional) Specify additional concurrency constraints
 }
+
+.ConcurrencyGroup =
+[
+    .ConcurrencyGroupName           // Unique name of the Concurrency Group
+    .ConcurrencyLimit               // (optional) Hard limit for jobs
+    .ConcurrencyPerJobMiB           // (optional) Required system MiB per-job
+]
+</div>
+
+    <div id='copy' class='newsitemheader'>
+      Concurrency Groups
+    </div>	
+    <div class='newsitembody'>
+      <p>
+	  <b>.ConcurrencyGroupName</b> - String - (Required)
+	  </p>
+	  <p>	  
+	  Concurrency Groups are defined and referenced by name. Each group must have a unique
+      name.
+	  </p>
+	  Example:
+<div class='code'>.Group1 =
+[
+    .ConcurrencyGroupName = 'link'
+</div>
+</div>
+<hr>
+    <div class='newsitembody'>
+      <p>
+	  <b>.ConcurrencyLimit</b> - Integer - (Optional)
+	  </p>
+	  <p>	  
+	  Concurrency Groups can specify a hard limit of instances to run concurrently.
+      If .ConcurrencyPerJobMiB is also set, the lower of the two
+      limits will be respected.
+	  </p>
+	  Example:
+<div class='code'>.Group1 =
+[
+    .ConcurrencyLimit = 4 // At most 4 jobs concurrently
+</div>
+</div>
+<hr>
+    <div class='newsitembody'>
+      <p>
+	  <b>.ConcurrencyPerJobMiB</b> - Integer - (Optional)
+	  </p>
+	  <p>	  
+	  Concurrency Groups can specify a per-instance memory requirement in MiB.
+      A limit of instances to run concurrently will be derived by dividing system
+      physical addressable memory by this value. At least one job will always be
+      allowed to run. If .ConcurrencyLimit is also specified, the lower of
+      the two limits will be respected.<br>
+      <br>
+      The physical addressable memory is typically slightly less than the physcially
+      installed memory due to OS or hardware reservations/limitations.<br>
+      <br>
+      The physcial addressable memory of the system is queried once at startup.
+	  </p>
+	  Example:
+<div class='code'>.Group1 =
+[
+    .ConcurrencyPerJobMiB = 2048 // Jobs require 2 GiB each
 </div>
     </div>
 
-    </div><div class='footer'>&copy; 2012-2024 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
 </body>
 </html>

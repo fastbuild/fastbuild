@@ -790,7 +790,7 @@ void TestArray::SortBig() const
 
         // Validate that no allocations were performed
         // (all strings should have been moved)
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
 
         OUTPUT( "SortBig 2, %2.3fs, %u\n", static_cast<double>( t1 ), numItems );
 
@@ -1441,7 +1441,7 @@ void TestArray::EmplaceBack() const
 
         TEST_ASSERT( array.EmplaceBack( "string1" ) == "string1" );
 
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 ) // Check expected amount of allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u ) // Check expected amount of allocs occurred
 
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
@@ -1457,7 +1457,7 @@ void TestArray::EmplaceBack() const
 
         TEST_ASSERT( array.EmplaceBack( Move( AString( "string1" ) ) ) == "string1" );
 
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 ) // Check expected amount of allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u ) // Check expected amount of allocs occurred
 
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
@@ -1475,7 +1475,7 @@ void TestArray::EmplaceBack() const
         TEST_ASSERT( array.EmplaceBack( "string2" ) == "string2" );
         TEST_ASSERT( array.EmplaceBack( "string3" ) == "string3" );
 
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 3 ) // Check expected amount of allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 3u ) // Check expected amount of allocs occurred
 
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
@@ -2054,7 +2054,7 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
         }
 
         // Check should be no more active allocs in total, even if some allocs occurred
-        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0u )
     }
 }
 
@@ -2118,7 +2118,7 @@ void TestArray::MoveWhenGrowing() const
 
     // Should be 2 allocs: one for resize and one for new string
     // but existing strings should have been moved
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 2 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 2u )
 
     CheckConsistency( array );
 }
@@ -2136,7 +2136,7 @@ void TestArray::MoveAppend() const
     array.Append( Move( string ) );
 
     // Should be no allocations
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
 
     CheckConsistency( array );
 }
@@ -2155,7 +2155,7 @@ void TestArray::MoveSetCapacity() const
     array.SetCapacity( 8 );
 
     // Should be 1 allocation for resize (element should be moved)
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u )
 
     CheckConsistency( array );
 }
@@ -2175,7 +2175,7 @@ void TestArray::MovePopFront() const
     array.PopFront();
 
     // Should be no allocations (element should be moved)
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
 
     CheckConsistency( array );
 }
@@ -2195,7 +2195,7 @@ void TestArray::MoveErase() const
     array.Erase( array.Begin() );
 
     // Should be no allocations (element should be moved)
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
 
     CheckConsistency( array );
 }

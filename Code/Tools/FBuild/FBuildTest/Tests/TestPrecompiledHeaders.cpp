@@ -38,6 +38,7 @@ private:
     void Deoptimization() const;
     void PCHOnly() const;
     void PCHReuse() const;
+    void PCHMultipleUses() const;
     void PCHRedefinitionError() const;
     void PCHNotDefinedError() const;
     void PrecompiledHeaderCacheAnalyze_MSVC() const;
@@ -66,6 +67,7 @@ REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( Deoptimization )
     REGISTER_TEST( PCHOnly )
     REGISTER_TEST( PCHReuse )
+    REGISTER_TEST( PCHMultipleUses )
     REGISTER_TEST( PCHRedefinitionError )
     REGISTER_TEST( PCHNotDefinedError )
     #if defined( __WINDOWS__ )
@@ -541,6 +543,25 @@ void TestPrecompiledHeaders::PCHReuse() const
     CheckStatsNode ( 2,      2,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,      1,      Node::OBJECT_LIST_NODE );
 }
+
+// PCHMultipleUses
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::PCHMultipleUses() const
+{
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHMultipleUses/fbuild.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+    TEST_ASSERT( fBuild.Build( "PCHMultipleUses" ) );
+
+    CheckStatsNode ( 3,      3,      Node::OBJECT_NODE );
+    CheckStatsNode ( 2,      2,      Node::OBJECT_LIST_NODE );
+    CheckStatsNode ( 1,      1,      Node::EXE_NODE );
+}
+
 
 // PCHRedefinitionError
 //------------------------------------------------------------------------------

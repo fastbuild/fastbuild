@@ -64,7 +64,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 175 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 176 };
 
     bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == NODE_GRAPH_CURRENT_VERSION; }
@@ -108,6 +108,8 @@ public:
     Node * FindNodeExact( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
+
+    void SetSettings( const SettingsNode & settings );
     const SettingsNode * GetSettings() const { return m_Settings; }
 
     void RegisterNode( Node * n, const BFFToken * sourceToken );

@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Error Reference</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>1600 - Too many Concurrency Groups %u (max %u).</h1>
+    <div class='newsitemheader'>Description</div>
+    <div class='newsitembody'>
+Concurrency Groups defined in <a href='../functions/settings.html'>Settings()</a> can be used
+to artificially limit concurrency between certain groups of processes, but doing so requires adding
+some overhead to task scheduling. To ensure this overhead doesn't become significant due to an erroneous
+configuration, an upper bound is placed on the number of groups.<br>
+    </div>
+<div class='newsitemheader'>Example</div>
+    <div class='newsitembody'>
+Config:
+<div class='code'>Settings
+{
+    .Group1 = [ .ConcurrencyGroupName = 'group1' .ConcurrencyLimit = 4 ]
+    ... // Groups omitted for example brevity
+    .Group16 = [ .ConcurrencyGroupName = 'group16' .ConcurrencyLimit = 4 ]
+    .Group17 = [ .ConcurrencyGroupName = 'group17' .ConcurrencyLimit = 4 ]
+    .ConcurrencyGroups = { .Group1, .Group2, ... .Group16, .Group17 }
+}</div>
+Output:
+<div class='output'>C:\Test\fbuild.bff(1,1): FASTBuild Error #1600 - Settings() - Too many concurrency groups defined. Count: 17, Max: 16.
+Settings
+^
+\--here
+</div>
+Fix:
+<div class='code'>Settings
+{
+    .Group1 = [ .ConcurrencyGroupName = 'group1' .ConcurrencyLimit = 4 ]
+    ... // Groups omitted for example brevity
+    .Group16 = [ .ConcurrencyGroupName = 'group16' .ConcurrencyLimit = 4 ]
+    .ConcurrencyGroups = { .Group1, .Group2, ... .Group16 }
+}</div>
+    </div>
+
+
+    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
+</body>
+</html>

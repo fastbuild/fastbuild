@@ -21,15 +21,20 @@ public:
         typedef uint32_t (*ThreadEntryFunction)( void * param );
 
         #define INVALID_THREAD_HANDLE ( nullptr )
+        #define INVALID_THREAD_ID ( 0 )
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         typedef pthread_t ThreadId;
         typedef void * ThreadHandle;
         typedef uint32_t (*ThreadEntryFunction)( void * param );
         #define INVALID_THREAD_HANDLE ( nullptr )
+        #if defined( __APPLE__ ) 
+            #define INVALID_THREAD_ID ( nullptr )
+        #else
+            #define INVALID_THREAD_ID ( 0 )
+        #endif
     #else
         #error Unknown platform
     #endif
-    #define INVALID_THREAD_ID ( 0 )
     enum : uint32_t { kDefaultStackSize = ( 64 * 1024 ) };
 
     Thread();

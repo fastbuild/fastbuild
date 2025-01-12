@@ -7,6 +7,7 @@
     //#define USING_CLANG_6
     #define USING_CLANG_10
     //#define USING_CLANG_14
+    //#define USING_CLANG_18
 #endif
 #if __OSX__ && !CI_BUILD
     //#define USING_CLANG_8
@@ -19,7 +20,9 @@
     //#define USING_CLANG_11
     //#define USING_CLANG_14
     //#define USING_CLANG_15
-    #define USING_CLANG_17
+    //#define USING_CLANG_17
+    #define USING_CLANG_18
+    //#define USING_CLANG_19
 #endif
 
 // Activate
@@ -37,6 +40,9 @@
     #if USING_CLANG_14
         #include "Linux/Clang14.bff"
     #endif
+    #if USING_CLANG_18
+        #include "Linux/Clang18.bff"
+    #endif
 #endif
 #if __OSX__
     #if CI_BUILD
@@ -51,7 +57,11 @@
 #endif
 #if __WINDOWS__
     #if CI_BUILD
-        #define USING_CLANG_11
+        #if USING_VS2022
+            #define USING_CLANG_18
+        #else
+            #define USING_CLANG_11
+        #endif
     #endif
     #if USING_CLANG_8
         #include "Windows/Clang8.bff"
@@ -73,6 +83,12 @@
     #endif
     #if USING_CLANG_17
         #include "Windows/Clang17.bff"
+    #endif
+    #if USING_CLANG_18
+        #include "Windows/Clang18.bff"
+    #endif
+    #if USING_CLANG_19
+        #include "Windows/Clang19.bff"
     #endif
 #endif
 

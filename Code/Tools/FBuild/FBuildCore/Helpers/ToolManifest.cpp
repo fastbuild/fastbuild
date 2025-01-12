@@ -8,6 +8,7 @@
 // Core
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -16,6 +17,7 @@
 #include "Core/Math/xxHash.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
@@ -697,7 +699,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
         {
             // Get path to file
             AStackString<> fileName;
-            GetRemoteFilePath( fileId, fileName );
+            GetRemoteFilePath( static_cast<uint32_t>( fileId ), fileName );
 
             // Make modification time now
             FileIO::SetFileLastWriteTimeToNow( fileName );
@@ -741,14 +743,14 @@ bool ToolManifestFile::LoadFile( void * & uncompressedContent, uint32_t & uncomp
     FileStream fs;
     if ( fs.Open( m_Name.Get(), FileStream::READ_ONLY ) == false )
     {
-        FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest\n", m_Name.Get() );
+        FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );
         return false;
     }
     uncompressedContentSize = (uint32_t)fs.GetFileSize();
     UniquePtr< void, FreeDeletor > mem( ALLOC( uncompressedContentSize ) );
     if ( fs.Read( mem.Get(), uncompressedContentSize ) != uncompressedContentSize )
     {
-        FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest\n", m_Name.Get() );
+        FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );
         return false;
     }
 

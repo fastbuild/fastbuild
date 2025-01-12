@@ -32,7 +32,7 @@ bool LockSystemMutex( const char * name )
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         char tempFileName[256];
-        sprintf( tempFileName, "/tmp/%s.lock", name );
+        snprintf( tempFileName, sizeof(tempFileName), "/tmp/%s.lock", name );
         int handle = open( tempFileName, O_CREAT | O_RDWR, 0666 );
         if ( handle < 0 )
         {
