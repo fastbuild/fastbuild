@@ -41,12 +41,13 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( const AString & args, bool consoleMode, bool periodicRestart )
+Worker::Worker( const AString & args, bool consoleMode, bool periodicRestart, bool preferHostName )
     : m_ConsoleMode( consoleMode )
     , m_PeriodicRestart( periodicRestart )
     , m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
+    , m_WorkerBrokerage( preferHostName )
     , m_BaseArgs( args )
     , m_LastWriteTime( 0 )
     , m_WantToQuit( false )

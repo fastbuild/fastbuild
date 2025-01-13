@@ -18,7 +18,7 @@
 class WorkerBrokerageServer : public WorkerBrokerage
 {
 public:
-    WorkerBrokerageServer();
+    WorkerBrokerageServer( bool preferHostName );
     ~WorkerBrokerageServer();
 
     void SetAvailability( bool available );
@@ -33,6 +33,7 @@ protected:
     Timer               m_TimerLastCleanBroker;
     uint64_t            m_SettingsWriteTime = 0; // FileTime of settings time when last changed
     bool                m_Available = false;
+    bool                m_PreferHostName = false;
     AString             m_BrokerageFilePath;
     AString             m_IPAddress;
     AString             m_DomainName;
