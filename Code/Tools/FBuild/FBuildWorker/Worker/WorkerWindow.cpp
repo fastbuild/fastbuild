@@ -192,14 +192,23 @@ WorkerWindow::~WorkerWindow()
 
 // SetStatus
 //------------------------------------------------------------------------------
-void WorkerWindow::SetStatus( const AString & hostName, const AString & statusText )
+void WorkerWindow::SetStatus( const AString & hostName, const AString& hostIPAddress, const AString & statusText )
 {
     AStackString< 512 > text;
     text.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
     if ( !hostName.IsEmpty() )
     {
         text.AppendFormat( " | \"%s\"", hostName.Get() );
+        if (!hostIPAddress.IsEmpty())
+        {
+            text.AppendFormat( " (%s)", hostIPAddress.Get() );
+        }
     }
+    else if (!hostIPAddress.IsEmpty())
+    {
+        text.AppendFormat( " | %s", hostIPAddress.Get() );
+    }
+
     if ( !statusText.IsEmpty() )
     {
         text.AppendFormat( " | %s", statusText.Get() );
