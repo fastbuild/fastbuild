@@ -29,15 +29,15 @@
 // OSX Functions
 //------------------------------------------------------------------------------
 #if defined( __OSX__ )
-    void * TrayIconOSX_Create( void * iconData, size_t iconDataSize );
+    void * TrayIconOSX_Create( const void * iconData, size_t iconDataSize );
     void TrayIconOSX_SetMenu( OSTrayIcon * owner, OSMenu * menu );
 #endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
-{
-    #if defined( __WINDOWS__ )
+#if defined( __WINDOWS__ )
+    OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
+    {
         ZeroMemory( &m_NotifyIconData, sizeof(NOTIFYICONDATA) );
         m_NotifyIconData.cbSize = sizeof(NOTIFYICONDATA);
         m_NotifyIconData.hWnd = (HWND)parentWindow->GetHandle();
@@ -56,18 +56,22 @@ OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
 
         // Display
         Shell_NotifyIcon( NIM_ADD, &m_NotifyIconData );
-    #elif defined( __OSX__ )
-        size_t size;
-        void * ptr = getsectiondata( &_mh_execute_header, "binary", "trayicon", &size );
-        ASSERT( ptr && size );
-        m_Handle = TrayIconOSX_Create( ptr, size );
-        (void)parentWindow;
-        (void)toolTip;
-    #else
-        (void)parentWindow;
-        (void)toolTip;
-    #endif
-}
+    }
+#endif
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+#if !defined( __WINDOWS__ )
+    OSTrayIcon::OSTrayIcon( const void * iconImage, size_t iconImageSize )
+    {
+        #if defined( __OSX__ )
+            m_Handle = TrayIconOSX_Create( iconImage, iconImageSize );
+        #else
+            (void)iconImage;
+            (void)iconImageSize;
+        #endif
+    }
+#endif
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
