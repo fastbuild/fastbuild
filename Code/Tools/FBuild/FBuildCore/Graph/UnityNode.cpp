@@ -743,6 +743,11 @@ void UnityNode::FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array<
         return;
     }
 
+    if ( files.IsEmpty() )
+    {
+        return;
+    }
+
     UnityFileAndOrigin * writeIt = files.Begin();
     const UnityFileAndOrigin * readIt = writeIt;
 

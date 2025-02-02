@@ -49,6 +49,7 @@ private:
     void SortFiles() const;
     void CacheUsingRelativePaths() const;
     void NoUnityCommandLineOption() const;
+    void NoUnityCache() const;
 };
 
 // Register Tests
@@ -73,6 +74,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( SortFiles )
     REGISTER_TEST( CacheUsingRelativePaths )
     REGISTER_TEST( NoUnityCommandLineOption )
+    REGISTER_TEST( NoUnityCache )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -1068,6 +1070,72 @@ void TestUnity::NoUnityCommandLineOption() const
         CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
         CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
         CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+    }
+}
+
+// NoUnityCache
+//------------------------------------------------------------------------------
+void TestUnity::NoUnityCache() const
+{
+    // Files isolated from Unity don't get caching, but when -nounity is used
+    // they should behave as if they are being compiled via an ObjectList
+    // without unity, which is cached.
+    const char * const dbFile = "../tmp/Test/Unity/NoUnityCache/fbuild.fdb";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/NoUnityCache/fbuild.bff";
+
+    // Allow writing to cache. We'll check below it only occurs when expected
+    options.m_UseCacheWrite = true;
+
+    // Build normally
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
+
+        // Isolated files should not be written to cache
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 0 );
+    }
+
+    // Switch on -nounity
+    options.m_NoUnity = true;
+
+    // Build again
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
+
+        // Isolated files should not be cached
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 2 );
+    }
+
+    // Allow reading
+    options.m_UseCacheRead = true;
+
+    // Build again
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+        CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );
+
+        // Isolated files should not be cached
+        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 2 );
     }
 }
 

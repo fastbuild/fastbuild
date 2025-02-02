@@ -2662,8 +2662,14 @@ bool ObjectNode::ShouldUseCache() const
                      FBuild::Get().GetOptions().m_UseCacheWrite );
     if ( IsIsolatedFromUnity() )
     {
-        // disable caching for locally modified files (since they will rarely if ever get a hit)
-        useCache = false;
+        // If -nounity is being used, we want to treat files as if being
+        // compiled in an ObjectList without use of unity, which inclues
+        // caching
+        if ( FBuild::Get().GetOptions().m_NoUnity == false )
+        {
+            // disable caching for locally modified files (since they will rarely if ever get a hit)
+            useCache = false;
+        }
     }
     if ( IsMSVC() && IsUsingPCH() )
     {
