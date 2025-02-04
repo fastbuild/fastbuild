@@ -41,6 +41,7 @@ public:
 
     // Other
     bool m_PeriodicRestart;
+    bool m_PreferHostName;
 
 private:
     void ShowUsageError();
