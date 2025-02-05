@@ -4,6 +4,9 @@
 // Includes
 //------------------------------------------------------------------------------
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+
 // FBuildWorker
 #include "Tools/FBuild/FBuildWorker/FBuildWorkerOptions.h"
 #include "Tools/FBuild/FBuildWorker/Worker/Worker.h"
@@ -13,6 +16,7 @@
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Mem/MemTracker.h"
 #include "Core/Process/Process.h"
 #include "Core/Process/SystemMutex.h"
@@ -126,7 +130,11 @@ int Main( const AString & args )
     // start the worker and wait for it to be closed
     int ret;
     {
-        Worker worker( args, options.m_ConsoleMode, options.m_PeriodicRestart );
+        const AString * baseExe = nullptr;
+        #if defined( __WINDOWS__ )
+            baseExe = &options.m_BaseExe;
+        #endif
+        Worker worker( args, options.m_ConsoleMode, options.m_PeriodicRestart, baseExe );
         if ( options.m_OverrideCPUAllocation )
         {
             WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );
@@ -153,7 +161,20 @@ int Main( const AString & args )
         // try to make a copy of our exe
         AStackString<> exeName;
         Env::GetExePath( exeName );
-        AStackString<> exeNameCopy( exeName );
+
+        AStackString<> exeNameCopy;
+        FBuild::GetTempDir( exeNameCopy );
+        PathUtils::EnsureTrailingSlash( exeNameCopy );
+
+        {
+            // extract filename, copied from FileIO::EnsurePathExistsForFile, maybe worth a utility method?
+            const char* lastSlashA = exeName.FindLast( NATIVE_SLASH );
+            const char* lastSlashB = exeName.FindLast( OTHER_SLASH );
+            const char* lastSlash = lastSlashA > lastSlashB ? lastSlashA : lastSlashB;
+            ASSERT( lastSlash ); // Caller must pass something valid
+            exeNameCopy += lastSlash + 1;
+        }
+
         exeNameCopy += ".copy";
         const Timer t;
         while ( FileIO::FileCopy( exeName.Get(), exeNameCopy.Get() ) == false )
@@ -170,6 +191,7 @@ int Main( const AString & args )
 
         AStackString<> argsCopy( args );
         argsCopy += " -subprocess";
+        argsCopy.AppendFormat(" -baseexe \"%s\"", exeName.Get() );
 
         // allow subprocess to access the mutex
         g_OneProcessMutex.Unlock();
