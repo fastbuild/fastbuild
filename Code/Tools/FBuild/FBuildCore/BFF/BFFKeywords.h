@@ -13,6 +13,7 @@
 #define BFF_KEYWORD_IF      "if"
 #define BFF_KEYWORD_IMPORT  "import"
 #define BFF_KEYWORD_IN      "in"
+#define BFF_KEYWORD_OUT     "out"
 #define BFF_KEYWORD_INCLUDE "include"
 #define BFF_KEYWORD_NOT     "not"
 #define BFF_KEYWORD_ONCE    "once"
