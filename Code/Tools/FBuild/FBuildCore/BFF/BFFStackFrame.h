@@ -85,6 +85,8 @@ public:
     static BFFStackFrame * GetCurrent() { return s_StackHead; }
     static uint32_t        GetDepth() { return s_StackHead ? s_StackHead->m_Depth : 1; }
 
+    static BFFStackFrame * GetDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable );
+    static BFFStackFrame * GetDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable );
     static BFFStackFrame * GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable );
     static BFFStackFrame * GetParentDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable );
 

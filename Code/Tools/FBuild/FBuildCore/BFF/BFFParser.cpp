@@ -94,7 +94,7 @@ bool BFFParser::ParseFromString( const char * fileName, const char * fileContent
 bool BFFParser::Parse( BFFTokenRange & iter )
 {
     // Check for excessive depth (deeply recursive function calls for example)
-    if ( BFFStackFrame::GetDepth() >= 128 )
+    if ( BFFStackFrame::GetDepth() >= 74 )
     {
         Error::Error_1035_ExcessiveDepthComplexity( iter.GetCurrent() );
         return false;
@@ -565,31 +565,43 @@ bool BFFParser::ParseUserFunctionDeclaration( BFFTokenRange & iter )
     }
 
     // Validate/parse argument declarations (ok to be empty)
-    StackArray< const BFFToken * > arguments;
+    bool hasRef = false;
+    StackArray< BFFUserFunction::Argument > arguments;
     while ( header.IsAtEnd() == false )
     {
         // Get parameter name
+        bool isRef = false;
+        if ( header->IsKeyword( BFF_KEYWORD_IN ) )
+        {
+            header++; // ignore in keywork
+        }
+        else if ( header->IsKeyword( BFF_KEYWORD_OUT ) )
+        {
+            isRef = true;
+            hasRef = true;
+            header++;
+        }
+
         if ( header->IsVariable() == false )
         {
             Error::Error_1007_ExpectedVariable( header.GetCurrent(), nullptr );
             return false;
         }
-        const BFFToken * newArg = header.GetCurrent();
+        const BFFUserFunction::Argument newArg = {header.GetCurrent(), isRef};
         header++;
 
         // TODO:B Support default values for arguments
 
         // Check arg is not already defined
-        for ( const BFFToken * existingArg : arguments )
+        for ( const BFFUserFunction::Argument& existingArg : arguments )
         {
-            if ( newArg->GetValueString() == existingArg->GetValueString() )
+            if ( newArg.m_Val->GetValueString() == existingArg.m_Val->GetValueString() )
             {
-                Error::Error_1109_FunctionArgumentAlreadyDefined( newArg );
+                Error::Error_1109_FunctionArgumentAlreadyDefined( newArg.m_Val );
                 return false;
             }
         }
 
-        // Store arg
         arguments.Append( newArg );
 
         // Allow optional commas between args
@@ -612,7 +624,7 @@ bool BFFParser::ParseUserFunctionDeclaration( BFFTokenRange & iter )
     }
 
     // Store function
-    FBuild::Get().GetUserFunctions().AddFunction( functionName->GetValueString(), arguments, bodyRange );
+    FBuild::Get().GetUserFunctions().AddFunction( functionName->GetValueString(), arguments, bodyRange, hasRef );
     return true;
 }
 
@@ -668,7 +680,7 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
     }
 
     // Check arguments against function signature
-    const Array< const BFFToken * > & expectedArgs = function.GetArgs();
+    const Array< BFFUserFunction::Argument > & expectedArgs = function.GetArgs();
     if ( arguments.GetSize() != expectedArgs.GetSize() )
     {
         Error::Error_1111_FunctionCallArgumentMismatch( functionToken,
@@ -680,13 +692,28 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
     // Function call has its own stack frame
     BFFStackFrame frame;
 
+    struct ArgsInfo
+    {
+        AStackString<> m_Name;
+        BFFStackFrame * m_SrcFrame;
+    };
+
     // Push args into function call stack frame
     const size_t numArgs = arguments.GetSize();
+    StackArray< ArgsInfo > argumentInfos;
+    argumentInfos.SetSize(numArgs);
     for ( size_t i = 0; i < numArgs; ++i )
     {
-        const BFFToken * expectedArg = expectedArgs[ i ];
-        const AString & argName = expectedArg->GetValueString();
+        const BFFUserFunction::Argument& expectedArg = expectedArgs[ i ];
+        const AString & argName = expectedArg.m_Val->GetValueString();
         const BFFToken * arg = arguments[ i ];
+
+        if ( expectedArg.m_IsRef && !arg->IsVariable() )
+        {
+            Error::Error_1113_FunctionCallExpectedVariableArgument( arg );
+            return false;
+        }
+
         if ( arg->IsString() )
         {
             // unescape and substitute embedded variables
@@ -710,7 +737,7 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
             ASSERT( arg->IsVariable() );
 
             // a variable, possibly with substitutions
-            AStackString<> srcVarName;
+            AStackString<>& srcVarName = argumentInfos[i].m_Name;
             bool srcParentScope;
             if ( ParseVariableName( arg, srcVarName, srcParentScope ) == false )
             {
@@ -726,7 +753,8 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
             }
 
             // get the variable
-            const BFFVariable * varSrc = srcFrame ? srcFrame->GetVariableRecurse( srcVarName ) : nullptr;
+            const BFFVariable * varSrc = nullptr;
+            argumentInfos[i].m_SrcFrame = srcFrame ? BFFStackFrame::GetDeclaration(srcVarName, srcFrame, varSrc) : nullptr;
             if ( varSrc == nullptr )
             {
                 Error::Error_1009_UnknownVariable( arg, nullptr, srcVarName );
@@ -747,6 +775,21 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
     if ( Parse( functionImplementation ) == false )
     {
         return false; // Parse will have emitted an error
+    }
+
+    if(function.HasReferences())
+    {
+        for ( size_t i = 0; i < numArgs; ++i )
+        {
+            const BFFUserFunction::Argument& expectedArg = expectedArgs[i];
+            if(expectedArg.m_IsRef)
+            {
+                const BFFToken * arg = arguments[ i ];
+                const ArgsInfo& argInfo = argumentInfos[i];
+                const BFFVariable * functionVar = BFFStackFrame::GetVar(expectedArg.m_Val->GetValueString(), &frame);
+                BFFStackFrame::SetVar(functionVar, *arg, argInfo.m_Name, argInfo.m_SrcFrame);
+            }
+        }
     }
 
     return true;

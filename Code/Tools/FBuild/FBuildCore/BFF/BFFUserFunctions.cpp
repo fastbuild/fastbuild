@@ -8,11 +8,13 @@
 // CONSTRUCTOR (BFFUserFunction)
 //------------------------------------------------------------------------------
 BFFUserFunction::BFFUserFunction( const AString & name,
-                                  const Array< const BFFToken * > & args,
-                                  const BFFTokenRange & bodyTokenRange )
+                                  const Array< Argument > & args,
+                                  const BFFTokenRange & bodyTokenRange,
+                                  bool hasReferences )
     : m_Name( name )
     , m_Args( args )
     , m_BodyTokenRange( bodyTokenRange )
+    , m_HasReferences( hasReferences )
 {
 }
 
@@ -37,10 +39,11 @@ BFFUserFunctions::~BFFUserFunctions()
 // AddFunction
 //------------------------------------------------------------------------------
 void BFFUserFunctions::AddFunction( const AString & name,
-                                    const Array< const BFFToken * > & args,
-                                    const BFFTokenRange & tokenRange )
+                                    const Array< BFFUserFunction::Argument > & args,
+                                    const BFFTokenRange & tokenRange,
+                                    bool hasReferences )
 {
-    BFFUserFunction * newFunction = FNEW( BFFUserFunction( name, args, tokenRange ) );
+    BFFUserFunction * newFunction = FNEW( BFFUserFunction( name, args, tokenRange, hasReferences ) );
     m_Functions.Append( newFunction );
 }
 
