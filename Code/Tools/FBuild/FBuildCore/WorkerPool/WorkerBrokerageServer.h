@@ -24,6 +24,7 @@ public:
     void SetAvailability( bool available );
 
     const AString & GetHostName() const { return m_HostName; }
+    const AString & GetIPAddress() const { return m_IPAddress; }
 
 protected:
     void UpdateBrokerageFilePath();
