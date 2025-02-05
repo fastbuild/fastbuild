@@ -336,6 +336,27 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
     return GetVarNoRecurse( name );
 }
 
+// GetDeclaration
+//------------------------------------------------------------------------------
+/*static*/ BFFStackFrame * BFFStackFrame::GetDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable )
+{
+    AStackString<> strName( name );
+    return GetDeclaration( strName, frame, variable );
+}
+
+// GetDeclaration
+//------------------------------------------------------------------------------
+/*static*/ BFFStackFrame * BFFStackFrame::GetDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable )
+{
+    if( frame == nullptr )
+        frame = GetCurrent();
+
+    if( ( variable = frame->GetLocalVar(name) ) != nullptr )
+        return frame;
+
+    return GetParentDeclaration(name, frame, variable);
+}
+
 // GetParentDeclaration
 //------------------------------------------------------------------------------
 /*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable )

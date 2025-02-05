@@ -613,6 +613,13 @@
     FormatError( iter, 1112u, nullptr, "Function call arguments should be literals or variables." );
 }
 
+// Error_1113_FunctionCallExpectedVariableArgument
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1113_FunctionCallExpectedVariableArgument( const BFFToken * iter )
+{
+    FormatError( iter, 1113u, nullptr, "Function call out argument should be a variable." );
+}
+
 // Error_1200_ExpectedVar // TODO:C Remove (Deprecated by 1007)
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1200_ExpectedVar( const BFFToken * iter, const Function * function )
