@@ -19,6 +19,9 @@ private:
     void TestPathBeginsWith() const;
     void TestPathEndsWithFile() const;
     void GetRelativePath() const;
+    void TestGetBaseName() const;
+    void TestGetDirectoryName() const;
+    void TestJoinPath() const;
 };
 
 // Register Tests
@@ -29,6 +32,9 @@ REGISTER_TESTS_BEGIN( TestPathUtils )
     REGISTER_TEST( TestPathBeginsWith )
     REGISTER_TEST( TestPathEndsWithFile )
     REGISTER_TEST( GetRelativePath )
+    REGISTER_TEST( TestGetBaseName )
+    REGISTER_TEST( TestGetDirectoryName )
+    REGISTER_TEST( TestJoinPath )
 REGISTER_TESTS_END
 
 // TestFixupFolderPath
@@ -196,4 +202,94 @@ void TestPathUtils::GetRelativePath() const
     #undef DOCHECK
 }
 
+// TestGetBaseName
 //------------------------------------------------------------------------------
+void TestPathUtils::TestGetBaseName() const
+{
+    #define DOCHECK( path, expectedResult ) \
+    { \
+        AStackString<> baseName; \
+        PathUtils::GetBaseName( AStackString<>( path ), baseName ); \
+        TEST_ASSERTM( baseName == expectedResult, "Expected: %s\nGot     : %s", expectedResult, baseName.Get() ); \
+    }
+
+    #if defined( __WINDOWS__)
+        DOCHECK( "c:\\folder\\file.cpp", "file.cpp" )
+        DOCHECK( "c:\\folder\\subfolder\\", "" ) // No file, just a folder
+        DOCHECK( "c:\\file.cpp", "file.cpp" )
+        DOCHECK( "file.cpp", "file.cpp" )
+        DOCHECK( "c:\\folder\\", "" ) // Trailing slash only
+        DOCHECK( "c:\\folder", "folder" ) // Folder without trailing slash
+    #else
+        DOCHECK( "/folder/file.cpp", "file.cpp" )
+        DOCHECK( "/folder/subfolder/", "" ) // No file, just a folder
+        DOCHECK( "/file.cpp", "file.cpp" )
+        DOCHECK( "file.cpp", "file.cpp" )
+        DOCHECK( "/folder/", "" ) // Trailing slash only
+        DOCHECK( "/folder", "folder" ) // Folder without trailing slash
+    #endif
+
+    #undef DOCHECK
+}
+
+// TestGetDirectoryName
+//------------------------------------------------------------------------------
+void TestPathUtils::TestGetDirectoryName() const
+{
+    #define DOCHECK( path, expectedResult ) \
+    { \
+        AStackString<> directoryName; \
+        PathUtils::GetDirectoryName( AStackString<>( path ), directoryName ); \
+        TEST_ASSERTM( directoryName == expectedResult, "Expected: %s\nGot     : %s", expectedResult, directoryName.Get() ); \
+    }
+
+    #if defined( __WINDOWS__ )
+        DOCHECK( "c:\\folder\\file.cpp", "c:\\folder\\" )
+        DOCHECK( "c:\\folder\\subfolder\\", "c:\\folder\\subfolder\\" ) // Trailing slash
+        DOCHECK( "c:\\file.cpp", "c:\\" )
+        DOCHECK( "file.cpp", "" ) // No directory
+        DOCHECK( "c:\\folder\\", "c:\\folder\\" ) // Only folder with slash
+        DOCHECK( "c:\\folder", "c:\\" ) // Folder without trailing slash
+        DOCHECK( "c:\\", "c:\\" ) // Root directory
+    #else
+        DOCHECK( "/folder/file.cpp", "/folder/" )
+        DOCHECK( "/folder/subfolder/", "/folder/subfolder/" ) // Trailing slash
+        DOCHECK( "/file.cpp", "/" )
+        DOCHECK( "file.cpp", "" ) // No directory
+        DOCHECK( "/folder/", "/folder/" ) // Only folder with slash
+        DOCHECK( "/folder", "/" ) // Folder without trailing slash
+        DOCHECK( "/", "/" ) // Root directory
+    #endif
+
+    #undef DOCHECK
+}
+
+// TestJoinPath
+//------------------------------------------------------------------------------
+void TestPathUtils::TestJoinPath() const
+{
+    #define DOCHECK( part1, part2, expectedResult ) \
+    { \
+        AString result( part1 ); \
+        PathUtils::JoinPath( result, AString( part2 ) ); \
+        TEST_ASSERTM( result == expectedResult, "Expected: %s\nGot     : %s", expectedResult, result.Get() ); \
+    }
+
+    #if defined( __WINDOWS__ )
+        DOCHECK( "c:\\folder", "file.cpp", "c:\\folder\\file.cpp" )
+        DOCHECK( "c:\\folder\\", "file.cpp", "c:\\folder\\file.cpp" ) // Trailing backslash in first part
+        DOCHECK( "c:\\folder", "subfolder\\file.cpp", "c:\\folder\\subfolder\\file.cpp" ) // Leading backslash in second part
+        DOCHECK( "c:\\", "folder\\file.cpp", "c:\\folder\\file.cpp" ) // Root directory with trailing backslash
+        DOCHECK( "c:\\folder", "", "c:\\folder\\" ) // Second part is empty
+        DOCHECK( "", "file.cpp", "file.cpp" ) // First part is empty
+    #else
+        DOCHECK( "/folder", "file.cpp", "/folder/file.cpp" )
+        DOCHECK( "/folder/", "file.cpp", "/folder/file.cpp" ) // Trailing slash in first part
+        DOCHECK( "/folder", "subfolder/file.cpp", "/folder/subfolder/file.cpp" ) // Leading slash in second part
+        DOCHECK( "/", "folder/file.cpp", "/folder/file.cpp" ) // Root directory with trailing slash
+        DOCHECK( "/folder", "", "/folder/" ) // Second part is empty
+        DOCHECK( "", "file.cpp", "file.cpp" ) // First part is empty
+    #endif
+
+    #undef DOCHECK
+}
