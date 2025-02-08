@@ -1,0 +1,104 @@
+.Extensions = { '', '.exe', '.bat', '.cmd', '.sh' }
+
+.Msvc = [
+    .Family = 'Msvc'
+    .Names = { 'cl', 'icl' }
+]
+
+.Clang =
+[
+    .Family = 'Clang'
+    .Names = {
+        'clang',
+        'clang++',
+        'custom-clang',
+        'clang-11',
+        'clang++-12',
+        'custom-clang-12',
+    }
+]
+
+.Clang_Cl =
+[
+    .Family = 'Clang_Cl'
+    .Names = { 'clang-cl' }
+]
+
+.Gcc =
+[
+    .Family = 'Gcc'
+    .Names = {
+        'gcc',
+        'g++',
+        'dcc',
+        'gcc-9',
+        'g++-8',
+        'custom-gcc',
+        'custom-g++',
+    }
+]
+
+.Snc =
+[
+    .Family = 'Snc'
+    .Names = { 'ps3ppusnc' }
+]
+
+.Codewarrior_Wii =
+[
+    .Family = 'Codewarrior_Wii'
+    .Names = { 'mwcceppc' }
+]
+
+.Greenhills_WiiU =
+[
+    .Family = 'Greenhills_WiiU'
+    .Names = { 'cxppc', 'ccppc' }
+]
+
+.Cuda_Nvcc =
+[
+    .Family = 'Cuda_Nvcc'
+    .Names = { 'nvcc' }
+]
+
+.Qt_Rcc =
+[
+    .Family = 'Qt_Rcc'
+    .Names = { 'rcc', 'custom-rcc' }
+]
+
+.Vbcc =
+[
+    .Family = 'Vbcc'
+    .Names = { 'vc', 'custom-vc' }
+]
+
+.Orbis_Wave_Psslc =
+[
+    .Family = 'Orbis_Wave_Psslc'
+    .Names = { 'orbis-wave-psslc', 'custom-orbis-wave-psslc' }
+]
+
+.Csharp =
+[
+    .Family = 'Csharp'
+    .Names = { 'csc', 'custom-csc' }
+]
+
+.CompilerFamilies = { .Msvc, .Clang, .Clang_Cl, .Gcc, .Snc, .Codewarrior_Wii, .Greenhills_WiiU, .Cuda_Nvcc, .Qt_Rcc, .Vbcc, .Orbis_Wave_Psslc, .Csharp }
+
+ForEach(.EachFamily in .CompilerFamilies)
+{
+    Using(.EachFamily)
+    ForEach(.Name in .Names)
+    {
+        ForEach(.Extension in .Extensions)
+        {
+            Compiler( '$Family$-$Name$$Extension$' )
+            {
+                .Executable = 'ArbitraryBasePath/$Name$$Extension$'
+            }
+        }
+    }
+}
