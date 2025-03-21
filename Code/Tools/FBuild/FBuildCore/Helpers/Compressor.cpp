@@ -81,6 +81,7 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
 
     // allocate worst case output size for LZ4
     const int worstCaseSize = LZ4_compressBound( (int)dataSize );
+    ASSERT( worstCaseSize > 0 );
     UniquePtr< char, FreeDeletor > output( (char *)ALLOC( (size_t)worstCaseSize ) );
 
     int32_t compressedSize;
@@ -102,6 +103,8 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
         // Disable compression
         compressedSize = (int32_t)dataSize; // Act as if compression achieved nothing
     }
+
+    ASSERT( compressedSize >= 0 ); // Can be zero for 0 byte files
 
     // did the compression yield any benefit?
     const bool compressed = ( compressedSize < (int)dataSize );
@@ -230,9 +233,9 @@ bool Compressor::CompressZstd( const void * data,
     if (compressed)
     {
         // trim memory usage to compressed size
-        m_Result = ALLOC( (uint32_t)compressedSize + sizeof(Header) );
+        m_Result = ALLOC( compressedSize + sizeof(Header) );
         memcpy( (char *)m_Result + sizeof(Header), output.Get(), (size_t)compressedSize );
-        m_ResultSize = (uint32_t)compressedSize + sizeof(Header);
+        m_ResultSize = compressedSize + sizeof(Header);
     }
     else
     {
