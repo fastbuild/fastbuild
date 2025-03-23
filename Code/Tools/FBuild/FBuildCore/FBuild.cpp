@@ -236,7 +236,7 @@ bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );
 
-    Array< AString > targets( 1 );
+    StackArray< AString > targets;
     targets.Append( target );
     return Build( targets );
 }
@@ -266,7 +266,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
             FLOG_ERROR( "Unknown build target '%s'", target.Get() );
 
             // Gets the 5 targets with minimal distance to user input
-            Array< NodeGraph::NodeWithDistance > nearestNodes( 5 );
+            StackArray< NodeGraph::NodeWithDistance > nearestNodes;
             m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
 
             if ( false == nearestNodes.IsEmpty() )

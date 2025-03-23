@@ -34,7 +34,7 @@ FunctionCopy::FunctionCopy()
 /*virtual*/ bool FunctionCopy::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
     // make sure all required variables are defined
-    Array< AString > sources( 16 );
+    StackArray< AString > sources;
     const BFFVariable * dstFileV;
     if ( !GetStrings( funcStartIter, sources, ".Source", true ) ||
          !GetString( funcStartIter, dstFileV, ".Dest", true ) )

@@ -1449,7 +1449,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         const size_t uncompressedDataSize = buffer.GetDataSize();
         const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
 
-        Array< AString > fileNames( 4 );
+        StackArray< AString > fileNames;
         fileNames.Append( m_Name );
 
         GetExtraCacheFilePaths( job, fileNames );
@@ -1535,7 +1535,7 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
     PROFILE_FUNCTION;
 
     // Get list of files
-    Array< AString > fileNames( 4 );
+    StackArray< AString > fileNames;
     fileNames.Append( m_Name );
     GetExtraCacheFilePaths( job, fileNames );
 
