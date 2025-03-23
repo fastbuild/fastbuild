@@ -19,6 +19,7 @@
             .UnityInputPath             = '$ProjectPath$/'
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
             .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
+            .UnityInputExcludePath      = '$ProjectPath$/OSUITest/' // Exclude Tests
         }
 
         // Objective C++

@@ -24,9 +24,15 @@ protected:
     virtual void PreTest() const {}
     virtual void PostTest( bool /*passed*/ ) const {}
 
+    // Memory Leak checks can be disabled for individual tests
+    static void SetMemoryLeakCheckEnabled( bool enabled ) { sMemoryLeakCheckEnabled = enabled; }
+    static bool IsMemoryLeakCheckEnabled() { return sMemoryLeakCheckEnabled; }
+
 private:
     friend class TestManager;
     TestGroup * m_NextTestGroup;
+
+    static bool sMemoryLeakCheckEnabled;
 };
 
 // Create a no-return helper to improve static analysis

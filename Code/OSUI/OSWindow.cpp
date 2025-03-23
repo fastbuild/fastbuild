@@ -144,7 +144,13 @@ OSWindow::~OSWindow()
     #if defined( __WINDOWS__ )
         if ( m_Handle )
         {
+            // Free Window
             DestroyWindow( (HWND)m_Handle );
+
+            // Unregister Window class
+            AStackString<> uniqueWindowClass;
+            GetWindowClassName( uniqueWindowClass );
+            VERIFY( UnregisterClassA( uniqueWindowClass.Get(), static_cast<HINSTANCE>( m_HInstance ) ) );
         }
     #elif defined( __OSX__ )
         if ( m_Handle )
@@ -163,7 +169,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
 
         // Register Window class
         AStackString<> uniqueWindowClass;
-        uniqueWindowClass.Format( "windowClass_%p", (void *)this );
+        GetWindowClassName( uniqueWindowClass );
 
         WNDCLASSEX wc;
         wc.cbSize           = sizeof(WNDCLASSEX);
@@ -364,6 +370,16 @@ void OSWindow::StopMessagePump()
             }
         }
         return nullptr;
+    }
+#endif
+
+// GetWindowClassName
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    void OSWindow::GetWindowClassName( AString & outClassName )
+    {
+        const void * const uniquifier = this;
+        outClassName.Format( "windowClass_%p", uniquifier );
     }
 #endif
 

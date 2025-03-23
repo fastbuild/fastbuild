@@ -63,6 +63,7 @@ void OSDropDown::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                   nullptr,
                                   nullptr, // TODO: ??? m_HInstance
                                   nullptr );
+        ASSERT( m_Handle );
 
         // Font
         SendMessage( (HWND)m_Handle, WM_SETFONT, (WPARAM)m_Font->GetFont(), (LPARAM)0 );
