@@ -186,7 +186,11 @@ uint32_t Worker::WorkThread()
         #endif
         if ( !FileIO::EnsurePathExists( tmpPath ) )
         {
-            ErrorMessage( "Failed to initialize tmp folder. Error: %s", LAST_ERROR_STR );
+            ErrorMessage( "Failed to initialize tmp folder.\n"
+                          " - Path : %s\n"
+                          " - Error: %s",
+                          tmpPath.Get(),
+                          LAST_ERROR_STR );
             return (uint32_t)-2;
         }
         #if defined( __WINDOWS__ )
