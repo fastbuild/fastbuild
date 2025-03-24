@@ -69,7 +69,6 @@ Compiler( 'Compiler-VS2022-x64' )
     .ExtraFiles = { '$Root$/c1.dll'
                     '$Root$/c1xx.dll',
                     '$Root$/c2.dll',
-                    '$Root$/c2dd.dll' // Added in 17.14
                     '$Root$/msobj140.dll'
                     '$Root$/mspdb140.dll'
                     '$Root$/mspdbcore.dll'
