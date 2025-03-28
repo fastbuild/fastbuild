@@ -163,7 +163,7 @@ public:
     void GetPDBName( AString & pdbName ) const;
     void GetNativeAnalysisXMLPath( AString& outXMLFileName ) const;
     void GetGCNOPath( AString & gcnoFileName ) const;
-    void GetAltObjPath( AString& altObjName ) const;
+    void GetAltObjPath( AString & altObjName ) const;
 
     const char * GetObjExtension() const;
 

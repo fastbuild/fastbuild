@@ -1037,7 +1037,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         // 4) user only wants preprocessor step executed
         // 5) Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
         // 6) Distribution of /dynamicdeopt is not currently supported because old remote workers won't know to
-        //    return the extra obj files.
+        //    return the extra "alt" obj files.
         // 7) Source mappings are not currently forwarded so can only compiled locally
         if ( !usingCLR && !usingPreprocessorOnly )
         {
@@ -1335,7 +1335,7 @@ void ObjectNode::GetGCNOPath( AString & gcnoFileName ) const
 
 // GetAltObjPath
 //------------------------------------------------------------------------------
-void ObjectNode::GetAltObjPath( AString& altObjName ) const
+void ObjectNode::GetAltObjPath( AString & altObjName ) const
 {
     ASSERT( IsUsingDynamicDeopt() );
 
