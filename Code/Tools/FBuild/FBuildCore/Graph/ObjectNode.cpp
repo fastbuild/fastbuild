@@ -1024,6 +1024,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                     flags.Set( CompilerFlags::FLAG_STATIC_ANALYSIS_MSVC );
                 }
             }
+            else if ( IsStartOfCompilerArg_MSVC( token, "dynamicdeopt" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_DYNAMIC_DEOPT );
+            }
         }
 
         // 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
@@ -1032,13 +1036,16 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         // 3) pch files can't be built from preprocessed output (disabled acceleration), so can't be distributed
         // 4) user only wants preprocessor step executed
         // 5) Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
-        // 6) Source mappings are not currently forwarded so can only compiled locally
+        // 6) Distribution of /dynamicdeopt is not currently supported because old remote workers won't know to
+        //    return the extra obj files.
+        // 7) Source mappings are not currently forwarded so can only compiled locally
         if ( !usingCLR && !usingPreprocessorOnly )
         {
             if ( isDistributableCompiler &&
                  !usingWinRT &&
                  !( flags.IsCreatingPCH() )&&
                  !( flags.IsUsingStaticAnalysisMSVC() ) &&
+                 !( flags.IsUsingDynamicDeopt() ) &&
                  !hasSourceMapping )
             {
                 flags.Set( CompilerFlags::FLAG_CAN_BE_DISTRIBUTED );
@@ -1324,6 +1331,20 @@ void ObjectNode::GetGCNOPath( AString & gcnoFileName ) const
     const char * extPos = m_Name.FindLast( '.' ); // Only last extension removed
     gcnoFileName.Assign( m_Name.Get(), extPos ? extPos : m_Name.GetEnd() );
     gcnoFileName += ".gcno";
+}
+
+// GetAltObjPath
+//------------------------------------------------------------------------------
+void ObjectNode::GetAltObjPath( AString& altObjName ) const
+{
+    ASSERT( IsUsingDynamicDeopt() );
+
+    const AString & sourceName = m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName;
+
+    // TODO:B The suffix ('.alt') can be manually specified with /dynamicdeopt:suffix
+    const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
+    altObjName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
+    altObjName += ".alt.obj";
 }
 
 // GetObjExtension
@@ -1711,6 +1732,15 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         AStackString<> gcnoFileName;
         GetGCNOPath( gcnoFileName );
         outFileNames.Append( gcnoFileName );
+    }
+
+    // MSVC dynamic deoptimization adds extra files
+    if ( objectNode->m_CompilerFlags.IsUsingDynamicDeopt() )
+    {
+        // .alt.obj
+        AStackString<> altObjName;
+        GetAltObjPath( altObjName );
+        outFileNames.Append( altObjName );
     }
 }
 
