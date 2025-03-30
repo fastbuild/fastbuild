@@ -32,7 +32,7 @@ namespace Protocol
 
     // Protocol Version
     enum : uint32_t { PROTOCOL_VERSION_MAJOR = 22 };    // Changes here make workers incompatible
-    enum : uint8_t  { PROTOCOL_VERSION_MINOR = 4 };     // Changes must be forwards and backwards compatible
+    enum : uint8_t  { PROTOCOL_VERSION_MINOR = 5 };     // Changes must be forwards and backwards compatible
 
     enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
 
@@ -60,6 +60,10 @@ namespace Protocol
 
         // v22.3 or later
         MSG_CONNECTION_ACK      = 12,// Server -> Client : Handshake ack
+
+        // v22.4 or later supports Zstd compression (no packet changes)
+
+        // v22.5 or later support /dynamicdeopt for MSVC 2022 v17.44.x or later
 
         NUM_MESSAGES            // leave last
     };

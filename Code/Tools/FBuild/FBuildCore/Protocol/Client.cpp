@@ -436,7 +436,12 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
         return;
     }
 
-    Job * job = JobQueue::Get().GetDistributableJobToProcess( true );
+    // Some jobs require Server (Worker) changes which can be validated by
+    // comparing the minor protocol version.
+    const uint8_t workerMinorProtocolVersion = ss->m_ProtocolVersionMinor.Load();
+
+    Job * job = JobQueue::Get().GetDistributableJobToProcess( true, workerMinorProtocolVersion );
+
     if ( job == nullptr )
     {
         PROFILE_SECTION( "NoJob" );
@@ -780,6 +785,14 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                 AStackString<> xmlFileName;
                 on->GetNativeAnalysisXMLPath( xmlFileName );
                 result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
+            }
+
+            // 4. .alt.obj (optional)
+            if ( result && on->IsUsingDynamicDeopt() )
+            {
+                AStackString<> altObjName;
+                on->GetAltObjPath( altObjName );
+                result = WriteFileToDisk( altObjName, mb, fileIndex++ );
             }
 
             if ( result )

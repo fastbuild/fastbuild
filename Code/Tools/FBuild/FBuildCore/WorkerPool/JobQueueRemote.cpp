@@ -447,6 +447,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     const ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
     const bool includePDB = node->IsUsingPDB();
     const bool usingStaticAnalysis = node->IsUsingStaticAnalysisMSVC();
+    const bool usingDynamicDeoptimization = node->IsUsingDynamicDeopt();
 
     // Determine list of files to send
 
@@ -471,6 +472,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         AStackString<> xmlFileName;
         node->GetNativeAnalysisXMLPath( xmlFileName );
         fileNames.Append( xmlFileName );
+    }
+
+    // 4. .alt.obj (optional)
+    //--------------------------------------------
+    if ( usingDynamicDeoptimization )
+    {
+        AStackString<> altObjName;
+        node->GetAltObjPath( altObjName );
+        fileNames.Append( altObjName );
     }
 
     MultiBuffer mb;

@@ -83,7 +83,7 @@ private:
 
     // client side of protocol consumes jobs via this interface
     friend class Client;
-    Job *       GetDistributableJobToProcess( bool remote );
+    Job *       GetDistributableJobToProcess( bool remote, uint8_t workerMinorProtocolVersion );
     Job *       OnReturnRemoteJob( uint32_t jobId,
                                    bool systemError,
                                    bool & outRaceLost,

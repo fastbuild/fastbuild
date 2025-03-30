@@ -1,0 +1,18 @@
+//
+// Test extra cached file: file.alt.obj
+//
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+#if MSVC_DYNAMIC_DEOPT_AVAILABLE
+    ObjectList( 'ObjectList' )
+    {
+        .CompilerInputFiles = { '$TestRoot$/Data/TestCache/ExtraFiles_DynamicDeopt/file.cpp' }
+        .CompilerOutputPath = '$Out$/Test/Cache/ExtraFiles_DynamicDeopt/'
+        .CompilerOptions    + ' /dynamicdeopt'
+    }
+#else
+    #error Dynamic Deoptimization not available
+#endif

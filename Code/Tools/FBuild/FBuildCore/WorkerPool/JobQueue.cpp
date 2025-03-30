@@ -431,7 +431,7 @@ void JobQueue::QueueDistributableJob( Job * job )
 
 // GetDistributableJobToProcess
 //------------------------------------------------------------------------------
-Job * JobQueue::GetDistributableJobToProcess( bool remote )
+Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorProtocolVersion )
 {
     MutexHolder m( m_DistributedJobsMutex );
 
@@ -440,10 +440,50 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote )
         return nullptr;
     }
 
-    // Jobs are sorted from least to most expensive, so we consume
-    // from the end of the list.
-    Job * job = m_DistributableJobs_Available.Top();
-    m_DistributableJobs_Available.Pop();
+    Job * job = nullptr;
+
+    // Compare capabilities of the worker to our local requirements
+    if ( workerMinorProtocolVersion >= Protocol::PROTOCOL_VERSION_MINOR )
+    {
+        // Worker is equal or newer and minor protocol changes are backwards
+        // compatible so worker can take any job.
+
+        // Jobs are sorted from least to most expensive, so we consume
+        // from the end of the list.
+        job = m_DistributableJobs_Available.Top();
+        m_DistributableJobs_Available.Pop();
+    }
+    else
+    {
+        // Worker is old so we need to check if it can process a specific job
+        // Search backwards to obtain most expensive job
+        const int32_t numJobs = static_cast<int32_t>( m_DistributableJobs_Available.GetSize() );
+        for ( int32_t i = ( numJobs - 1 ); i >= 0; --i )
+        {
+            Job * potentialJob = m_DistributableJobs_Available[ static_cast<size_t>( i ) ];
+
+            // Check if the node is using a feature that needs a particular version
+            // TODO:B: Migrate this logic to the CompilerDriver
+
+            // MSVC /dynamicdeopt require minor protocol 5 or later
+            const ObjectNode * on = potentialJob->GetNode()->CastTo< ObjectNode >();
+            if ( on->IsMSVC() && on->IsUsingDynamicDeopt() )
+            {
+                if ( workerMinorProtocolVersion >= 5 )
+                {
+                    job = potentialJob;
+                    m_DistributableJobs_Available.EraseIndex( static_cast<size_t>( i ) );
+                    break;
+                }
+            }
+        }
+
+        // It's possible there are no compatible jobs
+        if ( job == nullptr )
+        {
+            return nullptr;
+        }
+    }
 
     ASSERT( job->GetDistributionState() == Job::DIST_AVAILABLE );
 
