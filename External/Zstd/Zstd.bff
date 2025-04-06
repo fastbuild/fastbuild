@@ -1,6 +1,6 @@
 // Zstd
 //------------------------------------------------------------------------------
-.ZstdBasePath        = '../External/Zstd/zstd-1.5.6/lib'
+.ZstdBasePath        = '../External/Zstd/zstd-1.5.7/lib'
 .ZstdIncludePaths    = ' "-I$ZstdBasePath$"'
 {
     .ProjectName        = 'Zstd'
