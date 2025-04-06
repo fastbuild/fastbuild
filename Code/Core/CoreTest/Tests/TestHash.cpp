@@ -148,7 +148,7 @@ void TestHash::CompareHashTimes_Large() const
 void TestHash::CompareHashTimes_Small() const
 {
     // some different strings to hash
-    Array< AString > strings( 32 );
+    StackArray< AString > strings;
     strings.EmplaceBack( " " );
     strings.EmplaceBack( "shOrt" );
     strings.EmplaceBack( "MediumstringMediumstring123456789" );

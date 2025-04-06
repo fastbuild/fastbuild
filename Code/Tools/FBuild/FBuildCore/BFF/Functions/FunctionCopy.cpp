@@ -75,7 +75,8 @@ FunctionCopy::FunctionCopy()
     {
         return false; // GetNodeList will have emitted an error
     }
-    Array< AString > preBuildDependencyNames( preBuildDependencies.GetSize() );
+    Array< AString > preBuildDependencyNames;
+    preBuildDependencyNames.SetCapacity( preBuildDependencies.GetSize() );
     for ( const Dependency & dep : preBuildDependencies )
     {
         preBuildDependencyNames.Append( dep.GetNode()->GetName() );

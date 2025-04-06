@@ -147,9 +147,9 @@ ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
 //------------------------------------------------------------------------------
 TCPConnectionPool::TCPConnectionPool()
     : m_ListenConnection( nullptr )
-    , m_Connections( 8 )
     , m_ShuttingDown( false )
 {
+    m_Connections.SetCapacity( 8 );
 }
 
 // DESTRUCTOR

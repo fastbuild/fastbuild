@@ -19,7 +19,7 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ Array< ProfileManager::ProfileEventInfo > ProfileManager::s_ProfileEventInfo( 0 );
+/*static*/ Array< ProfileManager::ProfileEventInfo > ProfileManager::s_ProfileEventInfo;
 
 // Global Data
 //------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 //------------------------------------------------------------------------------
 /*static*/ void ProfileManager::SynchronizeNoTag()
 {
-    Array< ProfileEventInfo > infos( 0 );
+    Array< ProfileEventInfo > infos;
     {
         MutexHolder mh( g_ProfileManagerMutex );
         infos.Swap( s_ProfileEventInfo );

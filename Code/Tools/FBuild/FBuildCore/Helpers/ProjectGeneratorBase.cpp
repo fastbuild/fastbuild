@@ -30,9 +30,9 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::ProjectGeneratorBase()
-    : m_Folders( 128 )
-    , m_Files( 4096 )
 {
+    m_Folders.SetCapacity( 128 );
+    m_Files.SetCapacity( 4096 );
     m_RootFolder = FNEW( Folder );
     m_Folders.Append( m_RootFolder );
 }
@@ -488,7 +488,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 {
     ASSERT( prefixes.IsEmpty() == false );
 
-    Array< AString > tokens;
+    StackArray< AString > tokens;
     compilerArgs.Tokenize( tokens );
     AString::RemoveQuotes( tokens );
 

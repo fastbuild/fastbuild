@@ -60,7 +60,8 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     PROFILE_FUNCTION;
 
     // Create wrapper Jobs around Nodes
-    Array< Job * > jobs( nodes.GetSize() );
+    Array< Job * > jobs;
+    jobs.SetCapacity( nodes.GetSize() );
     for ( Node * node : nodes )
     {
         Job * job = FNEW( Job( node ) );
@@ -143,24 +144,25 @@ Job * JobSubQueue::RemoveJob()
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool ) :
-    m_NumLocalJobsActive( 0 ),
-    m_DistributableJobs_Available( 1024 ),
-    m_DistributableJobs_InProgress( 1024 ),
+JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool )
+    : m_NumLocalJobsActive( 0 )
     #if defined( __WINDOWS__ )
-        m_MainThreadSemaphore( 1 ), // On Windows, take advantage of signalling limit
+        , m_MainThreadSemaphore( 1 ) // On Windows, take advantage of signalling limit
     #else
-        m_MainThreadSemaphore(),
+        , m_MainThreadSemaphore()
     #endif
-    m_CompletedJobs( 1024 ),
-    m_CompletedJobsAborted( 64 ),
-    m_CompletedJobsFailed( 64 ),
-    m_CompletedJobs2( 1024 ),
-    m_CompletedJobsAborted2( 64 ),
-    m_CompletedJobsFailed2( 64 ),
-    m_Workers( numWorkerThreads )
 {
     PROFILE_FUNCTION;
+
+    m_DistributableJobs_Available.SetCapacity( 1024 );
+    m_DistributableJobs_InProgress.SetCapacity( 1024 );
+    m_CompletedJobs.SetCapacity( 1024 );
+    m_CompletedJobsAborted.SetCapacity( 64 );
+    m_CompletedJobsFailed.SetCapacity( 64 );
+    m_CompletedJobs2.SetCapacity( 1024 );
+    m_CompletedJobsAborted2.SetCapacity( 64 );
+    m_CompletedJobsFailed2.SetCapacity( 64 );
+    m_Workers.SetCapacity( numWorkerThreads );
 
     WorkerThread::InitTmpDir();
 

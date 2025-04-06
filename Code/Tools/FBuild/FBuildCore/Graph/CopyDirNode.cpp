@@ -89,7 +89,8 @@ CopyDirNode::~CopyDirNode() = default;
 
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
-    Array< AString > preBuildDependencyNames( m_PreBuildDependencies.GetSize() );
+    Array< AString > preBuildDependencyNames;
+    preBuildDependencyNames.SetCapacity( m_PreBuildDependencies.GetSize() );
     for ( const Dependency & dep : m_PreBuildDependencies )
     {
         preBuildDependencyNames.Append( dep.GetNode()->GetName() );
@@ -178,7 +179,8 @@ CopyDirNode::~CopyDirNode() = default;
     else
     {
         // Generate stamp
-        Array< uint64_t > stamps( m_DynamicDependencies.GetSize() );
+        StackArray< uint64_t > stamps;
+        stamps.SetCapacity( m_DynamicDependencies.GetSize() );
         for ( const Dependency & dep: m_DynamicDependencies )
         {
             const CopyFileNode * cn = dep.GetNode()->CastTo< CopyFileNode >();

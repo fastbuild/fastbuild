@@ -13,8 +13,8 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFMacros::BFFMacros()
-    : m_Tokens( 8 )
 {
+    m_Tokens.SetCapacity( 8 );
 }
 
 // DESTRUCTOR

@@ -154,7 +154,7 @@ void JSONReport::DoCPUTimeByType(const FBuildStats & stats)
     Write( "\"CPU Time by Node Type\": {" );
     Write( "\n\t\t" );
 
-    Array< TimingStats > items( 32 );
+    StackArray< TimingStats > items;
 
     for ( size_t i = 0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
     {
@@ -259,7 +259,7 @@ void JSONReport::DoCacheStats( const FBuildStats & /*stats*/ )
         Write( "\t\t" );
         Write( "\"summary\": {\n\t\t\t" );
 
-        Array< TimingStats > items( 3 );
+        StackArray< TimingStats > items;
         items.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable) );
         items.EmplaceBack( "Cache Miss", (float)totalCacheMisses );
         items.EmplaceBack( "Cache Hit", (float)totalCacheHits );
@@ -546,7 +546,8 @@ void JSONReport::DoIncludes()
         GetIncludeFilesRecurse( incStatsMap, library );
 
         // flatten and sort by usage
-        Array< const IncludeStats * > incStats( 10 * 1024 );
+        Array< const IncludeStats * > incStats;
+        incStats.SetCapacity( 10 * 1024 );
         incStatsMap.Flatten( incStats );
         incStats.SortDeref();
 

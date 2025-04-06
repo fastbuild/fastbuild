@@ -26,13 +26,14 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
-    m_PendingJobs( 1024 ),
-    m_CompletedJobs( 1024 ),
-    m_CompletedJobsFailed( 64 ),
-    m_CompletedJobsAborted( 64 ),
-    m_Workers( numWorkerThreads )
+JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads )
 {
+    m_PendingJobs.SetCapacity( 1024 );
+    m_CompletedJobs.SetCapacity( 1024 );
+    m_CompletedJobsFailed.SetCapacity( 64 );
+    m_CompletedJobsAborted.SetCapacity( 64 );
+    m_Workers.SetCapacity( numWorkerThreads );
+
     WorkerThread::InitTmpDir( true ); // remote == true
 
     // Create thread pool

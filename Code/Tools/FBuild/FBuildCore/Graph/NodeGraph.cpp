@@ -81,10 +81,11 @@ bool NodeGraphHeader::IsValid() const
 //------------------------------------------------------------------------------
 NodeGraph::NodeGraph( unsigned nodeMapHashBits )
 : m_NodeMapMaxKey( ( 1u << nodeMapHashBits ) - 1u )
-, m_AllNodes( 1024 )
-, m_UsedFiles( 16 )
 , m_Settings( nullptr )
 {
+    m_AllNodes.SetCapacity( 1024 );
+    m_UsedFiles.SetCapacity( 16 );
+
     ASSERT( nodeMapHashBits > 0 && nodeMapHashBits < 32 );
     m_NodeMap = FNEW_ARRAY( Node * [ m_NodeMapMaxKey + 1 ] );
     memset( m_NodeMap, 0, sizeof( Node * ) * ( m_NodeMapMaxKey + 1 ) );

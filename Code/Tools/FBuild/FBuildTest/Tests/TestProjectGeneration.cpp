@@ -322,7 +322,8 @@ void TestProjectGeneration::TestFunction_Speed() const
     Random r( 1234567 ); // Deterministic seed
     const size_t numFiles = 5000;
     const size_t maxSubDirDepth = 8;
-    Array< AString > files( numFiles );
+    Array< AString > files;
+    files.SetCapacity( numFiles );
     for ( size_t i = 0; i < numFiles; ++i )
     {
         AStackString<> fileName( baseDir );
@@ -452,7 +453,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
     AString buffer;
     buffer.SetLength( (uint32_t)f.GetFileSize() );
     TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-    Array< AString > tokens;
+    StackArray< AString > tokens;
     buffer.Tokenize( tokens, '\n' );
 
     // Check
@@ -590,7 +591,7 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     AString buffer;
     buffer.SetLength( (uint32_t)f.GetFileSize() );
     TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-    Array< AString > tokens;
+    StackArray< AString > tokens;
     buffer.Tokenize( tokens, '\n' );
 
     // Check

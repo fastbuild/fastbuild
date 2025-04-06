@@ -893,7 +893,7 @@ void Node::ReplaceDummyName( const AString & newName )
         }
     }
 
-    Array< AString > tokens;
+    StackArray< AString > tokens;
     beforeTag.Tokenize( tokens, ':' );
     const size_t numTokens = tokens.GetSize();
     if ( numTokens < 3 )
@@ -967,7 +967,7 @@ void Node::ReplaceDummyName( const AString & newName )
 //------------------------------------------------------------------------------
 /*static*/ void Node::FixupPathForVSIntegration_VBCC( AString & line, const char * /*tag*/ )
 {
-    Array< AString > tokens;
+    StackArray< AString > tokens;
     line.Tokenize( tokens, ' ' );
 
     //     warning 55 in line 8 of "Core/Mem/Mem.h": some warning text

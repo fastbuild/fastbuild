@@ -23,12 +23,12 @@
 Args::Args()
     : m_Args()
     , m_ResponseFileArgs()
-    , m_DelimiterIndices( 64 )
     #if defined( ASSERTS_ENABLED )
         , m_Finalized( false )
     #endif
     , m_DisableResponseFileWrite( false )
 {
+    m_DelimiterIndices.SetCapacity( 64 );
 }
 
 // DESTRUCTOR

@@ -35,14 +35,11 @@ public:
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 VSProjectGenerator::VSProjectGenerator()
-    : m_BasePaths( 0 )
-    , m_ProjectSccEntrySAK( false )
-    , m_References( 0 )
-    , m_ProjectReferences( 0 )
+    : m_ProjectSccEntrySAK( false )
     , m_FilePathsCanonicalized( false )
-    , m_Files( 1024 )
 {
     // preallocate to avoid re-allocations
+    m_Files.SetCapacity( 1024 );
     m_Tmp.SetReserved( MEGABYTE );
 }
 
@@ -463,8 +460,10 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     Write( "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
 
     // list of all folders
-    Array< AString > folders( 1024 );
-    Array< uint32_t > folderHashes( 1024 );
+    Array< AString > folders;
+    folders.SetCapacity( 1024 );
+    Array< uint32_t > folderHashes;
+    folderHashes.SetCapacity( 1024 );
 
     // files
     {
@@ -647,7 +646,8 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
     if ( m_Files.IsEmpty() == false )
     {
         // Canonicalize and make all paths relative to project
-        Array< const VSProjectFilePair * > filePointers( m_Files.GetSize() );
+        StackArray< const VSProjectFilePair * > filePointers;
+        filePointers.SetCapacity( m_Files.GetSize() );
         for ( VSProjectFilePair & filePathPair : m_Files )
         {
             ProjectGeneratorBase::GetRelativePath( projectBasePath, filePathPair.m_AbsolutePath, filePathPair.m_ProjectRelativePath );
@@ -662,7 +662,8 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         filePointers.Sort( sorter );
 
         // Find unique files
-        Array< VSProjectFilePair > uniqueFiles( m_Files.GetSize() );
+        Array< VSProjectFilePair > uniqueFiles;
+        uniqueFiles.SetCapacity( m_Files.GetSize() );
         const VSProjectFilePair * prev = filePointers[ 0 ];
         uniqueFiles.Append( *filePointers[ 0 ] );
         const size_t numFiles = m_Files.GetSize();

@@ -66,7 +66,6 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_SmoothedProgressTarget( 0.0f )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
-    , m_ImportedEnvironmentVars( 0 )
 {
     #ifdef DEBUG_CRT_MEMORY_USAGE
         _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF |

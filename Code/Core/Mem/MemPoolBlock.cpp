@@ -17,7 +17,6 @@ MemPoolBlock::MemPoolBlock( size_t blockSize, size_t blockAlignment )
     #endif
     , m_BlockSize( (uint32_t)blockSize )
     , m_BlockAlignment( (uint32_t)blockAlignment )
-    , m_Pages( 0 )
 {
     ASSERT( blockSize >= sizeof( FreeBlock ) );
     ASSERT( blockSize <= MEMPOOLBLOCK_PAGE_SIZE );

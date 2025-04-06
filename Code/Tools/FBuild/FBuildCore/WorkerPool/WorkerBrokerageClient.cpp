@@ -52,7 +52,8 @@ void WorkerBrokerageClient::FindWorkers( Array< AString > & outWorkerList )
         return;
     }
 
-    Array< AString > results( 256 );
+    Array< AString > results;
+    results.SetCapacity( 256 );
     for( AString & root : m_BrokerageRoots )
     {
         const size_t filesBeforeSearch = results.GetSize();
