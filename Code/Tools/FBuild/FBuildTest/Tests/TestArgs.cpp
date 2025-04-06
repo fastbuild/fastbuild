@@ -210,7 +210,7 @@ void TestArgs::ArgumentParsing() const
     // Escaped quotes
     CheckParsing( R"(-aaa -D\"ARG\")",   "-aaa", R"(-D"ARG")" );
     CheckParsing( R"(-aaa "-D\"ARG\"")", "-aaa", R"(-D"ARG")" );
-    
+
     // Spaces inside quotes
     CheckParsing( R"("-DTHING=\"   \"")", R"(-DTHING="   ")" );
 }

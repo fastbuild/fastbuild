@@ -610,7 +610,7 @@ void TestFileIO::CreateOrOpenReadWrite() const
         TEST_ASSERT( f.Seek( valueCopy ) );
         TEST_ASSERT( valueCopy == value );
     }
-    
+
     FileIO::FileDelete( path.Get() );
 }
 

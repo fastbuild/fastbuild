@@ -116,7 +116,7 @@ static uint32_t CancelHelperThread( void * )
     {
         // unlock so child can acquire
         mutex4.Unlock();
-    
+
         // Wait before trying again, waiting longer each time up to a limit
         Thread::Sleep( sleepTimeMS );
         sleepTimeMS = Math::Min<uint32_t>( ( sleepTimeMS * 2 ), 128 );

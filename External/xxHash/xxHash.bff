@@ -66,7 +66,7 @@
                                         #else
                                             - ' -O0'
                                         #endif
-                                        
+
                                         // Disable warnings if using Clang. There are too many warnings in xxHash
                                         // and they differ with every version of Clang
                                         - ' -Wall'

@@ -857,11 +857,11 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     IncludedFileBucket & bucket = g_AllIncludedFiles[ bucketIndex ];
 
     // Lock the bucket while we deal with this file.
-    // 
+    //
     // This prevents two threads processing the same file, which for most
     // codebases would otherwise happen a lot (code tends to have a large set
     // of shared headers).
-    // 
+    //
     // Collisions in the bucketIndex mean some unrelated files will block
     // each other, but not redundantly processing the same file results
     // in a significant speedup which more than offsets the blocking caused

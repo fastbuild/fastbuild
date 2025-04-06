@@ -57,13 +57,13 @@ private:
                         char splitChar,
                         const char * expectedToken1 = nullptr,
                         const char * expectedToken2 = nullptr,
-                        const char * expectedToken3 = nullptr, 
+                        const char * expectedToken3 = nullptr,
                         const char * expectedToken4 = nullptr ) const;
     template<bool REMOVE_QUOTES = false>
     void CheckTokenize( const char * originalString,
                         const char * expectedToken1 = nullptr,
                         const char * expectedToken2 = nullptr,
-                        const char * expectedToken3 = nullptr, 
+                        const char * expectedToken3 = nullptr,
                         const char * expectedToken4 = nullptr ) const;
 };
 
@@ -1085,7 +1085,7 @@ void TestAString::MoveAssignment() const
 //------------------------------------------------------------------------------
 template<bool REMOVE_QUOTES>
 void TestAString::CheckTokenize( const char * originalString,
-                                 char splitChar, 
+                                 char splitChar,
                                  const char * expectedToken1,
                                  const char * expectedToken2,
                                  const char * expectedToken3,
@@ -1119,7 +1119,7 @@ template<bool REMOVE_QUOTES>
 void TestAString::CheckTokenize( const char * originalString,
                                  const char * expectedToken1,
                                  const char * expectedToken2,
-                                 const char * expectedToken3, 
+                                 const char * expectedToken3,
                                  const char * expectedToken4 ) const
 {
     CheckTokenize<REMOVE_QUOTES>( originalString,

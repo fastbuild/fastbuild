@@ -43,7 +43,7 @@
                 .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Preview/VC'
                 .VS2022_Version         = '14.44.34918'
                 .VS2022_MSC_VER         = '1944'
-                #define MSVC_DYNAMIC_DEOPT_AVAILABLE                
+                #define MSVC_DYNAMIC_DEOPT_AVAILABLE
             #else
                 #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe" )
                     // v17.8.3
@@ -193,7 +193,7 @@ Compiler( 'Compiler-VS2022-x64' )
 
 // VisualStudioSettings
 //------------------------------------------------------------------------------
-.VisualStudioSettings_VS2022 = 
+.VisualStudioSettings_VS2022 =
 [
     .VS_Version                     = .VS2022_Version
     .VS_Version_HumanReadable       = '2022'

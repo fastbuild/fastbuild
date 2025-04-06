@@ -342,7 +342,7 @@ void JobQueue::FlushJobBatch( const SettingsNode & settings )
         // exist), including the default group (index 0).
         ASSERT( group.GetLimit() > 0 );
         uint32_t maxJobs = group.GetLimit();
-        
+
         // If the ThreadPool constrains the number of tasks below the
         // requirements of the ConcurrencyGroup we don't need to throttle
         // flushing jobs. This reduces scheduling latency slightly for

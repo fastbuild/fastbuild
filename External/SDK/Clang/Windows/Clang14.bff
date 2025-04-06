@@ -154,12 +154,12 @@ Compiler( 'Compiler-Clang14-NonCL' )
                                     + ' /std:c++17'                     // Enable c++17 features
 
     // Exception Control
-    .UseExceptions                  = ' /EHs'                                    
+    .UseExceptions                  = ' /EHs'
 ]
 
-// ToolChain 
+// ToolChain
 //------------------------------------------------------------------------------
-.ToolChain_ClangNonCL_Windows = 
+.ToolChain_ClangNonCL_Windows =
 [
     Using( .ToolChain_Clang_Windows_Common )
 

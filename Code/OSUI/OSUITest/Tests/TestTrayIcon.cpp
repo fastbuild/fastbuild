@@ -16,7 +16,7 @@
 
 // Static Data
 #if !defined( __WINDOWS__ )
-namespace 
+namespace
 {
     // Test PNG for OSX
     const uint8_t gIconData[] = { 0x00, 0x00, 0x00, 0x0D, // Length of chunk

@@ -114,7 +114,7 @@ ObjectNode::ObjectNode()
     {
         return false; // InitializePreBuildDependencies will have emitted an error
     }
-    
+
     // NOTE: ConcurrencyGroup set directly by ObjectList or Library
 
     // .Compiler
@@ -1689,7 +1689,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
     const ObjectNode * objectNode = node->CastTo< ObjectNode >();
 
     // MSVC precompiled headers have an extra file (as does clang in "cl" mode)
-    if ( objectNode->m_CompilerFlags.IsCreatingPCH() && 
+    if ( objectNode->m_CompilerFlags.IsCreatingPCH() &&
          ( objectNode->m_CompilerFlags.IsMSVC() || objectNode->m_CompilerFlags.IsClangCl() ) )
     {
         // .pch.obj

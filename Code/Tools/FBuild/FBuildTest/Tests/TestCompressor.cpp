@@ -208,7 +208,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 
     // Compress at various compression levels
     const int32_t zStdCompressionLevels[] =
-    { 
+    {
         0,                                          // Disabled
         1, 3, 6, 9, 12, 15, 18, 21                  // Zstd
     };

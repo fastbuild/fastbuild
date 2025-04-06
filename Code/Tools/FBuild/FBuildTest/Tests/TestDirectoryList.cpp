@@ -108,7 +108,7 @@ void TestDirectoryList::Names() const
     DirectoryListNode::FormatName( path,
                                    nullptr,             // patterns (.*)
                                    false,               // not recursive
-                                   false,               // don't include read only status 
+                                   false,               // don't include read only status
                                    false,               // don't include dirs
                                    Array<AString>(),    // exclude paths
                                    Array<AString>(),    // exclude files

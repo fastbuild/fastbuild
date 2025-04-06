@@ -360,7 +360,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
         return false;
     }
 
-    // Truncate if new data is smaller than old data    
+    // Truncate if new data is smaller than old data
     fileStream.Truncate();
 
     FLOG_VERBOSE( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );

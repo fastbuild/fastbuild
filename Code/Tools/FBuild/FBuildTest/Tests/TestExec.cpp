@@ -324,7 +324,7 @@ void TestExec::Build_ExecEnvCommand() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    // Build and run exe that checks env var is set 
+    // Build and run exe that checks env var is set
     // (the executable checks the expected env var)
     TEST_ASSERT( fBuild.Build( "ExecEnvCommandTest" ) );
 

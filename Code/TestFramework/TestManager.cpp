@@ -243,7 +243,7 @@ void TestManager::TestEnd()
             }
             return;
         }
-        
+
         // Disabling leak checks is done per-test so we
         // re-enable it here (each test must re-disable it)
         TestGroup::SetMemoryLeakCheckEnabled( true );
