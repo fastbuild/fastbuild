@@ -103,7 +103,7 @@ public:
 
     Array<AString>& GetDirectories() { return m_Directories; }
 
-    DirectoryListNodeGetFilesHelper& operator =(DirectoryListNodeGetFilesHelper&) = delete;
+    DirectoryListNodeGetFilesHelper & operator =(DirectoryListNodeGetFilesHelper&) = delete;
 protected:
     const Array<AString> & m_ExcludePaths;
     const Array<AString> & m_FilesToExclude;

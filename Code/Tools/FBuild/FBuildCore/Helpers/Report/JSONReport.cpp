@@ -149,7 +149,7 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
 
 // DoCPUTimeByType
 //------------------------------------------------------------------------------
-void JSONReport::DoCPUTimeByType(const FBuildStats& stats)
+void JSONReport::DoCPUTimeByType(const FBuildStats & stats)
 {
     Write( "\"CPU Time by Node Type\": {" );
     Write( "\n\t\t" );
@@ -158,7 +158,7 @@ void JSONReport::DoCPUTimeByType(const FBuildStats& stats)
 
     for ( size_t i = 0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
     {
-        const FBuildStats::Stats& nodeStats = stats.GetStatsFor( (Node::Type)i );
+        const FBuildStats::Stats & nodeStats = stats.GetStatsFor( (Node::Type)i );
         if ( nodeStats.m_NumProcessed == 0 )
         {
             continue;
@@ -184,7 +184,7 @@ void JSONReport::DoCPUTimeByType(const FBuildStats& stats)
     for ( size_t i = 0; i < items.GetSize(); ++i )
     {
         const Node::Type type = (Node::Type)(size_t)items[ i ].m_UserData;
-        const FBuildStats::Stats& nodeStats = stats.GetStatsFor( type );
+        const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
             continue;

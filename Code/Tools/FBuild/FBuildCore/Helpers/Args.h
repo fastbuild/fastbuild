@@ -49,8 +49,8 @@ public:
     bool Finalize( const AString & exe, const AString & nodeNameForError, ArgsResponseFileMode responseFileMode );
 
     // After finalization, access args
-    const AString& GetRawArgs() const   { return m_Args; }
-    const AString& GetFinalArgs() const { ASSERT( m_Finalized ); return m_ResponseFileArgs.IsEmpty() ? m_Args : m_ResponseFileArgs; }
+    const AString & GetRawArgs() const   { return m_Args; }
+    const AString & GetFinalArgs() const { ASSERT( m_Finalized ); return m_ResponseFileArgs.IsEmpty() ? m_Args : m_ResponseFileArgs; }
 
     // helper functions
     static void StripQuotes( const char * start, const char * end, AString & out );

@@ -56,7 +56,7 @@ void TestEnv::GetExePath() const
 //------------------------------------------------------------------------------
 void TestEnv::GetProcessorInfo() const
 {
-    const Env::ProcessorInfo& info = Env::GetProcessorInfo();
+    const Env::ProcessorInfo & info = Env::GetProcessorInfo();
     OUTPUT( "Num Cores: %u (PCores: %u + ECores: %u)\n",
             info.mNumCores,
             info.mNumPCores,

@@ -1306,7 +1306,7 @@ void ObjectNode::GetPDBName( AString & pdbName ) const
 
 // GetNativeAnalysisXMLPath
 //------------------------------------------------------------------------------
-void ObjectNode::GetNativeAnalysisXMLPath( AString& outXMLFileName ) const
+void ObjectNode::GetNativeAnalysisXMLPath( AString & outXMLFileName ) const
 {
     ASSERT( IsUsingStaticAnalysisMSVC() );
 
@@ -1391,7 +1391,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         {
             // Append the source mapping destination only, so different machines with different
             // working directory local paths compute consistent keys.
-            const AString& sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
+            const AString & sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
             args.AddDelimiter();
             args += sourceMapping;
         }
@@ -1888,7 +1888,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     {
         job->GetToolManifest()->GetRemoteFilePath( 0, remoteCompiler );
     }
-    const AString& compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
+    const AString & compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
     if ( fullArgs.Finalize( compiler, GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error

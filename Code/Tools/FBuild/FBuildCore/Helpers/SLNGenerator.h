@@ -36,7 +36,7 @@ public:
 private:
     void WriteHeader( const AString & solutionVisualStudioVersion,
                       const AString & solutionMinimumVisualStudioVersion );
-    void WriteProjectListings( const AString& solutionBasePath,
+    void WriteProjectListings( const AString & solutionBasePath,
                                const Array< VSProjectBaseNode * > & projects,
                                const Array< SolutionFolder > & solutionFolders,
                                const Array< SolutionDependency > & solutionDependencies,

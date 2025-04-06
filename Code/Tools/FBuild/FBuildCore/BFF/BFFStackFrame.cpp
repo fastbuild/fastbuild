@@ -176,7 +176,7 @@ void BFFStackFrame::DisconnectStackChain()
 
 // SetVarStruct
 //------------------------------------------------------------------------------
-/*static*/ void BFFStackFrame::SetVarStruct( const AString& name,
+/*static*/ void BFFStackFrame::SetVarStruct( const AString & name,
                                              const BFFToken & token,
                                              Array<BFFVariable *> && members,
                                              BFFStackFrame * frame )

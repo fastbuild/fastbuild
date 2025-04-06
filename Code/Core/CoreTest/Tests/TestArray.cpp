@@ -434,7 +434,7 @@ void TestArray::RangeBasedForLoop() const
             total += u;
         }
         TEST_ASSERT( total == 3 );
-        for ( const uint32_t& u : array ) // by reference
+        for ( const uint32_t & u : array ) // by reference
         {
             total += u;
         }
@@ -1929,7 +1929,7 @@ void TestArray::MoveConstructorHelper() const
 
     // Move construct destination. SRC_CAST allows us to check Array/StackArray
     // behave the same
-    DST arrayB( Move( (SRC_CAST&)( arrayA ) ) );
+    DST arrayB( Move( (SRC_CAST &)( arrayA ) ) );
 
     // Check expected amount of allocs occurred
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
@@ -2005,7 +2005,7 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
 
         // Move construct destination. SRC_CAST allows us to check Array/StackArray
         // behave the same
-        arrayB = Move( (SRC_CAST&)( arrayA ) );
+        arrayB = Move( (SRC_CAST &)( arrayA ) );
 
         // Check expected amount of allocs occurred
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
@@ -2042,7 +2042,7 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
 
             // Move construct destination. SRC_CAST allows us to check Array/StackArray
             // behave the same
-            arrayB = Move( (SRC_CAST&)( arrayA ) );
+            arrayB = Move( (SRC_CAST &)( arrayA ) );
 
             // Source string should be empty
             PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate

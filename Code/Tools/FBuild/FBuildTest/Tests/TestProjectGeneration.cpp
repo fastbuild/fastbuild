@@ -1422,8 +1422,8 @@ void TestProjectGeneration::VSExternalProj_ExternalProject() const
 
     // because of the external module, peek how many of them were actually processed, depending if using the module is
     // enforced or not in the actual fbuild.bff
-    const FBuildStats& stats = FBuild::Get().GetStats();
-    const FBuildStats::Stats& nodeStatsExternal = stats.GetStatsFor( Node::VSPROJEXTERNAL_NODE );
+    const FBuildStats & stats = FBuild::Get().GetStats();
+    const FBuildStats::Stats & nodeStatsExternal = stats.GetStatsFor( Node::VSPROJEXTERNAL_NODE );
     const size_t actualNumExtSeen = nodeStatsExternal.m_NumProcessed;
     const size_t actualNumExtBuilt = nodeStatsExternal.m_NumBuilt;
 

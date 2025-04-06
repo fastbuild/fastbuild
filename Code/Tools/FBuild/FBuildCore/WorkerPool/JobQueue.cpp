@@ -270,7 +270,7 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
     // If ConcurrencyGroups are in use, sum up the number of delayed
     // jobs to include in the total "numJobs"
     uint32_t numPendingJobs = 0;
-    for (const ConcurrencyGroupState& groupState : m_ConcurrencyGroupsState)
+    for (const ConcurrencyGroupState & groupState : m_ConcurrencyGroupsState)
     {
         numPendingJobs += static_cast<uint32_t>(groupState.m_LocalJobs_Staging.GetSize());
     }

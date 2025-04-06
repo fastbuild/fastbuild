@@ -579,7 +579,7 @@ void NodeGraph::SerializeToText( const Dependencies & deps, AString & outBuffer 
 
 // SerializeToText
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::SerializeToText( Node * node, uint32_t depth, AString& outBuffer )
+/*static*/ void NodeGraph::SerializeToText( Node * node, uint32_t depth, AString & outBuffer )
 {
     // Print this even if it has been visited before so the edge is visible
     outBuffer.AppendFormat( "%*s%s %s\n", depth * 4, "", node->GetTypeName(), node->GetName().Get() );

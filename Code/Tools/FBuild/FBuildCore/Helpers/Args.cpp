@@ -43,7 +43,7 @@ void Args::operator += ( const char * argPart )
     m_Args += argPart;
 }
 
-// operator += (AString&)
+// operator += (AString &)
 //------------------------------------------------------------------------------
 void Args::operator += ( const AString & argPart )
 {

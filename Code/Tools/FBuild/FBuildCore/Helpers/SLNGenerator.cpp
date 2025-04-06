@@ -103,7 +103,7 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 
 // WriteProjectListings
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
+void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
                                          const Array< VSProjectBaseNode * > & projects,
                                          const Array< SolutionFolder > & solutionFolders,
                                          const Array< SolutionDependency > & solutionDependencies,
@@ -247,7 +247,7 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
                solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
 
         // lookup solution folder to find out if it contains items
-        for ( const SolutionFolder& solutionFolder : solutionFolders )
+        for ( const SolutionFolder & solutionFolder : solutionFolders )
         {
             if ( solutionFolderPath.EqualsI( solutionFolder.m_Path ) )
             {

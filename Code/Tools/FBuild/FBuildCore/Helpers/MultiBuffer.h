@@ -24,7 +24,7 @@ public:
     ~MultiBuffer();
 
     bool CreateFromFiles( const Array< AString > & fileNames, size_t * outProblemFileIndex = nullptr );
-    bool ExtractFile( size_t index, const AString& fileName ) const;
+    bool ExtractFile( size_t index, const AString & fileName ) const;
 
     void Compress( int32_t compressionLevel, bool allowZstdUse );
     bool Decompress();

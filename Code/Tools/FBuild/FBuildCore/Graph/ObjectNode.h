@@ -114,7 +114,7 @@ public:
 
         uint32_t m_Flags = 0;
     };
-    const CompilerFlags& GetCompilerFlags() const { return m_CompilerFlags; }
+    const CompilerFlags & GetCompilerFlags() const { return m_CompilerFlags; }
 
     static CompilerFlags DetermineFlags( const CompilerNode * compilerNode,
                                          const AString & args,
@@ -161,7 +161,7 @@ public:
     ObjectNode * GetPrecompiledHeader() const;
 
     void GetPDBName( AString & pdbName ) const;
-    void GetNativeAnalysisXMLPath( AString& outXMLFileName ) const;
+    void GetNativeAnalysisXMLPath( AString & outXMLFileName ) const;
     void GetGCNOPath( AString & gcnoFileName ) const;
     void GetAltObjPath( AString & altObjName ) const;
 

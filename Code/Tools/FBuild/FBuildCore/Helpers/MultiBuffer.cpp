@@ -54,7 +54,7 @@ bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * 
     uint64_t memSize = sizeof( uint32_t ); // write number of files
     for ( size_t i = 0; i <numFiles; ++i )
     {
-        FileStream& fs = fileStreams[ i ];
+        FileStream & fs = fileStreams[ i ];
         if ( fs.Open( fileNames[ i ].Get(), FileStream::READ_ONLY ) == false )
         {
             if ( outproblemFileIndex )
@@ -101,7 +101,7 @@ bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * 
 
 // ExtractFile
 //------------------------------------------------------------------------------
-bool MultiBuffer::ExtractFile( size_t index, const AString& fileName ) const
+bool MultiBuffer::ExtractFile( size_t index, const AString & fileName ) const
 {
     ASSERT( m_ReadStream );
 

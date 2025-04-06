@@ -221,7 +221,7 @@ void TestDependencies::Iteration() const
     PRAGMA_DISABLE_POP_MSVC
 
     // Const
-    const Dependencies& constD( d );
+    const Dependencies & constD( d );
     for ( const Dependency & dep : constD )
     {
         const size_t index = d.GetIndexOf( &dep );

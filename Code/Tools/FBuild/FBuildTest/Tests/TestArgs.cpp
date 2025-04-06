@@ -45,7 +45,7 @@ private:
     const AString mExeName{ "ExeName" };
     const AString mNodeName{ "NodeName" };
 
-    void operator = (TestArgs&) = delete;
+    void operator = (TestArgs &) = delete;
 };
 
 // Register Tests
