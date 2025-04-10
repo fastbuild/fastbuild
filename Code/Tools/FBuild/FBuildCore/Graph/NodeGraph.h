@@ -117,7 +117,7 @@ public:
     // create new nodes
     Node *      CreateNode( Node::Type type,
                             AString && name,
-                            uint32_t nameHashHint = 0 );
+                            uint32_t nameHash );
     Node *      CreateNode( Node::Type type,
                             const AString & name,
                             const BFFToken * sourceToken = nullptr );

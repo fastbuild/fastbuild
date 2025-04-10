@@ -839,9 +839,12 @@ void NodeGraph::RegisterSourceToken( const Node * node, const BFFToken * sourceT
 
 // CreateNode
 //------------------------------------------------------------------------------
-Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHashHint )
+Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHash )
 {
     ASSERT( Thread::IsMainThread() );
+
+    // Ensure provided hash is correct
+    ASSERT( nameHash == Node::CalcNameHash( name ) );
 
     Node * node = nullptr;
     switch ( type )
@@ -884,7 +887,7 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHas
     ASSERT( !node->IsAFile() || IsCleanPath( name ) );
 
     // Store name and track new node
-    node->SetName( Move( name ), nameHashHint );
+    node->SetName( Move( name ), nameHash );
     AddNode( node );
 
     return node;
@@ -915,7 +918,8 @@ Node * NodeGraph::CreateNode( Node::Type type, const AString & name, const BFFTo
         nameCopy = name;
     }
 
-    Node * node = CreateNode( type, Move( nameCopy ), 0 );
+    const uint32_t nameHash = Node::CalcNameHash( nameCopy );
+    Node * node = CreateNode( type, Move( nameCopy ), nameHash );
 
     RegisterSourceToken( node, sourceToken );
 
@@ -930,11 +934,11 @@ void NodeGraph::AddNode( Node * node )
 
     ASSERT( node );
 
+    ASSERT( node->GetNameHash() == Node::CalcNameHash( node->GetName() ) );
     ASSERT( FindNodeInternal( node->GetName(), node->GetNameHash() ) == nullptr ); // node name must be unique
 
     // track in NodeMap
-    const uint32_t crc = Node::CalcNameHash( node->GetName() );
-    const size_t key = ( crc & m_NodeMapMaxKey );
+    const size_t key = ( node->GetNameHash() & m_NodeMapMaxKey );
     node->m_Next = m_NodeMap[ key ];
     m_NodeMap[ key ] = node;
 
