@@ -303,11 +303,10 @@ int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... ) const
 
 // Tokenize
 //------------------------------------------------------------------------------
-void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
+void AString::Tokenize( Array<const char *> & outTokenStarts,
+                        Array<const char *> & outTokenEnds,
+                        char splitChar ) const
 {
-    StackArray<const char *, 64> tokenStarts;
-    StackArray<const char *, 64> tokenEnds;
-
     const char * pos = Get();
     const char * end = GetEnd();
     bool lookingForStart = true;
@@ -323,7 +322,7 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
             }
 
             // found the start of a new token
-            tokenStarts.Append( pos );
+            outTokenStarts.Append( pos );
             lookingForStart = false;
         }
 
@@ -359,7 +358,7 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
         {
             if ( quoteChar == 0 )
             {
-                tokenEnds.Append( pos );
+                outTokenEnds.Append( pos );
                 lookingForStart = true;
             }
             else
@@ -373,13 +372,23 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
         }
         ++pos;
     }
-    ASSERT( ( tokenStarts.GetSize() == tokenEnds.GetSize() ) ||
-            ( tokenStarts.GetSize() == ( tokenEnds.GetSize() + 1 ) ) );
-    if ( tokenStarts.GetSize() > tokenEnds.GetSize() )
+    ASSERT( ( outTokenStarts.GetSize() == outTokenEnds.GetSize() ) ||
+            ( outTokenStarts.GetSize() == ( outTokenEnds.GetSize() + 1 ) ) );
+    if ( outTokenStarts.GetSize() > outTokenEnds.GetSize() )
     {
-        tokenEnds.Append( pos );
+        outTokenEnds.Append( pos );
     }
-    ASSERT( tokenStarts.GetSize() == tokenEnds.GetSize() );
+    ASSERT( outTokenStarts.GetSize() == outTokenEnds.GetSize() );
+}
+
+// Tokenize
+//------------------------------------------------------------------------------
+void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
+{
+    // Get the bounds of the tokens
+    StackArray<const char *, 64> tokenStarts;
+    StackArray<const char *, 64> tokenEnds;
+    Tokenize( tokenStarts, tokenEnds, splitChar );
 
     // pre-size output to avoid reallocations
     tokens.Clear();
@@ -403,55 +412,62 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
 {
     for ( AString & token : inoutTokens )
     {
-        // Remove quotes in-place
-        char * src = token.Get();
-        char * dst = token.Get();
-        const char * const end = token.GetEnd();
-        char quoteChar = 0;
-        while ( src < end )
+        token.RemoveQuotes();
+    }
+}
+
+// RemoveQuotes
+//------------------------------------------------------------------------------
+void AString::RemoveQuotes()
+{
+    // Remove quotes in-place
+    char * src = Get();
+    char * dst = src;
+    const char * const end = GetEnd();
+    char quoteChar = 0;
+    while ( src < end )
+    {
+        const char c = *src;
+        if ( c == '"' )
         {
-            const char c = *src;
-            if ( c == '"' )
+            if ( quoteChar == 0 )
             {
-                if ( quoteChar == 0 )
+                // opening quote - remove from output
+                quoteChar = c;
+                ++src;
+                continue;
+            }
+            else
+            {
+                // closing quote
+                ASSERT( quoteChar == c );
+                quoteChar = 0;
+                ++src;
+                continue; // Remove quote from token
+            }
+        }
+        else if ( c == '\\' ) // Escape char
+        {
+            // collapse escaped quotes
+            if ( ( src + 1 ) < end )
+            {
+                const char nextChar = src[ 1 ];
+                if ( nextChar == '"' )
                 {
-                    // opening quote - remove from output
-                    quoteChar = c;
-                    ++src;
+                    // Replace escaped char with quote
+                    src += 2;
+                    *dst = nextChar;
+                    ++dst;
                     continue;
                 }
-                else
-                {
-                    // closing quote
-                    ASSERT( quoteChar == c );
-                    quoteChar = 0;
-                    ++src;
-                    continue; // Remove quote from token
-                }
             }
-            else if ( c == '\\' ) // Escape char
-            {
-                // collapse escaped quotes
-                if ( ( src + 1 ) < end )
-                {
-                    const char nextChar = src[ 1 ];
-                    if ( nextChar == '"' )
-                    {
-                        // Replace escaped char with quote
-                        src += 2;
-                        *dst = nextChar;
-                        ++dst;
-                        continue;
-                    }
-                }
-            }
-
-            *dst = *src;
-            ++dst;
-            ++src;
         }
-        token.SetLength( static_cast<uint32_t>( dst - token.Get() ) );
+
+        *dst = *src;
+        ++dst;
+        ++src;
     }
+    SetLength( static_cast<uint32_t>( dst - Get() ) );
 }
 
 // Assign (const char *)

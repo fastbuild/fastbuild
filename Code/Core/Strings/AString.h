@@ -101,7 +101,11 @@ public:
     [[nodiscard]] int32_t           Scan( MSVC_SAL_SCANF const char * fmtString, ... ) const SCAN_STRING( 2, 3 );
     [[nodiscard]] static int32_t    ScanS( const char * buffer, MSVC_SAL_SCANF const char * fmtString, ... ) SCAN_STRING( 2, 3 );
 
+    void                        Tokenize( Array<const char *> & outTokenStarts,
+                                          Array<const char *> & outTokenEnds,
+                                          char splitChar = ' ' ) const;
     void                        Tokenize( Array< AString > & tokens, char splitChar = ' ' ) const;
+    void                        RemoveQuotes();
     static void                 RemoveQuotes( Array< AString > & inoutTokens );
 
     // transformations
