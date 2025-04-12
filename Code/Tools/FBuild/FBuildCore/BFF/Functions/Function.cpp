@@ -61,7 +61,7 @@
 
 // Static
 //------------------------------------------------------------------------------
-/*static*/ Array<const Function *> g_Functions;
+/*static*/ StackArray<const Function *> g_Functions;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -94,7 +94,6 @@ Function::~Function() = default;
 //------------------------------------------------------------------------------
 /*static*/ void Function::Create()
 {
-    g_Functions.SetCapacity( 25 );
     g_Functions.Append( FNEW( FunctionAlias ) );
     g_Functions.Append( FNEW( FunctionCompiler ) );
     g_Functions.Append( FNEW( FunctionCopy ) );
