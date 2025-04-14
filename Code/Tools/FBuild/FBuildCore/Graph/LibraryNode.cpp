@@ -379,11 +379,14 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     if ( flags & LIB_FLAG_LIB )
     {
         // Parse args for some other flags
-        StackArray< AString > tokens;
-        args.Tokenize( tokens );
-
-        for ( const AString & token : tokens )
+        StackArray<const char *, 512> tokenStarts;
+        StackArray<const char *, 512> tokenEnds;
+        args.Tokenize( tokenStarts, tokenEnds );
+        const size_t numTokens = tokenStarts.GetSize();
+        for ( size_t i = 0; i < numTokens; ++i )
         {
+            const AStackString<> token( tokenStarts[ i ], tokenEnds[ i ] );
+        
             if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
             {
                 flags |= LIB_FLAG_WARNINGS_AS_ERRORS_MSVC;

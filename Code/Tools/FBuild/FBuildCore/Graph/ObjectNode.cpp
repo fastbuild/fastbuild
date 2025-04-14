@@ -977,6 +977,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // Source mappings are not currently forwarded so can only compiled locally
     const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
 
+    StackArray<const char *, 512> tokenStarts;
+    StackArray<const char *, 512> tokenEnds;
+
     // Check MS compiler options
     if ( flags.IsMSVC() || flags.IsClangCl() )
     {
@@ -984,10 +987,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         bool usingWinRT = false;
         bool usingPreprocessorOnly = false;
 
-        StackArray< AString > tokens;
-        args.Tokenize( tokens );
-        for ( const AString & token : tokens )
+        args.Tokenize( tokenStarts, tokenEnds );
+        const size_t numTokens = tokenStarts.GetSize();
+        for ( size_t i = 0; i < numTokens; ++i )
         {
+            const AStackString<> token( tokenStarts[ i ], tokenEnds[ i ] );
+
             if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
                 if ( !flags.IsClangCl() ) // with clang-cl, Zi is an alias for /Z7, it does not produce PDBs
@@ -1068,12 +1073,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         bool coverage = false;
 
-        StackArray< AString > tokens;
-        args.Tokenize( tokens );
-        const AString * const end = tokens.End();
-        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        args.Tokenize( tokenStarts, tokenEnds );
+        const size_t numTokens = tokenStarts.GetSize();
+        for ( size_t i = 0; i < numTokens; ++i )
         {
-            const AString & token = *it;
+            const AStackString<> token( tokenStarts[ i ], tokenEnds[ i ] );
 
             if ( token == "-fdiagnostics-color=auto" )
             {
@@ -1107,9 +1111,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             }
             else if ( token == "-x" )
             {
-                if ( it < ( end - 1 ) )
+                if ( i < ( numTokens - 1 ) )
                 {
-                    const AString & nextToken = *( it + 1);
+                    const AStackString<> nextToken( tokenStarts[ i + 1 ], tokenEnds[ i + 1 ] );
                     if ( nextToken == "objective-c" )
                     {
                         objectiveC = true;
