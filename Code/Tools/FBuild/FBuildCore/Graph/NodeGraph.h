@@ -17,6 +17,7 @@
 //------------------------------------------------------------------------------
 class AliasNode;
 class AString;
+class ChainedMemoryStream;
 class CompilerNode;
 class ConstMemoryStream;
 class CopyDirNode;
@@ -32,7 +33,6 @@ class IOStream;
 class LibraryNode;
 class LinkerNode;
 class ListDependenciesNode;
-class MemoryStream;
 class Node;
 class ObjectListNode;
 class ObjectNode;
@@ -99,7 +99,7 @@ public:
     NodeGraph::LoadResult Load( const char * nodeGraphDBFile );
 
     LoadResult Load( ConstMemoryStream & stream, const char * nodeGraphDBFile );
-    void Save( MemoryStream & stream, const char * nodeGraphDBFile ) const;
+    void Save( ChainedMemoryStream & stream, const char * nodeGraphDBFile ) const;
     void SerializeToText( const Dependencies & dependencies, AString & outBuffer ) const;
     void SerializeToDotFormat( const Dependencies & deps, const bool fullGraph, AString & outBuffer ) const;
 

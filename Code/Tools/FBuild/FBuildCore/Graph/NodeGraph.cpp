@@ -40,10 +40,10 @@
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
+#include "Core/FileIO/ChainedMemoryStream.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
-#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/Mem.h"
@@ -468,7 +468,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 
 // Save
 //------------------------------------------------------------------------------
-void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
+void NodeGraph::Save( ChainedMemoryStream & stream, const char* nodeGraphDBFile ) const
 {
     // write header and version
     const NodeGraphHeader header;
@@ -544,13 +544,29 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
 
     // Calculate hash of stream excluding header
     {
-        char * data = static_cast<char *>( stream.GetDataMutable() );
-        const char * content = ( data + sizeof(NodeGraphHeader) );
-        const size_t remainingSize = ( stream.GetSize() - sizeof(NodeGraphHeader) );
-        const uint64_t hash = xxHash3::Calc64( content, remainingSize );
+        NodeGraphHeader * headerToUpdate = nullptr;
+
+        // Calculate hash of non-contiguous pages
+        xxHash3Accumulator accumulator;
+        for ( uint32_t i = 0; i < stream.GetNumPages(); ++i )
+        {
+            uint32_t dataSize = 0;
+            char * data = stream.GetPage( i, dataSize );
+            if ( i == 0 )
+            {
+                // Exclude header from first page
+                headerToUpdate = reinterpret_cast<NodeGraphHeader *>( data );
+                ASSERT( dataSize >= sizeof(NodeGraphHeader) );
+                data += sizeof(NodeGraphHeader);
+                dataSize -= sizeof(NodeGraphHeader);
+            }
+
+            accumulator.AddData( data, dataSize );
+        }
+        const uint64_t hash = accumulator.Finalize64();
 
         // Update hash in header
-        NodeGraphHeader * headerToUpdate = reinterpret_cast<NodeGraphHeader *>( data );
+        ASSERT( headerToUpdate ); // Guaranteed to be in first page
         ASSERT( headerToUpdate->GetContentHash() == 0 );
         headerToUpdate->SetContentHash( hash );
     }
