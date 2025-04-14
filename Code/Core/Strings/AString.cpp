@@ -589,9 +589,18 @@ void AString::ClearAndFreeMemory()
 void AString::SetReserved( size_t capacity )
 {
     // shrinking content?
+    // TODO:C This code path seems suspect and hitting this is likely an error
+    // in the calling code
     if ( capacity < GetLength() )
     {
         SetLength( (uint32_t)capacity ); // truncate to new capacity
+        return;
+    }
+
+    // Ignore requests for capacity lower that already available
+    if ( capacity <= GetReserved() )
+    {
+        return;
     }
 
     // allocate memory of new capacity and copy existing string
