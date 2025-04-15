@@ -2204,7 +2204,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     }
 
     const CompilerNode * compiler = job->GetNode()->CastTo<ObjectNode>()->GetCompiler();
-    if ( ( compiler != nullptr ) && ( compiler->GetUseDeterministicPaths() ) )
+    if ( compiler && compiler->GetUseDeterministicPaths() )
     {
         VERIFY( FBuild::GetTempDir( tmpDirectory ) );
         #if defined( __WINDOWS__ )

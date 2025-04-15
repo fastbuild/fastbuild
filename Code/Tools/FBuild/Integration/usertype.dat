@@ -267,6 +267,7 @@ UnityNumFiles
 UnityOutputPath
 UnityOutputPattern
 UnityPCH
+UseDeterministicPaths_Experimental
 UseLightCache_Experimental
 UseRelativePaths_Experimental
 VS2012EnumBugFix
