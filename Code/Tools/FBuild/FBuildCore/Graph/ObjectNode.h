@@ -205,6 +205,7 @@ private:
     bool ProcessIncludesWithPreProcessor( Job * job );
 
     const AString & GetCacheName( Job * job ) const;
+    uint32_t GetCommandLineKey( Job * job ) const;
     bool RetrieveFromCache( Job * job );
     void WriteToCache_FromDisk( Job * job );
     void WriteToCache_FromUncompressedData( Job * job,
