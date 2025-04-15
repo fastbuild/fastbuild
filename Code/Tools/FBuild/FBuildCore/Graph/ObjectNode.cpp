@@ -1382,7 +1382,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
-    uint32_t commandLineKey = GetCommandLineKey( job );
+    const uint32_t commandLineKey = GetCommandLineKey( job );
     ASSERT( commandLineKey );
 
     // ToolChain hash
