@@ -2120,7 +2120,21 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     ASSERT( job->GetData() && job->GetDataSize() );
 
     const Node * sourceFile = GetSourceFile();
-    const uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+    uint32_t sourceNameHash = 0;
+
+    if ( job->IsLocal() )
+    {
+        // Make the source file path relative to the working dir so the hash is deterministic.
+        AStackString<> basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
+        PathUtils::EnsureTrailingSlash( basePath );
+        AStackString<> relativeFileName;
+        PathUtils::GetRelativePath( basePath, sourceFile->GetName(), relativeFileName );
+        sourceNameHash = xxHash::Calc32( relativeFileName.Get(), relativeFileName.GetLength() );
+    }
+    else
+    {
+        sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+    }
 
     FileStream tmpFile;
     AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
