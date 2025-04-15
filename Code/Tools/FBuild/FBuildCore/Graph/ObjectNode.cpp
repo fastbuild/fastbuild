@@ -1382,26 +1382,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
-    uint32_t commandLineKey;
-    {
-        Args args;
-        const bool useDeoptimization = false;
-        const bool showIncludes = false;
-        const bool useSourceMapping = false; // Source mapping compiler flags contain local paths, so we treat them specially
-        const bool finalize = false; // Don't write args to response file
-        BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize );
-
-        if ( job->IsLocal() )
-        {
-            // Append the source mapping destination only, so different machines with different
-            // working directory local paths compute consistent keys.
-            const AString & sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
-            args.AddDelimiter();
-            args += sourceMapping;
-        }
-
-        commandLineKey = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
-    }
+    const uint32_t commandLineKey = GetCommandLineKey( job );
     ASSERT( commandLineKey );
 
     // ToolChain hash
@@ -1421,6 +1402,29 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     job->SetCacheName(cacheName);
 
     return job->GetCacheName();
+}
+
+// GetCommandLineKey
+//------------------------------------------------------------------------------
+uint32_t ObjectNode::GetCommandLineKey( Job * job ) const
+{
+    Args args;
+    const bool useDeoptimization = false;
+    const bool showIncludes = false;
+    const bool useSourceMapping = false; // Source mapping compiler flags contain local paths, so we treat them specially
+    const bool finalize = false; // Don't write args to response file
+    BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize );
+
+    if ( job->IsLocal() )
+    {
+        // Append the source mapping destination only, so different machines with different
+        // working directory local paths compute consistent keys.
+        const AString& sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
+        args.AddDelimiter();
+        args += sourceMapping;
+    }
+
+    return xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
 }
 
 // RetrieveFromCache
@@ -2199,7 +2203,22 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         dataToWriteSize = c.GetResultSize();
     }
 
-    WorkerThread::GetTempFileDirectory( tmpDirectory );
+    const CompilerNode * compiler = job->GetNode()->CastTo<ObjectNode>()->GetCompiler();
+    if ( ( compiler != nullptr ) && ( compiler->GetUseDeterministicPaths() ) )
+    {
+        VERIFY( FBuild::GetTempDir( tmpDirectory ) );
+        #if defined( __WINDOWS__ )
+            tmpDirectory += ".fbuild.tmp\\";
+        #else
+            tmpDirectory += "_fbuild.tmp/";
+        #endif
+        tmpDirectory.AppendFormat( "%08X-", GetCommandLineKey( job ) );
+    }
+    else
+    {
+        WorkerThread::GetTempFileDirectory( tmpDirectory );
+    }
+
     tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
     if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
     {

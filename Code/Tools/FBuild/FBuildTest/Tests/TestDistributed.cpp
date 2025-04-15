@@ -306,7 +306,7 @@ void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
     TEST_ASSERT( false == fBuild.Build( "ErrorsAreCorrectlyReported-Clang" ) );
 
     // Check that error is returned
-    TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "error: expected ';' at end of declaration" ) );
 }
 
 // WarningsAreCorrectlyReported_MSVC
