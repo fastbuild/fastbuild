@@ -60,6 +60,7 @@ Compiler( 'Compiler-Clang' )
                                     + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
                                     + ' -Wno-missing-noreturn'          // function '%s' could be declared with attribute 'noreturn'
                                     + ' -Wno-old-style-cast'            // use of old-style cast
+                                    + ' -Wno-reserved-identifier'       // Fix declaration of _itoa_s
                                     + ' -Wno-shorten-64-to-32'          // implicit conversion loses integer precision: '%s' to '%s'
                                     + ' -Wno-weak-vtables'              // '%s has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit
 
