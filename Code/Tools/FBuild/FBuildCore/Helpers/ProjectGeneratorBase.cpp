@@ -552,14 +552,14 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 {
     ASSERT( prefixes.IsEmpty() == false );
 
-    StackArray<const char *, 64> tokenStarts;
-    StackArray<const char *, 64> tokenEnds;
-    compilerArgs.Tokenize( tokenStarts, tokenEnds );
-    const size_t numTokens = tokenStarts.GetSize();
+    StackArray<AString::TokenRange, 128> tokenRanges;
+    compilerArgs.Tokenize( tokenRanges );
+    const size_t numTokens = tokenRanges.GetSize();
 
     for ( size_t i = 0; i < numTokens; ++i )
     {
-        AStackString<> token( tokenStarts[ i ], tokenEnds[ i ] );
+        AStackString<> token( ( compilerArgs.Get() + tokenRanges[ i ].m_StartIndex ),
+                              ( compilerArgs.Get() + tokenRanges[ i ].m_EndIndex ) );
         token.RemoveQuotes();
 
         AStackString<> optionBody;
@@ -576,7 +576,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                 }
 
                 // Use next token
-                optionBody.Assign( tokenStarts[ i + 1 ], tokenEnds[ i + 1 ] );
+                optionBody.Assign( ( compilerArgs.Get() + tokenRanges[ i + 1 ].m_StartIndex ),
+                                   ( compilerArgs.Get() + tokenRanges[ i + 1 ].m_EndIndex ) );
                 optionBody.RemoveQuotes();
                 break;
             }

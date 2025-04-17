@@ -303,17 +303,16 @@ int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... ) const
 
 // Tokenize
 //------------------------------------------------------------------------------
-void AString::Tokenize( Array<const char *> & outTokenStarts,
-                        Array<const char *> & outTokenEnds,
+void AString::Tokenize( Array<TokenRange> & outTokenRanges,
                         char splitChar ) const
 {
     const char * pos = Get();
     const char * end = GetEnd();
-    bool lookingForStart = true;
     char quoteChar = 0;
+    TokenRange * current = nullptr;
     while ( pos < end )
     {
-        if ( lookingForStart )
+        if ( current == nullptr )
         {
             if ( *pos == splitChar )
             {
@@ -322,8 +321,8 @@ void AString::Tokenize( Array<const char *> & outTokenStarts,
             }
 
             // found the start of a new token
-            outTokenStarts.Append( pos );
-            lookingForStart = false;
+            current = &outTokenRanges.EmplaceBack();
+            current->m_StartIndex = static_cast<uint32_t>( pos - Get() );
         }
 
         // hit a quote?
@@ -358,8 +357,8 @@ void AString::Tokenize( Array<const char *> & outTokenStarts,
         {
             if ( quoteChar == 0 )
             {
-                outTokenEnds.Append( pos );
-                lookingForStart = true;
+                current->m_EndIndex = static_cast<uint32_t>( pos - Get() );
+                current = nullptr;
             }
             else
             {
@@ -372,13 +371,13 @@ void AString::Tokenize( Array<const char *> & outTokenStarts,
         }
         ++pos;
     }
-    ASSERT( ( outTokenStarts.GetSize() == outTokenEnds.GetSize() ) ||
-            ( outTokenStarts.GetSize() == ( outTokenEnds.GetSize() + 1 ) ) );
-    if ( outTokenStarts.GetSize() > outTokenEnds.GetSize() )
+
+    // Terminate last token if needed
+    if ( current != nullptr )
     {
-        outTokenEnds.Append( pos );
+        ASSERT( current->m_EndIndex == 0 );
+        current->m_EndIndex = static_cast<uint32_t>( pos - Get() );
     }
-    ASSERT( outTokenStarts.GetSize() == outTokenEnds.GetSize() );
 }
 
 // Tokenize
@@ -386,23 +385,18 @@ void AString::Tokenize( Array<const char *> & outTokenStarts,
 void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
 {
     // Get the bounds of the tokens
-    StackArray<const char *, 64> tokenStarts;
-    StackArray<const char *, 64> tokenEnds;
-    Tokenize( tokenStarts, tokenEnds, splitChar );
+    StackArray<TokenRange, 128> tokenRanges;
+    Tokenize( tokenRanges, splitChar );
 
     // pre-size output to avoid reallocations
     tokens.Clear();
-    const size_t numTokens( tokenStarts.GetSize() );
-    if ( tokens.GetCapacity() < numTokens )
-    {
-        tokens.SetCapacity( numTokens );
-    }
-    tokens.SetSize( numTokens );
+    tokens.SetCapacity( tokenRanges.GetSize() );
 
     // copy tokens
-    for ( size_t i = 0; i < numTokens; ++i )
+    for ( const TokenRange & tokenRange : tokenRanges )
     {
-        tokens[ i ].Assign( tokenStarts[ i ], tokenEnds[ i ] );
+        tokens.EmplaceBack( ( Get() + tokenRange.m_StartIndex ),
+                            ( Get() + tokenRange.m_EndIndex ) );
     }
 }
 

@@ -755,10 +755,8 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
 /*static*/ uint32_t LinkerNode::DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args )
 {
     // Parse args for some other flags
-    StackArray<const char *, 512> tokenStarts;
-    StackArray<const char *, 512> tokenEnds;
-    args.Tokenize( tokenStarts, tokenEnds );
-    const size_t numTokens = tokenStarts.GetSize();
+    StackArray<AString::TokenRange, 512> tokenRanges;
+    args.Tokenize( tokenRanges );
 
     uint32_t flags = DetermineLinkerTypeFlags( linkerType, linkerName );
 
@@ -772,9 +770,10 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
         bool optLBRFlag = false;
         bool orderFlag = false;
 
-        for ( size_t i = 0; i < numTokens; ++i )
+        for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            const AStackString<> token( tokenStarts[ i ], tokenEnds[ i ] );
+            const AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
+                                        ( args.Get() + tokenRange.m_EndIndex ) );
 
             if ( IsLinkerArg_MSVC( token, "DLL" ) )
             {
@@ -855,9 +854,10 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
     }
     else
     {
-        for ( size_t i = 0; i < numTokens; ++i )
+        for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            AStackString<> token( tokenStarts[ i ], tokenEnds[ i ] );
+            AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
+                                  ( args.Get() + tokenRange.m_EndIndex ) );
             token.ToLower();
 
             if ( ( token == "-shared" ) ||

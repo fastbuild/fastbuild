@@ -977,8 +977,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // Source mappings are not currently forwarded so can only compiled locally
     const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
 
-    StackArray<const char *, 512> tokenStarts;
-    StackArray<const char *, 512> tokenEnds;
+    StackArray<AString::TokenRange, 512> tokenRanges;
 
     // Check MS compiler options
     if ( flags.IsMSVC() || flags.IsClangCl() )
@@ -987,11 +986,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         bool usingWinRT = false;
         bool usingPreprocessorOnly = false;
 
-        args.Tokenize( tokenStarts, tokenEnds );
-        const size_t numTokens = tokenStarts.GetSize();
-        for ( size_t i = 0; i < numTokens; ++i )
+        args.Tokenize( tokenRanges );
+        for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            const AStackString<> token( tokenStarts[ i ], tokenEnds[ i ] );
+            const AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
+                                        ( args.Get() + tokenRange.m_EndIndex ) );
 
             if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
@@ -1073,11 +1072,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         bool coverage = false;
 
-        args.Tokenize( tokenStarts, tokenEnds );
-        const size_t numTokens = tokenStarts.GetSize();
+        args.Tokenize( tokenRanges );
+        const size_t numTokens = tokenRanges.GetSize();
         for ( size_t i = 0; i < numTokens; ++i )
         {
-            const AStackString<> token( tokenStarts[ i ], tokenEnds[ i ] );
+            const AStackString<> token( ( args.Get() + tokenRanges[ i ].m_StartIndex ),
+                                        ( args.Get() + tokenRanges[ i ].m_EndIndex ) );
 
             if ( token == "-fdiagnostics-color=auto" )
             {
@@ -1113,7 +1113,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             {
                 if ( i < ( numTokens - 1 ) )
                 {
-                    const AStackString<> nextToken( tokenStarts[ i + 1 ], tokenEnds[ i + 1 ] );
+                    const AStackString<> nextToken( ( args.Get() + tokenRanges[ i + 1 ].m_StartIndex ),
+                                                    ( args.Get() + tokenRanges[ i + 1 ].m_EndIndex ) );
                     if ( nextToken == "objective-c" )
                     {
                         objectiveC = true;
