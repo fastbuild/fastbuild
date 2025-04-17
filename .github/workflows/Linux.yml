@@ -15,19 +15,19 @@ jobs:
         include:
           - cfg: Build & Tests
             gcc: 10
-            clang: 12
+            clang: 15
             os: ubuntu-22.04
           - cfg: ASan
             gcc: 10
-            clang: 12
+            clang: 15
             os: ubuntu-22.04
           - cfg: MSan
             gcc: 10
-            clang: 12
+            clang: 15
             os: ubuntu-22.04
           - cfg: TSan
             gcc: 10
-            clang: 12
+            clang: 15
             os: ubuntu-22.04
             can-fail: true
 
