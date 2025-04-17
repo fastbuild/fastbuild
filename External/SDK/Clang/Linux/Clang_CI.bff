@@ -42,6 +42,7 @@ Compiler( 'Compiler-Clang' )
                                     // Warnings that are not useful
                                     + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
                                     + ' -Wno-disabled-macro-expansion'  // disabled expansion of recursive macro
+                                    + ' -Wno-documentation-unknown-command' // unknown command tag name
                                     + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
                                     + ' -Wno-global-constructors'       // declaration requires a global destructor
                                     + ' -Wno-gnu-zero-variadic-macro-arguments' // token pasting of ',' and __VA_ARGS__ is a GNU extension
