@@ -42,9 +42,9 @@ Compiler( 'Compiler-Clang' )
                                     // Warnings that are not useful
                                     + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
                                     + ' -Wno-disabled-macro-expansion'  // disabled expansion of recursive macro
-                                    + ' -Wno-documentation-unknown-command' // unknown command tag name
                                     + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
                                     + ' -Wno-global-constructors'       // declaration requires a global destructor
+                                    + ' -Wno-gnu-line-marker'           // this style of line directive is a GNU extension
                                     + ' -Wno-gnu-zero-variadic-macro-arguments' // token pasting of ',' and __VA_ARGS__ is a GNU extension
                                     + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
                                     + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
