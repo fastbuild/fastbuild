@@ -24,6 +24,7 @@ __asm__( ".symver pthread_detach,pthread_detach@GLIBC_2.2.5" );
 __asm__( ".symver pthread_join,pthread_join@GLIBC_2.2.5" );
 __asm__( ".symver pthread_mutexattr_init,pthread_mutexattr_init@GLIBC_2.2.5" );
 __asm__( ".symver pthread_mutexattr_settype,pthread_mutexattr_settype@GLIBC_2.2.5" );
+__asm__( ".symver pthread_mutex_trylock,pthread_mutex_trylock@GLIBC_2.2.5" );
 __asm__( ".symver pthread_timedjoin_np,pthread_timedjoin_np@GLIBC_2.3.3" );
 __asm__( ".symver sem_destroy,sem_destroy@GLIBC_2.2.5" );
 __asm__( ".symver sem_init,sem_init@GLIBC_2.2.5" );
