@@ -54,10 +54,13 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AStr
     bool hasOutputToken = false;
     bool hasCompileToken = false;
 
-    StackArray< AString > tokens;
-    compilerOptions.Tokenize( tokens );
-    for ( const AString & token : tokens )
+    StackArray<AString::TokenRange, 128> tokenRanges;
+    compilerOptions.Tokenize( tokenRanges );
+    for ( const AString::TokenRange & tokenRange : tokenRanges )
     {
+        const AStackString<> token( ( compilerOptions.Get() + tokenRange.m_StartIndex ),
+                                    ( compilerOptions.Get() + tokenRange.m_EndIndex ) );
+
         if ( token.Find( "%1" ) )
         {
             hasInputToken = true;
@@ -82,6 +85,12 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AStr
                     hasCompileToken = true;
                 }
             }
+        }
+
+        // If all args have been seen we can stop searching
+        if ( hasInputToken && hasOutputToken && hasCompileToken )
+        {
+            break;
         }
     }
 

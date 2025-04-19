@@ -320,10 +320,14 @@ ObjectListNode::ObjectListNode()
     }
 
     // Extra output paths
-    ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions,
-                                                           m_ExtraPDBPath,
-                                                           m_ExtraASMPath,
-                                                           m_ExtraSourceDependenciesPath );
+    // Currently these are MSVC only
+    if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClangCl() )
+    {
+        ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions,
+                                                               m_ExtraPDBPath,
+                                                               m_ExtraASMPath,
+                                                               m_ExtraSourceDependenciesPath );
+    }
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( compilerInputPath.GetSize() +
