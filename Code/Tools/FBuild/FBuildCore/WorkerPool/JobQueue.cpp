@@ -469,15 +469,16 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorPr
 
             // MSVC /dynamicdeopt require minor protocol 5 or later
             const ObjectNode * on = potentialJob->GetNode()->CastTo< ObjectNode >();
-            if ( on->IsMSVC() && on->IsUsingDynamicDeopt() )
+            if ( on->IsMSVC() &&
+                 on->IsUsingDynamicDeopt() &&
+                 ( workerMinorProtocolVersion < 5 ) )
             {
-                if ( workerMinorProtocolVersion >= 5 )
-                {
-                    job = potentialJob;
-                    m_DistributableJobs_Available.EraseIndex( static_cast<size_t>( i ) );
-                    break;
-                }
+                continue;
             }
+
+            job = potentialJob;
+            m_DistributableJobs_Available.EraseIndex( static_cast<size_t>( i ) );
+            break;
         }
 
         // It's possible there are no compatible jobs
