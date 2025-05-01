@@ -15,20 +15,21 @@ jobs:
         include:
           - cfg: Build & Tests
             gcc: 10
-            clang: 12
-            os: ubuntu-20.04
+            clang: 15
+            os: ubuntu-22.04
           - cfg: ASan
             gcc: 10
-            clang: 12
-            os: ubuntu-20.04
+            clang: 15
+            os: ubuntu-22.04
           - cfg: MSan
             gcc: 10
-            clang: 12
-            os: ubuntu-20.04
+            clang: 15
+            os: ubuntu-22.04
+            can-fail: true
           - cfg: TSan
             gcc: 10
-            clang: 12
-            os: ubuntu-20.04
+            clang: 15
+            os: ubuntu-22.04
             can-fail: true
 
     name: Linux (${{ matrix.cfg }}, GCC ${{ matrix.gcc }}, Clang ${{ matrix.clang }})
