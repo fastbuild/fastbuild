@@ -26,6 +26,55 @@
 
 <h1>Changelog</h1>
 
+<div class='newsitemheader'>
+    v1.15&nbsp;<font color='#bbbbbb'>(1st-May-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version changed</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>Support <a href="https://learn.microsoft.com/en-us/cpp/build/reference/dynamic-deopt">/dynamicdeopt</a> feature of MSVC (Thanks to Xiang Fan MSFT)</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix FBuildWorker crash on OSX</li>
+        <li>Fix crash when Unity is configured with no files and only isolated files</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Optimize db save time for large databases</li>
+        <li>Improve startup by avoiding some per-node work loading the fdb file</li>
+        <li>[OSX][Linux] Reduce process spawning overhead</li>
+        <li>Ensure directory listings are deterministic (Thanks to Javier Blazquez)</li>
+        <li>Make hashes used in local temp paths deterministic (Thanks to Javier Blazquez)</li>
+        <li>Add UseDeterministicPaths_Experimental flag (Thanks to Javier Blazquez)</li>
+        <li>Objects built using -nounity can read/write the cache when when "isolated"</li>        
+        <li>BFF Parsing</li>
+        <ul>
+            <li>Reduce bff parsing time for ObjectList, Library, Executable and DLL</li>            
+            <li>Reduce bff parsing cost for every ObjectList slightly</li>
+            <li>Further reduce bff parsing cost for every ObjectList slightly for non-MSVC compilers</li>
+        </ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Improve error message when FBuildWorker fails to mount TMP dir</li>
+        </ul>
+        <li>Caching</li>        
+        <ul>
+            <li>Cache bandwidth and storage space reduced slightly (~1-3%)</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li>Massively improve VCXProj and XCode project generation performance</li>
+            <li>Optimize VCXProj generation when processing relative file paths in various places</li>
+            <li>VCXProj and XCode project generation performance improved significantly</li>
+        </ul>
+    </ul>
+</div>
 
 <div class='newsitemheader'>
     v1.14&nbsp;<font color='#bbbbbb'>(12th-Jan-2025)</font>
