@@ -4,6 +4,11 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// Core
+#if !defined( __WINDOWS__ )
+    #include "Core/Env/Types.h"
+#endif
+
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h" // TODO: Remove need for this
     #include <shellapi.h> // TODO: Remove need for this
@@ -20,7 +25,12 @@ class OSWindow;
 class OSTrayIcon
 {
 public:
-    explicit OSTrayIcon( OSWindow * parentWindow, const AString & toolTip );
+    #if defined( __WINDOWS__ )
+        explicit OSTrayIcon( OSWindow * parentWindow, const AString & toolTip );
+    #else
+        OSTrayIcon( const void * iconImage, size_t iconImageSize );
+    #endif
+
     ~OSTrayIcon();
 
     void ShowNotification( const char * msg );

@@ -207,7 +207,7 @@ void TestGraph::SingleFileNodeMissing() const
     FileNodeTestHelper * helper = reinterpret_cast<FileNodeTestHelper *>( node );
     PRAGMA_DISABLE_POP_MSVC
     TEST_ASSERT( helper->DoBuild( &j ) == Node::BuildResult::eOk );
-    
+
     // Missing file should have a zero stamp
     TEST_ASSERT( node->GetStamp() == 0 );
 }

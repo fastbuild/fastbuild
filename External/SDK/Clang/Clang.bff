@@ -7,6 +7,7 @@
     //#define USING_CLANG_6
     #define USING_CLANG_10
     //#define USING_CLANG_14
+    //#define USING_CLANG_15
     //#define USING_CLANG_18
 #endif
 #if __OSX__ && !CI_BUILD
@@ -39,6 +40,9 @@
     #endif
     #if USING_CLANG_14
         #include "Linux/Clang14.bff"
+    #endif
+    #if USING_CLANG_15
+        #include "Linux/Clang15.bff"
     #endif
     #if USING_CLANG_18
         #include "Linux/Clang18.bff"

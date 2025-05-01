@@ -179,7 +179,8 @@ SLNNode::SLNNode()
 
     // Gather all Project references and canonicalize project names
     //------------------------------------------------------------------------------
-    Array< VSProjectBaseNode * > projects( m_SolutionProjects.GetSize() );
+    StackArray< VSProjectBaseNode * > projects;
+    projects.SetCapacity( m_SolutionProjects.GetSize() );
     // SolutionProjects
     if ( !GatherProjects( nodeGraph, function, iter, ".SolutionProjects", m_SolutionProjects, projects ) )
     {
@@ -276,7 +277,8 @@ SLNNode::~SLNNode() = default;
     SLNGenerator sg;
 
     // projects
-    Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize() );
+    StackArray< VSProjectBaseNode * > projects;
+    projects.SetCapacity( m_StaticDependencies.GetSize() );
     for ( const Dependency & dep : m_StaticDependencies )
     {
         const Node * node = dep.GetNode();

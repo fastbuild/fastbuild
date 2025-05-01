@@ -12,8 +12,10 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 
+// Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Tracing/Tracing.h"
 
 // Defines
 //------------------------------------------------------------------------------
@@ -47,6 +49,7 @@ private:
     void TestZiDebugFormat() const;
     void TestZiDebugFormat_Local() const;
     void D8049_ToolLongDebugRecord() const;
+    void DynamicDeoptimization() const;
     void CleanMessageToPreventMSBuildFailure() const;
 
     void TestHelper( const char * target,
@@ -78,6 +81,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
         REGISTER_TEST( TestZiDebugFormat )
         REGISTER_TEST( TestZiDebugFormat_Local )
         REGISTER_TEST( D8049_ToolLongDebugRecord )
+        REGISTER_TEST( DynamicDeoptimization )
     #endif
     REGISTER_TEST( CleanMessageToPreventMSBuildFailure )
 REGISTER_TESTS_END
@@ -302,7 +306,7 @@ void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
     TEST_ASSERT( false == fBuild.Build( "ErrorsAreCorrectlyReported-Clang" ) );
 
     // Check that error is returned
-    TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "error: expected ';' at end of declaration" ) );
 }
 
 // WarningsAreCorrectlyReported_MSVC
@@ -481,6 +485,41 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     s.Listen( Protocol::PROTOCOL_TEST_PORT );
 
     TEST_ASSERT( fBuild.Build( "D8049" ) );
+}
+
+// DynamicDeoptimization
+//------------------------------------------------------------------------------
+void TestDistributed::DynamicDeoptimization() const
+{
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/MSVCDynamicDeoptimization/fbuild.bff";
+        options.m_AllowDistributed = true;
+        options.m_NumWorkerThreads = 1;
+        options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+        options.m_AllowLocalRace = false;
+        options.m_ForceCleanBuild = true;
+        FBuild fBuild(options);
+
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // /dynamicdeopt has an additional file which sits next to the normal one
+        const char* const extraObjFile = "../tmp/Test/Distributed/MSVCDynamicDeoptimization/file.alt.obj";
+
+        // Ensure file doesn't linker from prior test runs
+        EnsureFileDoesNotExist( extraObjFile );
+
+        // Start a server to emulate the other end
+        Server s( 1 );
+        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
+        TEST_ASSERT( fBuild.Build( "MSVCDynamicDeoptimization" ) );
+
+        // Ensure extra file was returned by worker
+        EnsureFileExists( extraObjFile );
+    #else
+        OUTPUT( "[SKIP] DynamicDeoptimization - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
+    #endif
 }
 
 //------------------------------------------------------------------------------

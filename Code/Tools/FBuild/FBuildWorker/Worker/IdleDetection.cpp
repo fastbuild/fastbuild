@@ -48,18 +48,17 @@ IdleDetection::IdleDetection()
     , m_IsIdleCurrent( 0.0f )
     , m_IdleSmoother( 0 )
     , m_IdleFloatSmoother( 0 )
-    , m_ProcessesInOurHierarchy( 32 )
     , m_LastTimeIdle( 0 )
     , m_LastTimeBusy( 0 )
 {
-    ProcessInfo self;
+    m_ProcessesInOurHierarchy.SetCapacity( 32 );
+    ProcessInfo & self = m_ProcessesInOurHierarchy.EmplaceBack();
     self.m_PID = Process::GetCurrentId();
     self.m_AliveValue = 0;
     #if defined( __WINDOWS__ )
         self.m_ProcessHandle = ::GetCurrentProcess();
     #endif
     self.m_LastTime = 0;
-    m_ProcessesInOurHierarchy.Append( self );
 }
 
 // DESTRUCTOR
@@ -206,7 +205,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
         // First line should be system totals
         if ( procStat.BeginsWithI( "cpu" ) )
         {
-            Array< uint32_t > values( 10 );
+            StackArray< uint32_t > values;
             const char * pos = procStat.Get() + 4; // skip "cpu "
             for ( ;; )
             {
@@ -270,7 +269,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
         if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pi.m_PID ).Get(),
                                    processInfo ) )
         {
-            Array< AString > tokens( 32 );
+            StackArray< AString > tokens;
             processInfo.Tokenize( tokens, ' ' );
             if ( tokens.GetSize() >= 15 )
             {
@@ -417,7 +416,7 @@ void IdleDetection::UpdateProcessList()
                 }
 
                 // Item index 3 (0-based) is the parent PID
-                Array< AString > tokens( 32 );
+                StackArray< AString > tokens;
                 processInfo.Tokenize( tokens, ' ' );
                 const uint32_t parentPID = strtoul( tokens[ 3 ].Get(), nullptr, 10 );
 

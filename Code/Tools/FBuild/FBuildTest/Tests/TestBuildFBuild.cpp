@@ -8,8 +8,8 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+#include "Core/FileIO/ChainedMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/MemoryStream.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -85,7 +85,8 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
 void TestBuildFBuild::BuildClean() const
 {
     // delete files from previous runs
-    Array< AString > files( 1024 );
+    Array< AString > files;
+    files.SetCapacity( 1024 );
     FileIO::GetFiles( AStackString<>( "../tmp/Test/BuildFBuild" ), AStackString<>( "*" ), true, &files );
     for ( const AString & file : files )
     {
@@ -170,12 +171,10 @@ void TestBuildFBuild::DBSavePerformance() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetDBFile() ) );
 
-    MemoryStream ms( 64 * 1024 * 1024, 1024 * 1024 );
-
     const Timer t;
     for ( size_t i = 0; i < 100; ++i )
     {
-        ms.Reset();
+        ChainedMemoryStream ms( 8 * 1024 * 1024 );
         fBuild.SaveDependencyGraph( ms, "unused.fdb" );
     }
 

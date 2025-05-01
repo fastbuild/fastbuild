@@ -12,7 +12,7 @@ Compiler( 'Compiler-Clang8' )
     // Allow tests to activate some experimental behavior
     #if ENABLE_RELATIVE_PATHS
         .UseRelativePaths_Experimental = true
-    #endif    
+    #endif
     #if ENABLE_SOURCE_MAPPING
         .SourceMapping_Experimental = '/fastbuild-test-mapping'
     #endif

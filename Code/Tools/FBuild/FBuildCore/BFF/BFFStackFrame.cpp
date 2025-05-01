@@ -19,8 +19,9 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFStackFrame::BFFStackFrame()
-    : m_Variables( 32 )
 {
+    m_Variables.SetCapacity( 32 );
+
     // hook into top of stack chain
     m_Next = s_StackHead;
     m_OldHeadToRestore = nullptr;
@@ -176,7 +177,7 @@ void BFFStackFrame::DisconnectStackChain()
 
 // SetVarStruct
 //------------------------------------------------------------------------------
-/*static*/ void BFFStackFrame::SetVarStruct( const AString& name,
+/*static*/ void BFFStackFrame::SetVarStruct( const AString & name,
                                              const BFFToken & token,
                                              Array<BFFVariable *> && members,
                                              BFFStackFrame * frame )

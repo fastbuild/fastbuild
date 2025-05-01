@@ -215,7 +215,8 @@ bool SettingsNode::InitializeConcurrencyGroups( const BFFToken * iter,
     }
 
     // Insert "special "default" group for jobs with no concurrency limit
-    Array<ConcurrencyGroup> groups( m_ConcurrencyGroups.GetSize() + 1 );
+    Array< ConcurrencyGroup > groups;
+    groups.SetCapacity( m_ConcurrencyGroups.GetSize() + 1 );
     groups.EmplaceBack().SetLimit( ConcurrencyGroup::eUnlimited );
     groups.Append( m_ConcurrencyGroups );
     m_ConcurrencyGroups.Swap( groups );

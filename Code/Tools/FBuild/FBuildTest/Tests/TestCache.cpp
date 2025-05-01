@@ -15,6 +15,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Tracing/Tracing.h"
 
 // TestCache
 //------------------------------------------------------------------------------
@@ -51,6 +52,7 @@ private:
     void Analyze_MSVC_WarningsOnly_ReadFromDist() const;
 
     void ExtraFiles( const char * bffPath, const char * extraFilePath ) const;
+    void ExtraFiles_DynamicDeopt() const;
     void ExtraFiles_NativeCodeAnalysisXML() const;
     void ExtraFiles_GCNO() const;
 
@@ -73,6 +75,7 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( ConsistentCacheKeysWithDist )
     REGISTER_TEST( ExtraFiles_GCNO )
     #if defined( __WINDOWS__ )
+        REGISTER_TEST( ExtraFiles_DynamicDeopt )
         REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
         REGISTER_TEST( LightCache_IncludeUsingMacro )
         REGISTER_TEST( LightCache_IncludeUsingMacro2 )
@@ -934,7 +937,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 );
 
     // Check for expected warnings
-    const AString& output = GetRecordedOutput();
+    const AString & output = GetRecordedOutput();
     // file1.cpp
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
@@ -1078,6 +1081,9 @@ void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) c
     options.m_ForceCleanBuild = true;
     options.m_ConfigFile = bffPath;
 
+    // Ensure extra is not left over from previous runs
+    EnsureFileDoesNotExist( extraFilePath );
+
     // Do first build writing to cache
     {
         options.m_UseCacheRead = false;
@@ -1113,6 +1119,18 @@ void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) c
 
     // Check that extra file was restored from cache.
     TEST_ASSERT( FileIO::FileExists( extraFilePath ) );
+}
+
+// ExtraFiles_DynamicDeopt
+//------------------------------------------------------------------------------
+void TestCache::ExtraFiles_DynamicDeopt() const
+{
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
+        ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_DynamicDeopt/fbuild.bff",
+                    "../tmp/Test/Cache/ExtraFiles_DynamicDeopt/file.alt.obj" );
+    #else
+        OUTPUT( "[SKIP] ExtraFiles_DynamicDeopt - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
+    #endif
 }
 
 // ExtraFiles_NativeCodeAnalysisXML

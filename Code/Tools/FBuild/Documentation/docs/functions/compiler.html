@@ -54,6 +54,7 @@ distribution, caching and more.
   // Temporary Options
   .UseLightCache_Experimental   // (optional) Enable experimental "light" caching mode (default: false)
   .UseRelativePaths_Experimental// (optional) Enable experimental relative path use (default: false)
+  .UseDeterministicPaths_Experimental// (optional) Enable experimental deterministic path use (default: false)
   .SourceMapping_Experimental   // (optional) Use Clang's -fdebug-source-map option to remap source files
   .ClangFixupUnity_Disable      // (optional) Disable preprocessor fixup for Unity files (default: false)
 }
@@ -399,6 +400,11 @@ Compiler( 'Compiler-x64Intel' )
     <p><font color=red>NOTE:</font> This feature is incomplete and should not be used.</p>
 
   	<p><hr></p>
+
+    <p><b>.UseDeterministicPaths_Experimental</b> - Boolean - (Optional)</p>
+    <p>When set, temporary directories created to store preprocessed sources have deterministic paths, helping ensure compiler outputs are deterministic.</p>
+
+    <p><hr></p>
 
   <p><b>.SourceMapping_Experimental</b> - String - (Optional)</p>
   <p>Provides a new root to remap source file paths to so they are recorded in the debugging information as if they were stored under the new root. For example, if $_WORKING_DIR_$ is "/path/to/original", a source file "src/main.cpp" would normally be recorded as being stored under "/path/to/original/src/main.cpp", but with .SourceMapping_Experimental='/another/root' it would be recorded as "/another/root/src/main.cpp" instead.</p>

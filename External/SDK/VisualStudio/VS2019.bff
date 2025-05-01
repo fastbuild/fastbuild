@@ -187,7 +187,7 @@ Compiler( 'Compiler-VS2019-x64' )
 
 // VisualStudioSettings
 //------------------------------------------------------------------------------
-.VisualStudioSettings_VS2019 = 
+.VisualStudioSettings_VS2019 =
 [
     .VS_Version                     = .VS2019_Version
     .VS_Version_HumanReadable       = '2019'

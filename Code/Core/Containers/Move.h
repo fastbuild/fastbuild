@@ -3,8 +3,8 @@
 #pragma once
 
 template<class T> struct RemoveReference        { using type = T; };
-template<class T> struct RemoveReference<T&>    { using type = T; };
-template<class T> struct RemoveReference<T&&>   { using type = T; };
+template<class T> struct RemoveReference<T &>   { using type = T; };
+template<class T> struct RemoveReference<T &&>  { using type = T; };
 template<class T> using RemoveReferenceT = typename RemoveReference<T>::type;
 
 //template<class T>

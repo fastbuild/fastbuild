@@ -74,7 +74,7 @@ Compiler( 'Compiler-Clang12' )
 .ToolChain_Clang_OSX =
 [
     Using( .ToolChain_Clang_OSXCommon )
-    
+
     // Intel 64-bit
     .Platform                       = 'x64OSX'
     .CompilerOptions                + ' -arch x86_64'
@@ -85,7 +85,7 @@ Compiler( 'Compiler-Clang12' )
 .ToolChain_Clang_ARMOSX =
 [
     Using( .ToolChain_Clang_OSXCommon )
-    
+
     // Apple ARM Silicon
     .Platform                       = 'ARMOSX'
     .CompilerOptions                + ' -arch arm64'

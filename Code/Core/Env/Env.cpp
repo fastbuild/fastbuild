@@ -97,7 +97,7 @@ Env::ProcessorInfo::ProcessorInfo()
         }
 
         // Increment the appropriate core type
-        uint32_t& coreCount = ( isECore ? mNumECores : mNumPCores );
+        uint32_t & coreCount = ( isECore ? mNumECores : mNumPCores );
         coreCount++;
     }
 
@@ -111,7 +111,7 @@ Env::ProcessorInfo::ProcessorInfo()
 
 // GetProcessorInfo
 //------------------------------------------------------------------------------
-/*static*/ const Env::ProcessorInfo& Env::GetProcessorInfo()
+/*static*/ const Env::ProcessorInfo & Env::GetProcessorInfo()
 {
     static ProcessorInfo sInfo; // Info is gathered on first call
     return sInfo;

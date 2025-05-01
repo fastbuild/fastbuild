@@ -160,20 +160,13 @@ bool UnityNode::UnityFileAndOrigin::operator < ( const UnityFileAndOrigin & othe
 UnityNode::UnityNode()
     : Node( Node::UNITY_NODE )
     , m_InputPathRecurse( true )
-    , m_InputPattern( 1 )
-    , m_Files( 0 )
     , m_OutputPath()
     , m_OutputPattern( "Unity*.cpp" )
     , m_NumUnityFilesToCreate( 1 )
     , m_PrecompiledHeader()
-    , m_PathsToExclude( 0 )
-    , m_FilesToExclude( 0 )
     , m_IsolateWritableFiles( false )
     , m_MaxIsolatedFiles( 0 )
-    , m_ExcludePatterns( 0 )
     , m_UseRelativePaths_Experimental( false )
-    , m_IsolatedFiles( 0 )
-    , m_UnityFileNames( 0 )
 {
     m_InputPattern.EmplaceBack( "*.cpp" );
     m_LastBuildTimeMs = 100; // higher default than a file node
@@ -326,7 +319,8 @@ UnityNode::~UnityNode()
     m_UnityFileNames.SetCapacity( m_NumUnityFilesToCreate );
 
     // get the files
-    Array< UnityFileAndOrigin > files( 4096 );
+    Array< UnityFileAndOrigin > files;
+    files.SetCapacity( 4096 );
 
     if ( !GetFiles( files ) )
     {
@@ -358,7 +352,8 @@ UnityNode::~UnityNode()
     AString output;
     output.SetReserved( 32 * 1024 );
 
-    Array< uint64_t > stamps( m_NumUnityFilesToCreate );
+    StackArray< uint64_t > stamps;
+    stamps.SetCapacity( m_NumUnityFilesToCreate );
 
     // Includes will be relative to root
     AStackString<> includeBasePath;
@@ -398,7 +393,7 @@ UnityNode::~UnityNode()
         // for floating point imprecision
 
         // determine allocation of includes for this unity file
-        Array< UnityFileAndOrigin > filesInThisUnity( 256 );
+        StackArray< UnityFileAndOrigin > filesInThisUnity;
         uint32_t numIsolated( 0 );
         const bool lastUnity = ( i == ( m_NumUnityFilesToCreate - 1 ) );
         while ( ( remainingInThisUnity > 0.0f ) || lastUnity )
@@ -739,6 +734,11 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
 void UnityNode::FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array< UnityIsolatedFile > & isolatedFiles )
 {
     if ( m_FilesToIsolate.IsEmpty() )
+    {
+        return;
+    }
+
+    if ( files.IsEmpty() )
     {
         return;
     }

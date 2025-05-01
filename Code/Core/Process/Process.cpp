@@ -299,30 +299,46 @@ bool Process::Spawn( const char * executable,
             fcntl( stdOutPipeFDs[ 1 ], F_SETPIPE_SZ, ( 512 * 1024 ) );
         #endif
 
-        // prepare args
-        StackArray<AString, 64> splitArgs;
-        StackArray<const char *, 64> argVector;
+        // prepare args in a single buffer
+        AStackString<2048> argVectorBuffer;
+        StackArray<const char *, 128> argVector;
         argVector.Append( executable ); // first arg is exe name
         if ( args )
         {
             // Tokenize
-            AStackString<>( args ).Tokenize( splitArgs );
+            StackArray<AString::TokenRange, 128> tokenRanges;
+            const AStackString<> argsCopy( args );
+            argsCopy.Tokenize( tokenRanges );
 
-            // Remove quotes from split args. Unlike Windows, on Linux/OSX we're
-            // passing the arg vector essentially directly to the process and
-            // it's not split/de-quoted by the API used for process spawning
-            AString::RemoveQuotes( splitArgs );
+            // Allocate worst case space for processed args. They can only be
+            // the same size or smaller than the original args.
+            // (If entire string is exactly one arg we need an extra byte for
+            //  a null terminator char to keep the loop simple)
+            argVectorBuffer.SetReserved( argsCopy.GetLength() + 1 );
 
             // Build Vector
-            for ( const AString & arg : splitArgs )
+            for ( const AString::TokenRange & tokenRange : tokenRanges )
             {
-                argVector.Append( arg.Get() ); // leave arg as-is
+                // Remove quotes from split args. Unlike Windows, on Linux/OSX we're
+                // passing the arg vector essentially directly to the process and
+                // it's not split/de-quoted by the API used for process spawning
+                AStackString<> arg( ( argsCopy.Get() + tokenRange.m_StartIndex ),
+                                    ( argsCopy.Get() + tokenRange.m_EndIndex ) );
+                arg.RemoveQuotes();
+
+                // Add to pointer array
+                const char* argPos = argVectorBuffer.GetEnd();
+                argVector.EmplaceBack( argPos );
+
+                // copy procesed arg into buffer
+                argVectorBuffer.Append( arg );
+                argVectorBuffer.Append( static_cast<char>( 0 ) ); // null terminator
             }
         }
         argVector.Append( nullptr ); // argv must have be nullptr terminated
 
         // prepare environment
-        Array< const char* > envVector( 8 );
+        StackArray< const char * > envVector;
         if ( environment )
         {
             // Iterate double-null terminated string vector

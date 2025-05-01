@@ -45,8 +45,10 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
     const char * lastSlash = solutionFile.FindLast( NATIVE_SLASH );
     AStackString<> solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
 
-    Array< AString > solutionProjectsToFolder( projects.GetSize() );
-    Array< AString > solutionFolderPaths( solutionFolders.GetSize() );
+    StackArray< AString > solutionProjectsToFolder;
+    solutionProjectsToFolder.SetCapacity( projects.GetSize() );
+    StackArray< AString > solutionFolderPaths;
+    solutionFolderPaths.SetCapacity( solutionFolders.GetSize() );
 
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
@@ -103,7 +105,7 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 
 // WriteProjectListings
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
+void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
                                          const Array< VSProjectBaseNode * > & projects,
                                          const Array< SolutionFolder > & solutionFolders,
                                          const Array< SolutionDependency > & solutionDependencies,
@@ -144,7 +146,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
                projectTypeGuid.Get(), projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
 
         // Manage dependencies
-        Array< AString > dependencyGUIDs( 64 );
+        StackArray< AString > dependencyGUIDs;
         for ( const SolutionDependency & deps : solutionDependencies )
         {
             // is the set of deps relevant to this project?
@@ -247,7 +249,7 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
                solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
 
         // lookup solution folder to find out if it contains items
-        for ( const SolutionFolder& solutionFolder : solutionFolders )
+        for ( const SolutionFolder & solutionFolder : solutionFolders )
         {
             if ( solutionFolderPath.EqualsI( solutionFolder.m_Path ) )
             {

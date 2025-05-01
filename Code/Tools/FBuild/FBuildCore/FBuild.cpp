@@ -27,9 +27,9 @@
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/Env/Types.h"
+#include "Core/FileIO/ChainedMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
-#include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/SmallBlockAllocator.h"
 #include "Core/Process/Atomic.h"
@@ -66,7 +66,6 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_SmoothedProgressTarget( 0.0f )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
-    , m_ImportedEnvironmentVars( 0 )
 {
     #ifdef DEBUG_CRT_MEMORY_USAGE
         _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF |
@@ -236,7 +235,7 @@ bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );
 
-    Array< AString > targets( 1 );
+    StackArray< AString > targets;
     targets.Append( target );
     return Build( targets );
 }
@@ -266,7 +265,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
             FLOG_ERROR( "Unknown build target '%s'", target.Get() );
 
             // Gets the 5 targets with minimal distance to user input
-            Array< NodeGraph::NodeWithDistance > nearestNodes( 5 );
+            StackArray< NodeGraph::NodeWithDistance > nearestNodes;
             m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
 
             if ( false == nearestNodes.IsEmpty() )
@@ -327,7 +326,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
     const Timer t;
 
     // serialize into memory first
-    MemoryStream memoryStream( 32 * 1024 * 1024, 8 * 1024 * 1024 );
+    ChainedMemoryStream memoryStream( 8 * 1024 * 1024 );
     m_DependencyGraph->Save( memoryStream, nodeGraphDBFile );
 
     // Ensure output dir exists where we'll save the DB
@@ -354,13 +353,18 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
     }
 
     // write in-memory serialized data to disk
-    if ( fileStream.Write( memoryStream.GetData(), memoryStream.GetSize() ) != memoryStream.GetSize() )
+    for ( uint32_t i = 0; i < memoryStream.GetNumPages(); ++i )
     {
-        FLOG_ERROR( "Saving DepGraph FAILED!" );
-        return false;
+        uint32_t dataSize = 0;
+        const char * const data = memoryStream.GetPage( i, dataSize );
+        if ( fileStream.Write( data, dataSize ) != dataSize )
+        {
+            FLOG_ERROR( "Saving DepGraph FAILED!" );
+            return false;
+        }
     }
 
-    // Truncate if new data is smaller than old data    
+    // Truncate if new data is smaller than old data
     fileStream.Truncate();
 
     FLOG_VERBOSE( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );
@@ -369,7 +373,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
 // SaveDependencyGraph
 //------------------------------------------------------------------------------
-void FBuild::SaveDependencyGraph( MemoryStream & stream, const char* nodeGraphDBFile ) const
+void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char* nodeGraphDBFile ) const
 {
     m_DependencyGraph->Save( stream, nodeGraphDBFile );
 }

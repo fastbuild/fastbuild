@@ -64,8 +64,9 @@ private:
     {
         explicit ClientState( const ConnectionInfo * ci )
             : m_Connection( ci )
-            , m_WaitingJobs( 16 )
-        {}
+        {
+            m_WaitingJobs.SetCapacity( 16 );
+        }
 
         inline bool operator < ( const ClientState & other ) const { return ( m_NumJobsAvailable.Load() > other.m_NumJobsAvailable.Load() ); }
 

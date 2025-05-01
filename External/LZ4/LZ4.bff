@@ -75,7 +75,7 @@
                                         #else
                                             - ' -O0'
                                         #endif
-                                        
+
                                         // Disable warnings if using Clang. There are too many warnings in LZ4
                                         // and they differ with every version of Clang
                                         - ' -Wall'

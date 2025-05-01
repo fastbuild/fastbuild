@@ -27,12 +27,92 @@
 #include <stdarg.h> // for va_args
 #include <string.h> // for memcmp
 
+//------------------------------------------------------------------------------
+namespace
+{
+    class ProjectGeneratorBaseConstants
+    {
+    public:
+        ProjectGeneratorBaseConstants()
+        {
+            // IncludePrefixes
+            //  - Different options add paths to the different groups which are
+            //    then searched in the order of their priority.
+            //    We need to do multiple passes over arguments to get a list of
+            //    paths in the correct order.
+            m_IncludePrefixes.SetCapacity( 6 );
+            {
+                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                options.SetCapacity( 2 );
+                options.EmplaceBack( "/I" );
+                options.EmplaceBack( "-I" );
+            }
+            {
+                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                options.SetCapacity( 2 );
+                options.EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
+                options.EmplaceBack( "-isystem" );
+            }
+            {
+                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                options.SetCapacity( 2 );
+                options.EmplaceBack( "/imsvc" );
+                options.EmplaceBack( "-imsvc" );
+            }
+            {
+                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                options.EmplaceBack( "-idirafter" );
+            }
+            {
+                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                options.EmplaceBack( "-iquote" );
+            }
+            {
+                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                options.SetCapacity( 2 );
+                options.EmplaceBack( "/external:I" );
+                options.EmplaceBack( "-external:I" );
+            }
+
+            // ForceIncludePrefixes
+            {
+                m_ForceIncludePrefixes.SetCapacity( 2 );
+                m_ForceIncludePrefixes.EmplaceBack( "/FI" );
+                m_ForceIncludePrefixes.EmplaceBack( "-FI" );
+            }
+
+            // DefinePrefixes
+            {
+                m_DefinePrefixes.SetCapacity( 2 );
+                m_DefinePrefixes.EmplaceBack( "/D" );
+                m_DefinePrefixes.EmplaceBack( "-D" );
+            }
+
+            // AdditionalOptionPrefixes
+            {
+                m_AdditionalOptionPrefixes.SetCapacity( 4 );
+                m_AdditionalOptionPrefixes.EmplaceBack( "-std" );
+                m_AdditionalOptionPrefixes.EmplaceBack( "/std" );
+                m_AdditionalOptionPrefixes.EmplaceBack( "-wd" );
+                m_AdditionalOptionPrefixes.EmplaceBack( "/wd" );
+            }
+        }
+
+        Array<Array<AString>>   m_IncludePrefixes;
+        Array<AString>          m_ForceIncludePrefixes;
+        Array<AString>          m_DefinePrefixes;
+        Array<AString>          m_AdditionalOptionPrefixes;
+    };
+
+    static const ProjectGeneratorBaseConstants g_ProjectGeneratorBaseConstants;
+}
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::ProjectGeneratorBase()
-    : m_Folders( 128 )
-    , m_Files( 4096 )
 {
+    m_Folders.SetCapacity( 128 );
+    m_Files.SetCapacity( 4096 );
     m_RootFolder = FNEW( Folder );
     m_Folders.Append( m_RootFolder );
 }
@@ -415,22 +495,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                            Array< AString > & outForceIncludes,
                                                            bool escapeQuotes )
 {
-    // Different options add paths to the different groups which are then searched in the order of their priority.
-    // So we need to do multiple passes over arguments to get a list of paths in the correct order.
-    StackArray< StackArray< AString, 2 >, 6 > prefixes;
-    prefixes.SetSize( 6 );
-    prefixes[ 0 ].EmplaceBack( "/I" );
-    prefixes[ 0 ].EmplaceBack( "-I" );
-    prefixes[ 1 ].EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
-    prefixes[ 1 ].EmplaceBack( "-isystem" );
-    prefixes[ 2 ].EmplaceBack( "/imsvc" );
-    prefixes[ 2 ].EmplaceBack( "-imsvc" );
-    prefixes[ 3 ].EmplaceBack( "-idirafter" );
-    prefixes[ 4 ].EmplaceBack( "-iquote" );
-    prefixes[ 5 ].EmplaceBack( "/external:I" );
-    prefixes[ 5 ].EmplaceBack( "-external:I" );
-
-    for ( const StackArray<AString, 2> & group : prefixes )
+    for ( const Array<AString> & group : g_ProjectGeneratorBaseConstants.m_IncludePrefixes )
     {
         const bool keepFullOption = false;
         ExtractIntellisenseOptions( compilerArgs, group, outIncludes, escapeQuotes, keepFullOption );
@@ -438,11 +503,12 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
     // Check for forced includes
     {
-        StackArray< AString, 2 > forceIncludeOptions;
-        forceIncludeOptions.EmplaceBack( "/FI" );
-        forceIncludeOptions.EmplaceBack( "-FI" );
         const bool keepFullOption = false;
-        ExtractIntellisenseOptions( compilerArgs, forceIncludeOptions, outForceIncludes, escapeQuotes, keepFullOption );
+        ExtractIntellisenseOptions( compilerArgs,
+                                    g_ProjectGeneratorBaseConstants.m_ForceIncludePrefixes,
+                                    outForceIncludes,
+                                    escapeQuotes,
+                                    keepFullOption );
     }
 }
 
@@ -452,13 +518,13 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                       Array< AString > & outDefines,
                                                       bool escapeQuotes )
 {
-    StackArray< AString, 2 > prefixes;
-    prefixes.EmplaceBack( "/D" );
-    prefixes.EmplaceBack( "-D" );
-
     // Extract various kinds of includes
     const bool keepFullOption = false;
-    ExtractIntellisenseOptions( compilerArgs, prefixes, outDefines, escapeQuotes, keepFullOption );
+    ExtractIntellisenseOptions( compilerArgs,
+                                g_ProjectGeneratorBaseConstants.m_DefinePrefixes,
+                                outDefines,
+                                escapeQuotes,
+                                keepFullOption );
 }
 
 // ExtractAdditionalOptions
@@ -466,16 +532,14 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 /*static*/ void ProjectGeneratorBase::ExtractAdditionalOptions( const AString & compilerArgs,
                                                                 Array< AString > & outOptions )
 {
-    StackArray< AString, 4 > prefixes;
-    prefixes.EmplaceBack( "-std" );
-    prefixes.EmplaceBack( "/std" );
-    prefixes.EmplaceBack( "-wd" );
-    prefixes.EmplaceBack( "/wd" );
-
     // Extract the options
     const bool escapeQuotes = false;
     const bool keepFullOption = true;
-    ExtractIntellisenseOptions( compilerArgs, prefixes, outOptions, escapeQuotes, keepFullOption );
+    ExtractIntellisenseOptions( compilerArgs, 
+                                g_ProjectGeneratorBaseConstants.m_AdditionalOptionPrefixes,
+                                outOptions,
+                                escapeQuotes,
+                                keepFullOption );
 }
 
 // ExtractIntellisenseOptions
@@ -488,13 +552,15 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 {
     ASSERT( prefixes.IsEmpty() == false );
 
-    Array< AString > tokens;
-    compilerArgs.Tokenize( tokens );
-    AString::RemoveQuotes( tokens );
+    StackArray<AString::TokenRange, 128> tokenRanges;
+    compilerArgs.Tokenize( tokenRanges );
+    const size_t numTokens = tokenRanges.GetSize();
 
-    for ( size_t i=0; i<tokens.GetSize(); ++i )
+    for ( size_t i = 0; i < numTokens; ++i )
     {
-        const AString & token = tokens[ i ];
+        AStackString<> token( ( compilerArgs.Get() + tokenRanges[ i ].m_StartIndex ),
+                              ( compilerArgs.Get() + tokenRanges[ i ].m_EndIndex ) );
+        token.RemoveQuotes();
 
         AStackString<> optionBody;
 
@@ -504,13 +570,15 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             if ( token == prefix )
             {
                 // Handle an incomplete token at the end of list
-                if ( i == (tokens.GetSize() - 1) )
+                if ( i == ( numTokens - 1 ) )
                 {
                     return;
                 }
 
                 // Use next token
-                optionBody = tokens[ i + 1 ];
+                optionBody.Assign( ( compilerArgs.Get() + tokenRanges[ i + 1 ].m_StartIndex ),
+                                   ( compilerArgs.Get() + tokenRanges[ i + 1 ].m_EndIndex ) );
+                optionBody.RemoveQuotes();
                 break;
             }
         }

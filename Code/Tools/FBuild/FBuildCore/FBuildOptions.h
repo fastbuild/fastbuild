@@ -38,7 +38,7 @@ public:
     void SetWorkingDir( const AString & path );
     inline const AString & GetWorkingDir() const { return m_WorkingDir; }
 
-    const AString& GetArgs() const { return m_Args; }
+    const AString & GetArgs() const { return m_Args; }
 
     // Basic Args
     AString     m_ProgramName;

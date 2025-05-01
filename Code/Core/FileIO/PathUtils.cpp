@@ -267,7 +267,7 @@
     // Build relative path
 
     // For every remaining dir in the project path, go up one directory
-    outRelativeFileName.Clear();
+    uint32_t upCount = 0;
     for ( ;; )
     {
         const char c = *pathA;
@@ -277,13 +277,27 @@
         }
         if ( ( c == '/' ) || ( c == '\\' ) )
         {
-            #if defined( __WINDOWS__ )
-                outRelativeFileName += "..\\";
-            #else
-                outRelativeFileName += "../";
-            #endif
+            ++upCount;
         }
         ++pathA;
+    }
+
+    // Allocate space in output for upwards traversals and remainder
+    const uint32_t finalLength = ( ( upCount * 3 ) + static_cast<uint32_t>( fileName.GetEnd() - pathB ) );
+    outRelativeFileName.Clear();
+    if ( finalLength > outRelativeFileName.GetReserved() )
+    {
+        outRelativeFileName.SetReserved( finalLength );
+    }
+
+    // Prefix upwards traversals
+    for ( uint32_t i = 0; i < upCount; ++i )
+    {
+        #if defined( __WINDOWS__ )
+            outRelativeFileName += "..\\";
+        #else
+            outRelativeFileName += "../";
+        #endif
     }
 
     // Add remainder of source path relative to the common sub path

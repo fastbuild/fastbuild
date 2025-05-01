@@ -33,6 +33,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT_ARRAY( m_Environment,   "Environment",          MetaOptional() )
     REFLECT( m_UseLightCache,       "UseLightCache_Experimental", MetaOptional() )
     REFLECT( m_UseRelativePaths,    "UseRelativePaths_Experimental", MetaOptional() )
+    REFLECT( m_UseDeterministicPaths, "UseDeterministicPaths_Experimental", MetaOptional() )
     REFLECT( m_SourceMapping,       "SourceMapping_Experimental", MetaOptional() )
 
     // Internal
@@ -56,6 +57,7 @@ CompilerNode::CompilerNode()
     , m_SimpleDistributionMode( false )
     , m_UseLightCache( false )
     , m_UseRelativePaths( false )
+    , m_UseDeterministicPaths( false )
     , m_EnvironmentString( nullptr )
 {
 }

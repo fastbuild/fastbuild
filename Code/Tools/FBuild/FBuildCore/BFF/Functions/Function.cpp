@@ -61,7 +61,7 @@
 
 // Static
 //------------------------------------------------------------------------------
-/*static*/ Array<const Function *> g_Functions( 25 );
+/*static*/ StackArray<const Function *> g_Functions;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -534,8 +534,9 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     // Since they can be used sensibly by matching just the end
     // of a path, assume they are relative to the working dir.
     // TODO:C Move this during bff parsing when everything is using reflection
-    Array< AString > filesToExcludeCleaned( filesToExclude.GetSize() );
-    for ( const AString& file : filesToExclude )
+    Array< AString > filesToExcludeCleaned;
+    filesToExcludeCleaned.SetCapacity( filesToExclude.GetSize() );
+    for ( const AString & file : filesToExclude )
     {
         AStackString<> cleanPath;
         NodeGraph::CleanPath( file, cleanPath, false );
@@ -1294,7 +1295,7 @@ bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFToken * i
     }
 
     // Arrays must not contain empty strings
-    for ( const AString& string : strings )
+    for ( const AString & string : strings )
     {
         if ( string.IsEmpty() == true )
         {

@@ -16,6 +16,10 @@ extern "C"
 
     // xxhash3
     unsigned long long xxHashLib_XXH3_64bits( const void * input, size_t length );
+    struct xxHashLib_XXH3_state_s;
+    void xxHashLib_XXH3_64bits_reset( xxHashLib_XXH3_state_s * state );
+    void xxHashLib_XXH3_64bits_update( xxHashLib_XXH3_state_s * state, const void * data, size_t dataSize );
+    uint64_t xxHashLib_XXH3_64bits_digest( xxHashLib_XXH3_state_s * state );
 };
 
 // xxHash
@@ -41,6 +45,49 @@ public:
 
     inline static uint64_t  Calc64( const AString & string ) { return Calc64( string.Get(), string.GetLength() ); }
 };
+
+// xxHash3Accumulator
+//------------------------------------------------------------------------------
+#if defined( ASSERTS_ENABLED )
+    PRAGMA_DISABLE_PUSH_MSVC(4324) // structure was padded due to alignment specifier
+#endif
+class alignas(64) xxHash3Accumulator
+{
+public:
+    // Create an accumulator
+    xxHash3Accumulator()
+    {
+        xxHashLib_XXH3_64bits_reset( reinterpret_cast<xxHashLib_XXH3_state_s *>( m_State ) );
+    }
+
+    // Add data in as many blocks as necessary
+    void AddData( const void * data, size_t dataSize )
+    {
+        ASSERT( mFinalized == false );
+        xxHashLib_XXH3_64bits_update( reinterpret_cast<xxHashLib_XXH3_state_s *>( m_State ),
+                                      data,
+                                      dataSize );
+    }
+
+    // Generate the final hash once and get the result
+    uint64_t Finalize64()
+    {
+        ASSERT( mFinalized == false );
+        #if defined( ASSERTS_ENABLED )
+            mFinalized = true;
+        #endif
+        return xxHashLib_XXH3_64bits_digest( reinterpret_cast<xxHashLib_XXH3_state_s *>( m_State ) );
+    }
+
+protected:
+    uint64_t m_State[ 72 ]; // See XXH3_state_s - note required alignas(64) on class
+    #if defined( ASSERTS_ENABLED )
+        bool mFinalized = false;
+    #endif
+};
+#if defined( ASSERTS_ENABLED )
+    PRAGMA_DISABLE_POP_MSVC
+#endif
 
 // Calc32
 //------------------------------------------------------------------------------

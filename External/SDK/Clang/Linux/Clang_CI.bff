@@ -44,6 +44,7 @@ Compiler( 'Compiler-Clang' )
                                     + ' -Wno-disabled-macro-expansion'  // disabled expansion of recursive macro
                                     + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
                                     + ' -Wno-global-constructors'       // declaration requires a global destructor
+                                    + ' -Wno-gnu-line-marker'           // this style of line directive is a GNU extension
                                     + ' -Wno-gnu-zero-variadic-macro-arguments' // token pasting of ',' and __VA_ARGS__ is a GNU extension
                                     + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
                                     + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
@@ -59,6 +60,7 @@ Compiler( 'Compiler-Clang' )
                                     + ' -Wno-deprecated-copy-dtor'      // definition of implicit copy constructor for '%s' is deprecated because it has a user-declared destructor
                                     + ' -Wno-missing-noreturn'          // function '%s' could be declared with attribute 'noreturn'
                                     + ' -Wno-old-style-cast'            // use of old-style cast
+                                    + ' -Wno-reserved-identifier'       // Fix declaration of _itoa_s
                                     + ' -Wno-shorten-64-to-32'          // implicit conversion loses integer precision: '%s' to '%s'
                                     + ' -Wno-weak-vtables'              // '%s has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit
 

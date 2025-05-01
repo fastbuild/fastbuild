@@ -17,6 +17,7 @@
 //------------------------------------------------------------------------------
 class AliasNode;
 class AString;
+class ChainedMemoryStream;
 class CompilerNode;
 class ConstMemoryStream;
 class CopyDirNode;
@@ -32,7 +33,6 @@ class IOStream;
 class LibraryNode;
 class LinkerNode;
 class ListDependenciesNode;
-class MemoryStream;
 class Node;
 class ObjectListNode;
 class ObjectNode;
@@ -64,7 +64,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 176 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 177 };
 
     bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == NODE_GRAPH_CURRENT_VERSION; }
@@ -99,7 +99,7 @@ public:
     NodeGraph::LoadResult Load( const char * nodeGraphDBFile );
 
     LoadResult Load( ConstMemoryStream & stream, const char * nodeGraphDBFile );
-    void Save( MemoryStream & stream, const char * nodeGraphDBFile ) const;
+    void Save( ChainedMemoryStream & stream, const char * nodeGraphDBFile ) const;
     void SerializeToText( const Dependencies & dependencies, AString & outBuffer ) const;
     void SerializeToDotFormat( const Dependencies & deps, const bool fullGraph, AString & outBuffer ) const;
 
@@ -117,7 +117,7 @@ public:
     // create new nodes
     Node *      CreateNode( Node::Type type,
                             AString && name,
-                            uint32_t nameHashHint = 0 );
+                            uint32_t nameHash );
     Node *      CreateNode( Node::Type type,
                             const AString & name,
                             const BFFToken * sourceToken = nullptr );

@@ -237,7 +237,7 @@ LibraryNode::~LibraryNode()
 //------------------------------------------------------------------------------
 bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
-    Array< AString > tokens( 1024 );
+    StackArray< AString > tokens;
     m_LibrarianOptions.Tokenize( tokens );
 
     // When merging libs for non-MSVC toolchains, merge the source
@@ -379,11 +379,13 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     if ( flags & LIB_FLAG_LIB )
     {
         // Parse args for some other flags
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-
-        for ( const AString & token : tokens )
+        StackArray<AString::TokenRange, 512> tokenRanges;
+        args.Tokenize( tokenRanges );
+        for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
+            const AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
+                                        ( args.Get() + tokenRange.m_EndIndex ) );
+
             if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
             {
                 flags |= LIB_FLAG_WARNINGS_AS_ERRORS_MSVC;

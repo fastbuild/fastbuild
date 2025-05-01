@@ -185,7 +185,8 @@ public:
     CacheStats perDay[ NUM_DAYS ];
 
     // Get all the files
-    Array< FileIO::FileInfo > allFiles( 1000000 );
+    Array< FileIO::FileInfo > allFiles;
+    allFiles.SetCapacity( 1000000 );
     uint64_t totalSize = 0;
     GetCacheFiles( showProgress, allFiles, totalSize );
 
@@ -245,7 +246,8 @@ public:
 /*virtual*/ bool Cache::Trim( bool showProgress, uint32_t sizeMiB )
 {
     // Get all the files
-    Array< FileIO::FileInfo > allFiles( 1000000 );
+    Array< FileIO::FileInfo > allFiles;
+    allFiles.SetCapacity( 1000000 );
     uint64_t totalSize = 0;
     GetCacheFiles( showProgress, allFiles, totalSize );
     OUTPUT( " - Before: %u Files @ %u MiB\n", (uint32_t)allFiles.GetSize(), (uint32_t)( totalSize / MEGABYTE ) );

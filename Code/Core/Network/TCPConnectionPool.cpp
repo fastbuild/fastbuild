@@ -101,7 +101,7 @@
             if ( m_Bit < 63 )
             {
                 // Chose which bitmap to use
-                uint64_t& bitmap = ( m_ThreadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+                uint64_t & bitmap = ( m_ThreadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
 
                 // Clear bit
                 MutexHolder mh( s_Mutex );
@@ -147,9 +147,9 @@ ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
 //------------------------------------------------------------------------------
 TCPConnectionPool::TCPConnectionPool()
     : m_ListenConnection( nullptr )
-    , m_Connections( 8 )
     , m_ShuttingDown( false )
 {
+    m_Connections.SetCapacity( 8 );
 }
 
 // DESTRUCTOR

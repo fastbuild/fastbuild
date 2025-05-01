@@ -159,7 +159,7 @@ private:
     }
     void Grow( size_t elts )
     {
-        Array< IncludedFile * > dest( elts );
+        Array< IncludedFile * > dest;
         dest.SetSize( elts );
         for ( IncludedFile * & elt : dest )
         {
@@ -188,7 +188,7 @@ private:
     }
 
     // m_Buckets must always be a size that is a power of 2
-    Array< IncludedFile * > m_Buckets{ LIGHTCACHE_DEFAULT_BUCKET_SIZE };
+    Array< IncludedFile * > m_Buckets;
     size_t m_Elts = 0;
 };
 
@@ -247,10 +247,10 @@ static IncludedFileBucket g_AllIncludedFiles[ LIGHTCACHE_NUM_BUCKETS ];
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LightCache::LightCache()
-    : m_IncludePaths( 32 )
-    , m_AllIncludedFiles( 2048 )
-    , m_IncludeStack( 32 )
 {
+    m_IncludePaths.SetCapacity( 32 );
+    m_AllIncludedFiles.SetCapacity( 2048 );
+    m_IncludeStack.SetCapacity( 32 );
 }
 
 // DESTRUCTOR
@@ -317,7 +317,8 @@ bool LightCache::Hash( ObjectNode * node,
 
     // Create final hash and return includes
     const size_t numIncludes = m_AllIncludedFiles.GetSize();
-    Array< uint64_t > hashes( numIncludes * 2 );
+    StackArray< uint64_t > hashes;
+    hashes.SetCapacity( numIncludes * 2 );
     outIncludes.SetCapacity( numIncludes );
     for ( const IncludedFile * file : m_AllIncludedFiles )
     {
@@ -857,11 +858,11 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     IncludedFileBucket & bucket = g_AllIncludedFiles[ bucketIndex ];
 
     // Lock the bucket while we deal with this file.
-    // 
+    //
     // This prevents two threads processing the same file, which for most
     // codebases would otherwise happen a lot (code tends to have a large set
     // of shared headers).
-    // 
+    //
     // Collisions in the bucketIndex mean some unrelated files will block
     // each other, but not redundantly processing the same file results
     // in a significant speedup which more than offsets the blocking caused

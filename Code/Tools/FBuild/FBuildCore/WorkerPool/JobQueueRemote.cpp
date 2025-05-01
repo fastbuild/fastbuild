@@ -26,13 +26,14 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
-    m_PendingJobs( 1024 ),
-    m_CompletedJobs( 1024 ),
-    m_CompletedJobsFailed( 64 ),
-    m_CompletedJobsAborted( 64 ),
-    m_Workers( numWorkerThreads )
+JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads )
 {
+    m_PendingJobs.SetCapacity( 1024 );
+    m_CompletedJobs.SetCapacity( 1024 );
+    m_CompletedJobsFailed.SetCapacity( 64 );
+    m_CompletedJobsAborted.SetCapacity( 64 );
+    m_Workers.SetCapacity( numWorkerThreads );
+
     WorkerThread::InitTmpDir( true ); // remote == true
 
     // Create thread pool
@@ -447,6 +448,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     const ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
     const bool includePDB = node->IsUsingPDB();
     const bool usingStaticAnalysis = node->IsUsingStaticAnalysisMSVC();
+    const bool usingDynamicDeoptimization = node->IsUsingDynamicDeopt();
 
     // Determine list of files to send
 
@@ -471,6 +473,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         AStackString<> xmlFileName;
         node->GetNativeAnalysisXMLPath( xmlFileName );
         fileNames.Append( xmlFileName );
+    }
+
+    // 4. .alt.obj (optional)
+    //--------------------------------------------
+    if ( usingDynamicDeoptimization )
+    {
+        AStackString<> altObjName;
+        node->GetAltObjPath( altObjName );
+        fileNames.Append( altObjName );
     }
 
     MultiBuffer mb;

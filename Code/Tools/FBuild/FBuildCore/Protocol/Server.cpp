@@ -30,8 +30,9 @@
 //------------------------------------------------------------------------------
 Server::Server( uint32_t numThreadsInJobQueue )
     : m_ShouldExit( false )
-    , m_ClientList( 32 )
 {
+    m_ClientList.SetCapacity( 32 );
+
     m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
 
     m_Thread.Start( ThreadFuncStatic, "Server", this );

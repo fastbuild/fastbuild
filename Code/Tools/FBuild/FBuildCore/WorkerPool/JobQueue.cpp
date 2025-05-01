@@ -60,7 +60,8 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     PROFILE_FUNCTION;
 
     // Create wrapper Jobs around Nodes
-    Array< Job * > jobs( nodes.GetSize() );
+    Array< Job * > jobs;
+    jobs.SetCapacity( nodes.GetSize() );
     for ( Node * node : nodes )
     {
         Job * job = FNEW( Job( node ) );
@@ -143,24 +144,25 @@ Job * JobSubQueue::RemoveJob()
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool ) :
-    m_NumLocalJobsActive( 0 ),
-    m_DistributableJobs_Available( 1024 ),
-    m_DistributableJobs_InProgress( 1024 ),
+JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool )
+    : m_NumLocalJobsActive( 0 )
     #if defined( __WINDOWS__ )
-        m_MainThreadSemaphore( 1 ), // On Windows, take advantage of signalling limit
+        , m_MainThreadSemaphore( 1 ) // On Windows, take advantage of signalling limit
     #else
-        m_MainThreadSemaphore(),
+        , m_MainThreadSemaphore()
     #endif
-    m_CompletedJobs( 1024 ),
-    m_CompletedJobsAborted( 64 ),
-    m_CompletedJobsFailed( 64 ),
-    m_CompletedJobs2( 1024 ),
-    m_CompletedJobsAborted2( 64 ),
-    m_CompletedJobsFailed2( 64 ),
-    m_Workers( numWorkerThreads )
 {
     PROFILE_FUNCTION;
+
+    m_DistributableJobs_Available.SetCapacity( 1024 );
+    m_DistributableJobs_InProgress.SetCapacity( 1024 );
+    m_CompletedJobs.SetCapacity( 1024 );
+    m_CompletedJobsAborted.SetCapacity( 64 );
+    m_CompletedJobsFailed.SetCapacity( 64 );
+    m_CompletedJobs2.SetCapacity( 1024 );
+    m_CompletedJobsAborted2.SetCapacity( 64 );
+    m_CompletedJobsFailed2.SetCapacity( 64 );
+    m_Workers.SetCapacity( numWorkerThreads );
 
     WorkerThread::InitTmpDir();
 
@@ -270,7 +272,7 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
     // If ConcurrencyGroups are in use, sum up the number of delayed
     // jobs to include in the total "numJobs"
     uint32_t numPendingJobs = 0;
-    for (const ConcurrencyGroupState& groupState : m_ConcurrencyGroupsState)
+    for (const ConcurrencyGroupState & groupState : m_ConcurrencyGroupsState)
     {
         numPendingJobs += static_cast<uint32_t>(groupState.m_LocalJobs_Staging.GetSize());
     }
@@ -342,7 +344,7 @@ void JobQueue::FlushJobBatch( const SettingsNode & settings )
         // exist), including the default group (index 0).
         ASSERT( group.GetLimit() > 0 );
         uint32_t maxJobs = group.GetLimit();
-        
+
         // If the ThreadPool constrains the number of tasks below the
         // requirements of the ConcurrencyGroup we don't need to throttle
         // flushing jobs. This reduces scheduling latency slightly for
@@ -431,7 +433,7 @@ void JobQueue::QueueDistributableJob( Job * job )
 
 // GetDistributableJobToProcess
 //------------------------------------------------------------------------------
-Job * JobQueue::GetDistributableJobToProcess( bool remote )
+Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorProtocolVersion )
 {
     MutexHolder m( m_DistributedJobsMutex );
 
@@ -440,10 +442,51 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote )
         return nullptr;
     }
 
-    // Jobs are sorted from least to most expensive, so we consume
-    // from the end of the list.
-    Job * job = m_DistributableJobs_Available.Top();
-    m_DistributableJobs_Available.Pop();
+    Job * job = nullptr;
+
+    // Compare capabilities of the worker to our local requirements
+    if ( workerMinorProtocolVersion >= Protocol::PROTOCOL_VERSION_MINOR )
+    {
+        // Worker is equal or newer and minor protocol changes are backwards
+        // compatible so worker can take any job.
+
+        // Jobs are sorted from least to most expensive, so we consume
+        // from the end of the list.
+        job = m_DistributableJobs_Available.Top();
+        m_DistributableJobs_Available.Pop();
+    }
+    else
+    {
+        // Worker is old so we need to check if it can process a specific job
+        // Search backwards to obtain most expensive job
+        const int32_t numJobs = static_cast<int32_t>( m_DistributableJobs_Available.GetSize() );
+        for ( int32_t i = ( numJobs - 1 ); i >= 0; --i )
+        {
+            Job * potentialJob = m_DistributableJobs_Available[ static_cast<size_t>( i ) ];
+
+            // Check if the node is using a feature that needs a particular version
+            // TODO:B: Migrate this logic to the CompilerDriver
+
+            // MSVC /dynamicdeopt require minor protocol 5 or later
+            const ObjectNode * on = potentialJob->GetNode()->CastTo< ObjectNode >();
+            if ( on->IsMSVC() &&
+                 on->IsUsingDynamicDeopt() &&
+                 ( workerMinorProtocolVersion < 5 ) )
+            {
+                continue;
+            }
+
+            job = potentialJob;
+            m_DistributableJobs_Available.EraseIndex( static_cast<size_t>( i ) );
+            break;
+        }
+
+        // It's possible there are no compatible jobs
+        if ( job == nullptr )
+        {
+            return nullptr;
+        }
+    }
 
     ASSERT( job->GetDistributionState() == Job::DIST_AVAILABLE );
 

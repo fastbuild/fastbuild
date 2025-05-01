@@ -124,7 +124,7 @@ public:
     void SetStepName( const char * stepName ) { m_StepName = stepName; }
 
 protected:
-    BuildProfilerScope& operator = ( BuildProfilerScope & other ) = delete;
+    BuildProfilerScope & operator = ( BuildProfilerScope & other ) = delete;
 
     bool            m_Active;
     uint32_t        m_ThreadId;

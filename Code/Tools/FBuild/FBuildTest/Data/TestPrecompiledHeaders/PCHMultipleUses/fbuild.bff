@@ -35,7 +35,7 @@ ObjectList( 'CreatePCH' )
     .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/PCHMultipleUses/'
     .CompilerOptions            + ' -I"Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHMultipleUses"'
 
-    // Use PCH 
+    // Use PCH
     #if __WINDOWS__
         .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
     #endif

@@ -271,7 +271,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
 bool CSNode::BuildArgs( Args & fullArgs ) const
 {
     // split into tokens
-    Array< AString > tokens( 1024 );
+    StackArray< AString > tokens;
     m_CompilerOptions.Tokenize( tokens );
 
     AStackString<> quote( "\"" );

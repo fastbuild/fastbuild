@@ -253,7 +253,7 @@ VCXProjectNode::VCXProjectNode()
     {
         VSProjectPlatformConfigTuple platCfgTuple;
         m_ProjectPlatformConfigTuples.SetCapacity( m_ProjectConfigs.GetSize() );
-        for ( const VSProjectConfig& config : m_ProjectConfigs )
+        for ( const VSProjectConfig & config : m_ProjectConfigs )
         {
             platCfgTuple.m_Config = config.m_Config;
             platCfgTuple.m_Platform = config.m_Platform;

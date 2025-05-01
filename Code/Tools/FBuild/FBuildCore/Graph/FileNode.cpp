@@ -106,7 +106,7 @@ void FileNode::DumpOutput( Job * job, const AString & name, const AString & data
 {
     if ( data.IsEmpty() == false )
     {
-        Array< AString > exclusions( 2 );
+        StackArray< AString > exclusions;
         exclusions.EmplaceBack( "Note: including file:" );
         exclusions.EmplaceBack( "#line" );
 

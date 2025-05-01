@@ -45,7 +45,7 @@ private:
     const AString mExeName{ "ExeName" };
     const AString mNodeName{ "NodeName" };
 
-    void operator = (TestArgs&) = delete;
+    void operator = (TestArgs &) = delete;
 };
 
 // Register Tests
@@ -210,7 +210,7 @@ void TestArgs::ArgumentParsing() const
     // Escaped quotes
     CheckParsing( R"(-aaa -D\"ARG\")",   "-aaa", R"(-D"ARG")" );
     CheckParsing( R"(-aaa "-D\"ARG\"")", "-aaa", R"(-D"ARG")" );
-    
+
     // Spaces inside quotes
     CheckParsing( R"("-DTHING=\"   \"")", R"(-DTHING="   ")" );
 }

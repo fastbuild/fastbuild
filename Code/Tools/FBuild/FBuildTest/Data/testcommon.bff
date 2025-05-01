@@ -3,6 +3,10 @@
 //
 #define BUILDING_FROM_TESTS // Control some behavior in shared bff files
 
+// Enable new deterministic path behavior for local compiler temp dirs
+// Eventually this will be the default/standard behavior
+.UseDeterministicPaths_Experimental = true
+
 //==============================================================================
 // Visual Studio
 //==============================================================================

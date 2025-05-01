@@ -30,6 +30,7 @@ public:
     inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
     inline bool GetUseLightCache() const { return m_UseLightCache; }
     inline bool GetUseRelativePaths() const { return m_UseRelativePaths; }
+    inline bool GetUseDeterministicPaths() const { return m_UseDeterministicPaths; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
     inline bool CanUseResponseFile() const { return m_AllowResponseFile; }
     inline bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
@@ -85,6 +86,7 @@ private:
     bool                    m_SimpleDistributionMode;
     bool                    m_UseLightCache;
     bool                    m_UseRelativePaths;
+    bool                    m_UseDeterministicPaths;
     ToolManifest            m_Manifest;
     Array< AString >        m_Environment;
     AString                 m_SourceMapping;

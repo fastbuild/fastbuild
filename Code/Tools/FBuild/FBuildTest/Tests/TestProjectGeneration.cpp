@@ -322,7 +322,8 @@ void TestProjectGeneration::TestFunction_Speed() const
     Random r( 1234567 ); // Deterministic seed
     const size_t numFiles = 5000;
     const size_t maxSubDirDepth = 8;
-    Array< AString > files( numFiles );
+    Array< AString > files;
+    files.SetCapacity( numFiles );
     for ( size_t i = 0; i < numFiles; ++i )
     {
         AStackString<> fileName( baseDir );
@@ -452,7 +453,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
     AString buffer;
     buffer.SetLength( (uint32_t)f.GetFileSize() );
     TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-    Array< AString > tokens;
+    StackArray< AString > tokens;
     buffer.Tokenize( tokens, '\n' );
 
     // Check
@@ -590,7 +591,7 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     AString buffer;
     buffer.SetLength( (uint32_t)f.GetFileSize() );
     TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-    Array< AString > tokens;
+    StackArray< AString > tokens;
     buffer.Tokenize( tokens, '\n' );
 
     // Check
@@ -1422,8 +1423,8 @@ void TestProjectGeneration::VSExternalProj_ExternalProject() const
 
     // because of the external module, peek how many of them were actually processed, depending if using the module is
     // enforced or not in the actual fbuild.bff
-    const FBuildStats& stats = FBuild::Get().GetStats();
-    const FBuildStats::Stats& nodeStatsExternal = stats.GetStatsFor( Node::VSPROJEXTERNAL_NODE );
+    const FBuildStats & stats = FBuild::Get().GetStats();
+    const FBuildStats::Stats & nodeStatsExternal = stats.GetStatsFor( Node::VSPROJEXTERNAL_NODE );
     const size_t actualNumExtSeen = nodeStatsExternal.m_NumProcessed;
     const size_t actualNumExtBuilt = nodeStatsExternal.m_NumBuilt;
 

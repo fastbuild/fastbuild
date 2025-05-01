@@ -436,7 +436,12 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
         return;
     }
 
-    Job * job = JobQueue::Get().GetDistributableJobToProcess( true );
+    // Some jobs require Server (Worker) changes which can be validated by
+    // comparing the minor protocol version.
+    const uint8_t workerMinorProtocolVersion = ss->m_ProtocolVersionMinor.Load();
+
+    Job * job = JobQueue::Get().GetDistributableJobToProcess( true, workerMinorProtocolVersion );
+
     if ( job == nullptr )
     {
         PROFILE_SECTION( "NoJob" );
@@ -782,6 +787,14 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                 result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
             }
 
+            // 4. .alt.obj (optional)
+            if ( result && on->IsUsingDynamicDeopt() )
+            {
+                AStackString<> altObjName;
+                on->GetAltObjPath( altObjName );
+                result = WriteFileToDisk( altObjName, mb, fileIndex++ );
+            }
+
             if ( result )
             {
                 // record new file time
@@ -962,9 +975,9 @@ Client::ServerState::ServerState()
     : m_Connection( nullptr )
     , m_CurrentMessage( nullptr )
     , m_NumJobsAvailable( 0 )
-    , m_Jobs( 16 )
     , m_Denylisted( false )
 {
+    m_Jobs.SetCapacity( 16 );
     m_DelayTimer.Start( 999.0f );
 }
 

@@ -342,7 +342,7 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
         }
         const uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
-        Array< PieItem > pieItems( 3 );
+        StackArray< PieItem > pieItems;
         pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
         pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, (uint32_t)0xFFCC88 );
         pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, (uint32_t)0x88FF88 );
@@ -425,7 +425,7 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
     DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
 
     // Summary Pie Chart
-    Array< PieItem > items( 32 );
+    StackArray< PieItem > items;
 
     for ( size_t i=0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
     {
@@ -630,7 +630,8 @@ void HTMLReport::DoIncludes()
         GetIncludeFilesRecurse( incStatsMap, library );
 
         // flatten and sort by usage
-        Array< const IncludeStats * > incStats( 10 * 1024 );
+        Array< const IncludeStats * > incStats;
+        incStats.SetCapacity( 10 * 1024 );
         incStatsMap.Flatten( incStats );
         incStats.SortDeref();
 

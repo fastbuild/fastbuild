@@ -103,7 +103,7 @@ public:
 
     Array<AString>& GetDirectories() { return m_Directories; }
 
-    DirectoryListNodeGetFilesHelper& operator =(DirectoryListNodeGetFilesHelper&) = delete;
+    DirectoryListNodeGetFilesHelper & operator =(DirectoryListNodeGetFilesHelper&) = delete;
 protected:
     const Array<AString> & m_ExcludePaths;
     const Array<AString> & m_FilesToExclude;
@@ -235,6 +235,21 @@ DirectoryListNode::~DirectoryListNode() = default;
         // Transfer ownership of filtered list
         m_Files = Move( helper.GetFiles() );
         m_Directories = Move( helper.GetDirectories() );
+
+        // Sort the lists alphabetically, for determinism. Some filesystems do not guarantee
+        // the order in which files are returned during directory scans, so we sort them to
+        // make sure the order in which files appear on the list is consistent across machines
+        class FileSorter
+        {
+        public:
+            bool operator () ( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
+            {
+                return ( a.m_Name < b.m_Name );
+            }
+        };
+
+        m_Files.Sort( FileSorter() );
+        m_Directories.Sort();
     }
 
     MakePrettyName();

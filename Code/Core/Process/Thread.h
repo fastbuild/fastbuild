@@ -27,7 +27,7 @@ public:
         typedef void * ThreadHandle;
         typedef uint32_t (*ThreadEntryFunction)( void * param );
         #define INVALID_THREAD_HANDLE ( nullptr )
-        #if defined( __APPLE__ ) 
+        #if defined( __APPLE__ )
             #define INVALID_THREAD_ID ( nullptr )
         #else
             #define INVALID_THREAD_ID ( 0 )

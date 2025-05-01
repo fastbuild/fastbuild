@@ -307,7 +307,7 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // build
-    Array< AString > targets( 2 );
+    StackArray< AString > targets;
     targets.EmplaceBack( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" );
     targets.EmplaceBack( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" );
     TEST_ASSERT( !fBuild.Build( targets ) );
@@ -324,7 +324,7 @@ void TestExec::Build_ExecEnvCommand() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    // Build and run exe that checks env var is set 
+    // Build and run exe that checks env var is set
     // (the executable checks the expected env var)
     TEST_ASSERT( fBuild.Build( "ExecEnvCommandTest" ) );
 

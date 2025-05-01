@@ -40,10 +40,10 @@
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
+#include "Core/FileIO/ChainedMemoryStream.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
-#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/Mem.h"
@@ -81,10 +81,11 @@ bool NodeGraphHeader::IsValid() const
 //------------------------------------------------------------------------------
 NodeGraph::NodeGraph( unsigned nodeMapHashBits )
 : m_NodeMapMaxKey( ( 1u << nodeMapHashBits ) - 1u )
-, m_AllNodes( 1024 )
-, m_UsedFiles( 16 )
 , m_Settings( nullptr )
 {
+    m_AllNodes.SetCapacity( 1024 );
+    m_UsedFiles.SetCapacity( 16 );
+
     ASSERT( nodeMapHashBits > 0 && nodeMapHashBits < 32 );
     m_NodeMap = FNEW_ARRAY( Node * [ m_NodeMapMaxKey + 1 ] );
     memset( m_NodeMap, 0, sizeof( Node * ) * ( m_NodeMapMaxKey + 1 ) );
@@ -467,7 +468,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 
 // Save
 //------------------------------------------------------------------------------
-void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
+void NodeGraph::Save( ChainedMemoryStream & stream, const char* nodeGraphDBFile ) const
 {
     // write header and version
     const NodeGraphHeader header;
@@ -543,13 +544,29 @@ void NodeGraph::Save( MemoryStream & stream, const char* nodeGraphDBFile ) const
 
     // Calculate hash of stream excluding header
     {
-        char * data = static_cast<char *>( stream.GetDataMutable() );
-        const char * content = ( data + sizeof(NodeGraphHeader) );
-        const size_t remainingSize = ( stream.GetSize() - sizeof(NodeGraphHeader) );
-        const uint64_t hash = xxHash3::Calc64( content, remainingSize );
+        NodeGraphHeader * headerToUpdate = nullptr;
+
+        // Calculate hash of non-contiguous pages
+        xxHash3Accumulator accumulator;
+        for ( uint32_t i = 0; i < stream.GetNumPages(); ++i )
+        {
+            uint32_t dataSize = 0;
+            char * data = stream.GetPage( i, dataSize );
+            if ( i == 0 )
+            {
+                // Exclude header from first page
+                headerToUpdate = reinterpret_cast<NodeGraphHeader *>( data );
+                ASSERT( dataSize >= sizeof(NodeGraphHeader) );
+                data += sizeof(NodeGraphHeader);
+                dataSize -= sizeof(NodeGraphHeader);
+            }
+
+            accumulator.AddData( data, dataSize );
+        }
+        const uint64_t hash = accumulator.Finalize64();
 
         // Update hash in header
-        NodeGraphHeader * headerToUpdate = reinterpret_cast<NodeGraphHeader *>( data );
+        ASSERT( headerToUpdate ); // Guaranteed to be in first page
         ASSERT( headerToUpdate->GetContentHash() == 0 );
         headerToUpdate->SetContentHash( hash );
     }
@@ -579,7 +596,7 @@ void NodeGraph::SerializeToText( const Dependencies & deps, AString & outBuffer 
 
 // SerializeToText
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::SerializeToText( Node * node, uint32_t depth, AString& outBuffer )
+/*static*/ void NodeGraph::SerializeToText( Node * node, uint32_t depth, AString & outBuffer )
 {
     // Print this even if it has been visited before so the edge is visible
     outBuffer.AppendFormat( "%*s%s %s\n", depth * 4, "", node->GetTypeName(), node->GetName().Get() );
@@ -838,9 +855,12 @@ void NodeGraph::RegisterSourceToken( const Node * node, const BFFToken * sourceT
 
 // CreateNode
 //------------------------------------------------------------------------------
-Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHashHint )
+Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHash )
 {
     ASSERT( Thread::IsMainThread() );
+
+    // Ensure provided hash is correct
+    ASSERT( nameHash == Node::CalcNameHash( name ) );
 
     Node * node = nullptr;
     switch ( type )
@@ -883,7 +903,7 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHas
     ASSERT( !node->IsAFile() || IsCleanPath( name ) );
 
     // Store name and track new node
-    node->SetName( Move( name ), nameHashHint );
+    node->SetName( Move( name ), nameHash );
     AddNode( node );
 
     return node;
@@ -914,7 +934,8 @@ Node * NodeGraph::CreateNode( Node::Type type, const AString & name, const BFFTo
         nameCopy = name;
     }
 
-    Node * node = CreateNode( type, Move( nameCopy ), 0 );
+    const uint32_t nameHash = Node::CalcNameHash( nameCopy );
+    Node * node = CreateNode( type, Move( nameCopy ), nameHash );
 
     RegisterSourceToken( node, sourceToken );
 
@@ -929,11 +950,11 @@ void NodeGraph::AddNode( Node * node )
 
     ASSERT( node );
 
+    ASSERT( node->GetNameHash() == Node::CalcNameHash( node->GetName() ) );
     ASSERT( FindNodeInternal( node->GetName(), node->GetNameHash() ) == nullptr ); // node name must be unique
 
     // track in NodeMap
-    const uint32_t crc = Node::CalcNameHash( node->GetName() );
-    const size_t key = ( crc & m_NodeMapMaxKey );
+    const size_t key = ( node->GetNameHash() & m_NodeMapMaxKey );
     node->m_Next = m_NodeMap[ key ];
     m_NodeMap[ key ] = node;
 

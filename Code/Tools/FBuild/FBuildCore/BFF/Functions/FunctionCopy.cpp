@@ -34,7 +34,7 @@ FunctionCopy::FunctionCopy()
 /*virtual*/ bool FunctionCopy::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
     // make sure all required variables are defined
-    Array< AString > sources( 16 );
+    StackArray< AString > sources;
     const BFFVariable * dstFileV;
     if ( !GetStrings( funcStartIter, sources, ".Source", true ) ||
          !GetString( funcStartIter, dstFileV, ".Dest", true ) )
@@ -75,7 +75,8 @@ FunctionCopy::FunctionCopy()
     {
         return false; // GetNodeList will have emitted an error
     }
-    Array< AString > preBuildDependencyNames( preBuildDependencies.GetSize() );
+    Array< AString > preBuildDependencyNames;
+    preBuildDependencyNames.SetCapacity( preBuildDependencies.GetSize() );
     for ( const Dependency & dep : preBuildDependencies )
     {
         preBuildDependencyNames.Append( dep.GetNode()->GetName() );

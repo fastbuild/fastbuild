@@ -60,6 +60,10 @@ public:
     virtual void OnTrayIconMenuItemSelected( uint32_t index );
 
 protected:
+    #if defined( __WINDOWS__ )
+        void GetWindowClassName( AString & outClassName );
+    #endif
+
     void * m_Handle;
     #if defined( __WINDOWS__ )
         void * m_HInstance;

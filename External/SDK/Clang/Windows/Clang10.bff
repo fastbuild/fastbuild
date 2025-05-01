@@ -114,14 +114,14 @@ Compiler( 'Compiler-Clang10-NonCL' )
     .CompilerOptionsC               = ' /TC -o"%2" "%1" $CommonCompilerOptions$'
     .PCHOptions                     = ' /TP $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
                                     + ' /std:c++17'                     // Enable c++17 features
-                                    
+
     // Exception Control
-    .UseExceptions                  = ' /EHs'                                    
+    .UseExceptions                  = ' /EHs'
 ]
 
-// ToolChain 
+// ToolChain
 //------------------------------------------------------------------------------
-.ToolChain_ClangNonCL_Windows = 
+.ToolChain_ClangNonCL_Windows =
 [
     Using( .ToolChain_Clang_Windows_Common )
 

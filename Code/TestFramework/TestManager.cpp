@@ -232,7 +232,7 @@ void TestManager::TestEnd()
 
     #ifdef MEMTRACKER_ENABLED
         const bool hasLeaks = MemTracker::HasAllocationsInRange( m_CurrentTestAllocationId, postAllocationId );
-        if ( hasLeaks )
+        if ( hasLeaks && TestGroup::IsMemoryLeakCheckEnabled() )
         {
             info.m_MemoryLeaks = true;
             OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
@@ -243,6 +243,10 @@ void TestManager::TestEnd()
             }
             return;
         }
+
+        // Disabling leak checks is done per-test so we
+        // re-enable it here (each test must re-disable it)
+        TestGroup::SetMemoryLeakCheckEnabled( true );
     #endif
 
     OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, (double)timeTaken );

@@ -44,7 +44,7 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
 bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 {
     // Tokenize
-    Array< AString > tokens;
+    StackArray< AString > tokens;
     commandLine.Tokenize( tokens );
 
     // Check each token

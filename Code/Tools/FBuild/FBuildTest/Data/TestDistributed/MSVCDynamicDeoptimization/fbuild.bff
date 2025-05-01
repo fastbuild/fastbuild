@@ -1,0 +1,15 @@
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers        = { "127.0.0.1" }
+}
+
+// MSVC /dynamicdeopt
+ObjectList( 'MSVCDynamicDeoptimization' )
+{
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/MSVCDynamicDeoptimization/file.cpp'
+    .CompilerOutputPath     = '$Out$/Test/Distributed/MSVCDynamicDeoptimization/'
+    .CompilerOptions        + ' /dynamicdeopt'
+}

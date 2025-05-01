@@ -35,7 +35,7 @@
         const uint64_t physTotalPages = info.PhysicalTotal;
         const uint64_t physAvailPages = info.PhysicalAvailable;
     #else
-    
+
         const uint64_t pageSize = static_cast<uint64_t>( sysconf( _SC_PAGE_SIZE ) );
         const uint64_t physTotalPages = static_cast<uint64_t>( sysconf( _SC_PHYS_PAGES ) );
         #if defined( __LINUX__ )

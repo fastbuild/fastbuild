@@ -25,6 +25,7 @@ private:
 
     void CompareHashTimes_Large() const;
     void CompareHashTimes_Small() const;
+    void Accumulator() const;
 };
 
 // Register Tests
@@ -32,6 +33,7 @@ private:
 REGISTER_TESTS_BEGIN( TestHash )
     REGISTER_TEST( CompareHashTimes_Large )
     REGISTER_TEST( CompareHashTimes_Small )
+    REGISTER_TEST( Accumulator )
 REGISTER_TESTS_END
 
 // CompareHashTimes_Large
@@ -148,7 +150,7 @@ void TestHash::CompareHashTimes_Large() const
 void TestHash::CompareHashTimes_Small() const
 {
     // some different strings to hash
-    Array< AString > strings( 32 );
+    StackArray< AString > strings;
     strings.EmplaceBack( " " );
     strings.EmplaceBack( "shOrt" );
     strings.EmplaceBack( "MediumstringMediumstring123456789" );
@@ -267,6 +269,20 @@ void TestHash::CompareHashTimes_Small() const
         const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
         OUTPUT( "CRC32Lower      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
+}
+
+//------------------------------------------------------------------------------
+void TestHash::Accumulator() const
+{
+    const volatile uint64_t sentinel1 = 0xBAADF00D;
+    xxHash3Accumulator accumulator;
+    const volatile uint64_t sentinel2 = 0xBAADF00D;
+    accumulator.AddData( "ABCD", 4 );
+    accumulator.AddData( "0123456789", 10 );
+    TEST_ASSERT( accumulator.Finalize64() == xxHash3::Calc64( "ABCD0123456789", 14 ) );
+
+    TEST_ASSERT( sentinel1 == 0xBAADF00D );
+    TEST_ASSERT( sentinel2 == 0xBAADF00D );
 }
 
 //------------------------------------------------------------------------------

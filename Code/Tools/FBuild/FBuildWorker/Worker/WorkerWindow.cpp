@@ -29,8 +29,17 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
-// Defines
+// Icon
 //------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    const uint8_t gTrayIcon[] =
+    {
+        // Generate with:
+        //  cat Tools/FBuild/Icons/16x16_blue.png | xxd -p | sed 's/\(..\)/0x\1, /g' > Tools/FBuild/Icons/16x16_blue.h
+        #include "Tools/FBuild/Icons/16x16_blue.h"
+    };
+    const size_t gTrayIconSize = sizeof(gTrayIcon);
+#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -58,7 +67,11 @@ WorkerWindow::WorkerWindow()
     // Create the tray icon
     AStackString<> toolTip;
     toolTip.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
-    m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
+    #if defined( __WINDOWS__ )
+        m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
+    #elif defined( __OSX__ )
+        m_TrayIcon = FNEW( OSTrayIcon( gTrayIcon, gTrayIconSize ) );
+    #endif
 
     // listview
     m_ThreadList = FNEW( OSListView( this ) );

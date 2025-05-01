@@ -22,7 +22,6 @@ public:
     explicit Array( const Array< T > & other );
     explicit Array( Array< T > && other );
     explicit Array( const T * otherBegin, const T * otherEnd );
-    explicit Array( size_t initialCapacity );
     ~Array();
 
     void Destruct();
@@ -164,28 +163,12 @@ Array< T >::Array( Array< T > && other )
 //------------------------------------------------------------------------------
 template < class T >
 Array< T >::Array( const T * otherBegin, const T * otherEnd )
-    : Array<T>( (size_t)( otherEnd - otherBegin ) )
+    : m_Begin( nullptr )
+    , m_Size( 0 )
+    , m_CapacityAndFlags( 0 )
 {
+    SetCapacity( (size_t)( otherEnd - otherBegin ) );
     Append( otherBegin, otherEnd );
-}
-
-// CONSTRUCTOR
-//------------------------------------------------------------------------------
-template < class T >
-Array< T >::Array( size_t initialCapacity )
-{
-    if ( initialCapacity )
-    {
-        m_Begin = Allocate( initialCapacity );
-        m_Size = 0;
-        m_CapacityAndFlags = (uint32_t)initialCapacity;
-    }
-    else
-    {
-        m_Begin = nullptr;
-        m_Size = 0;
-        m_CapacityAndFlags = 0;
-    }
 }
 
 // DESTRUCTOR

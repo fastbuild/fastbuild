@@ -25,28 +25,6 @@
             }
         #endif
 
-        // OSX Resources
-        //--------------------------------------------------------------------------
-        #if __OSX__
-            Exec( '$ProjectName$-OSXRes-$Platform$-$BuildConfigName$' )
-            {
-                .ExecExecutable             = .Linker
-                .ExecInput                  = 'Tools/FBuild/Icons/16x16_blue.png'
-                .ExecArguments              = '-r -o "%2" -sectcreate binary trayicon "%1"'
-											+ ' -shared'
-                                            + ' -mmacosx-version-min=10.7'
-                If( .Platform == 'x64OSX' )
-                {
-                    ^ExecArguments              + ' -arch x86_64'
-                }
-                If( .Platform == 'ARMOSX' )
-                {
-                    ^ExecArguments              + ' -arch arm64'
-                }
-                .ExecOutput                 = '$OutputBase$/$ProjectName$/16x16_blue.o'
-            }
-        #endif
-
         // Unity
         //--------------------------------------------------------------------------
         Unity( '$ProjectName$-Unity-$Platform$-$BuildConfigName$' )
@@ -95,9 +73,6 @@
                                         #if __WINDOWS__
                                             + 'FBuildWorker-Res-$Platform$-$BuildConfigName$'
                                         #endif
-                                        #if __OSX__
-                                            + '$ProjectName$-OSXRes-$Platform$-$BuildConfigName$'
-                                        #endif
             #if __LINUX__
                 .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuildworker$ExeExtension$' // NOTE: lower case
             #else
@@ -126,6 +101,7 @@
             #endif
             #if __LINUX__
                 .LinkerOptions              + ' -pthread -ldl -lrt'
+                                            + ' -Wl,--wrap=__libc_start_main' // GLIBC compat
 
                 .LinkerStampExe             = '/bin/bash'
                 .ExtractDebugInfo           = 'objcopy --only-keep-debug $LinkerOutput$ $LinkerOutput$.debug'

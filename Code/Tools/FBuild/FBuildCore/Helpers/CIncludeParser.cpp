@@ -19,14 +19,14 @@
 //------------------------------------------------------------------------------
 CIncludeParser::CIncludeParser()
     : m_LastCRC1( 0 )
-    , m_CRCs1( 4096 )
     , m_LastCRC2( 0 )
-    , m_CRCs2( 4096 )
-    , m_Includes( 4096 )
 #ifdef DEBUG
     , m_NonUniqueCount( 0 )
 #endif
 {
+    m_CRCs1.SetCapacity( 4096 );
+    m_CRCs2.SetCapacity( 4096 );
+    m_Includes.SetCapacity( 4096 );
 }
 
 // DESTRUCTOR

@@ -114,7 +114,7 @@ ObjectNode::ObjectNode()
     {
         return false; // InitializePreBuildDependencies will have emitted an error
     }
-    
+
     // NOTE: ConcurrencyGroup set directly by ObjectList or Library
 
     // .Compiler
@@ -744,7 +744,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         output.Replace( '\r', '\n' ); // Normalize all carriage line endings
 
         // split into lines
-        Array< AString > lines( 256 );
+        Array< AString > lines;
         output.Tokenize( lines, '\n' );
 
         m_Includes.Clear();
@@ -977,6 +977,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // Source mappings are not currently forwarded so can only compiled locally
     const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
 
+    StackArray<AString::TokenRange, 512> tokenRanges;
+
     // Check MS compiler options
     if ( flags.IsMSVC() || flags.IsClangCl() )
     {
@@ -984,10 +986,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         bool usingWinRT = false;
         bool usingPreprocessorOnly = false;
 
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-        for ( const AString & token : tokens )
+        args.Tokenize( tokenRanges );
+        for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
+            const AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
+                                        ( args.Get() + tokenRange.m_EndIndex ) );
+
             if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
                 if ( !flags.IsClangCl() ) // with clang-cl, Zi is an alias for /Z7, it does not produce PDBs
@@ -1023,6 +1027,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                 {
                     flags.Set( CompilerFlags::FLAG_STATIC_ANALYSIS_MSVC );
                 }
+            }
+            else if ( IsStartOfCompilerArg_MSVC( token, "dynamicdeopt" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_DYNAMIC_DEOPT );
             }
         }
 
@@ -1064,12 +1072,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         bool coverage = false;
 
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-        const AString * const end = tokens.End();
-        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        args.Tokenize( tokenRanges );
+        const size_t numTokens = tokenRanges.GetSize();
+        for ( size_t i = 0; i < numTokens; ++i )
         {
-            const AString & token = *it;
+            const AStackString<> token( ( args.Get() + tokenRanges[ i ].m_StartIndex ),
+                                        ( args.Get() + tokenRanges[ i ].m_EndIndex ) );
 
             if ( token == "-fdiagnostics-color=auto" )
             {
@@ -1103,9 +1111,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             }
             else if ( token == "-x" )
             {
-                if ( it < ( end - 1 ) )
+                if ( i < ( numTokens - 1 ) )
                 {
-                    const AString & nextToken = *( it + 1);
+                    const AStackString<> nextToken( ( args.Get() + tokenRanges[ i + 1 ].m_StartIndex ),
+                                                    ( args.Get() + tokenRanges[ i + 1 ].m_EndIndex ) );
                     if ( nextToken == "objective-c" )
                     {
                         objectiveC = true;
@@ -1231,7 +1240,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // Prepare args for remote worker
     UniquePtr<CompilerDriverBase> driver;
     CreateDriver( m_CompilerFlags, AString::GetEmpty(), driver );
-    Array< AString > tokens( 1024 );
+    StackArray< AString > tokens;
     compilerOptions.Tokenize( tokens );
     Args fullArgs;
 
@@ -1302,7 +1311,7 @@ void ObjectNode::GetPDBName( AString & pdbName ) const
 
 // GetNativeAnalysisXMLPath
 //------------------------------------------------------------------------------
-void ObjectNode::GetNativeAnalysisXMLPath( AString& outXMLFileName ) const
+void ObjectNode::GetNativeAnalysisXMLPath( AString & outXMLFileName ) const
 {
     ASSERT( IsUsingStaticAnalysisMSVC() );
 
@@ -1324,6 +1333,20 @@ void ObjectNode::GetGCNOPath( AString & gcnoFileName ) const
     const char * extPos = m_Name.FindLast( '.' ); // Only last extension removed
     gcnoFileName.Assign( m_Name.Get(), extPos ? extPos : m_Name.GetEnd() );
     gcnoFileName += ".gcno";
+}
+
+// GetAltObjPath
+//------------------------------------------------------------------------------
+void ObjectNode::GetAltObjPath( AString & altObjName ) const
+{
+    ASSERT( IsUsingDynamicDeopt() );
+
+    const AString & sourceName = m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName;
+
+    // TODO:B The suffix ('.alt') can be manually specified with /dynamicdeopt:suffix
+    const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
+    altObjName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
+    altObjName += ".alt.obj";
 }
 
 // GetObjExtension
@@ -1360,26 +1383,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
-    uint32_t commandLineKey;
-    {
-        Args args;
-        const bool useDeoptimization = false;
-        const bool showIncludes = false;
-        const bool useSourceMapping = false; // Source mapping compiler flags contain local paths, so we treat them specially
-        const bool finalize = false; // Don't write args to response file
-        BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize );
-
-        if ( job->IsLocal() )
-        {
-            // Append the source mapping destination only, so different machines with different
-            // working directory local paths compute consistent keys.
-            const AString& sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
-            args.AddDelimiter();
-            args += sourceMapping;
-        }
-
-        commandLineKey = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
-    }
+    const uint32_t commandLineKey = GetCommandLineKey( job );
     ASSERT( commandLineKey );
 
     // ToolChain hash
@@ -1399,6 +1403,29 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     job->SetCacheName(cacheName);
 
     return job->GetCacheName();
+}
+
+// GetCommandLineKey
+//------------------------------------------------------------------------------
+uint32_t ObjectNode::GetCommandLineKey( Job * job ) const
+{
+    Args args;
+    const bool useDeoptimization = false;
+    const bool showIncludes = false;
+    const bool useSourceMapping = false; // Source mapping compiler flags contain local paths, so we treat them specially
+    const bool finalize = false; // Don't write args to response file
+    BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize );
+
+    if ( job->IsLocal() )
+    {
+        // Append the source mapping destination only, so different machines with different
+        // working directory local paths compute consistent keys.
+        const AString& sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
+        args.AddDelimiter();
+        args += sourceMapping;
+    }
+
+    return xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
 }
 
 // RetrieveFromCache
@@ -1449,7 +1476,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         const size_t uncompressedDataSize = buffer.GetDataSize();
         const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
 
-        Array< AString > fileNames( 4 );
+        StackArray< AString > fileNames;
         fileNames.Append( m_Name );
 
         GetExtraCacheFilePaths( job, fileNames );
@@ -1535,7 +1562,7 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
     PROFILE_FUNCTION;
 
     // Get list of files
-    Array< AString > fileNames( 4 );
+    StackArray< AString > fileNames;
     fileNames.Append( m_Name );
     GetExtraCacheFilePaths( job, fileNames );
 
@@ -1671,7 +1698,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
     const ObjectNode * objectNode = node->CastTo< ObjectNode >();
 
     // MSVC precompiled headers have an extra file (as does clang in "cl" mode)
-    if ( objectNode->m_CompilerFlags.IsCreatingPCH() && 
+    if ( objectNode->m_CompilerFlags.IsCreatingPCH() &&
          ( objectNode->m_CompilerFlags.IsMSVC() || objectNode->m_CompilerFlags.IsClangCl() ) )
     {
         // .pch.obj
@@ -1711,6 +1738,15 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         AStackString<> gcnoFileName;
         GetGCNOPath( gcnoFileName );
         outFileNames.Append( gcnoFileName );
+    }
+
+    // MSVC dynamic deoptimization adds extra files
+    if ( objectNode->m_CompilerFlags.IsUsingDynamicDeopt() )
+    {
+        // .alt.obj
+        AStackString<> altObjName;
+        GetAltObjPath( altObjName );
+        outFileNames.Append( altObjName );
     }
 }
 
@@ -1760,7 +1796,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 {
     PROFILE_FUNCTION;
 
-    Array< AString > tokens( 1024 );
+    StackArray< AString > tokens;
 
     const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
     if ( useDedicatedPreprocessor )
@@ -1861,7 +1897,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     {
         job->GetToolManifest()->GetRemoteFilePath( 0, remoteCompiler );
     }
-    const AString& compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
+    const AString & compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
     if ( fullArgs.Finalize( compiler, GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error
@@ -1998,7 +2034,8 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
 
         if ( doVS2012Fixup )
         {
-            Array< const char * > enumsFound( 2048 );
+            Array< const char * > enumsFound;
+            enumsFound.SetCapacity( 2048 );
             const char BUGGY_CODE[] = "enum ";
             const char* workBuffer = outputBuffer;
             ASSERT( workBuffer[ outputBufferSize ] == '\0' );
@@ -2084,7 +2121,21 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     ASSERT( job->GetData() && job->GetDataSize() );
 
     const Node * sourceFile = GetSourceFile();
-    const uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+    uint32_t sourceNameHash = 0;
+
+    if ( job->IsLocal() )
+    {
+        // Make the source file path relative to the working dir so the hash is deterministic.
+        AStackString<> basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
+        PathUtils::EnsureTrailingSlash( basePath );
+        AStackString<> relativeFileName;
+        PathUtils::GetRelativePath( basePath, sourceFile->GetName(), relativeFileName );
+        sourceNameHash = xxHash::Calc32( relativeFileName.Get(), relativeFileName.GetLength() );
+    }
+    else
+    {
+        sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+    }
 
     FileStream tmpFile;
     AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
@@ -2167,7 +2218,22 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         dataToWriteSize = c.GetResultSize();
     }
 
-    WorkerThread::GetTempFileDirectory( tmpDirectory );
+    const CompilerNode * compiler = job->GetNode()->CastTo<ObjectNode>()->GetCompiler();
+    if ( compiler && compiler->GetUseDeterministicPaths() )
+    {
+        VERIFY( FBuild::GetTempDir( tmpDirectory ) );
+        #if defined( __WINDOWS__ )
+            tmpDirectory += ".fbuild.tmp\\";
+        #else
+            tmpDirectory += "_fbuild.tmp/";
+        #endif
+        tmpDirectory.AppendFormat( "%08X-", GetCommandLineKey( job ) );
+    }
+    else
+    {
+        WorkerThread::GetTempFileDirectory( tmpDirectory );
+    }
+
     tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
     if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
     {
@@ -2662,8 +2728,14 @@ bool ObjectNode::ShouldUseCache() const
                      FBuild::Get().GetOptions().m_UseCacheWrite );
     if ( IsIsolatedFromUnity() )
     {
-        // disable caching for locally modified files (since they will rarely if ever get a hit)
-        useCache = false;
+        // If -nounity is being used, we want to treat files as if being
+        // compiled in an ObjectList without use of unity, which inclues
+        // caching
+        if ( FBuild::Get().GetOptions().m_NoUnity == false )
+        {
+            // disable caching for locally modified files (since they will rarely if ever get a hit)
+            useCache = false;
+        }
     }
     if ( IsMSVC() && IsUsingPCH() )
     {

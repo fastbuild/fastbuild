@@ -182,7 +182,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
     // Add args for source mapping
     if ( ( m_SourceMapping.IsEmpty() == false ) && isLocal )
     {
-        const AString& workingDir = FBuild::Get().GetOptions().GetWorkingDir();
+        const AString & workingDir = FBuild::Get().GetOptions().GetWorkingDir();
         AStackString<> tmp;
         // Using -ffile-prefix-map would be better since that would change not only the file paths in
         // the DWARF debugging information but also in the __FILE__ and related predefined macros, but

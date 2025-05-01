@@ -37,7 +37,7 @@ public:
         uint32_t mNumPCores = 0;    // "Performance" cores
         uint32_t mNumECores = 0;    // "Efficiency" cores
     };
-    static const ProcessorInfo& GetProcessorInfo();
+    static const ProcessorInfo & GetProcessorInfo();
     static uint32_t GetNumProcessors();
 
     static bool GetEnvVariable( const char * envVarName, AString & envVarValue );

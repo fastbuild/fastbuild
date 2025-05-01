@@ -26,7 +26,7 @@ class VSProjectExternalNode : public VSProjectBaseNode
     REFLECT_NODE_DECLARE( VSProjectExternalNode )
 public:
     VSProjectExternalNode();
-    virtual bool Initialize( NodeGraph& nodeGraph, const BFFToken* iter, const Function* function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken* iter, const Function* function ) override;
     virtual ~VSProjectExternalNode() override;
 
     static inline Node::Type GetTypeS() { return Node::VSPROJEXTERNAL_NODE; }

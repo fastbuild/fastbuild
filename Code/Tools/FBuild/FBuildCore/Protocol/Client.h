@@ -55,7 +55,7 @@ private:
     void ProcessJobResultCommon( const ConnectionInfo * connection, bool isCompressed, const void * payload, size_t payloadSize );
 
     const ToolManifest * FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const;
-    bool WriteFileToDisk( const AString& fileName, const MultiBuffer & multiBuffer, size_t index ) const;
+    bool WriteFileToDisk( const AString & fileName, const MultiBuffer & multiBuffer, size_t index ) const;
 
     static uint32_t ThreadFuncStatic( void * param );
     void            ThreadFunc();

@@ -72,6 +72,7 @@
             #endif
             #if __LINUX__
                 .LinkerOptions              + ' -pthread -ldl -lrt'
+                                            + ' -Wl,--wrap=__libc_start_main' // GLIBC compat
             #endif
         }
         #if __WINDOWS__

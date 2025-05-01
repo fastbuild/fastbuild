@@ -320,10 +320,14 @@ ObjectListNode::ObjectListNode()
     }
 
     // Extra output paths
-    ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions,
-                                                           m_ExtraPDBPath,
-                                                           m_ExtraASMPath,
-                                                           m_ExtraSourceDependenciesPath );
+    // Currently these are MSVC only
+    if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClangCl() )
+    {
+        ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions,
+                                                               m_ExtraPDBPath,
+                                                               m_ExtraASMPath,
+                                                               m_ExtraSourceDependenciesPath );
+    }
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( compilerInputPath.GetSize() +
@@ -570,7 +574,8 @@ ObjectListNode::~ObjectListNode() = default;
     }
     else
     {
-        Array< uint64_t > stamps( m_DynamicDependencies.GetSize() );
+        StackArray< uint64_t > stamps;
+        stamps.SetCapacity( m_DynamicDependencies.GetSize() );
         for ( const Dependency & dep : m_DynamicDependencies )
         {
             const ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();

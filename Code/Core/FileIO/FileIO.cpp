@@ -1802,15 +1802,21 @@ bool FileIO::FileInfo::IsReadOnly() const
 // GetFilesHelper CONSTRUCTOR
 //------------------------------------------------------------------------------
 GetFilesHelper::GetFilesHelper( size_t sizeHint )
-    : m_Files( sizeHint )
 {
+    if ( sizeHint > 0 )
+    {
+        m_Files.SetCapacity( sizeHint );
+    }
 }
 
 //------------------------------------------------------------------------------
 GetFilesHelper::GetFilesHelper( const Array<AString> & patterns, size_t sizeHint )
     : m_Patterns( &patterns )
-    , m_Files( sizeHint )
 {
+    if ( sizeHint > 0 )
+    {
+        m_Files.SetCapacity( sizeHint );
+    }
 }
 
 // GetFilesHelper DESTRUCTOR

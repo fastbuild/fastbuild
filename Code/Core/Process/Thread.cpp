@@ -94,7 +94,7 @@ public:
         #endif
     }
 
-    void operator =(const ThreadStartInfo& other) = delete;
+    void operator =(const ThreadStartInfo & other) = delete;
 };
 
 // Static Data

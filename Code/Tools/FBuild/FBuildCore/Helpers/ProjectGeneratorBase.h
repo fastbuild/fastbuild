@@ -90,7 +90,7 @@ protected:
         Array< Folder * >   m_Folders;      // Child Folders
         uint32_t            m_SortedIndex;
 
-        bool operator < (const Folder& other) const { return m_Path < other.m_Path; }
+        bool operator < (const Folder & other) const { return m_Path < other.m_Path; }
     };
     struct File
     {
@@ -99,7 +99,7 @@ protected:
         Folder *            m_Folder;       // Index into m_Folders
         uint32_t            m_SortedIndex;
 
-        bool operator < (const File& other) const { return m_FileName < other.m_FileName; }
+        bool operator < (const File & other) const { return m_FileName < other.m_FileName; }
     };
 
     // Input Data
