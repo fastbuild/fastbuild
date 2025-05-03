@@ -161,9 +161,34 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     // Handle auto-detect
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
     {
-        // Normalize slashes to make logic consistent on all platforms
-        AStackString<> compiler( GetExecutable() );
-        compiler.Replace( '/', '\\' );
+        const AString& executable = GetExecutable();
+
+        // Find the last slash or backslash in the executable path
+        const char * lastSlash = executable.FindLast( NATIVE_SLASH );
+        if ( const char * lastOtherSlash = executable.FindLast( OTHER_SLASH, nullptr, lastSlash ) )
+        {
+            lastSlash = lastOtherSlash;
+        }
+
+        // Strip everything up to and including the last slash in the path to retrieve the filename
+        const char * executableBase = lastSlash ? lastSlash + 1 : executable.Get();
+
+        // Strip off any executable-esque extensions from the end
+        const char * executableEnd = executable.GetEnd();
+        if ( const char * lastDot = executable.FindLast( '.', nullptr, executableBase ) )
+        {
+            AStackString<> extension( lastDot + 1, executableEnd );
+            if ( extension.EqualsI ( "exe") ||
+                 extension.EqualsI( "cmd" ) ||
+                 extension.EqualsI( "bat" ) ||
+                 extension.EqualsI( "sh" ) )
+            {
+                executableEnd -= extension.GetLength() + 1;
+            }
+        }
+
+        AStackString<> compiler( executableBase, executableEnd );
+
         AStackString<> compilerWithoutVersion( compiler.Get() );
         if ( const char * last = compiler.FindLast( '-' ) )
         {
@@ -171,43 +196,35 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
         }
 
         // MSVC
-        if ( compiler.EndsWithI( "\\cl.exe" ) ||
-             compiler.EndsWithI( "\\cl" ) ||
-             compiler.EndsWithI( "\\icl.exe" ) ||
-             compiler.EndsWithI( "\\icl" ) )
+        if ( compiler.EqualsI( "cl" ) ||
+             compiler.EqualsI( "icl" ) )
         {
             m_CompilerFamilyEnum = MSVC;
             return true;
         }
 
         // Clang
-        if ( compiler.EndsWithI( "clang++.exe" ) ||
-             compiler.EndsWithI( "clang++.cmd" ) ||
-             compiler.EndsWithI( "clang++" ) ||
-             compiler.EndsWithI( "clang.exe" ) ||
-             compiler.EndsWithI( "clang.cmd" ) ||
-             compiler.EndsWithI( "clang" ) )
+        if ( compiler.EndsWithI( "clang++" ) ||
+             compilerWithoutVersion.EndsWithI( "clang++" ) ||
+             compiler.EndsWithI( "clang" ) ||
+             compilerWithoutVersion.EndsWithI( "clang" ) )
         {
             m_CompilerFamilyEnum = CLANG;
             return true;
         }
 
         // Clang in "cl mode" (MSVC compatibility)
-        if ( compiler.EndsWithI( "clang-cl.exe" ) ||
-             compiler.EndsWithI( "clang-cl" ) )
+        if ( compiler.EqualsI( "clang-cl" ) )
         {
             m_CompilerFamilyEnum = CLANG_CL;
             return true;
         }
 
         // GCC
-        if ( compiler.EndsWithI( "gcc.exe" ) ||
-             compiler.EndsWithI( "gcc" ) ||
+        if ( compiler.EndsWithI( "gcc" ) ||
              compilerWithoutVersion.EndsWithI( "gcc" ) ||
-             compiler.EndsWithI( "g++.exe" ) ||
              compiler.EndsWithI( "g++" ) ||
              compilerWithoutVersion.EndsWithI( "g++" ) ||
-             compiler.EndsWithI( "dcc.exe" ) || // WindRiver
              compiler.EndsWithI( "dcc" ) )      // WindRiver
         {
             m_CompilerFamilyEnum = GCC;
@@ -215,73 +232,64 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
         }
 
         // SNC
-        if ( compiler.EndsWithI( "\\ps3ppusnc.exe" ) ||
-             compiler.EndsWithI( "\\ps3ppusnc" ) )
+        if ( compiler.EqualsI( "ps3ppusnc" ) )
         {
             m_CompilerFamilyEnum = SNC;
             return true;
         }
 
         // CodeWarrior Wii
-        if ( compiler.EndsWithI( "\\mwcceppc.exe" ) ||
-             compiler.EndsWithI( "\\mwcceppc" ) )
+        if ( compiler.EqualsI( "mwcceppc" ) )
         {
             m_CompilerFamilyEnum = CODEWARRIOR_WII;
             return true;
         }
 
         // Greenhills WiiU
-        if ( compiler.EndsWithI( "\\cxppc.exe" ) ||
-             compiler.EndsWithI( "\\cxppc" ) ||
-             compiler.EndsWithI( "\\ccppc.exe" ) ||
-             compiler.EndsWithI( "\\ccppc" ) )
+        if ( compiler.EqualsI( "cxppc" ) ||
+             compiler.EqualsI( "ccppc" ) )
         {
             m_CompilerFamilyEnum = GREENHILLS_WIIU;
             return true;
         }
 
         // CUDA
-        if ( compiler.EndsWithI( "\\nvcc.exe" ) ||
-             compiler.EndsWithI( "\\nvcc" ) )
+        if ( compiler.EqualsI( "nvcc" ) )
         {
             m_CompilerFamilyEnum = CUDA_NVCC;
             return true;
         }
 
         // Qt rcc
-        if ( compiler.EndsWith( "rcc.exe" ) ||
-             compiler.EndsWith( "rcc" ) )
+        if ( compiler.EndsWith( "rcc" ) )
         {
             m_CompilerFamilyEnum = QT_RCC;
             return true;
         }
 
         // VBCC
-        if ( compiler.EndsWith( "vc.exe" ) ||
-             compiler.EndsWith( "vc" ) )
+        if ( compiler.EndsWith( "vc" ) )
         {
             m_CompilerFamilyEnum = VBCC;
             return true;
         }
 
         // Orbis wave shader compiler
-        if ( compiler.EndsWithI( "orbis-wave-psslc.exe" ) ||
-             compiler.EndsWithI( "orbis-wave-psslc" ) )
+        if ( compiler.EndsWithI( "orbis-wave-psslc" ) )
         {
             m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
             return true;
         }
 
         // C# compiler
-        if ( compiler.EndsWithI( "csc.exe" ) ||
-             compiler.EndsWithI( "csc" ) )
+        if ( compiler.EndsWithI( "csc" ) )
         {
             m_CompilerFamilyEnum = CSHARP;
             return true;
         }
 
         // Auto-detect failed
-        Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
+        Error::Error_1500_CompilerDetectionFailed( iter, function, GetExecutable() );
         return false;
     }
 
