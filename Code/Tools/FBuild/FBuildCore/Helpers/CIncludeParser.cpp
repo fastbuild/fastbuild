@@ -9,12 +9,18 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // Core
+#include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
 #include <string.h>
+#include "Core/Process/Process.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
+#include "Core/Env/Env.h"
 
 //------------------------------------------------------------------------------
 CIncludeParser::CIncludeParser()
@@ -33,6 +39,148 @@ CIncludeParser::CIncludeParser()
 //------------------------------------------------------------------------------
 CIncludeParser::~CIncludeParser() = default;
 
+AStackString< 256 >  CIncludeParser::ms_ShowIncludesMarker( "Note: including file:" ); // Default value. The default value is mainly for unittests.
+bool                 CIncludeParser::ms_ShowIncludesMarkerDetected;
+Mutex                CIncludeParser::ms_ShowIncludesMarkerMutex;
+
+bool CIncludeParser::DetectMS_ShowIncludesMarker(const AString & compiler)
+{
+    // Avoid locking once the pattern is detected
+    if (ms_ShowIncludesMarkerDetected)
+        return true;
+
+    MutexHolder lock(ms_ShowIncludesMarkerMutex);
+    if (ms_ShowIncludesMarkerDetected)
+        return true;
+
+
+    FileStream tmpFile;
+    AStackString< 256 > tmpFilenameHeader;
+    AStackString< 64 > dummyHeader( "#pragma once" );
+    WorkerThread::CreateTempFilePath( "showincludedetect.h", tmpFilenameHeader );
+    WorkerThread::CreateTempFile( tmpFilenameHeader, tmpFile );
+    if (! tmpFile.Write( dummyHeader.Get(), dummyHeader.GetLength() ) )
+    {
+        OUTPUT( "Failed to write to temp file '%s' (error %u)", tmpFilenameHeader.Get(), Env::GetLastErr() );
+        return false;
+    }
+    tmpFile.Close();
+
+
+    AStackString< 256 > tmpFilenameCPP;
+    AStackString< 256 > tmpFilenameObj;
+    AStackString< 64 > dummyCPP;
+    dummyCPP.Format( "#include \"%s\"", tmpFilenameHeader.Get() );
+    const char* includeDetectFilename = "showincludedetect.cpp";
+    const size_t includeDetectLength = 21;
+    WorkerThread::CreateTempFilePath( includeDetectFilename, tmpFilenameCPP );
+    WorkerThread::CreateTempFilePath( "showincludedetect.obj", tmpFilenameObj );
+    WorkerThread::CreateTempFile( tmpFilenameCPP, tmpFile );
+    if (! tmpFile.Write( dummyCPP.Get(), dummyCPP.GetLength() ) )
+    {
+        OUTPUT( "Failed to write to temp file '%s' (error %u)", tmpFilenameCPP.Get(), Env::GetLastErr() );
+        return false;
+    }
+    tmpFile.Close();
+
+    AStackString< 256 > args;
+    args.Format( "/c %s /Fo%s /showIncludes /nologo", tmpFilenameCPP.Get(), tmpFilenameObj.Get() );
+
+    const char * environmentString = ( FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr );
+    Process compilerProcess;
+    if ( false == compilerProcess.Spawn( compiler.Get(),
+        args.Get(),
+        nullptr,
+        environmentString ) )
+    {
+        OUTPUT( "Failed to spawn process (error 0x%x) to build '%s'\n", Env::GetLastErr(), tmpFilenameCPP.Get() );
+        return false;
+    }
+    AutoPtr< char > out;
+    uint32_t		outSize;
+    AutoPtr< char > err;
+    uint32_t		errSize;
+
+    // capture all of the stdout and stderr
+    compilerProcess.ReadAllData( out, &outSize, err, &errSize );
+
+    // Get result
+    int result = compilerProcess.WaitForExit();
+    if ( result != 0 )
+    {
+        OUTPUT( "Failed to build %s Object (error 0x%x)\n", tmpFilenameCPP.Get(), result );
+
+        return false;
+    }
+
+    FileIO::FileDelete(tmpFilenameCPP.Get());
+    FileIO::FileDelete(tmpFilenameHeader.Get());
+    FileIO::FileDelete(tmpFilenameObj.Get());
+
+    ASSERT(out.Get()[outSize] == 0);
+    const char* pos = out.Get();
+
+    bool foundMarker = false;
+    if (pos && strncmp(pos, includeDetectFilename, includeDetectLength) == 0)
+    {
+        // Change position to beginning of next line
+        pos = strchr(pos + includeDetectLength, '\r');
+        if(pos && pos[1] == '\n')
+            pos += 2;
+    }
+    if(pos)
+    {
+        // Marker has the following form : 
+        // <string> : <other string> :
+        // Examples:
+        //
+        // French:
+        // Remarque : inclusion du fichier : X:\A\B\C
+        // English:
+        // Note: including file: 
+        // Look for two : symbols. Marker is in between the start of the line and the second : marker
+        const char* firstMarkerSeparator = strchr(pos, ':');
+        if (firstMarkerSeparator != nullptr)
+        {
+            const char* secondMarkerSeparator = strchr(firstMarkerSeparator + 1, ':');
+            if (secondMarkerSeparator != nullptr)
+            {
+                // Now that we've found the marker, we will just validate that we've really found it by validating the path of the include.
+                // This is a little bit parano but help insuring that the parsing was really correct.
+                const char* afterMarker = secondMarkerSeparator + 1;
+
+                // Skip all spaces.
+                while(*afterMarker == ' ')
+                    ++afterMarker;
+
+                // Find end of line
+                const char* endLine = strchr(afterMarker, '\n');
+                if (endLine != nullptr)
+                {
+                    endLine = endLine[-1] == '\r' ? endLine - 1 : endLine;
+
+                    AStackString< 256> tmpPath(afterMarker, endLine);
+                    if (tmpPath.CompareI(tmpFilenameHeader) == 0)
+                    {
+                        // Found the same include! Everything is fine
+                        ms_ShowIncludesMarker.Assign(pos, secondMarkerSeparator + 1);
+                        foundMarker = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if ( !foundMarker )
+    {
+        OUTPUT( "Error while parsing result for /showincludes marker: '%s'", out.Get() );
+        return false;
+    }
+
+    ms_ShowIncludesMarkerDetected = true;
+    return true;
+}
+
 // Parse
 //------------------------------------------------------------------------------
 bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
@@ -42,111 +190,56 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
     ASSERT( compilerOutput[ compilerOutputSize ] == 0 );
     (void)compilerOutputSize;
 
+    AStackString< 256 > rawIncludePath;
+    AStackString< 256 > tmpIncludePath;
     const char * pos = compilerOutput;
+    const char * endLine = nullptr;
     for (;;)
     {
-        const char * lineStart = pos;
+        // Look for next include information marker.
+        const char* nextIncludeMarker = strstr(pos, ms_ShowIncludesMarker.Get());
+        if ( !nextIncludeMarker )
+        {
+            break;  // No more includes
+        }
 
         // find end of the line
-        pos = strchr( pos, '\n' );
-        if ( !pos )
+        endLine = strchr( nextIncludeMarker, '\n' );
+        if ( !endLine )
         {
             break; // end of output
         }
+        endLine = endLine[-1] == '\r' ? endLine - 1 : endLine;
 
-        const char * lineEnd = ( lineStart < pos && pos[-1] == '\r' ) ? pos - 1 : pos;
+        // Find start of include - skipping indentation
+        const char* nextInclude = nextIncludeMarker + ms_ShowIncludesMarker.GetLength();
+        while( *nextInclude == ' ' )
+            ++nextInclude;
 
-        ASSERT( *pos == '\n' );
-        ++pos; // skip \r for next line
-
-        const char * ch = lineStart;
-
-        // count colons in the line
-        const char * colon1 = nullptr;
-        for ( ; ch < lineEnd ; ++ch )
+        // Assign raw includePath before any transformation
+        rawIncludePath.Assign( nextInclude, endLine );
+        if ( PathUtils::IsFullPath( rawIncludePath ) )
         {
-            if ( *ch == ':' )
+            AddInclude( rawIncludePath.Get(), rawIncludePath.Get() + rawIncludePath.GetLength() );
+        }
+        else
+        {
+            // We've got a relative path...
+            NodeGraph::CleanPath( rawIncludePath, tmpIncludePath );
+            bool fileExists = FileIO::FileExists( tmpIncludePath.Get() );
+            ASSERT( fileExists );
+            if ( fileExists ) // Something is wrong with the parsing
             {
-                if ( colon1 == nullptr )
-                {
-                    colon1 = ch;
-                }
-                else
-                {
-                    break;
-                }
+                AddInclude( tmpIncludePath.Get(), tmpIncludePath.Get() + tmpIncludePath.GetLength() );
+            }
+            else
+            {
+                FLOG_WARN( "Found non existing file when parsing dependencies: %s. Skipping it", tmpIncludePath.Get() );
             }
         }
 
-        // check that we have two colons separated by at least one char
-        if ( colon1 == nullptr || colon1 == lineStart ||
-             *ch != ':' || (ch - colon1) < 2 )
-        {
-            continue; // next line
-        }
-
-        ASSERT( *ch == ':' );
-        const char * colon2 = ch;
-
-        // skip whitespace (always spaces)
-        do
-        {
-            ++ch;
-        }
-        while ( *ch == ' ' );
-
-        // must have whitespaces
-        if ( ch == colon2 )
-        {
-            continue; // next line
-        }
-
-        const char * includeStart = ch;
-        const char * includeEnd = lineEnd;
-
-        // validates the windows path
-        bool validated = ( includeStart < includeEnd );
-        size_t colonCount( 0 );
-        for ( ; validated && ( ch < includeEnd ); ++ch )
-        {
-            switch ( *ch )
-            {
-                // https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
-                case '<':
-                case '>':
-                case '"':
-                case '|':
-                case '?':
-                case '*':
-                {
-                    validated = false;
-                    break;
-                }
-                case ':':
-                {
-                    // This logic handles warnings which might otherwise appear as valid paths
-                    ++colonCount;
-                    if ( colonCount > 1 )
-                    {
-                        validated = false;
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-
-        if ( validated )
-        {
-            const char c1 = includeStart[ 0 ];
-            const bool driveLetter = ( ( ( c1 >= 'A' ) && ( c1 <= 'Z' ) ) || ( ( c1 >= 'a' ) && ( c1 <= 'z' ) ) );
-            const bool validPath = driveLetter && ( includeStart[ 1 ] == ':' );
-            if ( validPath )
-            {
-                AddInclude( includeStart, includeEnd );
-            }
-        }
+        // Advance to next line
+        pos = endLine + 1;
     }
 
     return true;
