@@ -11,7 +11,6 @@
 
 // Core
 #include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Profile/Profile.h"
@@ -284,24 +283,27 @@ DirectoryListNode::~DirectoryListNode() = default;
     }
     else
     {
-        MemoryStream ms;
-        for ( const FileIO::FileInfo & file : m_Files )
+        xxHash3Accumulator hashAccumulator;
         {
-            // Include filenames, so additions and removals will change the hash
-            ms.WriteBuffer( file.m_Name.Get(), file.m_Name.GetLength() );
-
-            // Include read-only status if desired
-            if ( m_IncludeReadOnlyStatusInHash )
+            for ( const FileIO::FileInfo & file : m_Files )
             {
-                ms.Write( file.IsReadOnly() );
+                // Include filenames, so additions and removals will change the hash
+                hashAccumulator.AddData( file.m_Name.Get(), file.m_Name.GetLength() );
+
+                // Include read-only status if desired
+                if ( m_IncludeReadOnlyStatusInHash )
+                {
+                    const bool b = file.IsReadOnly();
+                    hashAccumulator.AddData( &b, sizeof(b) );
+                }
             }
         }
         for ( const AString & dir : m_Directories )
         {
             // additions and removals will change the hash
-            ms.WriteBuffer( dir.Get(), dir.GetLength() );
+            hashAccumulator.AddData( dir.Get(), dir.GetLength() );
         }
-        m_Stamp = xxHash3::Calc64( ms.GetData(), ms.GetSize() );
+        m_Stamp = hashAccumulator.Finalize64();
     }
 
     return BuildResult::eOk;
