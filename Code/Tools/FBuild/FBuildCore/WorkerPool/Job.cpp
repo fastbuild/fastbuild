@@ -26,6 +26,9 @@ static uint32_t s_LastJobId( 0 );
 //------------------------------------------------------------------------------
 Job::Job( Node * node )
     : m_Node( node )
+    , m_DataIsCompressed( false )
+    , m_IsLocal( true )
+    , m_AllowZstdUse( false )
 {
     // Constructor that assigns JobId can only be called on the main thread.
     ASSERT( Thread::IsMainThread() );
@@ -35,7 +38,9 @@ Job::Job( Node * node )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Job::Job( IOStream & stream )
-    : m_IsLocal( false )
+    : m_DataIsCompressed( false )
+    , m_IsLocal( false )
+    , m_AllowZstdUse( false )
 {
     Deserialize( stream );
 }
