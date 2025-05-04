@@ -14,6 +14,20 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 
+//------------------------------------------------------------------------------
+namespace
+{
+    #pragma pack(push, 1)
+    class SerializedDependency
+    {
+    public:
+        uint32_t    m_Index;
+        uint64_t    m_Stamp;
+        bool        m_IsWeak;
+    };
+    #pragma pack(pop)
+}
+
 // Save
 //------------------------------------------------------------------------------
 void Dependencies::Save( IOStream & stream ) const
@@ -25,22 +39,20 @@ void Dependencies::Save( IOStream & stream ) const
         return;
     }
 
+    SerializedDependency serializedDep;
+
     const Dependency * deps = GetDependencies( m_DependencyList );
     for ( size_t i = 0; i < numDeps; ++i )
     {
         const Dependency & dep = deps[ i ];
 
-        // Save index of node we depend on
-        const uint32_t index = dep.GetNode()->GetBuildPassTag();
-        stream.Write( index );
+        // Prepare structure to serialize and write in one operation
+        // to greatly reduce serialization overhead
+        serializedDep.m_Index = dep.GetNode()->GetBuildPassTag();
+        serializedDep.m_Stamp = dep.GetNodeStamp();
+        serializedDep.m_IsWeak = dep.IsWeak();
 
-        // Save stamp
-        const uint64_t stamp = dep.GetNodeStamp();
-        stream.Write( stamp );
-
-        // Save weak flag
-        const bool isWeak = dep.IsWeak();
-        stream.Write( isWeak );
+        VERIFY( stream.WriteBuffer( &serializedDep, sizeof(SerializedDependency) ) == sizeof(SerializedDependency) );
     }
 }
 
@@ -57,27 +69,23 @@ void Dependencies::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
         return;
     }
 
+    // Bypass serialization functions and directly interpret in-memory buffer
+    // to avoid non-trivial function overheads
+    const uint64_t pos = stream.Tell();
+    const char * data = ( static_cast<const char *>( stream.GetData() ) + pos );
+    stream.Seek( pos + ( sizeof(SerializedDependency) * numDeps ) );
+
     SetCapacity( numDeps );
     for ( uint32_t i=0; i<numDeps; ++i )
     {
-        // Read node index
-        uint32_t index( INVALID_NODE_INDEX );
-        VERIFY( stream.Read( index ) );
+        const SerializedDependency * dep = reinterpret_cast<const SerializedDependency *>( data ) + i;
 
         // Convert to Node *
-        Node * node = nodeGraph.GetNodeByIndex( index );
+        Node * node = nodeGraph.GetNodeByIndex( dep->m_Index );
         ASSERT( node );
 
-        // Read Stamp
-        uint64_t stamp;
-        VERIFY( stream.Read( stamp ) );
-
-        // Read weak flag
-        bool isWeak( false );
-        VERIFY( stream.Read( isWeak ) );
-
         // Recombine dependency info
-        Add( node, stamp, isWeak );
+        Add( node, dep->m_Stamp, dep->m_IsWeak );
     }
 }
 
