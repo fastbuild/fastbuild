@@ -963,7 +963,10 @@ void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // EmitStampMessage
@@ -987,7 +990,10 @@ void LinkerNode::EmitStampMessage() const
         output += m_LinkerStampExeArgs;
         output += '\n';
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // GetResponseFileMode

@@ -1787,7 +1787,10 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // BuildArgs

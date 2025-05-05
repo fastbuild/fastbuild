@@ -285,7 +285,10 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
             output += '\n';
         }
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 //------------------------------------------------------------------------------

@@ -110,16 +110,16 @@ TextFileNode::~TextFileNode() = default;
 //------------------------------------------------------------------------------
 void TextFileNode::EmitCompilationMessage() const
 {
-    AStackString<> output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
+        AStackString<> output;
         output += "Txt: ";
         output += GetName();
         output += '\n';
+        
+        // output all at once for contiguousness 
+        FLOG_OUTPUT( output );
     }
-
-    // output all at once for contiguousness
-    FLOG_OUTPUT( output );
 }
 
 //------------------------------------------------------------------------------

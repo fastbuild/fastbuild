@@ -287,7 +287,10 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     }
 
     // output all at once for contiguousness
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // GetFullArgs
