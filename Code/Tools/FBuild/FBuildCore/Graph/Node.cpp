@@ -88,6 +88,26 @@
 };
 static Mutex g_NodeEnvStringMutex;
 
+//------------------------------------------------------------------------------
+namespace
+{
+    #pragma pack(push, 1)
+    class SerializedFileNode
+    {
+    public:
+        uint8_t     m_Type;
+        uint32_t    m_NameHash;
+    };
+
+    class SerializedNode : public SerializedFileNode
+    {
+    public:
+        uint64_t    m_Stamp;
+        uint32_t    m_LastBuildTime;
+    };
+    #pragma pack(pop)
+}
+
 // Custom MetaData
 //------------------------------------------------------------------------------
 IMetaData & MetaName( const char * name )
@@ -328,15 +348,18 @@ void Node::SetLastBuildTime( uint32_t ms )
 //------------------------------------------------------------------------------
 /*static*/ Node * Node::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
 {
-    // read type
-    uint8_t nodeType;
-    VERIFY( stream.Read( nodeType ) );
-
     // Name of node
     AString name;
     VERIFY( stream.Read( name ) );
-    uint32_t nameHash;
-    VERIFY( stream.Read( nameHash ) );
+
+    // Use data directly from memory buffer
+    const uint64_t pos = stream.Tell();
+    const char * data = static_cast<const char *>( stream.GetData() );
+    const SerializedNode & serializedNode = *reinterpret_cast<const SerializedNode *>( data + pos );
+
+    // Common attributes
+    const uint8_t nodeType = serializedNode.m_Type;
+    const uint32_t nameHash = serializedNode.m_NameHash;
 
     // Create node
     Node * n = nodeGraph.CreateNode( (Type)nodeType, Move( name ), nameHash );
@@ -345,23 +368,22 @@ void Node::SetLastBuildTime( uint32_t ms )
     // Early out for FileNode
     if ( nodeType == Node::FILE_NODE )
     {
+        // Consume common attributes
+        VERIFY( stream.Seek( pos + sizeof( SerializedFileNode ) ) );
         return n;
     }
 
-    // Read stamp
-    uint64_t stamp;
-    VERIFY( stream.Read( stamp ) );
+    // Consume extended data
+    VERIFY( stream.Seek( pos + sizeof( SerializedNode ) ) );
 
     // Build time
-    uint32_t lastTimeToBuild;
-    VERIFY( stream.Read( lastTimeToBuild ) );
-    n->SetLastBuildTime( lastTimeToBuild );
+    n->SetLastBuildTime( serializedNode.m_LastBuildTime );
 
     // Deserialize properties
     Deserialize( stream, n, *n->GetReflectionInfoV() );
 
     // set stamp
-    n->m_Stamp = stamp;
+    n->m_Stamp = serializedNode.m_Stamp;
     return n;
 }
 
@@ -393,30 +415,31 @@ void Node::SetLastBuildTime( uint32_t ms )
 {
     ASSERT( node );
 
-    // save type
-    const uint8_t nodeType = node->GetType();
-    stream.Write( nodeType );
-
     // Save Name
     stream.Write( node->m_Name );
-    stream.Write( node->m_NameHash );
+
+    // Prep common data
+    SerializedNode serializedNode;
+    serializedNode.m_Type = node->GetType();
+    serializedNode.m_NameHash = node->m_NameHash;
 
     // FileNodes don't need most things serialized:
     // - their stamp is obtained every build, so doesn't need saving
     // - they take sub 1ms to check, so don't need their build time saved
     // - they have no reflected properties
-    if ( nodeType == Node::FILE_NODE )
+    if ( node->m_Type == Node::FILE_NODE )
     {
+        // Save only the SerializedFileNode subset
+        VERIFY( stream.WriteBuffer( &serializedNode, sizeof( SerializedFileNode ) ) == sizeof( SerializedFileNode ) );
         return;
     }
 
-    // Stamp
-    const uint64_t stamp = node->GetStamp();
-    stream.Write( stamp );
+    // Prep extended data
+    serializedNode.m_Stamp = node->GetStamp();
+    serializedNode.m_LastBuildTime = node->GetLastBuildTime();
 
-    // Build time
-    const uint32_t lastBuildTime = node->GetLastBuildTime();
-    stream.Write( lastBuildTime );
+    // Save everything
+    VERIFY( stream.WriteBuffer( &serializedNode, sizeof( SerializedNode ) ) == sizeof( SerializedNode ) );
 
     // Properties
     const ReflectionInfo * const ri = node->GetReflectionInfoV();
