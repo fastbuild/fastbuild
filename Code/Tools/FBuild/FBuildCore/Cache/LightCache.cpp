@@ -73,14 +73,7 @@ class IncludedFileHashSet
 public:
     IncludedFileHashSet( const IncludedFileHashSet & ) = delete;
     IncludedFileHashSet & operator=( const IncludedFileHashSet & ) = delete;
-    IncludedFileHashSet()
-    {
-        m_Buckets.SetSize( LIGHTCACHE_DEFAULT_BUCKET_SIZE );
-        for ( IncludedFile * & elt : m_Buckets )
-        {
-            elt = nullptr;
-        }
-    }
+    IncludedFileHashSet() = default;
 
     ~IncludedFileHashSet()
     {
