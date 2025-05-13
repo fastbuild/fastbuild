@@ -414,6 +414,7 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
          ( identifier == BFF_KEYWORD_IMPORT ) ||
          ( identifier == BFF_KEYWORD_INCLUDE ) ||
          ( identifier == BFF_KEYWORD_IN ) ||
+         ( identifier == BFF_KEYWORD_OUT ) ||
          ( identifier == BFF_KEYWORD_NOT ) ||
          ( identifier == BFF_KEYWORD_ONCE ) ||
          ( identifier == BFF_KEYWORD_UNDEF ) )

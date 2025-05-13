@@ -174,6 +174,7 @@ public:
                                                          uint32_t numArgsProvided,
                                                          uint32_t numArgsExpected );
     static void Error_1112_FunctionCallExpectedArgument( const BFFToken * iter );
+    static void Error_1113_FunctionCallExpectedVariableArgument( const BFFToken * iter );
 
     // 1200 - 1299 : ForEach specific errors
     //------------------------------------------------------------------------------
