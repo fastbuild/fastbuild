@@ -47,9 +47,23 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
     StackArray< AString > tokens;
     commandLine.Tokenize( tokens );
 
+    #if defined( __WINDOWS__ )
+        bool baseExe = false;
+        AString::RemoveQuotes( tokens );
+    #endif
+
     // Check each token
     for ( const AString & token : tokens )
     {
+        #if defined( __WINDOWS__ )
+            if ( baseExe )
+            {
+                m_BaseExe = token;
+                baseExe = false;
+                continue;
+            }
+        #endif
+
         #if defined( __WINDOWS__ ) || defined( __OSX__ )
             if ( token == "-console" )
             {
@@ -138,6 +152,12 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
                 m_IsSubprocess = true;
                 continue;
             }
+            else if ( token == "-baseexe" )
+            {
+                // we expect the next loop iteration to hold the path
+                baseExe = true;
+                continue;
+            }
             else if ( token == "-debug" )
             {
                 Env::ShowMsgBox( "FBuildWorker", "Please attach debugger and press ok\n\n(-debug command line used)" );
@@ -161,6 +181,8 @@ void FBuildWorkerOptions::ShowUsageError()
                        "\n"
                        "Command Line Options:\n"
                        "---------------------------------------------------------------------------\n"
+                       " -baseexe <path>\n"
+                       "        (Windows) Location of the base executable when used as a worker copy\n"
                        " -console\n"
                        "        (Windows/OSX) Operate from console instead of GUI.\n"
                        " -cpus=<n|-n|n%>   Set number of CPUs to use:\n"
