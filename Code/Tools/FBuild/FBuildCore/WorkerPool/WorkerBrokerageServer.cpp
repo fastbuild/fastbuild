@@ -74,7 +74,6 @@ void WorkerBrokerageServer::SetAvailability( bool available )
 
             // Check IP last update time and determine if host name or IP address has changed
             if ( m_HostName.IsEmpty() ||
-                 m_IPAddress.IsEmpty() ||
                  ( m_TimerLastIPUpdate.GetElapsed() >= sBrokerageIPAddressUpdateTime ) )
             {
                 AStackString<> hostName;
@@ -85,14 +84,21 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                 Network::GetHostName( hostName );
                 Network::GetDomainName( domainName );
 
-                // Resolve host name to ip address
-                const uint32_t ip = Network::GetHostIPFromName( hostName );
-                if ( ( ip != 0 ) && ( ip != 0x0100007f ) )
+                if ( m_IPAddressOverridden )
                 {
-                    TCPConnectionPool::GetAddressAsString( ip, ipAddress );
+                    ipAddress = m_IPAddress;
+                }
+                else
+                {
+                    // Resolve host name to ip address
+                    const uint32_t ip = Network::GetHostIPFromName( hostName );
+                    if ( ( ip != 0 ) && ( ip != 0x0100007f ) )
+                    {
+                        TCPConnectionPool::GetAddressAsString( ip, ipAddress );
+                    }
                 }
 
-                if ( ( hostName != m_HostName ) || ( domainName != m_DomainName ) || ( ipAddress != m_IPAddress ) )
+                if ( ( hostName != m_HostName ) || ( domainName != m_DomainName ) ||  ( ipAddress != m_IPAddress ) )
                 {
                     m_HostName = hostName;
                     m_DomainName = domainName;
@@ -236,6 +242,14 @@ void WorkerBrokerageServer::UpdateBrokerageFilePath()
             m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
         }
     }
+}
+
+// SetIPAddressOverride
+//------------------------------------------------------------------------------
+void WorkerBrokerageServer::SetIPAddressOverride( const AString & ipAddress )
+{
+    m_IPAddress = ipAddress;
+    m_IPAddressOverridden = true;
 }
 
 //------------------------------------------------------------------------------

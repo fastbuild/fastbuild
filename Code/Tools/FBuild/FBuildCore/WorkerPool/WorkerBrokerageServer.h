@@ -24,6 +24,9 @@ public:
     void SetAvailability( bool available );
 
     const AString & GetHostName() const { return m_HostName; }
+    const AString & GetIPAddress() const { return m_IPAddress; }
+    void SetIPAddressOverride( const AString & ipAddress );
+
 
 protected:
     void UpdateBrokerageFilePath();
@@ -34,6 +37,7 @@ protected:
     uint64_t            m_SettingsWriteTime = 0; // FileTime of settings time when last changed
     bool                m_Available = false;
     AString             m_BrokerageFilePath;
+    bool                m_IPAddressOverridden = false;
     AString             m_IPAddress;
     AString             m_DomainName;
     AString             m_HostName;

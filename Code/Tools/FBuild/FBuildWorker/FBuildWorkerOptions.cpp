@@ -118,6 +118,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_PeriodicRestart = true;
             continue;
         }
+        else if ( token.BeginsWith( "-ipaddress=" ) )
+        {
+            m_OverrideIPAddress = AString( token.Get() + 11 );
+            continue;
+        }
         #if defined( __WINDOWS__ )
             else if ( token.BeginsWith( "-minfreememory=" ) )
             {
@@ -181,6 +186,8 @@ void FBuildWorkerOptions::ShowUsageError()
                        "        (Windows) Don't spawn a sub-process worker copy.\n"
                        " -periodicrestart\n"
                        "        Worker will restart every 4 hours.\n"
+                       " -ipaddress=<ipaddress>\n"
+                       "        Worker will advertise as this specific IP address.\n"
                        "---------------------------------------------------------------------------\n"
                        ;
 
