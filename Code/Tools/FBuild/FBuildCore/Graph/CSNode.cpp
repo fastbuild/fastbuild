@@ -147,7 +147,7 @@ CSNode::~CSNode() = default;
 
         // get the list of files
         const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )
         {
@@ -277,7 +277,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
 bool CSNode::BuildArgs( Args & fullArgs ) const
 {
     // split into tokens
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     m_CompilerOptions.Tokenize( tokens );
 
     AStackString<> quote( "\"" );

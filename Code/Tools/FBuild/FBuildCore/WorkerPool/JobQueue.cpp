@@ -57,12 +57,12 @@ uint32_t JobSubQueue::GetCount() const
 
 // JobSubQueue:QueueJobs
 //------------------------------------------------------------------------------
-void JobSubQueue::QueueJobs( Array< Node * > & nodes )
+void JobSubQueue::QueueJobs( Array<Node *> & nodes )
 {
     PROFILE_FUNCTION;
 
     // Create wrapper Jobs around Nodes
-    Array< Job * > jobs;
+    Array<Job *> jobs;
     jobs.SetCapacity( nodes.GetSize() );
     for ( Node * node : nodes )
     {
@@ -87,7 +87,7 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     }
 
     // Merge lists
-    Array< Job * > mergedList;
+    Array<Job *> mergedList;
     mergedList.SetSize( m_Jobs.GetSize() + jobs.GetSize() );
     Job ** dst = mergedList.Begin();
     Job ** src1 = m_Jobs.Begin();
@@ -136,7 +136,7 @@ Job * JobSubQueue::RemoveJob()
         return nullptr;
     }
 
-    VERIFY( AtomicDec( &m_Count ) != static_cast< uint32_t >( -1 ) );
+    VERIFY( AtomicDec( &m_Count ) != static_cast<uint32_t>( -1 ) );
 
     Job * job = m_Jobs.Top();
     m_Jobs.Pop();
@@ -686,10 +686,10 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
     }
 
     // Process results
-    Array< Job * > * jobArrays[] = { &m_CompletedJobs2,
-                                     &m_CompletedJobsAborted2,
-                                     &m_CompletedJobsFailed2 };
-    for ( Array< Job * > * jobArray : jobArrays )
+    Array<Job *> * jobArrays[] = { &m_CompletedJobs2,
+                                   &m_CompletedJobsAborted2,
+                                   &m_CompletedJobsFailed2 };
+    for ( Array<Job *> * jobArray : jobArrays )
     {
         const bool completedJob = ( jobArray == &m_CompletedJobs2 );
         const bool failedJob = ( jobArray == &m_CompletedJobsFailed2 );

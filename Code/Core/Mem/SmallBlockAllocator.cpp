@@ -55,7 +55,7 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
 
     // Construct the bucket structures in the reserved space
     // (Done this way to avoid memory allocations which would be re-entrant)
-    s_Buckets = reinterpret_cast< MemBucket * >( s_BucketMemBucketMemory );
+    s_Buckets = reinterpret_cast<MemBucket *>( s_BucketMemBucketMemory );
     for ( size_t i = 0; i < BUCKET_NUM_BUCKETS; ++i )
     {
         const size_t size = BUCKET_ALIGNMENT * ( i + 1 );

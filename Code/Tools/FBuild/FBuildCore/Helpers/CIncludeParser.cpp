@@ -361,7 +361,7 @@ PRAGMA_DISABLE_POP_MSVC
 
 // SwapIncludes
 //------------------------------------------------------------------------------
-void CIncludeParser::SwapIncludes( Array< AString > & includes )
+void CIncludeParser::SwapIncludes( Array<AString> & includes )
 {
     m_Includes.Swap( includes );
 }
@@ -388,8 +388,8 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
     m_CRCs1.Append( crc1 );
 
     // robust check
-    AStackString< 256 > include( begin, end );
-    AStackString< 256 > cleanInclude;
+    AStackString<256> include( begin, end );
+    AStackString<256> cleanInclude;
     NodeGraph::CleanPath( include, cleanInclude );
     #if defined( __WINDOWS__ ) || defined( __OSX__ )
         // Windows and OSX are case-insensitive

@@ -199,13 +199,13 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
         outUserTime = cpuInfo.cpu_ticks[ CPU_STATE_USER ];
     #elif defined( __LINUX__ )
         // Read first line of /proc/stat
-        AStackString< 1024 > procStat;
+        AStackString<1024> procStat;
         VERIFY( GetProcessInfoString( "/proc/stat", procStat ) ); // Should never fail
 
         // First line should be system totals
         if ( procStat.BeginsWithI( "cpu" ) )
         {
-            StackArray< uint32_t > values;
+            StackArray<uint32_t> values;
             const char * pos = procStat.Get() + 4; // skip "cpu "
             for ( ;; )
             {
@@ -265,11 +265,11 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
         outUserTime = 0;
     #elif defined( __LINUX__ )
         // Read first line of /proc/<pid>/stat for the process
-        AStackString< 1024 > processInfo;
+        AStackString<1024> processInfo;
         if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pi.m_PID ).Get(),
                                    processInfo ) )
         {
-            StackArray< AString > tokens;
+            StackArray<AString> tokens;
             processInfo.Tokenize( tokens, ' ' );
             if ( tokens.GetSize() >= 15 )
             {
@@ -408,7 +408,7 @@ void IdleDetection::UpdateProcessList()
                 const uint32_t pid = strtoul( entry->d_name, nullptr, 10 );
 
                 // Read the first line of /proc/<pid>/stat for the process
-                AStackString< 1024 > processInfo;
+                AStackString<1024> processInfo;
                 if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pid ).Get(),
                                            processInfo ) == false )
                 {
@@ -416,7 +416,7 @@ void IdleDetection::UpdateProcessList()
                 }
 
                 // Item index 3 (0-based) is the parent PID
-                StackArray< AString > tokens;
+                StackArray<AString> tokens;
                 processInfo.Tokenize( tokens, ' ' );
                 const uint32_t parentPID = strtoul( tokens[ 3 ].Get(), nullptr, 10 );
 
@@ -469,7 +469,7 @@ void IdleDetection::UpdateProcessList()
 //------------------------------------------------------------------------------
 #if defined( __LINUX__ )
     /*static*/ bool IdleDetection::GetProcessInfoString( const char * fileName,
-                                                         AStackString< 1024 > & outProcessInfoString )
+                                                         AStackString<1024> & outProcessInfoString )
     {
         // Open the file
         FileStream f;

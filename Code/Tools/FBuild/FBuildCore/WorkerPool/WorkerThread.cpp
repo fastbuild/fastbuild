@@ -107,7 +107,7 @@ void WorkerThread::WaitForStop()
 //------------------------------------------------------------------------------
 /*static*/ void WorkerThread::ThreadWrapperFunc( void * param )
 {
-    WorkerThread * wt = static_cast< WorkerThread * >( param );
+    WorkerThread * wt = static_cast<WorkerThread *>( param );
     s_WorkerThreadThreadIndex = wt->m_ThreadIndex;
 
     wt->Main();

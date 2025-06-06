@@ -122,7 +122,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     jqr.CancelJobsWithUserData( cs );
 
     // check if any tool chain was being sync'd from this Client
-    Array< ToolManifest * > cancelledManifests;
+    Array<ToolManifest *> cancelledManifests;
     {
         MutexHolder manifestMH( m_ToolManifestsMutex );
         for ( ToolManifest * tm : m_Tools )
@@ -190,7 +190,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     if ( cs->m_CurrentMessage == nullptr )
     {
         // message
-        cs->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
+        cs->m_CurrentMessage = static_cast<const Protocol::IMessage *>( data );
         if ( cs->m_CurrentMessage->HasPayload() )
         {
             return;
@@ -214,37 +214,37 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     {
         case Protocol::MSG_CONNECTION:
         {
-            const Protocol::MsgConnection * msg = static_cast< const Protocol::MsgConnection * >( imsg );
+            const Protocol::MsgConnection * msg = static_cast<const Protocol::MsgConnection *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_STATUS:
         {
-            const Protocol::MsgStatus * msg = static_cast< const Protocol::MsgStatus * >( imsg );
+            const Protocol::MsgStatus * msg = static_cast<const Protocol::MsgStatus *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_NO_JOB_AVAILABLE:
         {
-            const Protocol::MsgNoJobAvailable * msg = static_cast< const Protocol::MsgNoJobAvailable * >( imsg );
+            const Protocol::MsgNoJobAvailable * msg = static_cast<const Protocol::MsgNoJobAvailable *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_JOB:
         {
-            const Protocol::MsgJob * msg = static_cast< const Protocol::MsgJob * >( imsg );
+            const Protocol::MsgJob * msg = static_cast<const Protocol::MsgJob *>( imsg );
             Process( connection, msg, payload, payloadSize );
             break;
         }
         case Protocol::MSG_MANIFEST:
         {
-            const Protocol::MsgManifest * msg = static_cast< const Protocol::MsgManifest * >( imsg );
+            const Protocol::MsgManifest * msg = static_cast<const Protocol::MsgManifest *>( imsg );
             Process( connection, msg, payload, payloadSize );
             break;
         }
         case Protocol::MSG_FILE:
         {
-            const Protocol::MsgFile * msg = static_cast< const Protocol::MsgFile * >( imsg );
+            const Protocol::MsgFile * msg = static_cast<const Protocol::MsgFile *>( imsg );
             Process( connection, msg, payload, payloadSize );
             break;
         }
@@ -799,7 +799,7 @@ void Server::RequestMissingFiles( const ConnectionInfo * connection, ToolManifes
 {
     MutexHolder manifestMH( m_ToolManifestsMutex );
 
-    const Array< ToolManifestFile > & files = manifest->GetFiles();
+    const Array<ToolManifestFile> & files = manifest->GetFiles();
     const size_t numFiles = files.GetSize();
     for ( size_t i=0; i<numFiles; ++i )
     {

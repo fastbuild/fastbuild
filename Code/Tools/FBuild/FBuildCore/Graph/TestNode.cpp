@@ -153,7 +153,7 @@ const char * TestNode::GetEnvironmentString() const
 
         // get the list of files
         const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )
         {

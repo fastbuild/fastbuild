@@ -161,7 +161,7 @@ private:
 
     // remote connection related info
     mutable Mutex               m_ConnectionsMutex;
-    Array< ConnectionInfo * >   m_Connections;
+    Array<ConnectionInfo *>     m_Connections;
 
     bool                        m_ShuttingDown;
     Semaphore                   m_ShutdownSemaphore;

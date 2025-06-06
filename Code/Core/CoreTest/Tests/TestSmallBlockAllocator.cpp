@@ -39,16 +39,16 @@ private:
     class ThreadInfo
     {
     public:
-        Thread                  m_Thread;
-        Array< uint32_t > *     m_AllocationSizes   = nullptr;
-        uint32_t                m_RepeatCount       = 0;
-        float                   m_TimeTaken         = 0.0f;
+        Thread              m_Thread;
+        Array<uint32_t> *   m_AllocationSizes   = nullptr;
+        uint32_t            m_RepeatCount       = 0;
+        float               m_TimeTaken         = 0.0f;
     };
 
     // Helper functions
-    static void     GetRandomAllocSizes( const uint32_t numAllocs, Array< uint32_t> & allocSizes );
-    static float    AllocateFromSystemAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount );
-    static float    AllocateFromSmallBlockAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount );
+    static void     GetRandomAllocSizes( const uint32_t numAllocs, Array<uint32_t> & allocSizes );
+    static float    AllocateFromSystemAllocator( const Array<uint32_t> & allocSizes, const uint32_t repeatCount );
+    static float    AllocateFromSmallBlockAllocator( const Array<uint32_t> & allocSizes, const uint32_t repeatCount );
     static uint32_t ThreadFunction_System( void * userData );
     static uint32_t ThreadFunction_SmallBlock( void * userData );
 };
@@ -71,7 +71,7 @@ void TestSmallBlockAllocator::SingleThreaded() const
     #endif
     const uint32_t repeatCount( 10 );
 
-    Array< uint32_t > allocSizes;
+    Array<uint32_t> allocSizes;
     GetRandomAllocSizes( numAllocs, allocSizes );
 
     const float time1 = AllocateFromSystemAllocator( allocSizes, repeatCount );
@@ -93,7 +93,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
     #endif
     const uint32_t repeatCount( 10 );
 
-    Array< uint32_t > allocSizes;
+    Array<uint32_t> allocSizes;
     GetRandomAllocSizes( numAllocs, allocSizes );
 
     float time1( 0.0f );
@@ -146,7 +146,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
 
 // GetRandomAllocSizes
 //------------------------------------------------------------------------------
-/*static*/ void TestSmallBlockAllocator::GetRandomAllocSizes( const uint32_t numAllocs, Array< uint32_t > & allocSizes )
+/*static*/ void TestSmallBlockAllocator::GetRandomAllocSizes( const uint32_t numAllocs, Array<uint32_t> & allocSizes )
 {
     const size_t maxSize( 256 ); // max supported size of block allocator
 
@@ -163,11 +163,11 @@ void TestSmallBlockAllocator::MultiThreaded() const
 
 // AllocateFromSystemAllocator
 //------------------------------------------------------------------------------
-/*static*/ float TestSmallBlockAllocator::AllocateFromSystemAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount )
+/*static*/ float TestSmallBlockAllocator::AllocateFromSystemAllocator( const Array<uint32_t> & allocSizes, const uint32_t repeatCount )
 {
     const size_t numAllocs = allocSizes.GetSize();
 
-    Array< void * > allocs;
+    Array<void *> allocs;
     allocs.SetCapacity( numAllocs );
     const Timer timer;
 
@@ -199,11 +199,11 @@ void TestSmallBlockAllocator::MultiThreaded() const
 
 // AllocateFromSmallBlockAllocator
 //------------------------------------------------------------------------------
-/*static*/ float TestSmallBlockAllocator::AllocateFromSmallBlockAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount )
+/*static*/ float TestSmallBlockAllocator::AllocateFromSmallBlockAllocator( const Array<uint32_t> & allocSizes, const uint32_t repeatCount )
 {
     const size_t numAllocs = allocSizes.GetSize();
 
-    Array< void * > allocs;
+    Array<void *> allocs;
     allocs.SetCapacity( numAllocs );
     const Timer timer;
 
@@ -233,7 +233,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestSmallBlockAllocator::ThreadFunction_System( void * userData )
 {
-    ThreadInfo & info = *( static_cast< ThreadInfo * >( userData ) );
+    ThreadInfo & info = *( static_cast<ThreadInfo *>( userData ) );
     info.m_TimeTaken = AllocateFromSystemAllocator( *info.m_AllocationSizes, info.m_RepeatCount );
     return 0;
 }
@@ -242,7 +242,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestSmallBlockAllocator::ThreadFunction_SmallBlock( void * userData )
 {
-    ThreadInfo & info = *( static_cast< ThreadInfo * >( userData ) );
+    ThreadInfo & info = *( static_cast<ThreadInfo *>( userData ) );
     info.m_TimeTaken = AllocateFromSmallBlockAllocator( *info.m_AllocationSizes, info.m_RepeatCount );
     return 0;
 }

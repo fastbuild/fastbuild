@@ -682,7 +682,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         AStackString<> languageStandard( "gnu++0x" );
         if ( oln )
         {
-            StackArray< AString > extraOptions;
+            StackArray<AString> extraOptions;
             ProjectGeneratorBase::ExtractAdditionalOptions( oln->GetCompilerOptions(), extraOptions );
             for ( const AString & option : extraOptions )
             {
@@ -701,7 +701,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         {
             // Defines
             {
-                StackArray< AString, 64 > defines;
+                StackArray<AString, 64> defines;
                 ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, false );
                 WriteArray( 4, "GCC_PREPROCESSOR_DEFINITIONS", defines );
             }
@@ -721,8 +721,8 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         {
             // User Include Paths
             {
-                StackArray< AString, 64 > includePaths;
-                StackArray< AString, 64 > forceIncludePaths; // TODO:C Is there a place in XCode projects to put this?
+                StackArray<AString, 64> includePaths;
+                StackArray<AString, 64> forceIncludePaths; // TODO:C Is there a place in XCode projects to put this?
                 ProjectGeneratorBase::ExtractIncludePaths( oln->GetCompilerOptions(), includePaths, forceIncludePaths, true );
                 for ( AString & include : includePaths )
                 {

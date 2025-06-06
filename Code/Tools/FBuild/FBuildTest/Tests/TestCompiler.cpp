@@ -142,7 +142,7 @@ void TestCompiler::BuildCompiler_Implicit() const
         TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
         // Ensure node was implicitly created
-        Array< const Node * > compilerNodes;
+        Array<const Node *> compilerNodes;
         fBuild.GetNodesOfType( Node::COMPILER_NODE, compilerNodes );
         TEST_ASSERT( compilerNodes.GetSize() == 1 );
         compilerNodeName = compilerNodes[ 0 ]->GetName();
@@ -166,7 +166,7 @@ void TestCompiler::BuildCompiler_Implicit() const
         TEST_ASSERT( fBuild.Build( compilerNodeName ) );
 
         // Ensure node was implicitly created
-        Array< const Node * > compilerNodes;
+        Array<const Node *> compilerNodes;
         fBuild.GetNodesOfType( Node::COMPILER_NODE, compilerNodes );
         TEST_ASSERT( compilerNodes.GetSize() == 1 );
 

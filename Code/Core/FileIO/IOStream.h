@@ -41,7 +41,7 @@ public:
     bool Read( uint32_t & u )    { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
     bool Read( uint64_t & u )    { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
     bool Read( AString & string );
-    template< class T > bool Read( Array< T > & a );
+    template <class T> bool Read( Array<T> & a );
 
     // helper write wrappers
     uint64_t Write( const void * b, size_t s ) { return WriteBuffer( b, s ); }
@@ -55,17 +55,17 @@ public:
     bool Write( const uint32_t & u ) { return ( WriteBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
     bool Write( const uint64_t & u ) { return ( WriteBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
     bool Write( const AString & string );
-    template< class T > bool Write( const Array< T > & a );
+    template <class T> bool Write( const Array<T> & a );
 
     // manage memory-mapped aligned data
     void AlignRead( size_t alignment );
     void AlignWrite( size_t alignment );
 };
 
-// Read ( Array< T > )
+// Read ( Array<T> )
 //------------------------------------------------------------------------------
-template< class T >
-bool IOStream::Read( Array< T > & a )
+template <class T>
+bool IOStream::Read( Array<T> & a )
 {
     uint32_t num = 0;
     if ( Read( num ) == false ) { return false; }
@@ -77,10 +77,10 @@ bool IOStream::Read( Array< T > & a )
     return true;
 }
 
-// Write ( Array< T > )
+// Write ( Array<T> )
 //------------------------------------------------------------------------------
-template< class T >
-bool IOStream::Write( const Array< T > & a )
+template <class T>
+bool IOStream::Write( const Array<T> & a )
 {
     const uint32_t num = (uint32_t)a.GetSize();
     if ( Write( num ) == false ) { return false; }

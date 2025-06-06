@@ -38,8 +38,8 @@ private:
     virtual const AString & GetProjectTypeGuid() const override;
 
     // Exposed
-    AString                             m_ProjectTypeGuid;
-    Array< VSExternalProjectConfig >    m_ProjectConfigs;
+    AString                         m_ProjectTypeGuid;
+    Array<VSExternalProjectConfig>  m_ProjectConfigs;
 };
 
 //------------------------------------------------------------------------------

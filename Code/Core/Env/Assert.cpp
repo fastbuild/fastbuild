@@ -132,10 +132,10 @@ bool IsDebuggerAttached()
                                          ... )
 {
     #ifdef DEBUG
-        AStackString< 4096 > buffer( message );
+        AStackString<4096> buffer( message );
         buffer += '\n';
 
-        AStackString< 4096 > buffer2;
+        AStackString<4096> buffer2;
         va_list args;
         va_start( args, fmtString );
         buffer2.VFormat( fmtString, args );

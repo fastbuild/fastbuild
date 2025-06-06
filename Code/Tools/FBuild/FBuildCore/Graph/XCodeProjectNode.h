@@ -29,7 +29,7 @@ public:
     AString             m_XCodeIphoneOSDeploymentTarget;
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
-                                Array< XCodeProjectConfig > & configs,
+                                Array<XCodeProjectConfig> & configs,
                                 const BFFToken * iter = nullptr,
                                 const Function * function = nullptr );
 };
@@ -50,15 +50,15 @@ private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void PostLoad( NodeGraph & nodeGraph ) override;
 
-    Array< AString >    m_ProjectInputPaths;
-    Array< AString >    m_ProjectInputPathsExclude;
+    Array<AString>      m_ProjectInputPaths;
+    Array<AString>      m_ProjectInputPathsExclude;
     bool                m_ProjectInputPathsRecurse = true;
-    Array< AString >    m_ProjectFiles;
-    Array< AString >    m_ProjectFilesToExclude;
-    Array< AString >    m_PatternToExclude;
-    Array< AString >    m_ProjectBasePath;
-    Array< AString >    m_ProjectAllowedFileExtensions;
-    Array< XCodeProjectConfig > m_ProjectConfigs;
+    Array<AString>      m_ProjectFiles;
+    Array<AString>      m_ProjectFilesToExclude;
+    Array<AString>      m_PatternToExclude;
+    Array<AString>      m_ProjectBasePath;
+    Array<AString>      m_ProjectAllowedFileExtensions;
+    Array<XCodeProjectConfig> m_ProjectConfigs;
     AString             m_XCodeOrganizationName;
     AString             m_XCodeBuildToolPath;
     AString             m_XCodeBuildToolArgs;

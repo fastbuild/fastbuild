@@ -166,7 +166,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
 //------------------------------------------------------------------------------
 /*static*/ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AString & baseDir, void * userData )
 {
-    ObjectListContext * ctx = static_cast< ObjectListContext * >( userData );
+    ObjectListContext * ctx = static_cast<ObjectListContext *>( userData );
     ctx->m_DB->HandleInputFile( inputFile, baseDir, ctx );
 }
 

@@ -11,7 +11,7 @@
 
 // WorkerSettings
 //------------------------------------------------------------------------------
-class WorkerSettings : public Singleton< WorkerSettings >
+class WorkerSettings : public Singleton<WorkerSettings>
 {
 public:
     explicit WorkerSettings();

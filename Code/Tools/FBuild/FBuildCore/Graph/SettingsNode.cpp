@@ -159,7 +159,7 @@ const ConcurrencyGroup & SettingsNode::GetConcurrencyGroup( uint8_t index ) cons
 
 // ProcessEnvironment
 //------------------------------------------------------------------------------
-void SettingsNode::ProcessEnvironment( const Array< AString > & envStrings ) const
+void SettingsNode::ProcessEnvironment( const Array<AString> & envStrings ) const
 {
     // the environment string is used in windows as a double-null terminated string
     // so convert our array to a single buffer
@@ -172,7 +172,7 @@ void SettingsNode::ProcessEnvironment( const Array< AString > & envStrings ) con
     }
 
     // allocate space
-    UniquePtr< char, FreeDeletor > envString( (char *)ALLOC( size + 1 ) ); // +1 for extra double-null
+    UniquePtr<char, FreeDeletor> envString( (char *)ALLOC( size + 1 ) ); // +1 for extra double-null
 
     // while iterating, extract the LIB environment variable (if there is one)
     AStackString<> libEnvVar;
@@ -215,7 +215,7 @@ bool SettingsNode::InitializeConcurrencyGroups( const BFFToken * iter,
     }
 
     // Insert "special "default" group for jobs with no concurrency limit
-    Array< ConcurrencyGroup > groups;
+    Array<ConcurrencyGroup> groups;
     groups.SetCapacity( m_ConcurrencyGroups.GetSize() + 1 );
     groups.EmplaceBack().SetLimit( ConcurrencyGroup::eUnlimited );
     groups.Append( m_ConcurrencyGroups );

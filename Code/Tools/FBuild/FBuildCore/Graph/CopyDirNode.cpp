@@ -50,8 +50,8 @@ CopyDirNode::CopyDirNode()
                                               function,
                                               m_SourcePaths,
                                               m_SourceExcludePaths,
-                                              Array< AString >(),     // Unsupported: Excluded files
-                                              Array< AString >(),    // Unsupported: Excluded patterns
+                                              Array<AString>(),     // Unsupported: Excluded files
+                                              Array<AString>(),    // Unsupported: Excluded patterns
                                               m_SourcePathsRecurse,
                                               false, // Don't include read-only status in hash
                                               false, // Don't include directories
@@ -89,7 +89,7 @@ CopyDirNode::~CopyDirNode() = default;
 
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
-    Array< AString > preBuildDependencyNames;
+    Array<AString> preBuildDependencyNames;
     preBuildDependencyNames.SetCapacity( m_PreBuildDependencies.GetSize() );
     for ( const Dependency & dep : m_PreBuildDependencies )
     {
@@ -179,7 +179,7 @@ CopyDirNode::~CopyDirNode() = default;
     else
     {
         // Generate stamp
-        StackArray< uint64_t > stamps;
+        StackArray<uint64_t> stamps;
         stamps.SetCapacity( m_DynamicDependencies.GetSize() );
         for ( const Dependency & dep: m_DynamicDependencies )
         {

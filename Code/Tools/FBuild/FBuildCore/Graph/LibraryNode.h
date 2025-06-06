@@ -61,8 +61,8 @@ private:
     AString             m_LibrarianOptions;
     AString             m_LibrarianType;
     AString             m_LibrarianOutput;
-    Array< AString >    m_LibrarianAdditionalInputs;
-    Array< AString >    m_Environment;
+    Array<AString>      m_LibrarianAdditionalInputs;
+    Array<AString>      m_Environment;
     bool                m_LibrarianAllowResponseFile;
     bool                m_LibrarianForceResponseFile;
 

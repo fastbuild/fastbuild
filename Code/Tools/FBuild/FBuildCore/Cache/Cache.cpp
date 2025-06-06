@@ -157,7 +157,7 @@ public:
     if ( cacheFile.Open( fullPath.Get(), FileStream::READ_ONLY ) )
     {
         const size_t cacheFileSize = (size_t)cacheFile.GetFileSize();
-        UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( cacheFileSize ) );
+        UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( cacheFileSize ) );
         if ( cacheFile.Read( mem.Get(), cacheFileSize ) == cacheFileSize )
         {
             dataSize = cacheFileSize;
@@ -185,7 +185,7 @@ public:
     CacheStats perDay[ NUM_DAYS ];
 
     // Get all the files
-    Array< FileIO::FileInfo > allFiles;
+    Array<FileIO::FileInfo> allFiles;
     allFiles.SetCapacity( 1000000 );
     uint64_t totalSize = 0;
     GetCacheFiles( showProgress, allFiles, totalSize );
@@ -246,7 +246,7 @@ public:
 /*virtual*/ bool Cache::Trim( bool showProgress, uint32_t sizeMiB )
 {
     // Get all the files
-    Array< FileIO::FileInfo > allFiles;
+    Array<FileIO::FileInfo> allFiles;
     allFiles.SetCapacity( 1000000 );
     uint64_t totalSize = 0;
     GetCacheFiles( showProgress, allFiles, totalSize );
@@ -314,7 +314,7 @@ public:
 // GetCacheFiles
 //------------------------------------------------------------------------------
 void Cache::GetCacheFiles( bool showProgress,
-                           Array< FileIO::FileInfo > & outInfo,
+                           Array<FileIO::FileInfo> & outInfo,
                            uint64_t & outTotalSize ) const
 {
     // Throttle progress messages to avoid impacting performance significantly

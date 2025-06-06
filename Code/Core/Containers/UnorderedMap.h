@@ -19,7 +19,7 @@ namespace UnorderedMapKeyHashingFunctions
 
 // UnorderedMap
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
+template <class KEY, class VALUE>
 class UnorderedMap
 {
 public:
@@ -71,21 +71,21 @@ protected:
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-UnorderedMap< KEY, VALUE >::UnorderedMap() = default;
+template <class KEY, class VALUE>
+UnorderedMap<KEY, VALUE>::UnorderedMap() = default;
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-UnorderedMap< KEY, VALUE >::~UnorderedMap()
+template <class KEY, class VALUE>
+UnorderedMap<KEY, VALUE>::~UnorderedMap()
 {
     Destruct();
 }
 
 // Destruct
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-void UnorderedMap< KEY, VALUE >::Destruct()
+template <class KEY, class VALUE>
+void UnorderedMap<KEY, VALUE>::Destruct()
 {
     if ( m_Buckets )
     {
@@ -108,8 +108,8 @@ void UnorderedMap< KEY, VALUE >::Destruct()
 
 // Find
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-typename UnorderedMap< KEY, VALUE >::KeyValue * UnorderedMap< KEY, VALUE >::Find( const KEY & key )
+template <class KEY, class VALUE>
+typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Find( const KEY & key )
 {
     // Handle empty
     if ( m_Buckets == nullptr )
@@ -141,8 +141,8 @@ typename UnorderedMap< KEY, VALUE >::KeyValue * UnorderedMap< KEY, VALUE >::Find
 
 // Insert
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-typename UnorderedMap< KEY, VALUE >::KeyValue & UnorderedMap< KEY, VALUE >::Insert( const KEY & key, const VALUE & value )
+template <class KEY, class VALUE>
+typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Insert( const KEY & key, const VALUE & value )
 {
     // Handle empty
     if ( m_Buckets == nullptr )

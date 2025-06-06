@@ -1153,7 +1153,7 @@ void TestCache::ExtraFiles_GCNO() const
 //------------------------------------------------------------------------------
 void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char * const files[], size_t numFiles ) const
 {
-    Array< const Node * > nodes;
+    Array<const Node *> nodes;
     fBuild.GetNodesOfType( Node::FILE_NODE, nodes );
     for ( size_t i = 0; i < numFiles; ++i )
     {

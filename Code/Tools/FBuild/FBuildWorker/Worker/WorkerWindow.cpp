@@ -207,7 +207,7 @@ WorkerWindow::~WorkerWindow()
 //------------------------------------------------------------------------------
 void WorkerWindow::SetStatus( const AString & hostName, const AString & statusText )
 {
-    AStackString< 512 > text;
+    AStackString<512> text;
     text.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
     if ( !hostName.IsEmpty() )
     {

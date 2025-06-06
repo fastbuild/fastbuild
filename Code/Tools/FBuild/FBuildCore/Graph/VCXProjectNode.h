@@ -91,7 +91,7 @@ public:
     const Node *        m_TargetNode = nullptr;
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
-                                Array< VSProjectConfig > & configs,
+                                Array<VSProjectConfig> & configs,
                                 const BFFToken * iter = nullptr,
                                 const Function * function = nullptr );
 };
@@ -136,26 +136,26 @@ private:
     virtual const AString & GetProjectTypeGuid() const override;
 
     // Exposed
-    Array< AString >    m_ProjectInputPaths;
-    Array< AString >    m_ProjectInputPathsExclude;
+    Array<AString>      m_ProjectInputPaths;
+    Array<AString>      m_ProjectInputPathsExclude;
     bool                m_ProjectInputPathsRecurse = true;
-    Array< AString >    m_ProjectFiles;
-    Array< AString >    m_ProjectFilesToExclude;
-    Array< AString >    m_ProjectPatternToExclude;
-    Array< AString >    m_ProjectBasePaths;
-    Array< AString >    m_ProjectAllowedFileExtensions;
+    Array<AString>      m_ProjectFiles;
+    Array<AString>      m_ProjectFilesToExclude;
+    Array<AString>      m_ProjectPatternToExclude;
+    Array<AString>      m_ProjectBasePaths;
+    Array<AString>      m_ProjectAllowedFileExtensions;
     VSProjectConfigBase m_BaseProjectConfig;
-    Array< VSProjectConfig > m_ProjectConfigs;
-    Array< VSProjectFileType > m_ProjectFileTypes;
+    Array<VSProjectConfig> m_ProjectConfigs;
+    Array<VSProjectFileType> m_ProjectFileTypes;
 
     AString             m_DefaultLanguage;
     AString             m_ApplicationEnvironment;
     bool                m_ProjectSccEntrySAK = false;
 
-    Array< AString >    m_ProjectReferences;
-    Array< AString >    m_ProjectProjectReferences;
+    Array<AString>      m_ProjectReferences;
+    Array<AString>      m_ProjectProjectReferences;
 
-    Array< VSProjectImport > m_ProjectProjectImports;
+    Array<VSProjectImport> m_ProjectProjectImports;
 };
 
 //------------------------------------------------------------------------------

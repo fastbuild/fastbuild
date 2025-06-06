@@ -73,7 +73,7 @@ protected:
 
     static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found );
-    static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const Array< AString > & paths, const AString & lib );
+    static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const Array<AString> & paths, const AString & lib );
     static bool GetOtherLibsArg( const char * arg,
                                  AString & value,
                                  const AString * & it,
@@ -81,7 +81,7 @@ protected:
                                  bool canonicalizePath,
                                  bool isMSVC );
     static bool GetOtherLibsArg( const char * arg,
-                                 Array< AString > & list,
+                                 Array<AString> & list,
                                  const AString * & it,
                                  const AString * const & end,
                                  bool canonicalizePath,
@@ -101,16 +101,16 @@ protected:
     AString             m_Linker;
     AString             m_LinkerOptions;
     AString             m_LinkerType;
-    Array< AString >    m_Libraries;
-    Array< AString >    m_Libraries2;
-    Array< AString >    m_LinkerAssemblyResources;
+    Array<AString>      m_Libraries;
+    Array<AString>      m_Libraries2;
+    Array<AString>      m_LinkerAssemblyResources;
     bool                m_LinkerLinkObjects             = false;
     bool                m_LinkerAllowResponseFile;
     bool                m_LinkerForceResponseFile;
     AString             m_LinkerStampExe;
     AString             m_LinkerStampExeArgs;
-    Array< AString >    m_PreBuildDependencyNames;
-    Array< AString >    m_Environment;
+    Array<AString>      m_PreBuildDependencyNames;
+    Array<AString>      m_Environment;
     AString             m_ConcurrencyGroupName;
 
     // Internal State

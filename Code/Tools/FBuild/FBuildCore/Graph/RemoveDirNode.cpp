@@ -54,7 +54,7 @@ RemoveDirNode::RemoveDirNode()
                                               m_RemovePaths,
                                               m_RemoveExcludePaths,
                                               m_RemoveExcludeFiles,
-                                              Array< AString >(), // unused ExcludePatterns
+                                              Array<AString>(), // unused ExcludePatterns
                                               m_RemovePathsRecurse,
                                               false, // Don't include read-only status in hash
                                               m_RemoveDirs,

@@ -35,7 +35,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Client::Client( const Array< AString > & workerList,
+Client::Client( const Array<AString> & workerList,
                 uint16_t port,
                 uint32_t workerConnectionLimit,
                 bool detailedLogging )
@@ -89,7 +89,7 @@ Client::~Client()
     FREE( (void *)( ss->m_CurrentMessage ) );
 
     ss->m_RemoteName.Clear();
-    AtomicStoreRelaxed( &ss->m_Connection, static_cast< const ConnectionInfo * >( nullptr ) );
+    AtomicStoreRelaxed( &ss->m_Connection, static_cast<const ConnectionInfo *>( nullptr ) );
     ss->m_CurrentMessage = nullptr;
 }
 
@@ -346,7 +346,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     if ( ss->m_CurrentMessage == nullptr )
     {
         // message
-        ss->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
+        ss->m_CurrentMessage = static_cast<const Protocol::IMessage *>( data );
         if ( ss->m_CurrentMessage->HasPayload() )
         {
             return;
@@ -370,37 +370,37 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     {
         case Protocol::MSG_REQUEST_JOB:
         {
-            const Protocol::MsgRequestJob * msg = static_cast< const Protocol::MsgRequestJob * >( imsg );
+            const Protocol::MsgRequestJob * msg = static_cast<const Protocol::MsgRequestJob *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_JOB_RESULT:
         {
-            const Protocol::MsgJobResult * msg = static_cast< const Protocol::MsgJobResult * >( imsg );
+            const Protocol::MsgJobResult * msg = static_cast<const Protocol::MsgJobResult *>( imsg );
             Process( connection, msg, payload, payloadSize );
             break;
         }
         case Protocol::MSG_JOB_RESULT_COMPRESSED:
         {
-            const Protocol::MsgJobResultCompressed * msg = static_cast< const Protocol::MsgJobResultCompressed * >( imsg );
+            const Protocol::MsgJobResultCompressed * msg = static_cast<const Protocol::MsgJobResultCompressed *>( imsg );
             Process( connection, msg, payload, payloadSize );
             break;
         }
         case Protocol::MSG_REQUEST_MANIFEST:
         {
-            const Protocol::MsgRequestManifest * msg = static_cast< const Protocol::MsgRequestManifest * >( imsg );
+            const Protocol::MsgRequestManifest * msg = static_cast<const Protocol::MsgRequestManifest *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_REQUEST_FILE:
         {
-            const Protocol::MsgRequestFile * msg = static_cast< const Protocol::MsgRequestFile * >( imsg );
+            const Protocol::MsgRequestFile * msg = static_cast<const Protocol::MsgRequestFile *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_CONNECTION_ACK:
         {
-            const Protocol::MsgConnectionAck * msg = static_cast< const Protocol::MsgConnectionAck * >( imsg );
+            const Protocol::MsgConnectionAck * msg = static_cast<const Protocol::MsgConnectionAck *>( imsg );
             Process( connection, msg );
             break;
         }
@@ -577,7 +577,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     bool systemError = false;
     ms.Read( systemError );
 
-    Array< AString > messages;
+    Array<AString> messages;
     ms.Read( messages );
 
     uint32_t buildTime;
@@ -610,7 +610,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                                                    jobSystemErrorCount ); // Set by OnReturnRemoteJob
 
     // Prepare failure output if needed
-    AStackString< 8192 > failureOutput;
+    AStackString<8192> failureOutput;
     if ( result == false )
     {
         failureOutput.Format( "PROBLEM: %s\n", node->GetName().Get() );

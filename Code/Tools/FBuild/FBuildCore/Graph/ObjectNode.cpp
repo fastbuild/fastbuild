@@ -745,7 +745,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         output.Replace( '\r', '\n' ); // Normalize all carriage line endings
 
         // split into lines
-        Array< AString > lines;
+        Array<AString> lines;
         output.Tokenize( lines, '\n' );
 
         m_Includes.Clear();
@@ -1241,7 +1241,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // Prepare args for remote worker
     UniquePtr<CompilerDriverBase> driver;
     CreateDriver( m_CompilerFlags, AString::GetEmpty(), driver );
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     compilerOptions.Tokenize( tokens );
     Args fullArgs;
 
@@ -1477,7 +1477,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         const size_t uncompressedDataSize = buffer.GetDataSize();
         const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
 
-        StackArray< AString > fileNames;
+        StackArray<AString> fileNames;
         fileNames.Append( m_Name );
 
         GetExtraCacheFilePaths( job, fileNames );
@@ -1563,7 +1563,7 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
     PROFILE_FUNCTION;
 
     // Get list of files
-    StackArray< AString > fileNames;
+    StackArray<AString> fileNames;
     fileNames.Append( m_Name );
     GetExtraCacheFilePaths( job, fileNames );
 
@@ -1688,7 +1688,7 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
 
 // GetExtraCacheFilePaths
 //------------------------------------------------------------------------------
-void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & outFileNames ) const
+void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFileNames ) const
 {
     const Node * node = job->GetNode();
     if ( node->GetType() != Node::OBJECT_NODE )
@@ -1800,7 +1800,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 {
     PROFILE_FUNCTION;
 
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
 
     const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
     if ( useDedicatedPreprocessor )
@@ -1990,7 +1990,7 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
         return false;
     }
     const uint32_t contentSize = (uint32_t)fs.GetFileSize();
-    UniquePtr< void, FreeDeletor > mem( ALLOC( contentSize ) );
+    UniquePtr<void, FreeDeletor> mem( ALLOC( contentSize ) );
     if ( fs.Read( mem.Get(), contentSize ) != contentSize )
     {
         FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest\n", fileName.Get() );
@@ -2038,7 +2038,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
 
         if ( doVS2012Fixup )
         {
-            Array< const char * > enumsFound;
+            Array<const char *> enumsFound;
             enumsFound.SetCapacity( 2048 );
             const char BUGGY_CODE[] = "enum ";
             const char* workBuffer = outputBuffer;
@@ -2315,7 +2315,7 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
             // for remote jobs, we must serialize the errors to return with the job
             if ( job->IsLocal() == false )
             {
-                UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
+                UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
                 memcpy( mem.Get(), ch.GetOut().Get(), ch.GetOut().GetLength() );
                 memcpy( mem.Get() + ch.GetOut().GetLength(), ch.GetErr().Get(), ch.GetErr().GetLength() );
                 job->OwnData( mem.ReleaseOwnership(), ( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
@@ -2464,7 +2464,7 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         if ( job->IsLocal() && FBuild::Get().GetOptions().m_ShowCommandOutput )
         {
             // Suppress /showIncludes - TODO:C leave in if user specified it
-            StackArray< AString > exclusions;
+            StackArray<AString> exclusions;
             if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
                 ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
             {

@@ -82,14 +82,14 @@ public:
     static bool GetDirectoryListNodeList( NodeGraph & nodeGraph,
                                           const BFFToken * iter,
                                           const Function * function,
-                                          const Array< AString > & paths,
-                                          const Array< AString > & excludePaths,
-                                          const Array< AString > & filesToExclude,
-                                          const Array< AString > & excludePatterns,
+                                          const Array<AString> & paths,
+                                          const Array<AString> & excludePaths,
+                                          const Array<AString> & filesToExclude,
+                                          const Array<AString> & excludePatterns,
                                           bool recurse,
                                           bool includeReadOnlyStatusInHash,
                                           bool includeDirs,
-                                          const Array< AString > * patterns,
+                                          const Array<AString> * patterns,
                                           const char * inputVarName,
                                           Dependencies & nodes );
     static bool GetFileNode( NodeGraph & nodeGraph,
@@ -101,20 +101,20 @@ public:
     static bool GetFileNodes( NodeGraph & nodeGraph,
                               const BFFToken * iter,
                               const Function * function,
-                              const Array< AString > & files,
+                              const Array<AString> & files,
                               const char * inputVarName,
                               Dependencies & nodes );
     static bool GetObjectListNodes( NodeGraph & nodeGraph,
                                     const BFFToken * iter,
                                     const Function * function,
-                                    const Array< AString > & objectLists,
+                                    const Array<AString> & objectLists,
                                     const char * inputVarName,
                                     Dependencies & nodes );
     static bool GetNodeList( NodeGraph & nodeGraph,
                              const BFFToken * iter,
                              const Function * function,
                              const char * propertyName,
-                             const Array< AString > & nodeNames,
+                             const Array<AString> & nodeNames,
                              Dependencies & nodes,
                              const GetNodeListOptions & options = GetNodeListOptions() );
     static bool GetNodeList( NodeGraph & nodeGraph,
@@ -152,7 +152,7 @@ protected:
     bool GetString( const BFFToken * iter, const BFFVariable * & var, const char * name, bool required = false ) const;
     bool GetString( const BFFToken * iter, AString & var, const char * name, bool required = false ) const;
     bool GetStringOrArrayOfStrings( const BFFToken * iter, const BFFVariable * & var, const char * name, bool required ) const;
-    bool GetStrings( const BFFToken * iter, Array< AString > & strings, const char * name, bool required = false ) const;
+    bool GetStrings( const BFFToken * iter, Array<AString> & strings, const char * name, bool required = false ) const;
 
     // helper function to make alias for target
     bool ProcessAlias( NodeGraph & nodeGraph, Node * nodeToAlias ) const;
@@ -171,8 +171,8 @@ protected:
     bool PopulateArrayOfStructs( NodeGraph & nodeGraph, const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
     bool PopulateArrayOfStructsElement( NodeGraph & nodeGraph, const BFFToken * iter, void * structBase, const ReflectionInfo * structRI, const BFFVariable * srcVariable ) const;
 
-    bool PopulateStringHelper( NodeGraph & nodeGraph, const BFFToken * iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, Array< AString > & outStrings ) const;
-    bool PopulateStringHelper( NodeGraph & nodeGraph, const BFFToken * iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, const AString & string, Array< AString > & outStrings ) const;
+    bool PopulateStringHelper( NodeGraph & nodeGraph, const BFFToken * iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, Array<AString> & outStrings ) const;
+    bool PopulateStringHelper( NodeGraph & nodeGraph, const BFFToken * iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, const AString & string, Array<AString> & outStrings ) const;
     bool PopulatePathAndFileHelper( const BFFToken * iter, const Meta_Path * pathMD, const Meta_File * fileMD, const AString & variableName, AString & valueToFix ) const;
 };
 

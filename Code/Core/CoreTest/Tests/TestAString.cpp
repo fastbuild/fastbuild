@@ -52,14 +52,14 @@ private:
     void MoveConstructorHelper() const;
     template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class SRC_CAST = SRC>
     void MoveAssignmentHelper() const;
-    template<bool REMOVE_QUOTES = false>
+    template <bool REMOVE_QUOTES = false>
     void CheckTokenize( const char * originalString,
                         char splitChar,
                         const char * expectedToken1 = nullptr,
                         const char * expectedToken2 = nullptr,
                         const char * expectedToken3 = nullptr,
                         const char * expectedToken4 = nullptr ) const;
-    template<bool REMOVE_QUOTES = false>
+    template <bool REMOVE_QUOTES = false>
     void CheckTokenize( const char * originalString,
                         const char * expectedToken1 = nullptr,
                         const char * expectedToken2 = nullptr,
@@ -233,20 +233,20 @@ void TestAString::AStackStringOverflow() const
 {
     {
         // constructor with string longer than buffer
-        AStackString< 8 > string( "01234567890123456789" );
+        AStackString<8> string( "01234567890123456789" );
         TEST_ASSERT( string.GetLength() == 20 );
         TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
     }
     {
         // assigned of string longer than buffer
-        AStackString< 8 > string;
+        AStackString<8> string;
         string = "01234567890123456789";
         TEST_ASSERT( string.GetLength() == 20 );
         TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
     }
     {
         // concatenation of string longer than buffer
-        AStackString< 8 > string;
+        AStackString<8> string;
         string += "01234567890123456789";
         TEST_ASSERT( string.GetLength() == 20 );
         TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
@@ -258,12 +258,12 @@ void TestAString::AStackStringOverflow() const
 void TestAString::BigString() const
 {
     // create a massive string
-    UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( ( 10 * MEGABYTE ) + 1 ) );
+    UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( ( 10 * MEGABYTE ) + 1 ) );
     memset( mem.Get(), 'a', 10 * MEGABYTE );
     mem.Get()[ 10 * MEGABYTE ] = '\000';
 
     // create a stack string
-    AStackString< 2048 > string;
+    AStackString<2048> string;
 
     // now overflow massively so the buffer resizes
     // (string will now be 10MB, which is well over the 64K limit
@@ -1083,7 +1083,7 @@ void TestAString::MoveAssignment() const
 
 // CheckTokenize
 //------------------------------------------------------------------------------
-template<bool REMOVE_QUOTES>
+template <bool REMOVE_QUOTES>
 void TestAString::CheckTokenize( const char * originalString,
                                  char splitChar,
                                  const char * expectedToken1,
@@ -1092,7 +1092,7 @@ void TestAString::CheckTokenize( const char * originalString,
                                  const char * expectedToken4 ) const
 {
     // Tokenize
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     AStackString<>( originalString ).Tokenize( tokens, splitChar );
     if constexpr ( REMOVE_QUOTES )
     {
@@ -1115,7 +1115,7 @@ void TestAString::CheckTokenize( const char * originalString,
 
 // CheckTokenize
 //------------------------------------------------------------------------------
-template<bool REMOVE_QUOTES>
+template <bool REMOVE_QUOTES>
 void TestAString::CheckTokenize( const char * originalString,
                                  const char * expectedToken1,
                                  const char * expectedToken2,

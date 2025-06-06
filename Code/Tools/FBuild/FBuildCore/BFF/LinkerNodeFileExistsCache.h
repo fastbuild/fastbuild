@@ -10,7 +10,7 @@
 
 // LinkerNodeFileExistsCache
 //------------------------------------------------------------------------------
-class LinkerNodeFileExistsCache : public Singleton< LinkerNodeFileExistsCache >
+class LinkerNodeFileExistsCache : public Singleton<LinkerNodeFileExistsCache>
 {
 public:
     explicit LinkerNodeFileExistsCache();

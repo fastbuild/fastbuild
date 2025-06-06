@@ -29,7 +29,7 @@
 
 // Pointers
 //------------------------------------------------------------------------------
-template < class T >
+template <class T>
 [[nodiscard]] inline T * AtomicLoadRelaxed( T * const volatile * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
@@ -40,7 +40,7 @@ template < class T >
         #error Unknown compiler
     #endif
 }
-template < class T >
+template <class T>
 [[nodiscard]] inline T * AtomicLoadAcquire( T * const volatile * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
@@ -53,7 +53,7 @@ template < class T >
         #error Unknown compiler
     #endif
 }
-template < class T >
+template <class T>
 inline void AtomicStoreRelaxed( T * volatile * x, T * value )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
@@ -64,7 +64,7 @@ inline void AtomicStoreRelaxed( T * volatile * x, T * value )
         #error Unknown compiler
     #endif
 }
-template < class T >
+template <class T>
 inline void AtomicStoreRelease( T * volatile * x, T * value )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
@@ -83,19 +83,19 @@ inline void AtomicStoreRelease( T * volatile * x, T * value )
     #if defined( __WINDOWS__ )
         PRAGMA_DISABLE_PUSH_CLANG( "-Watomic-implicit-seq-cst" )
     #endif
-    template<typename T> inline T AtomicInc( volatile T * x )
+    template <typename T> inline T AtomicInc( volatile T * x )
     {
         return __sync_add_and_fetch( x, 1 );
     }
-    template<typename T> inline T AtomicDec( volatile T * x )
+    template <typename T> inline T AtomicDec( volatile T * x )
     {
         return __sync_sub_and_fetch( x, 1 );
     }
-    template<typename T> inline T AtomicAdd( volatile T * x, T value )
+    template <typename T> inline T AtomicAdd( volatile T * x, T value )
     {
         return __sync_add_and_fetch( x, value );
     }
-    template<typename T> inline T AtomicSub( volatile T * x, T value )
+    template <typename T> inline T AtomicSub( volatile T * x, T value )
     {
         return __sync_sub_and_fetch( x, value );
     }
@@ -151,7 +151,7 @@ inline void AtomicStoreRelease( T * volatile * x, T * value )
 
 // AtomicLoadRelaxed
 //------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 [[nodiscard]] inline T AtomicLoadRelaxed( const volatile T * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
@@ -163,7 +163,7 @@ template<typename T>
 
 // AtomicLoadAcquire
 //------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 [[nodiscard]] inline T AtomicLoadAcquire( const volatile T * x )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
@@ -177,7 +177,7 @@ template<typename T>
 
 // AtomicStoreRelaxed
 //------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 inline void AtomicStoreRelaxed( volatile T * x, T value )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )
@@ -189,7 +189,7 @@ inline void AtomicStoreRelaxed( volatile T * x, T value )
 
 // AtomicStoreRelease
 //------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 inline void AtomicStoreRelease( volatile T * x, T value )
 {
     #if defined( __GNUC__ ) || defined( __clang__ )

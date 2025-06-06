@@ -38,12 +38,12 @@ private:
 
     // Exposed Properties
     AString             m_ExecExecutable;
-    Array< AString >    m_ExecInput;
-    Array< AString >    m_ExecInputPath;
-    Array< AString >    m_ExecInputPattern;
-    Array< AString >    m_ExecInputExcludePath;
-    Array< AString >    m_ExecInputExcludedFiles;
-    Array< AString >    m_ExecInputExcludePattern;
+    Array<AString>      m_ExecInput;
+    Array<AString>      m_ExecInputPath;
+    Array<AString>      m_ExecInputPattern;
+    Array<AString>      m_ExecInputExcludePath;
+    Array<AString>      m_ExecInputExcludedFiles;
+    Array<AString>      m_ExecInputExcludePattern;
     AString             m_ExecArguments;
     AString             m_ExecWorkingDir;
     int32_t             m_ExecReturnCode;
@@ -51,8 +51,8 @@ private:
     bool                m_ExecUseStdOutAsOutput;
     bool                m_ExecAlways;
     bool                m_ExecInputPathRecurse;
-    Array< AString >    m_PreBuildDependencyNames;
-    Array< AString >    m_Environment;
+    Array<AString>      m_PreBuildDependencyNames;
+    Array<AString>      m_Environment;
     AString             m_ConcurrencyGroupName;
 
     // Internal State

@@ -42,7 +42,7 @@ public:
     static Node::Type GetTypeS() { return Node::PROXY_NODE; }
 
     const AString & GetProjectGuid() const { return m_ProjectGuid; }
-    const Array< VSProjectPlatformConfigTuple > & GetPlatformConfigTuples() const { return m_ProjectPlatformConfigTuples; }
+    const Array<VSProjectPlatformConfigTuple> & GetPlatformConfigTuples() const { return m_ProjectPlatformConfigTuples; }
 
     // Derived projects implement this interface
     virtual const AString & GetProjectTypeGuid() const = 0;
@@ -52,7 +52,7 @@ protected:
     AString             m_ProjectGuid;
 
     // Internal
-    Array< VSProjectPlatformConfigTuple > m_ProjectPlatformConfigTuples;
+    Array<VSProjectPlatformConfigTuple> m_ProjectPlatformConfigTuples;
 };
 
 //------------------------------------------------------------------------------

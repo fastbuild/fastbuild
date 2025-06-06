@@ -51,7 +51,7 @@
     //------------------------------------------------------------------------------
     /*static*/ void Tracing::DebugSpamFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
     {
-        AStackString< 8192 > buffer;
+        AStackString<8192> buffer;
 
         va_list args;
         va_start( args, fmtString );
@@ -66,7 +66,7 @@
     /*static*/ void Tracing::Warning( const char * file, uint32_t line, const char * message )
     {
         // format a double clickable line
-        AStackString< 8192 > buffer;
+        AStackString<8192> buffer;
         buffer.Format( "%s(%u): %s\n", file, line, message );
 
         // normal output that goes to the TTY
@@ -118,7 +118,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Tracing::OutputFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
     va_start( args, fmtString );
@@ -150,7 +150,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Tracing::FatalErrorFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
     va_start( args, fmtString );

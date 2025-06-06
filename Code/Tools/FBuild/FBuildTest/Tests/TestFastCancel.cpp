@@ -19,7 +19,7 @@ class TestFastCancel : public FBuildTest
 private:
     DECLARE_TESTS
 
-    template<uint32_t SEED>
+    template <uint32_t SEED>
     void BuildFailure() const;
     void Cancel() const;
 };
@@ -39,7 +39,7 @@ REGISTER_TESTS_BEGIN( TestFastCancel )
 REGISTER_TESTS_END
 
 //------------------------------------------------------------------------------
-template<uint32_t SEED>
+template <uint32_t SEED>
 void TestFastCancel::BuildFailure() const
 {
     // Check that builds with failures are finalized correctly

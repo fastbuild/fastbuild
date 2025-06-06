@@ -536,7 +536,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         {
             if ( property.IsArray() )
             {
-                const Array< AString > * arrayOfStrings = property.GetPtrToArray<AString>( base );
+                const Array<AString> * arrayOfStrings = property.GetPtrToArray<AString>( base );
                 VERIFY( stream.Write( *arrayOfStrings ) );
             }
             else
@@ -583,7 +583,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
         case PT_STRUCT:
         {
-            const ReflectedPropertyStruct & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+            const ReflectedPropertyStruct & propertyS = static_cast<const ReflectedPropertyStruct &>( property );
 
             if ( property.IsArray() )
             {
@@ -655,7 +655,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         {
             if ( property.IsArray() )
             {
-                Array< AString > * arrayOfStrings = property.GetPtrToArray<AString>( base );
+                Array<AString> * arrayOfStrings = property.GetPtrToArray<AString>( base );
                 VERIFY( stream.Read( *arrayOfStrings ) );
             }
             else
@@ -702,7 +702,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
         case PT_STRUCT:
         {
-            const ReflectedPropertyStruct & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+            const ReflectedPropertyStruct & propertyS = static_cast<const ReflectedPropertyStruct &>( property );
 
             if ( property.IsArray() )
             {
@@ -756,7 +756,7 @@ void Node::ReplaceDummyName( const AString & newName )
 //------------------------------------------------------------------------------
 /*static*/ void Node::DumpOutput( Job * job,
                                   const AString & output,
-                                  const Array< AString > * exclusions )
+                                  const Array<AString> * exclusions )
 {
     if ( output.IsEmpty() )
     {
@@ -784,7 +784,7 @@ void Node::ReplaceDummyName( const AString & newName )
         if ( lineStart != lineEnd ) // ignore empty
         {
             // make a copy of the line to output
-            AStackString< 1024 > copy( lineStart, lineEnd );
+            AStackString<1024> copy( lineStart, lineEnd );
 
             // skip this line?
             bool skip = false;
@@ -917,7 +917,7 @@ void Node::ReplaceDummyName( const AString & newName )
         }
     }
 
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     beforeTag.Tokenize( tokens, ':' );
     const size_t numTokens = tokens.GetSize();
     if ( numTokens < 3 )
@@ -991,7 +991,7 @@ void Node::ReplaceDummyName( const AString & newName )
 //------------------------------------------------------------------------------
 /*static*/ void Node::FixupPathForVSIntegration_VBCC( AString & line, const char * /*tag*/ )
 {
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     line.Tokenize( tokens, ' ' );
 
     //     warning 55 in line 8 of "Core/Mem/Mem.h": some warning text
@@ -1141,7 +1141,7 @@ void Node::ReplaceDummyName( const AString & newName )
 
 // InitializePreBuildDependencies
 //------------------------------------------------------------------------------
-bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const Array< AString > & preBuildDependencyNames )
+bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const Array<AString> & preBuildDependencyNames )
 {
     if ( preBuildDependencyNames.IsEmpty() )
     {
@@ -1200,7 +1200,7 @@ bool Node::InitializeConcurrencyGroup( NodeGraph & nodeGraph,
 
 // GetEnvironmentString
 //------------------------------------------------------------------------------
-/*static*/ const char * Node::GetEnvironmentString( const Array< AString > & envVars,
+/*static*/ const char * Node::GetEnvironmentString( const Array<AString> & envVars,
                                                     const char * & inoutCachedEnvString )
 {
     // Do we need a custom env string?

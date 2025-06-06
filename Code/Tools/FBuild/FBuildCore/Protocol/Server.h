@@ -81,7 +81,7 @@ private:
         uint8_t                 m_ProtocolVersionMinor = 0;
         AString                 m_HostName;
 
-        Array< Job * >          m_WaitingJobs; // jobs waiting for manifests/toolchains
+        Array<Job *>            m_WaitingJobs; // jobs waiting for manifests/toolchains
 
         Timer                   m_StatusTimer;
     };
@@ -91,10 +91,10 @@ private:
     Atomic<bool>            m_ShouldExit;   // signal from main thread
     Thread                  m_Thread;       // the thread to manage workload
     Mutex                   m_ClientListMutex;
-    Array< ClientState * >  m_ClientList;
+    Array<ClientState *>    m_ClientList;
 
     mutable Mutex           m_ToolManifestsMutex;
-    Array< ToolManifest * > m_Tools;
+    Array<ToolManifest *>   m_Tools;
 
     #if defined( __OSX__ ) || defined( __LINUX__ )
         Timer                   m_TouchToolchainTimer;

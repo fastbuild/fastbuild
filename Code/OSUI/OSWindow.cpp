@@ -39,7 +39,7 @@
 #if defined( __WINDOWS__ )
     LRESULT CALLBACK WindowWndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
     {
-        OSWindow * window = reinterpret_cast< OSWindow * >( GetWindowLongPtr( hwnd, GWLP_USERDATA ) );
+        OSWindow * window = reinterpret_cast<OSWindow *>( GetWindowLongPtr( hwnd, GWLP_USERDATA ) );
 
         switch( msg )
         {

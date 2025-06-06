@@ -590,10 +590,10 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
                 const uint32_t remainder = ( buffers[ i ].size - overlap );
                 #if defined( __WINDOWS__ )
                     sendBuffers[ numSendBuffers ].len = remainder;
-                    sendBuffers[ numSendBuffers ].buf = const_cast< CHAR * >( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
+                    sendBuffers[ numSendBuffers ].buf = const_cast<CHAR *>( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
                 #else
                     sendBuffers[ numSendBuffers ].iov_len = remainder;
-                    sendBuffers[ numSendBuffers ].iov_base = const_cast< char * >( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
+                    sendBuffers[ numSendBuffers ].iov_base = const_cast<char *>( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
                 #endif
                 ++numSendBuffers;
             }

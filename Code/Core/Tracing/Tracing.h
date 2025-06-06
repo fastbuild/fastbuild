@@ -67,8 +67,8 @@ private:
 
         Mutex               m_CallbacksMutex;
         bool                m_InCallbackDispatch;
-        Array< Callback * > m_CallbacksDebugSpam;
-        Array< Callback * > m_CallbacksOutput;
+        Array<Callback *>   m_CallbacksDebugSpam;
+        Array<Callback *>   m_CallbacksOutput;
     };
     static Callbacks        s_Callbacks;
 };

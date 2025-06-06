@@ -83,7 +83,7 @@ void OSListView::AddColumn( const char * columnHeading, uint32_t columnIndex, ui
         memset( &col, 0, sizeof( col ) );
         col.mask = LVCF_WIDTH | LVCF_TEXT;
         col.cx = (int32_t)columnWidth;
-        col.pszText = const_cast< char * >( columnHeading ); // work around lack of const in LV_COLUMN when setting
+        col.pszText = const_cast<char *>( columnHeading ); // work around lack of const in LV_COLUMN when setting
         SendMessage( (HWND)m_Handle, LVM_INSERTCOLUMN, columnIndex, (LPARAM)&col );
     #elif defined( __OSX__ )
         ListViewOSX_AddColumn( this, columnHeading, columnWidth );
@@ -115,7 +115,7 @@ void OSListView::AddItem( const char * itemText )
         memset( &item, 0, sizeof( LVITEM ) );
         item.mask = LVIF_TEXT;
         item.iItem = INT_MAX; // Insert at end
-        item.pszText = const_cast< char * >( itemText ); // work around lack of const
+        item.pszText = const_cast<char *>( itemText ); // work around lack of const
         SendMessage( (HWND)m_Handle, LVM_INSERTITEM, (WPARAM)0, (LPARAM)&item );
     #elif defined( __OSX__ )
         ListViewOSX_AddItem( this, itemText );

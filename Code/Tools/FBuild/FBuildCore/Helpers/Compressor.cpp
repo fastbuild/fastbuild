@@ -82,7 +82,7 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
     // allocate worst case output size for LZ4
     const int worstCaseSize = LZ4_compressBound( (int)dataSize );
     ASSERT( worstCaseSize > 0 );
-    UniquePtr< char, FreeDeletor > output( (char *)ALLOC( (size_t)worstCaseSize ) );
+    UniquePtr<char, FreeDeletor> output( (char *)ALLOC( (size_t)worstCaseSize ) );
 
     int32_t compressedSize;
 

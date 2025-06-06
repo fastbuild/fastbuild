@@ -35,7 +35,7 @@ class ToolManifest;
 class Client : public TCPConnectionPool
 {
 public:
-    Client( const Array< AString > & workerList,
+    Client( const Array<AString> & workerList,
             uint16_t port,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
@@ -68,7 +68,7 @@ private:
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const ConstMemoryStream & memoryStream );
 
-    Array< AString >    m_WorkerList;   // workers to connect to
+    Array<AString>      m_WorkerList;   // workers to connect to
     Atomic<bool>        m_ShouldExit;   // signal from main thread
     bool                m_DetailedLogging;
     Thread              m_Thread;       // the thread to find and manage workers
@@ -89,12 +89,12 @@ private:
         const Protocol::IMessage * m_CurrentMessage;
         Timer                   m_DelayTimer;
         uint32_t                m_NumJobsAvailable;     // num jobs we've told this server we have available
-        Array< Job * >          m_Jobs;                 // jobs we've sent to this server
+        Array<Job *>            m_Jobs;                 // jobs we've sent to this server
 
         bool                    m_Denylisted;
     };
     Mutex                   m_ServerListMutex;
-    Array< ServerState >    m_ServerList;
+    Array<ServerState>      m_ServerList;
     uint32_t                m_WorkerConnectionLimit;
     uint16_t                m_Port;
 };

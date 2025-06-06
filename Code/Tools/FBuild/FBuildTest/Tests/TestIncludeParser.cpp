@@ -85,7 +85,7 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
             TEST_ASSERT( parser.ParseMSCL_Preprocessed( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 284 );
             #ifdef DEBUG
                 TEST_ASSERT( parser.GetNonUniqueCount() == 381 );
@@ -114,7 +114,7 @@ void TestIncludeParser::TestMSVCPreprocessedOutput_Indent() const
     TEST_ASSERT( parser.ParseMSCL_Preprocessed( testData, testDataSize ) );
 
     // check number of includes found to prevent future regressions
-    const Array< AString > & includes = parser.GetIncludes();
+    const Array<AString> & includes = parser.GetIncludes();
     TEST_ASSERT( includes.GetSize() == 6 );
     #ifdef DEBUG
         TEST_ASSERT( parser.GetNonUniqueCount() == 6 );
@@ -156,7 +156,7 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
             TEST_ASSERT( parser.ParseMSCL_Output( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 189 );
             #ifdef DEBUG
                 TEST_ASSERT( parser.GetNonUniqueCount() == 258 );
@@ -230,7 +230,7 @@ void TestIncludeParser::TestMSVC_ShowIncludesWithWarnings() const
         TEST_ASSERT( parser.ParseMSCL_Output( buffer->Get(), buffer->GetLength() ) );
 
         // check number of includes found to prevent future regressions
-        const Array< AString > & includes = parser.GetIncludes();
+        const Array<AString> & includes = parser.GetIncludes();
         TEST_ASSERT( includes.GetSize() == 0 );
         #ifdef DEBUG
             TEST_ASSERT( parser.GetNonUniqueCount() == 0 );
@@ -275,7 +275,7 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
             TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 221 );
             #ifdef DEBUG
                 TEST_ASSERT( parser.GetNonUniqueCount() == 308 );
@@ -325,7 +325,7 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
             TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 279 );
             #ifdef DEBUG
                 TEST_ASSERT( parser.GetNonUniqueCount() == 427 );
@@ -374,7 +374,7 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
             TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 285 );
             #ifdef DEBUG
                 TEST_ASSERT( parser.GetNonUniqueCount() == 4758 );
@@ -461,7 +461,7 @@ void TestIncludeParser::ClangLineEndings() const
     TEST_ASSERT( parser.ParseGCC_Preprocessed( preprocessedData, AString::StrLen( preprocessedData ) ) );
 
     // check number of includes found to prevent future regressions
-    const Array< AString > & includes = parser.GetIncludes();
+    const Array<AString> & includes = parser.GetIncludes();
     TEST_ASSERT( includes.GetSize() == 3 );
     #ifdef DEBUG
         TEST_ASSERT( parser.GetNonUniqueCount() == 3 );

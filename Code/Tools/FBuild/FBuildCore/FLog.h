@@ -114,7 +114,7 @@ private:
     static bool s_ShowProgress;
     static bool s_MonitorEnabled;
 
-    static AStackString< 64 > m_ProgressText;
+    static AStackString<64> m_ProgressText;
 };
 
 //------------------------------------------------------------------------------

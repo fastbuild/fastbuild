@@ -91,7 +91,7 @@ void BFFStackFrame::DisconnectStackChain()
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarArrayOfStrings( const AString & name,
                                                      const BFFToken & token,
-                                                     const Array< AString > & values,
+                                                     const Array<AString> & values,
                                                      BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
@@ -157,7 +157,7 @@ void BFFStackFrame::DisconnectStackChain()
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarStruct( const AString & name,
                                              const BFFToken & token,
-                                             const Array< const BFFVariable * > & members,
+                                             const Array<const BFFVariable *> & members,
                                              BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
@@ -201,7 +201,7 @@ void BFFStackFrame::DisconnectStackChain()
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarArrayOfStructs( const AString & name,
                                                      const BFFToken & token,
-                                                     const Array< const BFFVariable * > & structs,
+                                                     const Array<const BFFVariable *> & structs,
                                                      BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
@@ -460,8 +460,8 @@ void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable * var )
     ASSERT( var );
 
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
+    Array<BFFVariable *>::Iter i = m_Variables.Begin();
+    Array<BFFVariable *>::Iter end = m_Variables.End();
     for( ; i < end ; ++i )
     {
         if ( ( *i )->GetName() == var->GetName() )

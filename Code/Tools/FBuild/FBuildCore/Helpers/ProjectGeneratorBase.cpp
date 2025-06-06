@@ -250,7 +250,7 @@ void ProjectGeneratorBase::AddFile( const AString & fileName )
 //------------------------------------------------------------------------------
 void ProjectGeneratorBase::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > tmp;
+    AStackString<1024> tmp;
 
     va_list args;
     va_start(args, fmtString);
@@ -299,7 +299,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         else
         {
             // check content
-            UniquePtr< char, FreeDeletor > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr<char, FreeDeletor> mem( ( char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "%s - Failed to read '%s'", generatorId, fileName.Get() );
@@ -375,7 +375,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
 // GetDefaultAllowedFileExtensions
 //------------------------------------------------------------------------------
-/*static*/ void ProjectGeneratorBase::GetDefaultAllowedFileExtensions( Array< AString > & extensions )
+/*static*/ void ProjectGeneratorBase::GetDefaultAllowedFileExtensions( Array<AString> & extensions )
 {
     static const char * const defaultExtensions[] =
     {
@@ -394,7 +394,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
 // FixupAllowedFileExtensions
 //------------------------------------------------------------------------------
-/*static*/ void ProjectGeneratorBase::FixupAllowedFileExtensions( Array< AString > & extensions )
+/*static*/ void ProjectGeneratorBase::FixupAllowedFileExtensions( Array<AString> & extensions )
 {
     // For backwards compatibility, we support explicit extensions ".ext" and wildcards "*.ext"
     // To normalize run-time behaviour, we convert everything to wildcard format
@@ -491,8 +491,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 // ExtractIncludePaths
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractIncludePaths( const AString & compilerArgs,
-                                                           Array< AString > & outIncludes,
-                                                           Array< AString > & outForceIncludes,
+                                                           Array<AString> & outIncludes,
+                                                           Array<AString> & outForceIncludes,
                                                            bool escapeQuotes )
 {
     for ( const Array<AString> & group : g_ProjectGeneratorBaseConstants.m_IncludePrefixes )
@@ -515,7 +515,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 // ExtractDefines
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractDefines( const AString & compilerArgs,
-                                                      Array< AString > & outDefines,
+                                                      Array<AString> & outDefines,
                                                       bool escapeQuotes )
 {
     // Extract various kinds of includes
@@ -530,7 +530,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 // ExtractAdditionalOptions
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractAdditionalOptions( const AString & compilerArgs,
-                                                                Array< AString > & outOptions )
+                                                                Array<AString> & outOptions )
 {
     // Extract the options
     const bool escapeQuotes = false;
@@ -545,8 +545,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 // ExtractIntellisenseOptions
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractIntellisenseOptions( const AString & compilerArgs,
-                                                                  const Array< AString > & prefixes,
-                                                                  Array< AString > & outOptions,
+                                                                  const Array<AString> & prefixes,
+                                                                  Array<AString> & outOptions,
                                                                   bool escapeQuotes,
                                                                   bool keepFullOption )
 {
@@ -623,7 +623,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
 // ConcatIntellisenseOptions
 //------------------------------------------------------------------------------
-/*static*/ void ProjectGeneratorBase::ConcatIntellisenseOptions( const Array< AString > & tokens,
+/*static*/ void ProjectGeneratorBase::ConcatIntellisenseOptions( const Array<AString> & tokens,
                                                                  AString & outTokenString,
                                                                  const char* preToken,
                                                                  const char* postToken )

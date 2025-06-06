@@ -32,19 +32,19 @@ private:
     void EmitCompilationMessage( const char * workingDir ) const;
 
     AString             m_TestExecutable;
-    Array< AString >    m_TestInput;
-    Array< AString >    m_TestInputPath;
-    Array< AString >    m_TestInputPattern;
-    Array< AString >    m_TestInputExcludePath;
-    Array< AString >    m_TestInputExcludedFiles;
-    Array< AString >    m_TestInputExcludePattern;
+    Array<AString>      m_TestInput;
+    Array<AString>      m_TestInputPath;
+    Array<AString>      m_TestInputPattern;
+    Array<AString>      m_TestInputExcludePath;
+    Array<AString>      m_TestInputExcludedFiles;
+    Array<AString>      m_TestInputExcludePattern;
     AString             m_TestArguments;
     AString             m_TestWorkingDir;
     uint32_t            m_TestTimeOut;
     bool                m_TestAlwaysShowOutput;
     bool                m_TestInputPathRecurse;
-    Array< AString >    m_PreBuildDependencyNames;
-    Array< AString >    m_Environment;
+    Array<AString>      m_PreBuildDependencyNames;
+    Array<AString>      m_Environment;
     AString             m_ConcurrencyGroupName;
 
     // Internal State

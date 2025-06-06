@@ -123,7 +123,7 @@ public:
     Node *      CreateNode( Node::Type type,
                             const AString & name,
                             const BFFToken * sourceToken = nullptr );
-    template<class T>
+    template <class T>
     T *         CreateNode( const AString & name,
                             const BFFToken * sourceToken = nullptr )
     {
@@ -163,9 +163,9 @@ private:
                                           uint32_t & totalNodeTime );
 
     static bool CheckForCyclicDependencies( const Node * node );
-    static bool CheckForCyclicDependenciesRecurse( const Node * node, Array< const Node * > & dependencyStack );
+    static bool CheckForCyclicDependenciesRecurse( const Node * node, Array<const Node *> & dependencyStack );
     static bool CheckForCyclicDependenciesRecurse( const Dependencies & dependencies,
-                                                   Array< const Node * > & dependencyStack );
+                                                   Array<const Node *> & dependencyStack );
 
     Node * FindNodeInternal( const AString & name, uint32_t nameHashHint ) const;
 
@@ -176,12 +176,12 @@ private:
         Node *      m_Node;
         uint32_t    m_Distance;
     };
-    void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
+    void FindNearestNodesInternal( const AString & fullPath, Array<NodeWithDistance> & nodes, const uint32_t maxDistance = 5 ) const;
 
     struct UsedFile;
     bool ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream,
                                  const char* nodeGraphDBFile,
-                                 Array< UsedFile > & files,
+                                 Array<UsedFile> & files,
                                  bool & compatibleDB,
                                  bool & movedDB ) const;
     uint32_t GetLibEnvVarHash() const;
@@ -215,7 +215,7 @@ private:
 
     Node **         m_NodeMap;
     uint32_t        m_NodeMapMaxKey; // Always equals to some power of 2 minus 1, can be used as mask.
-    Array< Node * > m_AllNodes;
+    Array<Node *>   m_AllNodes;
 
     Timer m_Timer;
 
@@ -227,9 +227,9 @@ private:
         uint64_t    m_TimeStamp;
         uint64_t    m_DataHash;
     };
-    Array< UsedFile > m_UsedFiles;
+    Array<UsedFile> m_UsedFiles;
 
-    Array< const BFFToken * > m_NodeSourceTokens;
+    Array<const BFFToken *> m_NodeSourceTokens;
 
     const SettingsNode * m_Settings;
 

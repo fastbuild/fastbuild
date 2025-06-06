@@ -19,7 +19,7 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ Array< ProfileManager::ProfileEventInfo > ProfileManager::s_ProfileEventInfo;
+/*static*/ Array<ProfileManager::ProfileEventInfo> ProfileManager::s_ProfileEventInfo;
 
 // Global Data
 //------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 //------------------------------------------------------------------------------
 /*static*/ void ProfileManager::SynchronizeNoTag()
 {
-    Array< ProfileEventInfo > infos;
+    Array<ProfileEventInfo> infos;
     {
         MutexHolder mh( g_ProfileManagerMutex );
         infos.Swap( s_ProfileEventInfo );
@@ -240,7 +240,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     }
 
     // write all the events we have
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
     const double freqMul = ( (double)Timer::GetFrequencyInvFloatMS() * 1000.0 );
     if ( g_ProfileEventLog.IsOpen() )
     {

@@ -10,7 +10,7 @@
 
 // Macros
 //------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 class AtomicTestHelper
 {
 public:
@@ -104,7 +104,7 @@ private:
     DECLARE_TESTS
 
     // Basic types
-    template<typename T>
+    template <typename T>
     void DoAtomicTestsForType()
     {
         const AtomicTestHelper<T> helper;

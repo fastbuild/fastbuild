@@ -120,7 +120,7 @@ void TestListDependencies::Check_SourceResults( const FBuildTestOptions & option
     LoadFileContentsAsString( outputFilename.Get(), dependencies );
 
     // Split lines
-    Array< AString > files;
+    Array<AString> files;
     dependencies.Replace( '\r', '\n' );
     dependencies.Tokenize( files, '\n' ); // Will discard empty lines
 

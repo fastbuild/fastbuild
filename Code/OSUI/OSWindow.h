@@ -68,7 +68,7 @@ protected:
     #if defined( __WINDOWS__ )
         void * m_HInstance;
     #endif
-    Array< OSWidget * > m_ChildWidgets;
+    Array<OSWidget *> m_ChildWidgets;
 };
 
 //------------------------------------------------------------------------------

@@ -44,7 +44,7 @@ bool ResponseFile::Create( const AString & contents )
 {
     if ( m_EscapeSlashes )
     {
-        AStackString< 1024 > fixed;
+        AStackString<1024> fixed;
         if ( contents.GetLength() > 512 )
         {
             fixed.SetReserved( contents.GetLength() * 2 );

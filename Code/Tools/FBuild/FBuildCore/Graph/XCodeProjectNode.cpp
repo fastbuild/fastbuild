@@ -53,7 +53,7 @@ REFLECT_END( XCodeProjectNode )
 // XCodeProjectConfig::ResolveTargets
 //------------------------------------------------------------------------------
 /*static*/ bool XCodeProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
-                                                    Array< XCodeProjectConfig > & configs,
+                                                    Array<XCodeProjectConfig> & configs,
                                                     const BFFToken * iter,
                                                     const Function * function )
 {

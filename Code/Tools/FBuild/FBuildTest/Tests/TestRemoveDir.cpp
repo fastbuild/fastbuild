@@ -232,7 +232,7 @@ void TestRemoveDir::CreateFiles() const
     f.Close();
 
     // Check file are there
-    Array< AString > files;
+    Array<AString> files;
     FileIO::GetFiles( AStackString<>( s_PathA ), AStackString<>( "*" ), true, &files );
     TEST_ASSERT( files.GetSize() == 3 );
 }

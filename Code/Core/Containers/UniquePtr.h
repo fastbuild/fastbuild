@@ -20,7 +20,7 @@ public:
 class DeleteDeletor
 {
 public:
-    template < class T >
+    template <class T>
     static void Delete( T * ptr ) { FDELETE ptr; }
 };
 

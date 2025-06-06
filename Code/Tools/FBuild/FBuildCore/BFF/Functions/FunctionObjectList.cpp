@@ -141,7 +141,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Create( const BFFToken * iter,
     bool foundFpInPCHOptions = false;
 
     // Find /Fo option to obtain pch object file name
-    StackArray< AString > pchTokens;
+    StackArray<AString> pchTokens;
     pchOptions.Tokenize( pchTokens );
     for ( const AString & token : pchTokens )
     {
@@ -200,7 +200,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Use( const BFFToken * iter,
     // Check Compiler Options
     bool foundYuInCompilerOptions = false;
     bool foundFpInCompilerOptions = false;
-    StackArray< AString > compilerTokens;
+    StackArray<AString> compilerTokens;
     compilerOptions.Tokenize( compilerTokens );
     for ( const AString & token : compilerTokens )
     {
@@ -245,7 +245,7 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args,
                                               AString & outSourceDependenciesPath )
 {
     // split to individual tokens
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     args.Tokenize( tokens );
 
     const AString * const end = tokens.End();

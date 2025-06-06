@@ -31,7 +31,7 @@ class ThreadPool;
 
 // FBuild
 //------------------------------------------------------------------------------
-class FBuild : public Singleton< FBuild >
+class FBuild : public Singleton<FBuild>
 {
 public:
     explicit FBuild( const FBuildOptions & options = FBuildOptions() );
@@ -44,7 +44,7 @@ public:
     // build a target
     bool Build( const char * target );
     bool Build( const AString & target );
-    bool Build( const Array< AString > & targets );
+    bool Build( const Array<AString> & targets );
     virtual bool Build( Node * nodeToBuild ); // Virtual to allow for testing
 
     // after a build we can store progress/parsed rules for next time
@@ -64,9 +64,9 @@ public:
     uint32_t        GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
     void DisplayTargetList( bool showHidden ) const;
-    bool DisplayDependencyDB( const Array< AString > & targets ) const;
-    bool GenerateDotGraph( const Array< AString > & targets, const bool fullGraph ) const;
-    bool GenerateCompilationDatabase( const Array< AString > & targets ) const;
+    bool DisplayDependencyDB( const Array<AString> & targets ) const;
+    bool GenerateDotGraph( const Array<AString> & targets, const bool fullGraph ) const;
+    bool GenerateCompilationDatabase( const Array<AString> & targets ) const;
 
     class EnvironmentVarAndHash
     {
@@ -85,7 +85,7 @@ public:
     };
 
     bool ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash );
-    const Array< EnvironmentVarAndHash > & GetImportedEnvironmentVars() const { return m_ImportedEnvironmentVars; }
+    const Array<EnvironmentVarAndHash> & GetImportedEnvironmentVars() const { return m_ImportedEnvironmentVars; }
 
     bool AddFileExistsCheck( const AString & fileName );
     BFFFileExists & GetFileExistsInfo() { return m_FileExistsInfo; }
@@ -115,7 +115,7 @@ public:
     uint32_t GetNumWorkerConnections() const;
 
 protected:
-    bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
+    bool GetTargets( const Array<AString> & targets, Dependencies & outDeps ) const;
 
     void UpdateBuildStatus( const Node * node );
 
@@ -159,7 +159,7 @@ protected:
     uint32_t    m_EnvironmentStringSize; // size excluding last null
     AString     m_LibEnvVar; // LIB= value
 
-    Array< EnvironmentVarAndHash > m_ImportedEnvironmentVars;
+    Array<EnvironmentVarAndHash> m_ImportedEnvironmentVars;
     BFFFileExists m_FileExistsInfo;
     BFFUserFunctions m_UserFunctions;
 };

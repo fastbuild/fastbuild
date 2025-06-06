@@ -101,7 +101,7 @@ public:
 
     void            SetUserData( void * data )  { m_UserData = data; }
     void *          GetUserData() const         { return m_UserData; }
-    const Array< ToolManifestFile > & GetFiles() const { return m_Files; }
+    const Array<ToolManifestFile> & GetFiles() const { return m_Files; }
 
     void MarkFileAsSynchronizing( size_t fileId ) { ASSERT( m_Files[ fileId ].GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED ); m_Files[ fileId ].SetSyncState( ToolManifestFile::SYNCHRONIZING ); }
     void CancelSynchronizingFiles();
@@ -123,11 +123,11 @@ private:
     mutable Mutex   m_Mutex;
 
     // Reflected
-    uint64_t                    m_ToolId;       // Global identifier for this toolchain
-    uint64_t                    m_TimeStamp;    // Time stamp of most recent file
-    AString                     m_MainExecutableRootPath;
-    Array< ToolManifestFile >   m_Files;
-    Array< AString >            m_CustomEnvironmentVariables;
+    uint64_t                m_ToolId;       // Global identifier for this toolchain
+    uint64_t                m_TimeStamp;    // Time stamp of most recent file
+    AString                 m_MainExecutableRootPath;
+    Array<ToolManifestFile> m_Files;
+    Array<AString>          m_CustomEnvironmentVariables;
 
     // Internal state
     bool            m_Synchronized;

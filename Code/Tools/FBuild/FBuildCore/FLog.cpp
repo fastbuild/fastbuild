@@ -39,9 +39,9 @@
 /*static*/ bool FLog::s_ShowErrors = true;
 /*static*/ bool FLog::s_ShowProgress = false;
 /*static*/ bool FLog::s_MonitorEnabled = false;
-/*static*/ AStackString< 64 > FLog::m_ProgressText;
-static AStackString< 72 > g_ClearLineString( "\r                                                               \r" );
-static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
+/*static*/ AStackString<64> FLog::m_ProgressText;
+static AStackString<72> g_ClearLineString( "\r                                                               \r" );
+static AStackString<64> g_OutputString( "\r99.9 % [....................] " );
 static Mutex g_MonitorMutex;
 static FileStream * g_MonitorFileStream = nullptr;
 
@@ -53,7 +53,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Verbose( MSVC_SAL_PRINTF const char * formatString, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
     va_start(args, formatString);
@@ -67,7 +67,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Output( MSVC_SAL_PRINTF const char * formatString, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
     va_start(args, formatString);
@@ -94,13 +94,13 @@ static FileStream * g_MonitorFileStream = nullptr;
 
     PROFILE_SECTION( "FLog::Monitor" );
 
-    AStackString< 1024 > buffer;
+    AStackString<1024> buffer;
     va_list args;
     va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
-    AStackString< 1024 > finalBuffer;
+    AStackString<1024> finalBuffer;
     finalBuffer.Format( "%" PRIu64 " %s", Time::GetCurrentFileTime(), buffer.Get() );
 
     MutexHolder lock( g_MonitorMutex );
@@ -123,7 +123,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Warning( MSVC_SAL_PRINTF const char * formatString, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
     va_start(args, formatString);
@@ -145,7 +145,7 @@ static FileStream * g_MonitorFileStream = nullptr;
         return;
     }
 
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
     va_start(args, formatString);
@@ -177,7 +177,7 @@ static FileStream * g_MonitorFileStream = nullptr;
         return;
     }
 
-    AStackString< 1024 > buffer( message );
+    AStackString<1024> buffer( message );
     if ( buffer.IsEmpty() )
     {
         return;
@@ -351,7 +351,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 {
     const uint32_t threadIndex = WorkerThread::GetThreadIndex();
 
-    AStackString< 2048 > tmp;
+    AStackString<2048> tmp;
 
     if ( s_ShowProgress )
     {

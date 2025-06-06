@@ -41,7 +41,7 @@ MultiBuffer::~MultiBuffer()
 
 // SerializeFromFiles
 //------------------------------------------------------------------------------
-bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * outproblemFileIndex )
+bool MultiBuffer::CreateFromFiles( const Array<AString> & fileNames, size_t * outproblemFileIndex )
 {
     ASSERT( fileNames.GetSize() <= MAX_FILES );
     ASSERT( ( m_ReadStream == nullptr ) && ( m_WriteStream == nullptr ) );

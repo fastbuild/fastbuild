@@ -69,7 +69,7 @@ void TestSemaphore::WaitForSignal() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestSemaphore::WaitForSignal_Thread( void * userData )
 {
-    Semaphore * s = static_cast< Semaphore * >( userData );
+    Semaphore * s = static_cast<Semaphore *>( userData );
     s->Signal( 100 );
     return 0;
 }

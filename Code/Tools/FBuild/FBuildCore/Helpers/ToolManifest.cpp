@@ -235,7 +235,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
 void ToolManifest::Migrate( const ToolManifest & oldManifest )
 {
     const size_t numFiles = m_Files.GetSize();
-    const Array< ToolManifestFile > & oldFiles = oldManifest.GetFiles();
+    const Array<ToolManifestFile> & oldFiles = oldManifest.GetFiles();
     ASSERT( numFiles == oldFiles.GetSize() );
     for ( size_t i = 0; i < numFiles; ++i )
     {
@@ -372,7 +372,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         {
             continue; // file is not complete
         }
-        UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
+        UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
         if ( f.Read( mem.Get(), (size_t)f.GetFileSize() ) != f.GetFileSize() )
         {
             continue; // problem reading file
@@ -744,7 +744,7 @@ bool ToolManifestFile::LoadFile( void * & uncompressedContent, uint32_t & uncomp
         return false;
     }
     uncompressedContentSize = (uint32_t)fs.GetFileSize();
-    UniquePtr< void, FreeDeletor > mem( ALLOC( uncompressedContentSize ) );
+    UniquePtr<void, FreeDeletor> mem( ALLOC( uncompressedContentSize ) );
     if ( fs.Read( mem.Get(), uncompressedContentSize ) != uncompressedContentSize )
     {
         FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );

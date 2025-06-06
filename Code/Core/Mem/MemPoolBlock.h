@@ -44,7 +44,7 @@ protected:
     uint32_t    m_BlockAlignment            = 0;
 
     // allocated pages
-    Array< void * > m_Pages;
+    Array<void *> m_Pages;
 };
 
 //------------------------------------------------------------------------------

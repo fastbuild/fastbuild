@@ -15,7 +15,7 @@
 
 // WorkerWindow
 //------------------------------------------------------------------------------
-class IdleDetection : public Singleton< IdleDetection >
+class IdleDetection : public Singleton<IdleDetection>
 {
 public:
     explicit IdleDetection();
@@ -53,7 +53,7 @@ private:
     void UpdateProcessList();
     #if defined( __LINUX__ )
         static bool GetProcessInfoString( const char * fileName,
-                                          AStackString< 1024 > & outProcessInfoString );
+                                          AStackString<1024> & outProcessInfoString );
     #endif
 
     Timer   m_Timer;
@@ -64,7 +64,7 @@ private:
     float   m_IsIdleCurrent;
     int32_t m_IdleSmoother;
     int32_t m_IdleFloatSmoother;
-    Array< ProcessInfo > m_ProcessesInOurHierarchy;
+    Array<ProcessInfo> m_ProcessesInOurHierarchy;
     uint64_t m_LastTimeIdle;
     uint64_t m_LastTimeBusy;
 };

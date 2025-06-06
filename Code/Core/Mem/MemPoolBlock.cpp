@@ -80,7 +80,7 @@ void MemPoolBlock::Free( void * ptr )
     #endif
 
     // Insert free block into head of chain
-    FreeBlock * freeBlock = static_cast< FreeBlock * >( ptr );
+    FreeBlock * freeBlock = static_cast<FreeBlock *>( ptr );
     freeBlock->m_Next = m_FreeBlockChain;
     m_FreeBlockChain = freeBlock;
 
@@ -108,11 +108,11 @@ NO_INLINE bool MemPoolBlock::AllocPage()
     const size_t numBlocksInPage( MEMPOOLBLOCK_PAGE_SIZE / alignedSize );
 
     // build chain into new blocks
-    FreeBlock * block = reinterpret_cast< FreeBlock * >( (size_t)newPage );
+    FreeBlock * block = reinterpret_cast<FreeBlock *>( (size_t)newPage );
     FreeBlock * const firstBlock = block;
     for ( size_t i = 0; i < ( numBlocksInPage - 1 ); ++i )
     {
-        FreeBlock * next = reinterpret_cast< FreeBlock * >( (size_t)block + alignedSize );
+        FreeBlock * next = reinterpret_cast<FreeBlock *>( (size_t)block + alignedSize );
         block->m_Next = next;
         block = next;
     }

@@ -165,7 +165,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                     OUTPUT( "Try \"%s -help\"\n", programName.Get() );
                     return OPTIONS_ERROR;
                 }
-                m_CacheCompressionLevel = static_cast< int16_t >( cacheCompressionLevel );
+                m_CacheCompressionLevel = static_cast<int16_t>( cacheCompressionLevel );
                 i++; // skip extra arg we've consumed
 
                 // add to args we might pass to subprocess

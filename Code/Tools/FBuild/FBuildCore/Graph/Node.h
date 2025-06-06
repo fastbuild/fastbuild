@@ -130,7 +130,7 @@ public:
     Type GetType() const { return m_Type; }
     const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
     static const char * GetTypeName( Type t ) { return s_NodeTypeNames[ t ]; }
-    template < class T >
+    template <class T>
     T * CastTo() const;
 
     // each node must specify if it outputs a file
@@ -165,7 +165,7 @@ public:
 
     static void DumpOutput( Job * job,
                             const AString & output,
-                            const Array< AString > * exclusions = nullptr );
+                            const Array<AString> * exclusions = nullptr );
 
     void            SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
     uint32_t        GetBuildPassTag() const             { return m_BuildPassTag; }
@@ -238,13 +238,13 @@ protected:
     bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,
                                                     const BFFToken * iter,
                                                     const Function * function,
-                                                    const Array< AString > & preBuildDependencyNames );
+                                                    const Array<AString> & preBuildDependencyNames );
     bool            InitializeConcurrencyGroup( NodeGraph & nodeGraph,
                                                 const BFFToken * iter,
                                                 const Function * function,
                                                 const AString & concurrencyGroupName );
 
-    static const char * GetEnvironmentString( const Array< AString > & envVars,
+    static const char * GetEnvironmentString( const Array<AString> & envVars,
                                               const char * & inoutCachedEnvString );
 
     void RecordStampFromBuiltFile();
@@ -278,7 +278,7 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-template < class T >
+template <class T>
 inline T * Node::CastTo() const
 {
     ASSERT( T::GetTypeS() == GetType() );

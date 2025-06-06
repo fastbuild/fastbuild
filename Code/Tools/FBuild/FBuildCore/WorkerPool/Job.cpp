@@ -116,7 +116,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
 //------------------------------------------------------------------------------
 void Job::Error( MSVC_SAL_PRINTF const char * format, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
     va_start(args, format);
@@ -159,7 +159,7 @@ void Job::ErrorPreformatted( const char * message )
 
 // SetMessages
 //------------------------------------------------------------------------------
-void Job::SetMessages( const Array< AString > & messages )
+void Job::SetMessages( const Array<AString> & messages )
 {
     m_Messages = messages;
 }
@@ -225,7 +225,7 @@ void Job::GetMessagesForLog( AString & buffer ) const
 
 // GetMessagesForLog
 //------------------------------------------------------------------------------
-/*static*/ void Job::GetMessagesForLog( const Array< AString > & messages, AString & outBuffer )
+/*static*/ void Job::GetMessagesForLog( const Array<AString> & messages, AString & outBuffer )
 {
     // Ensure the output buffer is pre-sized
     // (errors can sometimes be very large so we want to avoid re-allocs)
@@ -259,7 +259,7 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
 
 // GetMessagesForMonitorLog
 //------------------------------------------------------------------------------
-/*static*/ void Job::GetMessagesForMonitorLog( const Array< AString > & messages, AString & outBuffer )
+/*static*/ void Job::GetMessagesForMonitorLog( const Array<AString> & messages, AString & outBuffer )
 {
     // Concatenate all messages
     GetMessagesForLog( messages, outBuffer );

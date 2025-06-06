@@ -45,16 +45,16 @@ void TestDirectoryList::Build() const
     #else
         const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
     #endif
-    Array< AString > patterns;
+    Array<AString> patterns;
     patterns.EmplaceBack( "library.*" );
     DirectoryListNode::FormatName( testFolder,
                                    &patterns,
                                    true, // recursive
                                    false, // Don't include read-only status in hash
                                    false, // Don't include directories
-                                   Array< AString >(), // excludePaths,
-                                   Array< AString >(), // excludeFiles,
-                                   Array< AString >(), // excludePatterns,
+                                   Array<AString>(), // excludePaths,
+                                   Array<AString>(), // excludeFiles,
+                                   Array<AString>(), // excludePatterns,
                                    name );
 
     // create the node, and make sure we can access it by name

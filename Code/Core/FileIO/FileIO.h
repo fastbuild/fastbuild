@@ -31,7 +31,7 @@ public:
     static bool GetFiles( const AString & path,
                           const AString & wildCard,
                           bool recurse,
-                          Array< AString > * results );
+                          Array<AString> * results );
     static void GetFiles( const AString & path,
                           GetFilesHelper & helper );
     struct FileInfo
@@ -44,9 +44,9 @@ public:
         bool        IsReadOnly() const;
     };
     static bool GetFilesEx( const AString & path,
-                            const Array< AString > * patterns,
+                            const Array<AString> * patterns,
                             bool recurse,
-                            Array< FileInfo > * results );
+                            Array<FileInfo> * results );
     static bool GetFileInfo( const AString & fileName, FileInfo & info );
 
     static bool GetCurrentDir( AString & output );
@@ -97,19 +97,19 @@ private:
                                  GetFilesHelper & helper );
     static void GetFilesRecurse( AString & path,
                                  const AString & wildCard,
-                                 Array< AString > * results );
+                                 Array<AString> * results );
     static void GetFilesNoRecurse( const char * path,
                                    const char * wildCard,
-                                   Array< AString > * results );
+                                   Array<AString> * results );
     static void GetFilesRecurseEx( AString & path,
-                                   const Array< AString > * patterns,
-                                   Array< FileInfo > * results );
+                                   const Array<AString> * patterns,
+                                   Array<FileInfo> * results );
     static void GetFilesNoRecurseEx( const char * path,
-                                     const Array< AString > * patterns,
-                                     Array< FileInfo > * results );
+                                     const Array<AString> * patterns,
+                                     Array<FileInfo> * results );
 
     friend class GetFilesHelper;
-    static bool IsMatch( const Array< AString > * patterns, const char * fileName );
+    static bool IsMatch( const Array<AString> * patterns, const char * fileName );
 };
 
 //------------------------------------------------------------------------------

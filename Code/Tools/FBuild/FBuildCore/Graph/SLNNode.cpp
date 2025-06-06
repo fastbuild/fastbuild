@@ -147,7 +147,7 @@ SLNNode::SLNNode()
     }
 
     // Collapse duplicate SolutionFolders
-    Array< SolutionFolder > collapsedFolders;
+    Array<SolutionFolder> collapsedFolders;
     for ( SolutionFolder & folder : m_SolutionFolders )
     {
         // Have we already seen this folder?
@@ -179,7 +179,7 @@ SLNNode::SLNNode()
 
     // Gather all Project references and canonicalize project names
     //------------------------------------------------------------------------------
-    StackArray< VSProjectBaseNode * > projects;
+    StackArray<VSProjectBaseNode *> projects;
     projects.SetCapacity( m_SolutionProjects.GetSize() );
     // SolutionProjects
     if ( !GatherProjects( nodeGraph, function, iter, ".SolutionProjects", m_SolutionProjects, projects ) )
@@ -277,14 +277,14 @@ SLNNode::~SLNNode() = default;
     SLNGenerator sg;
 
     // projects
-    StackArray< VSProjectBaseNode * > projects;
+    StackArray<VSProjectBaseNode *> projects;
     projects.SetCapacity( m_StaticDependencies.GetSize() );
     for ( const Dependency & dep : m_StaticDependencies )
     {
         const Node * node = dep.GetNode();
         VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
-                                        ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )
-                                        : static_cast< VSProjectBaseNode * >( node->CastTo< VSProjectExternalNode >() );
+                                        ? static_cast<VSProjectBaseNode *>( node->CastTo< VCXProjectNode >() )
+                                        : static_cast<VSProjectBaseNode *>( node->CastTo< VSProjectExternalNode >() );
 
         projects.Append( projectNode );
     }
@@ -314,7 +314,7 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
                              const BFFToken * iter,
                              const char * propertyName,
                              const AString & projectName,
-                             Array< VSProjectBaseNode * > & inOutProjects ) const
+                             Array<VSProjectBaseNode *> & inOutProjects ) const
 {
     // Get associated project file
     const Node * node = nodeGraph.FindNode( projectName );
@@ -331,8 +331,8 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
         return false;
     }
     VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
-                                    ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )
-                                    : static_cast< VSProjectBaseNode * >( node->CastTo< VSProjectExternalNode >() );
+                                    ? static_cast<VSProjectBaseNode *>( node->CastTo< VCXProjectNode >() )
+                                    : static_cast<VSProjectBaseNode *>( node->CastTo< VSProjectExternalNode >() );
 
     // Add to project list if not already there
     if ( inOutProjects.Find( projectNode ) == nullptr )
@@ -349,8 +349,8 @@ bool SLNNode::GatherProjects( NodeGraph & nodeGraph,
                               const Function * function,
                               const BFFToken * iter,
                               const char * propertyName,
-                              const Array< AString > & projectNames,
-                              Array< VSProjectBaseNode * > & inOutProjects ) const
+                              const Array<AString> & projectNames,
+                              Array<VSProjectBaseNode *> & inOutProjects ) const
 {
     for ( const AString & projectName : projectNames )
     {

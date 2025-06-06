@@ -9,7 +9,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
-template< class T > class Array;
+template <class T> class Array;
 
 // PropertyType
 //------------------------------------------------------------------------------
@@ -41,10 +41,10 @@ inline PropertyType GetPropertyType( const int32_t * )  { return PT_INT32; }
 inline PropertyType GetPropertyType( const int64_t * )  { return PT_INT64; }
 inline PropertyType GetPropertyType( const bool * )     { return PT_BOOL; }
 inline PropertyType GetPropertyType( const AString * )  { return PT_ASTRING; }
-template < class T >
-inline PropertyType GetPropertyArrayType( const Array< T > * )
+template <class T>
+inline PropertyType GetPropertyArrayType( const Array<T> * )
 {
-    return GetPropertyType( static_cast< T * >( nullptr ) );
+    return GetPropertyType( static_cast<T *>( nullptr ) );
 }
 
 //------------------------------------------------------------------------------

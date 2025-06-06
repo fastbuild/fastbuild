@@ -158,13 +158,13 @@ DirectoryListNode::~DirectoryListNode() = default;
 // FormatName
 //------------------------------------------------------------------------------
 /*static*/ void DirectoryListNode::FormatName( const AString & path,
-                                               const Array< AString > * patterns,
+                                               const Array<AString> * patterns,
                                                bool recursive,
                                                bool includeReadOnlyFlagInHash,
                                                bool includeDirs,
-                                               const Array< AString > & excludePaths,
-                                               const Array< AString > & excludeFiles,
-                                               const Array< AString > & excludePatterns,
+                                               const Array<AString> & excludePaths,
+                                               const Array<AString> & excludeFiles,
+                                               const Array<AString> & excludePatterns,
                                                AString & result )
 {
     ASSERT( path.EndsWith( NATIVE_SLASH ) );

@@ -64,7 +64,7 @@ protected:
 
     // Job queue
     Mutex               m_JobQueueMutex;
-    Array< ThreadJob >  m_JobQueue;
+    Array<ThreadJob>    m_JobQueue;
 };
 
 //------------------------------------------------------------------------------

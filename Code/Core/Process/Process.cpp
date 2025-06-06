@@ -244,7 +244,7 @@ bool Process::Spawn( const char * executable,
 
         // Make sure the first arg is the executable
         // We also need to make a copy, as CreateProcess can write back to this string
-        AStackString< 1024 > fullArgs;
+        AStackString<1024> fullArgs;
         fullArgs += '\"';
         fullArgs += executable;
         fullArgs += '\"';
@@ -338,7 +338,7 @@ bool Process::Spawn( const char * executable,
         argVector.Append( nullptr ); // argv must have be nullptr terminated
 
         // prepare environment
-        StackArray< const char * > envVector;
+        StackArray<const char *> envVector;
         if ( environment )
         {
             // Iterate double-null terminated string vector

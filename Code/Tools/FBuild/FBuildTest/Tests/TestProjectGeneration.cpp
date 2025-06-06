@@ -112,7 +112,7 @@ void TestProjectGeneration::Test() const
     #else
         baseDir += "/Core/";
     #endif
-    Array< AString > baseDirs;
+    Array<AString> baseDirs;
     baseDirs.Append( baseDir );
 
     VSProjectGenerator pg;
@@ -124,7 +124,7 @@ void TestProjectGeneration::Test() const
     pg.SetProjectGuid( guid );
     pg.SetBasePaths( baseDirs );
 
-    Array< VSProjectConfig > configs;
+    Array<VSProjectConfig> configs;
     VSProjectConfig cfg;
 
     // commands
@@ -154,13 +154,13 @@ void TestProjectGeneration::Test() const
     configs.Append( cfg );
 
     // files
-    Array< AString > files;
+    Array<AString> files;
     FileIO::GetFiles( baseDir, AStackString<>( "*.cpp" ), true, &files );
     FileIO::GetFiles( baseDir, AStackString<>( "*.h" ), true, &files );
     pg.AddFiles( files );
 
     // fileTypes
-    Array< VSProjectFileType > fileTypes;
+    Array<VSProjectFileType> fileTypes;
     {
         VSProjectFileType ft;
         ft.m_FileType = "CppForm";
@@ -169,7 +169,7 @@ void TestProjectGeneration::Test() const
     }
 
     // Project Imports
-    Array< VSProjectImport > projectImports;
+    Array<VSProjectImport> projectImports;
 
     FBuild fBuild; // needed for NodeGraph::CleanPath
 
@@ -218,14 +218,14 @@ void TestProjectGeneration::TestFunction() const
     // have a valid stamp for downstream dependencies to consume
     {
         // Solution
-        Array< const Node * > nodes;
+        Array<const Node *> nodes;
         fBuild.GetNodesOfType( Node::SLN_NODE, nodes );
         TEST_ASSERT( nodes.GetSize() == 1 );
         TEST_ASSERT( nodes[ 0 ]->GetStamp() != 0 );
     }
     {
         // VCXProj
-        Array< const Node * > nodes;
+        Array<const Node *> nodes;
         fBuild.GetNodesOfType( Node::VCXPROJECT_NODE, nodes );
         TEST_ASSERT( nodes.GetSize() == 1 );
         TEST_ASSERT( nodes[ 0 ]->GetStamp() != 0 );
@@ -298,7 +298,7 @@ void TestProjectGeneration::TestFunction_Speed() const
     VSProjectGenerator pg;
     AStackString<> baseDir;
     GetCodeDir( baseDir );
-    Array< AString > baseDirs;
+    Array<AString> baseDirs;
     baseDirs.Append( baseDir );
 
     // project name
@@ -309,7 +309,7 @@ void TestProjectGeneration::TestFunction_Speed() const
     pg.SetBasePaths( baseDirs );
 
     // platforms
-    Array< VSProjectConfig > configs;
+    Array<VSProjectConfig> configs;
     configs.SetCapacity( 6 );
     VSProjectConfig cfg;
     cfg.m_Platform = "Win32";   cfg.m_Config = "Debug";     configs.Append( cfg );
@@ -322,7 +322,7 @@ void TestProjectGeneration::TestFunction_Speed() const
     Random r( 1234567 ); // Deterministic seed
     const size_t numFiles = 5000;
     const size_t maxSubDirDepth = 8;
-    Array< AString > files;
+    Array<AString> files;
     files.SetCapacity( numFiles );
     for ( size_t i = 0; i < numFiles; ++i )
     {
@@ -342,7 +342,7 @@ void TestProjectGeneration::TestFunction_Speed() const
     }
     pg.AddFiles( files );
 
-    Array< VSProjectFileType > fileTypes;
+    Array<VSProjectFileType> fileTypes;
     {
         VSProjectFileType ft;
         ft.m_FileType = "CppForm";
@@ -353,7 +353,7 @@ void TestProjectGeneration::TestFunction_Speed() const
         fileTypes.Append( ft );
     }
 
-    Array< VSProjectImport > projectImports;
+    Array<VSProjectImport> projectImports;
 
     AStackString<> projectFileName;
     projectFileName.Format( "%s//dummy.vcxproj", baseDir.Get() );
@@ -453,7 +453,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
     AString buffer;
     buffer.SetLength( (uint32_t)f.GetFileSize() );
     TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     buffer.Tokenize( tokens, '\n' );
 
     // Check
@@ -504,11 +504,11 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( openTagEnd < closeTagBegin );
 
             const AStackString<> tagValue( openTagEnd + 1, closeTagBegin );
-            StackArray< AString > paths;
+            StackArray<AString> paths;
             tagValue.Tokenize( paths, ';' );
 
             // We only interested in checking relative ordering of paths that contain "Intellisense\\".
-            Array< AString > includes;
+            Array<AString> includes;
             for ( const AString & path : paths )
             {
                 const char * pathStartPos = path.Find( "Intellisense\\" );
@@ -591,13 +591,13 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     AString buffer;
     buffer.SetLength( (uint32_t)f.GetFileSize() );
     TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     buffer.Tokenize( tokens, '\n' );
 
     // Check
     const size_t NUM_DEFINES = 16;
     bool definesOk[ NUM_DEFINES ] = {};
-    Array< AString > includes;
+    Array<AString> includes;
     bool inDefineSection = false;
     bool inIncludeSection = false;
     for ( const AString & token : tokens )
@@ -833,7 +833,7 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
     // Base dir
 
     // Platforms
-    Array< VSProjectConfig > configs;
+    Array<VSProjectConfig> configs;
     configs.SetCapacity( 6 );
     VSProjectConfig cfg;
     cfg.m_Platform = "Win32";
@@ -861,7 +861,7 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >(), Array< VSProjectImport >() ) );
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
         TEST_ASSERT( proj.Replace( "File.cpp", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "File.cpp" ) == nullptr );
     }
@@ -923,12 +923,12 @@ void TestProjectGeneration::VCXProj_Folders() const
     pg.SetProjectGuid( guid );
 
     // Base dir
-    Array< AString > basePaths;
+    Array<AString> basePaths;
     basePaths.Append( basePath );
     pg.SetBasePaths( basePaths );
 
     // Platforms
-    Array< VSProjectConfig > configs;
+    Array<VSProjectConfig> configs;
     configs.SetCapacity( 6 );
     VSProjectConfig cfg;
     cfg.m_Platform = "Win32";
@@ -946,7 +946,7 @@ void TestProjectGeneration::VCXProj_Folders() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >(), Array< VSProjectImport >() ) );
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
         TEST_ASSERT( proj.Replace( "AFile.cpp", "" ) == 3 );
         TEST_ASSERT( proj.FindI( "AFile.cpp" ) == nullptr );
         TEST_ASSERT( proj.Replace( "ZFile.cpp", "" ) == 2 );
@@ -1011,12 +1011,12 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
     pg.SetProjectGuid( guid );
 
     // Base dir
-    Array< AString > basePaths;
+    Array<AString> basePaths;
     basePaths.Append( basePath );
     pg.SetBasePaths( basePaths );
 
     // Platforms
-    Array< VSProjectConfig > configs;
+    Array<VSProjectConfig> configs;
     VSProjectConfig cfg;
     cfg.m_Platform = "Win32";
     cfg.m_Config = "Debug";
@@ -1028,7 +1028,7 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >(), Array< VSProjectImport >() ) );
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\File.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\SubDir\\File.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );
@@ -1082,12 +1082,12 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
     pg.SetProjectGuid( guid );
 
     // Base dir
-    Array< AString > basePaths;
+    Array<AString> basePaths;
     basePaths.Append( basePath );
     pg.SetBasePaths( basePaths );
 
     // Platforms
-    Array< VSProjectConfig > configs;
+    Array<VSProjectConfig> configs;
     VSProjectConfig cfg;
     cfg.m_Platform = "Win32";
     cfg.m_Config = "Debug";
@@ -1099,7 +1099,7 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >(), Array< VSProjectImport >() ) );
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"GeneratedCpp.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"SubDir\\GeneratedCpp.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );
@@ -1493,7 +1493,7 @@ void TestProjectGeneration::XCode() const
     // have a valid stamp for downstream dependencies to consume
     {
         // XCode Project
-        Array< const Node * > nodes;
+        Array<const Node *> nodes;
         fBuild.GetNodesOfType( Node::XCODEPROJECT_NODE, nodes );
         TEST_ASSERT( nodes.GetSize() == 1 );
         TEST_ASSERT( nodes[ 0 ]->GetStamp() != 0 );

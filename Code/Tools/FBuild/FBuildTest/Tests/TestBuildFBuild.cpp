@@ -57,7 +57,7 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     TEST_ASSERT( fBuild.Initialize( useDB ? GetDBFile() : nullptr ) );
 
     // Build a subset of targets as a sort of smoke test
-    Array< AString > targets;
+    Array<AString> targets;
     #if defined( __WINDOWS__ )
         targets.EmplaceBack( "All-x64-Debug" );
         targets.EmplaceBack( "All-x64Clang-Release" );
@@ -85,7 +85,7 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
 void TestBuildFBuild::BuildClean() const
 {
     // delete files from previous runs
-    Array< AString > files;
+    Array<AString> files;
     files.SetCapacity( 1024 );
     FileIO::GetFiles( AStackString<>( "../tmp/Test/BuildFBuild" ), AStackString<>( "*" ), true, &files );
     for ( const AString & file : files )

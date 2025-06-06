@@ -60,7 +60,7 @@ private:
     void DoTableStop();
     void DoToggleSection( size_t numMore = 0 );
     void DoSectionTitle( const char * sectionName, const char * sectionId );
-    void DoPieChart( const Array< PieItem > & items, const char * units );
+    void DoPieChart( const Array<PieItem> & items, const char * units );
 
     // intermediate collected data
     uint32_t m_NumPieCharts = 0;

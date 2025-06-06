@@ -280,7 +280,7 @@ void TestManager::TestEnd()
                                              MSVC_SAL_PRINTF const char * formatString,
                                              ... )
 {
-    AStackString< 4096 > buffer;
+    AStackString<4096> buffer;
     va_list args;
     va_start( args, formatString );
     buffer.VFormat( formatString, args );

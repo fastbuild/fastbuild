@@ -123,7 +123,7 @@ struct ArrayOfString
 // Is
 // Normalized type checkers.
 // ---------------------------------------------------------------
-template < typename T, typename VarOrLiteral >
+template <typename T, typename VarOrLiteral>
 bool Is( const VarOrLiteral * token );
 
 template <>
@@ -153,7 +153,7 @@ bool Is<ArrayOfString, BFFVariable>( const BFFVariable * var ) { return ( var !=
 // Get
 // Normalized value getters.
 // ---------------------------------------------------------------
-template < typename T, typename VarOrLiteral >
+template <typename T, typename VarOrLiteral>
 typename T::ReturnType Get( const VarOrLiteral & varOrToken );
 
 template <>
@@ -214,14 +214,14 @@ public:
 
     bool IsValid() const { return m_Valid; }
 
-    template < typename T >
+    template <typename T>
     bool Is() const
     {
         ASSERT( m_Valid );
         return m_Valid && ( ::Is<T>( &m_Token ) || ::Is<T>( m_Var ) );
     }
 
-    template < typename T >
+    template <typename T>
     typename T::ReturnType GetValue() const
     {
         ASSERT( Is<T>() );
@@ -245,7 +245,7 @@ static const BoolOperator sBoolOperators[] =
 
 // OperandOf<T>
 // ------------------------------------------------------------
-template < typename T >
+template <typename T>
 class OperandOf : public Operand
 {
 public:
@@ -567,7 +567,7 @@ static bool ParseStringInArray( const Function * function, const OperandOf<Strin
         return false;
     }
 
-    const Array< AString > & rhsArray = rhs.GetValue();
+    const Array<AString> & rhsArray = rhs.GetValue();
 
     const AString & lhsValue = lhs.GetValue();
     bool conditionSuccess = ( rhsArray.Find( lhsValue ) != nullptr );

@@ -70,7 +70,7 @@ public:
     static void FormatTime( float timeInSeconds, AString & outBuffer );
 
     const Node * GetRootNode() const { return m_RootNode; }
-    const Array< const Node * > & GetNodesByTime() const { return m_NodesByTime; }
+    const Array<const Node *> & GetNodesByTime() const { return m_NodesByTime; }
 
     static void SetIgnoreCompilerNodeDeps( bool b ) { s_IgnoreCompilerNodeDeps = b; }
 private:
@@ -84,7 +84,7 @@ private:
     void GatherPostBuildStatisticsRecurse( const Dependencies & dependencies );
 
     Node * m_RootNode;
-    Array< const Node * > m_NodesByTime;
+    Array<const Node *> m_NodesByTime;
 
     Stats m_PerTypeStats[ Node::NUM_NODE_TYPES ];
     Stats m_Totals;

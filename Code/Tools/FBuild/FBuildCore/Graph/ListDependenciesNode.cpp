@@ -33,7 +33,7 @@ REFLECT_END( ListDependenciesNode )
 
 // FilterFileDependencies
 //------------------------------------------------------------------------------
-static void FilterFileDependencies( Array< const AString * > * dependencyList , const Array< AString > & patterns , const Dependencies & dependencies )
+static void FilterFileDependencies( Array<const AString *> * dependencyList, const Array<AString> & patterns, const Dependencies & dependencies )
 {
     dependencyList->SetCapacity( dependencyList->GetSize() + dependencies.GetSize() );
 
@@ -125,7 +125,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     EmitOutputMessage();
 
     // Collect all file dependencies
-    Array< const AString * > dependencyList;
+    Array<const AString *> dependencyList;
 
     for ( const Dependency & source : m_StaticDependencies )
     {

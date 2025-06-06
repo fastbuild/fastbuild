@@ -215,7 +215,7 @@ private:
                                           const void * compressedData,
                                           uint64_t compressedDataSize,
                                           uint32_t compressionTimeMS );
-    void GetExtraCacheFilePaths( const Job * job, Array< AString > & outFileNames ) const;
+    void GetExtraCacheFilePaths( const Job * job, Array<AString> & outFileNames ) const;
 
     void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
 
@@ -291,10 +291,10 @@ private:
     bool                m_DeoptimizeWritableFilesWithToken  = false;
     bool                m_AllowDistribution                 = true;
     bool                m_AllowCaching                      = true;
-    Array< AString >    m_CompilerForceUsing;
+    Array<AString>      m_CompilerForceUsing;
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
-    Array< AString >    m_PreBuildDependencyNames;
+    Array<AString>      m_PreBuildDependencyNames;
     AString             m_ConcurrencyGroupName;
 
     // Internal State
@@ -306,7 +306,7 @@ private:
     AString             m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
 
     // Not serialized
-    Array< AString >    m_Includes;
+    Array<AString>      m_Includes;
     bool                m_Remote                            = false;
 
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )

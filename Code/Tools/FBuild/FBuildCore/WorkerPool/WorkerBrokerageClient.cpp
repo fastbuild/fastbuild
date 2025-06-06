@@ -25,7 +25,7 @@ WorkerBrokerageClient::~WorkerBrokerageClient() = default;
 
 // FindWorkers
 //------------------------------------------------------------------------------
-void WorkerBrokerageClient::FindWorkers( Array< AString > & outWorkerList )
+void WorkerBrokerageClient::FindWorkers( Array<AString> & outWorkerList )
 {
     PROFILE_FUNCTION;
 
@@ -52,7 +52,7 @@ void WorkerBrokerageClient::FindWorkers( Array< AString > & outWorkerList )
         return;
     }
 
-    Array< AString > results;
+    Array<AString> results;
     results.SetCapacity( 256 );
     for( AString & root : m_BrokerageRoots )
     {

@@ -49,7 +49,7 @@ VSProjectGenerator::~VSProjectGenerator() = default;
 
 // SetBasePaths
 //------------------------------------------------------------------------------
-void VSProjectGenerator::SetBasePaths( const Array< AString > & paths )
+void VSProjectGenerator::SetBasePaths( const Array<AString> & paths )
 {
     ASSERT( m_FilePathsCanonicalized == false );
     m_BasePaths = paths;
@@ -68,7 +68,7 @@ void VSProjectGenerator::AddFile( const AString & file )
 
 // AddFiles
 //------------------------------------------------------------------------------
-void VSProjectGenerator::AddFiles( const Array< AString > & files )
+void VSProjectGenerator::AddFiles( const Array<AString> & files )
 {
     for ( const AString & file : files )
     {
@@ -89,9 +89,9 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
 // GenerateVCXProj
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile,
-                                                     const Array< VSProjectConfig > & configs,
-                                                     const Array< VSProjectFileType > & fileTypes,
-                                                     const Array< VSProjectImport > & projectImports )
+                                                     const Array<VSProjectConfig> & configs,
+                                                     const Array<VSProjectFileType> & fileTypes,
+                                                     const Array<VSProjectImport> & projectImports )
 {
     ASSERT( !m_ProjectGuid.IsEmpty() );
 
@@ -460,9 +460,9 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     Write( "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
 
     // list of all folders
-    Array< AString > folders;
+    Array<AString> folders;
     folders.SetCapacity( 1024 );
-    Array< uint32_t > folderHashes;
+    Array<uint32_t> folderHashes;
     folderHashes.SetCapacity( 1024 );
 
     // files
@@ -560,7 +560,7 @@ void VSProjectGenerator::Write( const char * string )
 //------------------------------------------------------------------------------
 void VSProjectGenerator::WriteF( const char * fmtString, ... )
 {
-    AStackString< 1024 > tmp;
+    AStackString<1024> tmp;
 
     va_list args;
     va_start(args, fmtString);
@@ -646,7 +646,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
     if ( m_Files.IsEmpty() == false )
     {
         // Canonicalize and make all paths relative to project
-        StackArray< const VSProjectFilePair * > filePointers;
+        StackArray<const VSProjectFilePair *> filePointers;
         filePointers.SetCapacity( m_Files.GetSize() );
         for ( VSProjectFilePair & filePathPair : m_Files )
         {
@@ -662,7 +662,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         filePointers.Sort( sorter );
 
         // Find unique files
-        Array< VSProjectFilePair > uniqueFiles;
+        Array<VSProjectFilePair> uniqueFiles;
         uniqueFiles.SetCapacity( m_Files.GetSize() );
         const VSProjectFilePair * prev = filePointers[ 0 ];
         uniqueFiles.Append( *filePointers[ 0 ] );

@@ -53,12 +53,12 @@ public:
     bool     IsDataCompressed() const { return m_DataIsCompressed; }
     bool     IsLocal() const     { return m_IsLocal; }
 
-    const Array< AString > & GetMessages() const { return m_Messages; }
+    const Array<AString> & GetMessages() const { return m_Messages; }
 
     // logging interface
     void                Error( MSVC_SAL_PRINTF const char * format, ... ) FORMAT_STRING( 2, 3 );
     void                ErrorPreformatted( const char * message );
-    void                SetMessages( const Array< AString >& messages );
+    void                SetMessages( const Array<AString> & messages );
 
     // Flag "system failures" - i.e. not a compilation failure, but some other problem (typically a remote worker misbehaving)
     void OnSystemError() { ++m_SystemErrorCount; }
@@ -69,9 +69,9 @@ public:
     void Deserialize( IOStream & stream );
 
     void                GetMessagesForLog( AString & buffer ) const;
-    static void         GetMessagesForLog( const Array< AString > & messages, AString & buffer );
+    static void         GetMessagesForLog( const Array<AString> & messages, AString & buffer );
     void                GetMessagesForMonitorLog( AString & buffer ) const;
-    static void         GetMessagesForMonitorLog( const Array< AString > & messages, AString & outBuffer );
+    static void         GetMessagesForMonitorLog( const Array<AString> & messages, AString & outBuffer );
 
     void                SetRemoteThreadIndex( uint16_t threadIndex )    { m_RemoteThreadIndex = threadIndex; }
     uint16_t            GetRemoteThreadIndex() const                    { return m_RemoteThreadIndex; }
@@ -129,7 +129,7 @@ private:
     BuildProfilerScope * m_BuildProfilerScope = nullptr;    // Additional context when profiling a build
     ToolManifest *      m_ToolManifest      = nullptr;
 
-    Array< AString >    m_Messages;
+    Array<AString>      m_Messages;
 
     static Atomic<int64_t> s_TotalLocalDataMemoryUsage; // Total memory being managed by OwnData
 };

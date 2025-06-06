@@ -473,7 +473,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     if ( var->IsArrayOfStrings() )
     {
         // an array of references
-        const Array< AString > & nodeNames = var->GetArrayOfStrings();
+        const Array<AString> & nodeNames = var->GetArrayOfStrings();
         nodes.SetCapacity( nodes.GetSize() + nodeNames.GetSize() );
         for ( const AString & nodeName : nodeNames )
         {
@@ -519,14 +519,14 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
 /*static*/ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
                                                     const BFFToken * iter,
                                                     const Function * function,
-                                                    const Array< AString > & paths,
-                                                    const Array< AString > & excludePaths,
-                                                    const Array< AString > & filesToExclude,
-                                                    const Array< AString > & excludePatterns,
+                                                    const Array<AString> & paths,
+                                                    const Array<AString> & excludePaths,
+                                                    const Array<AString> & filesToExclude,
+                                                    const Array<AString> & excludePatterns,
                                                     bool recurse,
                                                     bool includeReadOnlyStatusInHash,
                                                     bool includeDirs,
-                                                    const Array< AString > * patterns,
+                                                    const Array<AString> * patterns,
                                                     const char * inputVarName,
                                                     Dependencies & nodes )
 {
@@ -534,7 +534,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     // Since they can be used sensibly by matching just the end
     // of a path, assume they are relative to the working dir.
     // TODO:C Move this during bff parsing when everything is using reflection
-    Array< AString > filesToExcludeCleaned;
+    Array<AString> filesToExcludeCleaned;
     filesToExcludeCleaned.SetCapacity( filesToExclude.GetSize() );
     for ( const AString & file : filesToExclude )
     {
@@ -696,7 +696,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
 /*static*/ bool Function::GetFileNodes( NodeGraph & nodeGraph,
                                         const BFFToken * iter,
                                         const Function * function,
-                                        const Array< AString > & files,
+                                        const Array<AString> & files,
                                         const char * inputVarName,
                                         Dependencies & nodes )
 {
@@ -715,7 +715,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
 /*static*/ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
                                               const BFFToken * iter,
                                               const Function * function,
-                                              const Array< AString > & objectLists,
+                                              const Array<AString> & objectLists,
                                               const char * inputVarName,
                                               Dependencies & nodes )
 {
@@ -745,7 +745,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                        const BFFToken * iter,
                                        const Function * function,
                                        const char * propertyName,
-                                       const Array< AString > & nodeNames,
+                                       const Array<AString> & nodeNames,
                                        Dependencies & nodes,
                                        const GetNodeListOptions & options )
 {
@@ -876,7 +876,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
 
 // GetStrings
 //------------------------------------------------------------------------------
-bool Function::GetStrings( const BFFToken * iter, Array< AString > & strings, const char * name, bool required ) const
+bool Function::GetStrings( const BFFToken * iter, Array<AString> & strings, const char * name, bool required ) const
 {
     const BFFVariable * var;
     if ( !GetStringOrArrayOfStrings( iter, var, name, required ) )
@@ -895,7 +895,7 @@ bool Function::GetStrings( const BFFToken * iter, Array< AString > & strings, co
     }
     else if ( var->GetType() == BFFVariable::VAR_ARRAY_OF_STRINGS )
     {
-        const Array< AString > & vStrings = var->GetArrayOfStrings();
+        const Array<AString> & vStrings = var->GetArrayOfStrings();
         strings.Append( vStrings );
     }
     else
@@ -1060,7 +1060,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
     {
         ASSERT( property.GetType() == PropertyType::PT_STRUCT );
         ASSERT( property.IsArray() == false );
-        const ReflectedPropertyStruct & rps = static_cast< const ReflectedPropertyStruct & >( property );
+        const ReflectedPropertyStruct & rps = static_cast<const ReflectedPropertyStruct &>( property );
         return PopulateProperties( nodeGraph, iter, (Struct *)rps.GetStructBase( base ), rps.GetStructReflectionInfo() );
     }
 
@@ -1123,7 +1123,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
 
 // PopulateStringHelper
 //------------------------------------------------------------------------------
-bool Function::PopulateStringHelper( NodeGraph & nodeGraph, const BFFToken * iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, Array< AString > & outStrings ) const
+bool Function::PopulateStringHelper( NodeGraph & nodeGraph, const BFFToken * iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, Array<AString> & outStrings ) const
 {
     if ( variable->IsArrayOfStrings() )
     {
@@ -1159,7 +1159,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
                                      const Meta_AllowNonFile * allowNonFileMD,
                                      const BFFVariable * variable,
                                      const AString & string,
-                                     Array< AString > & outStrings ) const
+                                     Array<AString> & outStrings ) const
 {
     // Return empty string untouched (expansion of aliases or paths makes no sense)
     if ( string.IsEmpty() )
@@ -1430,7 +1430,7 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
                                        const BFFVariable * variable ) const
 {
     // Get the destination
-    const ReflectedPropertyStruct & dstStructs = static_cast< const ReflectedPropertyStruct & >( property );
+    const ReflectedPropertyStruct & dstStructs = static_cast<const ReflectedPropertyStruct &>( property );
     ASSERT( dstStructs.IsArray() );
 
     // Array to Array

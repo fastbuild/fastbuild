@@ -36,7 +36,7 @@ public:
     const char * GetObjExtension() const;
 
     void GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & outInputs ) const;
-    void GetInputFiles( Array< AString > & files ) const;
+    void GetInputFiles( Array<AString> & files ) const;
 
     const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
     const AString & GetCompilerOptions() const { return m_CompilerOptions; }
@@ -79,16 +79,16 @@ protected:
     AString             m_CompilerOutputPath;
     AString             m_CompilerOutputPrefix;
     AString             m_CompilerOutputExtension;
-    Array< AString >    m_CompilerInputPath;
-    Array< AString >    m_CompilerInputPattern;
-    Array< AString >    m_CompilerInputExcludePath;
-    Array< AString >    m_CompilerInputExcludedFiles;
-    Array< AString >    m_CompilerInputExcludePattern;
-    Array< AString >    m_CompilerInputFiles;
-    Array< AString >    m_CompilerInputUnity;
+    Array<AString>      m_CompilerInputPath;
+    Array<AString>      m_CompilerInputPattern;
+    Array<AString>      m_CompilerInputExcludePath;
+    Array<AString>      m_CompilerInputExcludedFiles;
+    Array<AString>      m_CompilerInputExcludePattern;
+    Array<AString>      m_CompilerInputFiles;
+    Array<AString>      m_CompilerInputUnity;
     AString             m_CompilerInputFilesRoot;
-    Array< AString >    m_CompilerInputObjectLists;
-    Array< AString >    m_CompilerForceUsing;
+    Array<AString>      m_CompilerInputObjectLists;
+    Array<AString>      m_CompilerForceUsing;
     bool                m_CompilerInputAllowNoFiles         = false;
     bool                m_CompilerInputPathRecurse          = true;
     bool                m_CompilerOutputKeepBaseExtension   = false;
@@ -101,7 +101,7 @@ protected:
     AString             m_PCHOptions;
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
-    Array< AString >    m_PreBuildDependencyNames;
+    Array<AString>      m_PreBuildDependencyNames;
     AString             m_ConcurrencyGroupName;
 
     // Internal State

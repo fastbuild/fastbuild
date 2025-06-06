@@ -33,19 +33,19 @@ public:
     uint32_t GetCount() const;
 
     // jobs pushed by the main thread
-    void QueueJobs( Array< Node * > & nodes );
+    void QueueJobs( Array<Node *> & nodes );
 
     // jobs consumed by workers
     Job * RemoveJob();
 private:
     uint32_t    m_Count;    // access the current count
     Mutex       m_Mutex;    // lock to add/remove jobs
-    Array< Job * > m_Jobs;  // Sorted, most expensive at end
+    Array<Job *> m_Jobs;  // Sorted, most expensive at end
 };
 
 // JobQueue
 //------------------------------------------------------------------------------
-class JobQueue : public Singleton< JobQueue >
+class JobQueue : public Singleton<JobQueue>
 {
 public:
     explicit JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool );
@@ -112,24 +112,24 @@ private:
 
     // Jobs available for distributed processing (can also be done locally)
     mutable Mutex       m_DistributedJobsMutex;
-    Array< Job * >      m_DistributableJobs_Available;  // Available, not in progress anywhere
-    Array< Job * >      m_DistributableJobs_InProgress; // In progress remotely, locally or both
+    Array<Job *>        m_DistributableJobs_Available;  // Available, not in progress anywhere
+    Array<Job *>        m_DistributableJobs_InProgress; // In progress remotely, locally or both
 
     // Semaphore to manage thread idle
     Semaphore           m_MainThreadSemaphore;
 
     // completed jobs
     mutable Mutex       m_CompletedJobsMutex;
-    Array< Job * >      m_CompletedJobs;
-    Array< Job * >      m_CompletedJobsAborted;
-    Array< Job * >      m_CompletedJobsFailed;
+    Array<Job *>        m_CompletedJobs;
+    Array<Job *>        m_CompletedJobsAborted;
+    Array<Job *>        m_CompletedJobsFailed;
 
     // we have pair of arrays to enable a swap, avoiding locking the mutex too long
-    Array< Job * >      m_CompletedJobs2;
-    Array< Job * >      m_CompletedJobsAborted2;
-    Array< Job * >      m_CompletedJobsFailed2;
+    Array<Job *>        m_CompletedJobs2;
+    Array<Job *>        m_CompletedJobsAborted2;
+    Array<Job *>        m_CompletedJobsFailed2;
 
-    Array< WorkerThread * > m_Workers;
+    Array<WorkerThread *> m_Workers;
 };
 
 //------------------------------------------------------------------------------

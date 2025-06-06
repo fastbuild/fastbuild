@@ -64,7 +64,7 @@
         static void Init();
         static void DumpLeaksAtExit();
 
-        static Mutex & GetMutex() { return reinterpret_cast< Mutex & >( s_Mutex ); }
+        static Mutex & GetMutex() { return reinterpret_cast<Mutex &>( s_Mutex ); }
 
         static uint32_t         s_Id;
         static bool             s_Enabled;

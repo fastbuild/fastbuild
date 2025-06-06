@@ -114,9 +114,9 @@ private: // ensure reflection can set private members
 
     TestStruct  m_TestStruct;
 
-    Array< float > m_FloatArray;
+    Array<float> m_FloatArray;
 
-    Array< TestStruct > m_StructArray;
+    Array<TestStruct> m_StructArray;
 };
 
 REFLECT_BEGIN( TestObject, Object, MetaNone() )

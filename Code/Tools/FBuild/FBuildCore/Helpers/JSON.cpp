@@ -13,7 +13,7 @@
 /*static*/ void JSON::Escape( AString & string )
 {
     // Build result in a temporary buffer
-    AStackString< 8192 > temp;
+    AStackString<8192> temp;
 
     const char * const end = string.GetEnd();
     for ( const char * pos = string.Get(); pos != end; ++pos )

@@ -66,7 +66,7 @@ Report::~Report()
 //------------------------------------------------------------------------------
 void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > tmp;
+    AStackString<1024> tmp;
 
     va_list args;
     va_start( args, fmtString );
@@ -127,7 +127,7 @@ void Report::GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & s
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const
+void Report::GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Node * node, LibraryStats * currentLib ) const
 {
     // skip nodes we've already seen
     if ( node->GetBuildPassTag() == eNodeSeen )
@@ -220,7 +220,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
+void Report::GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
 {
     for ( const Dependency & dep : dependencies )
     {
@@ -347,7 +347,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 
 // Flatten
 //------------------------------------------------------------------------------
-void Report::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
+void Report::IncludeStatsMap::Flatten( Array<const IncludeStats *> & stats ) const
 {
     for ( size_t i = 0; i < 65536; ++i )
     {

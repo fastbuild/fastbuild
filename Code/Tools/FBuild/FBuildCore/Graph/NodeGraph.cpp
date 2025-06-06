@@ -250,7 +250,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
 
     // Read it into memory to avoid lots of tiny disk accesses
     const size_t fileSize = (size_t)fs.GetFileSize();
-    UniquePtr< char, FreeDeletor > memory( (char *)ALLOC( fileSize ) );
+    UniquePtr<char, FreeDeletor> memory( (char *)ALLOC( fileSize ) );
     if ( fs.ReadBuffer( memory.Get(), fileSize ) != fileSize )
     {
         FLOG_ERROR( "Could not read Database. Error: %s File: '%s'", LAST_ERROR_STR, nodeGraphDBFile );
@@ -273,7 +273,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
 {
     bool compatibleDB;
     bool movedDB;
-    Array< UsedFile > usedFiles;
+    Array<UsedFile> usedFiles;
     if ( ReadHeaderAndUsedFiles( stream, nodeGraphDBFile, usedFiles, compatibleDB, movedDB ) == false )
     {
         return movedDB ? LoadResult::LOAD_ERROR_MOVED : LoadResult::LOAD_ERROR;
@@ -311,7 +311,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
         }
 
         const size_t size = (size_t)fs.GetFileSize();
-        UniquePtr< void, FreeDeletor > mem( ALLOC( size ) );
+        UniquePtr<void, FreeDeletor> mem( ALLOC( size ) );
         if ( fs.Read( mem.Get(), size ) != size )
         {
             return LoadResult::LOAD_ERROR; // error reading
@@ -340,7 +340,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
     // environment
     uint32_t envStringSize = 0;
     VERIFY( stream.Read( envStringSize ) );
-    UniquePtr< char, FreeDeletor > envString;
+    UniquePtr<char, FreeDeletor> envString;
     AStackString<> libEnvVar;
     if ( envStringSize > 0 )
     {
@@ -506,7 +506,7 @@ void NodeGraph::Save( ChainedMemoryStream & stream, const char* nodeGraphDBFile 
         }
 
         // imported environment variables
-        const Array< FBuild::EnvironmentVarAndHash > & importedEnvironmentsVars = FBuild::Get().GetImportedEnvironmentVars();
+        const Array<FBuild::EnvironmentVarAndHash> & importedEnvironmentsVars = FBuild::Get().GetImportedEnvironmentVars();
         const uint32_t importedEnvironmentsVarsSize = static_cast<uint32_t>( importedEnvironmentsVars.GetSize() );
         ASSERT( importedEnvironmentsVarsSize == importedEnvironmentsVars.GetSize() );
         stream.Write( importedEnvironmentsVarsSize );
@@ -782,7 +782,7 @@ Node * NodeGraph::FindNode( const AString & nodeName ) const
     }
 
     // the expanding to a full path
-    AStackString< 1024 > fullPath;
+    AStackString<1024> fullPath;
     CleanPath( nodeName, fullPath );
     return FindNodeInternal( fullPath, 0 );
 }
@@ -925,7 +925,7 @@ Node * NodeGraph::CreateNode( Node::Type type, const AString & name, const BFFTo
     if ( type == Node::FILE_NODE )
     {
         // Clean path
-        AStackString< 512 > cleanPath;
+        AStackString<512> cleanPath;
         CleanPath( name, cleanPath );
         nameCopy = cleanPath;
     }
@@ -1426,7 +1426,7 @@ Node * NodeGraph::FindNodeInternal( const AString & name, uint32_t nameHashHint 
 
 // FindNearestNodesInternal
 //------------------------------------------------------------------------------
-void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance ) const
+void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array<NodeWithDistance> & nodes, const uint32_t maxDistance ) const
 {
     ASSERT( Thread::IsMainThread() );
     ASSERT( nodes.IsEmpty() );
@@ -1632,13 +1632,13 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
     PROFILE_FUNCTION;
 
     s_BuildPassTag++;
-    StackArray< const Node * > dependencyStack;
+    StackArray<const Node *> dependencyStack;
     return CheckForCyclicDependenciesRecurse( node, dependencyStack );
 }
 
 // CheckForCyclicDependenciesRecurse
 //------------------------------------------------------------------------------
-/*static*/ bool NodeGraph::CheckForCyclicDependenciesRecurse( const Node * node, Array< const Node * > & dependencyStack )
+/*static*/ bool NodeGraph::CheckForCyclicDependenciesRecurse( const Node * node, Array<const Node *> & dependencyStack )
 {
     // If dependencies are satisfied, there can't be any circular dependencies
     // below this node
@@ -1691,7 +1691,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 // UpdateBuildStatusRecurse
 //------------------------------------------------------------------------------
 /*static*/ bool NodeGraph::CheckForCyclicDependenciesRecurse( const Dependencies & dependencies,
-                                                                Array< const Node * > & dependencyStack )
+                                                              Array<const Node *> & dependencyStack )
 {
     for ( const Dependency & dep : dependencies )
     {
@@ -1705,7 +1705,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 
 // ReadHeaderAndUsedFiles
 //------------------------------------------------------------------------------
-bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB, bool & movedDB ) const
+bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, const char* nodeGraphDBFile, Array<UsedFile> & files, bool & compatibleDB, bool & movedDB ) const
 {
     // Assume good DB by default (cases below will change flags if needed)
     compatibleDB = true;
@@ -1811,7 +1811,7 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
 #if defined( ASSERTS_ENABLED )
     /*static*/ bool NodeGraph::IsCleanPath( const AString & path )
     {
-        AStackString< 1024 > clean;
+        AStackString<1024> clean;
         CleanPath( path, clean );
         return ( path == clean );
     }
@@ -2013,8 +2013,8 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
         {
             if ( property.IsArray() )
             {
-                const Array< AString > * stringsOld = property.GetPtrToArray<AString>( oldBase );
-                Array< AString > * stringsNew = property.GetPtrToArray<AString>( newBase );
+                const Array<AString> * stringsOld = property.GetPtrToArray<AString>( oldBase );
+                Array<AString> * stringsNew = property.GetPtrToArray<AString>( newBase );
                 *stringsNew = *stringsOld;
             }
             else
@@ -2128,8 +2128,8 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
         {
             if ( property.IsArray() )
             {
-                const Array< AString > * stringsA = property.GetPtrToArray<AString>( baseA );
-                const Array< AString > * stringsB = property.GetPtrToArray<AString>( baseB );
+                const Array<AString> * stringsA = property.GetPtrToArray<AString>( baseA );
+                const Array<AString> * stringsB = property.GetPtrToArray<AString>( baseB );
                 if ( stringsA->GetSize() != stringsB->GetSize() )
                 {
                     return false;

@@ -127,7 +127,7 @@ REFLECT_END( VCXProjectNode )
 // VSProjectConfig::ResolveTargets
 //------------------------------------------------------------------------------
 /*static*/ bool VSProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
-                                                 Array< VSProjectConfig > & configs,
+                                                 Array<VSProjectConfig> & configs,
                                                  const BFFToken * iter,
                                                  const Function * function )
 {

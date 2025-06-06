@@ -117,7 +117,7 @@ GETSET_PROPERTY( bool, bool )
 GETSET_PROPERTY( AString, const AString & )
 
 #define GETSET_PROPERTY_ARRAY( valueType ) \
-    bool ReflectionInfo::GetProperty( void * object, const char * name, Array< valueType > * value ) const \
+    bool ReflectionInfo::GetProperty( void * object, const char * name, Array<valueType> * value ) const \
     { \
         const ReflectedProperty * p = FindProperty( name ); \
         if ( p && ( p->GetType() == GetPropertyType( (valueType *)nullptr ) ) && p->IsArray() ) \
@@ -127,7 +127,7 @@ GETSET_PROPERTY( AString, const AString & )
         } \
         return false; \
     } \
-    bool ReflectionInfo::SetProperty( void * object, const char * name, const Array< valueType > & value ) const \
+    bool ReflectionInfo::SetProperty( void * object, const char * name, const Array<valueType> & value ) const \
     { \
         const ReflectedProperty * p = FindProperty( name ); \
         if ( p && ( p->GetType() == GetPropertyType( (valueType *)nullptr ) ) && p->IsArray() ) \

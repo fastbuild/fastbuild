@@ -235,14 +235,14 @@ bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );
 
-    StackArray< AString > targets;
+    StackArray<AString> targets;
     targets.Append( target );
     return Build( targets );
 }
 
 // GetTargets
 //------------------------------------------------------------------------------
-bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const
+bool FBuild::GetTargets( const Array<AString> & targets, Dependencies & outDeps ) const
 {
     ASSERT( !targets.IsEmpty() );
 
@@ -265,7 +265,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
             FLOG_ERROR( "Unknown build target '%s'", target.Get() );
 
             // Gets the 5 targets with minimal distance to user input
-            StackArray< NodeGraph::NodeWithDistance > nearestNodes;
+            StackArray<NodeGraph::NodeWithDistance> nearestNodes;
             m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
 
             if ( false == nearestNodes.IsEmpty() )
@@ -288,10 +288,10 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
 
 // Build
 //------------------------------------------------------------------------------
-bool FBuild::Build( const Array< AString > & targets )
+bool FBuild::Build( const Array<AString> & targets )
 {
     // create a temporary node, not hooked into the DB
-    NodeProxy proxy( AStackString< 32 >( "*proxy*" ) );
+    NodeProxy proxy( AStackString<32>( "*proxy*" ) );
     Dependencies deps( targets.GetSize() );
     if ( !GetTargets( targets, deps ) )
     {
@@ -397,7 +397,7 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char* node
         const SettingsNode * settings = m_DependencyGraph->GetSettings();
 
         // Worker list from Settings takes priority
-        Array< AString > workers( settings->GetWorkerList() );
+        Array<AString> workers( settings->GetWorkerList() );
         if ( workers.IsEmpty() )
         {
             // check for workers through brokerage or environment
@@ -774,7 +774,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
 
 // DisplayDependencyDB
 //------------------------------------------------------------------------------
-bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
+bool FBuild::DisplayDependencyDB( const Array<AString> & targets ) const
 {
     AString buffer( 10 * 1024 * 1024 );
 
@@ -796,7 +796,7 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
 
 // GenerateDotGraph
 //------------------------------------------------------------------------------
-bool FBuild::GenerateDotGraph( const Array< AString > & targets, const bool fullGraph ) const
+bool FBuild::GenerateDotGraph( const Array<AString> & targets, const bool fullGraph ) const
 {
     // Get the nodes for the targets, or leave empty to get everything
     Dependencies deps;
@@ -828,7 +828,7 @@ bool FBuild::GenerateDotGraph( const Array< AString > & targets, const bool full
 
 // GenerateCompilationDatabase
 //------------------------------------------------------------------------------
-bool FBuild::GenerateCompilationDatabase( const Array< AString > & targets ) const
+bool FBuild::GenerateCompilationDatabase( const Array<AString> & targets ) const
 {
     Dependencies deps;
     if ( !GetTargets( targets, deps ) )

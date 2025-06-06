@@ -453,7 +453,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
 
     // 1. Object file
     //---------------
-    StackArray< AString > fileNames;
+    StackArray<AString> fileNames;
     fileNames.Append( node->GetName() );
 
     // 2. PDB file (optional)

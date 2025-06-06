@@ -30,7 +30,7 @@ public:
     const AString &                     GetCachePathMountPoint() const;
     const AString &                     GetCachePluginDLL() const;
     const AString &                     GetCachePluginDLLConfig() const;
-    const Array< AString > &            GetWorkerList() const { return m_Workers; }
+    const Array<AString> &              GetWorkerList() const { return m_Workers; }
     uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
     uint32_t                            GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
     const ConcurrencyGroup *            GetConcurrencyGroup( const AString & groupName ) const;
@@ -39,7 +39,7 @@ public:
     enum : uint32_t { eMaxConcurrencyGroups = 16 };
 
 private:
-    void ProcessEnvironment( const Array< AString > & envStrings ) const;
+    void ProcessEnvironment( const Array<AString> & envStrings ) const;
     [[nodiscard]] bool InitializeConcurrencyGroups( const BFFToken * iter,
                                                     const Function * function );
 
@@ -49,15 +49,15 @@ private:
 
     // Exposed settings
     //friend class FunctionSettings;
-    Array< AString  >   m_Environment;
+    Array<AString>      m_Environment;
     AString             m_CachePath;
     AString             m_CachePathMountPoint;
     AString             m_CachePluginDLL;
     AString             m_CachePluginDLLConfig;
-    Array< AString  >   m_Workers;
+    Array<AString>      m_Workers;
     uint32_t            m_WorkerConnectionLimit;
     uint32_t            m_DistributableJobMemoryLimitMiB;
-    Array< ConcurrencyGroup > m_ConcurrencyGroups;
+    Array<ConcurrencyGroup> m_ConcurrencyGroups;
 };
 
 //------------------------------------------------------------------------------

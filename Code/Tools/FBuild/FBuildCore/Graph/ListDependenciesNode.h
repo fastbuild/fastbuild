@@ -30,8 +30,8 @@ private:
     friend class FunctionListDependencies;
     AString             m_Source;
     AString             m_Dest;
-    Array< AString >    m_Patterns;
-    Array< AString >    m_PreBuildDependencyNames;
+    Array<AString>      m_Patterns;
+    Array<AString>      m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

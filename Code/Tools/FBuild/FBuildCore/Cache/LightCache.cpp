@@ -56,9 +56,9 @@ public:
     AString                         m_FileName;
     bool                            m_Exists;
     uint64_t                        m_ContentHash;
-    Array< Include >                m_Includes;
-    Array< const IncludeDefine * >  m_IncludeDefines;
-    Array< uint64_t >               m_NonIncludeDefines;
+    Array<Include>                  m_Includes;
+    Array<const IncludeDefine *>    m_IncludeDefines;
+    Array<uint64_t>                 m_NonIncludeDefines;
 
     bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
     bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
@@ -141,7 +141,7 @@ private:
         return bucket;
     }
 
-    static IncludedFile ** Next( Array< IncludedFile * > &buckets,
+    static IncludedFile ** Next( Array<IncludedFile *> &buckets,
                                  size_t startIdx,
                                  size_t & probeCount )
     {
@@ -152,7 +152,7 @@ private:
     }
     void Grow( size_t elts )
     {
-        Array< IncludedFile * > dest;
+        Array<IncludedFile *> dest;
         dest.SetSize( elts );
         for ( IncludedFile * & elt : dest )
         {
@@ -181,7 +181,7 @@ private:
     }
 
     // m_Buckets must always be a size that is a power of 2
-    Array< IncludedFile * > m_Buckets;
+    Array<IncludedFile *> m_Buckets;
     size_t m_Elts = 0;
 };
 
@@ -255,7 +255,7 @@ LightCache::~LightCache() = default;
 bool LightCache::Hash( ObjectNode * node,
                        const AString & compilerArgs,
                        uint64_t & outSourceHash,
-                       Array< AString > & outIncludes )
+                       Array<AString> & outIncludes )
 {
     PROFILE_FUNCTION;
 
@@ -310,7 +310,7 @@ bool LightCache::Hash( ObjectNode * node,
 
     // Create final hash and return includes
     const size_t numIncludes = m_AllIncludedFiles.GetSize();
-    StackArray< uint64_t > hashes;
+    StackArray<uint64_t> hashes;
     hashes.SetCapacity( numIncludes * 2 );
     outIncludes.SetCapacity( numIncludes );
     for ( const IncludedFile * file : m_AllIncludedFiles )
@@ -909,13 +909,13 @@ void LightCache::AddError( IncludedFile * file,
                            ... )
 {
     // Format the error-specific output
-    AStackString< 1024 > msgBuffer;
+    AStackString<1024> msgBuffer;
     va_list args;
     va_start( args, formatString );
     msgBuffer.VFormat( formatString, args );
     va_end( args );
 
-    AStackString< 1024 > finalBuffer;
+    AStackString<1024> finalBuffer;
     finalBuffer.Format( "  Problem: %s\n", msgBuffer.Get() );
 
     // Annotate with file name

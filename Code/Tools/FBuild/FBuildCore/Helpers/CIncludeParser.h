@@ -20,10 +20,10 @@ public:
     bool ParseMSCL_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
     bool ParseGCC_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
 
-    const Array< AString > & GetIncludes() const { return m_Includes; }
+    const Array<AString> & GetIncludes() const { return m_Includes; }
 
     // take ownership of includes array to avoid re-allocations
-    void SwapIncludes( Array< AString > & includes );
+    void SwapIncludes( Array<AString> & includes );
     #ifdef DEBUG
         size_t GetNonUniqueCount() const { return m_NonUniqueCount; }
     #endif
@@ -35,12 +35,12 @@ private:
 
     // temporary data
     uint32_t            m_LastCRC1;
-    Array< uint32_t >   m_CRCs1;
+    Array<uint32_t>     m_CRCs1;
     uint32_t            m_LastCRC2;
-    Array< uint32_t >   m_CRCs2;
+    Array<uint32_t>     m_CRCs2;
 
     // final data
-    Array< AString > m_Includes;    // list of unique includes
+    Array<AString> m_Includes;    // list of unique includes
     #ifdef DEBUG
         size_t m_NonUniqueCount;    // number of include directives seen
     #endif

@@ -124,7 +124,7 @@ void FBuildStats::OutputSummary() const
 {
     PROFILE_FUNCTION;
 
-    AStackString< 4096 > output;
+    AStackString<4096> output;
 
     // Top 10 cost items
     if ( m_NodesByTime.IsEmpty() == false )

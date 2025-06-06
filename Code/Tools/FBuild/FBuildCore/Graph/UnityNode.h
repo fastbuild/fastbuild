@@ -49,8 +49,8 @@ public:
 
     static Node::Type GetTypeS() { return Node::UNITY_NODE; }
 
-    const Array< AString > & GetUnityFileNames() const { return m_UnityFileNames; }
-    const Array< UnityIsolatedFile > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
+    const Array<AString> & GetUnityFileNames() const { return m_UnityFileNames; }
+    const Array<UnityIsolatedFile> & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
     void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
@@ -83,36 +83,36 @@ protected:
         bool                    m_Isolated          = false;
     };
 
-    bool GetFiles( Array< UnityFileAndOrigin > & files );
-    bool GetIsolatedFilesFromList( Array< AString > & files ) const;
-    void FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array< UnityIsolatedFile > & isolatedFiles );
+    bool GetFiles( Array<UnityFileAndOrigin> & files );
+    bool GetIsolatedFilesFromList( Array<AString> & files ) const;
+    void FilterForceIsolated( Array<UnityFileAndOrigin> & files, Array<UnityIsolatedFile> & isolatedFiles );
 
     // Exposed properties
-    Array< AString > m_InputPaths;
+    Array<AString> m_InputPaths;
     bool m_InputPathRecurse;
-    Array< AString > m_InputPattern;
-    Array< AString > m_Files;
-    Array< AString > m_ObjectLists;
+    Array<AString> m_InputPattern;
+    Array<AString> m_Files;
+    Array<AString> m_ObjectLists;
     AString m_OutputPath;
     AString m_OutputPattern;
     uint32_t m_NumUnityFilesToCreate;
     AString m_PrecompiledHeader;
-    Array< AString > m_PathsToExclude;
-    Array< AString > m_FilesToExclude;
-    Array< AString > m_FilesToIsolate;
+    Array<AString> m_PathsToExclude;
+    Array<AString> m_FilesToExclude;
+    Array<AString> m_FilesToIsolate;
     bool m_IsolateWritableFiles;
     uint32_t m_MaxIsolatedFiles;
     AString m_IsolateListFile;
-    Array< AString > m_ExcludePatterns;
-    Array< AString > m_PreBuildDependencyNames;
+    Array<AString> m_ExcludePatterns;
+    Array<AString> m_PreBuildDependencyNames;
     bool m_UseRelativePaths_Experimental;
 
     // Temporary data
-    Array< FileIO::FileInfo* > m_FilesInfo;
+    Array<FileIO::FileInfo*> m_FilesInfo;
 
     // Internal data persisted between builds
-    Array< UnityIsolatedFile > m_IsolatedFiles;
-    Array< AString > m_UnityFileNames;
+    Array<UnityIsolatedFile> m_IsolatedFiles;
+    Array<AString> m_UnityFileNames;
 };
 
 //------------------------------------------------------------------------------

@@ -33,7 +33,7 @@ public:
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
-    Array< AString > m_Targets;
+    Array<AString> m_Targets;
 };
 
 //------------------------------------------------------------------------------

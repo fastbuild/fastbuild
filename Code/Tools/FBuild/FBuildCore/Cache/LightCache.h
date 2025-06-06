@@ -28,10 +28,10 @@ public:
     LightCache();
     ~LightCache();
 
-    bool Hash( ObjectNode * node,                // Object to be compiled
-               const AString & compilerArgs,     // Args to extract include paths from
-               uint64_t & outSourceHash,         // Resulting hash of source code
-               Array< AString > & outIncludes ); // Discovered dependencies
+    bool Hash( ObjectNode * node,               // Object to be compiled
+               const AString & compilerArgs,    // Args to extract include paths from
+               uint64_t & outSourceHash,        // Resulting hash of source code
+               Array<AString> & outIncludes );  // Discovered dependencies
 
     // Get text description of problem(s) if Hash() fails
     const AString & GetErrors() const { return m_Errors; }
@@ -66,10 +66,10 @@ protected:
 
     static void ExtractLine( const char * pos, AString & outLine );
 
-    Array< AString >                m_IncludePaths;             // Paths to search for includes (from -I etc)
-    Array< const IncludedFile * >   m_AllIncludedFiles;         // List of files seen during parsing
-    Array< const IncludedFile * >   m_IncludeStack;             // Stack of includes, for file relative checks
-    Array< const IncludeDefine * >  m_IncludeDefines;           // Macros describing files to include
+    Array<AString>                  m_IncludePaths;             // Paths to search for includes (from -I etc)
+    Array<const IncludedFile *>     m_AllIncludedFiles;         // List of files seen during parsing
+    Array<const IncludedFile *>     m_IncludeStack;             // Stack of includes, for file relative checks
+    Array<const IncludeDefine *>    m_IncludeDefines;           // Macros describing files to include
     AString                         m_Errors;                   // Did we encounter some code we couldn't parse?
 };
 

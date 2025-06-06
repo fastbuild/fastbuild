@@ -60,15 +60,15 @@ public:
     GETSET_PROPERTY( AString, const AString & )
 
     #define GETSET_PROPERTY_ARRAY( valueType ) \
-        bool GetProperty( void * object, const char * name, Array< valueType > * value ) const; \
-        bool SetProperty( void * object, const char * name, const Array< valueType > & value ) const;
+        bool GetProperty( void * object, const char * name, Array<valueType> * value ) const; \
+        bool SetProperty( void * object, const char * name, const Array<valueType> & value ) const;
 
     GETSET_PROPERTY_ARRAY( AString )
 
     #undef GETSET_PROPERTY
     #undef GETSET_PROPERTY_ARRAY
 
-    template < class T >
+    template <class T>
     const T * HasMetaData() const
     {
         const ReflectionInfo * ri = T::GetReflectionInfoS();
@@ -103,7 +103,7 @@ protected:
     virtual void SetArraySizeV( void * array, size_t size ) const;
 
     uint32_t m_TypeNameCRC;
-    Array< ReflectedProperty * > m_Properties;
+    Array<ReflectedProperty *> m_Properties;
     const ReflectionInfo * m_SuperClass;
     const ReflectionInfo * m_Next;
     const char * m_TypeName;

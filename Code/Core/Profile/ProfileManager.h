@@ -44,11 +44,11 @@ private:
     struct ProfileEventInfo
     {
         Thread::ThreadId        m_ThreadId;
-        AStackString< 32 >      m_ThreadName;
+        AStackString<32>        m_ThreadName;
         const ProfileEvent *    m_Events;
         size_t                  m_NumEvents;
     };
-    static Array< ProfileEventInfo > s_ProfileEventInfo;
+    static Array<ProfileEventInfo> s_ProfileEventInfo;
 };
 
 //------------------------------------------------------------------------------

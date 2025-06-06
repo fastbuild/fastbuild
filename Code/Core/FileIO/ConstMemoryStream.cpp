@@ -39,7 +39,7 @@ ConstMemoryStream::~ConstMemoryStream()
 {
     if ( m_OwnsMemory )
     {
-        FREE( const_cast< void * >( m_Buffer ) );
+        FREE( const_cast<void *>( m_Buffer ) );
     }
 }
 

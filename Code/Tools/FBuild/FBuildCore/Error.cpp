@@ -844,7 +844,7 @@ void Error::FormatError( const BFFToken * iter,
                          MSVC_SAL_PRINTF const char * message, ... )
 {
     ASSERT( message );
-    AStackString< 4096 > buffer;
+    AStackString<4096> buffer;
 
     va_list args;
     va_start(args, message);

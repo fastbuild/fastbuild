@@ -58,7 +58,7 @@ FunctionPrint::FunctionPrint()
     if ( varToken->IsString() )
     {
         // perform variable substitutions
-        AStackString< 1024 > tmp;
+        AStackString<1024> tmp;
         if ( BFFParser::PerformVariableSubstitutions( varToken, tmp ) == false )
         {
             return false; // substitution will have emitted an error
@@ -73,7 +73,7 @@ FunctionPrint::FunctionPrint()
     else if ( varToken->IsVariable() )
     {
         // find variable name
-        AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
+        AStackString<BFFParser::MAX_VARIABLE_NAME_LENGTH> varName;
         bool parentScope = false;
         if ( BFFParser::ParseVariableName( varToken, varName, parentScope ) == false )
         {

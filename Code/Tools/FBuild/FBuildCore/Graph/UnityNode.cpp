@@ -296,7 +296,7 @@ UnityNode::~UnityNode()
     // Emit build summary message
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        AStackString< 512 > buffer( "Uni: " );
+        AStackString<512> buffer( "Uni: " );
         buffer += GetName();
         buffer += '\n';
         FLOG_OUTPUT( buffer );
@@ -319,7 +319,7 @@ UnityNode::~UnityNode()
     m_UnityFileNames.SetCapacity( m_NumUnityFilesToCreate );
 
     // get the files
-    Array< UnityFileAndOrigin > files;
+    Array<UnityFileAndOrigin> files;
     files.SetCapacity( 4096 );
 
     if ( !GetFiles( files ) )
@@ -330,7 +330,7 @@ UnityNode::~UnityNode()
     FilterForceIsolated( files, m_IsolatedFiles );
 
     // get isolated files from list
-    StackArray< AString > isolatedFilesFromList;
+    StackArray<AString> isolatedFilesFromList;
     if ( !GetIsolatedFilesFromList( isolatedFilesFromList ) )
     {
         return BuildResult::eFailed; // GetFiles will have emitted an error
@@ -352,7 +352,7 @@ UnityNode::~UnityNode()
     AString output;
     output.SetReserved( 32 * 1024 );
 
-    StackArray< uint64_t > stamps;
+    StackArray<uint64_t> stamps;
     stamps.SetCapacity( m_NumUnityFilesToCreate );
 
     // Includes will be relative to root
@@ -393,7 +393,7 @@ UnityNode::~UnityNode()
         // for floating point imprecision
 
         // determine allocation of includes for this unity file
-        StackArray< UnityFileAndOrigin > filesInThisUnity;
+        StackArray<UnityFileAndOrigin> filesInThisUnity;
         uint32_t numIsolated( 0 );
         const bool lastUnity = ( i == ( m_NumUnityFilesToCreate - 1 ) );
         while ( ( remainingInThisUnity > 0.0f ) || lastUnity )
@@ -547,7 +547,7 @@ UnityNode::~UnityNode()
                 else
                 {
                     // files the same size - are the contents the same?
-                    UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( fileSize ) );
+                    UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( fileSize ) );
                     if ( f.Read( mem.Get(), fileSize ) != fileSize )
                     {
                         // problem reading file - try to write it again
@@ -632,7 +632,7 @@ UnityNode::~UnityNode()
 
 // GetFiles
 //------------------------------------------------------------------------------
-bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
+bool UnityNode::GetFiles( Array<UnityFileAndOrigin> & files )
 {
     bool ok = true;
 
@@ -680,7 +680,7 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
             const ObjectListNode * objListNode = node->CastTo< ObjectListNode >();
 
             // iterate all the files in the object list
-            Array< AString > objListFiles;
+            Array<AString> objListFiles;
             objListNode->GetInputFiles( objListFiles );
             for ( const AString & file : objListFiles )
             {
@@ -731,7 +731,7 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
 
 // FilterForceIsolated
 //------------------------------------------------------------------------------
-void UnityNode::FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array< UnityIsolatedFile > & isolatedFiles )
+void UnityNode::FilterForceIsolated( Array<UnityFileAndOrigin> & files, Array<UnityIsolatedFile> & isolatedFiles )
 {
     if ( m_FilesToIsolate.IsEmpty() )
     {
@@ -789,7 +789,7 @@ void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile
         {
             const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
 
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            const Array<FileIO::FileInfo> & files = dln->GetFiles();
             for ( const FileIO::FileInfo & fi : files )
             {
                 callback( fi.m_Name, dln->GetPath(), userData );
@@ -814,7 +814,7 @@ void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile
 
 // GetIsolatedFiles
 //------------------------------------------------------------------------------
-bool UnityNode::GetIsolatedFilesFromList( Array< AString > & files ) const
+bool UnityNode::GetIsolatedFilesFromList( Array<AString> & files ) const
 {
     if ( m_IsolateListFile.IsEmpty() )
     {

@@ -105,7 +105,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     s.Listen( Protocol::PROTOCOL_TEST_PORT );
 
     // clean up anything left over from previous runs
-    Array< AString > files;
+    Array<AString> files;
     FileIO::GetFiles( AStackString<>( "../tmp/Test/Distributed" ), AStackString<>( "*.*" ), true, &files );
     for ( const AString & file : files )
     {
@@ -400,7 +400,7 @@ void TestDistributed::ShutdownMemoryLeak() const
             {
                 if ( Job::GetTotalLocalDataMemoryUsage() != 0 )
                 {
-                    *static_cast< bool * >( data ) = true;
+                    *static_cast<bool *>( data ) = true;
                     break;
                 }
                 Thread::Sleep( 1 );

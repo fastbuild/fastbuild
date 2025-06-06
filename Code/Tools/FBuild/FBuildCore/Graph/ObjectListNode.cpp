@@ -373,7 +373,7 @@ ObjectListNode::~ObjectListNode() = default;
         {
             // get the list of files
             const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            const Array<FileIO::FileInfo> & files = dln->GetFiles();
             m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
             for ( const FileIO::FileInfo & file : files )
             {
@@ -456,7 +456,7 @@ ObjectListNode::~ObjectListNode() = default;
         {
             // get the list of files from the ObjectListNode
             const ObjectListNode * objListNode = dep.GetNode()->CastTo< ObjectListNode >();
-            Array< AString > objListFiles;
+            Array<AString> objListFiles;
             objListNode->GetInputFiles( objListFiles );
 
             // iterate all the files in the object list
@@ -575,7 +575,7 @@ ObjectListNode::~ObjectListNode() = default;
     }
     else
     {
-        StackArray< uint64_t > stamps;
+        StackArray<uint64_t> stamps;
         stamps.SetCapacity( m_DynamicDependencies.GetSize() );
         for ( const Dependency & dep : m_DynamicDependencies )
         {
@@ -649,7 +649,7 @@ void ObjectListNode::GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & 
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::GetInputFiles( Array< AString > & files ) const
+void ObjectListNode::GetInputFiles( Array<AString> & files ) const
 {
     // only valid to call on ObjectListNode (not LibraryNode)
     ASSERT( GetType() == Node::OBJECT_LIST_NODE );
@@ -855,7 +855,7 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
         {
             const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
 
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            const Array<FileIO::FileInfo> & files = dln->GetFiles();
             for ( const FileIO::FileInfo & fi : files )
             {
                 callback( fi.m_Name, dln->GetPath(), userData );

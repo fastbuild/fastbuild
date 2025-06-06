@@ -203,7 +203,7 @@ void TestMutex::TestExclusivity() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestMutex::TestExclusivityThreadEntryFunction( void * userData )
 {
-    TestExclusivityUserData & data = *( static_cast< TestExclusivityUserData * >( userData ) );
+    TestExclusivityUserData & data = *( static_cast<TestExclusivityUserData *>( userData ) );
 
     // arrive at barrier and wait
     AtomicInc( &data.m_BarrierCounter );

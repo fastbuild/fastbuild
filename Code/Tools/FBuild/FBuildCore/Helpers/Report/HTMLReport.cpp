@@ -342,7 +342,7 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
         }
         const uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
-        StackArray< PieItem > pieItems;
+        StackArray<PieItem> pieItems;
         pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
         pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, (uint32_t)0xFFCC88 );
         pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, (uint32_t)0x88FF88 );
@@ -425,7 +425,7 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
     DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
 
     // Summary Pie Chart
-    StackArray< PieItem > items;
+    StackArray<PieItem> items;
 
     for ( size_t i=0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
     {
@@ -503,7 +503,7 @@ void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
     size_t numOutput = 0;
 
     // Result
-    const Array< const Node * > & nodes = stats.GetNodesByTime();
+    const Array<const Node *> & nodes = stats.GetNodesByTime();
     for ( const Node * node: nodes )
     {
         const float time = ( (float)node->GetProcessingTime() * 0.001f ); // ms to s
@@ -630,7 +630,7 @@ void HTMLReport::DoIncludes()
         GetIncludeFilesRecurse( incStatsMap, library );
 
         // flatten and sort by usage
-        Array< const IncludeStats * > incStats;
+        Array<const IncludeStats *> incStats;
         incStats.SetCapacity( 10 * 1024 );
         incStatsMap.Flatten( incStats );
         incStats.SortDeref();
@@ -694,7 +694,7 @@ PRAGMA_DISABLE_POP_MSVC // warning C6262: Function uses '262212' bytes of stack
 
 // DoPieChart
 //------------------------------------------------------------------------------
-void HTMLReport::DoPieChart( const Array< PieItem > & items, const char * units )
+void HTMLReport::DoPieChart( const Array<PieItem> & items, const char * units )
 {
     AStackString<> buffer;
 

@@ -47,7 +47,7 @@ public:
     AString     m_WSLPath;
 
     // Targets
-    Array< AString > m_Targets;
+    Array<AString> m_Targets;
 
     // Build Behaviour
     bool        m_ForceCleanBuild                   = false;

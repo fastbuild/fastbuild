@@ -238,7 +238,7 @@ LibraryNode::~LibraryNode()
 //------------------------------------------------------------------------------
 bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     m_LibrarianOptions.Tokenize( tokens );
 
     // When merging libs for non-MSVC toolchains, merge the source

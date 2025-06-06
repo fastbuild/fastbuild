@@ -382,7 +382,7 @@ void AString::Tokenize( Array<TokenRange> & outTokenRanges,
 
 // Tokenize
 //------------------------------------------------------------------------------
-void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
+void AString::Tokenize( Array<AString> & tokens, char splitChar ) const
 {
     // Get the bounds of the tokens
     StackArray<TokenRange, 128> tokenRanges;
@@ -402,7 +402,7 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
 
 // RemoveQuotes
 //------------------------------------------------------------------------------
-/*static*/ void AString::RemoveQuotes( Array< AString > & inoutTokens )
+/*static*/ void AString::RemoveQuotes( Array<AString> & inoutTokens )
 {
     for ( AString & token : inoutTokens )
     {
@@ -698,7 +698,7 @@ AString & AString::Append( const char * string, size_t len )
 //------------------------------------------------------------------------------
 AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > buffer;
+    AStackString<1024> buffer;
     va_list args;
     va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
@@ -857,7 +857,7 @@ uint32_t AString::Replace( const char * from, const char * to, uint32_t maxRepla
         return 0;
     }
 
-    AStackString< 2 * KILOBYTE > temp;
+    AStackString<2 * KILOBYTE> temp;
     uint32_t replaceCount = 0;
 
     // loop until the last possible position for a potential match

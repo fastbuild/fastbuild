@@ -148,7 +148,7 @@ ExecNode::~ExecNode()
 
         // get the list of files
         const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )
         {
@@ -191,7 +191,7 @@ ExecNode::~ExecNode()
     const char * workingDir = m_ExecWorkingDir.IsEmpty() ? nullptr : m_ExecWorkingDir.Get();
 
     // Format compiler args string
-    AStackString< 4 * KILOBYTE > fullArgs;
+    AStackString<4 * KILOBYTE> fullArgs;
     GetFullArgs(fullArgs);
 
     const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
@@ -268,7 +268,7 @@ ExecNode::~ExecNode()
 void ExecNode::EmitCompilationMessage( const AString & args ) const
 {
     // basic info
-    AStackString< 2048 > output;
+    AStackString<2048> output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Run: ";
@@ -279,7 +279,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     // verbose mode
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
-        AStackString< 1024 > verboseOutput;
+        AStackString<1024> verboseOutput;
         verboseOutput.Format( "%s %s\nWorkingDir: %s\nExpectedReturnCode: %i\n",
                               GetExecutable()->GetName().Get(),
                               args.Get(),
@@ -300,7 +300,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 void ExecNode::GetFullArgs(AString & fullArgs) const
 {
     // split into tokens
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     m_ExecArguments.Tokenize(tokens);
 
     AStackString<> quote("\"");
@@ -367,7 +367,7 @@ void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AStr
         if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
         {
             const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            const Array<FileIO::FileInfo> & files = dln->GetFiles();
             for ( const FileIO::FileInfo & file : files )
             {
                 if ( !first )

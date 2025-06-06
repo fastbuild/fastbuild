@@ -29,7 +29,7 @@ protected:
         CompilationDatabase * m_DB;
         ObjectListNode * m_ObjectListNode;
         AString m_CompilerEscaped;
-        Array< AString > m_ArgumentsEscaped;
+        Array<AString> m_ArgumentsEscaped;
     };
 
     // Track visited state for nodes using sweep tag

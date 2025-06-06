@@ -125,7 +125,7 @@ Env::ProcessorInfo::ProcessorInfo()
         // Default to NUMBER_OF_PROCESSORS
         uint32_t numProcessors = 1;
 
-        AStackString< 32 > var;
+        AStackString<32> var;
         if ( GetEnvVariable( "NUMBER_OF_PROCESSORS", var ) )
         {
             if ( var.Scan( "%u", &numProcessors ) != 1 )
@@ -257,7 +257,7 @@ Env::ProcessorInfo::ProcessorInfo()
         cmdLine = ::GetCommandLine();
     #elif defined( __APPLE__ )
         int argc = *_NSGetArgc();
-        const char ** argv = const_cast< const char ** >( *_NSGetArgv() );
+        const char ** argv = const_cast<const char **>( *_NSGetArgv() );
         for ( int i=0; i<argc; ++i )
         {
             if ( i > 0 )
@@ -348,7 +348,7 @@ static bool IsStdOutRedirectedInternal()
             return true; // Redirected to something that doesn't have a name
         }
 
-        FILE_NAME_INFO * info = reinterpret_cast< FILE_NAME_INFO * >( buffer );
+        FILE_NAME_INFO * info = reinterpret_cast<FILE_NAME_INFO *>( buffer );
         info->FileName[ info->FileNameLength / sizeof( wchar_t ) ] = L'\0';
 
         // Check if name of the pipe matches pattern "\cygwin-%llx-pty%d-to-master" or "\msys-%llx-pty%d-to-master"
@@ -441,7 +441,7 @@ static bool IsStdOutRedirectedInternal()
 
 // AllocEnvironmentString
 //------------------------------------------------------------------------------
-/*static*/ const char * Env::AllocEnvironmentString( const Array< AString > & environment )
+/*static*/ const char * Env::AllocEnvironmentString( const Array<AString> & environment )
 {
     size_t len = 0;
     const size_t numEnvVars = environment.GetSize();

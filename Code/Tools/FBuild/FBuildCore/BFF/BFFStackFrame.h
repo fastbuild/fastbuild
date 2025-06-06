@@ -31,7 +31,7 @@ public:
                               BFFStackFrame * frame );
     static void SetVarArrayOfStrings( const AString & name,
                                       const BFFToken & token,
-                                      const Array< AString > & values,
+                                      const Array<AString> & values,
                                       BFFStackFrame * frame );
     static void SetVarBool( const AString & name,
                             const BFFToken & token,
@@ -43,7 +43,7 @@ public:
                            BFFStackFrame * frame );
     static void SetVarStruct( const AString & name,
                               const BFFToken & token,
-                              const Array< const BFFVariable * > & members,
+                              const Array<const BFFVariable *> & members,
                               BFFStackFrame * frame );
     static void SetVarStruct( const AString & name,
                               const BFFToken & token,
@@ -51,7 +51,7 @@ public:
                               BFFStackFrame * frame );
     static void SetVarArrayOfStructs( const AString & name,
                                       const BFFToken & token,
-                                      const Array< const BFFVariable * > & structs,
+                                      const Array<const BFFVariable *> & structs,
                                       BFFStackFrame * frame );
 
     // set from an existing variable
@@ -78,7 +78,7 @@ public:
     static const BFFVariable * GetVarAny( const AString & nameOnly );
 
     // get all variables at this stack level only
-    const Array< const BFFVariable * > & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ) }
+    const Array<const BFFVariable *> & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ) }
     Array<BFFVariable *> & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only
@@ -112,7 +112,7 @@ private:
     void CreateOrReplaceVarMutableNoRecurse( BFFVariable * var );
 
     // variables at current scope
-    Array< BFFVariable * > m_Variables;
+    Array<BFFVariable *> m_Variables;
 
     // pointer to parent scope
     BFFStackFrame * m_Next;

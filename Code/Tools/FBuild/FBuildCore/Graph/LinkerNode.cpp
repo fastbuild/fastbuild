@@ -1094,7 +1094,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     StackArray<AString> envLibPaths;
 
     // extract lib path from system if present
-    AStackString< 1024 > libVar;
+    AStackString<1024> libVar;
     FBuild::Get().GetLibEnvVar( libVar );
     libVar.Tokenize( envLibPaths, ';' );
 
@@ -1399,7 +1399,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
                                              const BFFToken * iter,
                                              const Function * function,
                                              Dependencies & libs,
-                                             const Array< AString > & paths,
+                                             const Array<AString> & paths,
                                              const AString & lib )
 {
     for ( const AString & path : paths )
@@ -1478,7 +1478,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // GetOtherLibsArg
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibsArg( const char * arg,
-                                             Array< AString > & list,
+                                             Array<AString> & list,
                                              const AString * & it,
                                              const AString * const & end,
                                              bool canonicalizePath,

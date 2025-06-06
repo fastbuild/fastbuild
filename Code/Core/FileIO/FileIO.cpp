@@ -337,7 +337,7 @@
 /*static*/ bool FileIO::GetFiles( const AString & path,
                                   const AString & wildCard,
                                   bool recurse,
-                                  Array< AString > * results )
+                                  Array<AString> * results )
 {
     ASSERT( results );
 
@@ -345,7 +345,7 @@
     if ( recurse )
     {
         // make a copy of the path as it will be modified during recursion
-        AStackString< 256 > pathCopy( path );
+        AStackString<256> pathCopy( path );
         PathUtils::EnsureTrailingSlash( pathCopy );
         GetFilesRecurse( pathCopy, wildCard, results );
     }
@@ -371,9 +371,9 @@
 // GetFilesEx
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFilesEx( const AString & path,
-                                    const Array< AString > * patterns,
+                                    const Array<AString> * patterns,
                                     bool recurse,
-                                    Array< FileInfo > * results )
+                                    Array<FileInfo> * results )
 {
     ASSERT( results );
 
@@ -381,7 +381,7 @@
     if ( recurse )
     {
         // make a copy of the path as it will be modified during recursion
-        AStackString< 256 > pathCopy( path );
+        AStackString<256> pathCopy( path );
         PathUtils::EnsureTrailingSlash( pathCopy );
         GetFilesRecurseEx( pathCopy, patterns, results );
     }
@@ -1159,7 +1159,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurse( AString & pathCopy,
                                          const AString & wildCard,
-                                         Array< AString > * results )
+                                         Array<AString> * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
 
@@ -1301,9 +1301,9 @@
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurse( const char * path,
                                            const char * wildCard,
-                                           Array< AString > * results )
+                                           Array<AString> * results )
 {
-    AStackString< 256 > pathCopy( path );
+    AStackString<256> pathCopy( path );
     PathUtils::EnsureTrailingSlash( pathCopy );
     const uint32_t baseLength = pathCopy.GetLength();
 
@@ -1398,8 +1398,8 @@
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurseEx( AString & pathCopy,
-                                           const Array< AString > * patterns,
-                                           Array< FileInfo > * results )
+                                           const Array<AString> * patterns,
+                                           Array<FileInfo> * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
 
@@ -1549,10 +1549,10 @@
 // GetFilesNoRecurseEx
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurseEx( const char * path,
-                                             const Array< AString > * patterns,
-                                             Array< FileInfo > * results )
+                                             const Array<AString> * patterns,
+                                             Array<FileInfo> * results )
 {
-    AStackString< 256 > pathCopy( path );
+    AStackString<256> pathCopy( path );
     PathUtils::EnsureTrailingSlash( pathCopy );
     const uint32_t baseLength = pathCopy.GetLength();
 
@@ -1778,7 +1778,7 @@ bool FileIO::FileInfo::IsReadOnly() const
 
 // IsMatch
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::IsMatch( const Array< AString > * patterns, const char * fileName )
+/*static*/ bool FileIO::IsMatch( const Array<AString> * patterns, const char * fileName )
 {
     // no wildcards means match all files (equivalent to *)
     if ( ( patterns == nullptr ) || ( patterns->IsEmpty() ) )

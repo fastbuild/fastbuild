@@ -32,7 +32,7 @@ public:
     virtual bool OutputInfo( bool showProgress ) override;
     virtual bool Trim( bool showProgress, uint32_t sizeMiB ) override;
 private:
-    void GetCacheFiles( bool showProgress, Array< FileIO::FileInfo > & outInfo, uint64_t & outTotalSize ) const;
+    void GetCacheFiles( bool showProgress, Array<FileIO::FileInfo> & outInfo, uint64_t & outTotalSize ) const;
     void GetFullPathForCacheEntry( const AString & cacheId, AString & outFullPath ) const;
 
     AString m_CachePath;

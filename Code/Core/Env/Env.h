@@ -9,7 +9,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-template< class T > class Array;
+template <class T> class Array;
 class AString;
 
 // Env
@@ -48,7 +48,7 @@ public:
     static bool GetLocalUserName( AString & outUserName );
 
     static uint32_t GetLastErr();
-    static const char * AllocEnvironmentString( const Array< AString > & environment );
+    static const char * AllocEnvironmentString( const Array<AString> & environment );
     static void ShowMsgBox( const char * title, const char * msg );
 };
 

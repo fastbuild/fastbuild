@@ -71,8 +71,8 @@ private:
 
     // Exposed params
     AString                 m_Executable;
-    Array< AString >        m_ExtraFiles;
-    Array< AString >        m_CustomEnvironmentVariables;
+    Array<AString>          m_ExtraFiles;
+    Array<AString>          m_CustomEnvironmentVariables;
     bool                    m_AllowDistribution;
     bool                    m_AllowResponseFile;
     bool                    m_ForceResponseFile;
@@ -88,7 +88,7 @@ private:
     bool                    m_UseRelativePaths;
     bool                    m_UseDeterministicPaths;
     ToolManifest            m_Manifest;
-    Array< AString >        m_Environment;
+    Array<AString>          m_Environment;
     AString                 m_SourceMapping;
 
     // Internal state
