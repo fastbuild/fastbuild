@@ -25,7 +25,7 @@ public:
     // take ownership of includes array to avoid re-allocations
     void SwapIncludes( Array< AString > & includes );
     #ifdef DEBUG
-        inline size_t GetNonUniqueCount() const { return m_NonUniqueCount; }
+        size_t GetNonUniqueCount() const { return m_NonUniqueCount; }
     #endif
 
 private:

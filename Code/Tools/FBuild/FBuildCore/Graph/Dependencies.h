@@ -29,11 +29,11 @@ public:
         , m_IsWeak( isWeak )
     {}
 
-    inline Node * GetNode() const { return m_Node; }
-    inline uint64_t GetNodeStamp() const { return m_NodeStamp; }
-    inline bool IsWeak() const { return m_IsWeak; }
+    Node * GetNode() const { return m_Node; }
+    uint64_t GetNodeStamp() const { return m_NodeStamp; }
+    bool IsWeak() const { return m_IsWeak; }
 
-    inline void Stamp( uint64_t stamp ) { m_NodeStamp = stamp; }
+    void Stamp( uint64_t stamp ) { m_NodeStamp = stamp; }
 
 private:
     Node * m_Node;  // Node being depended on

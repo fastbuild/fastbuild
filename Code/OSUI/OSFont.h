@@ -21,7 +21,7 @@ public:
     void Init( uint32_t size, const char * fontFamily );
 
     #if defined( __WINDOWS__ )
-        inline void * GetFont() { return m_Font; }
+        void * GetFont() { return m_Font; }
     #endif
 
 protected:

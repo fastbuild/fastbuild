@@ -36,7 +36,7 @@ public:
     };
 
     void SetWorkingDir( const AString & path );
-    inline const AString & GetWorkingDir() const { return m_WorkingDir; }
+    const AString & GetWorkingDir() const { return m_WorkingDir; }
 
     const AString & GetArgs() const { return m_Args; }
 
@@ -104,10 +104,10 @@ public:
     uint32_t    m_NumWorkerThreads                  = 0; // True default detected in constructor
     AString     m_ConfigFile;
 
-    inline uint32_t GetWorkingDirHash() const                   { return m_WorkingDirHash; }
-    inline const AString & GetMainProcessMutexName() const      { return m_ProcessMutexName; }
-    inline const AString & GetFinalProcessMutexName( ) const    { return m_FinalProcessMutexName; }
-    inline const AString & GetSharedMemoryName() const          { return m_SharedMemoryName; }
+    uint32_t GetWorkingDirHash() const                  { return m_WorkingDirHash; }
+    const AString & GetMainProcessMutexName() const     { return m_ProcessMutexName; }
+    const AString & GetFinalProcessMutexName( ) const   { return m_FinalProcessMutexName; }
+    const AString & GetSharedMemoryName() const         { return m_SharedMemoryName; }
 
 private:
     void DisplayHelp( const AString & programName ) const;

@@ -27,13 +27,13 @@ public:
     explicit ReflectionInfo();
     virtual ~ReflectionInfo();
 
-    inline const ReflectionInfo * GetSuperClass() const { return m_SuperClass; }
+    const ReflectionInfo * GetSuperClass() const { return m_SuperClass; }
 
-    inline const char * GetTypeName() const { return m_TypeName; }
-    inline bool IsStruct() const { return ( m_StructSize > 0 ); }
-    inline bool IsObject() const { return ( m_StructSize == 0 ); }
-    inline bool IsAbstract() const { return m_IsAbstract; }
-    inline size_t GetStructSize() const { return m_StructSize; }
+    const char * GetTypeName() const { return m_TypeName; }
+    bool IsStruct() const { return ( m_StructSize > 0 ); }
+    bool IsObject() const { return ( m_StructSize == 0 ); }
+    bool IsAbstract() const { return m_IsAbstract; }
+    size_t GetStructSize() const { return m_StructSize; }
 
     ReflectionIter Begin() const;
     ReflectionIter End() const;

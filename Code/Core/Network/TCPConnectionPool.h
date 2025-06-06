@@ -45,7 +45,7 @@ public:
 
     // access to info about this connection
     TCPConnectionPool & GetTCPConnectionPool() const { return *m_TCPConnectionPool; }
-    inline uint32_t GetRemoteAddress() const { return m_RemoteAddress; }
+    uint32_t GetRemoteAddress() const { return m_RemoteAddress; }
 
 private:
     friend class TCPConnectionPool;

@@ -84,23 +84,23 @@ public:
     bool DoBuild( const Dependencies & dependencies );
     void Migrate( const ToolManifest & oldManifest );
 
-    inline uint64_t GetToolId() const { return m_ToolId; }
-    inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
+    uint64_t GetToolId() const { return m_ToolId; }
+    uint64_t GetTimeStamp() const { return m_TimeStamp; }
 
     void SerializeForRemote( IOStream & ms ) const;
     bool DeserializeFromRemote( IOStream & ms );
 
-    inline bool IsSynchronized() const { return m_Synchronized; }
+    bool IsSynchronized() const { return m_Synchronized; }
     bool GetSynchronizationStatus( uint32_t & syncDone, uint32_t & syncTotal ) const;
 
     // operator for FindDeref
-    inline bool operator == ( uint64_t toolId ) const
+    bool operator == ( uint64_t toolId ) const
     {
         return ( m_ToolId == toolId );
     }
 
-    inline void     SetUserData( void * data )  { m_UserData = data; }
-    inline void *   GetUserData() const         { return m_UserData; }
+    void            SetUserData( void * data )  { m_UserData = data; }
+    void *          GetUserData() const         { return m_UserData; }
     const Array< ToolManifestFile > & GetFiles() const { return m_Files; }
 
     void MarkFileAsSynchronizing( size_t fileId ) { ASSERT( m_Files[ fileId ].GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED ); m_Files[ fileId ].SetSyncState( ToolManifestFile::SYNCHRONIZING ); }

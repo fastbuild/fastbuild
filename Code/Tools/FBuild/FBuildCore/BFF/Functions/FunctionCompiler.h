@@ -11,8 +11,8 @@
 class FunctionCompiler : public Function
 {
 public:
-    explicit        FunctionCompiler();
-    inline virtual ~FunctionCompiler() override = default;
+    explicit FunctionCompiler();
+    virtual ~FunctionCompiler() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

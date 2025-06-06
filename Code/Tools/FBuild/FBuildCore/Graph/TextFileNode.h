@@ -23,7 +23,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~TextFileNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::TEXT_FILE_NODE; }
+    static Node::Type GetTypeS() { return Node::TEXT_FILE_NODE; }
 
 private:
     virtual bool DetermineNeedToBuildStatic() const override;

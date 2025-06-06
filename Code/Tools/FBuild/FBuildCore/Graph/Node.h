@@ -127,27 +127,27 @@ public:
     virtual ~Node();
 
     uint32_t        GetNameHash() const { return m_NameHash; }
-    inline Type GetType() const { return m_Type; }
-    inline const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
-    inline static const char * GetTypeName( Type t ) { return s_NodeTypeNames[ t ]; }
+    Type GetType() const { return m_Type; }
+    const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
+    static const char * GetTypeName( Type t ) { return s_NodeTypeNames[ t ]; }
     template < class T >
-    inline T * CastTo() const;
+    T * CastTo() const;
 
     // each node must specify if it outputs a file
     virtual bool IsAFile() const = 0;
 
-    inline State GetState() const { return m_State; }
+    State GetState() const { return m_State; }
 
-    [[nodiscard]] inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
-    inline void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
+    [[nodiscard]] bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
+    void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
 
     uint32_t GetLastBuildTime() const;
-    inline uint32_t GetProcessingTime() const   { return m_ProcessingTime; }
-    inline uint32_t GetCachingTime() const      { return m_CachingTime; }
-    inline uint32_t GetRecursiveCost() const    { return m_RecursiveCost; }
+    uint32_t GetProcessingTime() const   { return m_ProcessingTime; }
+    uint32_t GetCachingTime() const      { return m_CachingTime; }
+    uint32_t GetRecursiveCost() const    { return m_RecursiveCost; }
 
-    inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
-    inline void     SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
+    uint32_t        GetProgressAccumulator() const { return m_ProgressAccumulator; }
+    void            SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
     static Node *   Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
     static void     LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
@@ -161,14 +161,14 @@ public:
     static bool EnsurePathExistsForFile( const AString & name );
     static bool DoPreBuildFileDeletion( const AString & fileName );
 
-    inline uint64_t GetStamp() const { return m_Stamp; }
+    uint64_t        GetStamp() const { return m_Stamp; }
 
     static void DumpOutput( Job * job,
                             const AString & output,
                             const Array< AString > * exclusions = nullptr );
 
-    inline void     SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
-    inline uint32_t GetBuildPassTag() const             { return m_BuildPassTag; }
+    void            SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
+    uint32_t        GetBuildPassTag() const             { return m_BuildPassTag; }
 
     const AString & GetName() const { return m_Name; }
 
@@ -177,9 +177,9 @@ public:
     bool IsHidden() const { return m_Hidden; }
     uint8_t GetConcurrencyGroupIndex() const { return m_ConcurrencyGroupIndex; }
 
-    inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
-    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
-    inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+    const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
+    const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
+    const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
     static uint32_t CalcNameHash( const AString & name );
 
@@ -204,9 +204,9 @@ protected:
 
     virtual void SaveRemote( IOStream & stream ) const;
 
-    inline uint8_t GetControlFlags() const { return m_ControlFlags; }
+    uint8_t GetControlFlags() const { return m_ControlFlags; }
 
-    inline void SetState( State state ) { m_State = state; }
+    void SetState( State state ) { m_State = state; }
 
     // each node implements a subset of these as needed
     virtual bool DetermineNeedToBuildStatic() const;
@@ -219,8 +219,8 @@ protected:
     bool DetermineNeedToBuild( const Dependencies & deps ) const;
 
     void SetLastBuildTime( uint32_t ms );
-    inline void     AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
-    inline void     AddCachingTime( uint32_t ms )     { m_CachingTime += ms; }
+    void AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
+    void AddCachingTime( uint32_t ms )     { m_CachingTime += ms; }
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );

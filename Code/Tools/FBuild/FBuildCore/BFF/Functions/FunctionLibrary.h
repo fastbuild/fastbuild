@@ -12,8 +12,8 @@
 class FunctionLibrary : public FunctionObjectList
 {
 public:
-    explicit        FunctionLibrary();
-    inline virtual ~FunctionLibrary() override = default;
+    explicit FunctionLibrary();
+    virtual ~FunctionLibrary() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

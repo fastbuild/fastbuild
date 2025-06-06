@@ -20,9 +20,9 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~TestNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
+    static Node::Type GetTypeS() { return Node::TEST_NODE; }
 
-    inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
+    const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
     const char * GetEnvironmentString() const;
 
 private:

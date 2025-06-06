@@ -15,7 +15,7 @@ class AString;
 class ICache
 {
 public:
-    inline virtual ~ICache() = default;
+    virtual ~ICache() = default;
 
     // Interface that cache implementations must provide
     virtual bool Init( const AString & cachePath,

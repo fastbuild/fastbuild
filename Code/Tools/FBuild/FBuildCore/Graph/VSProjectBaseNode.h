@@ -39,7 +39,7 @@ public:
 
     virtual ~VSProjectBaseNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::PROXY_NODE; }
+    static Node::Type GetTypeS() { return Node::PROXY_NODE; }
 
     const AString & GetProjectGuid() const { return m_ProjectGuid; }
     const Array< VSProjectPlatformConfigTuple > & GetPlatformConfigTuples() const { return m_ProjectPlatformConfigTuples; }

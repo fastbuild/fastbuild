@@ -77,7 +77,7 @@ static void FilterFileDependencies( Array< const AString * > * dependencyList , 
 class DependencyAscendingCompareIDeref
 {
 public:
-    inline bool operator () ( const AString * a, const AString * b ) const
+    bool operator () ( const AString * a, const AString * b ) const
     {
         #if defined( __WINDOWS__ )
             return ( a->CompareI( *b ) < 0 );

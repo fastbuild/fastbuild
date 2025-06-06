@@ -32,7 +32,7 @@ public:
     ProjectGeneratorBase();
     ~ProjectGeneratorBase();
 
-    inline void SetBasePaths( const Array< AString > & paths ) { m_BasePaths = paths; }
+    void SetBasePaths( const Array< AString > & paths ) { m_BasePaths = paths; }
     void AddFile( const AString & fileName );
 
     void AddConfig( const ProjectGeneratorBaseConfig & config );

@@ -43,7 +43,7 @@ public:
     virtual     ~Function();
 
     // info about a function
-    inline const AString & GetName() const { return m_Name; }
+    const AString & GetName() const { return m_Name; }
 
     // access to functions
     static const Function * Find( const AString & name );
@@ -60,8 +60,8 @@ public:
 
     // must this function be unique?
     virtual bool IsUnique() const;
-    inline bool GetSeen() const { return m_Seen; }
-    inline void SetSeen() const { m_Seen = true; }
+    bool GetSeen() const { return m_Seen; }
+    void SetSeen() const { m_Seen = true; }
 
     // most functions don't need to override this
     virtual bool ParseFunction( NodeGraph & nodeGraph,

@@ -24,11 +24,11 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~AliasNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::ALIAS_NODE; }
+    static Node::Type GetTypeS() { return Node::ALIAS_NODE; }
 
     virtual bool IsAFile() const override { return false; }
 
-    inline const Dependencies & GetAliasedNodes() const { return m_StaticDependencies; }
+    const Dependencies & GetAliasedNodes() const { return m_StaticDependencies; }
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;

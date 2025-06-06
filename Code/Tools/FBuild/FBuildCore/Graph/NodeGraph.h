@@ -55,7 +55,7 @@ class XCodeProjectNode;
 class NodeGraphHeader
 {
 public:
-    inline explicit NodeGraphHeader()
+    explicit NodeGraphHeader()
     {
         m_Identifier[ 0 ] = 'N';
         m_Identifier[ 1 ] = 'G';
@@ -64,7 +64,7 @@ public:
         m_Padding = 0;
         m_ContentHash = 0;
     }
-    inline ~NodeGraphHeader() = default;
+    ~NodeGraphHeader() = default;
 
     enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 178 };
 
@@ -171,7 +171,7 @@ private:
 
     struct NodeWithDistance
     {
-        inline NodeWithDistance() = default;
+        NodeWithDistance() = default;
         NodeWithDistance( Node * n, uint32_t dist ) : m_Node( n ), m_Distance( dist ) {}
         Node *      m_Node;
         uint32_t    m_Distance;

@@ -18,10 +18,10 @@ public:
     virtual ~OSWidget();
 
     void Init();
-    inline bool IsInitialized() const { return m_Initialized; }
+    bool IsInitialized() const { return m_Initialized; }
 
-    inline OSWindow * GetParentWindow() const { return m_Parent; }
-    inline void * GetHandle() const { return m_Handle; }
+    OSWindow * GetParentWindow() const { return m_Parent; }
+    void * GetHandle() const { return m_Handle; }
 
 protected:
     OSWindow *  m_Parent;

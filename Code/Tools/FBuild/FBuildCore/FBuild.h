@@ -57,11 +57,11 @@ public:
 
     static const char * GetDefaultBFFFileName();
 
-    inline const SettingsNode * GetSettings() const { return m_DependencyGraph->GetSettings(); }
+    const SettingsNode * GetSettings() const { return m_DependencyGraph->GetSettings(); }
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );
-    inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
-    inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
+    const char *    GetEnvironmentString() const            { return m_EnvironmentString; }
+    uint32_t        GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
     void DisplayTargetList( bool showHidden ) const;
     bool DisplayDependencyDB( const Array< AString > & targets ) const;
@@ -76,8 +76,8 @@ public:
          , m_Hash( hash )
         {}
 
-        inline const AString &              GetName() const             { return m_Name; }
-        inline uint32_t                     GetHash() const             { return m_Hash; }
+        const AString & GetName() const             { return m_Name; }
+        uint32_t        GetHash() const             { return m_Hash; }
 
     protected:
         AString     m_Name;
@@ -103,9 +103,9 @@ public:
     static        void AbortBuild();
     static        void OnBuildError();
     static        bool GetStopBuild();
-    static inline volatile bool * GetAbortBuildPointer() { return &s_AbortBuild; }
+    static volatile bool * GetAbortBuildPointer() { return &s_AbortBuild; }
 
-    inline ICache * GetCache() const { return m_Cache; }
+    ICache * GetCache() const { return m_Cache; }
 
     static bool GetTempDir( AString & outTempDir );
 

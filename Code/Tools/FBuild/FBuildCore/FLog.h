@@ -75,10 +75,10 @@ PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wgnu-zero-variadic-macro-arguments
 class FLog
 {
 public:
-    inline static bool ShowVerbose() { return s_ShowVerbose; }
-    inline static bool ShowBuildReason() { return s_ShowBuildReason; }
-    inline static bool ShowErrors() { return s_ShowErrors; }
-    inline static bool IsMonitorEnabled() { return s_MonitorEnabled; }
+    static bool ShowVerbose() { return s_ShowVerbose; }
+    static bool ShowBuildReason() { return s_ShowBuildReason; }
+    static bool ShowErrors() { return s_ShowErrors; }
+    static bool IsMonitorEnabled() { return s_MonitorEnabled; }
 
     static void Verbose( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
     static void Output( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
@@ -98,11 +98,11 @@ public:
 
 private:
     friend class FBuild;
-    static inline void SetShowVerbose( bool showVerbose ) { s_ShowVerbose = showVerbose; }
-    static inline void SetShowBuildReason( bool showBuildReason ) { s_ShowBuildReason = showBuildReason; }
-    static inline void SetShowErrors( bool showErrors ) { s_ShowErrors = showErrors; }
-    static inline void SetShowProgress( bool showProgress ) { s_ShowProgress = showProgress; }
-    static inline void SetMonitorEnabled( bool enabled ) { s_MonitorEnabled = enabled; }
+    static void SetShowVerbose( bool showVerbose ) { s_ShowVerbose = showVerbose; }
+    static void SetShowBuildReason( bool showBuildReason ) { s_ShowBuildReason = showBuildReason; }
+    static void SetShowErrors( bool showErrors ) { s_ShowErrors = showErrors; }
+    static void SetShowProgress( bool showProgress ) { s_ShowProgress = showProgress; }
+    static void SetMonitorEnabled( bool enabled ) { s_MonitorEnabled = enabled; }
 
     static void OutputInternal( const char * type, const char * message );
 

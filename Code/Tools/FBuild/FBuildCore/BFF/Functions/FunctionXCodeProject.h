@@ -14,8 +14,8 @@
 class FunctionXCodeProject : public Function
 {
 public:
-    explicit        FunctionXCodeProject();
-    inline virtual ~FunctionXCodeProject() override = default;
+    explicit FunctionXCodeProject();
+    virtual ~FunctionXCodeProject() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

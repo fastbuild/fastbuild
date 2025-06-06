@@ -15,7 +15,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) override;
     virtual ~FileNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::FILE_NODE; }
+    static Node::Type GetTypeS() { return Node::FILE_NODE; }
 
     virtual bool IsAFile() const override { return true; }
 

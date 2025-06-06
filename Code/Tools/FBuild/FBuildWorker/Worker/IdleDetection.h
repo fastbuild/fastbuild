@@ -25,14 +25,14 @@ public:
     void Update( uint32_t idleThresholdPercent );
 
     // query status
-    inline bool IsIdle() const { return m_IsIdle; }
-    inline float IsIdleFloat() const { return m_IsIdleFloat; }
+    bool IsIdle() const { return m_IsIdle; }
+    float IsIdleFloat() const { return m_IsIdleFloat; }
 
 private:
     // struct to track processes with
     struct ProcessInfo
     {
-        inline bool operator == ( uint32_t pid ) const { return m_PID == pid; }
+        bool operator == ( uint32_t pid ) const { return m_PID == pid; }
 
         uint32_t    m_PID;
         uint32_t    m_AliveValue;

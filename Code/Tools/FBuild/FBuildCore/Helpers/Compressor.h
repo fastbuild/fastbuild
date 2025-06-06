@@ -32,7 +32,7 @@ public:
     const void *    GetResult() const       { return m_Result; }
     size_t          GetResultSize() const   { return m_ResultSize; }
 
-    inline void *   ReleaseResult()         { void * r = m_Result; m_Result = nullptr; m_ResultSize = 0; return r; }
+    void *          ReleaseResult()         { void * r = m_Result; m_Result = nullptr; m_ResultSize = 0; return r; }
 
 private:
     enum CompressionType : uint32_t

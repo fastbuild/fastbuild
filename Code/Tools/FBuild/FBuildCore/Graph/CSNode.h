@@ -25,7 +25,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~CSNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::CS_NODE; }
+    static Node::Type GetTypeS() { return Node::CS_NODE; }
 
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;

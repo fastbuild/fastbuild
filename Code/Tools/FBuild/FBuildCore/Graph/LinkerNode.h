@@ -38,7 +38,7 @@ public:
         LINK_FLAG_WARNINGS_AS_ERRORS_MSVC = 0x200,
     };
 
-    inline bool IsADLL() const { return GetFlag( LINK_FLAG_DLL ); }
+    bool IsADLL() const { return GetFlag( LINK_FLAG_DLL ); }
 
     static uint32_t DetermineLinkerTypeFlags( const AString & linkerType, const AString & linkerName );
     static uint32_t DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args );
@@ -63,9 +63,9 @@ protected:
     void EmitCompilationMessage( const Args & fullArgs ) const;
     void EmitStampMessage() const;
 
-    inline bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
+    bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
 
-    inline const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
+    const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
 
     ArgsResponseFileMode GetResponseFileMode() const;
 

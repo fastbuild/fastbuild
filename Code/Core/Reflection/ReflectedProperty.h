@@ -26,13 +26,13 @@ public:
     ReflectedProperty( const char * name, uint32_t offset, PropertyType type, bool isArray );
     ~ReflectedProperty();
 
-    inline uint32_t GetNameCRC() const { return m_NameCRC; }
-    inline PropertyType GetType() const { return (PropertyType)m_Type; }
-    inline uint32_t GetOffset() const { return m_Offset; }
+    uint32_t GetNameCRC() const { return m_NameCRC; }
+    PropertyType GetType() const { return (PropertyType)m_Type; }
+    uint32_t GetOffset() const { return m_Offset; }
     size_t GetPropertySize() const;
-    inline bool IsArray() const { return m_IsArray; }
+    bool IsArray() const { return m_IsArray; }
     #if defined( REFLECTION_KEEP_STRING_NAMES )
-        inline const char * GetName() const { return m_Name; }
+        const char * GetName() const { return m_Name; }
     #endif
 
     template<class T>
@@ -144,7 +144,7 @@ public:
     Struct *    GetStructInArray( void * object, size_t index ) const;
     const Struct *  GetStructInArray( const void * object, size_t index ) const;
 
-    inline const ReflectionInfo * GetStructReflectionInfo() const { return m_StructReflectionInfo; }
+    const ReflectionInfo * GetStructReflectionInfo() const { return m_StructReflectionInfo; }
 private:
     const ReflectionInfo * m_StructReflectionInfo;
 };

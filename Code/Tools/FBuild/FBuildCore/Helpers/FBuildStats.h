@@ -72,7 +72,7 @@ public:
     const Node * GetRootNode() const { return m_RootNode; }
     const Array< const Node * > & GetNodesByTime() const { return m_NodesByTime; }
 
-    static inline void SetIgnoreCompilerNodeDeps( bool b ) { s_IgnoreCompilerNodeDeps = b; }
+    static void SetIgnoreCompilerNodeDeps( bool b ) { s_IgnoreCompilerNodeDeps = b; }
 private:
     enum : uint32_t
     {

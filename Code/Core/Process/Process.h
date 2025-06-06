@@ -57,7 +57,7 @@ private:
 
     #if defined( __WINDOWS__ )
         // This messiness is to avoid including windows.h in this file
-        inline struct _PROCESS_INFORMATION & GetProcessInfo() const
+        struct _PROCESS_INFORMATION & GetProcessInfo() const
         {
             return (_PROCESS_INFORMATION &)m_ProcessInfo;
         }

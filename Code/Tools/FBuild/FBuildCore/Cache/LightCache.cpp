@@ -60,9 +60,9 @@ public:
     Array< const IncludeDefine * >  m_IncludeDefines;
     Array< uint64_t >               m_NonIncludeDefines;
 
-    inline bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
-    inline bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
-    inline bool operator <  ( const IncludedFile & other ) const    { return ( m_FileName < other.m_FileName ); }
+    bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
+    bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
+    bool operator <  ( const IncludedFile & other ) const    { return ( m_FileName < other.m_FileName ); }
 };
 
 // IncludedFileHashSet

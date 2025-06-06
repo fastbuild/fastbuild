@@ -16,14 +16,14 @@ public:
     virtual ~MemoryStream() override;
 
     // memory stream specific functions
-    inline const void * GetData() const { return (void *)m_Begin; }
-    inline void *       GetDataMutable() { return (void *)m_Begin; }
-    inline size_t       GetSize() const { return (size_t)( m_End - m_Begin ); }
-    void                Reset();
-    void *              Release();
-    void                Replace( void * memory, size_t size );
+    const void *    GetData() const { return (void *)m_Begin; }
+    void *          GetDataMutable() { return (void *)m_Begin; }
+    size_t          GetSize() const { return (size_t)( m_End - m_Begin ); }
+    void            Reset();
+    void *          Release();
+    void            Replace( void * memory, size_t size );
 
-    uint64_t            WriteBuffer( IOStream & stream, uint64_t bytesToWrite );
+    uint64_t        WriteBuffer( IOStream & stream, uint64_t bytesToWrite );
 
     // raw read/write functions
     virtual uint64_t ReadBuffer( void * buffer, uint64_t bytesToRead ) override;

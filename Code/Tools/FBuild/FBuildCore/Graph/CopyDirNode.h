@@ -21,7 +21,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~CopyDirNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::COPY_DIR_NODE; }
+    static Node::Type GetTypeS() { return Node::COPY_DIR_NODE; }
     virtual bool IsAFile() const override;
 
 private:

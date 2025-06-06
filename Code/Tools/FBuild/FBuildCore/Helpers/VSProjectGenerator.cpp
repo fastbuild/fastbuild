@@ -26,7 +26,7 @@
 class FileAscendingCompareIDeref
 {
 public:
-    inline bool operator () ( const VSProjectFilePair * a, const VSProjectFilePair * b ) const
+    bool operator () ( const VSProjectFilePair * a, const VSProjectFilePair * b ) const
     {
         return ( a->m_ProjectRelativePath.CompareI( b->m_ProjectRelativePath ) < 0 );
     }

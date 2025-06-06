@@ -23,23 +23,23 @@ public:
 
     virtual bool IsAFile() const override;
 
-    static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }
+    static Node::Type GetTypeS() { return Node::COMPILER_NODE; }
 
-    inline const ToolManifest & GetManifest() const { return m_Manifest; }
+    const ToolManifest & GetManifest() const { return m_Manifest; }
 
-    inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
-    inline bool GetUseLightCache() const { return m_UseLightCache; }
-    inline bool GetUseRelativePaths() const { return m_UseRelativePaths; }
-    inline bool GetUseDeterministicPaths() const { return m_UseDeterministicPaths; }
-    inline bool CanBeDistributed() const { return m_AllowDistribution; }
-    inline bool CanUseResponseFile() const { return m_AllowResponseFile; }
-    inline bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
+    bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
+    bool GetUseLightCache() const { return m_UseLightCache; }
+    bool GetUseRelativePaths() const { return m_UseRelativePaths; }
+    bool GetUseDeterministicPaths() const { return m_UseDeterministicPaths; }
+    bool CanBeDistributed() const { return m_AllowDistribution; }
+    bool CanUseResponseFile() const { return m_AllowResponseFile; }
+    bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
     #if defined( __WINDOWS__ )
-        inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
+        bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
-    inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
-    inline bool IsClangGCCUpdateXLanguageArgEnabled() const { return m_ClangGCCUpdateXLanguageArg; }
-    inline bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }
+    bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
+    bool IsClangGCCUpdateXLanguageArgEnabled() const { return m_ClangGCCUpdateXLanguageArg; }
+    bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }
 
     enum CompilerFamily : uint8_t
     {

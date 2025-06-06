@@ -20,7 +20,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) override;
     virtual ~ListDependenciesNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::LIST_DEPENDENCIES_NODE; }
+    static Node::Type GetTypeS() { return Node::LIST_DEPENDENCIES_NODE; }
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;

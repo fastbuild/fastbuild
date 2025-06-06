@@ -28,11 +28,11 @@
     class ProfileHelper
     {
     public:
-        inline ProfileHelper( const char * id )
+        ProfileHelper( const char * id )
         {
             ProfileManager::Start( id );
         }
-        inline ~ProfileHelper()
+        ~ProfileHelper()
         {
             ProfileManager::Stop();
         }

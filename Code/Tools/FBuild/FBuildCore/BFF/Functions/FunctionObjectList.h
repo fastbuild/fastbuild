@@ -17,8 +17,8 @@ class Dependencies;
 class FunctionObjectList : public Function
 {
 public:
-    explicit        FunctionObjectList();
-    inline virtual ~FunctionObjectList() override = default;
+    explicit FunctionObjectList();
+    virtual ~FunctionObjectList() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

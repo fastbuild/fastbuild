@@ -15,8 +15,8 @@ class ReflectionInfo;
 class Object
 {
 public:
-    inline explicit Object() = default;
-    inline virtual ~Object() = default;
+    explicit Object() = default;
+    virtual ~Object() = default;
 
     virtual const ReflectionInfo * GetReflectionInfoV() const = 0;
 

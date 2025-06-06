@@ -23,7 +23,7 @@ public:
     const Array< FileIO::FileInfo > & GetFiles() const { return m_Files; }
     const Array<AString> & GetDirectories() const { return m_Directories; }
 
-    static inline Node::Type GetTypeS() { return Node::DIRECTORY_LIST_NODE; }
+    static Node::Type GetTypeS() { return Node::DIRECTORY_LIST_NODE; }
 
     virtual bool IsAFile() const override { return false; }
 

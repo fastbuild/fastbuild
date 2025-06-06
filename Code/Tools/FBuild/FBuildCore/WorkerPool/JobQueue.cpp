@@ -27,7 +27,7 @@
 class JobCostSorter
 {
 public:
-    inline bool operator () ( const Job * job1, const Job * job2 ) const
+    bool operator () ( const Job * job1, const Job * job2 ) const
     {
         return ( job1->GetNode()->GetRecursiveCost() < job2->GetNode()->GetRecursiveCost() );
     }

@@ -13,7 +13,7 @@ class Singleton
 {
 public:
     static T & Get();
-    static inline bool IsValid() { return ( s_Instance != nullptr ); }
+    static bool IsValid() { return ( s_Instance != nullptr ); }
 
 protected:
     Singleton();

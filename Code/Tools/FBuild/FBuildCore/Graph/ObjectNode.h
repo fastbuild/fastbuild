@@ -47,7 +47,7 @@ public:
                          uint32_t flags );
     virtual ~ObjectNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
+    static Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 
     class CompilerFlags
     {
@@ -153,10 +153,10 @@ public:
     static Node * LoadRemote( IOStream & stream );
 
     CompilerNode * GetCompiler() const;
-    inline Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
+    Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
     CompilerNode * GetDedicatedPreprocessor() const;
     #if defined( __WINDOWS__ )
-        inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( m_CompilerFlags.IsCreatingPCH() ); return m_StaticDependencies[ 1 ].GetNode(); }
+        Node * GetPrecompiledHeaderCPPFile() const { ASSERT( m_CompilerFlags.IsCreatingPCH() ); return m_StaticDependencies[ 1 ].GetNode(); }
     #endif
     ObjectNode * GetPrecompiledHeader() const;
 
@@ -264,12 +264,12 @@ private:
                                          const char * workingDir = nullptr );
 
         // determine overall result
-        inline int                      GetResult() const { return m_Result; }
+        int                             GetResult() const { return m_Result; }
 
         // access output/error
-        inline const AString &          GetOut() const { return m_Out; }
-        inline const AString &          GetErr() const { return m_Err; }
-        inline bool                     HasAborted() const { return m_Process.HasAborted(); }
+        const AString &                 GetOut() const { return m_Out; }
+        const AString &                 GetErr() const { return m_Err; }
+        bool                            HasAborted() const { return m_Process.HasAborted(); }
 
     private:
         bool            m_HandleOutput;

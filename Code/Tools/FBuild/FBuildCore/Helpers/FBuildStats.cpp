@@ -25,7 +25,7 @@
 class NodeCostSorter
 {
 public:
-    inline bool operator () ( const Node * a, const Node * b ) const
+    bool operator () ( const Node * a, const Node * b ) const
     {
         return ( a->GetProcessingTime() > b->GetProcessingTime() );
     }

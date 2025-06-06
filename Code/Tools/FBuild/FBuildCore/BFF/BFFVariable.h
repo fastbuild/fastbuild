@@ -29,7 +29,7 @@ class BFFToken;
 class BFFVariable
 {
 public:
-    inline const AString & GetName() const { return m_Name; }
+    const AString & GetName() const { return m_Name; }
 
     const AString & GetString() const { ASSERT( IsString() ); return m_StringValue; }
     const Array< AString > & GetArrayOfStrings() const { ASSERT( IsArrayOfStrings() ); return m_ArrayValues; }
@@ -50,19 +50,19 @@ public:
         MAX_VAR_TYPES    // NOTE: Be sure to update s_TypeNames when adding to here
     };
 
-    inline VarType GetType() const  { return m_Type; }
-    inline static const char * GetTypeName( VarType t ) { return s_TypeNames[ (uint32_t)t ]; }
+    VarType GetType() const  { return m_Type; }
+    static const char * GetTypeName( VarType t ) { return s_TypeNames[ (uint32_t)t ]; }
 
-    inline bool IsString() const    { return m_Type == BFFVariable::VAR_STRING; }
-    inline bool IsBool() const      { return m_Type == BFFVariable::VAR_BOOL; }
-    inline bool IsArrayOfStrings() const    { return m_Type == BFFVariable::VAR_ARRAY_OF_STRINGS; }
-    inline bool IsInt() const       { return m_Type == BFFVariable::VAR_INT; }
-    inline bool IsStruct() const    { return m_Type == BFFVariable::VAR_STRUCT; }
-    inline bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
+    bool IsString() const    { return m_Type == BFFVariable::VAR_STRING; }
+    bool IsBool() const      { return m_Type == BFFVariable::VAR_BOOL; }
+    bool IsArrayOfStrings() const    { return m_Type == BFFVariable::VAR_ARRAY_OF_STRINGS; }
+    bool IsInt() const       { return m_Type == BFFVariable::VAR_INT; }
+    bool IsStruct() const    { return m_Type == BFFVariable::VAR_STRUCT; }
+    bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
 
-    inline bool Frozen() const { return m_FreezeCount > 0; }
-    inline void Freeze() const { ++m_FreezeCount; }
-    inline void Unfreeze() const { ASSERT( m_FreezeCount != 0 ); --m_FreezeCount; }
+    bool Frozen() const { return m_FreezeCount > 0; }
+    void Freeze() const { ++m_FreezeCount; }
+    void Unfreeze() const { ASSERT( m_FreezeCount != 0 ); --m_FreezeCount; }
 
     BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFToken * operatorIter ) const;
 

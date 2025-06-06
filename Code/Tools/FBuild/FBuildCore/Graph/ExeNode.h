@@ -18,7 +18,7 @@ public:
     explicit ExeNode();
     virtual ~ExeNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::EXE_NODE; }
+    static Node::Type GetTypeS() { return Node::EXE_NODE; }
 };
 
 //------------------------------------------------------------------------------

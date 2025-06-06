@@ -85,9 +85,9 @@ namespace Protocol
         bool Send( const ConnectionInfo * connection, const ConstMemoryStream & payload ) const;
         bool Broadcast( TCPConnectionPool * pool ) const;
 
-        inline MessageType  GetType() const { return m_MsgType; }
-        inline uint32_t     GetSize() const { return m_MsgSize; }
-        inline bool         HasPayload() const { return m_HasPayload; }
+        MessageType     GetType() const { return m_MsgType; }
+        uint32_t        GetSize() const { return m_MsgSize; }
+        bool            HasPayload() const { return m_HasPayload; }
 
     protected:
         IMessage( MessageType msgType, uint8_t msgSize, bool hasPayload );
@@ -107,10 +107,10 @@ namespace Protocol
     public:
         explicit MsgConnection( uint32_t numJobsAvailable );
 
-        inline uint32_t GetProtocolVersion() const { return m_ProtocolVersion; }
-        inline uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
-        inline uint8_t  GetPlatform() const { return m_Platform; }
-        const char * GetHostName() const { return m_HostName; }
+        uint32_t        GetProtocolVersion() const { return m_ProtocolVersion; }
+        uint32_t        GetNumJobsAvailable() const { return m_NumJobsAvailable; }
+        uint8_t         GetPlatform() const { return m_Platform; }
+        const char *    GetHostName() const { return m_HostName; }
         uint8_t         GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
     private:
         uint32_t        m_ProtocolVersion;
@@ -145,7 +145,7 @@ namespace Protocol
     public:
         explicit MsgStatus( uint32_t numJobsAvailable );
 
-        inline uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
+        uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
     private:
         uint32_t        m_NumJobsAvailable;
     };
@@ -176,7 +176,7 @@ namespace Protocol
     public:
         explicit MsgJob( uint64_t toolId, int16_t resultCompressionLevel );
 
-        inline uint64_t GetToolId() const { return m_ToolId; }
+        uint64_t GetToolId() const { return m_ToolId; }
         int16_t         GetResultCompressionLevel() const { return m_ResultCompressionLevel; }
     private:
         int16_t     m_ResultCompressionLevel;
@@ -210,7 +210,7 @@ namespace Protocol
     public:
         explicit MsgRequestManifest( uint64_t toolId );
 
-        inline uint64_t GetToolId() const { return m_ToolId; }
+        uint64_t GetToolId() const { return m_ToolId; }
     private:
         char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
@@ -224,7 +224,7 @@ namespace Protocol
     public:
         explicit MsgManifest( uint64_t toolId );
 
-        inline uint64_t GetToolId() const { return m_ToolId; }
+        uint64_t GetToolId() const { return m_ToolId; }
     private:
         char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
@@ -238,8 +238,8 @@ namespace Protocol
     public:
         MsgRequestFile( uint64_t toolId, uint32_t fileId );
 
-        inline uint64_t GetToolId() const { return m_ToolId; }
-        inline uint32_t GetFileId() const { return m_FileId; }
+        uint64_t GetToolId() const { return m_ToolId; }
+        uint32_t GetFileId() const { return m_FileId; }
     private:
         uint32_t m_FileId;
         uint64_t m_ToolId;
@@ -253,8 +253,8 @@ namespace Protocol
     public:
         MsgFile( uint64_t toolId, uint32_t fileId );
 
-        inline uint64_t GetToolId() const { return m_ToolId; }
-        inline uint32_t GetFileId() const { return m_FileId; }
+        uint64_t GetToolId() const { return m_ToolId; }
+        uint32_t GetFileId() const { return m_FileId; }
     private:
         uint32_t m_FileId;
         uint64_t m_ToolId;

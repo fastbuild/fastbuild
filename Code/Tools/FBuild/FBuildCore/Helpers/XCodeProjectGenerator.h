@@ -21,14 +21,14 @@ public:
     XCodeProjectGenerator();
     ~XCodeProjectGenerator();
 
-    inline void SetProjectName( const AString & projectName ) { m_ProjectName = projectName; }
-    inline void SetXCodeOrganizationName( const AString & organizationName ) { m_XCodeOrganizationName = organizationName; }
-    inline void SetXCodeBuildToolPath( const AString & buildToolPath ) { m_XCodeBuildToolPath = buildToolPath; }
-    inline void SetXCodeBuildToolArgs( const AString & buildToolArgs ) { m_XCodeBuildToolArgs = buildToolArgs; }
-    inline void SetXCodeBuildWorkingDir( const AString & buildWorkingDir ){ m_XCodeBuildWorkingDir = buildWorkingDir; }
-    inline void SetXCodeDocumentVersioning( bool documentVersioning ) { m_XCodeDocumentVersioning = documentVersioning; }
-    inline void SetXCodeCommandLineArguments( const Array<AString> & commandLineArgs ) { m_XCodeCommandLineArguments = commandLineArgs; }
-    inline void SetXCodeCommandLineArgumentsDisabled( const Array<AString> & commandLineArgs ) { m_XCodeCommandLineArgumentsDisabled = commandLineArgs; }
+    void SetProjectName( const AString & projectName ) { m_ProjectName = projectName; }
+    void SetXCodeOrganizationName( const AString & organizationName ) { m_XCodeOrganizationName = organizationName; }
+    void SetXCodeBuildToolPath( const AString & buildToolPath ) { m_XCodeBuildToolPath = buildToolPath; }
+    void SetXCodeBuildToolArgs( const AString & buildToolArgs ) { m_XCodeBuildToolArgs = buildToolArgs; }
+    void SetXCodeBuildWorkingDir( const AString & buildWorkingDir ){ m_XCodeBuildWorkingDir = buildWorkingDir; }
+    void SetXCodeDocumentVersioning( bool documentVersioning ) { m_XCodeDocumentVersioning = documentVersioning; }
+    void SetXCodeCommandLineArguments( const Array<AString> & commandLineArgs ) { m_XCodeCommandLineArguments = commandLineArgs; }
+    void SetXCodeCommandLineArgumentsDisabled( const Array<AString> & commandLineArgs ) { m_XCodeCommandLineArgumentsDisabled = commandLineArgs; }
 
     const AString & GetProjectName() const { return m_ProjectName; }
 

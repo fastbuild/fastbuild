@@ -11,8 +11,8 @@
 class FunctionExec : public Function
 {
 public:
-    explicit        FunctionExec();
-    inline virtual ~FunctionExec() override = default;
+    explicit FunctionExec();
+    virtual ~FunctionExec() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

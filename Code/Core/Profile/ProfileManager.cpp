@@ -67,9 +67,9 @@ void FormatU64( uint64_t value, char * outBuffer )
 //------------------------------------------------------------------------------
 struct ProfileEventBuffer
 {
-    inline void Start( const char * profileId );
-    inline void Stop();
-    inline void SetThreadName( const char * threadName );
+    void Start( const char * profileId );
+    void Stop();
+    void SetThreadName( const char * threadName );
 
     NO_INLINE ProfileEvent * AllocateEventStorage();
 

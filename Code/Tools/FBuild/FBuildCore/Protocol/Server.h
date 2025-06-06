@@ -68,7 +68,7 @@ private:
             m_WaitingJobs.SetCapacity( 16 );
         }
 
-        inline bool operator < ( const ClientState & other ) const { return ( m_NumJobsAvailable.Load() > other.m_NumJobsAvailable.Load() ); }
+        bool operator < ( const ClientState & other ) const { return ( m_NumJobsAvailable.Load() > other.m_NumJobsAvailable.Load() ); }
 
         Mutex                   m_Mutex;
 

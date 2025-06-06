@@ -20,7 +20,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~CopyFileNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }
+    static Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }
 
     FileNode * GetSourceNode() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
 

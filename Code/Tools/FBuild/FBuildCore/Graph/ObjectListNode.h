@@ -29,7 +29,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~ObjectListNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
+    static Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
 
     virtual bool IsAFile() const override;
 
@@ -38,9 +38,9 @@ public:
     void GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & outInputs ) const;
     void GetInputFiles( Array< AString > & files ) const;
 
-    inline const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
-    inline const AString & GetCompilerOptions() const { return m_CompilerOptions; }
-    inline const AString & GetCompiler() const { return m_Compiler; }
+    const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
+    const AString & GetCompilerOptions() const { return m_CompilerOptions; }
+    const AString & GetCompiler() const { return m_Compiler; }
 
     void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
 

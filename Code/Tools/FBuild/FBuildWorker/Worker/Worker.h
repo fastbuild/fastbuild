@@ -44,7 +44,7 @@ private:
     bool HasEnoughDiskSpace();
     bool HasEnoughMemory();
 
-    inline bool InConsoleMode() const { return m_ConsoleMode; }
+    bool InConsoleMode() const { return m_ConsoleMode; }
 
     void StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
     void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );

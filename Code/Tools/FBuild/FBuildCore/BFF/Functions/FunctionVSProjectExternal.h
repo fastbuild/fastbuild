@@ -15,8 +15,8 @@ class BFFIterator;
 class FunctionVSProjectExternal : public Function
 {
 public:
-    explicit        FunctionVSProjectExternal();
-    inline virtual ~FunctionVSProjectExternal() override = default;
+    explicit FunctionVSProjectExternal();
+    virtual ~FunctionVSProjectExternal() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

@@ -11,8 +11,8 @@
 class FunctionAlias : public Function
 {
 public:
-    explicit        FunctionAlias();
-    inline virtual ~FunctionAlias() override = default;
+    explicit FunctionAlias();
+    virtual ~FunctionAlias() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

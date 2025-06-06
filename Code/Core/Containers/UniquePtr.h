@@ -12,7 +12,7 @@
 class FreeDeletor
 {
 public:
-    static inline void Delete( void * ptr ) { FREE( ptr ); }
+    static void Delete( void * ptr ) { FREE( ptr ); }
 };
 
 // DeleteDeletor - free using FDELETE
@@ -21,7 +21,7 @@ class DeleteDeletor
 {
 public:
     template < class T >
-    static inline void Delete( T * ptr ) { FDELETE ptr; }
+    static void Delete( T * ptr ) { FDELETE ptr; }
 };
 
 // UniquePtr
@@ -30,9 +30,9 @@ template <class T, class DELETOR = DeleteDeletor>
 class UniquePtr
 {
 public:
-    explicit inline UniquePtr() : m_Pointer( nullptr ) {}
-    explicit inline UniquePtr( T * ptr ) : m_Pointer( ptr ) {}
-    inline         ~UniquePtr() { DELETOR::Delete( m_Pointer ); }
+    explicit UniquePtr() : m_Pointer( nullptr ) {}
+    explicit UniquePtr( T * ptr ) : m_Pointer( ptr ) {}
+    ~UniquePtr() { DELETOR::Delete( m_Pointer ); }
 
     // access the pointer
     [[nodiscard]] T *           Get()       { return m_Pointer; }

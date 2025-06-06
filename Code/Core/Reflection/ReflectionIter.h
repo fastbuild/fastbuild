@@ -20,7 +20,7 @@ public:
 
     // comparison of iterators
     bool operator == ( const ReflectionIter & other ) const;
-    inline bool operator != ( const ReflectionIter & other ) const { return !( *this == other ); }
+    bool operator != ( const ReflectionIter & other ) const { return !( *this == other ); }
 
     // iterating
     void operator ++();

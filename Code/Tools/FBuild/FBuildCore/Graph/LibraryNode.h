@@ -29,7 +29,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~LibraryNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
+    static Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
 
     virtual bool IsAFile() const override;
 
@@ -52,7 +52,7 @@ private:
     bool BuildArgs( Args & fullArgs ) const;
     void EmitCompilationMessage( const Args & fullArgs ) const;
 
-    inline bool GetFlag( Flag flag ) const { return ( ( m_LibrarianFlags & (uint32_t)flag ) != 0 ); }
+    bool GetFlag( Flag flag ) const { return ( ( m_LibrarianFlags & (uint32_t)flag ) != 0 ); }
 
     ArgsResponseFileMode GetResponseFileMode() const;
 

@@ -19,7 +19,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~RemoveDirNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::REMOVE_DIR_NODE; }
+    static Node::Type GetTypeS() { return Node::REMOVE_DIR_NODE; }
     virtual bool IsAFile() const override;
 
 private:

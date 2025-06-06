@@ -24,9 +24,9 @@ public:
         LINUX
     };
 
-    static inline Platform GetPlatform();
-    static inline const char * GetPlatformName( Platform platform );
-    static inline const char * GetPlatformName() { return GetPlatformName( GetPlatform() ); }
+    static Platform GetPlatform();
+    static const char * GetPlatformName( Platform platform );
+    static const char * GetPlatformName() { return GetPlatformName( GetPlatform() ); }
 
     class ProcessorInfo
     {

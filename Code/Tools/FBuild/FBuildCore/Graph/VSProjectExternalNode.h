@@ -28,7 +28,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken* iter, const Function* function ) override;
     virtual ~VSProjectExternalNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::VSPROJEXTERNAL_NODE; }
+    static Node::Type GetTypeS() { return Node::VSPROJEXTERNAL_NODE; }
 
 private:
     virtual BuildResult DoBuild( Job* job ) override;

@@ -18,7 +18,7 @@ public:
     explicit Meta_Name( const char * name );
     virtual ~Meta_Name() override;
 
-    inline const AString & GetName() const { return m_Name; }
+    const AString & GetName() const { return m_Name; }
 
 protected:
     AString m_Name;

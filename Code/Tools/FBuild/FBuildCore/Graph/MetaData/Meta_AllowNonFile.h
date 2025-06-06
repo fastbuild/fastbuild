@@ -21,8 +21,8 @@ public:
 
     virtual ~Meta_AllowNonFile() override;
 
-    inline bool IsLimitedToType() const { return m_LimitToTypeEnabled; }
-    inline Node::Type GetLimitedType() const { return m_LimitToType; }
+    bool IsLimitedToType() const { return m_LimitToTypeEnabled; }
+    Node::Type GetLimitedType() const { return m_LimitToType; }
 
 protected:
     bool        m_LimitToTypeEnabled = false;

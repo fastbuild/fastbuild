@@ -37,8 +37,8 @@ public:
     void SignalStopWorkers();
     bool HaveWorkersStopped() const;
 
-    inline size_t GetNumWorkers() const { return m_Workers.GetSize(); }
-    void          GetWorkerStatus( size_t index, AString & hostName, AString & status, bool & isIdle ) const;
+    size_t GetNumWorkers() const { return m_Workers.GetSize(); }
+    void GetWorkerStatus( size_t index, AString & hostName, AString & status, bool & isIdle ) const;
 
     void MainThreadWait( uint32_t timeoutMS );
     void WakeMainThread();

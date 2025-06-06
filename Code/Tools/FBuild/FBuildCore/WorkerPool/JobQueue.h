@@ -59,7 +59,7 @@ public:
     void MainThreadWait( uint32_t maxWaitMS );
 
     // main thread can be signalled
-    inline void WakeMainThread() { m_MainThreadSemaphore.Signal(); }
+    void WakeMainThread() { m_MainThreadSemaphore.Signal(); }
 
     // handle shutting down
     void SignalStopWorkers();

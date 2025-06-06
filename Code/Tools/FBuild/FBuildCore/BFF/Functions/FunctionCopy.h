@@ -14,8 +14,8 @@
 class FunctionCopy : public Function
 {
 public:
-    explicit        FunctionCopy();
-    inline virtual ~FunctionCopy() override = default;
+    explicit FunctionCopy();
+    virtual ~FunctionCopy() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

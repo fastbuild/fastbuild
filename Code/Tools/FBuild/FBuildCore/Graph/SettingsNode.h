@@ -21,7 +21,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~SettingsNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::SETTINGS_NODE; }
+    static Node::Type GetTypeS() { return Node::SETTINGS_NODE; }
 
     virtual bool IsAFile() const override;
 
@@ -30,7 +30,7 @@ public:
     const AString &                     GetCachePathMountPoint() const;
     const AString &                     GetCachePluginDLL() const;
     const AString &                     GetCachePluginDLLConfig() const;
-    inline const Array< AString > &     GetWorkerList() const { return m_Workers; }
+    const Array< AString > &            GetWorkerList() const { return m_Workers; }
     uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
     uint32_t                            GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
     const ConcurrencyGroup *            GetConcurrencyGroup( const AString & groupName ) const;

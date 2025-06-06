@@ -31,8 +31,8 @@ public:
 
     void operator ++ (int) { ASSERT( m_Pos < m_End ); m_Pos++; }
 
-    inline bool IsAtEnd() const { return ( m_Pos == m_End ); }
-    inline bool IsEmpty() const { return ( m_Begin == m_End ); }
+    bool IsAtEnd() const { return ( m_Pos == m_End ); }
+    bool IsEmpty() const { return ( m_Begin == m_End ); }
 
 protected:
     const BFFToken * m_Pos      = nullptr;

@@ -14,8 +14,8 @@
 class TestGroup
 {
 protected:
-    explicit        TestGroup() { m_NextTestGroup = nullptr; }
-    inline virtual ~TestGroup() = default;
+    explicit TestGroup() { m_NextTestGroup = nullptr; }
+    virtual ~TestGroup() = default;
 
     virtual void RunTests() = 0;
     virtual const char * GetName() const = 0;

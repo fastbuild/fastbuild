@@ -48,8 +48,8 @@
         static bool HasAllocationsInRange( uint32_t startingId, uint32_t endingId );
         static void DumpAllocations( uint32_t startingId, uint32_t endingId );
 
-        static inline uint32_t GetCurrentAllocationCount() { return s_AllocationCount; }
-        static inline uint32_t GetCurrentAllocationId() { return s_Id; }
+        static uint32_t GetCurrentAllocationCount() { return s_AllocationCount; }
+        static uint32_t GetCurrentAllocationId() { return s_Id; }
 
         struct Allocation
         {

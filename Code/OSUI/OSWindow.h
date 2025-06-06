@@ -34,10 +34,10 @@ public:
 
     void AddChild( OSWidget * childWidget );
 
-    inline void *   GetHandle() const { return m_Handle; }
+    void * GetHandle() const { return m_Handle; }
 
     #if defined( __WINDOWS__ )
-        inline void *   GetHInstance() const { return m_HInstance; }
+        void * GetHInstance() const { return m_HInstance; }
 
         OSWidget *      GetChildFromHandle( void * handle );
     #endif

@@ -27,8 +27,8 @@ public:
     UnityIsolatedFile( const AString & fileName, const DirectoryListNode * dirListOrigin );
     ~UnityIsolatedFile();
 
-    inline const AString &      GetFileName() const             { return m_FileName; }
-    inline const AString &      GetDirListOriginPath() const    { return m_DirListOriginPath; }
+    const AString & GetFileName() const             { return m_FileName; }
+    const AString & GetDirListOriginPath() const    { return m_DirListOriginPath; }
 
 protected:
     AString m_FileName;
@@ -47,10 +47,10 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~UnityNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }
+    static Node::Type GetTypeS() { return Node::UNITY_NODE; }
 
-    inline const Array< AString > & GetUnityFileNames() const { return m_UnityFileNames; }
-    inline const Array< UnityIsolatedFile > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
+    const Array< AString > & GetUnityFileNames() const { return m_UnityFileNames; }
+    const Array< UnityIsolatedFile > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
     void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
@@ -67,12 +67,12 @@ protected:
         UnityFileAndOrigin();
         UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin );
 
-        inline const AString &              GetName() const             { return m_Info->m_Name; }
-        inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
-        inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
+        const AString &             GetName() const             { return m_Info->m_Name; }
+        bool                        IsReadOnly() const          { return m_Info->IsReadOnly(); }
+        const DirectoryListNode *   GetDirListOrigin() const    { return m_DirListOrigin; }
 
-        inline bool                         IsIsolated() const          { return m_Isolated; }
-        inline void                         SetIsolated( bool value )   { m_Isolated = value; }
+        bool                        IsIsolated() const          { return m_Isolated; }
+        void                        SetIsolated( bool value )   { m_Isolated = value; }
 
         bool operator < ( const UnityFileAndOrigin & other ) const;
 

@@ -19,7 +19,7 @@ public:
     explicit AStackString( AStackString && string );
     explicit AStackString( const char * string );
     explicit AStackString( const char * start, const char * end );
-    inline ~AStackString() = default;
+    ~AStackString() = default;
 
     AStackString< RESERVED > & operator = ( const char * string ) { Assign( string ); return *this; }
     AStackString< RESERVED > & operator = ( const AString & string ) { Assign( string ); return *this; }

@@ -26,7 +26,7 @@
 class Tracing
 {
 public:
-    static inline void DoNothing() {}
+    static void DoNothing() {}
 
     #ifdef DEBUG
         static void DebugSpam( const char * message );
