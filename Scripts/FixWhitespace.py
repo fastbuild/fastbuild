@@ -23,6 +23,7 @@ print('Checking files...')
 for file in files:
     fixedFile = []
     fixed = False
+    prev_line = '\n'
 
     f = open(file, 'r')
     for line in f.readlines():
@@ -51,10 +52,16 @@ for file in files:
         newLine = newLine.rstrip();
         newLine += '\n'
 
+        # Trim redundant empty lines
+        if (newLine == '\n' and newLine == prev_line):
+            fixed = True
+            continue;
+
         if newLine != line:
             fixed = True
 
         fixedFile += newLine
+        prev_line = newLine
     f.close()
 
     # any changes made?
