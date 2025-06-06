@@ -909,7 +909,6 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHas
     return node;
 }
 
-
 // CreateNode
 //------------------------------------------------------------------------------
 Node * NodeGraph::CreateNode( Node::Type type, const AString & name, const BFFToken * sourceToken )

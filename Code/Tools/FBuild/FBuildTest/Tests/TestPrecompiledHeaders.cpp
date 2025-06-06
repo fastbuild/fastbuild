@@ -562,7 +562,6 @@ void TestPrecompiledHeaders::PCHMultipleUses() const
     CheckStatsNode ( 1,      1,      Node::EXE_NODE );
 }
 
-
 // PCHRedefinitionError
 //------------------------------------------------------------------------------
 void TestPrecompiledHeaders::PCHRedefinitionError() const

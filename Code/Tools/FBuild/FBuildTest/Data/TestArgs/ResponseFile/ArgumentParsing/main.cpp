@@ -1,4 +1,3 @@
-
 // Avoid include of stdio.h to improve compile time
 extern "C"
 {

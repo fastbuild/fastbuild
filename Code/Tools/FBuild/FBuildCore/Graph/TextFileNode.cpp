@@ -116,8 +116,8 @@ void TextFileNode::EmitCompilationMessage() const
         output += "Txt: ";
         output += GetName();
         output += '\n';
-        
-        // output all at once for contiguousness 
+
+        // output all at once for contiguousness
         FLOG_OUTPUT( output );
     }
 }

@@ -1393,7 +1393,6 @@ void TestProjectGeneration::Solution_Items() const
     CheckStatsTotal( 6,     6 );
 }
 
-
 // VSExternalProj_ExternalProject
 //------------------------------------------------------------------------------
 void TestProjectGeneration::VSExternalProj_ExternalProject() const

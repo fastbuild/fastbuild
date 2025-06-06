@@ -50,8 +50,6 @@ static const uint32_t g_CRC32Table[ 256 ] =
     0xB40BBE37,0xC30C8EA1,0x5A05DF1B,0x2D02EF8D
 };
 
-
-
 // Slicing-by-4 and slicing-by-8 algorithms by Michael E. Kounavis and Frank L. Berry from Intel Corp.
 // http://www.intel.com/technology/comms/perfnet/download/CRC_generators.pdf
 

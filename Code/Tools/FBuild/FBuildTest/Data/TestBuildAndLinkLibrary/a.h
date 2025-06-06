@@ -1,4 +1,3 @@
-
 class ClassA
 {
 public:

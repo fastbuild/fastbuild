@@ -284,7 +284,6 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     }
 }
 
-
 // ProcessArg_PreparePreprocessedForRemote
 //------------------------------------------------------------------------------
 /*virtual*/ bool CompilerDriver_CL::ProcessArg_PreparePreprocessedForRemote( const AString & token,
@@ -352,7 +351,6 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     // MSVC Compiler args are case-sensitive
     return ( AString::StrNCmp( token.Get() + 1, arg, argLen ) == 0 );
 }
-
 
 // StripTokenWithArg_MSVC
 //------------------------------------------------------------------------------

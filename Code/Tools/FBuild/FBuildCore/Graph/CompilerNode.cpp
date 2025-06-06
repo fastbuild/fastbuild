@@ -13,7 +13,6 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
-
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
@@ -94,7 +93,6 @@ CompilerNode::CompilerNode()
     // Check for conflicting files
     AStackString<> relPathExe;
     ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
-
 
     const size_t numExtraFiles = extraFiles.GetSize();
     for ( size_t i=0; i<numExtraFiles; ++i )

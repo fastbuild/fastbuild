@@ -4,7 +4,6 @@
 Using( .StandardEnvironment )
 Settings {}
 
-
 // A simple compiler
 //--------------------
 ObjectList( "Compiler-Lib" )

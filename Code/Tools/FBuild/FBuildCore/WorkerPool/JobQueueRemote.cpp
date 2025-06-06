@@ -395,7 +395,6 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
                 }
             #endif
 
-
             // TODO:A Also read into job if cache is being used
             if ( job->IsLocal() == false )
             {

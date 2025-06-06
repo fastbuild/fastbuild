@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 #include "VSProjectBaseNode.h"
 
-
 // VSExternalProjectConfig
 //  - config / platform tuples as found in the external project or provided in the BFF
 //------------------------------------------------------------------------------

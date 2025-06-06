@@ -717,7 +717,6 @@ bool Process::ReadAllData( AString & outMem,
     }
 #endif
 
-
 // Read
 //------------------------------------------------------------------------------
 #if defined( __LINUX__ ) || defined( __APPLE__ )

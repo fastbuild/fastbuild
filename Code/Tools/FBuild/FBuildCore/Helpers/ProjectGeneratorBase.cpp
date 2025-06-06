@@ -535,7 +535,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     // Extract the options
     const bool escapeQuotes = false;
     const bool keepFullOption = true;
-    ExtractIntellisenseOptions( compilerArgs, 
+    ExtractIntellisenseOptions( compilerArgs,
                                 g_ProjectGeneratorBaseConstants.m_AdditionalOptionPrefixes,
                                 outOptions,
                                 escapeQuotes,

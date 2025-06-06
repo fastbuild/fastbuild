@@ -204,7 +204,6 @@ bool Server::IsSynchingTool( AString & statusStr ) const
         payloadSize = size;
     }
 
-
     // determine message type
     const Protocol::IMessage * imsg = cs->m_CurrentMessage;
     const Protocol::MessageType messageType = imsg->GetType();
@@ -353,7 +352,6 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
         // Get ToolId
         const uint64_t toolId = msg->GetToolId();
         ASSERT( toolId );
-
 
         {
             // Find or create the manifest
@@ -595,7 +593,6 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
     ASSERT( atLeastOneJobStarted );
 }
 
-
 // ThreadFuncStatic
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Server::ThreadFuncStatic( void * param )
@@ -641,7 +638,6 @@ void Server::FindNeedyClients()
         return;
     }
     ++availableJobs; // over request to parallelize building/network transfers
-
 
     {
         MutexHolder mh( m_ClientListMutex );

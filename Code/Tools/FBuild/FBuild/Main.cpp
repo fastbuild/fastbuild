@@ -219,7 +219,6 @@ int Main( int argc, char * argv[] )
         result = fBuild.Build( options.m_Targets );
     }
 
-
     // Build Profiling enabled?
     bool problemSavingBuildProfileJSON = false;
     if ( options.m_Profile )

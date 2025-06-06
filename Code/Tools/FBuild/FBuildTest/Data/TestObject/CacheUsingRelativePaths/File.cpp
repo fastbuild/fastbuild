@@ -1,4 +1,3 @@
-
 #include "Subdir/Header.h"
 
 const char* Function()

@@ -1,4 +1,3 @@
-
 #include "a.h"
 
 // A managed class, which creates an unmanaged object

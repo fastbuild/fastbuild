@@ -1,4 +1,3 @@
-
 // a managed type
 ref class C
 {

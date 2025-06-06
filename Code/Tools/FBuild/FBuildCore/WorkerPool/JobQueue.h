@@ -19,7 +19,6 @@ class SettingsNode;
 class ThreadPool;
 class WorkerThread;
 
-
 // JobSubQueue
 //------------------------------------------------------------------------------
 class JobSubQueue

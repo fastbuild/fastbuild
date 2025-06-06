@@ -779,7 +779,6 @@ void TestArray::SortBig() const
     }
 }
 
-
 // Find
 //------------------------------------------------------------------------------
 void TestArray::Find() const
@@ -2055,7 +2054,6 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
         TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0u )
     }
 }
-
 
 // MoveAssignment
 //------------------------------------------------------------------------------

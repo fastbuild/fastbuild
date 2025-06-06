@@ -189,7 +189,6 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Create( const BFFToken * iter,
     return true;
 }
 
-
 // CheckMSVCPCHFlags_Use
 //------------------------------------------------------------------------------
 bool FunctionObjectList::CheckMSVCPCHFlags_Use( const BFFToken * iter,

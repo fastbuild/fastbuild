@@ -71,7 +71,6 @@ Executable( 'Exe' )
         .TestOutput                 = '$Out$/Test/Test/Exclusions/ExcludedFiles-Path-Backslash.txt'
     }
 
-
     // ExcludePattern - forward slash
     Test( 'ExcludePattern-ForwardSlash' )
     {

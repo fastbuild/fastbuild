@@ -1,4 +1,3 @@
-
 void Function()
 {
     // this invalid code generates a compile error with % in it

@@ -197,7 +197,6 @@ void BFFStackFrame::DisconnectStackChain()
     frame->m_Variables.Append( v );
 }
 
-
 // SetVarArrayOfStructs
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarArrayOfStructs( const AString & name,
@@ -219,7 +218,6 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * v = FNEW( BFFVariable( name, token, structs, BFFVariable::VAR_ARRAY_OF_STRUCTS ) );
     frame->m_Variables.Append( v );
 }
-
 
 // SetVar
 //------------------------------------------------------------------------------

@@ -34,7 +34,6 @@ public:
     inline bool IsAtEnd() const { return ( m_Pos == m_End ); }
     inline bool IsEmpty() const { return ( m_Begin == m_End ); }
 
-
 protected:
     const BFFToken * m_Pos      = nullptr;
     const BFFToken * m_End      = nullptr;

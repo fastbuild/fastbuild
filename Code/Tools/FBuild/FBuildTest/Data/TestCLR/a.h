@@ -1,4 +1,3 @@
-
 // a regular class
 class A
 {

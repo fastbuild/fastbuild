@@ -152,7 +152,6 @@ function CreateVCXProject_Lib( .Name
         .ProjectInputPaths          = '$Path$\'
         .ProjectBasePath            = '$Path$\'
 
-
         Using( .ExtraOptions )
     }
 }
@@ -169,7 +168,6 @@ function CreateVCXProject_Exe( .Name
                       ]
     CreateVCXProject_Lib( .Name, .Path, .Configs, .ExtraOptions )
 }
-
 
 // CreateUniversalBinary
 //------------------------------------------------------------------------------

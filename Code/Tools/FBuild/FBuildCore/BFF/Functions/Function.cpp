@@ -435,7 +435,6 @@ bool Function::GetStringOrArrayOfStrings( const BFFToken * iter, const BFFVariab
         return true;
     }
 
-
     // UnityInputPath can be string or array of strings
     if ( v->IsString() || v->IsArrayOfStrings() )
     {

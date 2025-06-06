@@ -1,4 +1,3 @@
-
 #define MC_ASSERT(X) (X)
 
 int main()

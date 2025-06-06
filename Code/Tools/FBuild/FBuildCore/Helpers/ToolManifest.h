@@ -18,7 +18,6 @@ class Node;
 #include "Core/Reflection/Struct.h"
 #include "Core/Strings/AString.h"
 
-
 // ToolManifestFile
 //------------------------------------------------------------------------------
 class ToolManifestFile : public Struct

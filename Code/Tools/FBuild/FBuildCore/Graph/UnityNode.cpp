@@ -248,7 +248,6 @@ UnityNode::~UnityNode()
     }
 }
 
-
 // DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
 /*virtual*/ bool UnityNode::DetermineNeedToBuildStatic() const
@@ -776,7 +775,6 @@ void UnityNode::FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array<
 
     files.SetSize( files.GetIndexOf( writeIt ) );
 }
-
 
 // EnumerateInputFiles
 //------------------------------------------------------------------------------

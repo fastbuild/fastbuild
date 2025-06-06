@@ -1,4 +1,3 @@
-
 void Function()
 {
     // Use a class we haven't included the declaration for

@@ -1,4 +1,3 @@
-
 inline const char* GetFile()
 {
     // .obj file will contain filename, surrounded by these tokens

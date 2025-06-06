@@ -225,7 +225,6 @@ void WorkerThread::WaitForStop()
     return false; // no work to do
 }
 
-
 // GetTempFileDirectory
 //------------------------------------------------------------------------------
 /*static*/ void WorkerThread::GetTempFileDirectory( AString & tmpFileDirectory )

@@ -122,7 +122,6 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, Args
     // If the args exceed the cmd line limit, a response file is required
     const bool needResponseFile = ( totalLen >= argLimit );
 
-
     if ( needResponseFile )
     {
         switch ( responseFileMode )

@@ -1,4 +1,3 @@
-
 #include "c.h"
 
 ClassC::ClassC()

@@ -33,7 +33,6 @@ Unity( 'Unity' )
 .CompilerInputUnity                 = 'Unity'
 .CompilerOutputPath                 = .OutputPath
 
-
 // Compile a normal unity object
 ObjectList( 'Compile' )
 {

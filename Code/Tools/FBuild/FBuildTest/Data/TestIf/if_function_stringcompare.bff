@@ -1,4 +1,3 @@
-
 // Check string
 .String = 'Hello'
 .OtherStringA = 'Hello'

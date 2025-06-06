@@ -1,4 +1,3 @@
-
 // Create a bunch of extra defines that need to be tracked
 // (enough to ensure define storage we are iterating resizes)
 #define UNUSED_INCLUDEA "headerA.h"

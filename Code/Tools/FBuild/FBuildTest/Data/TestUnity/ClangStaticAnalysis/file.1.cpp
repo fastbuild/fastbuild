@@ -1,4 +1,3 @@
-
 int DivideByZeroFunction( int value )
 {
     return ( value / 0 ); // Generates warning

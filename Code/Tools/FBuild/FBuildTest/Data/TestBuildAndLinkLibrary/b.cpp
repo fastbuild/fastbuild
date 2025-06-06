@@ -1,4 +1,3 @@
-
 #include "b.h"
 
 ClassB::ClassB()

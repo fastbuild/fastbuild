@@ -430,7 +430,6 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 
     len += 1; // for double null
 
-
     // Now that the environment string length is calculated, allocate and fill.
     char * mem = (char *)ALLOC( len );
     m_RemoteEnvironmentString = mem;

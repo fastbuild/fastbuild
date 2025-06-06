@@ -47,7 +47,6 @@ Compiler( 'Compiler-Clang8' )
                                     + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
                                     + ' -Wno-implicit-exception-spec-mismatch' // Fires on our new/delete operator (Clang bug?)
 
-
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -fno-rtti'      // No RTTI
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
