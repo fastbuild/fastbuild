@@ -23,8 +23,8 @@
 
 //------------------------------------------------------------------------------
 WorkerThreadRemote::WorkerThreadRemote( uint16_t threadIndex )
-: WorkerThread( threadIndex )
-, m_CurrentJob( nullptr )
+    : WorkerThread( threadIndex )
+    , m_CurrentJob( nullptr )
 {
 }
 

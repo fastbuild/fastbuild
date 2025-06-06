@@ -12,7 +12,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionSettings::FunctionSettings()
-: Function( "Settings" )
+    : Function( "Settings" )
 {
 }
 

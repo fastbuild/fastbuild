@@ -45,10 +45,10 @@ REFLECT_END( LibraryNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LibraryNode::LibraryNode()
-: ObjectListNode()
-, m_LibrarianType( "auto" )
-, m_LibrarianAllowResponseFile( false )
-, m_LibrarianForceResponseFile( false )
+    : ObjectListNode()
+    , m_LibrarianType( "auto" )
+    , m_LibrarianAllowResponseFile( false )
+    , m_LibrarianForceResponseFile( false )
 {
     m_Type = LIBRARY_NODE;
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved

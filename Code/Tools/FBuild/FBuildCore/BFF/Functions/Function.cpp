@@ -67,9 +67,9 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Function::Function( const char * name )
-: m_Name( name )
-, m_Seen( false )
-, m_AliasForFunction( 256 )
+    : m_Name( name )
+    , m_Seen( false )
+    , m_AliasForFunction( 256 )
 {
 }
 

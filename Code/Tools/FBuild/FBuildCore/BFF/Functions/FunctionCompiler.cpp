@@ -19,7 +19,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionCompiler::FunctionCompiler()
-: Function( "Compiler" )
+    : Function( "Compiler" )
 {
 }
 

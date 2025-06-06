@@ -13,7 +13,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionError::FunctionError()
-: Function( "Error" )
+    : Function( "Error" )
 {
 }
 

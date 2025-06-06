@@ -13,7 +13,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionUsing::FunctionUsing()
-: Function( "Using" )
+    : Function( "Using" )
 {
 }
 

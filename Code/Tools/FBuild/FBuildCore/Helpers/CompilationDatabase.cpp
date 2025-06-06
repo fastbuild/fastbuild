@@ -24,7 +24,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilationDatabase::CompilationDatabase()
-: m_Output( 4 * 1024 * 1024 )
+    : m_Output( 4 * 1024 * 1024 )
 {
     m_DirectoryEscaped = FBuild::Get().GetWorkingDir();
     JSON::Escape( m_DirectoryEscaped );

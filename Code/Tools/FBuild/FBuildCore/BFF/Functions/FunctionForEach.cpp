@@ -17,7 +17,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionForEach::FunctionForEach()
-: Function( "ForEach" )
+    : Function( "ForEach" )
 {
 }
 

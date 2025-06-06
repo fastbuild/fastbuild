@@ -20,7 +20,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionCopy::FunctionCopy()
-: Function( "Copy" )
+    : Function( "Copy" )
 {
 }
 

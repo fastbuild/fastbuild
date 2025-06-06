@@ -14,7 +14,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionVCXProject::FunctionVCXProject()
-: Function( "VCXProject" )
+    : Function( "VCXProject" )
 {
 }
 

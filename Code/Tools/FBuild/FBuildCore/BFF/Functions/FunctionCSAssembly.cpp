@@ -12,7 +12,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionCSAssembly::FunctionCSAssembly()
-: Function( "CSAssembly" )
+    : Function( "CSAssembly" )
 {
 }
 

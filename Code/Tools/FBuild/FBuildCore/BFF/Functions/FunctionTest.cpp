@@ -11,7 +11,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionTest::FunctionTest()
-: Function( "Test" )
+    : Function( "Test" )
 {
 }
 

@@ -12,7 +12,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionLibrary::FunctionLibrary()
-: FunctionObjectList()
+    : FunctionObjectList()
 {
     m_Name = "Library";
 }

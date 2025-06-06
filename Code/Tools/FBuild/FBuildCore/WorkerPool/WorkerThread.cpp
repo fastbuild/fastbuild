@@ -28,9 +28,9 @@ AStackString<> WorkerThread::s_TmpRoot;
 
 //------------------------------------------------------------------------------
 WorkerThread::WorkerThread( uint16_t threadIndex )
-: m_ShouldExit( false )
-, m_Exited( false )
-, m_ThreadIndex( threadIndex )
+    : m_ShouldExit( false )
+    , m_Exited( false )
+    , m_ThreadIndex( threadIndex )
 {
 }
 

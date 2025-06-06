@@ -23,7 +23,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionObjectList::FunctionObjectList()
-: Function( "ObjectList" )
+    : Function( "ObjectList" )
 {
 }
 

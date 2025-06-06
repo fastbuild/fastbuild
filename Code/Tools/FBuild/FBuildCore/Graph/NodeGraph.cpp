@@ -81,8 +81,8 @@ bool NodeGraphHeader::IsValid() const
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 NodeGraph::NodeGraph( unsigned nodeMapHashBits )
-: m_NodeMapMaxKey( ( 1u << nodeMapHashBits ) - 1u )
-, m_Settings( nullptr )
+    : m_NodeMapMaxKey( ( 1u << nodeMapHashBits ) - 1u )
+    , m_Settings( nullptr )
 {
     m_AllNodes.SetCapacity( 1024 );
     m_UsedFiles.SetCapacity( 16 );

@@ -13,7 +13,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionAlias::FunctionAlias()
-: Function( "Alias" )
+    : Function( "Alias" )
 {
 }
 

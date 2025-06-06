@@ -16,7 +16,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionPrint::FunctionPrint()
-: Function( "Print" )
+    : Function( "Print" )
 {
 }
 
