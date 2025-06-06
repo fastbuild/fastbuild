@@ -17,8 +17,8 @@
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Conversions.h"
 #include "Core/Profile/Profile.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
     #include "Psapi.h"

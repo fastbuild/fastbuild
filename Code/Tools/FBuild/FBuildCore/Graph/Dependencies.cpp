@@ -11,8 +11,8 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // Core
-#include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/ConstMemoryStream.h"
+#include "Core/FileIO/IOStream.h"
 
 //------------------------------------------------------------------------------
 namespace

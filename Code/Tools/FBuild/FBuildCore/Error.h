@@ -4,8 +4,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
 // Core
 #include "Core/Env/MSVCStaticAnalysis.h"

@@ -6,12 +6,13 @@
 #include "UnityNode.h"
 #include "DirectoryListNode.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h" // TODO:C Remove this
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"

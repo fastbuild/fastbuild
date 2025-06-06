@@ -4,11 +4,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"

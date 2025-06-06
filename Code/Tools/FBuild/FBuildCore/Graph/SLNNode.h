@@ -6,9 +6,11 @@
 //------------------------------------------------------------------------------
 #include "FileNode.h"
 
-#include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
+#include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AString.h"

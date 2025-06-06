@@ -8,13 +8,13 @@
 #include "BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFFile.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
-#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenizer.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenizer.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // Core
 #include "Core/Env/Assert.h"

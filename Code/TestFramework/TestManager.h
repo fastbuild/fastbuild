@@ -6,9 +6,9 @@
 //------------------------------------------------------------------------------
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/Assert.h"
-#include "Core/Mem/MemTracker.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
+#include "Core/Mem/MemTracker.h"
 #include "Core/Time/Timer.h"
 
 // Forward Declarations

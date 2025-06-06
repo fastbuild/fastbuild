@@ -5,9 +5,11 @@
 //------------------------------------------------------------------------------
 #include "Job.h"
 
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
+// Core
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
@@ -15,6 +17,7 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
+// System
 #include <stdarg.h>
 
 // Static

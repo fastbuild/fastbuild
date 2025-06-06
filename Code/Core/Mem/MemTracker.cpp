@@ -16,8 +16,8 @@
     #include "Core/Tracing/Tracing.h"
 
     // system
-    #include <stdlib.h> // for atexit
     #include <memory.h> // for memset
+    #include <stdlib.h> // for atexit
 
     // Static Data
     //------------------------------------------------------------------------------

@@ -4,8 +4,9 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "ICache.h"
-#include "CachePluginInterface.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Cache/CachePluginInterface.h"
+#include "Tools/FBuild/FBuildCore/Cache/ICache.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------

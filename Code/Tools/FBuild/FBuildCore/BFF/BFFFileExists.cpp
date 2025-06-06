@@ -6,8 +6,8 @@
 #include "BFFFileExists.h"
 
 // Core
-#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/ConstMemoryStream.h"
+#include "Core/FileIO/FileIO.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "ICache.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Cache/ICache.h"
+
+// Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AString.h"
 

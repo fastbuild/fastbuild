@@ -7,6 +7,7 @@
 #include "Job.h"
 #include "WorkerThread.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
@@ -14,11 +15,12 @@
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 
-#include "Core/Time/Timer.h"
+// Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Time/Timer.h"
 
 // JobCostSorter
 //------------------------------------------------------------------------------

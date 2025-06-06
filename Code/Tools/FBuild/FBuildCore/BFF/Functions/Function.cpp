@@ -5,10 +5,10 @@
 //------------------------------------------------------------------------------
 #include "Function.h"
 #include "FunctionAlias.h"
+#include "FunctionCSAssembly.h"
 #include "FunctionCompiler.h"
 #include "FunctionCopy.h"
 #include "FunctionCopyDir.h"
-#include "FunctionCSAssembly.h"
 #include "FunctionDLL.h"
 #include "FunctionError.h"
 #include "FunctionExec.h"
@@ -30,6 +30,7 @@
 #include "FunctionVSSolution.h"
 #include "FunctionXCodeProject.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
@@ -39,21 +40,21 @@
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // Core
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Strings/AStackString.h"
-#include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
 #include "Core/Reflection/MetaData/Meta_Hidden.h"
 #include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/MetaData/Meta_Range.h"
+#include "Core/Reflection/ReflectedProperty.h"
+#include "Core/Strings/AStackString.h"
 
 // system
 #include <stdarg.h>

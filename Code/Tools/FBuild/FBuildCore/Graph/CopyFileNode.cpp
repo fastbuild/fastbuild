@@ -5,11 +5,13 @@
 //------------------------------------------------------------------------------
 #include "CopyFileNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"

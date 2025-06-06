@@ -4,10 +4,12 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionCopy.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"

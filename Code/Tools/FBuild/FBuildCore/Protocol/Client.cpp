@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 #include "Client.h"
 
-#include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
@@ -13,10 +13,12 @@
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
-#include <Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h>
+#include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
+#include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"

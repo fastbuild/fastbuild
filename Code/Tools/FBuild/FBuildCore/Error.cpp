@@ -5,8 +5,8 @@
 //------------------------------------------------------------------------------
 #include "Error.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
-#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFToken.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFToken.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 

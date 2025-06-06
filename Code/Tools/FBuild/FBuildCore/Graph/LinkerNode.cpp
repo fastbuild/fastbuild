@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 #include "LinkerNode.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/BFF/LinkerNodeFileExistsCache.h"
 #include "Tools/FBuild/FBuildCore/Error.h"
@@ -15,12 +16,13 @@
 #include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"

@@ -7,8 +7,8 @@
 
 // Core
 #include "Core/Containers/Array.h"
-#include "Core/Profile/Profile.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 #if defined( __WINDOWS__ )

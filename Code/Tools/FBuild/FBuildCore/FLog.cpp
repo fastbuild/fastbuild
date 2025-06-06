@@ -5,8 +5,8 @@
 //------------------------------------------------------------------------------
 #include "FLog.h"
 
-#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"

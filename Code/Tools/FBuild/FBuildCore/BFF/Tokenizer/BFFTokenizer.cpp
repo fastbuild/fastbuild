@@ -16,8 +16,8 @@
 
 // Core
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Strings/AStackString.h"
 
 // Helpers
 //------------------------------------------------------------------------------

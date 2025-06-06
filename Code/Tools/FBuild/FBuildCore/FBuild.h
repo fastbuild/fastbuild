@@ -4,12 +4,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Helpers/FBuildStats.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFUserFunctions.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerageClient.h"
-#include "Helpers/FBuildStats.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"

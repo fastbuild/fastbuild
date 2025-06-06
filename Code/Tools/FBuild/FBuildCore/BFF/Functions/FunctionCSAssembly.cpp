@@ -4,8 +4,10 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionCSAssembly.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/Graph/CSNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

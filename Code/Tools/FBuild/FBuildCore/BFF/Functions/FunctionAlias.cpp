@@ -4,9 +4,11 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionAlias.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

@@ -4,10 +4,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
-
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 

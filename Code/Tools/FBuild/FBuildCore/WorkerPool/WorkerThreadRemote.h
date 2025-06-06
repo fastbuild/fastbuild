@@ -4,9 +4,11 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "WorkerThread.h"
-#include "Core/Process/Mutex.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 
+// Core
+#include "Core/Process/Mutex.h"
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Job;

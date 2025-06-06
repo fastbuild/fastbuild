@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Node.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+
+// Core
 #include "Core/Containers/Array.h"
 
 // Forward Declarations

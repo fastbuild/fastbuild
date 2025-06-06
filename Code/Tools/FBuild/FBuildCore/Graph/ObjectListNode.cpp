@@ -5,18 +5,19 @@
 //------------------------------------------------------------------------------
 #include "ObjectListNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 
 // Core
 #include "Core/FileIO/IOStream.h"

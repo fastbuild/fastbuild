@@ -4,8 +4,10 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionLibrary.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

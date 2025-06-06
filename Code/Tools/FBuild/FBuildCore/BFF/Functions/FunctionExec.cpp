@@ -4,9 +4,11 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionExec.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ExecNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

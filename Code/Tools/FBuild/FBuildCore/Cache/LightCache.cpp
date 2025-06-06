@@ -6,10 +6,10 @@
 #include "LightCache.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
 #include "Core/Env/ErrorFormat.h"

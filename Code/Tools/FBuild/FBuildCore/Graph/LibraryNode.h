@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "ObjectListNode.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
+
+// Core
 #include "Core/Containers/Array.h"
 
 // Forward Declarations
