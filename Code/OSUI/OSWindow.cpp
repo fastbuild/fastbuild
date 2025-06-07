@@ -41,11 +41,11 @@
     {
         OSWindow * window = reinterpret_cast<OSWindow *>( GetWindowLongPtr( hwnd, GWLP_USERDATA ) );
 
-        switch( msg )
+        switch ( msg )
         {
             case WM_SYSCOMMAND:
             {
-                switch( wParam & 0xfff0 )
+                switch ( wParam & 0xfff0 )
                 {
                     case SC_MINIMIZE:
                     {

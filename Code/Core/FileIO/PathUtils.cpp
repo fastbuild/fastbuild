@@ -147,7 +147,7 @@
     #if defined( __WINDOWS__ )
         const bool isUNCPath = path.BeginsWith( NATIVE_DOUBLE_SLASH );
     #endif
-    while( path.Replace( NATIVE_DOUBLE_SLASH, NATIVE_SLASH_STR ) ) {}
+    while ( path.Replace( NATIVE_DOUBLE_SLASH, NATIVE_SLASH_STR ) ) {}
 
     #if defined( __WINDOWS__ )
         if ( isUNCPath )
@@ -172,7 +172,7 @@
 {
     // Normalize slashes - TODO:C This could be optimized into one pass
     path.Replace( OTHER_SLASH, NATIVE_SLASH );
-    while( path.Replace( NATIVE_DOUBLE_SLASH, NATIVE_SLASH_STR ) ) {}
+    while ( path.Replace( NATIVE_DOUBLE_SLASH, NATIVE_SLASH_STR ) ) {}
 
     // Sanity check - calling this function on a folder path is an error
     ASSERT( path.EndsWith( NATIVE_SLASH ) == false );

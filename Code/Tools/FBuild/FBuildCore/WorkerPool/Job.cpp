@@ -237,7 +237,7 @@ void Job::GetMessagesForLog( AString & buffer ) const
     outBuffer.SetReserved( size ); // Will be safely ignored if smaller than already reserved
 
     // Concatenate the errors
-    for( const AString & msg : messages )
+    for ( const AString & msg : messages )
     {
         outBuffer += msg;
     }

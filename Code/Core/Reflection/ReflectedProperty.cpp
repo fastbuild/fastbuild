@@ -49,7 +49,7 @@ ReflectedProperty::~ReflectedProperty()
 //------------------------------------------------------------------------------
 size_t ReflectedProperty::GetPropertySize() const
 {
-    switch( m_Type )
+    switch ( m_Type )
     {
         case PT_NONE:       ASSERT( false ); return 0;
         case PT_FLOAT:      return sizeof( float );

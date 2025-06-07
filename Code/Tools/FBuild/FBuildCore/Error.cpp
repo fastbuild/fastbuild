@@ -816,7 +816,7 @@
                                    "<,.>/?";
     bool printable = false;
     const char c = *iter->GetSourcePos();
-    for( const char pc : printableChars )
+    for ( const char pc : printableChars )
     {
         if ( ( c == pc ) && ( c != 0 ) )
         {

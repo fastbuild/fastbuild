@@ -759,7 +759,7 @@ bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBraced
     // Determine the matching close character
     const BFFToken * openToken = iter.GetCurrent();
     char closeTokenChar;
-    switch( openToken->GetType() )
+    switch ( openToken->GetType() )
     {
         case BFFTokenType::CurlyBracket:    closeTokenChar = '}'; break;
         case BFFTokenType::RoundBracket:    closeTokenChar = ')'; break;
@@ -788,7 +788,7 @@ bool BFFParser::FindBracedRangeRecurse( BFFTokenRange & iter ) const
     // Determine the matching close character
     const BFFToken * openToken = iter.GetCurrent();
     char closeTokenChar;
-    switch( openToken->GetType() )
+    switch ( openToken->GetType() )
     {
         case BFFTokenType::CurlyBracket:    closeTokenChar = '}'; break;
         case BFFTokenType::RoundBracket:    closeTokenChar = ')'; break;

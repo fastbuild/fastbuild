@@ -342,7 +342,7 @@ bool Process::Spawn( const char * executable,
         if ( environment )
         {
             // Iterate double-null terminated string vector
-            while( *environment != 0 )
+            while ( *environment != 0 )
             {
                 envVector.Append( environment );
                 environment += strlen( environment );
@@ -514,7 +514,7 @@ int32_t Process::WaitForExit()
         if ( m_HasAlreadyWaitTerminated == false )
         {
             int status;
-            for( ;; )
+            for ( ;; )
             {
                 pid_t ret = waitpid( m_ChildPID, &status, 0 );
                 if ( ret == -1 )

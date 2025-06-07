@@ -304,12 +304,12 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const Array<SolutionConfi
     Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
 
     // Solution Configuration Mappings to Projects
-    for( const VSProjectBaseNode * project : projects )
+    for ( const VSProjectBaseNode * project : projects )
     {
         AStackString<> projectGuid( project->GetProjectGuid() );
         projectGuid.ToUpper();
 
-        for( const SolutionConfig & solutionConfig : solutionConfigs )
+        for ( const SolutionConfig & solutionConfig : solutionConfigs )
         {
             Write( "\t\t%s.%s|%s.ActiveCfg = %s|%s\r\n",
                    projectGuid.Get(),
@@ -382,7 +382,7 @@ void SLNGenerator::WriteNestedProjects( const Array<AString> & solutionProjectsT
     }
 
     // Write every intermediate path
-    for( const AString & solutionFolderPath : solutionFolderPaths )
+    for ( const AString & solutionFolderPath : solutionFolderPaths )
     {
         // parse solution folder parent path
         AStackString<> solutionFolderParentGuid;

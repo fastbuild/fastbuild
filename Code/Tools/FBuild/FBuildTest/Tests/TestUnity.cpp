@@ -771,7 +771,8 @@ void TestUnity::SortFiles() const
 
     // Helper macros to reduce boilerplate code
     #define SORT( ... )                                                         \
-    do {                                                                           \
+    do                                                                          \
+    {                                                                           \
         const char * const inputs[] = { __VA_ARGS__ };                          \
         Helper h;                                                               \
         for ( const char * input : inputs )                                     \
@@ -786,7 +787,7 @@ void TestUnity::SortFiles() const
         {                                                                       \
             TEST_ASSERTM( h[ i ] == outputs[ i ], "Mismatch @ index %u: %s != %s", (uint32_t)i, h[ i ].Get(), outputs[ i ] ); \
         }                                                                       \
-    } while( false )
+    } while ( false )
 
     // Basic sanity check
     SORT( "a.cpp", "b.cpp" );

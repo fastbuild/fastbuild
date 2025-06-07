@@ -130,7 +130,7 @@ int Main( int argc, char * argv[] )
             }
 
             OUTPUT( "FBuild: Waiting for another FASTBuild to terminate due to -wait option.\n" );
-            while( mainProcess.TryLock() == false )
+            while ( mainProcess.TryLock() == false )
             {
                 Thread::Sleep( 1000 );
                 if ( FBuild::GetStopBuild() )

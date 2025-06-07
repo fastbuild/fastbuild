@@ -310,7 +310,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         if ( IsNumberStart( c ) )
         {
             ++pos;
-            while( IsNumber( *pos ) )
+            while ( IsNumber( *pos ) )
             {
                 ++pos;
             }
@@ -379,7 +379,7 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
     // Extract identifier
     const char * idStart = pos;
     ++pos;
-    while( IsIdentifier( *pos ) )
+    while ( IsIdentifier( *pos ) )
     {
         ++pos;
     }
@@ -457,7 +457,7 @@ bool BFFTokenizer::HandleVariable( const char * & pos, const char * /*end*/, con
     else
     {
         // .Blah style
-        while( IsVariable( *pos ) )
+        while ( IsVariable( *pos ) )
         {
             ++pos;
         }
@@ -1127,7 +1127,7 @@ bool BFFTokenizer::GetDirective( const BFFFile & file, const char * & pos, AStri
     const char * directiveNameStart = pos;
     if ( IsLowercaseLetter( *pos ) ) // Must start with lowercase letter
     {
-        while( IsLowercaseLetter( *pos ) || IsUnderscore( *pos ) )
+        while ( IsLowercaseLetter( *pos ) || IsUnderscore( *pos ) )
         {
             ++pos;
         }

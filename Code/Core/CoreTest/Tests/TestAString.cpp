@@ -783,10 +783,11 @@ void TestAString::Tokenize() const
 void TestAString::PatternMatch() const
 {
     #define CHECK_MATCH( pat, str, match )              \
-    do {                                                \
+    do                                                  \
+    {                                                   \
         AStackString<> string( str );                   \
         TEST_ASSERT( string.Matches( pat ) == match );  \
-    } while( false )
+    } while ( false )
 
     CHECK_MATCH( "*.cpp",   "File.cpp", true );
     CHECK_MATCH( "*",       "File.cpp", true );
@@ -817,10 +818,11 @@ void TestAString::PatternMatch() const
 void TestAString::PatternMatchI() const
 {
     #define CHECK_MATCH( pat, str, match )              \
-    do {                                                \
+    do                                                  \
+    {                                                   \
         AStackString<> string( str );                   \
         TEST_ASSERT( string.MatchesI( pat ) == match ); \
-    } while( false )
+    } while ( false )
 
     CHECK_MATCH( "*.cpp",   "File.cpp", true );
     CHECK_MATCH( "*",       "File.cpp", true );

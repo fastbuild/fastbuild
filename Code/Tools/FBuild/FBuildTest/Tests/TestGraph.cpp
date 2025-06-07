@@ -144,7 +144,7 @@ void TestGraph::TestNodeTypes() const
         TEST_ASSERT( node->GetType() == Node::TYPE_ENUM ); \
         TEST_ASSERT( TYPE::GetTypeS() == Node::TYPE_ENUM ); \
         TEST_ASSERT( AStackString<>( FRIENDLY_TYPE ) == node->GetTypeName() ); \
-    } while( false )
+    } while ( false )
 
     // TODO:C - It would be nice to restructure this so that new nodes are automatically tested
     TEST_NODE( FileNode,            FILE_NODE,          "File",     "file",             "file" );
@@ -378,11 +378,12 @@ void TestGraph::TestCleanPathPartial() const
     FBuild f( fo );
 
     #define CHECK( input, expectedOutput, makeFullPath ) \
-        do { \
+        do \
+        { \
             AStackString<> cleaned; \
             NodeGraph::CleanPath( AStackString<>( input ), cleaned, makeFullPath ); \
             TEST_ASSERT( cleaned == expectedOutput ); \
-        } while( false )
+        } while ( false )
 
     #if defined( __WINDOWS__ )
         #define CHECK_RELATIVE( input, expectedWindows, expectedOther ) \

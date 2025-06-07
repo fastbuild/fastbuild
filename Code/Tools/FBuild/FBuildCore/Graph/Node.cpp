@@ -768,7 +768,7 @@ void Node::ReplaceDummyName( const AString & newName )
 
     const char * data = output.Get();
     const char * end = output.GetEnd();
-    while( data < end )
+    while ( data < end )
     {
         // find the limits of the current line
         const char * lineStart = data;

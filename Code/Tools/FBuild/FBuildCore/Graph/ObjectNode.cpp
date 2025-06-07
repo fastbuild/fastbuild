@@ -2211,7 +2211,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     Compressor c; // scoped here so we can access decompression buffer
     if ( job->IsDataCompressed() )
     {
-        if( c.Decompress( dataToWrite ) == false )
+        if ( c.Decompress( dataToWrite ) == false )
         {
             // Decompression failure would indicate a bug
             job->Error( "Decompression failed. Target: '%s'", GetName().Get() );

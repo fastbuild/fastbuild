@@ -508,7 +508,8 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
     void TestFileIO::NormalizeWindowsPathCasing() const
     {
         #define CHECK_NORMALIZATION( badPath, expectedPath ) \
-            do { \
+            do \
+            { \
                 AStackString<> normalizedPath; \
                 TEST_ASSERT( FileIO::NormalizeWindowsPathCasing( AStackString<>( badPath ), normalizedPath ) ); \
                 TEST_ASSERT( normalizedPath == expectedPath ); \

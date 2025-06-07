@@ -2000,7 +2000,7 @@ void NodeGraph::MigrateProperties( const void * oldBase, void * newBase, const R
         // Traverse into parent class (if there is one)
         ri = ri->GetSuperClass();
     }
-    while( ri );
+    while ( ri );
 }
 
 // MigrateProperty
@@ -2108,7 +2108,7 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
         // Traverse into parent class (if there is one)
         ri = ri->GetSuperClass();
     }
-    while( ri );
+    while ( ri );
 
     return true;
 }

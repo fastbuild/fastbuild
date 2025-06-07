@@ -362,11 +362,12 @@ void TestLinker::IncrementalLinking_MSVC() const
 void TestLinker::LinkerType() const
 {
     #define TEST_LINKERTYPE( exeName, expectedFlag ) \
-    do { \
+    do \
+    { \
         const uint32_t flags = LinkerNode::DetermineLinkerTypeFlags( AStackString<>( "auto" ), \
                                                                      AStackString<>( exeName ) ); \
         TEST_ASSERT( flags & expectedFlag ); \
-    } while( false )
+    } while ( false )
 
     TEST_LINKERTYPE( "link",        LinkerNode::LINK_FLAG_MSVC );
     TEST_LINKERTYPE( "gcc",         LinkerNode::LINK_FLAG_GCC );

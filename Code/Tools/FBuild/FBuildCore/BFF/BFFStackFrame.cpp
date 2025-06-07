@@ -462,7 +462,7 @@ void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable * var )
     // look at this scope level
     Array<BFFVariable *>::Iter i = m_Variables.Begin();
     Array<BFFVariable *>::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( ; i < end ; ++i )
     {
         if ( ( *i )->GetName() == var->GetName() )
         {

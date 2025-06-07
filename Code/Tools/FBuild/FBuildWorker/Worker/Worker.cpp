@@ -325,7 +325,7 @@ void Worker::UpdateAvailability()
     m_IdleDetection.Update( ws.GetIdleThresholdPercent() );
 
     uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
-    switch( ws.GetMode() )
+    switch ( ws.GetMode() )
     {
         case WorkerSettings::WHEN_IDLE:
         {

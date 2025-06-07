@@ -153,7 +153,7 @@ Env::ProcessorInfo::ProcessorInfo()
 
         // NUMBER_OF_PROCESSORS is incorrect for our system, so loop over all NUMA Nodes and accumulate logical core counts
         uint32_t numProcessorsInAllGroups = 0;
-        for( USHORT nodeID = 0; nodeID <= numNodes; ++nodeID )
+        for ( USHORT nodeID = 0; nodeID <= numNodes; ++nodeID )
         {
             GROUP_AFFINITY groupProcessorMask;
             memset( &groupProcessorMask, 0, sizeof( GROUP_AFFINITY ) );

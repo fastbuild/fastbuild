@@ -57,7 +57,8 @@ private:
 // Helper Macros
 //------------------------------------------------------------------------------
 #define WAIT_UNTIL_WITH_TIMEOUT( cond )             \
-    do {                                            \
+    do                                              \
+    {                                               \
         Timer t;                                    \
         t.Start();                                  \
         while ( ( cond ) == false )                 \
@@ -65,7 +66,7 @@ private:
             Thread::Sleep( 1 );                     \
             TEST_ASSERT( t.GetElapsed() < 30.0f );  \
         }                                           \
-    } while( false )
+    } while ( false )
 
 // Register Tests
 //------------------------------------------------------------------------------

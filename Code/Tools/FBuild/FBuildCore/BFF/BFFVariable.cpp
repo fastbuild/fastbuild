@@ -38,7 +38,7 @@ BFFVariable::BFFVariable( const BFFVariable & other )
     , m_Type( other.m_Type )
     , m_Token( other.m_Token )
 {
-    switch( m_Type )
+    switch ( m_Type )
     {
         case VAR_ANY:               ASSERT( false ); break;
         case VAR_STRING:            SetValueString( other.GetString() ); break;
