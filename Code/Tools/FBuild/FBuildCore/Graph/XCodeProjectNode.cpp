@@ -192,7 +192,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         const Node * n = dep.GetNode();
         if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+            const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
             for ( const FileIO::FileInfo & file : dln->GetFiles() )
             {
                 //filter the file by pattern

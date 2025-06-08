@@ -42,33 +42,33 @@ namespace
             //    paths in the correct order.
             m_IncludePrefixes.SetCapacity( 6 );
             {
-                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
                 options.SetCapacity( 2 );
                 options.EmplaceBack( "/I" );
                 options.EmplaceBack( "-I" );
             }
             {
-                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
                 options.SetCapacity( 2 );
                 options.EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
                 options.EmplaceBack( "-isystem" );
             }
             {
-                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
                 options.SetCapacity( 2 );
                 options.EmplaceBack( "/imsvc" );
                 options.EmplaceBack( "-imsvc" );
             }
             {
-                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
                 options.EmplaceBack( "-idirafter" );
             }
             {
-                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
                 options.EmplaceBack( "-iquote" );
             }
             {
-                Array<AString>& options = m_IncludePrefixes.EmplaceBack();
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
                 options.SetCapacity( 2 );
                 options.EmplaceBack( "/external:I" );
                 options.EmplaceBack( "-external:I" );
@@ -196,7 +196,7 @@ ProjectGeneratorBase::Folder * ProjectGeneratorBase::GetFolderFor( const AString
 
 // SortFilesAndFolders
 //------------------------------------------------------------------------------
-void  ProjectGeneratorBase::SortFilesAndFolders()
+void ProjectGeneratorBase::SortFilesAndFolders()
 {
     // Sort files and bake final indices
     m_Files.SortDeref();
@@ -253,7 +253,7 @@ void ProjectGeneratorBase::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
     AStackString<1024> tmp;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     tmp.VFormat( fmtString, args );
     va_end( args );
 
@@ -299,7 +299,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         else
         {
             // check content
-            UniquePtr<char, FreeDeletor> mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "%s - Failed to read '%s'", generatorId, fileName.Get() );
@@ -402,7 +402,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     // convert any that are not wildcards patterns
     for ( AString & ext : extensions )
     {
-        if ( ext.Find('*') || ext.Find('?') )
+        if ( ext.Find( '*' ) || ext.Find( '?' ) )
         {
             continue; // already a pattern, leave as is
         }
@@ -422,8 +422,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     {
         switch ( node->GetType() )
         {
-            case Node::OBJECT_LIST_NODE: return node->CastTo< ObjectListNode >();
-            case Node::LIBRARY_NODE: return node->CastTo< LibraryNode >();
+            case Node::OBJECT_LIST_NODE: return node->CastTo<ObjectListNode>();
+            case Node::LIBRARY_NODE: return node->CastTo<LibraryNode>();
             case Node::EXE_NODE:
             {
                 // For Exe use first library
@@ -447,7 +447,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             case Node::TEST_NODE:
             {
                 // For test search in executable
-                const Node * testExe = node->CastTo< TestNode >()->GetTestExecutable();
+                const Node * testExe = node->CastTo<TestNode>()->GetTestExecutable();
                 if ( testExe )
                 {
                     return FindTargetForIntellisenseInfo( testExe );
@@ -456,7 +456,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             }
             case Node::ALIAS_NODE:
             {
-                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->CastTo<AliasNode>()->GetAliasedNodes() );
                 if ( n )
                 {
                     return n;
@@ -465,7 +465,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             }
             case Node::COPY_FILE_NODE:
             {
-                return FindTargetForIntellisenseInfo( node->CastTo< CopyFileNode >()->GetSourceNode() );
+                return FindTargetForIntellisenseInfo( node->CastTo<CopyFileNode>()->GetSourceNode() );
             }
             default: break; // Unsupported type - ignore
         }
@@ -625,8 +625,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ConcatIntellisenseOptions( const Array<AString> & tokens,
                                                                  AString & outTokenString,
-                                                                 const char* preToken,
-                                                                 const char* postToken )
+                                                                 const char * preToken,
+                                                                 const char * postToken )
 {
     for ( const AString & token : tokens )
     {
@@ -651,8 +651,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     {
         switch ( node->GetType() )
         {
-            case Node::EXE_NODE: return node->CastTo< ExeNode >();
-            case Node::DLL_NODE: return node->CastTo< DLLNode >();
+            case Node::EXE_NODE: return node->CastTo<ExeNode>();
+            case Node::DLL_NODE: return node->CastTo<DLLNode>();
             case Node::COPY_FILE_NODE:
             {
                 // When copying, we want to debug the copy as that usually means a staging dir
@@ -662,11 +662,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             case Node::TEST_NODE:
             {
                 // Get executable backing test
-                return (FileNode *)node->CastTo< TestNode >()->GetTestExecutable();
+                return (FileNode *)node->CastTo<TestNode>()->GetTestExecutable();
             }
             case Node::ALIAS_NODE:
             {
-                const FileNode * n = FindExecutableDebugTarget( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                const FileNode * n = FindExecutableDebugTarget( node->CastTo<AliasNode>()->GetAliasedNodes() );
                 if ( n )
                 {
                     return n;

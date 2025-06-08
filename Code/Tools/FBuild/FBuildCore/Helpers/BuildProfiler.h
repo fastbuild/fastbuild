@@ -66,7 +66,8 @@ protected:
             , m_EndTime( endTime )
             , m_StepName( stepName )
             , m_TargetName( targetName )
-        {}
+        {
+        }
 
         enum : int32_t { LOCAL_MACHINE_ID = -1 };
 
@@ -124,7 +125,7 @@ public:
     void SetStepName( const char * stepName ) { m_StepName = stepName; }
 
 protected:
-    BuildProfilerScope & operator = ( BuildProfilerScope & other ) = delete;
+    BuildProfilerScope & operator=( BuildProfilerScope & other ) = delete;
 
     bool            m_Active;
     uint32_t        m_ThreadId;

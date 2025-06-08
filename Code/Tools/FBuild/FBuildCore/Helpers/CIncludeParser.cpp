@@ -43,7 +43,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
     (void)compilerOutputSize;
 
     const char * pos = compilerOutput;
-    for (;;)
+    for ( ;; )
     {
         const char * lineStart = pos;
 
@@ -63,7 +63,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 
         // count colons in the line
         const char * colon1 = nullptr;
-        for ( ; ch < lineEnd ; ++ch )
+        for ( ; ch < lineEnd; ++ch )
         {
             if ( *ch == ':' )
             {
@@ -79,8 +79,10 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
         }
 
         // check that we have two colons separated by at least one char
-        if ( colon1 == nullptr || colon1 == lineStart ||
-             *ch != ':' || (ch - colon1) < 2 )
+        if ( ( colon1 == nullptr ) ||
+             ( colon1 == lineStart ) ||
+             ( *ch != ':' ) ||
+             ( ( ch - colon1 ) < 2 ) )
         {
             continue; // next line
         }
@@ -133,7 +135,9 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
                     break;
                 }
                 default:
+                {
                     break;
+                }
             }
         }
 
@@ -163,7 +167,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 
     const char * pos = compilerOutput;
 
-    for (;;)
+    for ( ;; )
     {
         pos = strstr( pos, "#line 1 " );
         if ( !pos )
@@ -227,9 +231,9 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 
 // ParseToNextLineStaringWithHash
 //------------------------------------------------------------------------------
-/*static*/ void CIncludeParser::ParseToNextLineStartingWithHash( const char * & pos )
+/*static*/ void CIncludeParser::ParseToNextLineStartingWithHash( const char *& pos )
 {
-    for (;;)
+    for ( ;; )
     {
         pos = strchr( pos, '#' );
         if ( pos )
@@ -237,7 +241,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
             // Safe to index -1 because # as first char is handled as a
             // special case to avoid having it in this critical loop
             const char prevC = pos[ -1 ];
-            if ( ( prevC  == '\n' ) || ( prevC  == '\r' ) )
+            if ( ( prevC == '\n' ) || ( prevC == '\r' ) )
             {
                 return;
             }
@@ -251,7 +255,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 // Parse
 //------------------------------------------------------------------------------
 // TODO:C - restructure function to avoid use of goto
-PRAGMA_DISABLE_PUSH_MSVC(26051) // Function with irreducible control flow graph.
+PRAGMA_DISABLE_PUSH_MSVC( 26051 ) // Function with irreducible control flow graph.
 bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
                                             size_t compilerOutputSize )
 {
@@ -270,7 +274,7 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         goto possibleInclude;
     }
 
-    for (;;)
+    for ( ;; )
     {
         ParseToNextLineStartingWithHash( pos );
         if ( !pos )
@@ -297,7 +301,7 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         // skip number
         for ( ;; )
         {
-            const char c = * pos;
+            const char c = *pos;
             if ( ( c >= '0' ) && ( c <= '9' ) )
             {
                 pos++;
@@ -352,7 +356,6 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         {
             AddInclude( lineStart, lineEnd );
         }
-
     }
 
     return true;

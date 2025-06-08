@@ -75,7 +75,7 @@ void TestDropDown::Items() const
         // OSX main window appears to be leaked by OS
         SetMemoryLeakCheckEnabled( false );
 
-        if (( true ))
+        if ( ( true ) )
         {
             return; // TODO:B fix faulty test for OSX
         }

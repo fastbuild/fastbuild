@@ -139,7 +139,7 @@ ExecNode::~ExecNode()
 
     // get the result of the directory lists and depend on those
     const size_t startIndex = 1 + m_NumExecInputFiles; // Skip Compiler + ExecInputFiles
-    const size_t endIndex =  ( 1 + m_NumExecInputFiles + m_ExecInputPath.GetSize() );
+    const size_t endIndex = ( 1 + m_NumExecInputFiles + m_ExecInputPath.GetSize() );
     for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
@@ -147,7 +147,7 @@ ExecNode::~ExecNode()
         ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
         // get the list of files
-        const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
         const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )
@@ -192,7 +192,7 @@ ExecNode::~ExecNode()
 
     // Format compiler args string
     AStackString<4 * KILOBYTE> fullArgs;
-    GetFullArgs(fullArgs);
+    GetFullArgs( fullArgs );
 
     const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 
@@ -201,9 +201,9 @@ ExecNode::~ExecNode()
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
     const bool spawnOK = p.Spawn( GetExecutable()->GetName().Get(),
-                            fullArgs.Get(),
-                            workingDir,
-                            environment );
+                                  fullArgs.Get(),
+                                  workingDir,
+                                  environment );
 
     if ( !spawnOK )
     {
@@ -297,49 +297,49 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 
 // GetFullArgs
 //------------------------------------------------------------------------------
-void ExecNode::GetFullArgs(AString & fullArgs) const
+void ExecNode::GetFullArgs( AString & fullArgs ) const
 {
     // split into tokens
     StackArray<AString> tokens;
-    m_ExecArguments.Tokenize(tokens);
+    m_ExecArguments.Tokenize( tokens );
 
-    AStackString<> quote("\"");
+    AStackString<> quote( "\"" );
 
     for ( const AString & token : tokens )
     {
-        if (token.EndsWith("%1"))
+        if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
             AStackString<> pre;
-            if (token.GetLength() > 2)
+            if ( token.GetLength() > 2 )
             {
-                pre.Assign(token.Get(), token.GetEnd() - 2);
+                pre.Assign( token.Get(), token.GetEnd() - 2 );
             }
 
             // concatenate files, unquoted
-            GetInputFiles(fullArgs, pre, AString::GetEmpty());
+            GetInputFiles( fullArgs, pre, AString::GetEmpty() );
         }
-        else if (token.EndsWith("\"%1\""))
+        else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre(token.Get(), token.GetEnd() - 3); // 3 instead of 4 to include quote
+            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
 
             // concatenate files, quoted
-            GetInputFiles(fullArgs, pre, quote);
+            GetInputFiles( fullArgs, pre, quote );
         }
-        else if (token.EndsWith("%2"))
+        else if ( token.EndsWith( "%2" ) )
         {
             // handle /Option:%2 -> /Option:A
-            if (token.GetLength() > 2)
+            if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>(token.Get(), token.GetEnd() - 2);
+                fullArgs += AStackString<>( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += GetName().Get();
         }
-        else if (token.EndsWith("\"%2\""))
+        else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre(token.Get(), token.GetEnd() - 3); // 3 instead of 4 to include quote
+            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += GetName().Get();
             fullArgs += '"'; // post
@@ -355,10 +355,10 @@ void ExecNode::GetFullArgs(AString & fullArgs) const
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AString & post) const
+void ExecNode::GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const
 {
     bool first = true; // Handle comma separation
-    for ( size_t i=1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (executable)
+    for ( size_t i = 1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (executable)
     {
         const Dependency & dep = m_StaticDependencies[ i ];
         const Node * n = dep.GetNode();
@@ -366,7 +366,7 @@ void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AStr
         // Handle directory lists
         if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+            const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
             const Array<FileIO::FileInfo> & files = dln->GetFiles();
             for ( const FileIO::FileInfo & file : files )
             {

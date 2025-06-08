@@ -465,13 +465,19 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
         if ( token.Find( "NMakePreprocessorDefinitions" ) )
         {
             // Split the define string back into its constituent parts
-            AStackString<> copy(token);
-            while (copy.BeginsWith(' ')) { copy.Trim( 1, 0 ); }
-            while (copy.EndsWith(' ')) { copy.Trim( 0, 1 ); }
-            copy.Replace("<NMakePreprocessorDefinitions>", "");
-            copy.Replace("</NMakePreprocessorDefinitions>", "");
+            AStackString<> copy( token );
+            while ( copy.BeginsWith( ' ' ) )
+            {
+                copy.Trim( 1, 0 );
+            }
+            while ( copy.EndsWith( ' ' ) )
+            {
+                copy.Trim( 0, 1 );
+            }
+            copy.Replace( "<NMakePreprocessorDefinitions>", "" );
+            copy.Replace( "</NMakePreprocessorDefinitions>", "" );
             StackArray<AString> defines;
-            copy.Tokenize(defines, ';');
+            copy.Tokenize( defines, ';' );
 
             // Check the expected items are found
             TEST_ASSERT( defines.Find( "INTELLISENSE_DEFINE" ) );
@@ -804,15 +810,15 @@ void TestProjectGeneration::VCXProj_PerConfigOverrides() const
     TEST_ASSERT( numConfigs == 1 );
 
     // Check options were overriden in the config
-    const uint32_t buildCmdCount    = fileContents.Replace( "<NMakeBuildCommandLine>OVERRIDDEN_BUILD_COMMAND</NMakeBuildCommandLine>", "" );
+    const uint32_t buildCmdCount = fileContents.Replace( "<NMakeBuildCommandLine>OVERRIDDEN_BUILD_COMMAND</NMakeBuildCommandLine>", "" );
     TEST_ASSERT( buildCmdCount == numConfigs );
 
     // Check non-overridden options were inherited
-    const uint32_t rebuildCmdCount  = fileContents.Replace( "<NMakeReBuildCommandLine>BASE_REBUILD_COMMAND</NMakeReBuildCommandLine>", "" );
+    const uint32_t rebuildCmdCount = fileContents.Replace( "<NMakeReBuildCommandLine>BASE_REBUILD_COMMAND</NMakeReBuildCommandLine>", "" );
     TEST_ASSERT( rebuildCmdCount == numConfigs );
 
     // Check option set only on config
-    const uint32_t cleanCmdCount  = fileContents.Replace( "<NMakeCleanCommandLine>CONFIG_CLEAN_COMMAND</NMakeCleanCommandLine>", "" );
+    const uint32_t cleanCmdCount = fileContents.Replace( "<NMakeCleanCommandLine>CONFIG_CLEAN_COMMAND</NMakeCleanCommandLine>", "" );
     TEST_ASSERT( cleanCmdCount == numConfigs );
 }
 

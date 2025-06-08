@@ -50,7 +50,7 @@
             VERIFY( host_statistics64( mach_host_self(),
                                        HOST_VM_INFO,
                                        (host_info_t)&vmstat,
-                                       &count ) == KERN_SUCCESS);
+                                       &count ) == KERN_SUCCESS );
             const uint64_t physAvailPages = ( vmstat.free_count +
                                               vmstat.inactive_count +
                                               vmstat.speculative_count );

@@ -63,7 +63,7 @@ private:
                                                  bool expectedLightCacheUsage,
                                                  const char * lightCacheError ) const;
 
-    TestCache & operator = ( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
+    TestCache & operator=( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
 };
 
 // Register Tests
@@ -912,7 +912,7 @@ void TestCache::LightCache_ResponseFile() const
     TEST_ASSERT( nodes.GetSize() == 1 );
     const Dependencies & deps = nodes[ 0 ]->GetDynamicDependencies();
     TEST_ASSERT( deps.GetSize() == 2 ); // main cpp plus include
-    TEST_ASSERT( deps[ 1 ].GetNode()->GetName().EndsWith( "include.h") );
+    TEST_ASSERT( deps[ 1 ].GetNode()->GetName().EndsWith( "include.h" ) );
 }
 
 // Analyze_MSVC_WarningsOnly_Write

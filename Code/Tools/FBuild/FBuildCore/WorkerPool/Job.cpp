@@ -119,7 +119,7 @@ void Job::Error( MSVC_SAL_PRINTF const char * format, ... )
     AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, format);
+    va_start( args, format );
     buffer.VFormat( format, args );
     va_end( args );
 

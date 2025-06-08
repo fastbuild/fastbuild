@@ -68,7 +68,7 @@ REFLECT_END( SLNNode )
 //------------------------------------------------------------------------------
 struct VCXProjectNodeComp
 {
-    bool operator ()( const VSProjectBaseNode * a, const VSProjectBaseNode * b ) const
+    bool operator()( const VSProjectBaseNode * a, const VSProjectBaseNode * b ) const
     {
         return ( a->GetName() < b->GetName() );
     }
@@ -129,7 +129,7 @@ SLNNode::SLNNode()
         //         but for 32 bits, Platform is "Win32" while SolutionPlatform is "x86"
         if ( solutionConfig.m_SolutionPlatform.MatchesI( "Win32" ) )
         {
-             solutionConfig.m_SolutionPlatform = "x86";
+            solutionConfig.m_SolutionPlatform = "x86";
         }
     }
 
@@ -283,8 +283,8 @@ SLNNode::~SLNNode() = default;
     {
         const Node * node = dep.GetNode();
         VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
-                                        ? static_cast<VSProjectBaseNode *>( node->CastTo< VCXProjectNode >() )
-                                        : static_cast<VSProjectBaseNode *>( node->CastTo< VSProjectExternalNode >() );
+                                        ? static_cast<VSProjectBaseNode *>( node->CastTo<VCXProjectNode>() )
+                                        : static_cast<VSProjectBaseNode *>( node->CastTo<VSProjectExternalNode>() );
 
         projects.Append( projectNode );
     }
@@ -331,8 +331,8 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
         return false;
     }
     VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
-                                    ? static_cast<VSProjectBaseNode *>( node->CastTo< VCXProjectNode >() )
-                                    : static_cast<VSProjectBaseNode *>( node->CastTo< VSProjectExternalNode >() );
+                                    ? static_cast<VSProjectBaseNode *>( node->CastTo<VCXProjectNode>() )
+                                    : static_cast<VSProjectBaseNode *>( node->CastTo<VSProjectExternalNode>() );
 
     // Add to project list if not already there
     if ( inOutProjects.Find( projectNode ) == nullptr )

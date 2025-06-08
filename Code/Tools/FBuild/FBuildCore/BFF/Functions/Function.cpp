@@ -103,7 +103,7 @@ Function::~Function() = default;
     g_Functions.Append( FNEW( FunctionDLL ) );
     g_Functions.Append( FNEW( FunctionError ) );
     g_Functions.Append( FNEW( FunctionExec ) );
-    g_Functions.Append( FNEW( FunctionExecutable ));
+    g_Functions.Append( FNEW( FunctionExecutable ) );
     g_Functions.Append( FNEW( FunctionForEach ) );
     g_Functions.Append( FNEW( FunctionIf ) );
     g_Functions.Append( FNEW( FunctionLibrary ) );
@@ -273,7 +273,7 @@ Function::~Function() = default;
     const size_t nodeCountBefore = nodeGraph.GetNodeCount();
 
     // complete the function
-    if (!Commit( nodeGraph, functionNameStart ))
+    if ( !Commit( nodeGraph, functionNameStart ) )
     {
         return false;
     }
@@ -284,7 +284,7 @@ Function::~Function() = default;
     {
         for ( size_t index = nodeCountBefore; index < nodeCountAfter; ++index )
         {
-            const Node* node = nodeGraph.GetNodeByIndex( index );
+            const Node * node = nodeGraph.GetNodeByIndex( index );
 
             const Dependencies * depVectors[ 3 ] = { &node->GetPreBuildDependencies(),
                                                      &node->GetStaticDependencies(),
@@ -369,7 +369,7 @@ Function::~Function() = default;
 
 // GetString
 //------------------------------------------------------------------------------
-bool Function::GetString( const BFFToken * iter, const BFFVariable * & var, const char * name, bool required ) const
+bool Function::GetString( const BFFToken * iter, const BFFVariable *& var, const char * name, bool required ) const
 {
     ASSERT( name );
     var = nullptr;
@@ -419,7 +419,7 @@ bool Function::GetString( const BFFToken * iter, AString & var, const char * nam
 
 // GetStringOrArrayOfStrings
 //------------------------------------------------------------------------------
-bool Function::GetStringOrArrayOfStrings( const BFFToken * iter, const BFFVariable * & var, const char * name, bool required ) const
+bool Function::GetStringOrArrayOfStrings( const BFFToken * iter, const BFFVariable *& var, const char * name, bool required ) const
 {
     ASSERT( name );
     var = nullptr;
@@ -599,7 +599,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                            const BFFToken * iter,
                                            const Function * function,
                                            const AString & compiler,
-                                           CompilerNode * & compilerNode )
+                                           CompilerNode *& compilerNode )
 {
     Node * cn = nodeGraph.FindNodeExact( compiler );
     compilerNode = nullptr;
@@ -622,7 +622,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
             Error::Error_1102_UnexpectedType( iter, function, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
             return false;
         }
-        compilerNode = cn->CastTo< CompilerNode >();
+        compilerNode = cn->CastTo<CompilerNode>();
     }
     else
     {
@@ -643,7 +643,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                 Error::Error_1102_UnexpectedType( iter, function, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
                 return false;
             }
-            compilerNode = cn->CastTo< CompilerNode >();
+            compilerNode = cn->CastTo<CompilerNode>();
             return true;
         }
 
@@ -652,7 +652,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "Executable", compiler ) );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
         const char * lastSlash = compiler.FindLast( NATIVE_SLASH );
-        if (lastSlash)
+        if ( lastSlash )
         {
             AStackString<> executableRootPath( compiler.Get(), lastSlash + 1 );
             VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "ExecutableRootPath", executableRootPath ) );
@@ -702,7 +702,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
 {
     for ( const AString & file : files )
     {
-        if (!GetFileNode( nodeGraph, iter, function, file, inputVarName, nodes ))
+        if ( !GetFileNode( nodeGraph, iter, function, file, inputVarName, nodes ) )
         {
             return false; // GetFileNode will have emitted an error
         }
@@ -858,7 +858,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     // found - is it an alias?
     if ( n->GetType() == Node::ALIAS_NODE )
     {
-        const AliasNode * an = n->CastTo< AliasNode >();
+        const AliasNode * an = n->CastTo<AliasNode>();
         for ( const Dependency & dep : an->GetAliasedNodes() )
         {
             if ( !GetNodeList( iter, function, propertyName, dep.GetNode(), nodes, options ) )
@@ -947,7 +947,7 @@ bool Function::ProcessAlias( NodeGraph & nodeGraph, Dependencies & nodesToAlias 
 bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFToken * iter, const ReflectionInfo * ri, AString & name ) const
 {
     // get object MetaData
-    const Meta_Name * nameMD = ri->HasMetaData< Meta_Name >();
+    const Meta_Name * nameMD = ri->HasMetaData<Meta_Name>();
     if ( nameMD == nullptr )
     {
         return true; // No MetaName, but this is not an error
@@ -967,7 +967,7 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFToken * iter, con
     if ( variable->IsString() )
     {
         StackArray<AString> strings;
-        if ( !PopulateStringHelper( nodeGraph, iter, nullptr, ri->HasMetaData< Meta_File >(), nullptr, variable, strings ) )
+        if ( !PopulateStringHelper( nodeGraph, iter, nullptr, ri->HasMetaData<Meta_File>(), nullptr, variable, strings ) )
         {
             return false; // PopulateStringHelper will have emitted an error
         }
@@ -1021,7 +1021,7 @@ bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFToken * iter,
             const ReflectedProperty & property = *it;
 
             // Don't populate hidden properties
-            if ( property.HasMetaData< Meta_Hidden >() )
+            if ( property.HasMetaData<Meta_Hidden>() )
             {
                 continue;
             }
@@ -1041,8 +1041,7 @@ bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFToken * iter,
 
         // Traverse into parent class (if there is one)
         ri = ri->GetSuperClass();
-    }
-    while ( ri );
+    } while ( ri );
 
     return true;
 }
@@ -1056,7 +1055,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
                                  const BFFVariable * variable ) const
 {
     // Handle MetaEmbedMembers
-    if ( property.HasMetaData< Meta_EmbedMembers >() )
+    if ( property.HasMetaData<Meta_EmbedMembers>() )
     {
         ASSERT( property.GetType() == PropertyType::PT_STRUCT );
         ASSERT( property.IsArray() == false );
@@ -1067,7 +1066,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
     // Handle missing but required
     if ( variable == nullptr )
     {
-        const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
+        const bool required = ( property.HasMetaData<Meta_Optional>() == nullptr );
         if ( required )
         {
             Error::Error_1101_MissingProperty( iter, this, AStackString<>( property.GetName() ) );
@@ -1082,7 +1081,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
     {
         case PT_ASTRING:
         {
-            const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
+            const bool required = ( property.HasMetaData<Meta_Optional>() == nullptr );
             if ( property.IsArray() )
             {
                 return PopulateArrayOfStrings( nodeGraph, iter, base, property, variable, required );
@@ -1177,7 +1176,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
         {
             if ( node->GetType() == Node::ALIAS_NODE )
             {
-                const AliasNode * aliasNode = node->CastTo< AliasNode >();
+                const AliasNode * aliasNode = node->CastTo<AliasNode>();
                 for ( const Dependency & aliasedNode : aliasNode->GetAliasedNodes() )
                 {
                     if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowNonFileMD, variable, aliasedNode.GetNode()->GetName(), outStrings ) )
@@ -1282,7 +1281,13 @@ bool Function::PopulatePathAndFileHelper( const BFFToken * iter,
 bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
     StackArray<AString> strings;
-    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
+    if ( !PopulateStringHelper( nodeGraph,
+                                iter,
+                                property.HasMetaData<Meta_Path>(),
+                                property.HasMetaData<Meta_File>(),
+                                property.HasMetaData<Meta_AllowNonFile>(),
+                                variable,
+                                strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
     }
@@ -1313,7 +1318,13 @@ bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFToken * i
 bool Function::PopulateString( NodeGraph & nodeGraph, const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
     StackArray<AString> strings;
-    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
+    if ( !PopulateStringHelper( nodeGraph,
+                                iter,
+                                property.HasMetaData<Meta_Path>(),
+                                property.HasMetaData<Meta_File>(),
+                                property.HasMetaData<Meta_AllowNonFile>(),
+                                variable,
+                                strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
     }
@@ -1374,7 +1385,7 @@ bool Function::PopulateInt32( const BFFToken * iter, void * base, const Reflecte
         const int32_t value = variable->GetInt();
 
         // Check range
-        const Meta_Range * rangeMD = property.HasMetaData< Meta_Range >();
+        const Meta_Range * rangeMD = property.HasMetaData<Meta_Range>();
         if ( rangeMD )
         {
             if ( ( value < rangeMD->GetMin() ) || ( value > rangeMD->GetMax() ) )
@@ -1402,7 +1413,7 @@ bool Function::PopulateUInt32( const BFFToken * iter, void * base, const Reflect
         const int32_t value = variable->GetInt();
 
         // Check range
-        const Meta_Range * rangeMD = property.HasMetaData< Meta_Range >();
+        const Meta_Range * rangeMD = property.HasMetaData<Meta_Range>();
         if ( rangeMD )
         {
             if ( ( value < rangeMD->GetMin() ) || ( value > rangeMD->GetMax() ) )
@@ -1493,7 +1504,7 @@ bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
             const ReflectedProperty & property = *it;
 
             // Don't populate hidden properties
-            if ( property.HasMetaData< Meta_Hidden >() )
+            if ( property.HasMetaData<Meta_Hidden>() )
             {
                 continue;
             }
@@ -1525,8 +1536,7 @@ bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
 
         // Traverse into parent class (if there is one)
         structRI = structRI->GetSuperClass();
-    }
-    while ( structRI );
+    } while ( structRI );
 
     return true;
 }

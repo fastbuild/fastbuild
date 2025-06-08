@@ -73,7 +73,7 @@ BFFToken::BFFToken( BFFToken && other )
 //------------------------------------------------------------------------------
 void BFFToken::GetPosInfo( uint32_t & outLine,
                            uint32_t & outColumn,
-                           const char * & outLineStart ) const
+                           const char *& outLineStart ) const
 {
     ASSERT( m_SourcePos >= m_BFFFile.GetSourceFileContents().Get() );
     ASSERT( m_SourcePos <= m_BFFFile.GetSourceFileContents().GetEnd() ); // <= to allow pointing to EOF

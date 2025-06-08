@@ -144,15 +144,15 @@ const char * TestNode::GetEnvironmentString() const
 
     // get the result of the directory lists and depend on those
     const size_t startIndex = 1 + m_NumTestInputFiles; // Skip Executable + TestInputFiles
-    const size_t endIndex =  ( 1 + m_NumTestInputFiles + m_TestInputPath.GetSize() );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    const size_t endIndex = ( 1 + m_NumTestInputFiles + m_TestInputPath.GetSize() );
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
 
         ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
         // get the list of files
-        const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
         const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )

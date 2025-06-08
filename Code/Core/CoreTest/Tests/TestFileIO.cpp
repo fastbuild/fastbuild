@@ -176,11 +176,11 @@ void TestFileIO::FileCopy() const
 //------------------------------------------------------------------------------
 void TestFileIO::FileCopySymlink() const
 {
-    #if defined( __WINDOWS__ ) || defined ( __APPLE__ )
+    #if defined( __WINDOWS__ ) || defined( __APPLE__ )
         // Not tested on Windows/MacOS as symlinks are directly supported
         // by the file copy API.  Also on Windows, it would make unit
         // tests require administrator privileges.
-    #elif defined ( __LINUX__ )
+    #elif defined( __LINUX__ )
         AStackString<> symlinkTarget( "symlink" );
 
         // generate a process unique file path
@@ -625,7 +625,7 @@ void TestFileIO::CreateOrOpenReadWritePerf() const
     // Allocate a buffer. Each iteration will write a different subset of this
     // causing the file to be truncated or grow on each iteration
     const uint32_t maxDataLen = ( 16 * 1024 * 1024 );
-    UniquePtr<uint8_t, FreeDeletor> data( static_cast<uint8_t*>( ALLOC( maxDataLen ) ) );
+    UniquePtr<uint8_t, FreeDeletor> data( static_cast<uint8_t *>( ALLOC( maxDataLen ) ) );
     memset( data.Get(), 0, maxDataLen );
 
     // Repeat operation several times to get performance info
@@ -666,8 +666,8 @@ void TestFileIO::CreateOrOpenReadWritePerf() const
 
     FileIO::FileDelete( path.Get() );
 
-    OUTPUT(" Truncate on Open : %2.5f s\n", static_cast<double>( t1 ) );
-    OUTPUT(" Truncate on Close: %2.5f s\n", static_cast<double>( t2 ) );
+    OUTPUT( " Truncate on Open : %2.5f s\n", static_cast<double>( t1 ) );
+    OUTPUT( " Truncate on Close: %2.5f s\n", static_cast<double>( t2 ) );
 }
 
 //------------------------------------------------------------------------------

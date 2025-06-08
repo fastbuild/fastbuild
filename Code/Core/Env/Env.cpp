@@ -28,8 +28,8 @@
     #include <linux/limits.h>
     extern "C"
     {
-        char* getenv(const char * name);
-        int32_t setenv(const char * name, const char * value, int32_t overwrite);
+        char * getenv( const char * name );
+        int32_t setenv( const char * name, const char * value, int32_t overwrite );
     }
 #endif
 
@@ -74,7 +74,7 @@ Env::ProcessorInfo::ProcessorInfo()
     ASSERT( originalAffinity );
 
     // Iterate all the cores
-    for (uint32_t core = 0; core < mNumCores; ++core)
+    for ( uint32_t core = 0; core < mNumCores; ++core )
     {
         // Switch affinity to core so cpuid function returns info about that core
         VERIFY( SetThreadAffinityMask( GetCurrentThread(), ( 1ULL << core ) ) != 0 );
@@ -90,7 +90,7 @@ Env::ProcessorInfo::ProcessorInfo()
 
             // Determine if this core is a PCore or ECore by checking
             // the top 8 bits in EAX
-            if ( ( static_cast<uint32_t>( cpuIdInfo[0]) >> 24 ) == 0x20 ) // Intel Atom
+            if ( ( static_cast<uint32_t>( cpuIdInfo[0] ) >> 24 ) == 0x20 ) // Intel Atom
             {
                 isECore = true;
             }
@@ -167,7 +167,10 @@ Env::ProcessorInfo::ProcessorInfo()
 
             for ( size_t processorID = 0; processorID < maxLogicalProcessorsInThisGroup; ++processorID )
             {
-                numProcessorsInThisGroup += ( ( groupProcessorMask.Mask & ( uint64_t(1) << processorID ) ) != 0 ) ? 1 : 0;
+                numProcessorsInThisGroup += ( ( groupProcessorMask.Mask &
+                                                ( uint64_t( 1 ) << processorID ) ) != 0 )
+                                                ? 1
+                                                : 0;
             }
 
             numProcessorsInAllGroups += numProcessorsInThisGroup;
@@ -188,7 +191,7 @@ Env::ProcessorInfo::ProcessorInfo()
             ASSERT( false ); // this should never fail
             numCPUs = 1;
         }
-        return ( uint32_t )numCPUs;
+        return (uint32_t)numCPUs;
     #else
         #error Unknown platform
     #endif
@@ -258,7 +261,7 @@ Env::ProcessorInfo::ProcessorInfo()
     #elif defined( __APPLE__ )
         int argc = *_NSGetArgc();
         const char ** argv = const_cast<const char **>( *_NSGetArgv() );
-        for ( int i=0; i<argc; ++i )
+        for ( int i = 0; i < argc; ++i )
         {
             if ( i > 0 )
             {
@@ -267,10 +270,10 @@ Env::ProcessorInfo::ProcessorInfo()
             cmdLine += argv[i];
         }
     #else
-        FILE* f = fopen( "/proc/self/cmdline", "rb" );
+        FILE * f = fopen( "/proc/self/cmdline", "rb" );
         ASSERT( f );
         char buffer[ 4096 ];
-        for (;;)
+        for ( ;; )
         {
             int size = fread( buffer, 1, 4096, f );
             if ( size == 0 )
@@ -279,7 +282,7 @@ Env::ProcessorInfo::ProcessorInfo()
             }
 
             // Append
-            for ( int i=0; i<size; ++i )
+            for ( int i = 0; i < size; ++i )
             {
                 const char c = buffer[ i ];
                 cmdLine += ( c ? c : ' ' ); // convert nulls in between args back into spaces
@@ -343,7 +346,7 @@ static bool IsStdOutRedirectedInternal()
         }
 
         alignas( __alignof( FILE_NAME_INFO ) ) char buffer[ sizeof( FILE_NAME_INFO ) + MAX_PATH * sizeof( wchar_t ) ];
-        if ( ! GetFileInformationByHandleEx( h, FileNameInfo, buffer, sizeof( buffer ) ) )
+        if ( !GetFileInformationByHandleEx( h, FileNameInfo, buffer, sizeof( buffer ) ) )
         {
             return true; // Redirected to something that doesn't have a name
         }
@@ -389,7 +392,7 @@ static bool IsStdOutRedirectedInternal()
 {
     #if defined( __WINDOWS__ )
         char userName[ UNLEN + 1 ];
-        DWORD bufferSize = sizeof(userName);
+        DWORD bufferSize = sizeof( userName );
         if ( ::GetUserNameA( userName, &bufferSize ) == FALSE )
         {
             return false;

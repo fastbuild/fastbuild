@@ -199,12 +199,12 @@ LinkerNode::~LinkerNode()
     }
 
     // Make sure the implib output directory exists
-    if (m_ImportLibName.IsEmpty() == false)
+    if ( m_ImportLibName.IsEmpty() == false )
     {
         AStackString<> cleanPath;
-        NodeGraph::CleanPath(m_ImportLibName, cleanPath);
+        NodeGraph::CleanPath( m_ImportLibName, cleanPath );
 
-        if (EnsurePathExistsForFile(cleanPath) == false)
+        if ( EnsurePathExistsForFile( cleanPath ) == false )
         {
             // EnsurePathExistsForFile will have emitted error
             return BuildResult::eFailed;
@@ -228,7 +228,7 @@ LinkerNode::~LinkerNode()
     // we retry if linker crashes
     uint32_t attempt( 0 );
 
-    for (;;)
+    for ( ;; )
     {
         ++attempt;
 
@@ -493,7 +493,7 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
                 AStackString<> post( found + 2, token.GetEnd() );
                 StackArray<AString> inputs;
                 GetAssemblyResourceFiles( inputs );
-                for ( const AString & input: inputs )
+                for ( const AString & input : inputs )
                 {
                     fullArgs += pre;
                     fullArgs += input;
@@ -620,7 +620,7 @@ void LinkerNode::GetInputFiles( Node * n, Array<AString> & outInputs ) const
     {
         if ( m_LinkerLinkObjects )
         {
-            const LibraryNode * ln = n->CastTo< LibraryNode >();
+            const LibraryNode * ln = n->CastTo<LibraryNode>();
             ln->GetInputFiles( m_LinkerLinkObjects, outInputs );
         }
         else
@@ -631,18 +631,18 @@ void LinkerNode::GetInputFiles( Node * n, Array<AString> & outInputs ) const
     }
     else if ( n->GetType() == Node::OBJECT_LIST_NODE )
     {
-        const ObjectListNode * ol = n->CastTo< ObjectListNode >();
+        const ObjectListNode * ol = n->CastTo<ObjectListNode>();
         ol->GetInputFiles( m_LinkerLinkObjects, outInputs );
     }
     else if ( n->GetType() == Node::DLL_NODE )
     {
         // for a DLL, link to the import library
-        const DLLNode * dllNode = n->CastTo< DLLNode >();
+        const DLLNode * dllNode = n->CastTo<DLLNode>();
         dllNode->GetImportLibName( outInputs.EmplaceBack() );
     }
     else if ( n->GetType() == Node::COPY_FILE_NODE )
     {
-        const CopyFileNode * copyNode = n->CastTo< CopyFileNode >();
+        const CopyFileNode * copyNode = n->CastTo<CopyFileNode>();
         Node * srcNode = copyNode->GetSourceNode();
         GetInputFiles( srcNode, outInputs );
     }
@@ -665,14 +665,14 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
 
         if ( n->GetType() == Node::OBJECT_LIST_NODE )
         {
-            const ObjectListNode * oln = n->CastTo< ObjectListNode >();
+            const ObjectListNode * oln = n->CastTo<ObjectListNode>();
             oln->GetInputFiles( false, outInputs );
             continue;
         }
 
         if ( n->GetType() == Node::LIBRARY_NODE )
         {
-            const LibraryNode * ln = n->CastTo< LibraryNode >();
+            const LibraryNode * ln = n->CastTo<LibraryNode>();
             ln->GetInputFiles( false, outInputs );
             continue;
         }
@@ -683,11 +683,11 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
 
 // DetermineLinkerTypeFlags
 //------------------------------------------------------------------------------
-/*static*/ uint32_t LinkerNode::DetermineLinkerTypeFlags(const AString & linkerType, const AString & linkerName)
+/*static*/ uint32_t LinkerNode::DetermineLinkerTypeFlags( const AString & linkerType, const AString & linkerName )
 {
     uint32_t flags = 0;
 
-    if ( linkerType.IsEmpty() || ( linkerType == "auto" ))
+    if ( linkerType.IsEmpty() || ( linkerType == "auto" ) )
     {
         // Detect based upon linker executable name
         if ( ( linkerName.EndsWithI( "link.exe" ) ) ||
@@ -696,27 +696,27 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
             flags |= LinkerNode::LINK_FLAG_MSVC;
         }
         else if ( ( linkerName.EndsWithI( "gcc.exe" ) ) ||
-            ( linkerName.EndsWithI( "gcc" ) ) )
+                  ( linkerName.EndsWithI( "gcc" ) ) )
         {
             flags |= LinkerNode::LINK_FLAG_GCC;
         }
         else if ( ( linkerName.EndsWithI( "ps3ppuld.exe" ) ) ||
-            ( linkerName.EndsWithI( "ps3ppuld" ) ) )
+                  ( linkerName.EndsWithI( "ps3ppuld" ) ) )
         {
             flags |= LinkerNode::LINK_FLAG_SNC;
         }
         else if ( ( linkerName.EndsWithI( "orbis-ld.exe" ) ) ||
-            ( linkerName.EndsWithI( "orbis-ld" ) ) )
+                  ( linkerName.EndsWithI( "orbis-ld" ) ) )
         {
             flags |= LinkerNode::LINK_FLAG_ORBIS_LD;
         }
         else if ( ( linkerName.EndsWithI( "elxr.exe" ) ) ||
-            ( linkerName.EndsWithI( "elxr" ) ) )
+                  ( linkerName.EndsWithI( "elxr" ) ) )
         {
             flags |= LinkerNode::LINK_FLAG_GREENHILLS_ELXR;
         }
         else if ( ( linkerName.EndsWithI( "mwldeppc.exe" ) ) ||
-            ( linkerName.EndsWithI( "mwldeppc" ) ) )
+                  ( linkerName.EndsWithI( "mwldeppc" ) ) )
         {
             flags |= LinkerNode::LINK_FLAG_CODEWARRIOR_LD;
         }
@@ -1186,7 +1186,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
             }
 
             // -Bstatic (switching -l to looking up static libraries only)
-            if ( ( token == "-Wl,-Bstatic" ) || (token == "-Bstatic" ) ||
+            if ( ( token == "-Wl,-Bstatic" ) || ( token == "-Bstatic" ) ||
                  ( token == "-Wl,-dn" ) || ( token == "-dn" ) ||
                  ( token == "-Wl,-non_shared" ) || ( token == "-non_shared" ) ||
                  ( token == "-Wl,-static" ) ) // -static means something different in GCC, so we don't check for it.
@@ -1421,7 +1421,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibsArg( const char * arg,
                                              AString & value,
-                                             const AString * & it,
+                                             const AString *& it,
                                              const AString * const & end,
                                              bool canonicalizePath,
                                              bool isMSVC )
@@ -1479,7 +1479,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibsArg( const char * arg,
                                              Array<AString> & list,
-                                             const AString * & it,
+                                             const AString *& it,
                                              const AString * const & end,
                                              bool canonicalizePath,
                                              bool isMSVC )
@@ -1590,7 +1590,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::ALIAS_NODE )
     {
         // handle all targets in alias
-        const AliasNode * an = node->CastTo< AliasNode >();
+        const AliasNode * an = node->CastTo<AliasNode>();
         for ( const Dependency & dep : an->GetAliasedNodes() )
         {
             if ( DependOnNode( iter, function, dep.GetNode(), nodes ) == false )

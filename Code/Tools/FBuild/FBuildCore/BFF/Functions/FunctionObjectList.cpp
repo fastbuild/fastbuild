@@ -52,8 +52,8 @@ FunctionObjectList::FunctionObjectList()
 //------------------------------------------------------------------------------
 bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AString & compilerOptions, const ObjectNode::CompilerFlags objFlags ) const
 {
-    bool hasInputToken = false;
-    bool hasOutputToken = false;
+    bool hasInputToken   = false;
+    bool hasOutputToken  = false;
     bool hasCompileToken = false;
 
     StackArray<AString::TokenRange, 128> tokenRanges;

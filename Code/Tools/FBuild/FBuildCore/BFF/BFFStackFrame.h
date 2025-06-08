@@ -104,7 +104,7 @@ public:
 
 private:
     const BFFVariable * GetVariableRecurse( const AString & nameOnly,
-                                      BFFVariable::VarType type ) const;
+                                            BFFVariable::VarType type ) const;
 
     const BFFVariable * GetVarNoRecurse( const AString & name ) const;
     BFFVariable * GetVarMutableNoRecurse( const AString & name );

@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char *argv[], char *[])
+int main( int argc, char * argv[], char *[] )
 {
     // Touch each file listed
-    for (int i = 1; i < argc; ++i)
+    for ( int i = 1; i < argc; ++i )
     {
         const char * arg = argv[i];
 
@@ -28,4 +28,3 @@ int main(int argc, char *argv[], char *[])
 
     return argc - 1;
 }
-

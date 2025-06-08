@@ -92,7 +92,7 @@ static Mutex g_NodeEnvStringMutex;
 //------------------------------------------------------------------------------
 namespace
 {
-    #pragma pack(push, 1)
+    #pragma pack( push, 1 )
     class SerializedFileNode
     {
     public:
@@ -106,7 +106,7 @@ namespace
         uint64_t    m_Stamp;
         uint32_t    m_LastBuildTime;
     };
-    #pragma pack(pop)
+    #pragma pack( pop )
 }
 
 // Custom MetaData
@@ -148,7 +148,7 @@ Node::Node( Type type )
     m_Type = type;
 
     // Compile time check to ensure name vector is in sync
-    static_assert( sizeof( s_NodeTypeNames ) / sizeof(const char *) == NUM_NODE_TYPES, "s_NodeTypeNames item count doesn't match NUM_NODE_TYPES" );
+    static_assert( sizeof( s_NodeTypeNames ) / sizeof( const char * ) == NUM_NODE_TYPES, "s_NodeTypeNames item count doesn't match NUM_NODE_TYPES" );
 }
 
 // DESTRUCTOR
@@ -521,8 +521,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
 
         currentRI = currentRI->GetSuperClass();
-    }
-    while ( currentRI );
+    } while ( currentRI );
 }
 
 // Serialize
@@ -592,7 +591,7 @@ void Node::SetLastBuildTime( uint32_t ms )
                 VERIFY( stream.Write( numElements ) );
 
                 // Write each element
-                for ( uint32_t i=0; i<numElements; ++i )
+                for ( uint32_t i = 0; i < numElements; ++i )
                 {
                     const void * structBase = propertyS.GetStructInArray( base, (size_t)i );
                     Serialize( stream, structBase, *propertyS.GetStructReflectionInfo() );
@@ -629,8 +628,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
 
         currentRI = currentRI->GetSuperClass();
-    }
-    while ( currentRI );
+    } while ( currentRI );
 }
 
 // Migrate
@@ -712,7 +710,7 @@ void Node::SetLastBuildTime( uint32_t ms )
                 propertyS.ResizeArrayOfStruct( base, numElements );
 
                 // Read each element
-                for ( uint32_t i=0; i<numElements; ++i )
+                for ( uint32_t i = 0; i < numElements; ++i )
                 {
                     void * structBase = propertyS.GetStructInArray( base, (size_t)i );
                     Deserialize( stream, structBase, *propertyS.GetStructReflectionInfo() );
@@ -940,7 +938,7 @@ void Node::ReplaceDummyName( const AString & newName )
     CleanPathForVSIntegration( tokens[ 0 ], fixed );
 
     // insert additional tokens
-    for ( size_t i=1; i<( numTokens-2 ); ++i )
+    for ( size_t i = 1; i < ( numTokens - 2 ); ++i )
     {
         fixed += ':';
         fixed += tokens[ i ];
@@ -1033,7 +1031,7 @@ void Node::ReplaceDummyName( const AString & newName )
     fixed.AppendFormat( "(%s,1): %s %s: ", warningLine, problemType, warningNum );
 
     // add rest of warning
-    for ( size_t i=7; i < tokens.GetSize(); ++i )
+    for ( size_t i = 7; i < tokens.GetSize(); ++i )
     {
         fixed += tokens[ i ];
         fixed += ' ';
@@ -1060,7 +1058,7 @@ void Node::ReplaceDummyName( const AString & newName )
         const char driveLetter = path[5];
 
         // convert /mnt/X/... -> X:/...
-        outFixedPath.AppendFormat("%c:%s", driveLetter, ( path.Get() + 6 ) );
+        outFixedPath.AppendFormat( "%c:%s", driveLetter, ( path.Get() + 6 ) );
 
         // convert to Windows-style slashes
         outFixedPath.Replace( '/', '\\' );
@@ -1111,15 +1109,24 @@ void Node::ReplaceDummyName( const AString & newName )
         pos = tokenPos; // Advance to token
 
         // skip past the token
-        while ( AString::IsLetter( *pos ) )     { ++pos; }
-        while ( AString::IsWhitespace( *pos ) ) { ++pos; }
+        while ( AString::IsLetter( *pos ) )
+        {
+            ++pos;
+        }
+        while ( AString::IsWhitespace( *pos ) )
+        {
+            ++pos;
+        }
 
         // skip error code
         while ( AString::IsLetter( *pos ) || AString::IsNumber( *pos ) )
         {
             ++pos;
         }
-        while ( AString::IsWhitespace( *pos ) ) { ++pos; }
+        while ( AString::IsWhitespace( *pos ) )
+        {
+            ++pos;
+        }
 
         // Add everything to here including the token
         outMsg.Append( startPos, pos );
@@ -1180,7 +1187,7 @@ bool Node::InitializeConcurrencyGroup( NodeGraph & nodeGraph,
 
     // Get the ConcurrencyGroup by name
     const ConcurrencyGroup * group = nullptr;
-    const SettingsNode* settings = nodeGraph.GetSettings();
+    const SettingsNode * settings  = nodeGraph.GetSettings();
     if ( settings )
     {
         group = settings->GetConcurrencyGroup( concurrencyGroupName );
@@ -1201,7 +1208,7 @@ bool Node::InitializeConcurrencyGroup( NodeGraph & nodeGraph,
 // GetEnvironmentString
 //------------------------------------------------------------------------------
 /*static*/ const char * Node::GetEnvironmentString( const Array<AString> & envVars,
-                                                    const char * & inoutCachedEnvString )
+                                                    const char *& inoutCachedEnvString )
 {
     // Do we need a custom env string?
     if ( envVars.IsEmpty() )

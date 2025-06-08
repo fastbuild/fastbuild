@@ -41,14 +41,14 @@ namespace
     bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' )); }
     bool IsComma( const char c )            { return ( c == ',' ); }
     bool IsDirective( const char c )        { return ( c == '#' ); }
-    void SkipWhitespace( const char * & pos )
+    void SkipWhitespace( const char *& pos )
     {
         while ( IsWhiteSpace( *pos ) )
         {
             ++pos;
         }
     }
-    void SkipWhitespaceOnCurrentLine( const char * & pos )
+    void SkipWhitespaceOnCurrentLine( const char *& pos )
     {
         while ( ( *pos == ' ' ) || ( *pos == '\t' ) )
         {
@@ -68,7 +68,7 @@ namespace
         // ; style comments
         return ( c == ';' );
     }
-    void SkipToStartOfNextLine( const char * & pos, const char * end )
+    void SkipToStartOfNextLine( const char *& pos, const char * end )
     {
         while ( pos < end )
         {
@@ -79,7 +79,6 @@ namespace
             }
             ++pos;
         }
-
     }
 }
 
@@ -371,7 +370,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
 
 // HandleIdentifier
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, const BFFFile & file )
+bool BFFTokenizer::HandleIdentifier( const char *& pos, const char * /*end*/, const BFFFile & file )
 {
     // Should be called pointing to start of identifier
     ASSERT( IsIdentifierStart( *pos ) );
@@ -436,7 +435,7 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
 
 // HandleVariable
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleVariable( const char * & pos, const char * /*end*/, const BFFFile & file )
+bool BFFTokenizer::HandleVariable( const char *& pos, const char * /*end*/, const BFFFile & file )
 {
     const char * variableStart = pos; // Includes . or ^
     ASSERT( ( *pos == '.' ) || ( *pos == '^' ) );
@@ -478,7 +477,7 @@ bool BFFTokenizer::HandleVariable( const char * & pos, const char * /*end*/, con
 
 // HandleDirective
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective( const char * & pos, const char * end, const BFFFile & file )
+bool BFFTokenizer::HandleDirective( const char *& pos, const char * end, const BFFFile & file )
 {
     // Consume the directive start character
     ASSERT( *pos == '#' );
@@ -562,7 +561,10 @@ bool BFFTokenizer::HandleDirective( const char * & pos, const char * end, const 
 
 // HandleDirective_Define
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Define( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
+bool BFFTokenizer::HandleDirective_Define( const BFFFile & /*file*/,
+                                           const char *& /*pos*/,
+                                           const char * /*end*/,
+                                           BFFTokenRange & argsIter )
 {
     ASSERT( argsIter->IsKeyword( "define" ) );
     argsIter++;
@@ -590,7 +592,10 @@ bool BFFTokenizer::HandleDirective_Define( const BFFFile & /*file*/, const char 
 
 // HandleDirective_Else
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Else( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
+bool BFFTokenizer::HandleDirective_Else( const BFFFile & /*file*/,
+                                         const char *& /*pos*/,
+                                         const char * /*end*/,
+                                         BFFTokenRange & argsIter )
 {
     ASSERT( argsIter->IsKeyword( "else" ) );
 
@@ -602,7 +607,10 @@ bool BFFTokenizer::HandleDirective_Else( const BFFFile & /*file*/, const char * 
 
 // HandleDirective_If
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter )
+bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
+                                       const char *& pos,
+                                       const char * end,
+                                       BFFTokenRange & argsIter )
 {
     ASSERT( argsIter->IsKeyword( "if" ) );
     argsIter++;
@@ -864,7 +872,12 @@ bool BFFTokenizer::HandleDirective_IfDefined( BFFTokenRange & iter,
 
 // ParseToEndIf
 //------------------------------------------------------------------------------
-bool BFFTokenizer::ParseToEndIf( const char * & pos, const char * end, const BFFFile & file, bool allowElse, const char * & outBlockEnd, bool * outIsElse )
+bool BFFTokenizer::ParseToEndIf( const char *& pos,
+                                 const char * end,
+                                 const BFFFile & file,
+                                 bool allowElse,
+                                 const char *& outBlockEnd,
+                                 bool * outIsElse )
 {
     const char * blockEnd = nullptr;
 
@@ -938,7 +951,10 @@ bool BFFTokenizer::ParseToEndIf( const char * & pos, const char * end, const BFF
 
 // HandleDirective_Import
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & pos, const char * /*end*/, BFFTokenRange & argsIter )
+bool BFFTokenizer::HandleDirective_Import( const BFFFile & file,
+                                           const char *& pos,
+                                           const char * /*end*/,
+                                           BFFTokenRange & argsIter )
 {
     ASSERT( argsIter->IsKeyword( "import" ) );
     argsIter++;
@@ -984,7 +1000,10 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
 
 // HandleDirective_Include
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
+bool BFFTokenizer::HandleDirective_Include( const BFFFile & file,
+                                            const char *& /*pos*/,
+                                            const char * /*end*/,
+                                            BFFTokenRange & argsIter )
 {
     ASSERT( argsIter->IsKeyword( "include" ) );
 
@@ -1020,7 +1039,10 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
 
 // HandleDirective_Once
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Once( const BFFFile & file, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
+bool BFFTokenizer::HandleDirective_Once( const BFFFile & file,
+                                         const char *& /*pos*/,
+                                         const char * /*end*/,
+                                         BFFTokenRange & argsIter )
 {
     ASSERT( m_Files.Find( &file ) ); // Must be a file we're tracking
 
@@ -1035,7 +1057,10 @@ bool BFFTokenizer::HandleDirective_Once( const BFFFile & file, const char * & /*
 
 // HandleDirective_Undef
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Undef( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
+bool BFFTokenizer::HandleDirective_Undef( const BFFFile & /*file*/,
+                                          const char *& /*pos*/,
+                                          const char * /*end*/,
+                                          BFFTokenRange & argsIter )
 {
     ASSERT( argsIter->IsKeyword( "undef" ) );
     argsIter++; // consume directive
@@ -1069,7 +1094,7 @@ bool BFFTokenizer::HandleDirective_Undef( const BFFFile & /*file*/, const char *
 
 // GetQuotedString
 //------------------------------------------------------------------------------
-bool BFFTokenizer::GetQuotedString( const BFFFile & file, const char * & pos, AString & outString ) const
+bool BFFTokenizer::GetQuotedString( const BFFFile & file, const char *& pos, AString & outString ) const
 {
     ASSERT( IsStringStart( *pos ) );
 
@@ -1121,7 +1146,7 @@ bool BFFTokenizer::GetQuotedString( const BFFFile & file, const char * & pos, AS
 
 // GetDirective
 //------------------------------------------------------------------------------
-bool BFFTokenizer::GetDirective( const BFFFile & file, const char * & pos, AString & outDirectiveName ) const
+bool BFFTokenizer::GetDirective( const BFFFile & file, const char *& pos, AString & outDirectiveName ) const
 {
     // Find end of range of valid directive characters
     const char * directiveNameStart = pos;
@@ -1158,7 +1183,7 @@ void BFFTokenizer::ExpandIncludePath( const BFFFile & file, AString & includePat
         const AString & currentFile = file.GetFileName();
         const char * lastSlash = currentFile.FindLast( NATIVE_SLASH );
         lastSlash = lastSlash ? lastSlash : currentFile.FindLast( OTHER_SLASH );
-        lastSlash = lastSlash ? ( lastSlash + 1 ): currentFile.Get(); // file only, truncate to empty
+        lastSlash = lastSlash ? ( lastSlash + 1 ) : currentFile.Get(); // file only, truncate to empty
         AStackString<> tmp( currentFile.Get(), lastSlash );
         tmp += includePath;
         includePath = tmp;

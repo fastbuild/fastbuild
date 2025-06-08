@@ -37,11 +37,11 @@ public:
     // access the pointer
     [[nodiscard]] T *           Get()       { return m_Pointer; }
     [[nodiscard]] const T *     Get() const { return m_Pointer; }
-    [[nodiscard]] T *           operator ->()       { ASSERT( m_Pointer ); return m_Pointer; }
-    [[nodiscard]] const T *     operator ->() const { ASSERT( m_Pointer ); return m_Pointer; }
+    [[nodiscard]] T *           operator->()       { ASSERT( m_Pointer ); return m_Pointer; }
+    [[nodiscard]] const T *     operator->() const { ASSERT( m_Pointer ); return m_Pointer; }
 
     // acquire a new pointer
-    void                        operator = ( T * newPtr ) { DELETOR::Delete( m_Pointer ); m_Pointer = newPtr; }
+    void                        operator=( T * newPtr ) { DELETOR::Delete( m_Pointer ); m_Pointer = newPtr; }
 
     // manually initiate deletion
     void                        Destroy() { DELETOR::Delete( m_Pointer ); m_Pointer = nullptr; }

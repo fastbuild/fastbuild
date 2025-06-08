@@ -91,7 +91,7 @@ RemoveDirNode::~RemoveDirNode() = default;
     // Iterate all the DirectoryListNodes
     for ( const Dependency & dep : m_StaticDependencies )
     {
-        const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dln = dep.GetNode()->CastTo<DirectoryListNode>();
 
         // Delete files
         for ( const FileIO::FileInfo & fileInfo : dln->GetFiles() )

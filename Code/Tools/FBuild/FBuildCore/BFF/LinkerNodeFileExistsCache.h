@@ -18,10 +18,10 @@ public:
 
     bool FileExists( const AString & fileName );
 
-    LinkerNodeFileExistsCache & operator = ( const LinkerNodeFileExistsCache & other ) = delete;
+    LinkerNodeFileExistsCache & operator=( const LinkerNodeFileExistsCache & other ) = delete;
 
 private:
-    UnorderedMap< AString, bool > m_FileExistsMap;
+    UnorderedMap<AString, bool> m_FileExistsMap;
 };
 
 //------------------------------------------------------------------------------

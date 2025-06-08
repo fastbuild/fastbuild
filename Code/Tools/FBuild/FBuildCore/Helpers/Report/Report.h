@@ -52,7 +52,7 @@ protected:
         uint32_t        m_ObjectCount_CacheStores;
         uint32_t        m_CacheTimeMS;
 
-        bool operator < ( const LibraryStats & other ) const { return m_CPUTimeMS > other.m_CPUTimeMS; }
+        bool operator<( const LibraryStats & other ) const { return m_CPUTimeMS > other.m_CPUTimeMS; }
     };
 
     class IncludeStats
@@ -62,7 +62,7 @@ protected:
         uint32_t        m_Count;
         bool            m_InPCH;
 
-        bool operator < ( const IncludeStats & other ) const { return m_Count > other.m_Count; }
+        bool operator<( const IncludeStats & other ) const { return m_Count > other.m_Count; }
 
         IncludeStats *  m_Next; // in-place hash map chain
     };
@@ -77,6 +77,7 @@ protected:
         IncludeStats * Insert( const Node * node );
 
         void Flatten( Array<const IncludeStats *> & stats ) const;
+
     protected:
         IncludeStats * m_Table[ 65536 ];
         MemPoolBlock m_Pool;

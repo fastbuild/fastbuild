@@ -138,8 +138,8 @@ CSNode::~CSNode() = default;
 
     // get the result of the directory lists and depend on those
     const size_t startIndex = 1; // Skip Compiler
-    const size_t endIndex =  ( 1 + m_CompilerInputPath.GetSize() );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    const size_t endIndex = ( 1 + m_CompilerInputPath.GetSize() );
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
 
@@ -240,9 +240,9 @@ CSNode::~CSNode() = default;
 
 // GetCompiler
 //------------------------------------------------------------------------------
-CompilerNode* CSNode::GetCompiler() const
+CompilerNode * CSNode::GetCompiler() const
 {
-    return m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >();
+    return m_StaticDependencies[ 0 ].GetNode()->CastTo<CompilerNode>();
 }
 
 // EmitCompilationMessage
@@ -365,7 +365,7 @@ void CSNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString 
     // Add the explicitly listed files
     const size_t startIndex = ( 1 + m_CompilerInputPath.GetSize() ); // Skip compiler and input paths
     const size_t endIndex = ( startIndex + m_NumCompilerInputFiles );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         if ( !first )
         {
@@ -399,7 +399,7 @@ void CSNode::GetExtraRefs( Args & fullArgs, const AString & pre, const AString &
     const size_t startIndex = ( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles ); // Skip compiler, input paths and files
     const size_t endIndex = ( startIndex + m_NumCompilerReferences );
     ASSERT( endIndex == m_StaticDependencies.GetSize() ); // References are last
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         if ( !first )
         {

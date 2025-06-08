@@ -31,7 +31,7 @@ bool IsDebuggerAttached();
 #ifdef ASSERTS_ENABLED
     // Create a no-return helper to improve static analysis
     #if defined( __WINDOWS__ )
-        __declspec(noreturn) void NoReturn();
+        __declspec( noreturn ) void NoReturn();
         #define NO_RETURN NoReturn();
     #else
         #define NO_RETURN
@@ -39,14 +39,15 @@ bool IsDebuggerAttached();
 
     // standard assertion macro
     #define ASSERT( expression )                                                \
-        do {                                                                    \
-        PRAGMA_DISABLE_PUSH_MSVC(4127)                                          \
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )               \
+        do                                                                      \
+        {                                                                       \
+            PRAGMA_DISABLE_PUSH_MSVC( 4127 )                                    \
+            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )           \
             if ( !( expression ) )                                              \
             {                                                                   \
-                if ( AssertHandler::Failure( #expression, __FILE__, __LINE__ ) )\
+                if ( AssertHandler::Failure( #expression, __FILE__, __LINE__ ) ) \
                 {                                                               \
-                    BREAK_IN_DEBUGGER;                                              \
+                    BREAK_IN_DEBUGGER;                                          \
                 }                                                               \
                 NO_RETURN                                                       \
             }                                                                   \
@@ -56,14 +57,15 @@ bool IsDebuggerAttached();
 
     // standard assertion macro with message
     #define ASSERTM( expression, ... )                                          \
-        do {                                                                    \
-        PRAGMA_DISABLE_PUSH_MSVC(4127)                                          \
-        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )               \
+        do                                                                      \
+        {                                                                       \
+            PRAGMA_DISABLE_PUSH_MSVC( 4127 )                                    \
+            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )           \
             if ( !( expression ) )                                              \
             {                                                                   \
-                if ( AssertHandler::FailureM( #expression, __FILE__, __LINE__, __VA_ARGS__ ) )\
+                if ( AssertHandler::FailureM( #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
                 {                                                               \
-                    BREAK_IN_DEBUGGER;                                              \
+                    BREAK_IN_DEBUGGER;                                          \
                 }                                                               \
                 NO_RETURN                                                       \
             }                                                                   \
@@ -96,21 +98,26 @@ bool IsDebuggerAttached();
     };
 #else
     #define ASSERT( expression )            \
-        do {                                \
-        PRAGMA_DISABLE_PUSH_MSVC(4127)      \
+        do                                  \
+        {                                   \
+            PRAGMA_DISABLE_PUSH_MSVC( 4127 ) \
         } while ( false )                   \
         PRAGMA_DISABLE_POP_MSVC
 
     #define ASSERTM( expression, ... )      \
-        do {                                \
-        PRAGMA_DISABLE_PUSH_MSVC(4127)      \
+        do                                  \
+        {                                   \
+            PRAGMA_DISABLE_PUSH_MSVC( 4127 ) \
         } while ( false )                   \
         PRAGMA_DISABLE_POP_MSVC
 
     #define VERIFY( code )                  \
-        do {                                \
-            if ( code ) {}                  \
-        PRAGMA_DISABLE_PUSH_MSVC(4127)      \
+        do                                  \
+        {                                   \
+            if ( code )                     \
+            {                               \
+            }                               \
+            PRAGMA_DISABLE_PUSH_MSVC( 4127 ) \
         } while ( false )                   \
         PRAGMA_DISABLE_POP_MSVC
 #endif

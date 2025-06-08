@@ -98,7 +98,7 @@ namespace Protocol
         bool            m_HasPayload;
         char            m_Padding1[ 1 ];
     };
-    static_assert( sizeof( IMessage ) == 3 + 1/*padding*/, "Message base class has incorrect size" );
+    static_assert( sizeof( IMessage ) == 3 + 1 /*padding*/, "Message base class has incorrect size" );
 
     // MsgConnection
     //------------------------------------------------------------------------------
@@ -146,6 +146,7 @@ namespace Protocol
         explicit MsgStatus( uint32_t numJobsAvailable );
 
         uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
+
     private:
         uint32_t        m_NumJobsAvailable;
     };
@@ -211,6 +212,7 @@ namespace Protocol
         explicit MsgRequestManifest( uint64_t toolId );
 
         uint64_t GetToolId() const { return m_ToolId; }
+
     private:
         char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
@@ -225,6 +227,7 @@ namespace Protocol
         explicit MsgManifest( uint64_t toolId );
 
         uint64_t GetToolId() const { return m_ToolId; }
+
     private:
         char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
@@ -240,6 +243,7 @@ namespace Protocol
 
         uint64_t GetToolId() const { return m_ToolId; }
         uint32_t GetFileId() const { return m_FileId; }
+
     private:
         uint32_t m_FileId;
         uint64_t m_ToolId;
@@ -255,6 +259,7 @@ namespace Protocol
 
         uint64_t GetToolId() const { return m_ToolId; }
         uint32_t GetFileId() const { return m_FileId; }
+
     private:
         uint32_t m_FileId;
         uint64_t m_ToolId;

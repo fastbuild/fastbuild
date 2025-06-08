@@ -45,7 +45,7 @@ private:
     const AString mExeName{ "ExeName" };
     const AString mNodeName{ "NodeName" };
 
-    void operator = (TestArgs &) = delete;
+    void operator=( TestArgs & ) = delete;
 };
 
 // Register Tests
@@ -224,9 +224,9 @@ void TestArgs::CheckParsing( const char * commandLine,
     // Invoke previously built exe which echoes back commands
     Process p;
     TEST_ASSERT( p.Spawn( "../tmp/Test/Args/ResponseFile/ArgumentParsing/Exe.exe",
-                 commandLine,
-                 nullptr, // working dir
-                 nullptr ) ); // environment
+                          commandLine,
+                          nullptr, // working dir
+                          nullptr ) ); // environment
 
     // Capture the output
     AStackString<> out;

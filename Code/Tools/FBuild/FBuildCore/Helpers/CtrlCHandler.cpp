@@ -63,7 +63,7 @@ void CtrlCHandler::DeregisterHandler()
     if ( m_IsRegistered )
     {
         #if defined( __WINDOWS__ )
-            VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)nullptr, TRUE ) );
+            VERIFY( SetConsoleCtrlHandler( ( PHANDLER_ROUTINE ) nullptr, TRUE ) );
         #elif defined( __LINUX__ )
             signal( SIGINT, SIG_DFL );
         #elif defined( __OSX__ )

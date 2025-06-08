@@ -29,7 +29,7 @@
 //------------------------------------------------------------------------------
 /*static*/
 #if defined( __WINDOWS__ )
-    __declspec(noreturn)
+    __declspec( noreturn )
 #endif
 void OnAssert( const char * /*message*/ )
 {

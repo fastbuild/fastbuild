@@ -57,7 +57,7 @@
     class OSXHelper_utimensat
     {
     public:
-        typedef int (*FuncPtr)( int dirfd, const char * pathname, const struct timespec times[ 2 ], int flags );
+        typedef int ( *FuncPtr )( int dirfd, const char * pathname, const struct timespec times[ 2 ], int flags );
 
         OSXHelper_utimensat()
         {
@@ -179,7 +179,7 @@
             }
 
             // try to remove read-only flag on dst file
-            dwAttrs = ( dwAttrs & (uint32_t)(~FILE_ATTRIBUTE_READONLY) );
+            dwAttrs = ( dwAttrs & (uint32_t)( ~FILE_ATTRIBUTE_READONLY ) );
             if ( FALSE == SetFileAttributes( dstFileName, dwAttrs ) )
             {
                 return false; // failed to remove read-only flag
@@ -610,8 +610,16 @@
     #if defined( __WINDOWS__ )
         if ( *slash == NATIVE_SLASH )
         {
-            while ( *slash == NATIVE_SLASH ) { ++slash; } // skip leading double slash
-            while ( *slash != NATIVE_SLASH ) { ++slash; } // skip machine name
+            // skip leading double slash
+            while ( *slash == NATIVE_SLASH )
+            {
+                ++slash;
+            }
+            // skip machine name
+            while ( *slash != NATIVE_SLASH )
+            {
+                ++slash;
+            }
             ++slash; // move into first dir name, so next search will find dir name slash
         }
     #endif
@@ -643,8 +651,7 @@
         }
         *slash = NATIVE_SLASH; // put back the slash
         slash = pathCopy.Find( NATIVE_SLASH, slash + 1 );
-    }
-    while ( slash );
+    } while ( slash );
     return true;
 }
 
@@ -691,7 +698,7 @@
         while ( pos < path.GetEnd() )
         {
             // Find end of current segment (next slash in either direction or end of path)
-            const char* nextSlash = path.Find( '\\', pos );
+            const char * nextSlash = path.Find( '\\', pos );
             nextSlash = nextSlash ? nextSlash : path.Find( '/', pos );
 
             // Get the actual name for this part of the path
@@ -780,7 +787,7 @@
         if ( ( pathStat.st_dev == parentStat.st_dev ) &&
              ( pathStat.st_ino == parentStat.st_ino ) )
         {
-             return true;
+            return true;
         }
 
         return false; // Not a mount point
@@ -829,7 +836,7 @@
                                    nullptr,
                                    OPEN_EXISTING,
                                    0,
-                                   nullptr);
+                                   nullptr );
         if ( hFile == INVALID_HANDLE_VALUE )
         {
             return false;
@@ -839,7 +846,7 @@
         FILETIME ftWrite;
         ftWrite.dwLowDateTime = (uint32_t)( fileTime & 0x00000000FFFFFFFF );
         ftWrite.dwHighDateTime = (uint32_t)( ( fileTime & 0xFFFFFFFF00000000 ) >> 32 );
-        if ( !SetFileTime( hFile, nullptr, nullptr, &ftWrite) ) // create, access, write
+        if ( !SetFileTime( hFile, nullptr, nullptr, &ftWrite ) ) // create, access, write
         {
             CloseHandle( hFile );
             return false;
@@ -857,7 +864,7 @@
             t[ 0 ].tv_sec = fileTime / 1000000000ULL;
             t[ 0 ].tv_nsec = ( fileTime % 1000000000ULL );
             t[ 1 ] = t[ 0 ];
-            return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), t, 0 ) == 0 );
+            return ( ( gOSXHelper_utimensat.m_FuncPtr )( 0, fileName.Get(), t, 0 ) == 0 );
         }
 
         // Fallback to regular low-resolution filetime setting
@@ -888,7 +895,7 @@
         // Use higher precision function if available
         if ( gOSXHelper_utimensat.m_FuncPtr )
         {
-            return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), nullptr, 0 ) == 0 );
+            return ( ( gOSXHelper_utimensat.m_FuncPtr )( 0, fileName.Get(), nullptr, 0 ) == 0 );
         }
 
         // Fallback to regular low-resolution filetime setting
@@ -914,7 +921,7 @@
 
         // determine the new attributes
         const DWORD dwNewAttrs = ( readOnly ) ? ( dwAttrs | FILE_ATTRIBUTE_READONLY )
-                                              : ( dwAttrs & (uint32_t)(~FILE_ATTRIBUTE_READONLY) );
+                                              : ( dwAttrs & (uint32_t)( ~FILE_ATTRIBUTE_READONLY ) );
 
         // nothing to do if they are the same
         if ( dwNewAttrs == dwAttrs )
@@ -985,7 +992,7 @@
         {
             return false; // can't even get the attributes, treat as not read only
         }
-        return ( ( s.st_mode & S_IWUSR ) == 0 );// TODO:LINUX Is this the correct behaviour?
+        return ( ( s.st_mode & S_IWUSR ) == 0 ); // TODO:LINUX Is this the correct behaviour?
     #else
         #error Unknown platform
     #endif
@@ -1039,7 +1046,7 @@
     #if defined( __WINDOWS__ )
         WIN32_FIND_DATA findData;
         HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+        if ( hFind == INVALID_HANDLE_VALUE )
         {
             return;
         }
@@ -1122,10 +1129,10 @@
         {
             FileInfo fileInfo;
             const uint32_t fileNameLen = static_cast<uint32_t>( AString::StrLen( entryName ) );
-            const uint32_t fullPathLen = pathCopy.GetLength()  + fileNameLen;
+            const uint32_t fullPathLen = pathCopy.GetLength() + fileNameLen;
             fileInfo.m_Name.SetReserved( fullPathLen );
             fileInfo.m_Name.Assign( pathCopy );
-            fileInfo.m_Name.Append(entryName, fileNameLen );
+            fileInfo.m_Name.Append( entryName, fileNameLen );
             #if defined( __WINDOWS__ )
                 fileInfo.m_Attributes = findData.dwFileAttributes;
                 fileInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
@@ -1168,8 +1175,13 @@
 
         // recurse into directories
         WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchLimitToDirectories, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+        HANDLE hFind = FindFirstFileEx( pathCopy.Get(),
+                                        FindExInfoBasic,
+                                        &findData,
+                                        FindExSearchLimitToDirectories,
+                                        nullptr,
+                                        0 );
+        if ( hFind == INVALID_HANDLE_VALUE )
         {
             return;
         }
@@ -1192,15 +1204,14 @@
                 pathCopy += NATIVE_SLASH;
                 GetFilesRecurse( pathCopy, wildCard, results );
             }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
+        } while ( FindNextFile( hFind, &findData ) != 0 );
         FindClose( hFind );
 
         // do files in this directory
         pathCopy.SetLength( baseLength );
         pathCopy += '*';
         hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+        if ( hFind == INVALID_HANDLE_VALUE )
         {
             return;
         }
@@ -1218,8 +1229,7 @@
                 pathCopy += findData.cFileName;
                 results->Append( pathCopy );
             }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
+        } while ( FindNextFile( hFind, &findData ) != 0 );
 
         FindClose( hFind );
 
@@ -1312,7 +1322,7 @@
 
         WIN32_FIND_DATA findData;
         HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+        if ( hFind == INVALID_HANDLE_VALUE )
         {
             return;
         }
@@ -1330,8 +1340,7 @@
                 pathCopy += findData.cFileName;
                 results->Append( pathCopy );
             }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
+        } while ( FindNextFile( hFind, &findData ) != 0 );
 
         FindClose( hFind );
 
@@ -1409,7 +1418,7 @@
         // recurse into directories
         WIN32_FIND_DATA findData;
         HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+        if ( hFind == INVALID_HANDLE_VALUE )
         {
             return;
         }
@@ -1422,7 +1431,7 @@
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
                 if ( findData.cFileName[ 0 ] == '.' &&
-                    ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+                     ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
                 {
                     continue;
                 }
@@ -1449,8 +1458,7 @@
                 newInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
                 newInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
             }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
+        } while ( FindNextFile( hFind, &findData ) != 0 );
 
         FindClose( hFind );
 
@@ -1561,7 +1569,7 @@
 
         WIN32_FIND_DATA findData;
         HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+        if ( hFind == INVALID_HANDLE_VALUE )
         {
             return;
         }
@@ -1589,8 +1597,7 @@
                 newInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
                 newInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
             }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
+        } while ( FindNextFile( hFind, &findData ) != 0 );
 
         FindClose( hFind );
 
@@ -1698,11 +1705,14 @@
             // timeout so we don't get stuck in here forever
             if ( timer.GetElapsed() > (float)timeoutSeconds )
             {
-                ASSERTM( false, "WorkAroundForWindowsFilePermissionProblem Failed\n"
-                                "File   : %s\n"
-                                "Error  : %s\n"
-                                "Timeout: %u s",
-                                fileName.Get(), LAST_ERROR_STR, timeoutSeconds );
+                ASSERTM( false,
+                         "WorkAroundForWindowsFilePermissionProblem Failed\n"
+                         "File   : %s\n"
+                         "Error  : %s\n"
+                         "Timeout: %u s",
+                         fileName.Get(),
+                         LAST_ERROR_STR,
+                         timeoutSeconds );
                 return;
             }
         }
@@ -1741,20 +1751,24 @@
 
         // Open Registry Entry
         HKEY key;
-        if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\FileSystem", 0, KEY_READ, &key ) != ERROR_SUCCESS )
+        if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                           "SYSTEM\\CurrentControlSet\\Control\\FileSystem",
+                           0,
+                           KEY_READ,
+                           &key ) != ERROR_SUCCESS )
         {
             return false; // Entry doesn't exit
         }
 
         // Read Value
         DWORD value = 0;
-        DWORD valueSize = sizeof(DWORD);
+        DWORD valueSize = sizeof( DWORD );
         const LONG result = ::RegQueryValueEx( key,
-                                                "LongPathsEnabled",
-                                                nullptr,
-                                                nullptr,
-                                                reinterpret_cast<LPBYTE>( &value ),
-                                                &valueSize );
+                                               "LongPathsEnabled",
+                                               nullptr,
+                                               nullptr,
+                                               reinterpret_cast<LPBYTE>( &value ),
+                                               &valueSize );
 
         VERIFY( RegCloseKey( key ) == ERROR_SUCCESS );
 
@@ -1770,7 +1784,7 @@ bool FileIO::FileInfo::IsReadOnly() const
     #if defined( __WINDOWS__ )
         return ( ( m_Attributes & FILE_ATTRIBUTE_READONLY ) == FILE_ATTRIBUTE_READONLY );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        return ( ( m_Attributes & S_IWUSR ) == 0 );// TODO:LINUX TODO:MAC Is this the correct behaviour?
+        return ( ( m_Attributes & S_IWUSR ) == 0 ); // TODO:LINUX TODO:MAC Is this the correct behaviour?
     #else
         #error Unknown platform
     #endif

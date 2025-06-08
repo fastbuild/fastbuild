@@ -20,7 +20,7 @@
 // Error_1001_MissingStringStartToken
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1001_MissingStringStartToken( const BFFToken * iter,
-                                                        const Function * function )
+                                                           const Function * function )
 {
     FormatError( iter, 1001u, function, "Missing string start token \" or '." );
 }
@@ -32,7 +32,7 @@
                                                                 char expectedChar )
 {
     FormatError( iter, 1002u, function, "Matching closing token %c not found.",
-                                     expectedChar );
+                                        expectedChar );
 }
 
 // Error_1003_EmptyStringNotAllowedInHeader
@@ -46,20 +46,20 @@
 // Error_1004_EmptyStringPropertyNotAllowed
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1004_EmptyStringPropertyNotAllowed( const BFFToken * iter,
-                                                              const Function * function,
-                                                              const char * propertyName )
+                                                                 const Function * function,
+                                                                 const char * propertyName )
 {
     FormatError( iter, 1004u, function, "Empty string not allowed for property '%s'.",
-                                     propertyName );
+                                        propertyName );
 }
 
 // Error_1005_UnsupportedNodeType
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1005_UnsupportedNodeType( const BFFToken * iter,
-                                                    const Function * function,
-                                                    const char * propertyName,
-                                                    const AString & nodeName,
-                                                    Node::Type nodeType )
+                                                       const Function * function,
+                                                       const char * propertyName,
+                                                       const AString & nodeName,
+                                                       Node::Type nodeType )
 {
     FormatError( iter, 1005u, function, "Unsupported node type in '%s'. (Node: '%s', Type: '%s')",
                                      propertyName,
@@ -70,7 +70,7 @@
 // Error_1006_NothingToBuild
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1006_NothingToBuild( const BFFToken * iter,
-                                               const Function * function )
+                                                  const Function * function )
 {
     FormatError( iter, 1006u, function, "Nothing defined to be built." );
 }
@@ -128,7 +128,7 @@
 // Error_1013_UnexpectedCharInVariableName
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1013_UnexpectedCharInVariableName( const BFFToken * iter,
-                                                              const Function * function )
+                                                                const Function * function )
 {
     AStackString<> buffer;
     GetChar( iter, buffer );
@@ -198,7 +198,7 @@
 // Error_1023_FunctionRequiresAHeader
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1023_FunctionRequiresAHeader( const BFFToken * iter,
-                                                         const Function * function )
+                                                           const Function * function )
 {
     FormatError( iter, 1023u, function, "Function requires a header." );
 }
@@ -206,7 +206,7 @@
 // Error_1024_FunctionRequiresABody
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1024_FunctionRequiresABody( const BFFToken * iter,
-                                                       const Function * function )
+                                                         const Function * function )
 {
     FormatError( iter, 1024u, function, "Function requires a body." );
 }
@@ -222,7 +222,7 @@
 // Error_1026_VariableNotFoundForModification
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1026_VariableNotFoundForModification( const BFFToken * iter,
-                                                                  const AString & variableName )
+                                                                   const AString & variableName )
 {
     FormatError( iter, 1026u, nullptr, "Variable '%s' not found for modification.", variableName.Get() );
 }
@@ -230,9 +230,9 @@
 // Error_1027_CannotModify
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1027_CannotModify( const BFFToken * iter,
-                                                   const AString & variableName,
-                                                   BFFVariable::VarType dstType,
-                                                   BFFVariable::VarType srcType )
+                                                const AString & variableName,
+                                                BFFVariable::VarType dstType,
+                                                BFFVariable::VarType srcType )
 {
     FormatError( iter, 1027u, nullptr, "Cannot use <%s> to modify <%s> for Variable '%s'.",
                                      BFFVariable::GetTypeName( srcType ),
@@ -250,8 +250,8 @@
 // Error_1029_VariableForSubstitutionIsNotAString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1029_VariableForSubstitutionIsNotAString( const BFFToken * iter,
-                                                                     const AString & variableName,
-                                                                     BFFVariable::VarType varType )
+                                                                       const AString & variableName,
+                                                                       BFFVariable::VarType varType )
 {
     FormatError( iter, 1029u, nullptr, "Variable for substitution '%s' is not a string (Type: <%s>).",
                                      variableName.Get(),
@@ -264,7 +264,7 @@
                                                     const AString & directiveName )
 {
     FormatError( iter, 1030u, nullptr, "Unknown directive '%s'.",
-                                     directiveName.Get() );
+                                       directiveName.Get() );
 }
 
 // Error_1031_UnexpectedCharFollowingDirectiveName
@@ -276,9 +276,9 @@
     AStackString<> buffer;
     GetChar( iter, buffer );
     FormatError( iter, 1031u, nullptr, "Unknown char '%s' following '%s' directive. (Expected '%c').",
-                                     buffer.Get(),
-                                     directiveName,
-                                     expectedChar );
+                                       buffer.Get(),
+                                       directiveName,
+                                       expectedChar );
 }
 
 // Error_1032_UnableToOpenInclude
@@ -287,7 +287,7 @@
                                                        const AString & include )
 {
     FormatError( iter, 1032u, nullptr, "Unable to open include '%s'.",
-                                     include.Get() );
+                                       include.Get() );
 }
 
 // Error_1033_ErrorReadingInclude
@@ -306,7 +306,7 @@
 /*static*/ void Error::Error_1034_OperationNotSupported( const BFFToken * rhsIter,
                                                          BFFVariable::VarType lhs,
                                                          BFFVariable::VarType rhs,
-                                                         const  BFFToken * operatorIter )
+                                                         const BFFToken * operatorIter )
 {
     FormatError( rhsIter, 1034u, nullptr, "Operation not supported: '%s' %s '%s'.",
                                        BFFVariable::GetTypeName( lhs ),
@@ -407,7 +407,7 @@
 
 // Error_1047_IfExpressionTooComplex
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken* iter )
+/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken * iter )
 {
     FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %i boolean operators supported.", BFFParser::MAX_OPERATOR_HISTORY );
 }
@@ -415,11 +415,11 @@
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFToken * iter,
-                                                      const Function * function,
-                                                      const char * propertyName,
-                                                      BFFVariable::VarType foundType,
-                                                      BFFVariable::VarType requiredType,
-                                                      BFFVariable::VarType alternateRequiredType )
+                                                        const Function * function,
+                                                        const char * propertyName,
+                                                        BFFVariable::VarType foundType,
+                                                        BFFVariable::VarType requiredType,
+                                                        BFFVariable::VarType alternateRequiredType )
 {
     if ( alternateRequiredType == BFFVariable::VAR_ANY )
     {
@@ -441,10 +441,10 @@
 // Error_1054_IntegerOutOfRange
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1054_IntegerOutOfRange( const BFFToken * iter,
-                                                   const Function * function,
-                                                   const char * propertyName,
-                                                   int rangeMin,
-                                                   int rangeMax )
+                                                     const Function * function,
+                                                     const char * propertyName,
+                                                     int rangeMin,
+                                                     int rangeMax )
 {
     FormatError( iter, 1054u, function, "Integer '%s' must be in range %i to %i.",
                                       propertyName,
@@ -460,8 +460,8 @@
 
 // Error_1070_UnexpectedOperator
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1070_UnexpectedOperator( const BFFToken* iter,
-    const Function* function )
+/*static*/ void Error::Error_1070_UnexpectedOperator( const BFFToken * iter,
+                                                      const Function * function )
 {
     FormatError( iter, 1070u, function, "Unexpected operator '%s'.", iter->GetValueString().Get() );
 }
@@ -476,12 +476,12 @@
 // Error_1100_AlreadyDefined
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1100_AlreadyDefined( const BFFToken * iter,
-                                                 const Function * function,
-                                                 const AString & name,
-                                                 const BFFToken * previousDeclarationToken )
+                                                  const Function * function,
+                                                  const AString & name,
+                                                  const BFFToken * previousDeclarationToken )
 {
     FormatError( iter, 1100u, function, "Target '%s' already defined.",
-                                       name.Get() );
+                                        name.Get() );
     if ( previousDeclarationToken )
     {
         FormatError( previousDeclarationToken, 1100u, nullptr, "Previously declared here:" );
@@ -491,21 +491,21 @@
 // Error_1101_MissingProperty
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1101_MissingProperty( const BFFToken * iter,
-                                                  const Function * function,
-                                                  const AString & name )
+                                                   const Function * function,
+                                                   const AString & name )
 {
     FormatError( iter, 1101u, function, "Missing required property '%s'.",
-                                       name.Get() );
+                                        name.Get() );
 }
 
 // Error_1102_UnexpectedType
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1102_UnexpectedType( const BFFToken * iter,
-                                                 const Function * function,
-                                                 const char * propertyName,
-                                                 const AString & name,
-                                                 Node::Type foundType,
-                                                 Node::Type expectedType )
+                                                  const Function * function,
+                                                  const char * propertyName,
+                                                  const AString & name,
+                                                  Node::Type foundType,
+                                                  Node::Type expectedType )
 {
     FormatError( iter, 1102u, function, "'%s' ('%s') is of unexpected type '%s'. Expected '%s'.",
                                        propertyName,
@@ -535,9 +535,7 @@
                                                     const char * propertyName,
                                                     const AString & name )
 {
-    FormatError( iter, 1104u, function, "'%s' ('%s') is not defined.",
-                                       propertyName,
-                                       name.Get() );
+    FormatError( iter, 1104u, function, "'%s' ('%s') is not defined.", propertyName, name.Get() );
 }
 
 // Error_1105_PathNotAllowed
@@ -549,8 +547,8 @@
 
 {
     FormatError( iter, 1105u, function, "Path not allowed for '%s' ('%s').",
-                                       propertyName,
-                                       propertyValue.Get() );
+                                        propertyName,
+                                        propertyValue.Get() );
 }
 
 // Error_1106_MissingRequiredToken
@@ -637,10 +635,10 @@
 // Error_1204_LoopVariableLengthsDiffer
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1204_LoopVariableLengthsDiffer( const BFFToken * iter,
-                                                            const Function * function,
-                                                            const char * variableName,
-                                                            uint32_t foundSize,
-                                                            uint32_t expectedSize )
+                                                             const Function * function,
+                                                             const char * variableName,
+                                                             uint32_t foundSize,
+                                                             uint32_t expectedSize )
 {
     FormatError( iter, 1204u, function, "Variable '%s' contains %u elements, but loop is for %u elements.",
                                        variableName,
@@ -659,7 +657,7 @@
 // Error_1300_MissingPCHArgs
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1300_MissingPCHArgs( const BFFToken * iter,
-                                                 const Function * function )
+                                                  const Function * function )
 {
     FormatError( iter, 1300u, function, "Precompiled Header use requires 'PCHInputFile', 'PCHOutputFile' and 'PCHOptions' parameters." );
 }
@@ -667,11 +665,11 @@
 // Error_1301_AlreadyDefinedPCH
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1301_AlreadyDefinedPCH( const BFFToken * iter,
-                                                    const Function * function,
-                                                    const char * pch )
+                                                     const Function * function,
+                                                     const char * pch )
 {
     FormatError( iter, 1301u, function, "Precompiled Header target '%s' has already been defined.",
-                                       pch );
+                                        pch );
 }
 
 // Error_1302_MissingPCHCompilerOption
@@ -723,7 +721,7 @@
 // Error_1502_LightCacheIncompatibleWithCompiler
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1502_LightCacheIncompatibleWithCompiler( const BFFToken * iter,
-                                                                       const Function * function )
+                                                                      const Function * function )
 {
     FormatError( iter, 1502u, function, "LightCache only compatible with MSVC Compiler." );
 }
@@ -811,9 +809,9 @@
                                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                   "1234567890"
                                   "~`!@#$%^&*()-_+="
-                                   "{[]}|\\"
-                                   ";:\"'"
-                                   "<,.>/?";
+                                  "{[]}|\\"
+                                  ";:\"'"
+                                  "<,.>/?";
     bool printable = false;
     const char c = *iter->GetSourcePos();
     for ( const char pc : printableChars )
@@ -841,13 +839,14 @@
 void Error::FormatError( const BFFToken * iter,
                          uint32_t errNum,
                          const Function * function,
-                         MSVC_SAL_PRINTF const char * message, ... )
+                         MSVC_SAL_PRINTF const char * message,
+                         ... )
 {
     ASSERT( message );
     AStackString<4096> buffer;
 
     va_list args;
-    va_start(args, message);
+    va_start( args, message );
     buffer.VFormat( message, args );
     va_end( args );
 
@@ -883,7 +882,7 @@ void Error::FormatError( const BFFToken * iter,
 
     // find the line end
     const char * lineEnd = lineStart;
-    while ( ( *lineEnd != '\r' ) && ( *lineEnd != '\n' ) && ( *lineEnd !=  0 ) )
+    while ( ( *lineEnd != '\r' ) && ( *lineEnd != '\n' ) && ( *lineEnd != 0 ) )
     {
         lineEnd++;
     }

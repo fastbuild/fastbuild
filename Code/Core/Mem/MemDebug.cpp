@@ -21,7 +21,7 @@ void MemDebug::FillMem( void * ptr, const size_t size, const uint64_t pattern )
     // fill 64 bits at a tim
     const size_t numU64 = size / sizeof( uint64_t );
     uint64_t * it = static_cast<uint64_t *>( ptr );
-    const uint64_t* end = it + numU64;
+    const uint64_t * end = it + numU64;
     while ( it != end )
     {
         *it = pattern;
@@ -30,11 +30,11 @@ void MemDebug::FillMem( void * ptr, const size_t size, const uint64_t pattern )
 
     // fill remaining bytes
     size_t remainder = size & ( sizeof( uint64_t ) - 1 );
-    if (remainder)
+    if ( remainder )
     {
         const char * src = reinterpret_cast<const char *>( &pattern );
         char * dst = reinterpret_cast<char *>( it );
-        while (remainder)
+        while ( remainder )
         {
             *dst = *src;
             ++dst;

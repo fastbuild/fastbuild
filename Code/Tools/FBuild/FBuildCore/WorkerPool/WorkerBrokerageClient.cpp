@@ -81,7 +81,7 @@ void WorkerBrokerageClient::FindWorkers( Array<AString> & outWorkerList )
     Network::GetIPv4Addresses( localAddresses );
 
     // convert worker strings
-    for (const AString & fileName : results )
+    for ( const AString & fileName : results )
     {
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
         AStackString<> workerName( lastSlash + 1 );

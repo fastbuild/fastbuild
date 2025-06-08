@@ -161,7 +161,7 @@ void TestTest::Exclusions() const
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
     // Check all the exclusion methods worked as expected
-    const char* const aliasesToCheck[] =
+    const char * const aliasesToCheck[] =
     {
         "ExcludePath-ForwardSlash",
         "ExcludePath-Backslash",
@@ -171,7 +171,7 @@ void TestTest::Exclusions() const
         "ExcludePattern-ForwardSlash",
         "ExcludePattern-Backslash",
     };
-    for (const char* const aliasToCheck : aliasesToCheck)
+    for ( const char * const aliasToCheck : aliasesToCheck )
     {
         // Get the TestNode (via the Alias)
         const Node * aliasNode = fBuild.GetNode( aliasToCheck );

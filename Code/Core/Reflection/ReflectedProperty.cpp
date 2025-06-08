@@ -107,13 +107,13 @@ GETSET_PROPERTY( AString, const AString & )
 #define GETSET_PROPERTY_ARRAY( valueType ) \
     void ReflectedProperty::GetProperty( const void * object, Array<valueType> * value ) const \
     { \
-        ASSERT( (PropertyType)m_Type == GetPropertyType( ( valueType *)nullptr ) ); \
+        ASSERT( (PropertyType)m_Type == GetPropertyType( (valueType *)nullptr ) ); \
         ASSERT( m_IsArray ); \
         ( *value ) = *(const Array<valueType> *)( (size_t)object + m_Offset ); \
     } \
     void ReflectedProperty::SetProperty( void * object, const Array<valueType> & value ) const \
     { \
-        ASSERT( (PropertyType)m_Type == GetPropertyType( ( valueType *)nullptr ) ); \
+        ASSERT( (PropertyType)m_Type == GetPropertyType( (valueType *)nullptr ) ); \
         ASSERT( m_IsArray ); \
         *( (Array<valueType> *)( (size_t)object + m_Offset ) ) = value; \
     }

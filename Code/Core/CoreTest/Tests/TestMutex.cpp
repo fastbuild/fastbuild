@@ -183,7 +183,9 @@ void TestMutex::TestExclusivity() const
 
     // arrive at barrier and wait
     AtomicInc( &data.m_BarrierCounter );
-    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
+    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 )
+    {
+    }
 
     // increment
     for ( size_t i = 0; i < 1000000; ++i )
@@ -207,7 +209,9 @@ void TestMutex::TestExclusivity() const
 
     // arrive at barrier and wait
     AtomicInc( &data.m_BarrierCounter );
-    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
+    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 )
+    {
+    }
 
     // increment
     for ( size_t i = 0; i < 1000000; ++i )

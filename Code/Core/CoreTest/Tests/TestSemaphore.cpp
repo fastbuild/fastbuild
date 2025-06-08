@@ -114,16 +114,16 @@ void TestSemaphore::WaitTimeout() const
             // Signal more than the max count
             s.Signal(); // This should signal
             s.Signal(); // This should gracefully fail
-            TEST_ASSERT( s.Wait( 1 ) == true );    // First wait should see signalled state
-            TEST_ASSERT( s.Wait( 1 ) == false );   // Second wait should time out
+            TEST_ASSERT( s.Wait( 1 ) == true ); // First wait should see signalled state
+            TEST_ASSERT( s.Wait( 1 ) == false ); // Second wait should time out
         }
 
         // Signal with single call
         {
             // Signal more than the max count
             s.Signal( 2 ); // This should signal once
-            TEST_ASSERT( s.Wait( 1 ) == true );    // First wait should see signalled state
-            TEST_ASSERT( s.Wait( 1 ) == false );   // Second wait should time out
+            TEST_ASSERT( s.Wait( 1 ) == true ); // First wait should see signalled state
+            TEST_ASSERT( s.Wait( 1 ) == false ); // Second wait should time out
         }
     }
 #endif

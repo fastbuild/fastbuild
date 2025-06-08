@@ -34,7 +34,8 @@ class ReflectionInfo;
 //------------------------------------------------------------------------------
 #define CHECK_BASE_CLASS( className, baseClass ) \
     const className * c = nullptr; \
-    const baseClass * b = static_cast<const baseClass *>( c ); (void)b;
+    const baseClass * b = static_cast<const baseClass *>( c ); \
+    (void)b;
 
 #define ADD_METADATA( metaData ) \
     AddMetaData( metaData );

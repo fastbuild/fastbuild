@@ -449,7 +449,7 @@ void TestAString::Concatenation() const
     {
         AString a;
         const char * b = "";
-        a.Append( b, static_cast<size_t>(0) );
+        a.Append( b, static_cast<size_t>( 0 ) );
         TEST_ASSERT( a.IsEmpty() );
     }
     {
@@ -985,7 +985,7 @@ void TestAString::MoveConstructorHelper() const
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
     // Source string should be empty
-    PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+    PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
     TEST_ASSERT( stringA.IsEmpty() );
     PRAGMA_DISABLE_POP_MSVC
 }
@@ -1032,7 +1032,7 @@ void TestAString::MoveAssignmentHelper() const
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
         // Source string should be empty
-        PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+        PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
         TEST_ASSERT( stringA.IsEmpty() );
         PRAGMA_DISABLE_POP_MSVC
     }
@@ -1054,7 +1054,7 @@ void TestAString::MoveAssignmentHelper() const
             stringB = Move( (SRC_CAST &)( stringA ) );
 
             // Source string should be empty
-            PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+            PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
             TEST_ASSERT( stringA.IsEmpty() );
             PRAGMA_DISABLE_POP_MSVC
         }

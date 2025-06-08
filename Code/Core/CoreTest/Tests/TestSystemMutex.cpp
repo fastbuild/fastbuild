@@ -40,7 +40,7 @@ void TestSystemMutex::LeakRegression() const
     #if defined( __clang__ )
         mutexName += "Clang";
     #endif
-    mutexName += (sizeof(void*) == 8) ? "64_" : "32_";
+    mutexName += ( sizeof( void * ) == 8 ) ? "64_" : "32_";
     #if __has_feature( address_sanitizer ) || defined( __SANITIZE_ADDRESS__ )
         mutexName += "ASan";
     #elif __has_feature( memory_sanitizer )

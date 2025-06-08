@@ -74,7 +74,8 @@ const AString & XCodeProjectGenerator::GenerateUserSchemeManagementPList()
                         "\t\t<dict>\n"
                         "\t\t</dict>\n"
                         "\t</dict>\n",
-                        m_ProjectName.Get(), m_ProjectName.Get() );
+                        m_ProjectName.Get(),
+                        m_ProjectName.Get() );
 
     m_Tmp.AppendFormat( "\t<key>SuppressBuildableAutocreation</key>\n"
                         "\t<dict>\n"
@@ -118,7 +119,10 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
                            "            ReferencedContainer = \"container:%s.xcodeproj\">\n"
                            "         </BuildableReference>\n"
                            "      </MacroExpansion>\n",
-                        pbxLegacyTargetGUID.Get(), m_ProjectName.Get(), m_ProjectName.Get(), m_ProjectName.Get() );
+                           pbxLegacyTargetGUID.Get(),
+                           m_ProjectName.Get(),
+                           m_ProjectName.Get(),
+                           m_ProjectName.Get() );
 
     // Header
     m_Tmp.AppendFormat( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -147,7 +151,10 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
                         "         </BuildActionEntry>\n"
                         "      </BuildActionEntries>\n"
                         "   </BuildAction>\n",
-                        pbxLegacyTargetGUID.Get(), m_ProjectName.Get(), m_ProjectName.Get(), m_ProjectName.Get() );
+                        pbxLegacyTargetGUID.Get(),
+                        m_ProjectName.Get(),
+                        m_ProjectName.Get(),
+                        m_ProjectName.Get() );
 
     // Test Action
     m_Tmp.AppendFormat( "   <TestAction\n"
@@ -175,7 +182,9 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
                         "      debugServiceExtension = \"internal\"\n"
                         "      allowLocationSimulation = \"YES\">\n"
                         "%s",
-                        defaultConfigName.Get(), documentVersioning, macroExpansion.Get() );
+                        defaultConfigName.Get(),
+                        documentVersioning,
+                        macroExpansion.Get() );
     if ( ( m_XCodeCommandLineArguments.IsEmpty() == false ) || ( m_XCodeCommandLineArgumentsDisabled.IsEmpty() == false ) )
     {
         m_Tmp.AppendFormat( "      <CommandLineArguments>\n" );
@@ -214,7 +223,9 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
                         "      debugDocumentVersioning = \"%s\">\n"
                         "%s"
                         "   </ProfileAction>\n",
-                        defaultConfigName.Get(), documentVersioning, macroExpansion.Get() );
+                        defaultConfigName.Get(),
+                        documentVersioning,
+                        macroExpansion.Get() );
 
     // Analyze Action
     m_Tmp.AppendFormat( "   <AnalyzeAction\n"
@@ -320,7 +331,11 @@ void XCodeProjectGenerator::WriteFiles()
         const char * shortFolderName = "Sources";
 
         Write( "\t\t1111111100000000%08u /* %s in %s */ = {isa = PBXBuildFile; fileRef = 1111111111111111%08u /* %s */; };\n",
-                    file->m_SortedIndex, shortName, shortFolderName, file->m_SortedIndex, shortName );
+               file->m_SortedIndex,
+               shortName,
+               shortFolderName,
+               file->m_SortedIndex,
+               shortName );
     }
     Write( "/* End PBXBuildFile section */\n" );
 
@@ -340,7 +355,7 @@ void XCodeProjectGenerator::WriteFiles()
         {
             lastKnownFileType = "sourcecode.c.h";
         }
-        else if ( shortName.EndsWithI( ".xcodeproj" ))
+        else if ( shortName.EndsWithI( ".xcodeproj" ) )
         {
             lastKnownFileType = "\"wrapper.pb-project\"";
             fileEncoding = "";
@@ -388,7 +403,8 @@ void XCodeProjectGenerator::WriteFolders()
             Write( "\t\t%s /* %s */ = {\n"
                    "\t\t\tisa = PBXGroup;\n"
                    "\t\t\tchildren = (\n",
-                   pbxGroupGUID.Get(), folderName );
+                   pbxGroupGUID.Get(),
+                   folderName );
         }
         else
         {
@@ -402,7 +418,8 @@ void XCodeProjectGenerator::WriteFolders()
         for ( const File * file : folder->m_Files )
         {
             Write( "\t\t\t\t1111111111111111%08u /* %s */,\n",
-                   file->m_SortedIndex, file->m_FileName.Get() );
+                   file->m_SortedIndex,
+                   file->m_FileName.Get() );
         }
 
         // Child Folders
@@ -449,7 +466,9 @@ void XCodeProjectGenerator::WriteBuildCommand()
         Write( "\t\t%s /* %s */ = {\n", pbxLegacyTargetGUID.Get(), m_ProjectName.Get() );
         Write( "\t\t\tisa = PBXLegacyTarget;\n" );
         Write( "\t\t\tbuildArgumentsString = \"%s\";\n", m_XCodeBuildToolArgs.Get() );
-        Write( "\t\t\tbuildConfigurationList = %s /* Build configuration list for PBXLegacyTarget \"%s\" */;\n", xConfigurationListGUID.Get(), m_ProjectName.Get() );
+        Write( "\t\t\tbuildConfigurationList = %s /* Build configuration list for PBXLegacyTarget \"%s\" */;\n",
+               xConfigurationListGUID.Get(),
+               m_ProjectName.Get() );
         Write( "\t\t\tbuildPhases = (\n" );
         Write( "\t\t\t\t%s /* Sources */,\n", buildPhaseGuid.Get() );
         Write( "\t\t\t);\n" );
@@ -474,9 +493,13 @@ void XCodeProjectGenerator::WriteBuildCommand()
 
         Write( "\n" );
         Write( "/* Begin PBXNativeTarget section */\n" );
-        Write( "\t\t%s /* %s-doc */ = {\n", pbxNativeTargetGUID.Get(), m_ProjectName.Get() );
+        Write( "\t\t%s /* %s-doc */ = {\n",
+               pbxNativeTargetGUID.Get(),
+               m_ProjectName.Get() );
         Write( "\t\t\tisa = PBXNativeTarget;\n" );
-        Write( "\t\t\tbuildConfigurationList = %s /* Build configuration list for PBXNativeTarget \"%s-doc\" */;\n", xConfigurationListGUID.Get(), m_ProjectName.Get() );
+        Write( "\t\t\tbuildConfigurationList = %s /* Build configuration list for PBXNativeTarget \"%s-doc\" */;\n",
+               xConfigurationListGUID.Get(),
+               m_ProjectName.Get() );
         Write( "\t\t\tbuildPhases = (\n" );
         Write( "\t\t\t\t%s /* Sources */,\n", buildPhaseGuid.Get() );
         Write( "\t\t\t);\n" );
@@ -527,7 +550,9 @@ void XCodeProjectGenerator::WriteGeneralSettings()
     Write( "\t\t\t\t\t};\n" );
     Write( "\t\t\t\t};\n" );
     Write( "\t\t\t};\n" );
-    Write( "\t\t\tbuildConfigurationList = %s /* Build configuration list for PBXProject \"%s\" */;\n", xConfigurationListGUID.Get(), m_ProjectName.Get() );
+    Write( "\t\t\tbuildConfigurationList = %s /* Build configuration list for PBXProject \"%s\" */;\n",
+           xConfigurationListGUID.Get(),
+           m_ProjectName.Get() );
     Write( "\t\t\tcompatibilityVersion = \"Xcode 3.2\";\n" );
     Write( "\t\t\tdevelopmentRegion = en;\n" );
     Write( "\t\t\thasScannedForEncodings = 0;\n" );
@@ -540,7 +565,9 @@ void XCodeProjectGenerator::WriteGeneralSettings()
     Write( "\t\t\tprojectRoot = \"\";\n" );
     Write( "\t\t\ttargets = (\n" );
     Write( "\t\t\t\t%s /* %s */,\n", pbxLegacyTargetGUID.Get(), m_ProjectName.Get() );
-    Write( "\t\t\t\t%s /* %s-doc */,\n", pbxNativeTargetGUID.Get(), m_ProjectName.Get() );
+    Write( "\t\t\t\t%s /* %s-doc */,\n",
+           pbxNativeTargetGUID.Get(),
+           m_ProjectName.Get() );
     Write( "\t\t\t);\n" );
     Write( "\t\t};\n" );
     Write( "/* End PBXProject section */\n" );
@@ -556,7 +583,7 @@ void XCodeProjectGenerator::WritePBXSourcesBuildPhase()
     Write( "\n" );
     Write( "/* Begin PBXSourcesBuildPhase section */\n" );
 
-    Write( "\t\t%s /* Sources */ = {\n", buildPhaseGuid.Get());
+    Write( "\t\t%s /* Sources */ = {\n", buildPhaseGuid.Get() );
     Write( "\t\t\tisa = PBXSourcesBuildPhase;\n"
            "\t\t\tbuildActionMask = 0;\n" );
 
@@ -566,7 +593,9 @@ void XCodeProjectGenerator::WritePBXSourcesBuildPhase()
         const char * shortFolderName = "Sources";
 
         Write( "\t\t\t\t1111111100000000%08u /* %s in %s */,\n",
-               file->m_SortedIndex, file->m_FileName.Get(), shortFolderName );
+               file->m_SortedIndex,
+               file->m_FileName.Get(),
+               shortFolderName );
     }
     Write( "\t\t\t);\n" );
 
@@ -619,7 +648,8 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         Write( "\t\t%s /* %s */ = {\n"
                "\t\t\tisa = XCBuildConfiguration;\n"
                "\t\t\tbuildSettings = {\n",
-               xcBuildConfigurationGUID.Get(), config.m_Config.Get() );
+               xcBuildConfigurationGUID.Get(),
+               config.m_Config.Get() );
         WriteString( 4, "CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED", yesString );
         WriteString( 4, "ENABLE_TESTABILITY", yesString );
         WriteString( 4, "FASTBUILD_DEBUG_WORKING_DIR", debugWorkingDir );
@@ -649,7 +679,8 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         Write( "\t\t%s /* %s */ = {\n"
                "\t\t\tisa = XCBuildConfiguration;\n"
                "\t\t\tbuildSettings = {\n",
-               xcBuildConfigurationGUID.Get(), config->m_Config.Get() );
+               xcBuildConfigurationGUID.Get(),
+               config->m_Config.Get() );
 
         Write( "\t\t\t\tCLANG_ENABLE_OBJC_WEAK = YES;\n"
                "\t\t\t\tOTHER_CFLAGS = \"\";\n"
@@ -671,7 +702,8 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         Write( "\t\t%s /* %s */ = {\n"
                "\t\t\tisa = XCBuildConfiguration;\n"
                "\t\t\tbuildSettings = {\n",
-               xcBuildConfigurationGUID.Get(), config->m_Config.Get() );
+               xcBuildConfigurationGUID.Get(),
+               config->m_Config.Get() );
 
         Write( "\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;\n" );
 
@@ -756,7 +788,7 @@ void XCodeProjectGenerator::WriteConfigurationList()
 
     Write( "\n" );
     Write( "/* Begin XCConfigurationList section */\n" );
-    for ( uint32_t i=0; i<3; ++i )
+    for ( uint32_t i = 0; i < 3; ++i )
     {
         AStackString<> xConfigurationListGUID;
         GetGUID_XConfigurationList( i, xConfigurationListGUID );

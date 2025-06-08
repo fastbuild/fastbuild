@@ -60,7 +60,7 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
     {
         const size_t size = BUCKET_ALIGNMENT * ( i + 1 );
         MemBucket * bucket = &s_Buckets[ i ];
-        new (bucket) MemBucket( size, BUCKET_ALIGNMENT );
+        new ( bucket ) MemBucket( size, BUCKET_ALIGNMENT );
     }
 }
 
@@ -92,12 +92,17 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
             const uint32_t numPeak = bucket.m_PeakActiveAllocations;
             const uint32_t numLifetime = bucket.m_NumLifetimeAllocations;
             totalActive += numLive;
-            totalActiveBytes += (numLive * blockSize);
+            totalActiveBytes += ( numLive * blockSize );
             totalPeak += numPeak;
-            totalPeakBytes += (numPeak * blockSize);
+            totalPeakBytes += ( numPeak * blockSize );
             totalLifetime += numLifetime;
-            buffer.AppendFormat( "%8u | %8u %8u | %8u %8u | %10u\n", blockSize, numLive, (numLive * blockSize), numPeak, (numPeak * blockSize), numLifetime );
-
+            buffer.AppendFormat( "%8u | %8u %8u | %8u %8u | %10u\n",
+                                 blockSize,
+                                 numLive,
+                                 ( numLive * blockSize ),
+                                 numPeak,
+                                 ( numPeak * blockSize ),
+                                 numLifetime );
         }
 
         // Summary/Totals
@@ -139,7 +144,7 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
         return nullptr; // Can't satisfy alignment
     }
 
-    void* ptr;
+    void * ptr;
 
     // Alloc
     {
@@ -218,7 +223,7 @@ bool SmallBlockAllocator::Free( void * ptr )
     #endif
 
     // Update page to bucket mapping table
-    ASSERT( s_BucketMappingTable[ pageIndex ] ==  0 );
+    ASSERT( s_BucketMappingTable[ pageIndex ] == 0 );
     const size_t bucketIndex = (size_t)( this - SmallBlockAllocator::s_Buckets );
     ASSERT( bucketIndex <= 255 );
     s_BucketMappingTable[ pageIndex ] = (uint8_t)bucketIndex;

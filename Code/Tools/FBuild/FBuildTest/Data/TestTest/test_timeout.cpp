@@ -2,9 +2,9 @@
 // An test that fails to return
 //
 
-int main(int , char **)
+int main( int, char ** )
 {
-    for (;;)
+    for ( ;; )
     {
         // busy wait spin to avoid pulling dependencies for sleep/yield
     }

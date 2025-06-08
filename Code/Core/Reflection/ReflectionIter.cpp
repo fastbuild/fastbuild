@@ -16,7 +16,7 @@ ReflectionIter::ReflectionIter( const ReflectionInfo * info, uint32_t index )
 
 // operator ==
 //------------------------------------------------------------------------------
-bool ReflectionIter::operator == ( const ReflectionIter & other ) const
+bool ReflectionIter::operator==( const ReflectionIter & other ) const
 {
     ASSERT( other.m_Info == m_Info ); // invalid to compare iterators on different objects
 
@@ -25,21 +25,21 @@ bool ReflectionIter::operator == ( const ReflectionIter & other ) const
 
 // operator ++
 //------------------------------------------------------------------------------
-void ReflectionIter::operator ++()
+void ReflectionIter::operator++()
 {
     ++m_Index;
 }
 
 // operator ->
 //------------------------------------------------------------------------------
-const ReflectedProperty & ReflectionIter::operator ->() const
+const ReflectedProperty & ReflectionIter::operator->() const
 {
     return m_Info->GetReflectedProperty( m_Index );
 }
 
 // operator *
 //------------------------------------------------------------------------------
-const ReflectedProperty & ReflectionIter::operator *() const
+const ReflectedProperty & ReflectionIter::operator*() const
 {
     return m_Info->GetReflectedProperty( m_Index );
 }

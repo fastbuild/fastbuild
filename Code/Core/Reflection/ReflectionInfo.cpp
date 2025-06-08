@@ -35,7 +35,7 @@ ReflectionInfo::~ReflectionInfo()
     {
         if ( property->GetType() == PT_STRUCT )
         {
-            delete static_cast<ReflectedPropertyStruct*>( property );
+            delete static_cast<ReflectedPropertyStruct *>( property );
         }
         else
         {

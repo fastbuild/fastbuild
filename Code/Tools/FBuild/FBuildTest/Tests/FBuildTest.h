@@ -84,12 +84,14 @@ class FBuildForTest : public FBuild
 {
 public:
     FBuildForTest( FBuildOptions & options )
-        : FBuild( options ) {}
+        : FBuild( options )
+    {
+    }
 
     size_t GetRecursiveDependencyCount( const Node * node ) const;
     size_t GetRecursiveDependencyCount( const char * nodeName ) const;
 
-    void GetNodesOfType( Node::Type type, Array<const Node*> & outNodes ) const;
+    void GetNodesOfType( Node::Type type, Array<const Node *> & outNodes ) const;
     const Node * GetNode( const char * nodeName ) const;
 
     void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;

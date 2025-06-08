@@ -49,9 +49,9 @@ public:
 // xxHash3Accumulator
 //------------------------------------------------------------------------------
 #if defined( ASSERTS_ENABLED )
-    PRAGMA_DISABLE_PUSH_MSVC(4324) // structure was padded due to alignment specifier
+    PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
 #endif
-class alignas(64) xxHash3Accumulator
+class alignas( 64 ) xxHash3Accumulator
 {
 public:
     // Create an accumulator

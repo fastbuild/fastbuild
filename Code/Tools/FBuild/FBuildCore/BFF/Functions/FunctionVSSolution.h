@@ -15,11 +15,11 @@ class FunctionVSSolution : public Function
 {
 public:
     explicit FunctionVSSolution();
-    virtual  ~FunctionVSSolution() override = default;
+    virtual ~FunctionVSSolution() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;
-    virtual Node *CreateNode() const override;
+    virtual Node * CreateNode() const override;
 };
 
 //------------------------------------------------------------------------------

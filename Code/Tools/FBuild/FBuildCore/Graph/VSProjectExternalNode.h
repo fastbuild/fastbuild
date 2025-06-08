@@ -13,7 +13,6 @@ class VSExternalProjectConfig : public Struct
 {
     REFLECT_STRUCT_DECLARE( VSExternalProjectConfig )
 public:
-
     AString             m_Platform;
     AString             m_Config;
 };
@@ -25,13 +24,13 @@ class VSProjectExternalNode : public VSProjectBaseNode
     REFLECT_NODE_DECLARE( VSProjectExternalNode )
 public:
     VSProjectExternalNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken* iter, const Function* function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~VSProjectExternalNode() override;
 
     static Node::Type GetTypeS() { return Node::VSPROJEXTERNAL_NODE; }
 
 private:
-    virtual BuildResult DoBuild( Job* job ) override;
+    virtual BuildResult DoBuild( Job * job ) override;
     void CopyConfigs();
 
     // VSProjectBaseNode interface

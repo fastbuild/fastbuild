@@ -241,7 +241,7 @@ DirectoryListNode::~DirectoryListNode() = default;
         class FileSorter
         {
         public:
-            bool operator () ( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
+            bool operator()( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
             {
                 return ( a.m_Name < b.m_Name );
             }
@@ -294,7 +294,7 @@ DirectoryListNode::~DirectoryListNode() = default;
                 if ( m_IncludeReadOnlyStatusInHash )
                 {
                     const bool b = file.IsReadOnly();
-                    hashAccumulator.AddData( &b, sizeof(b) );
+                    hashAccumulator.AddData( &b, sizeof( b ) );
                 }
             }
         }
@@ -314,7 +314,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 void DirectoryListNode::MakePrettyName()
 {
     AStackString<> prettyName( m_Path );
-    if (m_Recursive)
+    if ( m_Recursive )
     {
         prettyName += " (recursive)";
     }

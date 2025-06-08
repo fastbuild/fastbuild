@@ -63,7 +63,7 @@ void MemoryStream::Replace( void * memory, size_t size )
     FREE( m_Begin );
 
     // Own new memory
-    m_Begin = static_cast<char *>(memory);
+    m_Begin = static_cast<char *>( memory );
     m_End = m_Begin + size;
     m_MaxEnd = m_End;
 }

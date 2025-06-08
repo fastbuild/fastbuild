@@ -24,7 +24,7 @@ class UnorderedMap
 {
 public:
     UnorderedMap();
-    UnorderedMap( UnorderedMap< KEY, VALUE > && other ) = delete;
+    UnorderedMap( UnorderedMap<KEY, VALUE> && other ) = delete;
     ~UnorderedMap();
 
     void Destruct();
@@ -32,8 +32,8 @@ public:
     [[nodiscard]] bool          IsEmpty() const { return ( m_Count == 0 ); }
     [[nodiscard]] size_t        GetSize() const { return m_Count; }
 
-    UnorderedMap< KEY, VALUE > & operator = ( const UnorderedMap< KEY, VALUE > & other ) = delete;
-    UnorderedMap< KEY, VALUE > & operator = ( UnorderedMap< KEY, VALUE > && other ) = delete;
+    UnorderedMap<KEY, VALUE> & operator=( const UnorderedMap<KEY, VALUE> & other ) = delete;
+    UnorderedMap<KEY, VALUE> & operator=( UnorderedMap<KEY, VALUE> && other ) = delete;
 
     class KeyValue
     {
@@ -42,15 +42,16 @@ public:
             : m_Key( key )
             , m_Value( value )
             , m_Next( next )
-        {}
+        {
+        }
 
-        KeyValue & operator = ( const KeyValue & other ) = delete;
+        KeyValue & operator=( const KeyValue & other ) = delete;
 
         const KEY   m_Key;
         VALUE       m_Value;
 
     protected:
-        friend class UnorderedMap< KEY, VALUE >;
+        friend class UnorderedMap<KEY, VALUE>;
         KeyValue    * m_Next; // In-place linked list for each bucket
     };
 
@@ -89,7 +90,7 @@ void UnorderedMap<KEY, VALUE>::Destruct()
 {
     if ( m_Buckets )
     {
-        for ( uint32_t i = 0 ; i < kTableSize ; ++i )
+        for ( uint32_t i = 0; i < kTableSize; ++i )
         {
             KeyValue * existingKeyValue = m_Buckets[ i ];
             while ( existingKeyValue )
@@ -100,7 +101,7 @@ void UnorderedMap<KEY, VALUE>::Destruct()
             }
         }
 
-        FDELETE [] m_Buckets;
+        FDELETE[] m_Buckets;
         m_Buckets = nullptr;
     }
     m_Count = 0;

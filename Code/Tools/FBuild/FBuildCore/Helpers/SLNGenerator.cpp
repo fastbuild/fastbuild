@@ -81,7 +81,9 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 
     const char * shortVersionStart = version;
     const char * shortVersionEnd = version;
-    for ( ; *shortVersionEnd && *shortVersionEnd != '.' ; ++shortVersionEnd );
+    for ( ; *shortVersionEnd && *shortVersionEnd != '.'; ++shortVersionEnd )
+    {
+    }
 
     AStackString<> shortVersion( shortVersionStart, shortVersionEnd );
 
@@ -352,7 +354,6 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const Array<SolutionConfi
                        solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
                        solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
             }
-
         }
     }
 
@@ -425,7 +426,7 @@ void SLNGenerator::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
     AStackString<1024> tmp;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     tmp.VFormat( fmtString, args );
     va_end( args );
 

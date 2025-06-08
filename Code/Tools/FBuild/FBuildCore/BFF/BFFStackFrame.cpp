@@ -185,7 +185,7 @@ void BFFStackFrame::DisconnectStackChain()
     frame = frame ? frame : s_StackHead;
     ASSERT( frame );
 
-    BFFVariable* var = frame->GetVarMutableNoRecurse( name );
+    BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
         var->SetValueStruct( Move( members ) );
@@ -193,7 +193,7 @@ void BFFStackFrame::DisconnectStackChain()
     }
 
     // variable not found at this level, so create it
-    BFFVariable* v = FNEW( BFFVariable( name, token, Move( members ) ) );
+    BFFVariable * v = FNEW( BFFVariable( name, token, Move( members ) ) );
     frame->m_Variables.Append( v );
 }
 
@@ -267,7 +267,7 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
     ASSERT( lhs );
     ASSERT( rhs );
 
-    BFFVariable *const newVar = lhs->ConcatVarsRecurse( name, *rhs, operatorIter );
+    BFFVariable * const newVar = lhs->ConcatVarsRecurse( name, *rhs, operatorIter );
     if ( newVar == nullptr )
     {
         return nullptr; // ConcatVarsRecurse will have emitted an error
@@ -383,7 +383,7 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 // GetVariableRecurse
 //------------------------------------------------------------------------------
 const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
-                                                 BFFVariable::VarType type ) const
+                                                       BFFVariable::VarType type ) const
 {
     ASSERT( nameOnly.BeginsWith( '.' ) == false ); // Should not include . : TODO:C Resolve the inconsistency
 
@@ -462,7 +462,7 @@ void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable * var )
     // look at this scope level
     Array<BFFVariable *>::Iter i = m_Variables.Begin();
     Array<BFFVariable *>::Iter end = m_Variables.End();
-    for ( ; i < end ; ++i )
+    for ( ; i < end; ++i )
     {
         if ( ( *i )->GetName() == var->GetName() )
         {

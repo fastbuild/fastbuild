@@ -52,7 +52,7 @@ public:
     const Array<AString> & GetUnityFileNames() const { return m_UnityFileNames; }
     const Array<UnityIsolatedFile> & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
-    void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
+    void EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
 protected:
     virtual bool DetermineNeedToBuildStatic() const override;
@@ -74,7 +74,7 @@ protected:
         bool                        IsIsolated() const          { return m_Isolated; }
         void                        SetIsolated( bool value )   { m_Isolated = value; }
 
-        bool operator < ( const UnityFileAndOrigin & other ) const;
+        bool operator<( const UnityFileAndOrigin & other ) const;
 
     protected:
         FileIO::FileInfo *      m_Info              = nullptr;
@@ -108,7 +108,7 @@ protected:
     bool m_UseRelativePaths_Experimental;
 
     // Temporary data
-    Array<FileIO::FileInfo*> m_FilesInfo;
+    Array<FileIO::FileInfo *> m_FilesInfo;
 
     // Internal data persisted between builds
     Array<UnityIsolatedFile> m_IsolatedFiles;

@@ -655,7 +655,7 @@ void TestCopy::ObjectListChaining2() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = configFileCopy;
-    const char* dbFile = "../tmp/Test/Copy/ObjectListChaining2/fbuild.fdb";
+    const char * dbFile = "../tmp/Test/Copy/ObjectListChaining2/fbuild.fdb";
 
     AString depGraphText1( 8 * 1024 );
     AString depGraphText2( 8 * 1024 );

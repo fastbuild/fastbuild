@@ -13,7 +13,11 @@
 class Object_ReflectionInfo : public ReflectionInfo
 {
 public:
-    explicit Object_ReflectionInfo() { SetTypeName( "Object" ); m_IsAbstract = true; }
+    explicit Object_ReflectionInfo()
+    {
+        SetTypeName( "Object" );
+        m_IsAbstract = true;
+    }
     virtual ~Object_ReflectionInfo() override = default;
 };
 Object_ReflectionInfo g_Object_ReflectionInfo;

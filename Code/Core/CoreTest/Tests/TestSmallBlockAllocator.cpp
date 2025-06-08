@@ -17,11 +17,11 @@
 #include <stdlib.h>
 
 // Handle GCC -ffreestanding environment
-#if defined(__STDC_HOSTED__) && (__STDC_HOSTED__ == 0)
+#if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
     extern "C"
     {
-        void* malloc(size_t size);
-        void free(void * ptr);
+        void * malloc( size_t size );
+        void free( void * ptr );
     }
 #endif
 
@@ -106,9 +106,9 @@ void TestSmallBlockAllocator::MultiThreaded() const
         ThreadInfo info[ numThreads ];
         for ( size_t i = 0; i < numThreads; ++i )
         {
-            info[ i ].m_AllocationSizes = & allocSizes;
+            info[ i ].m_AllocationSizes = &allocSizes;
             info[ i ].m_RepeatCount = repeatCount;
-            info[ i ].m_Thread.Start( ThreadFunction_System, "SmallBlock", (void*)&info[ i ] );
+            info[ i ].m_Thread.Start( ThreadFunction_System, "SmallBlock", (void *)&info[ i ] );
         }
 
         // Join the threads
@@ -125,9 +125,9 @@ void TestSmallBlockAllocator::MultiThreaded() const
         ThreadInfo info[ numThreads ];
         for ( size_t i = 0; i < numThreads; ++i )
         {
-            info[ i ].m_AllocationSizes = & allocSizes;
+            info[ i ].m_AllocationSizes = &allocSizes;
             info[ i ].m_RepeatCount = repeatCount;
-            info[ i ].m_Thread.Start( ThreadFunction_SmallBlock, "SmallBlock", (void*)&info[ i ] );
+            info[ i ].m_Thread.Start( ThreadFunction_SmallBlock, "SmallBlock", (void *)&info[ i ] );
         }
 
         // Join the threads
@@ -176,7 +176,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
         // use malloc
         for ( uint32_t i = 0; i < numAllocs; ++i )
         {
-            PRAGMA_DISABLE_PUSH_MSVC(26408) // Memory subsystem is allowed to call malloc
+            PRAGMA_DISABLE_PUSH_MSVC( 26408 ) // Memory subsystem is allowed to call malloc
             uint32_t * mem = (uint32_t *)malloc( allocSizes[ i ] );
             PRAGMA_DISABLE_POP_MSVC
             allocs.Append( mem );
@@ -186,7 +186,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
         for ( uint32_t i = 0; i < numAllocs; ++i )
         {
             void * mem = allocs[ i ];
-            PRAGMA_DISABLE_PUSH_MSVC(26408) // Memory subsystem is allowed to call free
+            PRAGMA_DISABLE_PUSH_MSVC( 26408 ) // Memory subsystem is allowed to call free
             free( mem );
             PRAGMA_DISABLE_POP_MSVC
         }

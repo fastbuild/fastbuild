@@ -42,8 +42,17 @@ OSFont::~OSFont()
 void OSFont::Init( uint32_t size, const char * fontFamily )
 {
     #if defined( __WINDOWS__ )
-        m_Font = CreateFontA( (int32_t)size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        m_Font = CreateFontA( (int32_t)size,
+                              0,
+                              0,
+                              0,
+                              FW_NORMAL,
+                              FALSE,
+                              FALSE,
+                              FALSE,
+                              DEFAULT_CHARSET,
+                              OUT_DEFAULT_PRECIS,
+                              CLIP_DEFAULT_PRECIS,
                               CLEARTYPE_QUALITY,
                               DEFAULT_PITCH,
                               fontFamily );

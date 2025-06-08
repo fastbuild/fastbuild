@@ -68,7 +68,7 @@ static const BFFVariable * GetVar( const Function * function, const BFFToken * t
         var = BFFStackFrame::GetVar( varName, nullptr );
     }
 
-    if ( (varParentScope && (nullptr == varFrame)) || (var == nullptr) )
+    if ( ( varParentScope && ( nullptr == varFrame ) ) || ( var == nullptr ) )
     {
         Error::Error_1009_UnknownVariable( token, function, varName );
         return nullptr;
@@ -209,8 +209,8 @@ public:
     explicit Operand( const Operand & ) = default;
 
     Operand( Operand && ) = delete;
-    Operand & operator = ( const Operand & ) = delete;
-    Operand & operator = ( Operand && ) = delete;
+    Operand & operator=( const Operand & ) = delete;
+    Operand & operator=( Operand && ) = delete;
 
     bool IsValid() const { return m_Valid; }
 
@@ -256,7 +256,7 @@ public:
         {
             return; // Operand constructor emitted an error
         }
-        if ( !Is< T >() )
+        if ( !Is<T>() )
         {
             if ( m_Var != nullptr )
             {
@@ -281,8 +281,8 @@ public:
     }
     OperandOf( const OperandOf & ) = delete;
     OperandOf( OperandOf && ) = delete;
-    OperandOf & operator = ( const OperandOf & ) = delete;
-    OperandOf & operator = ( OperandOf && ) = delete;
+    OperandOf & operator=( const OperandOf & ) = delete;
+    OperandOf & operator=( OperandOf && ) = delete;
 
     typename T::ReturnType GetValue() const { return Operand::GetValue<T>(); }
 };
@@ -830,7 +830,7 @@ static bool ParseStringComparisonExp( const Function * function, const OperandOf
                 return ParseStringInArray( function, lhs, op, iter, expResult );
             }
 
-            const OperandOf<String> rhs(*iter.GetCurrent(), function);
+            const OperandOf<String> rhs( *iter.GetCurrent(), function );
             if ( !rhs.IsValid() )
             {
                 return false;
@@ -944,7 +944,8 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
                     return false;
                 }
             }
-            else {
+            else
+            {
                 // TODO: Update the following error.
                 // Error::Error_1008_VariableOfWrongType was one of the options but we expected multiple types here,
                 // where the 1008 function accept a single expected type.
@@ -954,7 +955,7 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
 
             return ExpectExpEnd( function, iter, endsOnCloseBracket );
         }
-        case BFFTokenType::Operator:       // = += > ! == etc
+        case BFFTokenType::Operator: // = += > ! == etc
         {
             // Expect: !bool-exp [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
             if ( !ParseUnaryBooleanExp( function, iter, expResult ) )
@@ -970,7 +971,7 @@ static bool ParseBooleanExp( const Function * function, BFFTokenRange & iter, bo
             }
             return true;
         }
-        case BFFTokenType::RoundBracket:   // ( or )
+        case BFFTokenType::RoundBracket: // ( or )
         {
             // Expect: (bool-exp) [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
             if ( !ParseSubBooleanExp( function, iter, expResult ) )

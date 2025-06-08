@@ -32,7 +32,9 @@
     void NoReturn()
     {
         #if defined( __clang__ )
-            for (;;) {}
+        for ( ;; )
+        {
+        }
         #endif
     }
 #endif
@@ -62,8 +64,8 @@ bool IsDebuggerAttached()
         mib[ 3 ] = getpid();
 
         // Call sysctl
-        size_t size = sizeof(info);
-        VERIFY( sysctl( mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0 ) == 0 );
+        size_t size = sizeof( info );
+        VERIFY( sysctl( mib, sizeof( mib ) / sizeof( *mib ), &info, &size, NULL, 0 ) == 0 );
 
         // We're being debugged if the P_TRACED flag is set.
         return ( ( info.kp_proc.p_flag & P_TRACED ) != 0 );
@@ -85,12 +87,15 @@ bool IsDebuggerAttached()
         const uint32_t BUFFER_SIZE( 4096 );
         char buffer[ BUFFER_SIZE ];
         #if defined( __APPLE__ ) || defined( __LINUX__ )
-            snprintf( buffer, BUFFER_SIZE,
+            snprintf( buffer,
         #else
-            sprintf_s( buffer, BUFFER_SIZE,
+            sprintf_s( buffer,
         #endif
-            "\n-------- ASSERTION FAILED --------\n%s(%i): Assert: %s\n-----^^^ ASSERTION FAILED ^^^-----\n",
-            file, line, message );
+                       BUFFER_SIZE,
+                       "\n-------- ASSERTION FAILED --------\n%s(%i): Assert: %s\n-----^^^ ASSERTION FAILED ^^^-----\n",
+                       file,
+                       line,
+                       message );
 
         puts( buffer );
         fflush( stdout );
@@ -102,7 +107,7 @@ bool IsDebuggerAttached()
         // Trigger user callback if needed. This may not return.
         if ( s_AssertCallback )
         {
-            (*s_AssertCallback)( buffer );
+            ( *s_AssertCallback )( buffer );
         }
 
         if ( IsDebuggerAttached() == false )

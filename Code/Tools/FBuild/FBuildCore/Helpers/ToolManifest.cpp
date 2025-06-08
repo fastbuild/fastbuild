@@ -55,7 +55,8 @@ ToolManifestFile::ToolManifestFile( const AString & name, uint64_t stamp, uint32
     , m_TimeStamp( stamp )
     , m_Hash( hash )
     , m_UncompressedContentSize( size )
-{}
+{
+}
 
 // DESTRUCTOR (ToolManifestFile)
 //------------------------------------------------------------------------------
@@ -202,7 +203,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     const size_t memSize( numFiles * sizeof( uint32_t ) * 2 );
     uint32_t * mem = (uint32_t *)ALLOC( memSize );
     uint32_t * pos = mem;
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         const ToolManifestFile & f = m_Files[ i ];
 
@@ -220,7 +221,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     FREE( mem );
 
     // update time stamp (most recent file in manifest)
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         const ToolManifestFile & f = m_Files[ i ];
         ASSERT( f.GetTimeStamp() ); // should have had an error before if the file was missing
@@ -256,7 +257,7 @@ void ToolManifest::SerializeForRemote( IOStream & ms ) const
     const uint32_t numItems( (uint32_t)m_Files.GetSize() );
     ms.Write( numItems );
     const size_t numFiles( m_Files.GetSize() );
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         const ToolManifestFile & f = m_Files[ i ];
         ms.Write( f.GetName() );
@@ -306,7 +307,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     // Read file info
     Array<ToolManifestFile> files;
     files.SetCapacity( numFiles );
-    for ( size_t i=0; i<(size_t)numFiles; ++i )
+    for ( size_t i = 0; i < (size_t)numFiles; ++i )
     {
         AStackString<> name;
         uint64_t timeStamp( 0 );
@@ -348,7 +349,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 
     // determine if any files are remaining from a previous run
     size_t numFilesAlreadySynchronized = 0;
-    for ( size_t i=0; i<(size_t)numFiles; ++i )
+    for ( size_t i = 0; i < (size_t)numFiles; ++i )
     {
         AStackString<> localFile;
         GetRemoteFilePath( (uint32_t)i, localFile );
@@ -465,7 +466,8 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         }
     }
 
-    *mem = 0; ++mem; // double null
+    *mem = 0;
+    ++mem; // double null
 
     // are all files already present?
     if ( numFilesAlreadySynchronized == m_Files.GetSize() )
@@ -734,7 +736,7 @@ void ToolManifest::GetRemotePath( AString & path ) const
 
 // LoadFile (ToolManifestFile)
 //------------------------------------------------------------------------------
-bool ToolManifestFile::LoadFile( void * & uncompressedContent, uint32_t & uncompressedContentSize ) const
+bool ToolManifestFile::LoadFile( void *& uncompressedContent, uint32_t & uncompressedContentSize ) const
 {
     // read the file into memory
     FileStream fs;

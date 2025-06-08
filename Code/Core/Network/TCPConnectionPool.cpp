@@ -389,8 +389,8 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
                 const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
 
                 int32_t error = 0;
-                socklen_t size = sizeof(error);
-                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) != SOCKET_ERROR )
+                socklen_t size = sizeof( error );
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, &size ) != SOCKET_ERROR )
                 {
                     TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i, SO_ERROR %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet, error );
                 }
@@ -410,8 +410,8 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
                 // connect() succeeded, it only means that it is completed.
                 // To get the result we need to query SO_ERROR value via getsockopt().
                 int32_t error = 0;
-                socklen_t size = sizeof(error);
-                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) == SOCKET_ERROR )
+                socklen_t size = sizeof( error );
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, &size ) == SOCKET_ERROR )
                 {
                     #ifdef TCPCONNECTION_DEBUG
                         AStackString<> host;
@@ -900,7 +900,7 @@ void TCPConnectionPool::FDSet( TCPSocket fd, void * set ) const
     PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunknown-warning-option" )
     PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here
     PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunused-value" ) // expression result unused
-    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wreserved-identifier") // identifier '__i' is reserved because it starts with '__'
+    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wreserved-identifier" ) // identifier '__i' is reserved because it starts with '__'
     FD_SET( fd, static_cast<fd_set *>( set ) );
     PRAGMA_DISABLE_POP_CLANG_WINDOWS
     PRAGMA_DISABLE_POP_CLANG_WINDOWS
@@ -1193,7 +1193,7 @@ void TCPConnectionPool::DisableSigPipe( TCPSocket socket ) const
     #elif defined( __APPLE__ )
         // Must be done on every socket on OSX
         int nosigpipe = 1;
-        VERIFY( setsockopt( socket, SOL_SOCKET, SO_NOSIGPIPE, (void *)&nosigpipe, sizeof(int) ) == 0 );
+        VERIFY( setsockopt( socket, SOL_SOCKET, SO_NOSIGPIPE, (void *)&nosigpipe, sizeof( int ) ) == 0 );
     #endif
 }
 

@@ -224,7 +224,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
 // Build
 //------------------------------------------------------------------------------
-bool FBuild::Build( const char* target )
+bool FBuild::Build( const char * target )
 {
     return Build( AStackString<>( target ) );
 }
@@ -248,7 +248,7 @@ bool FBuild::GetTargets( const Array<AString> & targets, Dependencies & outDeps 
 
     // Get the nodes for all the targets
     const size_t numTargets = targets.GetSize();
-    for ( size_t i=0; i<numTargets; ++i )
+    for ( size_t i = 0; i < numTargets; ++i )
     {
         const AString & target = targets[ i ];
 
@@ -272,7 +272,7 @@ bool FBuild::GetTargets( const Array<AString> & targets, Dependencies & outDeps 
             {
                 FLOG_WARN( "Did you mean one of these ?" );
                 const size_t count = nearestNodes.GetSize();
-                for ( size_t j = 0 ; j < count ; ++j )
+                for ( size_t j = 0; j < count; ++j )
                 {
                     FLOG_WARN( "    %s", nearestNodes[j].m_Node->GetName().Get() );
                 }
@@ -303,7 +303,7 @@ bool FBuild::Build( const Array<AString> & targets )
     const bool result = Build( &proxy );
 
     // output per-target results
-    for ( size_t i=0; i<targets.GetSize(); ++i )
+    for ( size_t i = 0; i < targets.GetSize(); ++i )
     {
         const char * const nodeStatus = GetFinalStatus( deps[ i ].GetNode() );
         OUTPUT( "FBuild: %s: %s\n", nodeStatus, targets[ i ].Get() );
@@ -373,7 +373,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
 // SaveDependencyGraph
 //------------------------------------------------------------------------------
-void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char* nodeGraphDBFile ) const
+void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char * nodeGraphDBFile ) const
 {
     m_DependencyGraph->Save( stream, nodeGraphDBFile );
 }
@@ -477,7 +477,7 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char* node
                     stopping = true;
                     if ( m_Options.m_FastCancel )
                     {
-                    // Notify the system that the main process has been killed and that it can kill its process.
+                        // Notify the system that the main process has been killed and that it can kill its process.
                         AtomicStoreRelaxed( &s_AbortBuild, true );
                     }
                 }
@@ -691,10 +691,10 @@ void FBuild::UpdateBuildStatus( const Node * node )
         const float doneRatio = (float)( (double)bs.m_NodeTimeProgressms / (double)bs.m_NodeTimeTotalms );
 
         // don't allow it to reach 100% (handles rounding inaccuracies)
-        const float donePerc = Math::Min< float >( doneRatio * 100.0f, 99.9f );
+        const float donePerc = Math::Min<float>( doneRatio * 100.0f, 99.9f );
 
         // don't allow progress to go backwards
-        m_SmoothedProgressTarget = Math::Max< float >( donePerc, m_SmoothedProgressTarget );
+        m_SmoothedProgressTarget = Math::Max<float>( donePerc, m_SmoothedProgressTarget );
     }
 
     m_SmoothedProgressCurrent = ( 0.5f * m_SmoothedProgressCurrent ) + ( m_SmoothedProgressTarget * 0.5f );

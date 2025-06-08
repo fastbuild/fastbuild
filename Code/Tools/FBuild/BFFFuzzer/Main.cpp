@@ -55,7 +55,7 @@ extern "C" int LLVMFuzzerTestOneInput( const uint8_t * data, size_t size )
     static FuzzerEnvironment env;
 
     // Because BFFParser expects null-terminated input, we have to make a copy of the data and append null.
-    UniquePtr< char > str( (char *)ALLOC( size + 1 ) );
+    UniquePtr<char> str( (char *)ALLOC( size + 1 ) );
     memcpy( str.Get(), data, size );
     str.Get()[ size ] = 0;
 

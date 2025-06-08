@@ -78,7 +78,7 @@ public:
                                  const BFFToken * iter,
                                  const Function * function,
                                  const AString & compiler,
-                                 CompilerNode * & compilerNode );
+                                 CompilerNode *& compilerNode );
     static bool GetDirectoryListNodeList( NodeGraph & nodeGraph,
                                           const BFFToken * iter,
                                           const Function * function,
@@ -149,9 +149,9 @@ protected:
                       const GetNodeListOptions & options = GetNodeListOptions() ) const;
 
     // helpers to get properties
-    bool GetString( const BFFToken * iter, const BFFVariable * & var, const char * name, bool required = false ) const;
+    bool GetString( const BFFToken * iter, const BFFVariable *& var, const char * name, bool required = false ) const;
     bool GetString( const BFFToken * iter, AString & var, const char * name, bool required = false ) const;
-    bool GetStringOrArrayOfStrings( const BFFToken * iter, const BFFVariable * & var, const char * name, bool required ) const;
+    bool GetStringOrArrayOfStrings( const BFFToken * iter, const BFFVariable *& var, const char * name, bool required ) const;
     bool GetStrings( const BFFToken * iter, Array<AString> & strings, const char * name, bool required = false ) const;
 
     // helper function to make alias for target

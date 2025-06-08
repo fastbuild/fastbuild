@@ -56,7 +56,10 @@
         class MemBucket : public MemPoolBlock
         {
         public:
-            MemBucket( size_t size, size_t align ) : MemPoolBlock( size, align ) {}
+            MemBucket( size_t size, size_t align )
+                : MemPoolBlock( size, align )
+            {
+            }
 
         protected:
             virtual void *  AllocateMemoryForPage() override;

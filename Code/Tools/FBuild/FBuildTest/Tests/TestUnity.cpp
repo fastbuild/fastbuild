@@ -783,11 +783,12 @@ void TestUnity::SortFiles() const
 
     #define TEST( ... )                                                         \
         const char * const outputs[] = { __VA_ARGS__ };                         \
-        for ( size_t i = 0; i < (sizeof(outputs) / sizeof(const char *)); ++i ) \
+        for ( size_t i = 0; i < ( sizeof( outputs ) / sizeof( const char * ) ); ++i ) \
         {                                                                       \
             TEST_ASSERTM( h[ i ] == outputs[ i ], "Mismatch @ index %u: %s != %s", (uint32_t)i, h[ i ].Get(), outputs[ i ] ); \
         }                                                                       \
-    } while ( false )
+    }                                                                           \
+    while ( false )
 
     // Basic sanity check
     SORT( "a.cpp", "b.cpp" );
@@ -964,7 +965,6 @@ void TestUnity::CacheUsingRelativePaths() const
 
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
     }
-
 }
 
 // NoUnityCommandLineOption

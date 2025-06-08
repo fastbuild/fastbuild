@@ -80,7 +80,10 @@
 
     // WarningFormat
     //------------------------------------------------------------------------------
-    /*static*/ void Tracing::WarningFormat( MSVC_SAL_PRINTF const char * file, uint32_t line, const char * fmtString, ... )
+    /*static*/ void Tracing::WarningFormat( MSVC_SAL_PRINTF const char * file,
+                                            uint32_t line,
+                                            const char * fmtString,
+                                            ... )
     {
         AStackString<> buffer;
 
@@ -244,7 +247,7 @@ bool Tracing::Callbacks::DispatchCallbacksDebugSpam( const char * message )
 
     for ( Tracing::Callback * cb : m_CallbacksDebugSpam )
     {
-        if ( (*cb)( message ) == false )
+        if ( ( *cb )( message ) == false )
         {
             m_InCallbackDispatch = false;
             return true; // callback wants msg supressed
@@ -276,7 +279,7 @@ bool Tracing::Callbacks::DispatchCallbacksOutput( const char * message )
 
     for ( Tracing::Callback * cb : m_CallbacksOutput )
     {
-        if ( (*cb)( message ) == false )
+        if ( ( *cb )( message ) == false )
         {
             m_InCallbackDispatch = false;
             return true; // callback wants msg supressed

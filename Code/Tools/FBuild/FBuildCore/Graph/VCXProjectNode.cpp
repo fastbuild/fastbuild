@@ -294,7 +294,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     // files from directory listings
     for ( const Dependency & staticDep : m_StaticDependencies )
     {
-        const DirectoryListNode * dirNode = staticDep.GetNode()->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dirNode = staticDep.GetNode()->CastTo<DirectoryListNode>();
         for ( const FileIO::FileInfo & fileInfo : dirNode->GetFiles() )
         {
             pg.AddFile( fileInfo.m_Name );

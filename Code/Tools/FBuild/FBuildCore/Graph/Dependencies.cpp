@@ -17,7 +17,7 @@
 //------------------------------------------------------------------------------
 namespace
 {
-    #pragma pack(push, 1)
+    #pragma pack( push, 1 )
     class SerializedDependency
     {
     public:
@@ -25,7 +25,7 @@ namespace
         uint64_t    m_Stamp;
         bool        m_IsWeak;
     };
-    #pragma pack(pop)
+    #pragma pack( pop )
 }
 
 // Save
@@ -52,7 +52,7 @@ void Dependencies::Save( IOStream & stream ) const
         serializedDep.m_Stamp = dep.GetNodeStamp();
         serializedDep.m_IsWeak = dep.IsWeak();
 
-        VERIFY( stream.WriteBuffer( &serializedDep, sizeof(SerializedDependency) ) == sizeof(SerializedDependency) );
+        VERIFY( stream.WriteBuffer( &serializedDep, sizeof( SerializedDependency ) ) == sizeof( SerializedDependency ) );
     }
 }
 
@@ -73,10 +73,10 @@ void Dependencies::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
     // to avoid non-trivial function overheads
     const uint64_t pos = stream.Tell();
     const char * data = ( static_cast<const char *>( stream.GetData() ) + pos );
-    stream.Seek( pos + ( sizeof(SerializedDependency) * numDeps ) );
+    stream.Seek( pos + ( sizeof( SerializedDependency ) * numDeps ) );
 
     SetCapacity( numDeps );
-    for ( uint32_t i=0; i<numDeps; ++i )
+    for ( uint32_t i = 0; i < numDeps; ++i )
     {
         const SerializedDependency * dep = reinterpret_cast<const SerializedDependency *>( data ) + i;
 
@@ -102,7 +102,7 @@ void Dependencies::GrowCapacity( size_t newCapacity )
     }
 
     // Allocate space for new list
-    const size_t allocSize = ( sizeof(DependencyList) + ( newCapacity * sizeof(Dependency) ) );
+    const size_t allocSize = ( sizeof( DependencyList ) + ( newCapacity * sizeof( Dependency ) ) );
     DependencyList * newList = static_cast<DependencyList *>( ALLOC( allocSize ) );
     newList->m_Size = 0;
     newList->m_Capacity = static_cast<uint32_t>( newCapacity );
@@ -118,7 +118,7 @@ void Dependencies::GrowCapacity( size_t newCapacity )
         {
             INPLACE_NEW ( newPos++ ) Dependency( *oldPos++ );
         }
-        newList->m_Size = static_cast<uint32_t>(numDeps);
+        newList->m_Size = static_cast<uint32_t>( numDeps );
 
         // Free old list
         FREE( m_DependencyList ); // NOTE: Skipping destruction of POD Dependency

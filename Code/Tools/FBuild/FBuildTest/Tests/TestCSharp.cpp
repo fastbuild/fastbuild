@@ -47,7 +47,7 @@ REGISTER_TESTS_BEGIN( TestCSharp )
     REGISTER_TEST( TestMultipleAssemblies )
     REGISTER_TEST( TestMultipleAssemblies_NoRebuild )
     REGISTER_TEST( TestMultipleAssemblies_NoRebuild_BFFChange )
-//  REGISTER_TEST( TestMixedAssemblyWithCPP ) // TODO:A Enable
+    //REGISTER_TEST( TestMixedAssemblyWithCPP ) // TODO:A Enable
     REGISTER_TEST( CSharpWithObjectListFails )
     REGISTER_TEST( UsingNonCSharpCompilerFails )
     REGISTER_TEST( Exclusions )
@@ -345,7 +345,7 @@ void TestCSharp::Exclusions() const
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
     // Check all the exclusion methods worked as expected
-    const char* const aliasesToCheck[] =
+    const char * const aliasesToCheck[] =
     {
         "ExcludePath-ForwardSlash",
         "ExcludePath-Backslash",
@@ -355,7 +355,7 @@ void TestCSharp::Exclusions() const
         "ExcludePattern-ForwardSlash",
         "ExcludePattern-Backslash",
     };
-    for ( const char* const aliasToCheck : aliasesToCheck )
+    for ( const char * const aliasToCheck : aliasesToCheck )
     {
         // Get the TestNode (via the Alias)
         const Node * aliasNode = fBuild.GetNode( aliasToCheck );

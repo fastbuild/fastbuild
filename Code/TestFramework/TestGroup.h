@@ -37,7 +37,7 @@ private:
 
 // Create a no-return helper to improve static analysis
 #if defined( __WINDOWS__ )
-    __declspec(noreturn) void TestNoReturn();
+    __declspec( noreturn ) void TestNoReturn();
     #define TEST_NO_RETURN TestNoReturn();
 #else
     #define TEST_NO_RETURN
@@ -46,14 +46,15 @@ private:
 // Test Assertions
 //------------------------------------------------------------------------------
 #define TEST_ASSERT( expression )                                   \
-    do {                                                            \
-    PRAGMA_DISABLE_PUSH_MSVC(4127)                                  \
-    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )       \
+    do                                                              \
+    {                                                               \
+        PRAGMA_DISABLE_PUSH_MSVC( 4127 )                            \
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )   \
         if ( !( expression ) )                                      \
         {                                                           \
-            if ( TestManager::AssertFailure(  #expression, __FILE__, __LINE__ ) ) \
+            if ( TestManager::AssertFailure( #expression, __FILE__, __LINE__ ) ) \
             {                                                       \
-                BREAK_IN_DEBUGGER;                                      \
+                BREAK_IN_DEBUGGER;                                  \
             }                                                       \
             TEST_NO_RETURN                                          \
         }                                                           \
@@ -62,12 +63,13 @@ private:
     PRAGMA_DISABLE_POP_MSVC
 
 #define TEST_ASSERTM( expression, ... )                             \
-    do {                                                            \
-    PRAGMA_DISABLE_PUSH_MSVC(4127)                                  \
-    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )       \
+    do                                                              \
+    {                                                               \
+        PRAGMA_DISABLE_PUSH_MSVC( 4127 )                            \
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )   \
         if ( !( expression ) )                                      \
         {                                                           \
-            if ( TestManager::AssertFailureM(  #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
+            if ( TestManager::AssertFailureM( #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
             {                                                       \
                 BREAK_IN_DEBUGGER;                                  \
             }                                                       \
@@ -118,7 +120,9 @@ private:
         TestMemorySnapshot()
             : m_AllocationId( MemTracker::GetCurrentAllocationId() )
             , m_ActiveAllocationCount( MemTracker::GetCurrentAllocationCount() )
-        {}
+        {
+        }
+
         uint32_t    m_AllocationId;
         uint32_t    m_ActiveAllocationCount;
     };
@@ -135,7 +139,7 @@ private:
         }
 
     // Test for new active allocations since a snapshot
-    #define TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( snapshot, expected )    \
+    #define TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( snapshot, expected ) \
         {                                                               \
             const uint32_t numActiveAllocs = ( MemTracker::GetCurrentAllocationCount() - snapshot.m_ActiveAllocationCount ); \
             TEST_ASSERTM( numActiveAllocs == expected, "%u allocs(s) instead of %u alloc(s)", numActiveAllocs, expected ); \

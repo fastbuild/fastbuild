@@ -37,6 +37,7 @@ public:
 
     // jobs consumed by workers
     Job * RemoveJob();
+
 private:
     uint32_t    m_Count;    // access the current count
     Mutex       m_Mutex;    // lock to add/remove jobs
@@ -90,7 +91,7 @@ private:
                                    bool systemError,
                                    bool & outRaceLost,
                                    bool & outRaceWon,
-                                   const Node * & outNode,
+                                   const Node *& outNode,
                                    uint32_t & outJobSystemErrorCount );
     void        ReturnUnfinishedDistributableJob( Job * job );
 

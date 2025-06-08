@@ -36,7 +36,8 @@ private:
 class MutexHolder
 {
 public:
-    explicit MutexHolder( Mutex & mutex ) : m_Mutex( mutex )
+    explicit MutexHolder( Mutex & mutex )
+        : m_Mutex( mutex )
     {
         mutex.Lock();
     }
@@ -74,7 +75,7 @@ public:
 
 private:
     TryMutexHolder( const TryMutexHolder & other ) = delete;
-    void operator = ( TryMutexHolder & other ) = delete;
+    void operator=( TryMutexHolder & other ) = delete;
 
     Mutex &     m_Mutex;
     const bool  m_Locked;

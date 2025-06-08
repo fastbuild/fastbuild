@@ -18,7 +18,8 @@
 //------------------------------------------------------------------------------
 CompilerDriver_CL::CompilerDriver_CL( bool isClangCL )
     : m_IsClangCL( isClangCL )
-{}
+{
+}
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
@@ -278,7 +279,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
             // -ffile-prefix-map is only supported starting with GCC 8 and Clang 10. The -fdebug-prefix-map
             // option is available starting with Clang 3.8 and all modern GCC versions.
             tmp = " -Xclang "; // When clang is operating in "CL mode", it seems to need the -Xclang prefix for the command
-            tmp.AppendFormat(" \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), m_SourceMapping.Get());
+            tmp.AppendFormat( " \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), m_SourceMapping.Get() );
             outFullArgs += tmp;
         }
     }
@@ -289,7 +290,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
 /*virtual*/ bool CompilerDriver_CL::ProcessArg_PreparePreprocessedForRemote( const AString & token,
                                                                              size_t & index,
                                                                              const AString & /*nextToken*/,
-                                                                             Args & /*outFullArgs*/) const
+                                                                             Args & /*outFullArgs*/ ) const
 {
     // Remove "/sourceDependencies <arg>"
     if ( IsCompilerArg_MSVC( token, "sourceDependencies" ) )

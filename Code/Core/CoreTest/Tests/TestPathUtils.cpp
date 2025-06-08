@@ -68,7 +68,7 @@ void TestPathUtils::TestPathBeginsWith() const
         TEST_ASSERT( result == expectedResult ); \
     }
 
-    #if defined( __WINDOWS__)
+    #if defined( __WINDOWS__ )
         DOCHECK( "c:\\folder\\subFolder\\", "c:\\folder\\", true )
         DOCHECK( "c:\\folder\\subFolder", "c:\\folder", true )
 
@@ -103,7 +103,7 @@ void TestPathUtils::TestPathEndsWithFile() const
         TEST_ASSERT( result == expectedResult ); \
     }
 
-    #if defined( __WINDOWS__)
+    #if defined( __WINDOWS__ )
         DOCHECK( "c:\\folder\\file.cpp", "file.cpp", true )
         DOCHECK( "c:\\file.cpp", "file.cpp", true )
 

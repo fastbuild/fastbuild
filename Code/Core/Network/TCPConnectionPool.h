@@ -107,7 +107,9 @@ public:
 
 protected:
     // network events - NOTE: these happen in another thread! (but never at the same time)
-    virtual void OnReceive( const ConnectionInfo *, void * /*data*/, uint32_t /*size*/, bool & /*keepMemory*/ ) {}
+    virtual void OnReceive( const ConnectionInfo *, void * /*data*/, uint32_t /*size*/, bool & /*keepMemory*/ )
+    {
+    }
     virtual void OnConnected( const ConnectionInfo * ) {}
     virtual void OnDisconnected( const ConnectionInfo * ) {}
 

@@ -53,7 +53,7 @@ public:
     void                SetFileLock( FileStream * fileLock )    { m_FileLock = fileLock; }
 
 protected:
-    bool                LoadFile( void * & uncompressedContent, uint32_t & uncompressedContentSize ) const;
+    bool                LoadFile( void *& uncompressedContent, uint32_t & uncompressedContentSize ) const;
 
     // common members
     AString          m_Name;
@@ -94,7 +94,7 @@ public:
     bool GetSynchronizationStatus( uint32_t & syncDone, uint32_t & syncTotal ) const;
 
     // operator for FindDeref
-    bool operator == ( uint64_t toolId ) const
+    bool operator==( uint64_t toolId ) const
     {
         return ( m_ToolId == toolId );
     }

@@ -195,7 +195,8 @@ class FunctionWrapper : public Function
 public:
     FunctionWrapper()
         : Function( "dummyfunction" )
-    {}
+    {
+    }
 
     bool Populate( NodeGraph & ng, BFFToken * iter, Node & n )
     {
@@ -212,7 +213,9 @@ class TestHelper
 {
 public:
     explicit TestHelper( BaseNode * node )
-        : m_Node( node ) {}
+        : m_Node( node )
+    {
+    }
     ~TestHelper()
     {
         delete m_Node;

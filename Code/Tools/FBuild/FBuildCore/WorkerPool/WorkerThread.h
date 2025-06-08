@@ -40,6 +40,7 @@ public:
     static bool CreateTempFile( const AString & tmpFileName,
                                 FileStream & file );
     static void CreateThreadLocalTmpDir();
+
 protected:
     // allow update from the main thread when in -j0 mode
     friend class FBuild;

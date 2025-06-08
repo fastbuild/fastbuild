@@ -27,7 +27,7 @@
 class JobCostSorter
 {
 public:
-    bool operator () ( const Job * job1, const Job * job2 ) const
+    bool operator()( const Job * job1, const Job * job2 ) const
     {
         return ( job1->GetNode()->GetRecursiveCost() < job2->GetNode()->GetRecursiveCost() );
     }
@@ -200,7 +200,7 @@ JobQueue::~JobQueue()
 
     // wait for workers to finish - ok if they stopped before this
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         m_Workers[ i ]->WaitForStop();
         FDELETE m_Workers[ i ];
@@ -212,7 +212,7 @@ JobQueue::~JobQueue()
         // we may have some distributable jobs that could not be built,
         // so delete them here before checking mem usage below
         const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
-        for ( size_t i=0; i<numJobsAvailable; ++i )
+        for ( size_t i = 0; i < numJobsAvailable; ++i )
         {
             FDELETE m_DistributableJobs_Available[ i ];
         }
@@ -229,7 +229,7 @@ JobQueue::~JobQueue()
 void JobQueue::SignalStopWorkers()
 {
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         m_Workers[ i ]->Stop();
     }
@@ -244,7 +244,7 @@ void JobQueue::SignalStopWorkers()
 bool JobQueue::HaveWorkersStopped() const
 {
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         if ( m_Workers[ i ]->HasExited() == false )
         {
@@ -274,9 +274,9 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
     // If ConcurrencyGroups are in use, sum up the number of delayed
     // jobs to include in the total "numJobs"
     uint32_t numPendingJobs = 0;
-    for (const ConcurrencyGroupState & groupState : m_ConcurrencyGroupsState)
+    for ( const ConcurrencyGroupState & groupState : m_ConcurrencyGroupsState )
     {
-        numPendingJobs += static_cast<uint32_t>(groupState.m_LocalJobs_Staging.GetSize());
+        numPendingJobs += static_cast<uint32_t>( groupState.m_LocalJobs_Staging.GetSize() );
     }
 
     MutexHolder m( m_DistributedJobsMutex );
@@ -470,7 +470,7 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorPr
             // TODO:B: Migrate this logic to the CompilerDriver
 
             // MSVC /dynamicdeopt require minor protocol 5 or later
-            const ObjectNode * on = potentialJob->GetNode()->CastTo< ObjectNode >();
+            const ObjectNode * on = potentialJob->GetNode()->CastTo<ObjectNode>();
             if ( on->IsMSVC() &&
                  on->IsUsingDynamicDeopt() &&
                  ( workerMinorProtocolVersion < 5 ) )
@@ -533,11 +533,11 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId,
                                    bool systemError,
                                    bool & outRaceLost,
                                    bool & outRaceWon,
-                                   const Node * & outNode,
+                                   const Node *& outNode,
                                    uint32_t & outJobSystemErrorCount )
 {
     MutexHolder m( m_DistributedJobsMutex );
-    Job * * jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
+    Job ** jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
     if ( jobIt )
     {
         Job * job = *jobIt;
@@ -827,7 +827,7 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
         // Cancelling?
         if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
         {
-            ASSERT( *(job->GetAbortFlagPointer()) == true );
+            ASSERT( *( job->GetAbortFlagPointer() ) == true );
 
             // Did local job actually get cancelled?
             if ( result != Node::BuildResult::eOk )
@@ -842,7 +842,6 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
             // never happened
             m_DistributableJobs_InProgress.Erase( it );
             job->SetDistributionState( Job::DIST_COMPLETED_LOCALLY ); // Cancellation has failed
-
         }
         else if ( ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
                   ( distState == Job::DIST_RACE_WON_REMOTELY ) )

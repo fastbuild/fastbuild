@@ -18,7 +18,7 @@ public:
     virtual ~ChainedMemoryStream() override;
 
     // Copying not allowed
-    ChainedMemoryStream& operator =(ChainedMemoryStream& other) = delete;
+    ChainedMemoryStream & operator=( ChainedMemoryStream & other ) = delete;
 
     // ChainedMemoryStream specific functions
     uint32_t            GetNumPages() const { return static_cast<uint32_t>( m_Pages.GetSize() ); }

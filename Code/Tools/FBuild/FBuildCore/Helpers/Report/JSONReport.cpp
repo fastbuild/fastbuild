@@ -101,7 +101,7 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
     {
         const Dependencies & childNodes = rootNode->GetStaticDependencies();
         const size_t num = childNodes.GetSize();
-        for ( size_t i=0; i<num; ++i )
+        for ( size_t i = 0; i < num; ++i )
         {
             if ( i != 0 )
             {
@@ -149,7 +149,7 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
 
 // DoCPUTimeByType
 //------------------------------------------------------------------------------
-void JSONReport::DoCPUTimeByType(const FBuildStats & stats)
+void JSONReport::DoCPUTimeByType( const FBuildStats & stats )
 {
     Write( "\"CPU Time by Node Type\": {" );
     Write( "\n\t\t" );
@@ -165,7 +165,7 @@ void JSONReport::DoCPUTimeByType(const FBuildStats & stats)
         }
 
         // label
-        const char* typeName = Node::GetTypeName( Node::Type(i) );
+        const char * typeName = Node::GetTypeName( Node::Type( i ) );
         const float value = (float)( (double)nodeStats.m_ProcessingTimeMS / (double)1000 );
 
         items.EmplaceBack( typeName, value, (void *)i );
@@ -183,14 +183,14 @@ void JSONReport::DoCPUTimeByType(const FBuildStats & stats)
     AStackString<> buffer;
     for ( size_t i = 0; i < items.GetSize(); ++i )
     {
-        const Node::Type type = (Node::Type)(size_t)items[ i ].m_UserData;
+        const Node::Type type = ( Node::Type )(size_t)items[ i ].m_UserData;
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
             continue;
         }
 
-        const char* typeName = Node::GetTypeName( type );
+        const char * typeName = Node::GetTypeName( type );
         const float value = (float)( (double)nodeStats.m_ProcessingTimeMS / (double)1000 );
         const uint32_t processed = nodeStats.m_NumProcessed;
         const uint32_t built = nodeStats.m_NumBuilt;
@@ -214,8 +214,8 @@ void JSONReport::DoCPUTimeByType(const FBuildStats & stats)
             Write( "\"Cache Hits\": \"-\",\n\t\t\t" );
         }
 
-        const float percent = (total > 0.0f) ? ( items[ i ].m_Value / total ) * 100.0f
-                                             : 0.0f;
+        const float percent = ( total > 0.0f ) ? ( items[ i ].m_Value / total ) * 100.0f
+                                               : 0.0f;
         Write( "\"Percentage\": %.1f", (double)percent );
 
         Write( "\n\t\t" );
@@ -260,7 +260,7 @@ void JSONReport::DoCacheStats( const FBuildStats & /*stats*/ )
         Write( "\"summary\": {\n\t\t\t" );
 
         StackArray<TimingStats> items;
-        items.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable) );
+        items.EmplaceBack( "Uncacheable", (float)( totalOutOfDateItems - totalCacheable ) );
         items.EmplaceBack( "Cache Miss", (float)totalCacheMisses );
         items.EmplaceBack( "Cache Hit", (float)totalCacheHits );
 
@@ -306,7 +306,7 @@ void JSONReport::DoCacheStats( const FBuildStats & /*stats*/ )
             {
                 continue; // skip library if nothing was done
             }
-            const float     outOfDateItemsPerc = ( (float)outOfDateItems / (float)totalItemsCount) * 100.0f;
+            const float     outOfDateItemsPerc = ( (float)outOfDateItems / (float)totalItemsCount ) * 100.0f;
 
             // cacheable
             const uint32_t  cItems      = ls->m_ObjectCount_Cacheable;
@@ -333,7 +333,7 @@ void JSONReport::DoCacheStats( const FBuildStats & /*stats*/ )
             Write( "\n\t\t\t\t" );
 
             Write( "\"Library\": \"%s\",\n\t\t\t\t", libraryName );
-            Write( "\"Items\": %u,\n\t\t\t\t", totalItemsCount);
+            Write( "\"Items\": %u,\n\t\t\t\t", totalItemsCount );
             Write( "\"Out-of-Date\": {" );
             Write( "\n\t\t\t\t\t" );
             Write( "\"Count\": %u,", outOfDateItems );
@@ -408,7 +408,7 @@ void JSONReport::DoCPUTimeByLibrary()
 
     Write( "\n\t\t" );
 
-    const float totalS = (float)((double)total * 0.001);
+    const float totalS = (float)( (double)total * 0.001 );
     size_t numOutput( 0 );
     // Result
     for ( const LibraryStats * ls : m_LibraryStats )
@@ -430,7 +430,7 @@ void JSONReport::DoCPUTimeByLibrary()
             case Node::OBJECT_LIST_NODE:    type = "ObjectList"; break;
             default:                        break;
         }
-        const char* name = ls->m_Library->GetName().Get();
+        const char * name = ls->m_Library->GetName().Get();
 
         Write( "{" );
         Write( "\n\t\t\t" );
@@ -488,7 +488,7 @@ void JSONReport::DoCPUTimeByItem( const FBuildStats & stats )
 
             Write( "\"Time (s)\": %2.3f,\n\t\t\t", (double)time );
             Write( "\"Type\": \"%s\",\n\t\t\t", type );
-            Write( "\"Cache\": \"%s\",\n\t\t\t", cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A") );
+            Write( "\"Cache\": \"%s\",\n\t\t\t", cacheHit ? "HIT" : ( cacheStore ? "STORE" : "N/A" ) );
 
             AStackString<> itemName( name );
             JSON::Escape( itemName );
@@ -561,7 +561,7 @@ void JSONReport::DoIncludes()
             Write( "]\n\t\t}" );
 
             // insert a comma for next library if we are not done yet
-            if (numLibsOutput < m_LibraryStats.GetSize() - 1)
+            if ( numLibsOutput < m_LibraryStats.GetSize() - 1 )
             {
                 Write( ",\n\t\t" );
             }
@@ -576,7 +576,7 @@ void JSONReport::DoIncludes()
         // output
         const size_t numIncludes = incStats.GetSize();
         size_t numOutput = 0;
-        for ( size_t i=0; i<numIncludes; ++i )
+        for ( size_t i = 0; i < numIncludes; ++i )
         {
             const IncludeStats & s = *incStats[ i ];
             const char * fileName = s.m_Node->GetName().Get();
@@ -605,7 +605,7 @@ void JSONReport::DoIncludes()
             numOutput++;
         }
 
-        Write( "\n\t\t\t] ");
+        Write( "\n\t\t\t] " );
 
         Write( "\n\t\t}" );
 

@@ -139,7 +139,7 @@ const AString & SettingsNode::GetCachePluginDLLConfig() const
 //------------------------------------------------------------------------------
 const ConcurrencyGroup * SettingsNode::GetConcurrencyGroup( const AString & groupName ) const
 {
-    for (const ConcurrencyGroup & group : m_ConcurrencyGroups )
+    for ( const ConcurrencyGroup & group : m_ConcurrencyGroups )
     {
         // Names are case insensitive
         if ( group.GetName().EqualsI( groupName ) )
@@ -166,7 +166,7 @@ void SettingsNode::ProcessEnvironment( const Array<AString> & envStrings ) const
 
     // work out space required
     uint32_t size = 0;
-    for ( uint32_t i=0; i<envStrings.GetSize(); ++i )
+    for ( uint32_t i = 0; i < envStrings.GetSize(); ++i )
     {
         size += envStrings[ i ].GetLength() + 1; // string len inc null
     }
@@ -179,7 +179,7 @@ void SettingsNode::ProcessEnvironment( const Array<AString> & envStrings ) const
 
     // copy strings end to end
     char * dst = envString.Get();
-    for ( uint32_t i=0; i<envStrings.GetSize(); ++i )
+    for ( uint32_t i = 0; i < envStrings.GetSize(); ++i )
     {
         if ( envStrings[ i ].BeginsWith( "LIB=" ) )
         {

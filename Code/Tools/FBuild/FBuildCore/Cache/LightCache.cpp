@@ -44,7 +44,8 @@ public:
         Include( AString && include, IncludeType type )
             : m_Include( Move( include ) )
             , m_Type( type )
-        {}
+        {
+        }
 
         AString                     m_Include;
         IncludeType                 m_Type;
@@ -60,9 +61,9 @@ public:
     Array<const IncludeDefine *>    m_IncludeDefines;
     Array<uint64_t>                 m_NonIncludeDefines;
 
-    bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
-    bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
-    bool operator <  ( const IncludedFile & other ) const    { return ( m_FileName < other.m_FileName ); }
+    bool operator==( const AString & fileName ) const     { return ( m_FileName == fileName ); }
+    bool operator==( const IncludedFile & other ) const   { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
+    bool operator<( const IncludedFile & other ) const    { return ( m_FileName < other.m_FileName ); }
 };
 
 // IncludedFileHashSet
@@ -131,7 +132,7 @@ private:
         IncludedFile ** bucket = &m_Buckets[ startIdx ];
         while ( *bucket != nullptr )
         {
-            if ( ( (*bucket)->m_FileNameHash == fileNameHash ) && ( **bucket == fileName ) )
+            if ( ( ( *bucket )->m_FileNameHash == fileNameHash ) && ( **bucket == fileName ) )
             {
                 return bucket;
             }
@@ -141,7 +142,7 @@ private:
         return bucket;
     }
 
-    static IncludedFile ** Next( Array<IncludedFile *> &buckets,
+    static IncludedFile ** Next( Array<IncludedFile *> & buckets,
                                  size_t startIdx,
                                  size_t & probeCount )
     {
@@ -154,7 +155,7 @@ private:
     {
         Array<IncludedFile *> dest;
         dest.SetSize( elts );
-        for ( IncludedFile * & elt : dest )
+        for ( IncludedFile *& elt : dest )
         {
             elt = nullptr;
         }
@@ -194,7 +195,8 @@ public:
         : m_Macro( macro )
         , m_Include( include )
         , m_Type( type )
-    {}
+    {
+    }
 
     AString                         m_Macro;
     AString                         m_Include;
@@ -214,12 +216,12 @@ IncludedFile::~IncludedFile()
 // IncludedFileBucket
 //------------------------------------------------------------------------------
 PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
-class alignas(64) IncludedFileBucket // Align to cache line boundary
+class alignas( 64 ) IncludedFileBucket // Align to cache line boundary
 {
 public:
     IncludedFileBucket() = default;
     IncludedFileBucket( const IncludedFileBucket & ) = delete;
-    IncludedFileBucket & operator = ( const IncludedFileBucket & ) = delete;
+    IncludedFileBucket & operator=( const IncludedFileBucket & ) = delete;
 
     void Destruct()
     {
@@ -355,7 +357,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
     file->m_ContentHash = xxHash3::Calc64( fileContents );
 
     const char * pos = fileContents.Get();
-    for (;;)
+    for ( ;; )
     {
         // skip leading whitespace
         SkipWhitespace( pos );
@@ -398,7 +400,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
 
 // ParseDirective
 //------------------------------------------------------------------------------
-bool LightCache::ParseDirective( IncludedFile & file, const char * & pos )
+bool LightCache::ParseDirective( IncludedFile & file, const char *& pos )
 {
     // Skip '#' and whitespace
     ASSERT( *pos == '#' );
@@ -425,7 +427,7 @@ bool LightCache::ParseDirective( IncludedFile & file, const char * & pos )
 
 // ParseDirective_Include
 //------------------------------------------------------------------------------
-bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos )
+bool LightCache::ParseDirective_Include( IncludedFile & file, const char *& pos )
 {
     // skip "include" and whitespace
     ASSERT( AString::StrNCmp( pos, "include", 7 ) == 0 );
@@ -465,7 +467,7 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
 
 // ParseDirective_Define
 //------------------------------------------------------------------------------
-bool LightCache::ParseDirective_Define( IncludedFile & file, const char * & pos )
+bool LightCache::ParseDirective_Define( IncludedFile & file, const char *& pos )
 {
     // skip "include" and whitespace
     ASSERT( AString::StrNCmp( pos, "define", 6 ) == 0 );
@@ -502,7 +504,7 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char * & pos 
 
 // ParseDirective_Import
 //------------------------------------------------------------------------------
-bool LightCache::ParseDirective_Import( IncludedFile & file, const char * & pos )
+bool LightCache::ParseDirective_Import( IncludedFile & file, const char *& pos )
 {
     // We encountered an import directive, we can't handle them.
     AddError( &file, pos, "#import is unsupported." );
@@ -511,13 +513,13 @@ bool LightCache::ParseDirective_Import( IncludedFile & file, const char * & pos 
 
 // SkipCommentBlock
 //------------------------------------------------------------------------------
-void LightCache::SkipCommentBlock( const char * & pos )
+void LightCache::SkipCommentBlock( const char *& pos )
 {
     // Skip opening /*
     ASSERT( ( pos[ 0 ] == '/' ) && ( pos[ 1 ] == '*' ) );
 
     // Skip to closing*/
-    for (;;)
+    for ( ;; )
     {
         const char thisChar = *pos;
 
@@ -530,7 +532,7 @@ void LightCache::SkipCommentBlock( const char * & pos )
         // end of comment block?
         if ( ( thisChar == '*' ) && ( pos[ 1 ] == '/' ) )
         {
-            pos +=2;
+            pos += 2;
             break;
         }
 
@@ -541,7 +543,7 @@ void LightCache::SkipCommentBlock( const char * & pos )
 
 // ParseIncludeString
 //------------------------------------------------------------------------------
-bool LightCache::ParseIncludeString( const char * & pos,
+bool LightCache::ParseIncludeString( const char *& pos,
                                      AString & outIncludePath,
                                      IncludeType & outIncludeType )
 {
@@ -566,7 +568,7 @@ bool LightCache::ParseIncludeString( const char * & pos,
 
 // ParseMacroName
 //------------------------------------------------------------------------------
-bool LightCache::ParseMacroName( const char * & pos, AString & outMacroName )
+bool LightCache::ParseMacroName( const char *& pos, AString & outMacroName )
 {
     // Get macro name
     const char * macroNameStart = pos;
@@ -939,9 +941,9 @@ void LightCache::AddError( IncludedFile * file,
 
 // SkipWhitespace
 //------------------------------------------------------------------------------
-/*static*/ void LightCache::SkipWhitespace( const char * & pos )
+/*static*/ void LightCache::SkipWhitespace( const char *& pos )
 {
-    for (;;)
+    for ( ;; )
     {
         const char c = *pos;
         if ( ( c == ' ' ) || ( c == '\t' ) )
@@ -958,12 +960,12 @@ void LightCache::AddError( IncludedFile * file,
 /*static*/ bool LightCache::IsAtEndOfLine( const char * pos )
 {
     const char c = *pos;
-    return ( ( c == '\r' ) || ( c== '\n' ) );
+    return ( ( c == '\r' ) || ( c == '\n' ) );
 }
 
 // SkipLineEnd
 //------------------------------------------------------------------------------
-/*static*/ void LightCache::SkipLineEnd( const char * & pos )
+/*static*/ void LightCache::SkipLineEnd( const char *& pos )
 {
     while ( IsAtEndOfLine( pos ) )
     {
@@ -974,7 +976,7 @@ void LightCache::AddError( IncludedFile * file,
 
 // SkipToEndOfLine
 //------------------------------------------------------------------------------
-/*static*/ void LightCache::SkipToEndOfLine( const char * & pos )
+/*static*/ void LightCache::SkipToEndOfLine( const char *& pos )
 {
     for ( ;; )
     {
@@ -990,7 +992,7 @@ void LightCache::AddError( IncludedFile * file,
 
 // SkipToEndOfQuotedString
 //------------------------------------------------------------------------------
-/*static*/ bool LightCache::SkipToEndOfQuotedString( const char * & pos )
+/*static*/ bool LightCache::SkipToEndOfQuotedString( const char *& pos )
 {
     // Skip opening char
     const char c = *pos;

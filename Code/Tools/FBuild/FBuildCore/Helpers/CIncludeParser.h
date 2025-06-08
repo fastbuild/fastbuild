@@ -29,7 +29,7 @@ public:
     #endif
 
 private:
-    static void ParseToNextLineStartingWithHash( const char * & pos );
+    static void ParseToNextLineStartingWithHash( const char *& pos );
 
     void AddInclude( const char * begin, const char * end );
 

@@ -125,7 +125,7 @@
             {
                 char host[ NI_MAXHOST ];
                 VERIFY( getnameinfo( info->ifa_addr,
-                                     sizeof(struct sockaddr_in),
+                                     sizeof( struct sockaddr_in ),
                                      host,
                                      NI_MAXHOST,
                                      nullptr,
@@ -257,7 +257,7 @@
 
             // We want IPv4
             struct addrinfo hints;
-            memset( &hints, 0, sizeof(hints) );
+            memset( &hints, 0, sizeof( hints ) );
             hints.ai_family = AF_INET;
 
             // Try to resolve

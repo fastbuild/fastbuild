@@ -22,7 +22,7 @@ public:
 
     static Node::Type GetTypeS() { return Node::TEST_NODE; }
 
-    const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
+    const Node * GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
     const char * GetEnvironmentString() const;
 
 private:

@@ -51,7 +51,7 @@ void TestTrayIcon::Init() const
 {
     // TODO:B Fix hard coded assumptions about resource name on Windows
     #if defined( __WINDOWS__ )
-        if (( true ))
+        if ( ( true ) )
         {
             return;
         }
@@ -78,7 +78,7 @@ void TestTrayIcon::SetMenu() const
 {
     // TODO:B Fix hard coded assumptions about resource name on Windows
     #if defined( __WINDOWS__ )
-        if (( true ))
+        if ( ( true ) )
         {
             return;
         }

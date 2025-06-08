@@ -146,6 +146,7 @@ public:
     static void UpdateBuildStatus( const Node * node,
                                    uint32_t & nodesBuiltTime,
                                    uint32_t & totalNodeTime );
+
 private:
     friend class FBuild;
 
@@ -172,7 +173,12 @@ private:
     struct NodeWithDistance
     {
         NodeWithDistance() = default;
-        NodeWithDistance( Node * n, uint32_t dist ) : m_Node( n ), m_Distance( dist ) {}
+        NodeWithDistance( Node * n, uint32_t dist )
+            : m_Node( n )
+            , m_Distance( dist )
+        {
+        }
+        
         Node *      m_Node;
         uint32_t    m_Distance;
     };
@@ -180,7 +186,7 @@ private:
 
     struct UsedFile;
     bool ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream,
-                                 const char* nodeGraphDBFile,
+                                 const char * nodeGraphDBFile,
                                  Array<UsedFile> & files,
                                  bool & compatibleDB,
                                  bool & movedDB ) const;
@@ -222,7 +228,13 @@ private:
     // each file used in the generation of the node graph is tracked
     struct UsedFile
     {
-        explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash ) : m_FileName( fileName ), m_TimeStamp( timeStamp ), m_DataHash( dataHash ) {}
+        explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash )
+            : m_FileName( fileName )
+            , m_TimeStamp( timeStamp )
+            , m_DataHash( dataHash )
+        {
+        }
+
         AString     m_FileName;
         uint64_t    m_TimeStamp;
         uint64_t    m_DataHash;

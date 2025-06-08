@@ -23,10 +23,10 @@ class Job
 public:
     explicit Job( Node * node );
     explicit Job( IOStream & stream );
-            ~Job();
+    ~Job();
 
     uint32_t GetJobId() const { return m_JobId; }
-    bool operator == ( uint32_t jobId ) const { return ( m_JobId == jobId ); }
+    bool operator==( uint32_t jobId ) const { return ( m_JobId == jobId ); }
 
     Node * GetNode() const { return m_Node; }
     const AString & GetRemoteName() const { return m_RemoteName; }

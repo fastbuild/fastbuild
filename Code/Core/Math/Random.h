@@ -17,7 +17,10 @@ public:
     Random();
 
     // seed with a specific value
-    explicit Random( uint32_t seed ) : m_Seed( seed ) {}
+    explicit Random( uint32_t seed )
+        : m_Seed( seed )
+    {
+    }
 
     // random number from 0 to RAND_MAX
     uint32_t GetRand();

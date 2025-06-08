@@ -312,7 +312,7 @@ ObjectNode::~ObjectNode()
              ( fn->GetStamp() == 0 ) &&
              ( fn->GetStatFlag( Node::STATS_BUILT ) == false ) )
         {
-            fn->CastTo< FileNode >()->DoBuild( nullptr );
+            fn->CastTo<FileNode>()->DoBuild( nullptr );
         }
 
         m_DynamicDependencies.Add( fn );
@@ -334,7 +334,7 @@ ObjectNode::~ObjectNode()
     // lazily determined during a build, but needs to persist across migrations
     // to prevent unnecessary rebuilds of object that depend on this one, if this
     // is a precompiled header object.
-    m_PCHCacheKey = oldNode.CastTo< ObjectNode >()->m_PCHCacheKey;
+    m_PCHCacheKey = oldNode.CastTo<ObjectNode>()->m_PCHCacheKey;
 }
 
 // DoBuildMSCL_NoCache
@@ -381,7 +381,7 @@ ObjectNode::~ObjectNode()
         }
     }
 
-    const char *output = nullptr;
+    const char * output = nullptr;
     uint32_t outputSize = 0;
 
     // MSVC will write /ShowIncludes output on stderr sometimes (ex: /Fi)
@@ -436,8 +436,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             {
                 FLOG_OUTPUT( "LightCache cannot be used for '%s'\n"
                              "%s",
-                              GetName().Get(),
-                              lc.GetErrors().Get() );
+                             GetName().Get(),
+                             lc.GetErrors().Get() );
             }
 
             // Fall through to generate preprocessed output for old style cache and distribution....
@@ -1274,7 +1274,7 @@ CompilerNode * ObjectNode::GetCompiler() const
 {
     // node can be null if compiling remotely
     const Node * node = m_StaticDependencies[0].GetNode();
-    return node ? node->CastTo< CompilerNode >() : nullptr;
+    return node ? node->CastTo<CompilerNode>() : nullptr;
 }
 
 // GetDedicatedPreprocessor
@@ -1290,7 +1290,7 @@ CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
     {
         ++preprocessorIndex;
     }
-    return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo< CompilerNode >();
+    return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo<CompilerNode>();
 }
 
 // GetPrecompiledHeader()
@@ -1298,7 +1298,7 @@ CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
 ObjectNode * ObjectNode::GetPrecompiledHeader() const
 {
     ASSERT( m_PrecompiledHeader.IsEmpty() == false );
-    return m_StaticDependencies[ 2 ].GetNode()->CastTo< ObjectNode >();
+    return m_StaticDependencies[ 2 ].GetNode()->CastTo<ObjectNode>();
 }
 
 // GetPDBName
@@ -1388,7 +1388,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     ASSERT( commandLineKey );
 
     // ToolChain hash
-    const uint64_t toolChainKey = GetCompiler()->CastTo< CompilerNode >()->GetManifest().GetToolId();
+    const uint64_t toolChainKey = GetCompiler()->CastTo<CompilerNode>()->GetManifest().GetToolId();
     ASSERT( toolChainKey );
 
     // PCH dependency
@@ -1401,7 +1401,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     AStackString<> cacheName;
     ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
-    job->SetCacheName(cacheName);
+    job->SetCacheName( cacheName );
 
     return job->GetCacheName();
 }
@@ -1440,7 +1440,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
     PROFILE_FUNCTION;
 
-    const AString & cacheFileName = GetCacheName(job);
+    const AString & cacheFileName = GetCacheName( job );
 
     const Timer t;
 
@@ -1484,7 +1484,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
         // Extract the files
         const size_t numFiles = fileNames.GetSize();
-        for ( size_t i=0; i<numFiles; ++i )
+        for ( size_t i = 0; i < numFiles; ++i )
         {
             if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
             {
@@ -1555,7 +1555,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 //------------------------------------------------------------------------------
 void ObjectNode::WriteToCache_FromDisk( Job * job )
 {
-    if (FBuild::Get().GetOptions().m_UseCacheWrite == false)
+    if ( FBuild::Get().GetOptions().m_UseCacheWrite == false )
     {
         return;
     }
@@ -1575,8 +1575,8 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
         if ( FBuild::Get().GetOptions().m_CacheVerbose )
         {
             FLOG_OUTPUT( "Obj: %s\n"
-                            " - Cache Store Fail: '%s' (local IO problem)\n",
-                            GetName().Get(), GetCacheName( job ).Get() );
+                         " - Cache Store Fail: '%s' (local IO problem)\n",
+                         GetName().Get(), GetCacheName( job ).Get() );
         }
         return;
     }
@@ -1602,16 +1602,16 @@ void ObjectNode::WriteToCache_FromUncompressedData( Job * job,
     const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
     Compressor c;
     const int16_t compressionLevel = FBuild::Get().GetOptions().m_CacheCompressionLevel;
-    if (compressionLevel <= 0)
+    if ( compressionLevel <= 0 )
     {
         // Use LZ4 for low compression levels (level < 0)
         // This call also handles disabled compression (level 0)
-        c.Compress(uncompressedData, uncompressedDataSize, compressionLevel );
+        c.Compress( uncompressedData, uncompressedDataSize, compressionLevel );
     }
     else
     {
         // Use Ztd for higher compression levels (level > 0)
-        c.CompressZstd(uncompressedData, uncompressedDataSize, compressionLevel );
+        c.CompressZstd( uncompressedData, uncompressedDataSize, compressionLevel );
     }
     const uint32_t compressionTime = ( (uint32_t)t.GetElapsedMS() - startCompress );
 
@@ -1636,7 +1636,7 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
     // Ensure data is compressed
     ASSERT( Compressor::IsValidData( compressedData, compressedDataSize ) );
 
-    const AString & cacheFileName = GetCacheName(job);
+    const AString & cacheFileName = GetCacheName( job );
 
     // Commit to cache
     const Timer t;
@@ -1696,7 +1696,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
         return;
     }
 
-    const ObjectNode * objectNode = node->CastTo< ObjectNode >();
+    const ObjectNode * objectNode = node->CastTo<ObjectNode>();
 
     // MSVC precompiled headers have an extra file (as does clang in "cl" mode)
     if ( objectNode->m_CompilerFlags.IsCreatingPCH() &&
@@ -1759,7 +1759,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    if ( FBuild::IsValid()  && FBuild::Get().GetOptions().m_ShowCommandSummary )
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Obj: ";
         if ( useDeoptimization )
@@ -1916,7 +1916,7 @@ void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre,
 {
     const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1u : 0u ) + ( !m_Preprocessor.IsEmpty() ? 1u : 0u ); // Skip Compiler, InputFile, PCH and Preprocessor
     const size_t endIndex = m_StaticDependencies.GetSize();
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
 
@@ -1978,7 +1978,7 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
     // PreProcessing for SimpleDistribution is just loading the source file
 
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
-    EmitCompilationMessage(fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor);
+    EmitCompilationMessage( fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor );
 
     const AString & fileName = job->GetNode()->CastTo<ObjectNode>()->GetSourceFile()->CastTo<FileNode>()->GetName();
 
@@ -2041,7 +2041,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             Array<const char *> enumsFound;
             enumsFound.SetCapacity( 2048 );
             const char BUGGY_CODE[] = "enum ";
-            const char* workBuffer = outputBuffer;
+            const char * workBuffer = outputBuffer;
             ASSERT( workBuffer[ outputBufferSize ] == '\0' );
 
             // First scan the buffer to find all occurrences of the enums.
@@ -2049,7 +2049,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             // Keeping the found enums let us avoid searching for them twice.
             uint32_t nbrEnumsFound = 0;
             const char * buggyEnum = nullptr;
-            for (;;)
+            for ( ;; )
             {
                 buggyEnum = strstr( workBuffer, BUGGY_CODE );
                 if ( buggyEnum == nullptr )
@@ -2071,7 +2071,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             char * writeDest = bufferCopy;
             size_t sizeLeftInSourceBuffer = outputBufferSize;
             buggyEnum = nullptr;
-            for (;;)
+            for ( ;; )
             {
                 if ( enumIndex < nbrEnumsFound )
                 {
@@ -2466,7 +2466,7 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // Suppress /showIncludes - TODO:C leave in if user specified it
             StackArray<AString> exclusions;
             if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
-                ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
+                 ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
             {
                 exclusions.EmplaceBack( "Note: including file:" );
             }
@@ -2518,7 +2518,7 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         return;
     }
 
-    const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+    const ObjectNode * objectNode = job->GetNode()->CastTo<ObjectNode>();
 
     // General process failures
     #if defined( __WINDOWS__ )
@@ -2668,7 +2668,7 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
     }
 
-    #if !defined( __WINDOWS__)
+    #if !defined( __WINDOWS__ )
         (void)stdOut; // No checks use stdOut outside of Windows right now
     #endif
 }
@@ -2705,7 +2705,7 @@ bool ObjectNode::ShouldUseDeoptimization() const
     FileStream fs;
     if ( fs.Open( GetSourceFile()->GetName().Get(), FileStream::READ_ONLY ) )
     {
-        const size_t bytesToRead = Math::Min< size_t >( 1024, (size_t)fs.GetFileSize() );
+        const size_t bytesToRead = Math::Min<size_t>( 1024, (size_t)fs.GetFileSize() );
         char buffer[ 1025 ];
         if ( fs.Read( buffer, bytesToRead ) == bytesToRead )
         {
@@ -2729,7 +2729,7 @@ bool ObjectNode::ShouldUseCache() const
     bool useCache = IsCacheable() &&
                     m_AllowCaching &&
                     ( FBuild::Get().GetOptions().m_UseCacheRead ||
-                     FBuild::Get().GetOptions().m_UseCacheWrite );
+                      FBuild::Get().GetOptions().m_UseCacheWrite );
     if ( IsIsolatedFromUnity() )
     {
         // If -nounity is being used, we want to treat files as if being

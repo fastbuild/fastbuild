@@ -33,9 +33,9 @@ public:
     ~Args();
 
     // Construct args
-    void operator += ( const char * argPart );
-    void operator += ( const AString & argPart );
-    void operator += ( char argPart );
+    void operator+=( const char * argPart );
+    void operator+=( const AString & argPart );
+    void operator+=( char argPart );
     void Append( const char * begin, size_t count );
     void AddDelimiter();
 

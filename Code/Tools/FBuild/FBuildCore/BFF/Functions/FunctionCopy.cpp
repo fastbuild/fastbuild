@@ -139,8 +139,8 @@ FunctionCopy::FunctionCopy()
             {
                 // Use just the file name
                 const char * lastSlash = srcName.FindLast( NATIVE_SLASH );
-                dst += lastSlash ? ( lastSlash + 1 )    // append filename part if found
-                                     : srcName.Get();   // otherwise append whole thing
+                dst += lastSlash ? ( lastSlash + 1 ) // append filename part if found
+                                 : srcName.Get(); // otherwise append whole thing
             }
         }
 
@@ -175,7 +175,7 @@ bool FunctionCopy::GetSourceNodes( const BFFToken * iter, Node * node, Array<Nod
     if ( node->GetType() == Node::ALIAS_NODE )
     {
         // resolve aliases to real nodes
-        const AliasNode * aliasNode = node->CastTo< AliasNode >();
+        const AliasNode * aliasNode = node->CastTo<AliasNode>();
         for ( const Dependency & dep : aliasNode->GetAliasedNodes() )
         {
             if ( !GetSourceNodes( iter, dep.GetNode(), nodes ) )

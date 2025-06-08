@@ -32,7 +32,7 @@ bool LockSystemMutex( const char * name )
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         char tempFileName[256];
-        snprintf( tempFileName, sizeof(tempFileName), "/tmp/%s.lock", name );
+        snprintf( tempFileName, sizeof( tempFileName ), "/tmp/%s.lock", name );
         int handle = open( tempFileName, O_CREAT | O_RDWR, 0666 );
         if ( handle < 0 )
         {
@@ -59,7 +59,7 @@ bool Spawn( const char * exe, const char * mutexId )
     #if defined( __WINDOWS__ )
         // Set up the start up info struct.
         STARTUPINFO si;
-        ZeroMemory( &si, sizeof(STARTUPINFO) );
+        ZeroMemory( &si, sizeof( STARTUPINFO ) );
         si.cb = sizeof( STARTUPINFO );
         si.dwFlags |= STARTF_USESHOWWINDOW;
         si.wShowWindow = SW_HIDE;
@@ -176,7 +176,7 @@ int main( int argc, char ** argv )
 
     // Spin forever - test will terminate
     int count = 0;
-    for (;;)
+    for ( ;; )
     {
         ::Sleep( 1000 );
 

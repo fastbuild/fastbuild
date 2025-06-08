@@ -54,7 +54,7 @@ FileNode::~FileNode() = default;
 //------------------------------------------------------------------------------
 void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const AString & data )
 {
-    constexpr const char * msvcWarningString = ": warning ";  // string is ok even in non-English
+    constexpr const char * msvcWarningString = ": warning "; // string is ok even in non-English
     return HandleWarnings( job, name, data, msvcWarningString );
 }
 

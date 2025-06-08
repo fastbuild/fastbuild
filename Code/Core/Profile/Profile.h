@@ -8,7 +8,7 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#if !defined(PROFILING_ENABLED)
+#if !defined( PROFILING_ENABLED )
     #define PROFILE_SET_THREAD_NAME( threadName ) (void)0
     #define PROFILE_FUNCTION (void)0
     #define PROFILE_SECTION( sectionName ) (void)0
@@ -36,7 +36,6 @@
         {
             ProfileManager::Stop();
         }
-    private:
     };
 #endif // PROFILING_ENABLED
 

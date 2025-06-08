@@ -22,7 +22,7 @@
 // Memory Barrier
 //------------------------------------------------------------------------------
 #if defined( __LINUX__ ) || defined( __APPLE__ )
-    #define MemoryBarrier() __asm__ __volatile__("")
+    #define MemoryBarrier() __asm__ __volatile__( "" )
 #else
     #define MemoryBarrier __faststorefence
 #endif

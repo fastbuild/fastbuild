@@ -74,7 +74,7 @@ void TestChainedMemoryStream::WriteOneFullPage() const
     uint32_t dataSize = 0;
     const char * const data = ms.GetPage( 0, dataSize );
     TEST_ASSERT( data );
-    TEST_ASSERT( dataSize  == ms.GetFileSize() );
+    TEST_ASSERT( dataSize == ms.GetFileSize() );
 
     // Check content of page is as expected
     AStackString<> buffer( data, ( data + dataSize ) );
@@ -123,7 +123,7 @@ void TestChainedMemoryStream::WriteAcrossPageBoundary() const
 
     // Check state is as expected
     TEST_ASSERT( ms.GetFileSize() == 40 );
-    TEST_ASSERT( ms.GetNumPages() == 2);
+    TEST_ASSERT( ms.GetNumPages() == 2 );
     AStackString<> buffer;
     {
         uint32_t dataSize = 0;
@@ -139,7 +139,7 @@ void TestChainedMemoryStream::WriteAcrossPageBoundary() const
         TEST_ASSERT( dataSize == 8 );
         buffer.Append( data, ( data + dataSize ) );
     }
-    TEST_ASSERT( buffer.GetLength() ==ms.GetFileSize() );
+    TEST_ASSERT( buffer.GetLength() == ms.GetFileSize() );
     TEST_ASSERT( buffer == "ABCDabcd12345678901234567890123456789012" );
 }
 

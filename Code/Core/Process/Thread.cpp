@@ -29,7 +29,7 @@
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
     #ifdef DEBUG
-        #pragma pack(push,8)
+        #pragma pack( push, 8 )
         typedef struct tagTHREADNAME_INFO
         {
             DWORD dwType; // Must be 0x1000.
@@ -37,7 +37,7 @@
             DWORD dwThreadID; // Thread ID (-1=caller thread).
             DWORD dwFlags; // Reserved for future use, must be zero.
         } THREADNAME_INFO;
-        #pragma pack(pop)
+        #pragma pack( pop )
     #endif
 #endif
 
@@ -88,13 +88,13 @@ public:
 
         // enter into real thread function
         #if defined( __WINDOWS__ )
-            return (*realFunction)( realUserData );
+            return ( *realFunction )( realUserData );
         #else
-            return (void *)(size_t)( (*realFunction)( realUserData ) );
+            return (void *)(size_t)( ( *realFunction )( realUserData ) );
         #endif
     }
 
-    void operator =(const ThreadStartInfo & other) = delete;
+    void operator=( const ThreadStartInfo & other ) = delete;
 };
 
 // Static Data
@@ -209,7 +209,7 @@ bool Thread::IsRunning() const
 /*static*/ Thread::ThreadId Thread::GetCurrentThreadId()
 {
     #if defined( __WINDOWS__ )
-        return (Thread::ThreadId) ::GetCurrentThreadId();
+        return ( Thread::ThreadId )::GetCurrentThreadId();
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         return pthread_self();
     #else
@@ -331,7 +331,7 @@ uint32_t Thread::JoinWithTimeout( uint32_t timeoutMS, bool & outTimedOut )
             #if defined( __clang__ )
                 // Clang for windows (3.7.1) crashes trying to compile this
             #else
-                const DWORD MS_VC_EXCEPTION=0x406D1388;
+                const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
                 THREADNAME_INFO info;
                 info.dwType = 0x1000;
@@ -341,7 +341,7 @@ uint32_t Thread::JoinWithTimeout( uint32_t timeoutMS, bool & outTimedOut )
 
                 __try
                 {
-                    RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info );
+                    RaiseException( MS_VC_EXCEPTION, 0, sizeof( info ) / sizeof( ULONG_PTR ), (ULONG_PTR *)&info );
                 }
                 PRAGMA_DISABLE_PUSH_MSVC( 6320 ) // Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER
                 __except( EXCEPTION_EXECUTE_HANDLER )

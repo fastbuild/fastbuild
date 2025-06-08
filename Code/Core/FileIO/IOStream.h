@@ -68,11 +68,17 @@ template <class T>
 bool IOStream::Read( Array<T> & a )
 {
     uint32_t num = 0;
-    if ( Read( num ) == false ) { return false; }
+    if ( Read( num ) == false )
+    {
+        return false;
+    }
     a.SetSize( num );
     for ( uint32_t i = 0; i < num; ++i )
     {
-        if ( Read( a[ i ] ) == false ) { return false; }
+        if ( Read( a[ i ] ) == false )
+        {
+            return false;
+        }
     }
     return true;
 }
@@ -83,10 +89,16 @@ template <class T>
 bool IOStream::Write( const Array<T> & a )
 {
     const uint32_t num = (uint32_t)a.GetSize();
-    if ( Write( num ) == false ) { return false; }
+    if ( Write( num ) == false )
+    {
+        return false;
+    }
     for ( uint32_t i = 0; i < num; ++i )
     {
-        if ( Write( a[ i ] ) == false ) { return false; }
+        if ( Write( a[ i ] ) == false )
+        {
+            return false;
+        }
     }
     return true;
 }

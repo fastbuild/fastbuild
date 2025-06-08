@@ -21,7 +21,6 @@ public:
                                 const BFFToken * functionNameStart,
                                 const BFFTokenRange & headerRange,
                                 const BFFTokenRange & bodyRange ) const override;
-
 };
 
 //------------------------------------------------------------------------------

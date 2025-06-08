@@ -44,8 +44,8 @@ typedef signed int          int32_t;
     #endif
 #endif
 
-#define KILOBYTE (1024)
-#define MEGABYTE (1024 * 1024)
+#define KILOBYTE ( 1024 )
+#define MEGABYTE ( 1024 * 1024 )
 
 #if defined( __WINDOWS__ )
     #define THREAD_LOCAL __declspec( thread )
@@ -57,12 +57,12 @@ typedef signed int          int32_t;
     #define NO_INLINE __declspec( noinline )
     #define FORCE_INLINE __forceinline
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    #define NO_INLINE inline __attribute__((noinline))
-    #define FORCE_INLINE inline __attribute__((always_inline))
+    #define NO_INLINE inline __attribute__( ( noinline ) )
+    #define FORCE_INLINE inline __attribute__( ( always_inline ) )
 #endif
 
 #if defined( __clang__ )
-    #define NORETURN_CLANG_ANALYZER __attribute__((analyzer_noreturn))
+    #define NORETURN_CLANG_ANALYZER __attribute__( ( analyzer_noreturn ) )
 #else
     #define NORETURN_CLANG_ANALYZER
 #endif
@@ -93,8 +93,8 @@ typedef signed int          int32_t;
 #endif
 
 #if defined( __GNUC__ ) || defined( __clang__ ) // GCC or Clang
-    #define FORMAT_STRING( fmt, args ) __attribute__((format(printf, fmt, args)))
-    #define SCAN_STRING( fmt, args ) __attribute__((format(scanf, fmt, args)))
+    #define FORMAT_STRING( fmt, args ) __attribute__( ( format( printf, fmt, args ) ) )
+    #define SCAN_STRING( fmt, args ) __attribute__( ( format( scanf, fmt, args ) ) )
 #else
     #define FORMAT_STRING( fmt, args )
     #define SCAN_STRING( fmt, args )
@@ -105,9 +105,9 @@ typedef signed int          int32_t;
 // Warning disabling
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #define PRAGMA_DISABLE_PUSH_MSVC( num ) __pragma(warning(push))         \
-                                            __pragma(warning(disable:num))
-    #define PRAGMA_DISABLE_POP_MSVC         __pragma(warning(pop))
+    #define PRAGMA_DISABLE_PUSH_MSVC( num ) __pragma( warning( push ) ) \
+                                            __pragma( warning( disable : num ) )
+    #define PRAGMA_DISABLE_POP_MSVC         __pragma( warning( pop ) )
 #else
     // Do nothing on non-msvc platforms
     #define PRAGMA_DISABLE_PUSH_MSVC( num )

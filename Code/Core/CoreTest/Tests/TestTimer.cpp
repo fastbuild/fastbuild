@@ -47,11 +47,11 @@ void TestTimer::Validate() const
 
     // sanity check
     TEST_ASSERT( elapsed >= 0.001f ); // at least 1ms
-    TEST_ASSERT( elapsed <  1.000f ); // some sensible value
+    TEST_ASSERT( elapsed < 1.000f ); // some sensible value
 
     // sanity check
-    TEST_ASSERT( elapsedMS >=    1.0f ); // at least 1ms
-    TEST_ASSERT( elapsedMS <  1000.0f ); // some sensible value
+    TEST_ASSERT( elapsedMS >= 1.0f ); // at least 1ms
+    TEST_ASSERT( elapsedMS < 1000.0f ); // some sensible value
 }
 
 //------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ extern "C"
     #endif
 }
 
-int main(int, char *[], char *[])
+int main( int, char *[], char *[] )
 {
     // Check if env variable exists
     #if defined( __WINDOWS__ )

@@ -42,16 +42,16 @@ public:
     [[nodiscard]] const char *  Get() const         { return m_Contents; }
     [[nodiscard]] char *        GetEnd()            { return ( m_Contents + m_Length ); }
     [[nodiscard]] const char *  GetEnd() const      { return ( m_Contents + m_Length ); }
-    [[nodiscard]] char &        operator [] ( size_t index )        { ASSERT( index < m_Length ); return m_Contents[ index ]; }
-    [[nodiscard]] const char &  operator [] ( size_t index )  const { ASSERT( index < m_Length ); return m_Contents[ index ]; }
+    [[nodiscard]] char &        operator[]( size_t index )       { ASSERT( index < m_Length ); return m_Contents[ index ]; }
+    [[nodiscard]] const char &  operator[]( size_t index ) const { ASSERT( index < m_Length ); return m_Contents[ index ]; }
 
     // a pre-constructed global empty string for convenience
     static const AString & GetEmpty() { return s_EmptyAString; }
 
     // assignment
-    AString &                   operator = ( const char * string ) { Assign( string ); return *this; }
-    AString &                   operator = ( const AString & string ) { Assign( string ); return *this; }
-    AString &                   operator = ( AString && string ) { Assign( Move( string ) ); return *this; }
+    AString &                   operator=( const char * string ) { Assign( string ); return *this; }
+    AString &                   operator=( const AString & string ) { Assign( string ); return *this; }
+    AString &                   operator=( AString && string ) { Assign( Move( string ) ); return *this; }
     void                        Assign( const char * string );
     void                        Assign( const char * start, const char * end );
     void                        Assign( const AString & string );
@@ -64,22 +64,22 @@ public:
     void                        SetLength( uint32_t len );
 
     // concatenation
-    AString &                   operator += ( char c );
-    AString &                   operator += ( const char * string );
-    AString &                   operator += ( const AString & string );
-    AString &                   Append( char c ) { return this->operator +=( c ); }
-    AString &                   Append( const char * string ) { return this->operator +=( string ); }
-    AString &                   Append( const AString & string ) { return this->operator +=( string ); }
+    AString &                   operator+=( char c );
+    AString &                   operator+=( const char * string );
+    AString &                   operator+=( const AString & string );
+    AString &                   Append( char c ) { return this->operator+=( c ); }
+    AString &                   Append( const char * string ) { return this->operator+=( string ); }
+    AString &                   Append( const AString & string ) { return this->operator+=( string ); }
     AString &                   Append( const char * string, size_t len );
     AString &                   Append( const char * start, const char * end ) { return Append( start, static_cast<size_t>( end - start ) ); }
     AString &                   AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
     AString &                   AppendList( const Array<AString> & list, char separator = ',' );
 
     // comparison
-    [[nodiscard]] bool          operator == ( const char * other ) const;
-    [[nodiscard]] bool          operator == ( const AString & other ) const;
-    [[nodiscard]] bool          operator != ( const char * other ) const { return !(*this == other ); }
-    [[nodiscard]] bool          operator != ( const AString & other ) const { return !(*this == other ); }
+    [[nodiscard]] bool          operator==( const char * other ) const;
+    [[nodiscard]] bool          operator==( const AString & other ) const;
+    [[nodiscard]] bool          operator!=( const char * other ) const { return !(*this == other ); }
+    [[nodiscard]] bool          operator!=( const AString & other ) const { return !(*this == other ); }
     [[nodiscard]] int32_t       Compare( const AString & other ) const;
     [[nodiscard]] int32_t       Compare( const char * other ) const;
     [[nodiscard]] int32_t       CompareI( const AString & other ) const;

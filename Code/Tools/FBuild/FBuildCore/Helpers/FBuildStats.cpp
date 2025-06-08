@@ -25,7 +25,7 @@
 class NodeCostSorter
 {
 public:
-    bool operator () ( const Node * a, const Node * b ) const
+    bool operator()( const Node * a, const Node * b ) const
     {
         return ( a->GetProcessingTime() > b->GetProcessingTime() );
     }
@@ -56,7 +56,8 @@ FBuildStats::Stats::Stats()
     , m_ProcessingTimeMS( 0 )
     , m_NumFailed( 0 )
     , m_CachingTimeMS( 0 )
-{}
+{
+}
 
 // OnBuildStop
 //------------------------------------------------------------------------------
@@ -106,7 +107,7 @@ void FBuildStats::GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node *
     m_NodesByTime.Sort( ncs );
 
     // Total the stats
-    for ( uint32_t i=0; i< Node::NUM_NODE_TYPES; ++i )
+    for ( uint32_t i = 0; i < Node::NUM_NODE_TYPES; ++i )
     {
         m_Totals.m_NumProcessed     += m_PerTypeStats[ i ].m_NumProcessed;
         m_Totals.m_NumBuilt         += m_PerTypeStats[ i ].m_NumBuilt;
@@ -132,7 +133,7 @@ void FBuildStats::OutputSummary() const
         output += "--- Most Expensive ----------------------------------------------\n";
         output += "Time (s)  Name:\n";
         const size_t itemsToDisplay = Math::Min( m_NodesByTime.GetSize(), (size_t)20 );
-        for ( size_t i=0; i<itemsToDisplay; ++i )
+        for ( size_t i = 0; i < itemsToDisplay; ++i )
         {
             const Node * n = m_NodesByTime[ i ];
             output.AppendFormat( "%-9.3f %s\n", (double)( (float)n->GetProcessingTime() / 1000.0f ), n->GetPrettyName().Get() );
@@ -146,7 +147,7 @@ void FBuildStats::OutputSummary() const
     // NOTE: Only showing the interesting nodes
     output += "                                 /----- Cache -----\\\n";
     output += "Build:          Seen    Built   Hit     Miss    Store   CPU\n";
-    for ( uint32_t i=0; i< Node::NUM_NODE_TYPES; ++i )
+    for ( uint32_t i = 0; i < Node::NUM_NODE_TYPES; ++i )
     {
         // don't show nodes with no task
         const Stats & stats = m_PerTypeStats[ i ];
@@ -230,7 +231,7 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
         stats.m_NumProcessed++;
 
         m_TotalLocalCPUTimeMS += node->GetProcessingTime();
-        if (node->GetStatFlag(Node::STATS_BUILT_REMOTE))
+        if ( node->GetStatFlag( Node::STATS_BUILT_REMOTE ) )
         {
             m_TotalRemoteCPUTimeMS += node->GetLastBuildTime();
         }

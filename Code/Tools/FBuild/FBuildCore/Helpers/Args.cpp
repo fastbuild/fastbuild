@@ -37,7 +37,7 @@ Args::~Args() = default;
 
 // operator += (char *)
 //------------------------------------------------------------------------------
-void Args::operator += ( const char * argPart )
+void Args::operator+=( const char * argPart )
 {
     ASSERT( !m_Finalized );
     m_Args += argPart;
@@ -45,7 +45,7 @@ void Args::operator += ( const char * argPart )
 
 // operator += (AString &)
 //------------------------------------------------------------------------------
-void Args::operator += ( const AString & argPart )
+void Args::operator+=( const AString & argPart )
 {
     ASSERT( !m_Finalized );
     m_Args += argPart;
@@ -53,7 +53,7 @@ void Args::operator += ( const AString & argPart )
 
 // Append
 //------------------------------------------------------------------------------
-void Args::operator += ( char argPart )
+void Args::operator+=( char argPart )
 {
     ASSERT( !m_Finalized );
     m_Args += argPart;

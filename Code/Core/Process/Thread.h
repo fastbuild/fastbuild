@@ -18,14 +18,14 @@ public:
     #if defined( __WINDOWS__ )
         typedef uint32_t ThreadId;
         typedef void * ThreadHandle;
-        typedef uint32_t (*ThreadEntryFunction)( void * param );
+        typedef uint32_t ( *ThreadEntryFunction )( void * param );
 
         #define INVALID_THREAD_HANDLE ( nullptr )
         #define INVALID_THREAD_ID ( 0 )
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         typedef pthread_t ThreadId;
         typedef void * ThreadHandle;
-        typedef uint32_t (*ThreadEntryFunction)( void * param );
+        typedef uint32_t ( *ThreadEntryFunction )( void * param );
         #define INVALID_THREAD_HANDLE ( nullptr )
         #if defined( __APPLE__ )
             #define INVALID_THREAD_ID ( nullptr )

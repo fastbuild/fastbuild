@@ -1,4 +1,4 @@
-#define MC_ASSERT(X) (X)
+#define MC_ASSERT( X ) ( X )
 
 int main()
 {
@@ -8,6 +8,6 @@ int main()
     // the behaviour consistent
 
     unsigned int i = 0;
-    bool result = MC_ASSERT(i >= 0);
+    bool result = MC_ASSERT( i >= 0 );
     return result;
 }

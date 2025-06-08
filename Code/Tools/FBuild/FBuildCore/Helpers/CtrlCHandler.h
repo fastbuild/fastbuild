@@ -12,6 +12,7 @@ public:
 
     void RegisterHandler();
     void DeregisterHandler();
+
 private:
     bool m_IsRegistered = false;
 };

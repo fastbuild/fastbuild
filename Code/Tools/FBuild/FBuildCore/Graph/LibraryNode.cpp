@@ -134,7 +134,7 @@ LibraryNode::~LibraryNode()
     //  handle expanding them into the command line like everything else)
     const size_t startIndex = m_StaticDependencies.GetSize() - m_NumLibrarianAdditionalInputs;
     const size_t endIndex = m_StaticDependencies.GetSize();
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         m_DynamicDependencies.Add( m_StaticDependencies[ i ].GetNode() );
     }
@@ -259,7 +259,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             // concatenate files, unquoted
             StackArray<AString> inputs;
             GetInputFiles( objectsInsteadOfLibs, inputs );
-            for ( const AString & input: inputs )
+            for ( const AString & input : inputs )
             {
                 fullArgs += pre;
                 fullArgs += input;
@@ -275,7 +275,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             // concatenate files, quoted
             StackArray<AString> inputs;
             GetInputFiles( objectsInsteadOfLibs, inputs );
-            for ( const AString & input: inputs )
+            for ( const AString & input : inputs )
             {
                 fullArgs += pre;
                 fullArgs += input;

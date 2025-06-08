@@ -600,7 +600,7 @@ void TestObject::CLDependencyArgs() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild(options);
+        FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile

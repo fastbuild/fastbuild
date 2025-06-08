@@ -38,14 +38,15 @@ public:
     SolutionConfig() = default;
     explicit SolutionConfig( const SolutionConfigBase & baseConfig )
         : SolutionConfigBase( baseConfig )
-    {}
+    {
+    }
 
     AString m_SolutionPlatform;
     AString m_SolutionConfig;
     AString m_Platform;
     AString m_Config;
 
-    bool operator < ( const SolutionConfig & other ) const
+    bool operator<( const SolutionConfig & other ) const
     {
         const int32_t cmpConfig = m_Config.CompareI( other.m_Config );
         return ( cmpConfig == 0 ) ? m_SolutionPlatform < other.m_SolutionPlatform

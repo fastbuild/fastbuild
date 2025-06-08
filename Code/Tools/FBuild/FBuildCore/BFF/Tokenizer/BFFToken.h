@@ -79,7 +79,7 @@ public:
     const AString & GetSourceFileContents() const   { return m_BFFFile.GetSourceFileContents(); }
     const char *    GetSourcePos() const            { return m_SourcePos; }
 
-    void GetPosInfo( uint32_t & outLine, uint32_t & outColumn, const char * & outLineStart ) const;
+    void GetPosInfo( uint32_t & outLine, uint32_t & outColumn, const char *& outLineStart ) const;
 
     // Some variables come from built-in declarations so we need a proxy BFFToken for those
     static const BFFToken & GetBuiltInToken()       { return s_BuiltInToken; }

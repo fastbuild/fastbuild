@@ -48,7 +48,7 @@ void BFFUserFunctions::AddFunction( const AString & name,
 //------------------------------------------------------------------------------
 BFFUserFunction * BFFUserFunctions::FindFunction( const AString & name ) const
 {
-    BFFUserFunction * * found = m_Functions.FindDeref( name );
+    BFFUserFunction ** found = m_Functions.FindDeref( name );
     return found ? *found : nullptr;
 }
 

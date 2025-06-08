@@ -36,11 +36,11 @@ bool PosixMapMemory( const char * name,
     // For OSX compatibility, name must also be shorter than SHM_NAME_MAX (32)
     portableName = "/";
     portableName += name;
-    ASSERT( portableName.FindLast('/') == portableName.Get() );
+    ASSERT( portableName.FindLast( '/' ) == portableName.Get() );
     ASSERT( portableName.GetLength() <= 32 ); // from SHM_NAME_MAX on OSX
 
     *mapFile = shm_open( portableName.Get(),
-                         O_RDWR | (create ? O_CREAT : 0),
+                         O_RDWR | ( create ? O_CREAT : 0 ),
                          S_IWUSR | S_IRUSR );
     if ( *mapFile == -1 )
     {
@@ -64,7 +64,7 @@ SharedMemory::SharedMemory()
     : m_Memory( nullptr )
     #if defined( __WINDOWS__ )
         , m_MapFile( nullptr )
-    #elif defined(__LINUX__) || defined(__APPLE__)
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
         , m_MapFile( -1 )
         , m_Length( 0 )
     #else
@@ -116,7 +116,7 @@ void SharedMemory::Create( const char * name, unsigned int size )
                                       size );
         }
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        PosixMapMemory(name, size, true, &m_MapFile, &m_Memory, m_Name);
+        PosixMapMemory( name, size, true, &m_MapFile, &m_Memory, m_Name );
         m_Length = size;
     #else
         #error Unknown Platform
@@ -140,8 +140,8 @@ bool SharedMemory::Open( const char * name, unsigned int size )
                                       size );
         }
         return ( ( m_Memory != nullptr ) && ( m_MapFile != nullptr ) );
-    #elif defined( __APPLE__ ) || defined(__LINUX__)
-        const bool result = PosixMapMemory(name, size, false, &m_MapFile, &m_Memory, m_Name);
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        const bool result = PosixMapMemory( name, size, false, &m_MapFile, &m_Memory, m_Name );
         m_Length = size;
         return result;
     #else

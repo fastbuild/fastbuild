@@ -50,7 +50,8 @@ __asm__( ".symver __isoc99_vsscanf,vsscanf@GLIBC_2.2.5" );
 #if defined( __GLIBC__ ) && ( __GLIBC__ * 1000 + __GLIBC_MINOR__ ) >= 2033
 
     #ifdef __cplusplus
-        extern "C" {
+        extern "C"
+        {
     #endif
 
     int __xstat( int ver, const char * path, struct stat * buf );

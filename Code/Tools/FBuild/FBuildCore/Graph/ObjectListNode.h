@@ -44,7 +44,7 @@ public:
 
     void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
 
-    void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
+    void EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
 protected:
     friend class FunctionObjectList;

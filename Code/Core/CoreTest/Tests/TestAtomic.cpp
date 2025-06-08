@@ -21,8 +21,8 @@ public:
     AtomicTestHelper()
     {
         const T initialValue = 99;
-        PRAGMA_DISABLE_PUSH_MSVC(4307) // integral constant overflow
-        PRAGMA_DISABLE_PUSH_MSVC(4309) // truncation of constant value
+        PRAGMA_DISABLE_PUSH_MSVC( 4307 ) // integral constant overflow
+        PRAGMA_DISABLE_PUSH_MSVC( 4309 ) // truncation of constant value
         const T expectedResult = static_cast<T>( initialValue + ( 2 * loopCount * ( addValue - subValue ) ) );
         PRAGMA_DISABLE_POP_MSVC
         PRAGMA_DISABLE_POP_MSVC

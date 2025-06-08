@@ -42,7 +42,7 @@
             "JobResultCompressed",
             "ConnectionAck",
         };
-        static_assert( ( sizeof( msgNames ) / sizeof(const char *) ) == Protocol::NUM_MESSAGES, "msgNames item count doesn't match NUM_MESSAGES" );
+        static_assert( ( sizeof( msgNames ) / sizeof( const char * ) ) == Protocol::NUM_MESSAGES, "msgNames item count doesn't match NUM_MESSAGES" );
 
         return msgNames[ msgType ];
     }
@@ -109,7 +109,7 @@ Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )
     : Protocol::IMessage( Protocol::MSG_CONNECTION, sizeof( MsgConnection ), false )
     , m_ProtocolVersion( PROTOCOL_VERSION_MAJOR )
     , m_NumJobsAvailable( numJobsAvailable )
-    , m_Platform(Env::GetPlatform())
+    , m_Platform( Env::GetPlatform() )
     , m_ProtocolVersionMinor( PROTOCOL_VERSION_MINOR )
 {
     memset( m_Padding2, 0, sizeof( m_Padding2 ) );

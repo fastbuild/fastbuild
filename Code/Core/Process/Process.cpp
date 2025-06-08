@@ -72,11 +72,13 @@ Process::~Process()
 // KillProcessTreeInternal
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void Process::KillProcessTreeInternal( const void * hProc, const uint32_t processID, const uint64_t processCreationTime )
+    void Process::KillProcessTreeInternal( const void * hProc,
+                                           const uint32_t processID,
+                                           const uint64_t processCreationTime )
     {
         PROCESSENTRY32 pe;
 
-        memset( &pe, 0, sizeof( PROCESSENTRY32) );
+        memset( &pe, 0, sizeof( PROCESSENTRY32 ) );
         pe.dwSize = sizeof( PROCESSENTRY32 );
 
         const HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
@@ -112,8 +114,7 @@ Process::~Process()
 
                     ::CloseHandle( hChildProc );
                 }
-            }
-            while ( ::Process32Next( hSnap, &pe ) );
+            } while ( ::Process32Next( hSnap, &pe ) );
         }
 
         ::CloseHandle( hSnap );
@@ -185,14 +186,14 @@ bool Process::Spawn( const char * executable,
     #if defined( __WINDOWS__ )
         // Set up the start up info struct.
         STARTUPINFO si;
-        ZeroMemory( &si, sizeof(STARTUPINFO) );
+        ZeroMemory( &si, sizeof( STARTUPINFO ) );
         si.cb = sizeof( STARTUPINFO );
         si.dwFlags |= STARTF_USESHOWWINDOW;
         si.wShowWindow = SW_HIDE;
 
         SECURITY_ATTRIBUTES sa;
         ZeroMemory( &sa, sizeof( SECURITY_ATTRIBUTES ) );
-        sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa.nLength = sizeof( SECURITY_ATTRIBUTES );
         sa.bInheritHandle = TRUE;
         sa.lpSecurityDescriptor = nullptr;
 
@@ -203,9 +204,9 @@ bool Process::Spawn( const char * executable,
             // create the pipes
             if ( shareHandles )
             {
-                si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-                si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-                si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+                si.hStdOutput = GetStdHandle( STD_OUTPUT_HANDLE );
+                si.hStdError = GetStdHandle( STD_ERROR_HANDLE );
+                si.hStdInput = GetStdHandle( STD_INPUT_HANDLE );
             }
             else
             {
@@ -327,7 +328,7 @@ bool Process::Spawn( const char * executable,
                 arg.RemoveQuotes();
 
                 // Add to pointer array
-                const char* argPos = argVectorBuffer.GetEnd();
+                const char * argPos = argVectorBuffer.GetEnd();
                 argVector.EmplaceBack( argPos );
 
                 // copy procesed arg into buffer
@@ -444,7 +445,7 @@ bool Process::IsRunning() const
         // non-blocking "wait"
         int status( -1 );
         pid_t result = waitpid( m_ChildPID, &status, WNOHANG );
-        ASSERT ( result != -1 ); // usage error
+        ASSERT( result != -1 ); // usage error
         if ( result == 0 )
         {
             return true; // Still running
@@ -701,7 +702,7 @@ bool Process::ReadAllData( AString & outMem,
         if ( newSize > buffer.GetReserved() )
         {
             // Expand buffer for new data in large chunks
-            const uint32_t newBufferSize = Math::Max< uint32_t >( newSize, buffer.GetReserved() + ( 16 * MEGABYTE ) );
+            const uint32_t newBufferSize = Math::Max<uint32_t>( newSize, buffer.GetReserved() + ( 16 * MEGABYTE ) );
             buffer.SetReserved( newBufferSize );
         }
 
@@ -729,7 +730,7 @@ bool Process::ReadAllData( AString & outMem,
         fd_set fdSet;
         FD_ZERO( &fdSet );
         FD_SET( handle, &fdSet );
-        int ret = select( handle+1, &fdSet, nullptr, nullptr, &timeout );
+        int ret = select( handle + 1, &fdSet, nullptr, nullptr, &timeout );
         if ( ret == -1 )
         {
             ASSERT( false ); // usage error?

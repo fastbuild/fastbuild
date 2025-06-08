@@ -245,7 +245,7 @@ protected:
                                                 const AString & concurrencyGroupName );
 
     static const char * GetEnvironmentString( const Array<AString> & envVars,
-                                              const char * & inoutCachedEnvString );
+                                              const char *& inoutCachedEnvString );
 
     void RecordStampFromBuiltFile();
 
@@ -287,7 +287,7 @@ inline T * Node::CastTo() const
 
 //------------------------------------------------------------------------------
 template <>
-inline FileNode * Node::CastTo< FileNode >() const
+inline FileNode * Node::CastTo<FileNode>() const
 {
     ASSERT( IsAFile() );
     return (FileNode *)this;

@@ -121,7 +121,7 @@ void WorkerThread::WaitForStop()
 
     CreateThreadLocalTmpDir();
 
-    for (;;)
+    for ( ;; )
     {
         // Wait for work to become available (or quit signal)
         JobQueue::Get().WorkerThreadWait( 500 );

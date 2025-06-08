@@ -147,7 +147,7 @@ void Client::LookForWorkers()
 
     // find out how many connections we have now
     size_t numConnections = 0;
-    for ( size_t i=0; i<numWorkers; i++ )
+    for ( size_t i = 0; i < numWorkers; i++ )
     {
         if ( AtomicLoadRelaxed( &m_ServerList[ i ].m_Connection ) )
         {
@@ -174,7 +174,7 @@ void Client::LookForWorkers()
     const size_t startIndex = r.GetRandIndex( (uint32_t)numWorkers );
 
     // find someone to connect to
-    for ( size_t j=0; j<numWorkers; j++ )
+    for ( size_t j = 0; j < numWorkers; j++ )
     {
         const size_t i( ( j + startIndex ) % numWorkers );
 
@@ -294,9 +294,9 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
-                (uint32_t)msg.GetType(),
-                msg.GetSize() );
+               ( (ServerState *)connection->GetUserData() )->m_RemoteName.Get(),
+               (uint32_t)msg.GetType(),
+               msg.GetSize() );
 }
 
 // SendMessageInternal
@@ -309,10 +309,10 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u, Payload: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
-                (uint32_t)msg.GetType(),
-                msg.GetSize(),
-                (uint32_t)memoryStream.GetSize() );
+               ( (ServerState *)connection->GetUserData() )->m_RemoteName.Get(),
+               (uint32_t)msg.GetType(),
+               msg.GetSize(),
+               (uint32_t)memoryStream.GetSize() );
 }
 
 // SendMessageInternal
@@ -325,10 +325,10 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u, Payload: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
-                (uint32_t)msg.GetType(),
-                msg.GetSize(),
-                (uint32_t)memoryStream.GetSize() );
+               ( (ServerState *)connection->GetUserData() )->m_RemoteName.Get(),
+               (uint32_t)msg.GetType(),
+               msg.GetSize(),
+               (uint32_t)memoryStream.GetSize() );
 }
 
 // OnReceive
@@ -470,8 +470,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ss->m_NumJobsAvailable = 0;
 
     // if tool is explicitly specified, get the id of the tool manifest
-    const Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
-    const ToolManifest & manifest = n->CastTo< CompilerNode >()->GetManifest();
+    const Node * n = job->GetNode()->CastTo<ObjectNode>()->GetCompiler();
+    const ToolManifest & manifest = n->CastTo<CompilerNode>()->GetManifest();
     const uint64_t toolId = manifest.GetToolId();
     ASSERT( toolId );
 
@@ -491,7 +491,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
         const int16_t cacheCompressionLevel = FBuild::Get().GetOptions().m_CacheCompressionLevel;
         if ( ( cacheCompressionLevel != 0 ) &&
              ( FBuild::Get().GetOptions().m_UseCacheWrite ) &&
-             ( job->GetNode()->CastTo< ObjectNode >()->ShouldUseCache() ) )
+             ( job->GetNode()->CastTo<ObjectNode>()->ShouldUseCache() ) )
         {
             resultCompressionLevel = Math::Max( resultCompressionLevel, cacheCompressionLevel );
         }
@@ -543,11 +543,12 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     // Take note of additional server info
     ss->m_WorkerVersion.Store( msg->GetWorkerVersion() );
     ss->m_ProtocolVersionMinor.Store( msg->GetProtocolVersionMinor() );
-    DIST_INFO( " - Worker %s is v%u.%u (protocol v%u.%u)\n", ss->m_RemoteName.Get(),
-                                                             (ss->m_WorkerVersion.Load() / 100U),
-                                                             (ss->m_WorkerVersion.Load() % 100U),
-                                                             Protocol::PROTOCOL_VERSION_MAJOR,
-                                                             ss->m_ProtocolVersionMinor.Load() );
+    DIST_INFO( " - Worker %s is v%u.%u (protocol v%u.%u)\n",
+               ss->m_RemoteName.Get(),
+               ( ss->m_WorkerVersion.Load() / 100U ),
+               ( ss->m_WorkerVersion.Load() % 100U ),
+               Protocol::PROTOCOL_VERSION_MAJOR,
+               ss->m_ProtocolVersionMinor.Load() );
 }
 
 // ProcessJobResultCommon
@@ -636,15 +637,16 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         const size_t workerIndex = m_ServerList.GetIndexOf( ss );
         const AString & workerName = m_WorkerList[ workerIndex ];
         DIST_INFO( "Remote System Failure!\n"
-                    " - Deny listed Worker: %s\n"
-                    " - Node              : %s\n"
-                    " - Job Error Count   : %u / %u\n"
-                    " - Details           :\n"
-                    "%s",
-                    workerName.Get(),
-                    node->GetName().Get(),
-                    jobSystemErrorCount, SYSTEM_ERROR_ATTEMPT_COUNT,
-                    failureOutput.Get() );
+                   " - Deny listed Worker: %s\n"
+                   " - Node              : %s\n"
+                   " - Job Error Count   : %u / %u\n"
+                   " - Details           :\n"
+                   "%s",
+                   workerName.Get(),
+                   node->GetName().Get(),
+                   jobSystemErrorCount,
+                   SYSTEM_ERROR_ATTEMPT_COUNT,
+                   failureOutput.Get() );
     }
 
     // Handle build profiling output
@@ -654,7 +656,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         // NOTE:
         // * String lifetime must extend past BuildProfiler destruction
         // * String contents feeds into color selection for profiling json
-        const char* resultStr = "Compile";
+        const char * resultStr = "Compile";
         if ( systemError )
         {
             if ( raceWon )       { resultStr = "(System Failure) (Race Won) Compile"; }
@@ -677,13 +679,13 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
                                            start,
                                            receivedResultEndTime,
                                            resultStr,
-                                           node->GetName().Get());
+                                           node->GetName().Get() );
     }
 
     // Handle verbose logging
     if ( m_DetailedLogging )
     {
-        const char* resultStr = "";
+        const char * resultStr = "";
         if ( systemError )
         {
             if ( raceWon )       { resultStr = " (System Failure) (Race Won)"; }
@@ -729,7 +731,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     {
         // built ok - serialize to disc
 
-        ObjectNode * objectNode = node->CastTo< ObjectNode >();
+        ObjectNode * objectNode = node->CastTo<ObjectNode>();
 
         // Store to cache if needed
         const bool writeToCache = FBuild::Get().GetOptions().m_UseCacheWrite &&
@@ -768,7 +770,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         {
             size_t fileIndex = 0;
 
-            const ObjectNode * on = job->GetNode()->CastTo< ObjectNode >();
+            const ObjectNode * on = job->GetNode()->CastTo<ObjectNode>();
 
             // 1. Object file
             result = WriteFileToDisk( nodeName, mb, fileIndex++ );
@@ -804,8 +806,8 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
 
                 // record time taken to build
                 objectNode->SetLastBuildTime( buildTime );
-                objectNode->SetStatFlag(Node::STATS_BUILT);
-                objectNode->SetStatFlag(Node::STATS_BUILT_REMOTE);
+                objectNode->SetStatFlag( Node::STATS_BUILT );
+                objectNode->SetStatFlag( Node::STATS_BUILT_REMOTE );
             }
             else
             {
@@ -817,7 +819,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         AStackString<> msgBuffer;
         job->GetMessagesForLog( msgBuffer );
 
-        if ( objectNode->IsMSVC())
+        if ( objectNode->IsMSVC() )
         {
             if ( objectNode->IsWarningsAsErrorsMSVC() == false )
             {
@@ -841,7 +843,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     }
     else
     {
-        ((FileNode *)node)->SetStatFlag( Node::STATS_FAILED );
+        ( (FileNode *)node )->SetStatFlag( Node::STATS_FAILED );
 
         // was it a system error?
         if ( systemError )
@@ -895,7 +897,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     // Send manifest to worker
     const Protocol::MsgManifest resultMsg( toolId );
-    MutexHolder mh( static_cast<ServerState *>(connection->GetUserData())->m_Mutex );
+    MutexHolder mh( static_cast<ServerState *>( connection->GetUserData() )->m_Mutex );
     SendMessageInternal( connection, resultMsg, ms );
 }
 
@@ -932,7 +934,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     // Send file to worker
     const Protocol::MsgFile resultMsg( toolId, fileId );
-    MutexHolder mh( static_cast<ServerState *>(connection->GetUserData())->m_Mutex );
+    MutexHolder mh( static_cast<ServerState *>( connection->GetUserData() )->m_Mutex );
     SendMessageInternal( connection, resultMsg, ms );
 }
 
@@ -947,8 +949,8 @@ const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, ui
 
     for ( const Job * job : ss->m_Jobs )
     {
-        const Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
-        const ToolManifest & m = n->CastTo< CompilerNode >()->GetManifest();
+        const Node * n = job->GetNode()->CastTo<ObjectNode>()->GetCompiler();
+        const ToolManifest & m = n->CastTo<CompilerNode>()->GetManifest();
         if ( m.GetToolId() == toolId )
         {
             // found a job with the same toolid

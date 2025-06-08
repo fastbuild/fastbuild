@@ -48,7 +48,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         AStackString<> programPath( argv[0] );
         if ( !programPath.IsEmpty() )
         {
-            const char* slash = programPath.FindLast( NATIVE_SLASH );
+            const char * slash = programPath.FindLast( NATIVE_SLASH );
             programName = ( slash ? slash + 1 : programPath.Get() );
         }
     }
@@ -56,13 +56,13 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     bool progressOptionSpecified = false;
 
     // Parse options
-    for ( int32_t i=1; i<argc; ++i ) // start from 1 to skip exe name
+    for ( int32_t i = 1; i < argc; ++i ) // start from 1 to skip exe name
     {
         AStackString<> thisArg( argv[ i ] );
 
         // Check WSL wrapper
         #if defined( __WINDOWS__ )
-            if ( ( m_WrapperMode  == WRAPPER_MODE_NONE ) && ( thisArg == "-wsl" ) )
+            if ( ( m_WrapperMode == WRAPPER_MODE_NONE ) && ( thisArg == "-wsl" ) )
             {
                 // -wsl must be the first arg
                 if ( i != 1 )
@@ -324,7 +324,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_FastCancel = false;
                 continue;
             }
-            else if (thisArg == "-nolocalrace")
+            else if ( thisArg == "-nolocalrace" )
             {
                 m_AllowLocalRace = false;
                 continue;
@@ -335,7 +335,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 progressOptionSpecified = true;
                 continue;
             }
-            else if ( thisArg == "-nostoponerror")
+            else if ( thisArg == "-nostoponerror" )
             {
                 m_StopOnFirstError = false;
                 continue;
@@ -448,17 +448,17 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 continue;
             }
             #if defined( __WINDOWS__ )
-                else if ( thisArg == "-wrapper")
+                else if ( thisArg == "-wrapper" )
                 {
                     m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
                     continue;
                 }
-                else if ( thisArg == "-wrapperintermediate") // Internal use only
+                else if ( thisArg == "-wrapperintermediate" ) // Internal use only
                 {
                     m_WrapperMode = WRAPPER_MODE_INTERMEDIATE_PROCESS;
                     continue;
                 }
-                else if ( thisArg == "-wrapperfinal") // Internal use only
+                else if ( thisArg == "-wrapperfinal" ) // Internal use only
                 {
                     m_WrapperMode = WRAPPER_MODE_FINAL_PROCESS;
                     continue;

@@ -757,7 +757,7 @@ void TestArray::SortBig() const
             }
         }
 
-        TEST_MEMORY_SNAPSHOT(s1);
+        TEST_MEMORY_SNAPSHOT( s1 );
 
         // Sort
         const Timer t;
@@ -933,7 +933,7 @@ void TestArray::FindDerefAndErase() const
     // POD
     {
         // Empty
-        Array<uint32_t*> array;
+        Array<uint32_t *> array;
         TEST_ASSERT( array.FindDerefAndErase( (uint32_t)1 ) == false );
         CheckConsistency( array );
     }
@@ -942,7 +942,7 @@ void TestArray::FindDerefAndErase() const
         const uint32_t u32_1 = 1;
         const uint32_t u32_2 = 2;
         const uint32_t u32_3 = 3;
-        Array<const uint32_t*> array;
+        Array<const uint32_t *> array;
         array.Append( &u32_1 );
         array.Append( &u32_2 );
         array.Append( &u32_3 );
@@ -959,7 +959,7 @@ void TestArray::FindDerefAndErase() const
     // Complex type
     {
         // Empty
-        Array<AString*> array;
+        Array<AString *> array;
         TEST_ASSERT( array.FindDerefAndErase( "string1" ) == false );
         CheckConsistency( array );
     }
@@ -968,7 +968,7 @@ void TestArray::FindDerefAndErase() const
         const AString string1( "string1" );
         const AString string2( "string2" );
         const AString string3( "string3" );
-        Array<const AString*> array;
+        Array<const AString *> array;
         array.Append( &string1 );
         array.Append( &string2 );
         array.Append( &string3 );
@@ -1490,7 +1490,7 @@ void TestArray::AssignmentOperator_OtherArray() const
         CheckConsistency( array1 );
         CheckConsistency( array2 );
         TEST_ASSERT( array2.GetSize() == array1.GetSize() );
-        TEST_ASSERT( array1.IsEmpty() == false);
+        TEST_ASSERT( array1.IsEmpty() == false );
         TEST_ASSERT( array2.IsEmpty() == false );
         TEST_ASSERT( array2[ 0 ] == 1 );
         TEST_ASSERT( array2[ 0 ] == array1[ 0 ] );
@@ -1932,7 +1932,7 @@ void TestArray::MoveConstructorHelper() const
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
     // Source string should be empty
-    PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+    PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
     TEST_ASSERT( arrayA.IsEmpty() );
     PRAGMA_DISABLE_POP_MSVC
 
@@ -2008,7 +2008,7 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
         // Source string should be empty
-        PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+        PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
         TEST_ASSERT( arrayA.IsEmpty() );
         PRAGMA_DISABLE_POP_MSVC
 
@@ -2042,7 +2042,7 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
             arrayB = Move( (SRC_CAST &)( arrayA ) );
 
             // Source string should be empty
-            PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+            PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
             TEST_ASSERT( arrayA.IsEmpty() );
             PRAGMA_DISABLE_POP_MSVC
 
@@ -2186,7 +2186,7 @@ void TestArray::MoveErase() const
 {
     // Create array with something in it
     Array<AString> array;
-    array.SetCapacity(2);
+    array.SetCapacity( 2 );
     array.EmplaceBack( "string1" );
     array.EmplaceBack( "string2string2" ); // Larger than string 1
 

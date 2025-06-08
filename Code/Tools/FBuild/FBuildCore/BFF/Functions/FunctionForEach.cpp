@@ -174,18 +174,18 @@ FunctionForEach::FunctionForEach()
     }
 
     // freeze the variable to avoid modifications while looping
-    for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
+    for ( uint32_t j = 0; j < arrayVars.GetSize(); ++j )
     {
         arrayVars[ j ]->Freeze();
     }
 
     bool succeed = true;
 
-    for ( uint32_t i=0; i<(uint32_t)loopLen; ++i )
+    for ( uint32_t i = 0; i < (uint32_t)loopLen; ++i )
     {
         // create local loop variables
         BFFStackFrame loopStackFrame;
-        for ( uint32_t j=0; j<localNames.GetSize(); ++j )
+        for ( uint32_t j = 0; j < localNames.GetSize(); ++j )
         {
             if ( arrayVars[ j ]->GetType() == BFFVariable::VAR_ARRAY_OF_STRINGS )
             {
@@ -211,7 +211,7 @@ FunctionForEach::FunctionForEach()
     }
 
     // unfreeze all array variables
-    for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
+    for ( uint32_t j = 0; j < arrayVars.GetSize(); ++j )
     {
         arrayVars[ j ]->Unfreeze();
     }

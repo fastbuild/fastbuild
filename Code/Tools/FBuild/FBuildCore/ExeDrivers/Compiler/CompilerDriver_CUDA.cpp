@@ -19,9 +19,9 @@ CompilerDriver_CUDA::~CompilerDriver_CUDA() = default;
 // ProcessArg_PreprocessorOnly
 //------------------------------------------------------------------------------
 /*virtual*/ bool CompilerDriver_CUDA::ProcessArg_PreprocessorOnly( const AString & token,
-                                                                  size_t & index,
-                                                                  const AString & /*nextToken*/,
-                                                                  Args & /*outFullArgs*/ ) const
+                                                                   size_t & index,
+                                                                   const AString & /*nextToken*/,
+                                                                   Args & /*outFullArgs*/ ) const
 {
     // Remove output arg
     if ( StripTokenWithArg( "-o", token, index ) )

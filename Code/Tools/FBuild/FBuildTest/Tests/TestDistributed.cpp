@@ -413,7 +413,7 @@ void TestDistributed::ShutdownMemoryLeak() const
     };
     bool detectedDistributedJobs = false;
     Thread thread;
-    thread.Start( Helper::AbortBuild,"TestDistributed", &detectedDistributedJobs );
+    thread.Start( Helper::AbortBuild, "TestDistributed", &detectedDistributedJobs );
 
     // Start build and check it was aborted
     TEST_ASSERT( fBuild.Build( "ShutdownMemoryLeak" ) == false );
@@ -499,12 +499,12 @@ void TestDistributed::DynamicDeoptimization() const
         options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
         options.m_AllowLocalRace = false;
         options.m_ForceCleanBuild = true;
-        FBuild fBuild(options);
+        FBuild fBuild( options );
 
         TEST_ASSERT( fBuild.Initialize() );
 
         // /dynamicdeopt has an additional file which sits next to the normal one
-        const char* const extraObjFile = "../tmp/Test/Distributed/MSVCDynamicDeoptimization/file.alt.obj";
+        const char * const extraObjFile = "../tmp/Test/Distributed/MSVCDynamicDeoptimization/file.alt.obj";
 
         // Ensure file doesn't linker from prior test runs
         EnsureFileDoesNotExist( extraObjFile );

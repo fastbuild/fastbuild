@@ -38,8 +38,8 @@
 #if defined( __WINDOWS__ )
     OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
     {
-        ZeroMemory( &m_NotifyIconData, sizeof(NOTIFYICONDATA) );
-        m_NotifyIconData.cbSize = sizeof(NOTIFYICONDATA);
+        ZeroMemory( &m_NotifyIconData, sizeof( NOTIFYICONDATA ) );
+        m_NotifyIconData.cbSize = sizeof( NOTIFYICONDATA );
         m_NotifyIconData.hWnd = (HWND)parentWindow->GetHandle();
         m_NotifyIconData.uID = ID_TRAY_APP_ICON;
         m_NotifyIconData.uFlags = NIF_ICON |    // provide icon

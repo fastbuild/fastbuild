@@ -49,7 +49,7 @@ public:
 
     // after a build we can store progress/parsed rules for next time
     bool SaveDependencyGraph( const char * nodeGraphDBFile ) const;
-    void SaveDependencyGraph( ChainedMemoryStream & memorySteam, const char* nodeGraphDBFile ) const;
+    void SaveDependencyGraph( ChainedMemoryStream & memorySteam, const char * nodeGraphDBFile ) const;
 
     const FBuildOptions & GetOptions() const { return m_Options; }
 
@@ -72,9 +72,10 @@ public:
     {
     public:
         EnvironmentVarAndHash( const char * name, uint32_t hash )
-         : m_Name( name )
-         , m_Hash( hash )
-        {}
+            : m_Name( name )
+            , m_Hash( hash )
+        {
+        }
 
         const AString & GetName() const             { return m_Name; }
         uint32_t        GetHash() const             { return m_Hash; }

@@ -39,7 +39,7 @@
             return;
         }
     #else
-        m_DLL = dlopen(dllName.Get(), RTLD_NOW);
+        m_DLL = dlopen( dllName.Get(), RTLD_NOW );
         if ( !m_DLL )
         {
             FLOG_WARN( "Cache plugin load failed. Error: %s '%s' Plugin: %s", LAST_ERROR_STR, dlerror(), dllName.Get() );
@@ -72,14 +72,14 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
         ASSERT( m_DLL );
 
         // Try the unmangled name first
-        PRAGMA_DISABLE_PUSH_CLANG("-Wmicrosoft-cast")
+        PRAGMA_DISABLE_PUSH_CLANG( "-Wmicrosoft-cast" )
         void * func = ::GetProcAddress( (HMODULE)m_DLL, name );
         PRAGMA_DISABLE_POP_CLANG
 
         // If that fails, check for the mangled name for backwards compat with existing plugins
         if ( !func && mangledName )
         {
-            PRAGMA_DISABLE_PUSH_CLANG("-Wmicrosoft-cast")
+            PRAGMA_DISABLE_PUSH_CLANG( "-Wmicrosoft-cast" )
             func = ::GetProcAddress( (HMODULE)m_DLL, mangledName );
             PRAGMA_DISABLE_POP_CLANG
         }
@@ -123,14 +123,14 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
 
     if ( m_ShutdownFunc )
     {
-        (*m_ShutdownFunc)();
+        ( *m_ShutdownFunc )();
     }
 
     if ( m_DLL )
     {
         #if defined( __WINDOWS__ )
             ::FreeLibrary( (HMODULE)m_DLL );
-       #else
+        #else
             dlclose( m_DLL );
         #endif
     }
@@ -153,13 +153,18 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
     // Original Init
     if ( m_InitFunc )
     {
-        return (*m_InitFunc)( cachePath.Get() );
+        return ( *m_InitFunc )( cachePath.Get() );
     }
 
     // Extended Init
     if ( m_InitExFunc )
     {
-        return (*m_InitExFunc)( cachePath.Get(), cacheRead, cacheWrite, cacheVerbose, pluginDLLConfig.Get(), &CacheOutputWrapper );
+        return ( *m_InitExFunc )( cachePath.Get(),
+                                  cacheRead,
+                                  cacheWrite,
+                                  cacheVerbose,
+                                  pluginDLLConfig.Get(),
+                                  &CacheOutputWrapper );
     }
 
     return false;
@@ -176,14 +181,14 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
 
     if ( m_PublishFunc )
     {
-        return (*m_PublishFunc)( cacheId.Get(), data, dataSize );
+        return ( *m_PublishFunc )( cacheId.Get(), data, dataSize );
     }
     return false;
 }
 
 // Retrieve
 //------------------------------------------------------------------------------
-/*virtual*/ bool CachePlugin::Retrieve( const AString & cacheId, void * & data, size_t & dataSize )
+/*virtual*/ bool CachePlugin::Retrieve( const AString & cacheId, void *& data, size_t & dataSize )
 {
     if ( m_Valid == false )
     {
@@ -193,7 +198,7 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
     if ( m_RetrieveFunc )
     {
         unsigned long long size;
-        const bool ok = (*m_RetrieveFunc)( cacheId.Get(), data, size );
+        const bool ok = ( *m_RetrieveFunc )( cacheId.Get(), data, size );
         dataSize = (size_t)size;
         return ok;
     }
@@ -210,7 +215,7 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
     }
 
     ASSERT( m_FreeMemoryFunc ); // should never get here without being valid
-    (*m_FreeMemoryFunc)( data, dataSize );
+    ( *m_FreeMemoryFunc )( data, dataSize );
 }
 
 // OutputInfo
@@ -225,7 +230,7 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
     // OutputInfo is optional
     if ( m_OutputInfoFunc )
     {
-        return (*m_OutputInfoFunc)( showProgress );
+        return ( *m_OutputInfoFunc )( showProgress );
     }
 
     OUTPUT( "CachePlugin does not support OutputInfo.\n" );
@@ -244,7 +249,7 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
     // Trim is optional
     if ( m_TrimFunc )
     {
-        return (*m_TrimFunc)( showProgress , sizeMiB );
+        return ( *m_TrimFunc )( showProgress, sizeMiB );
     }
 
     OUTPUT( "CachePlugin does not support Trim.\n" );

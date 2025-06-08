@@ -8,6 +8,6 @@ public:
 void FunctionsAsCLR_C()
 {
     // use garbage collected new
-    C^ c = gcnew C;
+    C ^ c = gcnew C;
     (void)c;
 }

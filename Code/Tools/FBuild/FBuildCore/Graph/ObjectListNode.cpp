@@ -161,7 +161,7 @@ ObjectListNode::ObjectListNode()
         const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
         if ( pchFlags.IsMSVC() || pchFlags.IsClangCl() )
         {
-            if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
+            if ( ( (FunctionObjectList *)function )->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
             {
                 return false; // CheckMSVCPCHFlags_Create will have emitted an error
             }
@@ -205,7 +205,7 @@ ObjectListNode::ObjectListNode()
             // Check for correct PCH usage options
             if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClangCl() )
             {
-                if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Use( iter, m_CompilerOptions, m_CompilerFlags ) == false )
+                if ( ( (FunctionObjectList *)function )->CheckMSVCPCHFlags_Use( iter, m_CompilerOptions, m_CompilerFlags ) == false )
                 {
                     return false; // CheckMSVCPCHFlags_Use will have emitted an error
                 }
@@ -228,12 +228,12 @@ ObjectListNode::ObjectListNode()
                     Error::Error_1104_TargetNotDefined( iter, function, "PCHOutputFile", m_PCHOutputFile );
                     return false;
                 }
-                precompiledHeader = node->CastTo< ObjectNode >();
+                precompiledHeader = node->CastTo<ObjectNode>();
             }
         }
 
         // .CompilerOptions
-        if ( ((FunctionObjectList *)function)->CheckCompilerOptions( iter, m_CompilerOptions, m_CompilerFlags ) == false )
+        if ( ( (FunctionObjectList *)function )->CheckCompilerOptions( iter, m_CompilerOptions, m_CompilerFlags ) == false )
         {
             return false; // CheckCompilerOptions will have emitted an error
         }
@@ -324,10 +324,10 @@ ObjectListNode::ObjectListNode()
     // Currently these are MSVC only
     if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClangCl() )
     {
-        ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions,
-                                                               m_ExtraPDBPath,
-                                                               m_ExtraASMPath,
-                                                               m_ExtraSourceDependenciesPath );
+        ( (FunctionObjectList *)function )->GetExtraOutputPaths( m_CompilerOptions,
+                                                                 m_ExtraPDBPath,
+                                                                 m_ExtraASMPath,
+                                                                 m_ExtraSourceDependenciesPath );
     }
 
     // Store dependencies
@@ -364,7 +364,7 @@ ObjectListNode::~ObjectListNode() = default;
     m_DynamicDependencies.Clear();
 
     // Handle converting all static inputs into dynamic ones (i.e. cpp->obj)
-    for ( size_t i=m_ObjectListInputStartIndex; i<m_ObjectListInputEndIndex; ++i )
+    for ( size_t i = m_ObjectListInputStartIndex; i < m_ObjectListInputEndIndex; ++i )
     {
         const Dependency & dep = m_StaticDependencies[ i ];
 
@@ -372,7 +372,7 @@ ObjectListNode::~ObjectListNode() = default;
         if ( dep.GetNode()->GetType() == Node::DIRECTORY_LIST_NODE )
         {
             // get the list of files
-            const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
+            const DirectoryListNode * dln = dep.GetNode()->CastTo<DirectoryListNode>();
             const Array<FileIO::FileInfo> & files = dln->GetFiles();
             m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
             for ( const FileIO::FileInfo & file : files )
@@ -408,7 +408,7 @@ ObjectListNode::~ObjectListNode() = default;
         else if ( dep.GetNode()->GetType() == Node::UNITY_NODE )
         {
             // get the dir list from the unity node
-            const UnityNode * un = dep.GetNode()->CastTo< UnityNode >();
+            const UnityNode * un = dep.GetNode()->CastTo<UnityNode>();
 
             // unity files
             for ( const AString & unityFile : un->GetUnityFileNames() )
@@ -455,7 +455,7 @@ ObjectListNode::~ObjectListNode() = default;
         else if ( dep.GetNode()->GetType() == Node::OBJECT_LIST_NODE )
         {
             // get the list of files from the ObjectListNode
-            const ObjectListNode * objListNode = dep.GetNode()->CastTo< ObjectListNode >();
+            const ObjectListNode * objListNode = dep.GetNode()->CastTo<ObjectListNode>();
             Array<AString> objListFiles;
             objListNode->GetInputFiles( objListFiles );
 
@@ -579,11 +579,11 @@ ObjectListNode::~ObjectListNode() = default;
         stamps.SetCapacity( m_DynamicDependencies.GetSize() );
         for ( const Dependency & dep : m_DynamicDependencies )
         {
-            const ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
+            const ObjectNode * on = dep.GetNode()->CastTo<ObjectNode>();
             ASSERT( on->GetStamp() );
             stamps.Append( on->GetStamp() );
         }
-        m_Stamp = xxHash3::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
+        m_Stamp = xxHash3::Calc64( &stamps[0], ( stamps.GetSize() * sizeof( uint64_t ) ) );
     }
 
     return BuildResult::eOk;
@@ -601,7 +601,7 @@ void ObjectListNode::GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & 
         if ( n->GetType() == Node::OBJECT_NODE )
         {
             // handle pch files - get path to matching object
-            const ObjectNode * on = n->CastTo< ObjectNode >();
+            const ObjectNode * on = n->CastTo<ObjectNode>();
             if ( on->IsCreatingPCH() )
             {
                 if ( on->IsMSVC() || on->IsClangCl() )
@@ -626,7 +626,7 @@ void ObjectListNode::GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & 
             ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
 
             // insert all the objects in the object list
-            const ObjectListNode * oln = n->CastTo< ObjectListNode >();
+            const ObjectListNode * oln = n->CastTo<ObjectListNode>();
             oln->GetInputFiles( objectsInsteadOfLibs, outInputs );
             continue;
         }
@@ -637,7 +637,7 @@ void ObjectListNode::GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & 
             ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
 
             // insert all the objects in the object list
-            const LibraryNode * ln = n->CastTo< LibraryNode >();
+            const LibraryNode * ln = n->CastTo<LibraryNode>();
             ln->GetInputFiles( objectsInsteadOfLibs, outInputs );
             continue;
         }
@@ -744,7 +744,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
     }
     else
     {
-        const ObjectNode * other = on->CastTo< ObjectNode >();
+        const ObjectNode * other = on->CastTo<ObjectNode>();
 
         // Check for conflicts
         const bool conflict = ( inputFileName != other->GetSourceFile()->GetName() ) ||
@@ -782,7 +782,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const AString & objectInput,
                                                const AString & pchObjectName )
 {
-    ObjectNode * node= nodeGraph.CreateNode<ObjectNode>( objectName, iter );
+    ObjectNode * node = nodeGraph.CreateNode<ObjectNode>( objectName, iter );
     node->m_Compiler = m_Compiler;
     node->m_CompilerOptions = compilerOptions;
     node->m_CompilerOptionsDeoptimized = compilerOptionsDeoptimized;
@@ -838,7 +838,7 @@ const char * ObjectListNode::GetObjExtension() const
 
 // EnumerateInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
+void ObjectListNode::EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
 {
     // Statically specified files
     for ( const AString & file : m_CompilerInputFiles )
@@ -853,7 +853,7 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
 
         if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+            const DirectoryListNode * dln = node->CastTo<DirectoryListNode>();
 
             const Array<FileIO::FileInfo> & files = dln->GetFiles();
             for ( const FileIO::FileInfo & fi : files )
@@ -863,7 +863,7 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
         }
         else if ( node->GetType() == Node::UNITY_NODE )
         {
-            const UnityNode * un = node->CastTo< UnityNode >();
+            const UnityNode * un = node->CastTo<UnityNode>();
 
             un->EnumerateInputFiles( callback, userData );
         }
@@ -876,7 +876,6 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
             ASSERT( false ); // unexpected node type
         }
     }
-
 }
 
 //------------------------------------------------------------------------------

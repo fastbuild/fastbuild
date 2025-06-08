@@ -105,7 +105,7 @@ void Report::GetReportDateTime( AString & outReportDateTime ) const
 //------------------------------------------------------------------------------
 void Report::FixupTimeTakenPlaceholder()
 {
-    const float timeTakenSecs =  m_Timer.GetElapsed();
+    const float timeTakenSecs = m_Timer.GetElapsed();
 
     // patch in time take
     AStackString<> timeTakenBuffer;
@@ -264,7 +264,7 @@ void Report::AddInclude( IncludeStatsMap & incStats, const Node * node, const No
     bool isHeaderInPCH = false;
     if ( parentNode->GetType() == Node::OBJECT_NODE )
     {
-        const ObjectNode * obj = parentNode->CastTo< ObjectNode >();
+        const ObjectNode * obj = parentNode->CastTo<ObjectNode>();
         isHeaderInPCH = obj->IsCreatingPCH();
     }
 

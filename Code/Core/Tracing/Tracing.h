@@ -52,13 +52,13 @@ private:
         Callbacks();
         ~Callbacks();
 
-        void AddCallbackDebugSpam( Callback* callback );
-        void AddCallbackOutput( Callback* callback );
-        void RemoveCallbackDebugSpam( Callback* callback );
-        void RemoveCallbackOutput( Callback* callback );
+        void AddCallbackDebugSpam( Callback * callback );
+        void AddCallbackOutput( Callback * callback );
+        void RemoveCallbackDebugSpam( Callback * callback );
+        void RemoveCallbackOutput( Callback * callback );
 
         bool DispatchCallbacksDebugSpam( const char * message );
-        bool DispatchCallbacksOutput( const char* message );
+        bool DispatchCallbacksOutput( const char * message );
 
     protected:
         // Tracing can occur during static initialization or shutdown

@@ -11,7 +11,8 @@
 //------------------------------------------------------------------------------
 PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wgnu-zero-variadic-macro-arguments" ) // token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
 #define FLOG_VERBOSE( fmtString, ... )              \
-    do {                                            \
+    do                                              \
+    {                                               \
         if ( FLog::ShowVerbose() )                  \
         {                                           \
             FLog::Verbose( fmtString, ##__VA_ARGS__ ); \
@@ -21,7 +22,8 @@ PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wgnu-zero-variadic-macro-arguments" ) // to
     PRAGMA_DISABLE_POP_MSVC
 
 #define FLOG_BUILD_REASON( fmtString, ... )         \
-    do {                                            \
+    do                                              \
+    {                                               \
         if ( FLog::ShowBuildReason() )              \
         {                                           \
             FLog::Output( fmtString, ##__VA_ARGS__ ); \
@@ -31,14 +33,16 @@ PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wgnu-zero-variadic-macro-arguments" ) // to
     PRAGMA_DISABLE_POP_MSVC
 
 #define FLOG_OUTPUT( fmtString, ... )               \
-    do {                                            \
+    do                                              \
+    {                                               \
         FLog::Output( fmtString, ##__VA_ARGS__ );   \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false )                               \
     PRAGMA_DISABLE_POP_MSVC
 
 #define FLOG_MONITOR( fmtString, ... )              \
-    do {                                            \
+    do                                              \
+    {                                               \
         if ( FLog::IsMonitorEnabled() )             \
         {                                           \
             FLog::Monitor( fmtString, ##__VA_ARGS__ ); \
@@ -48,21 +52,24 @@ PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wgnu-zero-variadic-macro-arguments" ) // to
     PRAGMA_DISABLE_POP_MSVC
 
 #define FLOG_WARN( fmtString, ... )                 \
-    do {                                            \
+    do                                              \
+    {                                               \
         FLog::Warning( fmtString, ##__VA_ARGS__ );  \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false )                               \
     PRAGMA_DISABLE_POP_MSVC
 
 #define FLOG_ERROR( fmtString, ... )                \
-    do {                                            \
+    do                                              \
+    {                                               \
         FLog::Error( fmtString, ##__VA_ARGS__ );    \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false )                               \
     PRAGMA_DISABLE_POP_MSVC
 
 #define FLOG_ERROR_DIRECT( message )                \
-    do {                                            \
+    do                                              \
+    {                                               \
         FLog::ErrorDirect( message );               \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false )                               \

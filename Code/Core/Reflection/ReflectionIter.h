@@ -19,15 +19,15 @@ public:
     explicit ReflectionIter( const ReflectionInfo * info, uint32_t index );
 
     // comparison of iterators
-    bool operator == ( const ReflectionIter & other ) const;
-    bool operator != ( const ReflectionIter & other ) const { return !( *this == other ); }
+    bool operator==( const ReflectionIter & other ) const;
+    bool operator!=( const ReflectionIter & other ) const { return !( *this == other ); }
 
     // iterating
-    void operator ++();
+    void operator++();
 
     // dereferencing
-    const ReflectedProperty & operator ->() const;
-    const ReflectedProperty & operator *() const;
+    const ReflectedProperty & operator->() const;
+    const ReflectedProperty & operator*() const;
 
 protected:
     const ReflectionInfo *  m_Info;

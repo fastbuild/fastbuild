@@ -90,9 +90,9 @@
             }
             case WM_COMMAND:
             {
-                if ( HIWORD(wParam) == CBN_SELCHANGE )
+                if ( HIWORD( wParam ) == CBN_SELCHANGE )
                 {
-                    OSDropDown * dropDown = (OSDropDown *)window->GetChildFromHandle((void *)lParam);
+                    OSDropDown * dropDown = (OSDropDown *)window->GetChildFromHandle( (void *)lParam );
                     window->OnDropDownSelectionChanged( dropDown );
                     return 0;
                 }
@@ -113,7 +113,7 @@
             }
         }
 
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        return DefWindowProc( hwnd, msg, wParam, lParam );
     }
 #endif
 
@@ -172,11 +172,11 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         GetWindowClassName( uniqueWindowClass );
 
         WNDCLASSEX wc;
-        wc.cbSize           = sizeof(WNDCLASSEX);
+        wc.cbSize           = sizeof( WNDCLASSEX );
         wc.style            = 0;
         wc.lpfnWndProc      = WindowWndProc;
         wc.cbClsExtra       = 0;
-        wc.cbWndExtra       = sizeof(void *); // For GWLP_USERDATA
+        wc.cbWndExtra       = sizeof( void * ); // For GWLP_USERDATA
         wc.hInstance        = (HINSTANCE)m_HInstance;
         wc.hIcon            = (HICON)LoadIcon( (HINSTANCE)m_HInstance, MAKEINTRESOURCE( IDI_MAIN_ICON ) );
         wc.hCursor          = LoadCursor( nullptr, IDC_ARROW );
@@ -190,8 +190,10 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         m_Handle = CreateWindow( uniqueWindowClass.Get(),   // LPCTSTR lpClassName,
                                  nullptr,                   // LPCTSTR lpWindowName,
                                  WS_CAPTION | WS_SYSMENU,   // DWORD dwStyle,
-                                 x, y,                      // int x, int y,
-                                 (int32_t)w, (int32_t)h,    // int nWidth, int nHeight,
+                                 x,                         // int x,
+                                 y,                         // int y,
+                                 (int32_t)w,                // int nWidth
+                                 (int32_t)h,                // int nHeight,
                                  nullptr,                   // HWND hWndParent,
                                  nullptr,                   // HMENU hMenu,
                                  nullptr,                   // HINSTANCE hInstance,
@@ -278,7 +280,8 @@ void OSWindow::StartMessagePump()
             // an error could only occur due to a program bug (like passing an invalid
             // handle) and not during any normal operation.
             // See: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessage
-            ASSERT( bRet != -1 ); (void)bRet;
+            ASSERT( bRet != -1 );
+            (void)bRet;
 
             // Check for our custom "Stop" message
             if ( msg.message == OSUI_WM_STOPMSGPUMP )

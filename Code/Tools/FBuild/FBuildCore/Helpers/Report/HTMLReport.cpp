@@ -343,7 +343,7 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
         const uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
         StackArray<PieItem> pieItems;
-        pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
+        pieItems.EmplaceBack( "Uncacheable", (float)( totalOutOfDateItems - totalCacheable ), (uint32_t)0xFF8888 );
         pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, (uint32_t)0xFFCC88 );
         pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, (uint32_t)0x88FF88 );
         DoPieChart( pieItems, "" );
@@ -427,7 +427,7 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
     // Summary Pie Chart
     StackArray<PieItem> items;
 
-    for ( size_t i=0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
+    for ( size_t i = 0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
     {
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( (Node::Type)i );
         if ( nodeStats.m_NumProcessed == 0 )
@@ -451,9 +451,9 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
     // table
     DoTableStart();
     Write( "<tr><th width=80>Type</th><th width=80>Time</th><th width=80>Processed</th><th width=80>Built</th><th width=80>Cache Hits</th></tr>\n" );
-    for ( size_t i=0; i < items.GetSize(); ++i )
+    for ( size_t i = 0; i < items.GetSize(); ++i )
     {
-        const Node::Type type = (Node::Type)(size_t)items[ i ].m_UserData;
+        const Node::Type type = ( Node::Type )(size_t)items[ i ].m_UserData;
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
@@ -504,7 +504,7 @@ void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
 
     // Result
     const Array<const Node *> & nodes = stats.GetNodesByTime();
-    for ( const Node * node: nodes )
+    for ( const Node * node : nodes )
     {
         const float time = ( (float)node->GetProcessingTime() * 0.001f ); // ms to s
         const char * type = node->GetTypeName();
@@ -518,8 +518,8 @@ void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
 
         if ( cacheEnabled )
         {
-            const bool cacheHit = node->GetStatFlag(Node::STATS_CACHE_HIT);
-            const bool cacheStore = node->GetStatFlag(Node::STATS_CACHE_STORE);
+            const bool cacheHit = node->GetStatFlag( Node::STATS_CACHE_HIT );
+            const bool cacheStore = node->GetStatFlag( Node::STATS_CACHE_STORE );
 
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td style=\"width:120px;\">%s</td><td>%s</td></tr>\n"
                                        : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A" ), name );
@@ -652,7 +652,7 @@ void HTMLReport::DoIncludes()
         // output
         const size_t numIncludes = incStats.GetSize();
         size_t numOutput = 0;
-        for ( size_t i=0; i<numIncludes; ++i )
+        for ( size_t i = 0; i < numIncludes; ++i )
         {
             const IncludeStats & s = *incStats[ i ];
             const char * fileName = s.m_Node->GetName().Get();
@@ -698,7 +698,7 @@ void HTMLReport::DoPieChart( const Array<PieItem> & items, const char * units )
 {
     AStackString<> buffer;
 
-    const uint32_t height = Math::Max< uint32_t >( 140, 40 + 25 * (uint32_t)items.GetSize() );
+    const uint32_t height = Math::Max<uint32_t>( 140, 40 + 25 * (uint32_t)items.GetSize() );
 
     m_NumPieCharts++;
 
@@ -711,7 +711,7 @@ void HTMLReport::DoPieChart( const Array<PieItem> & items, const char * units )
 
     Write( "<script type=\"text/javascript\">\n" );
     Write( "    var myData = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
+    for ( size_t i = 0; i < items.GetSize(); ++i )
     {
         if ( i > 0 )
         {
@@ -722,7 +722,7 @@ void HTMLReport::DoPieChart( const Array<PieItem> & items, const char * units )
     }
     Write( "];\n" );
     Write( "    var myLabels = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
+    for ( size_t i = 0; i < items.GetSize(); ++i )
     {
         if ( i > 0 )
         {
@@ -732,7 +732,7 @@ void HTMLReport::DoPieChart( const Array<PieItem> & items, const char * units )
     }
     Write( "];\n" );
     Write( "    var myColors = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
+    for ( size_t i = 0; i < items.GetSize(); ++i )
     {
         if ( i > 0 )
         {

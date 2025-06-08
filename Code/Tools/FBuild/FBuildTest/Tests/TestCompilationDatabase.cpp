@@ -75,64 +75,66 @@ void TestCompilationDatabase::JSONEscape() const
 //------------------------------------------------------------------------------
 void TestCompilationDatabase::TestObjectListInputFile() const
 {
-    DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff", "ObjectList_InputFile",
-        "[\n"
-        "  {\n"
-        "    \"directory\": \"{WORKDIR}\",\n"
-        "    \"file\": \"{TESTDIR}file.cpp\",\n"
-        "    \"output\": \"{OUTDIR}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
-        "  }\n"
-        "]\n"
-    );
+    DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff",
+            "ObjectList_InputFile",
+            "[\n"
+            "  {\n"
+            "    \"directory\": \"{WORKDIR}\",\n"
+            "    \"file\": \"{TESTDIR}file.cpp\",\n"
+            "    \"output\": \"{OUTDIR}file.result\",\n"
+            "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS
+            " \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
+            "  }\n"
+            "]\n" );
 }
 
 // TestObjectListInputPath
 //------------------------------------------------------------------------------
 void TestCompilationDatabase::TestObjectListInputPath() const
 {
-    DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff", "ObjectList_InputPath",
-        "[\n"
-        "  {\n"
-        "    \"directory\": \"{WORKDIR}\",\n"
-        "    \"file\": \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\",\n"
-        "    \"output\": \"{OUTDIR}subdir{SLASH}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
-        "  }\n"
-        "]\n"
-    );
+    DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff",
+            "ObjectList_InputPath",
+            "[\n"
+            "  {\n"
+            "    \"directory\": \"{WORKDIR}\",\n"
+            "    \"file\": \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\",\n"
+            "    \"output\": \"{OUTDIR}subdir{SLASH}file.result\",\n"
+            "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
+            "  }\n"
+            "]\n" );
 }
 
 // TestUnityInputFile
 //------------------------------------------------------------------------------
 void TestCompilationDatabase::TestUnityInputFile() const
 {
-    DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff", "ObjectList_UnityInputFile",
-        "[\n"
-        "  {\n"
-        "    \"directory\": \"{WORKDIR}\",\n"
-        "    \"file\": \"{TESTDIR}file.cpp\",\n"
-        "    \"output\": \"{OUTDIR}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
-        "  }\n"
-        "]\n"
-    );
+    DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff",
+            "ObjectList_UnityInputFile",
+            "[\n"
+            "  {\n"
+            "    \"directory\": \"{WORKDIR}\",\n"
+            "    \"file\": \"{TESTDIR}file.cpp\",\n"
+            "    \"output\": \"{OUTDIR}file.result\",\n"
+            "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS
+            " \"{TESTDIR}file.cpp\", \"-o\", \"{OUTDIR}file.result\"]\n"
+            "  }\n"
+            "]\n" );
 }
 
 // TestUnityInputPath
 //------------------------------------------------------------------------------
 void TestCompilationDatabase::TestUnityInputPath() const
 {
-    DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff", "ObjectList_UnityInputPath",
-        "[\n"
-        "  {\n"
-        "    \"directory\": \"{WORKDIR}\",\n"
-        "    \"file\": \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\",\n"
-        "    \"output\": \"{OUTDIR}subdir{SLASH}file.result\",\n"
-        "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
-        "  }\n"
-        "]\n"
-    );
+    DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff",
+            "ObjectList_UnityInputPath",
+            "[\n"
+            "  {\n"
+            "    \"directory\": \"{WORKDIR}\",\n"
+            "    \"file\": \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\",\n"
+            "    \"output\": \"{OUTDIR}subdir{SLASH}file.result\",\n"
+            "    \"arguments\": [\"{TESTDIR}clang.exe\", " COMPDB_COMMON_ARGS " \"{TESTDIR}dir{SLASH}subdir{SLASH}file.cpp\", \"-o\", \"{OUTDIR}subdir{SLASH}file.result\"]\n"
+            "  }\n"
+            "]\n" );
 }
 
 // DoTest

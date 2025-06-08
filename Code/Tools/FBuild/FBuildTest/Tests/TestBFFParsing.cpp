@@ -322,7 +322,7 @@ void TestBFFParsing::ImportDirective() const
     TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
 
     // Ensure special characters are not lost
-    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR2", AString("Special^And$Special"));
+    Env::SetEnvVariable( "BFF_TEST_IMPORT_VAR2", AString( "Special^And$Special" ) );
     TEST_PARSE_OK( "#import BFF_TEST_IMPORT_VAR2\n"
                    ".Expected = 'Special^^And^$Special'\n"
                    "If( .BFF_TEST_IMPORT_VAR2 == .Expected )\n"
@@ -434,8 +434,8 @@ void TestBFFParsing::IfDirective() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::IfExistsDirective() const
 {
-    Env::SetEnvVariable("BFF_TEST_ENV_VAR1", AString("1"));
-    Env::SetEnvVariable("BFF_TEST_ENV_VAR2", AString("2"));
+    Env::SetEnvVariable( "BFF_TEST_ENV_VAR1", AString( "1" ) );
+    Env::SetEnvVariable( "BFF_TEST_ENV_VAR2", AString( "2" ) );
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_exists_directive.bff" );
 }
 
@@ -460,7 +460,7 @@ void TestBFFParsing::IfFileExistsDirective() const
         // Copy root bff to temp dir
         FileIO::SetReadOnly( rootBFF, false );
         EnsureFileDoesNotExist( rootBFF );
-        EnsureDirExists("../tmp/Test/BFFParsing/FileExistsDirective/");
+        EnsureDirExists( "../tmp/Test/BFFParsing/FileExistsDirective/" );
         FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff", rootBFF );
 
         // Delete extra file from previous test run
@@ -547,16 +547,16 @@ void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
     // (paths are relative to the bff)
 
     FBuildTestOptions options;
-    options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Check for expected output
     const AString & output( GetRecordedOutput() );
-    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ));
-    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ));
-    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ));
+    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ) );
+    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ) );
+    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ) );
     TEST_ASSERT( output.Find( "OK-4" ) );
 }
 
@@ -952,9 +952,9 @@ void TestBFFParsing::Variables() const
     // Invalid dynamic variables (rhs)
     TEST_PARSE_FAIL( ".A = .'$B$'",         "Error #1009 - Unknown variable" );
     TEST_PARSE_FAIL( ".A = 'B'\n"
-                     ".X = .'$A$'",         "Error #1009 - Unknown variable"  );
+                     ".X = .'$A$'",         "Error #1009 - Unknown variable" );
     TEST_PARSE_FAIL( ".A = 'B'\n"
-                     ".X = { .'$A$' }",     "Error #1009 - Unknown variable"  );
+                     ".X = { .'$A$' }",     "Error #1009 - Unknown variable" );
 }
 
 // Functions

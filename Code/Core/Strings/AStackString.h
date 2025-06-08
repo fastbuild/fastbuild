@@ -8,7 +8,7 @@
 
 // AStackString<>
 //------------------------------------------------------------------------------
-template <int RESERVED = 256 >
+template <int RESERVED = 256>
 class AStackString : public AString
 {
 public:
@@ -21,11 +21,11 @@ public:
     explicit AStackString( const char * start, const char * end );
     ~AStackString() = default;
 
-    AStackString<RESERVED> & operator = ( const char * string ) { Assign( string ); return *this; }
-    AStackString<RESERVED> & operator = ( const AString & string ) { Assign( string ); return *this; }
-    AStackString<RESERVED> & operator = ( AString && string ) { Assign( Move( string ) ); return *this; }
-    AStackString<RESERVED> & operator = ( const AStackString & string ) { Assign( string ); return *this; }
-    AStackString<RESERVED> & operator = ( AStackString && string ) { Assign( Move( string ) ); return *this; }
+    AStackString<RESERVED> & operator=( const char * string ) { Assign( string ); return *this; }
+    AStackString<RESERVED> & operator=( const AString & string ) { Assign( string ); return *this; }
+    AStackString<RESERVED> & operator=( AString && string ) { Assign( Move( string ) ); return *this; }
+    AStackString<RESERVED> & operator=( const AStackString & string ) { Assign( string ); return *this; }
+    AStackString<RESERVED> & operator=( AStackString && string ) { Assign( Move( string ) ); return *this; }
 
 private:
     char m_Storage[ RESERVED + 1 ];

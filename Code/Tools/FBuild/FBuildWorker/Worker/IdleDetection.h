@@ -32,7 +32,7 @@ private:
     // struct to track processes with
     struct ProcessInfo
     {
-        bool operator == ( uint32_t pid ) const { return m_PID == pid; }
+        bool operator==( uint32_t pid ) const { return m_PID == pid; }
 
         uint32_t    m_PID;
         uint32_t    m_AliveValue;

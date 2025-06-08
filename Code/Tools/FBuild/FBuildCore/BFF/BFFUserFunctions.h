@@ -25,7 +25,7 @@ public:
     const Array<const BFFToken *> & GetArgs() const { return m_Args; }
     const BFFTokenRange &           GetBodyTokenRange() const { return m_BodyTokenRange; }
 
-    bool operator == ( const AString & name ) const { return ( m_Name == name ); }
+    bool operator==( const AString & name ) const { return ( m_Name == name ); }
 
 protected:
     AString                 m_Name;

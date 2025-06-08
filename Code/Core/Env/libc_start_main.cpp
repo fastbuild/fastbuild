@@ -29,10 +29,10 @@
 #if defined( __GLIBC__ )
     #if ( __GLIBC__ * 1000 + __GLIBC_MINOR__ ) >= 2034
 
-        extern void (*__init_array_start[])( int, char **, char ** );
-        extern void (*__init_array_end[])( int, char **, char ** );
-        extern void (*__fini_array_start[])( void );
-        extern void (*__fini_array_end[])( void );
+        extern void ( *__init_array_start[] )( int, char **, char ** );
+        extern void ( *__init_array_end[] )( int, char **, char ** );
+        extern void ( *__fini_array_start[] )( void );
+        extern void ( *__fini_array_end[] )( void );
 
         extern "C" void _init();
         extern "C" void _fini();
@@ -44,7 +44,7 @@
             _init();
             for ( auto p = __init_array_start; p != __init_array_end; )
             {
-                (*p++)( argc, argv, envp );
+                ( *p++ )( argc, argv, envp );
             }
             return 0;
         }
@@ -52,27 +52,29 @@
         {
             for ( auto p = __fini_array_end; p != __fini_array_start; )
             {
-                (*--p)();
+                ( *--p )();
             }
             _fini();
         }
 
     #endif
 
-    extern "C" int __libc_start_main( int (*main)( int, char **, char ** ),
-                                      int argc, char ** argv,
-                                      int (*init)( int, char **, char ** ),
-                                      void (*fini)( void ),
-                                      void (*rtld_fini)( void ),
+    extern "C" int __libc_start_main( int ( *main )( int, char **, char ** ),
+                                      int argc,
+                                      char ** argv,
+                                      int ( *init )( int, char **, char ** ),
+                                      void ( *fini )( void ),
+                                      void ( *rtld_fini )( void ),
                                       void * stack_end );
 
     __asm__( ".symver __libc_start_main,__libc_start_main@GLIBC_2.2.5" );
-
-    extern "C" int __wrap___libc_start_main( int (*main)( int, char **, char ** ),
-                                             int argc, char ** argv,
-                                             int (*init)( int, char **, char ** ),
-                                             void (*fini)( void ),
-                                             void (*rtld_fini)( void ),
+    
+    extern "C" int __wrap___libc_start_main( int ( *main )( int, char **, char ** ),
+                                             int argc,
+                                             char ** argv,
+                                             int ( *init )( int, char **, char ** ),
+                                             void ( *fini )( void ),
+                                             void ( *rtld_fini )( void ),
                                              void * stack_end )
     {
         #if ( __GLIBC__ * 1000 + __GLIBC_MINOR__ ) >= 2034

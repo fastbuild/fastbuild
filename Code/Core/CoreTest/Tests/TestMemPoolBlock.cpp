@@ -14,11 +14,11 @@
 #include <stdlib.h>
 
 // Handle GCC -ffreestanding environment
-#if defined(__STDC_HOSTED__) && (__STDC_HOSTED__ == 0)
+#if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
     extern "C"
     {
-        void* malloc(size_t size);
-        void free(void * ptr);
+        void * malloc( size_t size );
+        void free( void * ptr );
     }
 #endif
 
@@ -117,7 +117,7 @@ void TestMemPoolBlock::TestSpeed()
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
-                PRAGMA_DISABLE_PUSH_MSVC(26408) // Memory subsystem is allowed to call malloc
+                PRAGMA_DISABLE_PUSH_MSVC( 26408 ) // Memory subsystem is allowed to call malloc
                 uint32_t * const mem = (uint32_t *)malloc( allocSize );
                 PRAGMA_DISABLE_POP_MSVC
                 allocs.Append( mem );
@@ -125,7 +125,7 @@ void TestMemPoolBlock::TestSpeed()
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 void * mem = allocs[ i ];
-                PRAGMA_DISABLE_PUSH_MSVC(26408) // Memory subsystem is allowed to call free
+                PRAGMA_DISABLE_PUSH_MSVC( 26408 ) // Memory subsystem is allowed to call free
                 free( mem );
                 PRAGMA_DISABLE_POP_MSVC
             }

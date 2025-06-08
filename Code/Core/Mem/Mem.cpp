@@ -13,11 +13,11 @@
 #include <stdlib.h>
 
 // Handle GCC -ffreestanding environment
-#if defined(__STDC_HOSTED__) && (__STDC_HOSTED__ == 0)
+#if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
     extern "C"
     {
-        int32_t posix_memalign(void ** memptr, size_t alignment, size_t size);
-        void free(void * ptr);
+        int32_t posix_memalign( void ** memptr, size_t alignment, size_t size );
+        void free( void * ptr );
     }
 #endif
 

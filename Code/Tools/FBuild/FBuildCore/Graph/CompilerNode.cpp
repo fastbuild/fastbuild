@@ -97,7 +97,7 @@ CompilerNode::CompilerNode()
     ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
 
     const size_t numExtraFiles = extraFiles.GetSize();
-    for ( size_t i=0; i<numExtraFiles; ++i )
+    for ( size_t i = 0; i < numExtraFiles; ++i )
     {
         AStackString<> relPathA;
         ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
@@ -110,7 +110,7 @@ CompilerNode::CompilerNode()
         }
 
         // Conflicts with another file?
-        for ( size_t j=(i+1); j<numExtraFiles; ++j )
+        for ( size_t j = ( i + 1 ); j < numExtraFiles; ++j )
         {
             AStackString<> relPathB;
             ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
@@ -128,7 +128,7 @@ CompilerNode::CompilerNode()
     m_StaticDependencies.Add( compilerExeFile );
     m_StaticDependencies.Add( extraFiles );
 
-    if (InitializeCompilerFamily( iter, function ) == false)
+    if ( InitializeCompilerFamily( iter, function ) == false )
     {
         return false;
     }

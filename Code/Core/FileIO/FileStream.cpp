@@ -124,7 +124,7 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
 
                 ++retryCount;
                 Sleep( 100 ); // sleep and
-                continue;     // try again as per http://support.microsoft.com/kb/316609
+                continue; // try again as per http://support.microsoft.com/kb/316609
             }
 
             // some other kind of error...

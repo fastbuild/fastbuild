@@ -22,12 +22,14 @@ public:
         : m_Node( node )
         , m_NodeStamp( 0 )
         , m_IsWeak( false )
-    {}
+    {
+    }
     explicit Dependency( Node * node, uint64_t stamp, bool isWeak )
         : m_Node( node )
         , m_NodeStamp( stamp )
         , m_IsWeak( isWeak )
-    {}
+    {
+    }
 
     Node * GetNode() const { return m_Node; }
     uint64_t GetNodeStamp() const { return m_NodeStamp; }
@@ -55,8 +57,8 @@ public:
     [[nodiscard]] size_t                GetSize() const { return m_DependencyList ? m_DependencyList->m_Size : 0; }
     [[nodiscard]] size_t                GetCapacity() const { return m_DependencyList ? m_DependencyList->m_Capacity : 0; }
     [[nodiscard]] bool                  IsEmpty() const { return ( GetSize() == 0 ); }
-    [[nodiscard]] Dependency &          operator [] ( size_t index );
-    [[nodiscard]] const Dependency &    operator [] ( size_t index ) const;
+    [[nodiscard]] Dependency &          operator[]( size_t index );
+    [[nodiscard]] const Dependency &    operator[]( size_t index ) const;
     [[nodiscard]] size_t                GetIndexOf( const Dependency * dep ) const;
 
     // Range based access
@@ -75,7 +77,7 @@ public:
     void                                Add( Node * node );
     void                                Add( Node * node, uint64_t stamp, bool isWeak );
     void                                Add( const Dependencies & deps );
-    Dependencies &                      operator = ( const Dependencies & other );
+    Dependencies &                      operator=( const Dependencies & other );
 
     void Save( IOStream & stream ) const;
     void Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
@@ -94,7 +96,7 @@ protected:
 
         // Dependencies immediately follow Size & Capacity
     };
-    static Dependency *                 GetDependencies( DependencyList * depList);
+    static Dependency *                 GetDependencies( DependencyList * depList );
     static const Dependency *           GetDependencies( const DependencyList * depList );
 
     DependencyList* m_DependencyList = nullptr;
@@ -123,7 +125,7 @@ inline Dependencies::~Dependencies()
 
 // operator []
 //------------------------------------------------------------------------------
-inline Dependency & Dependencies::operator [] ( size_t index )
+inline Dependency & Dependencies::operator[]( size_t index )
 {
     ASSERT( index < GetSize() );
     return GetDependencies( m_DependencyList )[ index ];
@@ -131,7 +133,7 @@ inline Dependency & Dependencies::operator [] ( size_t index )
 
 // operator []
 //------------------------------------------------------------------------------
-inline const Dependency & Dependencies::operator [] ( size_t index ) const
+inline const Dependency & Dependencies::operator[]( size_t index ) const
 {
     ASSERT( index < GetSize() );
     return GetDependencies( m_DependencyList )[ index ];
@@ -166,7 +168,7 @@ inline void Dependencies::Add( Node * node )
         GrowCapacity(); // Amortized capacity growth
     }
     Dependency * newDep = &GetDependencies( m_DependencyList )[ m_DependencyList->m_Size++ ];
-    INPLACE_NEW (newDep) Dependency( node );
+    INPLACE_NEW( newDep ) Dependency( node );
 }
 
 // Add
@@ -178,7 +180,7 @@ inline void Dependencies::Add( Node * node, uint64_t stamp, bool isWeak )
         GrowCapacity(); // Amortized capacity growth
     }
     Dependency * newDep = &GetDependencies( m_DependencyList )[ m_DependencyList->m_Size++ ];
-    INPLACE_NEW (newDep) Dependency( node, stamp, isWeak );
+    INPLACE_NEW( newDep ) Dependency( node, stamp, isWeak );
 }
 
 // Add
@@ -200,7 +202,7 @@ inline void Dependencies::Add( const Dependencies & deps )
         Dependency * dstPos = GetDependencies( m_DependencyList ) + GetSize();
         for ( size_t i = 0; i < numDepsToAdd; ++i )
         {
-            INPLACE_NEW ( dstPos++ ) Dependency( *srcPos++ );
+            INPLACE_NEW( dstPos++ ) Dependency( *srcPos++ );
         }
         m_DependencyList->m_Size += static_cast<uint32_t>( numDepsToAdd );
     }
@@ -208,7 +210,7 @@ inline void Dependencies::Add( const Dependencies & deps )
 
 // operator =
 //------------------------------------------------------------------------------
-inline Dependencies & Dependencies::operator = ( const Dependencies & other )
+inline Dependencies & Dependencies::operator=( const Dependencies & other )
 {
     Clear();
     Add( other );

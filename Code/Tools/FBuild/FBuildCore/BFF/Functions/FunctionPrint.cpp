@@ -121,7 +121,7 @@ FunctionPrint::FunctionPrint()
 /*static*/ void FunctionPrint::PrintVarRecurse( const BFFVariable & var, uint32_t indent )
 {
     AStackString<> indentStr;
-    for ( uint32_t i=0; i<indent; ++i )
+    for ( uint32_t i = 0; i < indent; ++i )
     {
         indentStr += "    ";
     }
@@ -130,7 +130,11 @@ FunctionPrint::FunctionPrint()
 
     switch ( var.GetType() )
     {
-        case BFFVariable::VAR_ANY: ASSERT( false ); break; // Something is terribly wrong
+        case BFFVariable::VAR_ANY:
+        {
+            ASSERT( false );
+            break; // Something is terribly wrong
+        }
         case BFFVariable::VAR_STRING:
         {
             AStackString<> value( var.GetString() );
@@ -182,7 +186,11 @@ FunctionPrint::FunctionPrint()
             FLOG_OUTPUT( "%s}\n", indentStr.Get() );
             break;
         }
-        case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break; // Something is terribly wrong
+        case BFFVariable::MAX_VAR_TYPES:
+        {
+            ASSERT( false );
+            break; // Something is terribly wrong
+        }
     }
 }
 

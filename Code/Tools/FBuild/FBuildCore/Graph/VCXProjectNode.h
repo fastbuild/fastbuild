@@ -83,7 +83,8 @@ public:
     VSProjectConfig() = default;
     explicit VSProjectConfig( const VSProjectConfigBase & baseConfig )
         : VSProjectConfigBase( baseConfig )
-    {}
+    {
+    }
 
     AString             m_Platform;
     AString             m_Config;

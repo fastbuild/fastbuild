@@ -94,7 +94,7 @@ private:
     BFFTokenizer m_Tokenizer;
     LinkerNodeFileExistsCache m_LinkerNodeFileExistsCache;
 
-    BFFParser & operator = (const BFFParser &) = delete;
+    BFFParser & operator=( const BFFParser & ) = delete;
 };
 
 //------------------------------------------------------------------------------

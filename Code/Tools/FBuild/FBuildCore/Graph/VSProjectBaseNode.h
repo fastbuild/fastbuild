@@ -35,8 +35,8 @@ class VSProjectBaseNode : public FileNode
 {
     REFLECT_NODE_DECLARE( VSProjectBaseNode )
     VSProjectBaseNode();
-public:
 
+public:
     virtual ~VSProjectBaseNode() override;
 
     static Node::Type GetTypeS() { return Node::PROXY_NODE; }

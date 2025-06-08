@@ -87,8 +87,8 @@ bool Server::IsSynchingTool( AString & statusStr ) const
             if ( synching )
             {
                 statusStr.Format( "Synchronizing Compiler %2.1f / %2.1f MiB\n",
-                                    (double)( (float)synchDone / (float)MEGABYTE ),
-                                    (double)( (float)synchTotal / (float)MEGABYTE ) );
+                                  (double)( (float)synchDone / (float)MEGABYTE ),
+                                  (double)( (float)synchTotal / (float)MEGABYTE ) );
                 return true;
             }
         }
@@ -144,7 +144,8 @@ bool Server::IsSynchingTool( AString & statusStr ) const
         // Remove from ClientList
         MutexHolder mh( m_ClientListMutex );
         const bool found = m_ClientList.FindAndErase( cs );
-        ASSERT( found ); (void)found;
+        ASSERT( found );
+        (void)found;
 
         // because we cancelled manifest synchronization, we need to check if other
         // connections are waiting for the same manifest
@@ -278,7 +279,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     }
 
     // Check for matching platform
-    if (msg->GetPlatform() != Env::GetPlatform())
+    if ( msg->GetPlatform() != Env::GetPlatform() )
     {
         AStackString<> remoteAddr;
         TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
@@ -493,7 +494,8 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
         ToolManifest ** found = m_Tools.FindDeref( toolId );
         ASSERT( found );
         manifest = *found;
-        ASSERT( manifest->GetUserData() == connection ); (void)connection;
+        ASSERT( manifest->GetUserData() == connection );
+        (void)connection;
 
         bool corruptData = false;
         if ( manifest->ReceiveFileData( fileId, payload, payloadSize, corruptData ) == false )
@@ -570,7 +572,7 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
 
             // .. check all jobs waiting for ToolManifests
             const int32_t numJobs = (int32_t)cs->m_WaitingJobs.GetSize();
-            for ( int32_t i=( numJobs -1 ); i >= 0; --i )
+            for ( int32_t i = ( numJobs - 1 ); i >= 0; --i )
             {
                 Job * job = cs->m_WaitingJobs[ (size_t)i ];
                 const ToolManifest * manifestForThisJob = job->GetToolManifest();
@@ -776,7 +778,7 @@ void Server::FinalizeCompletedJobs()
 //------------------------------------------------------------------------------
 void Server::TouchToolchains()
 {
-    #if defined( __OSX__ ) || defined( __LINUX__)
+    #if defined( __OSX__ ) || defined( __LINUX__ )
         if ( m_TouchToolchainTimer.GetElapsed() < SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS )
         {
             return;
@@ -801,7 +803,7 @@ void Server::RequestMissingFiles( const ConnectionInfo * connection, ToolManifes
 
     const Array<ToolManifestFile> & files = manifest->GetFiles();
     const size_t numFiles = files.GetSize();
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         const ToolManifestFile & f = files[ i ];
         if ( f.GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED )

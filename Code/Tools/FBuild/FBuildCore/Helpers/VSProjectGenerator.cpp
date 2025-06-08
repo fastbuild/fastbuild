@@ -26,7 +26,7 @@
 class FileAscendingCompareIDeref
 {
 public:
-    bool operator () ( const VSProjectFilePair * a, const VSProjectFilePair * b ) const
+    bool operator()( const VSProjectFilePair * a, const VSProjectFilePair * b ) const
     {
         return ( a->m_ProjectRelativePath.CompareI( b->m_ProjectRelativePath ) < 0 );
     }
@@ -113,9 +113,11 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         Write( "  <ItemGroup Label=\"ProjectConfigurations\">\n" );
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF("    <ProjectConfiguration Include=\"%s|%s\">\n", config.m_Config.Get(), config.m_Platform.Get() );
-            WriteF("      <Configuration>%s</Configuration>\n", config.m_Config.Get() );
-            WriteF("      <Platform>%s</Platform>\n", config.m_Platform.Get() );
+            WriteF( "    <ProjectConfiguration Include=\"%s|%s\">\n",
+                    config.m_Config.Get(),
+                    config.m_Platform.Get() );
+            WriteF( "      <Configuration>%s</Configuration>\n", config.m_Config.Get() );
+            WriteF( "      <Platform>%s</Platform>\n", config.m_Platform.Get() );
             Write( "    </ProjectConfiguration>\n" );
         }
         Write( "  </ItemGroup>\n" );
@@ -123,7 +125,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // files
     {
-        Write("  <ItemGroup>\n" );
+        Write( "  <ItemGroup>\n" );
         for ( const VSProjectFilePair & filePathPair : m_Files )
         {
             const AString & fileName = filePathPair.m_ProjectRelativePath;
@@ -148,12 +150,12 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WriteF( "    <CustomBuild Include=\"%s\" />\n", fileName.Get() );
             }
         }
-        Write("  </ItemGroup>\n" );
+        Write( "  </ItemGroup>\n" );
     }
 
     // References
     {
-        Write("  <ItemGroup>\n" );
+        Write( "  <ItemGroup>\n" );
         {
             // Project References
             for ( const AString & projectReference : m_ProjectReferences )
@@ -164,8 +166,8 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 {
                     proj.SetLength( (uint32_t)( pipe - proj.Get() ) );
                     AStackString<> guid( pipe + 1 );
-                    WriteF("    <ProjectReference Include=\"%s\">\n", proj.Get() );
-                    WriteF("      <Project>%s</Project>\n", guid.Get() );
+                    WriteF( "    <ProjectReference Include=\"%s\">\n", proj.Get() );
+                    WriteF( "      <Project>%s</Project>\n", guid.Get() );
                     Write( "    </ProjectReference>\n" );
                 }
                 else
@@ -181,7 +183,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WriteF( "    <Reference Include=\"%s\" />\n", reference.Get() );
             }
         }
-        Write("  </ItemGroup>\n" );
+        Write( "  </ItemGroup>\n" );
     }
 
     // Globals
@@ -212,7 +214,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                                  ( config.m_LinuxProjectType.IsEmpty() == false );
         if ( needSection )
         {
-            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Globals\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Globals\">\n",
+                    config.m_Config.Get(),
+                    config.m_Platform.Get() );
             WritePGItem( "Keyword", config.m_Keyword );
             WritePGItem( "RootNamespace", config.m_RootNamespace );
             WritePGItem( "ApplicationType", config.m_ApplicationType );
@@ -230,7 +234,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     {
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n",
+                    config.m_Config.Get(),
+                    config.m_Platform.Get() );
             Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
             Write( "    <UseDebugLibraries>false</UseDebugLibraries>\n" );
 
@@ -280,7 +286,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     {
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n",
+                    config.m_Config.Get(),
+                    config.m_Platform.Get() );
 
             if ( config.m_Keyword == "Linux" )
             {
@@ -492,7 +500,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
                 // Each unique path must be added, so FolderA/FolderB/FolderC
                 // will result in 3 entries, FolderA, FolderA/FolderB and FolderA/FolderB/FolderC
-                for (;;)
+                for ( ;; )
                 {
                     // add this folder if not already added
                     const uint32_t folderHash = xxHash::Calc32( folder );
@@ -521,7 +529,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     // folders
     {
         const size_t numFolders = folders.GetSize();
-        for ( size_t i=0; i<numFolders; ++i )
+        for ( size_t i = 0; i < numFolders; ++i )
         {
             const AString & folder = folders[ i ];
             const uint32_t folderHash = folderHashes[ i ];
@@ -563,7 +571,7 @@ void VSProjectGenerator::WriteF( const char * fmtString, ... )
     AStackString<1024> tmp;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     tmp.VFormat( fmtString, args );
     va_end( args );
 
@@ -667,7 +675,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         const VSProjectFilePair * prev = filePointers[ 0 ];
         uniqueFiles.Append( *filePointers[ 0 ] );
         const size_t numFiles = m_Files.GetSize();
-        for ( size_t i=1; i<numFiles; ++i )
+        for ( size_t i = 1; i < numFiles; ++i )
         {
             const VSProjectFilePair * current = filePointers[ i ];
             if ( current->m_ProjectRelativePath.EqualsI( prev->m_ProjectRelativePath ) )

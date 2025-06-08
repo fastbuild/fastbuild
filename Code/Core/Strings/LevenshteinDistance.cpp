@@ -16,16 +16,16 @@ namespace
     template <bool CASE_SENSITIVE>
     struct CharEqual
     {
-        bool operator ()( char lhs, char rhs ) const
+        bool operator()( char lhs, char rhs ) const
         {
             return lhs == rhs;
         }
     };
 
     template <>
-    struct CharEqual< false >
+    struct CharEqual<false>
     {
-        bool operator ()( char lhs, char rhs ) const
+        bool operator()( char lhs, char rhs ) const
         {
             lhs = ( ( lhs >= 'A' ) && ( lhs <= 'Z' ) ) ? 'a' + ( lhs - 'A' ) : lhs;
             rhs = ( ( rhs >= 'A' ) && ( rhs <= 'Z' ) ) ? 'a' + ( rhs - 'A' ) : rhs;
@@ -44,8 +44,14 @@ static uint32_t LevenshteinDistanceImpl( const char * str1, uint32_t len1,
     ASSERT( 0 == len1 || nullptr != str1 );
     ASSERT( 0 == len2 || nullptr != str2 );
 
-    if ( 0 == len1 || nullptr == str1 ) return len2;
-    if ( 0 == len2 || nullptr == str2 ) return len1;
+    if ( ( 0 == len1 ) || ( nullptr == str1 ) )
+    {
+        return len2;
+    }
+    if ( ( 0 == len2 ) || ( nullptr == str2 ) )
+    {
+        return len1;
+    }
 
     // swap str1 and str2 if str2 is shorter
     if ( len2 < len1 )
@@ -66,13 +72,15 @@ static uint32_t LevenshteinDistanceImpl( const char * str1, uint32_t len1,
 
     uint32_t column[ CAPACITY ] = { 0 };
 
-    for ( uint32_t y = 1 ; y <= len1; y++ )
+    for ( uint32_t y = 1; y <= len1; y++ )
+    {
         column[ y ] = y;
+    }
 
-    for ( uint32_t x = 1 ; x <= len2; x++ )
+    for ( uint32_t x = 1; x <= len2; x++ )
     {
         column[ 0 ] = x;
-        for ( uint32_t y = 1, lastDiag = x - 1 ; y <= len1 ; y++ )
+        for ( uint32_t y = 1, lastDiag = x - 1; y <= len1; y++ )
         {
             const uint32_t oldDiag = column[ y ];
 
@@ -94,14 +102,14 @@ static uint32_t LevenshteinDistanceImpl( const char * str1, uint32_t len1,
 {
     const uint32_t lhsLen = ( nullptr == lhs ) ? 0 : (uint32_t)AString::StrLen( lhs );
     const uint32_t rhsLen = ( nullptr == rhs ) ? 0 : (uint32_t)AString::StrLen( rhs );
-    return ::LevenshteinDistanceImpl< 1024, true >( lhs, lhsLen, rhs, rhsLen );
+    return ::LevenshteinDistanceImpl<1024, true>( lhs, lhsLen, rhs, rhsLen );
 }
 
 // Distance
 //------------------------------------------------------------------------------
 /*static*/ uint32_t LevenshteinDistance::Distance( const AString & lhs, const AString & rhs )
 {
-    return ::LevenshteinDistanceImpl< 1024, true >( lhs.Get(), lhs.GetLength(), rhs.Get(), rhs.GetLength() );
+    return ::LevenshteinDistanceImpl<1024, true>( lhs.Get(), lhs.GetLength(), rhs.Get(), rhs.GetLength() );
 }
 
 // DistanceI
@@ -110,14 +118,14 @@ static uint32_t LevenshteinDistanceImpl( const char * str1, uint32_t len1,
 {
     const uint32_t lhsLen = ( nullptr == lhs ) ? 0 : (uint32_t)AString::StrLen( lhs );
     const uint32_t rhsLen = ( nullptr == rhs ) ? 0 : (uint32_t)AString::StrLen( rhs );
-    return ::LevenshteinDistanceImpl< 1024, false >( lhs, lhsLen, rhs, rhsLen );
+    return ::LevenshteinDistanceImpl<1024, false>( lhs, lhsLen, rhs, rhsLen );
 }
 
 // DistanceI
 //------------------------------------------------------------------------------
 /*static*/ uint32_t LevenshteinDistance::DistanceI( const AString & lhs, const AString & rhs )
 {
-    return ::LevenshteinDistanceImpl< 1024, false >( lhs.Get(), lhs.GetLength(), rhs.Get(), rhs.GetLength() );
+    return ::LevenshteinDistanceImpl<1024, false>( lhs.Get(), lhs.GetLength(), rhs.Get(), rhs.GetLength() );
 }
 
 //------------------------------------------------------------------------------

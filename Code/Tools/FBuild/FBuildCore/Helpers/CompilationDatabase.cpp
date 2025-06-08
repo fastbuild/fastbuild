@@ -92,17 +92,17 @@ void CompilationDatabase::VisitNodes( const NodeGraph & nodeGraph,
             case Node::DIRECTORY_LIST_NODE:
             {
                 // Build directory list node to populate its file list
-                node->CastTo< DirectoryListNode >()->DoBuild( nullptr );
+                node->CastTo<DirectoryListNode>()->DoBuild( nullptr );
                 break;
             }
             case Node::OBJECT_LIST_NODE:
             {
-                HandleObjectListNode( nodeGraph, node->CastTo< ObjectListNode >() );
+                HandleObjectListNode( nodeGraph, node->CastTo<ObjectListNode>() );
                 break;
             }
             case Node::LIBRARY_NODE:
             {
-                HandleObjectListNode( nodeGraph, node->CastTo< LibraryNode >() );
+                HandleObjectListNode( nodeGraph, node->CastTo<LibraryNode>() );
                 break;
             }
             default: break;
@@ -123,7 +123,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
     // Check for MSVC
     const bool isMSVC = compilerNode &&
                         ( compilerNode->GetType() == Node::COMPILER_NODE ) &&
-                        ( compilerNode->CastTo< CompilerNode >()->GetCompilerFamily() == CompilerNode::MSVC );
+                        ( compilerNode->CastTo<CompilerNode>()->GetCompilerFamily() == CompilerNode::MSVC );
 
     // Get the compiler executable name
     if ( compilerNode )
@@ -131,7 +131,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
         if ( compilerNode->GetType() == Node::COMPILER_NODE )
         {
             // Use the name of the executable when dealing with an actual CompilerNode
-            ctx.m_CompilerEscaped = compilerNode->CastTo< CompilerNode >()->GetExecutable();
+            ctx.m_CompilerEscaped = compilerNode->CastTo<CompilerNode>()->GetExecutable();
         }
         else
         {

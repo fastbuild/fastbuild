@@ -34,7 +34,7 @@ public:
 class OldestFileTimeSorter
 {
 public:
-    bool operator () ( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
+    bool operator()( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
     {
         return ( a.m_LastWriteTime < b.m_LastWriteTime );
     }
@@ -145,7 +145,7 @@ public:
 
 // Retrieve
 //------------------------------------------------------------------------------
-/*virtual*/ bool Cache::Retrieve( const AString & cacheId, void * & data, size_t & dataSize )
+/*virtual*/ bool Cache::Retrieve( const AString & cacheId, void *& data, size_t & dataSize )
 {
     data = nullptr;
     dataSize = 0;
@@ -219,13 +219,13 @@ public:
     OUTPUT( "================================================================================\n" );
     OUTPUT( " Age (Days) | Files    | Size (MiB) | %%\n" );
     OUTPUT( "================================================================================\n" );
-    for ( uint32_t i=0; i<30; ++i )
+    for ( uint32_t i = 0; i < 30; ++i )
     {
         const uint32_t num = perDay[ i ].m_NumFiles;
         const uint64_t size = perDay[ i ].m_NumBytes / MEGABYTE;
         const float sizePerc = ( total.m_NumBytes > 0 ) ? 100.0f * ( (float)size / (float)( total.m_NumBytes / MEGABYTE ) ) : 0.0f;
         AStackString<> graphBar;
-        for ( uint32_t j=0; j < (uint32_t)(sizePerc); ++j )
+        for ( uint32_t j = 0; j < (uint32_t)( sizePerc ); ++j )
         {
             if ( graphBar.GetLength() < 35 )
             {
@@ -327,17 +327,18 @@ void Cache::GetCacheFiles( bool showProgress,
     }
 
     // Scan the matrix of directories
-    for ( size_t i=0; i<256; ++i )
+    for ( size_t i = 0; i < 256; ++i )
     {
-        for ( size_t j=0; j<256; ++j )
+        for ( size_t j = 0; j < 256; ++j )
         {
             // Get Files
             AStackString<> path;
-            path.Format( "%s%02X%c%02X%c", m_CachePath.Get(),
-                                               (uint32_t)i,
-                                               NATIVE_SLASH,
-                                               (uint32_t)j,
-                                               NATIVE_SLASH);
+            path.Format( "%s%02X%c%02X%c",
+                         m_CachePath.Get(),
+                         (uint32_t)i,
+                         NATIVE_SLASH,
+                         (uint32_t)j,
+                         NATIVE_SLASH);
             FileIO::GetFilesEx( path, nullptr, false, &outInfo );
 
             // Progress
@@ -346,7 +347,7 @@ void Cache::GetCacheFiles( bool showProgress,
                 // Throttled to avoid perf impact
                 if ( ( timer.GetElapsed() - lastProgressTime ) > 0.5f )
                 {
-                    const float perc = ( (float)( ( i*256 ) + j ) / (float)( 256 * 256 ) ) * 100.0f;
+                    const float perc = ( (float)( ( i * 256 ) + j ) / (float)( 256 * 256 ) ) * 100.0f;
                     FLog::OutputProgress( timer.GetElapsed(), perc, 0, 0, 0, 0 );
                     lastProgressTime = timer.GetElapsed();
                 }

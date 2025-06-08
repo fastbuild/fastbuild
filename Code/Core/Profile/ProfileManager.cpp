@@ -81,7 +81,7 @@ struct ProfileEventBuffer
     ProfileEvent *  m_MaxEnd;
 
     enum { MAX_THREAD_NAME_LEN = 31 };
-    char                m_ThreadName[ MAX_THREAD_NAME_LEN + 1 ];
+    char m_ThreadName[ MAX_THREAD_NAME_LEN + 1 ];
 
     // when allocating memory to track events, do it in blocks
     enum{ NUM_EVENTS_PER_BLOCK = 8192 }; // 64KiB pages with 8 bytes events
@@ -187,7 +187,10 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     ProfileEventBuffer & buffer = tls_ProfileEventBuffer;
 
     // Take a copy of the name
-    AString::Copy( threadName, buffer.m_ThreadName, Math::Min< size_t >( AString::StrLen( threadName ), ProfileEventBuffer::MAX_THREAD_NAME_LEN ) );
+    AString::Copy( threadName,
+                   buffer.m_ThreadName,
+                   Math::Min<size_t>( AString::StrLen( threadName ),
+                                      ProfileEventBuffer::MAX_THREAD_NAME_LEN ) );
 }
 
 //------------------------------------------------------------------------------

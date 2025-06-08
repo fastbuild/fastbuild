@@ -15,7 +15,9 @@
     void TestNoReturn()
     {
         #if defined( __clang__ )
-            for (;;) {}
+            for ( ;; )
+            {
+            }
         #endif
     }
 #endif

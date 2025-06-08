@@ -27,8 +27,9 @@
     // TODO:LINUX TODO:MAC Clean up this _itoa_s mess
     void _itoa_s( int value, char * buffer, int bufferSize, int base )
     {
-        ASSERT( base == 10 ); (void)base;
-        snprintf( buffer, static_cast<size_t>(bufferSize), "%i", value );
+        ASSERT( base == 10 );
+        (void)base;
+        snprintf( buffer, static_cast<size_t>( bufferSize ), "%i", value );
     }
 #endif
 
@@ -56,7 +57,7 @@ static FileStream * g_MonitorFileStream = nullptr;
     AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, formatString);
+    va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
@@ -70,7 +71,7 @@ static FileStream * g_MonitorFileStream = nullptr;
     AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, formatString);
+    va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
@@ -126,7 +127,7 @@ static FileStream * g_MonitorFileStream = nullptr;
     AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, formatString);
+    va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
@@ -148,7 +149,7 @@ static FileStream * g_MonitorFileStream = nullptr;
     AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, formatString);
+    va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
@@ -268,8 +269,10 @@ static FileStream * g_MonitorFileStream = nullptr;
 
     // format progress % (we know it never goes above 99.9%)
     uint32_t intPerc = (uint32_t)( percentage * 10.0f ); // 0 to 999
-    const uint32_t hundreds = ( intPerc / 100 ); intPerc -= ( hundreds * 100 );
-    uint32_t tens = ( intPerc / 10 ); intPerc -= ( tens * 10 );
+    const uint32_t hundreds = ( intPerc / 100 );
+    intPerc -= ( hundreds * 100 );
+    uint32_t tens = ( intPerc / 10 );
+    intPerc -= ( tens * 10 );
     uint32_t ones = intPerc;
     m_ProgressText = g_OutputString;
     m_ProgressText[ 1 ] = ( hundreds > 0 ) ? ( '0' + (char)hundreds ) : ' ';
@@ -278,7 +281,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
     // 20 column output (100/20 = 5% per char)
     const uint32_t numStarsDone = (uint32_t)( percentage * 20.0f / 100.0f ); // 20 columns
-    for ( uint32_t i=0; i<20; ++i )
+    for ( uint32_t i = 0; i < 20; ++i )
     {
         m_ProgressText[ 9 + i ] = ( i < numStarsDone ) ? '*' : '-';
     }
@@ -295,7 +298,10 @@ static FileStream * g_MonitorFileStream = nullptr;
     }
     char buffer[ 8 ];
     _itoa_s( (int32_t)timeTakenSeconds, buffer, 8, 10 );
-    if ( timeTakenSeconds < 10 ) { m_ProgressText += '0'; }
+    if ( timeTakenSeconds < 10 )
+    {
+        m_ProgressText += '0';
+    }
     m_ProgressText += buffer;
     m_ProgressText += 's';
 

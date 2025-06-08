@@ -238,7 +238,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     size_t sendSize = 31;
     while ( sendSize <= maxSendSize )
     {
-        AtomicStoreRelaxed( &server.m_ReceivedBytes, (uint64_t) 0 );
+        AtomicStoreRelaxed( &server.m_ReceivedBytes, (uint64_t)0 );
         server.m_DataSize = sendSize;
 
         const Timer timer;
@@ -314,7 +314,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     const ConnectionInfo * ci = (const ConnectionInfo *)userData;
     TCPConnectionPool & client = ci->GetTCPConnectionPool();
     // send lots of data to slow server
-    UniquePtr<char , FreeDeletor> mem( (char *)ALLOC( 10 * MEGABYTE ) );
+    UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( 10 * MEGABYTE ) );
     memset( mem.Get(), 0, 10 * MEGABYTE );
     for ( size_t i = 0; i < 1000; ++i )
     {

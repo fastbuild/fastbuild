@@ -86,7 +86,7 @@ void TestListView::Items() const
     listView.Init( 32, 32, 200, 100 );
 
     // Add Columns
-    listView.AddColumn( "Column 1", 0, 200);
+    listView.AddColumn( "Column 1", 0, 200 );
     listView.AddColumn( "Column 2", 1, 200 );
     listView.AddColumn( "Column 3", 2, 200 );
 

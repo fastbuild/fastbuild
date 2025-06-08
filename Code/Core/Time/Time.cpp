@@ -31,7 +31,7 @@ uint64_t Time::GetCurrentFileTime()
         return fileTimeNow;
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         struct timeval currentTime;
-        VERIFY( gettimeofday( &currentTime, nullptr )== 0 );
+        VERIFY( gettimeofday( &currentTime, nullptr ) == 0 );
         const uint64_t fileTimeNow = ( (uint64_t)currentTime.tv_sec * 1000000000ULL ) + ( (uint64_t)currentTime.tv_usec * 1000 );
         return fileTimeNow;
     #else

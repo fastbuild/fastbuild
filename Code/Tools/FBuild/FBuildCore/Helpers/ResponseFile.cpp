@@ -57,12 +57,15 @@ bool ResponseFile::Create( const AString & contents )
             char c = *it;
             if ( ( c == BACK_SLASH ) || ( c == FORWARD_SLASH ) )
             {
-                *dst = BACK_SLASH; dst++;
-                *dst = BACK_SLASH; dst++;
+                *dst = BACK_SLASH;
+                dst++;
+                *dst = BACK_SLASH;
+                dst++;
             }
             else
             {
-                *dst = c; dst++;
+                *dst = c;
+                dst++;
             }
             it++;
         }

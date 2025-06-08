@@ -51,7 +51,7 @@ bool BFFParser::ParseFromFile( const char * fileName )
         return false; // Tokenize will have emitted an error
     }
 
-    const Array<BFFToken>& tokens = m_Tokenizer.GetTokens();
+    const Array<BFFToken> & tokens = m_Tokenizer.GetTokens();
     if ( tokens.IsEmpty() )
     {
         return true; // An empty file is ok
@@ -76,7 +76,7 @@ bool BFFParser::ParseFromString( const char * fileName, const char * fileContent
         return false; // Tokenize will have emitted an error
     }
 
-    const Array<BFFToken>& tokens = m_Tokenizer.GetTokens();
+    const Array<BFFToken> & tokens = m_Tokenizer.GetTokens();
     if ( tokens.IsEmpty() )
     {
         return true; // An empty file is ok
@@ -222,7 +222,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // sanity check it is a sensible length
-        if ( name.GetLength() + 1  > MAX_VARIABLE_NAME_LENGTH ) // +1 for '.' will be added
+        if ( name.GetLength() + 1 > MAX_VARIABLE_NAME_LENGTH ) // +1 for '.' will be added
         {
             Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)value.GetLength(), (uint32_t)MAX_VARIABLE_NAME_LENGTH );
             return false;
@@ -495,7 +495,7 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
         {
             return false; // FindBracedRange will have emitted an error
         }
-     }
+    }
 
     return func->ParseFunction( m_NodeGraph,
                                 *this,
@@ -533,7 +533,7 @@ bool BFFParser::ParseUnnamedScope( BFFTokenRange & iter )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseUserFunctionDeclaration( BFFTokenRange & iter )
 {
-    ASSERT( iter->IsKeyword( BFF_KEYWORD_FUNCTION) );
+    ASSERT( iter->IsKeyword( BFF_KEYWORD_FUNCTION ) );
     iter++;
 
     // Get function name
@@ -553,7 +553,7 @@ bool BFFParser::ParseUserFunctionDeclaration( BFFTokenRange & iter )
     }
 
     // Find parameter declaration range
-    if ( iter-> IsRoundBracket( '(' ) == false )
+    if ( iter->IsRoundBracket( '(' ) == false )
     {
         Error::Error_1023_FunctionRequiresAHeader( iter.GetCurrent(), nullptr );
         return false;
@@ -769,7 +769,7 @@ bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBraced
 
     // Take note of range begin
     const BFFToken * begin = iter.GetCurrent() + 1; // First token after brace
-    if ( FindBracedRangeRecurse( iter ) == false)
+    if ( FindBracedRangeRecurse( iter ) == false )
     {
         Error::Error_1002_MatchingClosingTokenNotFound( openToken, function, closeTokenChar );
         return false;
@@ -793,7 +793,11 @@ bool BFFParser::FindBracedRangeRecurse( BFFTokenRange & iter ) const
         case BFFTokenType::CurlyBracket:    closeTokenChar = '}'; break;
         case BFFTokenType::RoundBracket:    closeTokenChar = ')'; break;
         case BFFTokenType::SquareBracket:   closeTokenChar = ']'; break;
-        default: ASSERT(false); return false;
+        default:
+        {
+            ASSERT(false);
+            return false;
+        }
     }
     iter++;
 
@@ -1454,13 +1458,13 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
         {
             if ( concat )
             {
-                AStackString<2048> finalValue(varDst->GetString());
+                AStackString<2048> finalValue( varDst->GetString() );
                 finalValue += varSrc->GetString();
                 BFFStackFrame::SetVarString( dstName, varSrc->GetToken(), finalValue, dstFrame );
             }
             else if ( subtract )
             {
-                AStackString<2048> finalValue(varDst->GetString());
+                AStackString<2048> finalValue( varDst->GetString() );
                 finalValue.Replace( varSrc->GetString().Get(), "" );
                 BFFStackFrame::SetVarString( dstName, varSrc->GetToken(), finalValue, dstFrame );
             }
@@ -1489,7 +1493,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
             return true;
         }
 
-        if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && !subtract)
+        if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && !subtract )
         {
             if ( concat )
             {
@@ -1593,7 +1597,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
                 src++; // skip opening $
 
                 // find matching $
-                const char *startName( src );
+                const char * startName( src );
                 const char * endName = nullptr;
                 while ( src < end )
                 {

@@ -18,7 +18,7 @@ public:
     HTMLReport();
     virtual ~HTMLReport() override;
 
-    virtual void Generate(const NodeGraph & nodeGraph, const FBuildStats & stats) override;
+    virtual void Generate( const NodeGraph & nodeGraph, const FBuildStats & stats ) override;
     virtual void Save() const override;
 
 private:
@@ -50,7 +50,7 @@ private:
         uint32_t        m_Color;
         void *          m_UserData;
 
-        bool operator < ( const PieItem & other ) const { return m_Value > other.m_Value; }
+        bool operator<( const PieItem & other ) const { return m_Value > other.m_Value; }
     };
 
     enum { DEFAULT_TABLE_WIDTH = 990 };

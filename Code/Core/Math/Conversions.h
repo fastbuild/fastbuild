@@ -13,7 +13,7 @@ namespace Math
     template <class T>
     static inline T RoundUp( T value, T alignment )
     {
-        return ( value + alignment - 1) & ~( alignment - 1 );
+        return ( value + alignment - 1 ) & ~( alignment - 1 );
     }
     template <class T>
     static inline T Max( T a, T b )

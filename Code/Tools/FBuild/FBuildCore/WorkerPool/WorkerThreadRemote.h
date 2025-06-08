@@ -26,6 +26,7 @@ public:
     // control remote CPU usage
     static void     SetNumCPUsToUse( uint32_t c ) { s_NumCPUsToUse = c; }
     static uint32_t GetNumCPUsToUse() { return s_NumCPUsToUse; }
+
 private:
     virtual void Main() override;
 

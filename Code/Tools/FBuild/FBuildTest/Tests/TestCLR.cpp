@@ -94,13 +94,13 @@ void TestCLR::CLRDetection() const
     for ( const Node * node : nodes )
     {
         // Ensure CLR was detected
-        TEST_ASSERT( node->CastTo< ObjectNode >()->IsUsingCLR() );
+        TEST_ASSERT( node->CastTo<ObjectNode>()->IsUsingCLR() );
 
         // Ensure distribution is disabled
-        TEST_ASSERT( node->CastTo< ObjectNode >()->IsDistributable() == false );
+        TEST_ASSERT( node->CastTo<ObjectNode>()->IsDistributable() == false );
 
         // Ensure caching is disabled
-        TEST_ASSERT( node->CastTo< ObjectNode >()->IsCacheable() == false );
+        TEST_ASSERT( node->CastTo<ObjectNode>()->IsCacheable() == false );
     }
 }
 

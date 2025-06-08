@@ -9,7 +9,7 @@ template <int TreePos, int N>
 struct FibSlow_t
 {
     enum { value = FibSlow_t<TreePos, N - 1>::value +
-           FibSlow_t<TreePos + (1 << N), N - 2>::value, };
+                   FibSlow_t<TreePos + ( 1 << N ), N - 2>::value, };
 };
 
 // Explicitly specialized for N==2

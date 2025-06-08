@@ -61,7 +61,7 @@ void TestObjectList::Exclusions() const
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
     // Check all the exclusion methods worked as expected
-    const char* const nodesToCheck[] =
+    const char * const nodesToCheck[] =
     {
         "ExcludedFiles-FileName",
         "ExcludedFiles-FileNameWithPath-ForwardSlash",
@@ -72,7 +72,7 @@ void TestObjectList::Exclusions() const
         "ExcludePattern-ForwardSlash",
         "ExcludePattern-Backslash",
     };
-    for (const char* const nodeName : nodesToCheck)
+    for ( const char * const nodeName : nodesToCheck )
     {
         // Get the ObjectListNode
         const Node * objectListNode = fBuild.GetNode( nodeName );

@@ -182,7 +182,7 @@ void TestGraph::SingleFileNode() const
 
     // Manually build a single node
     Job j( node );
-    PRAGMA_DISABLE_PUSH_MSVC(4946) // reinterpret_cast used between related classes
+    PRAGMA_DISABLE_PUSH_MSVC( 4946 ) // reinterpret_cast used between related classes
     FileNodeTestHelper * helper = reinterpret_cast<FileNodeTestHelper *>( node );
     PRAGMA_DISABLE_POP_MSVC
     TEST_ASSERT( helper->DoBuild( &j ) == Node::BuildResult::eOk );
@@ -203,7 +203,7 @@ void TestGraph::SingleFileNodeMissing() const
 
     // Manually build a single node
     Job j( node );
-    PRAGMA_DISABLE_PUSH_MSVC(4946) // reinterpret_cast used between related classes
+    PRAGMA_DISABLE_PUSH_MSVC( 4946 ) // reinterpret_cast used between related classes
     FileNodeTestHelper * helper = reinterpret_cast<FileNodeTestHelper *>( node );
     PRAGMA_DISABLE_POP_MSVC
     TEST_ASSERT( helper->DoBuild( &j ) == Node::BuildResult::eOk );
@@ -216,8 +216,8 @@ void TestGraph::SingleFileNodeMissing() const
 //------------------------------------------------------------------------------
 void TestGraph::TestSerialization() const
 {
-    const char * dbFile1    = "../tmp/Test/Graph/fbuild.db.1";
-    const char * dbFile2    = "../tmp/Test/Graph/fbuild.db.2";
+    const char * dbFile1 = "../tmp/Test/Graph/fbuild.db.1";
+    const char * dbFile2 = "../tmp/Test/Graph/fbuild.db.2";
 
     // load the config file and save the resulting db
     {
@@ -254,7 +254,7 @@ void TestGraph::TestSerialization() const
         uint32_t remaining = (uint32_t)fs1.GetFileSize();
         while ( remaining > 0 )
         {
-            const uint32_t readNow = Math::Min< uint32_t >( remaining, MEGABYTE );
+            const uint32_t readNow = Math::Min<uint32_t>( remaining, MEGABYTE );
             TEST_ASSERT( fs1.Read( buffer1.Get(), readNow ) == readNow );
             TEST_ASSERT( fs2.Read( buffer2.Get(), readNow ) == readNow );
             remaining -= readNow;
@@ -280,14 +280,14 @@ void TestGraph::TestCleanPath() const
     FBuild f( fo );
 
     #if defined( __WINDOWS__ )
-        #define CHECK(a, b, c) \
+        #define CHECK( a, b, c ) \
         { \
             AStackString<> cleaned; \
             NodeGraph::CleanPath( AStackString<>( a ), cleaned ); \
             TEST_ASSERT( cleaned == b ); \
         }
     #else
-        #define CHECK(a, b, c) \
+        #define CHECK( a, b, c ) \
         { \
             AStackString<> cleaned; \
             NodeGraph::CleanPath( AStackString<>( a ), cleaned ); \
@@ -760,8 +760,8 @@ void TestGraph::DBVersionChanged() const
 
     ( (uint8_t *)ms.GetDataMutable() )[ 3 ] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
 
-    const char* oldDB       = "../tmp/Test/Graph/DBVersionChanged/fbuild.fdb";
-    const char* emptyBFF    = "../tmp/Test/Graph/DBVersionChanged/fbuild.bff";
+    const char * oldDB = "../tmp/Test/Graph/DBVersionChanged/fbuild.fdb";
+    const char * emptyBFF = "../tmp/Test/Graph/DBVersionChanged/fbuild.bff";
 
     FBuildTestOptions options;
     options.m_ConfigFile = emptyBFF;
@@ -812,27 +812,28 @@ void TestGraph::FixupErrorPaths() const
         original = path; \
         fixup = path; \
         NodeTestHelper::FixupPathForVSIntegration( fixup ); \
-        do { \
-           if ( ( original.Find( "/mnt/" ) == nullptr ) && \
-                ( fixup.BeginsWith( workingDir ) == false ) ) \
-           { \
-               TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
-                                       "Original           : %s\n" \
-                                       "Returned           : %s\n" \
-                                       "Expected BeginsWith: %s\n", \
-                                       original.Get(), \
-                                       fixup.Get(), \
-                                       workingDir.Get() ); \
-           } \
-           else if ( fixup.Find( "/mnt/" ) != nullptr ) \
-           { \
-               TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
-                                       "Original           : %s\n" \
-                                       "Returned           : %s\n" \
-                                       "Unexpected         : Contains '/mnt/'\n", \
-                                       original.Get(), \
-                                       fixup.Get() ); \
-           } \
+        do \
+        { \
+            if ( ( original.Find( "/mnt/" ) == nullptr ) && \
+                 ( fixup.BeginsWith( workingDir ) == false ) ) \
+            { \
+                TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
+                                     "Original           : %s\n" \
+                                     "Returned           : %s\n" \
+                                     "Expected BeginsWith: %s\n", \
+                                     original.Get(), \
+                                     fixup.Get(), \
+                                     workingDir.Get() ); \
+            } \
+            else if ( fixup.Find( "/mnt/" ) != nullptr ) \
+            { \
+                TEST_ASSERTM( false, "Path was not fixed up as expected.\n" \
+                                     "Original           : %s\n" \
+                                     "Returned           : %s\n" \
+                                     "Unexpected         : Contains '/mnt/'\n", \
+                                     original.Get(), \
+                                     fixup.Get() ); \
+            } \
         } while ( false )
 
     // GCC/Clang style

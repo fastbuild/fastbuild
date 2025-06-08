@@ -100,7 +100,7 @@ CopyDirNode::~CopyDirNode() = default;
     for ( const Dependency & dep : m_StaticDependencies )
     {
         // Grab the files
-        const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dln = dep.GetNode()->CastTo<DirectoryListNode>();
         for ( const FileIO::FileInfo & file : dln->GetFiles() )
         {
             // Create a CopyFileNode for each dynamically discovered file
@@ -148,7 +148,7 @@ CopyDirNode::~CopyDirNode() = default;
             }
             else
             {
-                const CopyFileNode * cn = n->CastTo< CopyFileNode >();
+                const CopyFileNode * cn = n->CastTo<CopyFileNode>();
                 if ( srcFileNode != cn->GetSourceNode() )
                 {
                     FLOG_ERROR( "Conflicting objects found during CopyDir:\n"
@@ -172,7 +172,7 @@ CopyDirNode::~CopyDirNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CopyDirNode::DoBuild( Job * /*job*/ )
 {
-    if (m_DynamicDependencies.IsEmpty())
+    if ( m_DynamicDependencies.IsEmpty() )
     {
         m_Stamp = 1; // Non-zero
     }
@@ -181,9 +181,9 @@ CopyDirNode::~CopyDirNode() = default;
         // Generate stamp
         StackArray<uint64_t> stamps;
         stamps.SetCapacity( m_DynamicDependencies.GetSize() );
-        for ( const Dependency & dep: m_DynamicDependencies )
+        for ( const Dependency & dep : m_DynamicDependencies )
         {
-            const CopyFileNode * cn = dep.GetNode()->CastTo< CopyFileNode >();
+            const CopyFileNode * cn = dep.GetNode()->CastTo<CopyFileNode>();
             ASSERT( cn->GetStamp() );
             stamps.Append( cn->GetStamp() );
         }

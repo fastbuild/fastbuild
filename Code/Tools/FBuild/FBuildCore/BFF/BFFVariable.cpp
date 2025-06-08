@@ -137,7 +137,8 @@ BFFVariable::BFFVariable( const AString & name,
     m_SubVariables.SetCapacity( structs.GetSize() );
 
     // type for disambiguation only - sanity check it's the right type
-    ASSERT( type == VAR_ARRAY_OF_STRUCTS ); (void)type;
+    ASSERT( type == VAR_ARRAY_OF_STRUCTS );
+    (void)type;
 
     SetValueArrayOfStructs( structs );
 }
@@ -248,7 +249,7 @@ void BFFVariable::SetValueArrayOfStructs( const Array<const BFFVariable *> & val
     newVars.SetCapacity( values.GetSize() );
 
     m_Type = VAR_ARRAY_OF_STRUCTS;
-    for ( const BFFVariable * var : values)
+    for ( const BFFVariable * var : values )
     {
         newVars.Append( FNEW( BFFVariable( *var ) ) );
     }
@@ -270,7 +271,7 @@ void BFFVariable::SetValueArrayOfStructs( const Array<const BFFVariable *> & val
 
     for ( const BFFVariable ** it = members.Begin(); it != members.End(); ++it )
     {
-        if ( (*it)->GetName() == name )
+        if ( ( *it )->GetName() == name )
         {
             return it;
         }
@@ -389,7 +390,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varDst->GetArrayOfStructs() );
             values.Append( varSrc->GetArrayOfStructs() );
 
-            BFFVariable * result = FNEW(BFFVariable( dstName, varSrc->m_Token, values, VAR_ARRAY_OF_STRUCTS ) );
+            BFFVariable * result = FNEW( BFFVariable( dstName, varSrc->m_Token, values, VAR_ARRAY_OF_STRUCTS ) );
             return result;
         }
 
@@ -425,12 +426,12 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             // or concatenate recursively members where the name exists in both
             for ( const BFFVariable ** it = dstMembers.Begin(); it != dstMembers.End(); ++it )
             {
-                const BFFVariable * const * it2 = GetMemberByName( (*it)->GetName(), srcMembers );
+                const BFFVariable * const * it2 = GetMemberByName( ( *it )->GetName(), srcMembers );
 
                 BFFVariable * newVar;
                 if ( it2 )
                 {
-                    newVar = (*it)->ConcatVarsRecurse( (*it)->GetName(), **it2, operatorIter );
+                    newVar = ( *it )->ConcatVarsRecurse( ( *it )->GetName(), **it2, operatorIter );
                     if ( newVar == nullptr )
                     {
                         FDELETE result;
@@ -448,10 +449,10 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             // and add members only present in the src
             for ( const BFFVariable ** it = srcMembers.Begin(); it != srcMembers.End(); ++it )
             {
-                const BFFVariable * const * it2 = GetMemberByName( (*it)->GetName(), result->GetStructMembers() );
+                const BFFVariable * const * it2 = GetMemberByName( ( *it )->GetName(), result->GetStructMembers() );
                 if ( nullptr == it2 )
                 {
-                    BFFVariable *const newVar = FNEW( BFFVariable( **it ) );
+                    BFFVariable * const newVar = FNEW( BFFVariable( **it ) );
                     allMembers.Append( newVar );
                 }
             }

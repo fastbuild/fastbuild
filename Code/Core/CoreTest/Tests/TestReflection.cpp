@@ -46,7 +46,10 @@ struct TestStruct
 {
     REFLECT_STRUCT_DECLARE( TestStruct )
 public:
-    TestStruct() : m_MyInt( 851 ) {}
+    TestStruct()
+        : m_MyInt( 851 )
+    {
+    }
 
     uint32_t m_MyInt;
 };
@@ -173,7 +176,10 @@ class BaseClass : public Object
 {
     REFLECT_DECLARE( BaseClass )
 public:
-    BaseClass() : m_A( -1 ) {}
+    BaseClass()
+        : m_A( -1 )
+    {
+    }
     int m_A;
 };
 
@@ -181,7 +187,10 @@ class DerivedClass : public BaseClass
 {
     REFLECT_DECLARE( DerivedClass )
 public:
-    DerivedClass() : m_B( -1 ) {}
+    DerivedClass()
+        : m_B( -1 )
+    {
+    }
     int m_B;
 };
 
@@ -233,15 +242,15 @@ void TestReflection::MetaData() const
     const ReflectionInfo * ri = obj.GetReflectionInfoV();
 
     // Check all MetaData is present on object
-    TEST_ASSERT( ri->HasMetaData< Meta_File >() );
-    TEST_ASSERT( ri->HasMetaData< Meta_Optional >() );
-    TEST_ASSERT( ri->HasMetaData< Meta_Path >() );
+    TEST_ASSERT( ri->HasMetaData<Meta_File>() );
+    TEST_ASSERT( ri->HasMetaData<Meta_Optional>() );
+    TEST_ASSERT( ri->HasMetaData<Meta_Path>() );
 
     // Check all MetaData is present on property
     const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString<>( "Property" ) );
-    TEST_ASSERT( rp->HasMetaData< Meta_File >() );
-    TEST_ASSERT( rp->HasMetaData< Meta_Optional >() );
-    TEST_ASSERT( rp->HasMetaData< Meta_Path >() );
+    TEST_ASSERT( rp->HasMetaData<Meta_File>() );
+    TEST_ASSERT( rp->HasMetaData<Meta_Optional>() );
+    TEST_ASSERT( rp->HasMetaData<Meta_Path>() );
 }
 
 // ArraySize

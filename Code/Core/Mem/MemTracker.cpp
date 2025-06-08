@@ -153,17 +153,17 @@
     //------------------------------------------------------------------------------
     /*static*/ bool MemTracker::HasAllocationsInRange( uint32_t startingId, uint32_t endingId )
     {
-        if ( s_AllocationCount  == 0 )
+        if ( s_AllocationCount == 0 )
         {
             return false;
         }
 
-        for ( size_t i=0; i<ALLOCATION_HASH_SIZE; ++i )
+        for ( size_t i = 0; i < ALLOCATION_HASH_SIZE; ++i )
         {
             Allocation * a = s_AllocationHashTable[ i ];
             while ( a )
             {
-                const uint32_t id     = a->m_Id;
+                const uint32_t id = a->m_Id;
                 if ( ( id > startingId ) && ( id <= endingId ) )
                 {
                     return true;
@@ -207,30 +207,39 @@
         memset( displayChar, '.', sizeof( displayChar ) );
         const char * okChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`1234567890-=!@#$^&*()_+[]{};:'\",<>/?|\\";
         const char * ok = okChars;
-        for ( ;; ) { char c = *ok; if ( c == 0 ) break; displayChar[ (unsigned char)c ] = c; ++ok; }
+        for ( ;; )
+        {
+            char c = *ok;
+            if ( c == 0 )
+            {
+                break;
+            }
+            displayChar[ (unsigned char)c ] = c;
+            ++ok;
+        }
 
         char memView[ 32 ] = { 0 };
 
         OUTPUT( "--- DumpAllocations ------------------------------------------------\n" );
-        for ( size_t i=0; i<ALLOCATION_HASH_SIZE; ++i )
+        for ( size_t i = 0; i < ALLOCATION_HASH_SIZE; ++i )
         {
             Allocation * a = s_AllocationHashTable[ i ];
             while ( a )
             {
-                const uint32_t id     = a->m_Id;
+                const uint32_t id = a->m_Id;
                 if ( ( id <= startingId ) || ( id > endingId ) )
                 {
                     a = a->m_Next;
                     continue;
                 }
-                const uint64_t addr   = (size_t)a->m_Ptr;
-                const uint64_t size   = a->m_Size;
+                const uint64_t addr = (size_t)a->m_Ptr;
+                const uint64_t size = a->m_Size;
 
                 // format a view of the memory contents
                 const char * src = (const char *)addr;
                 char * dst = memView;
-                const size_t num = Math::Min< size_t >( (size_t)size, 31 );
-                for ( uint32_t j=0; j<num; ++j )
+                const size_t num = Math::Min<size_t>( (size_t)size, 31 );
+                for ( uint32_t j = 0; j < num; ++j )
                 {
                     char c = *src;
                     *dst = displayChar[ (uint8_t)c ];
@@ -239,7 +248,14 @@
                 }
                 *dst = 0;
 
-                OUTPUT( "%s(%u): Id %u : %" PRIu64 " bytes @ 0x%016" PRIx64 " (Mem: %s)\n", a->m_File, a->m_Line, id, size, addr, memView );
+                OUTPUT( "%s(%u): Id %u : %" PRIu64 " bytes @ 0x%016" PRIx64
+                        " (Mem: %s)\n",
+                        a->m_File,
+                        a->m_Line,
+                        id,
+                        size,
+                        addr,
+                        memView );
 
                 ++numAllocs;
                 total += size;
@@ -265,7 +281,9 @@
         if ( AtomicInc( &threadSafeGuard ) != 1 )
         {
             // subsequent callers wait for init
-            while ( !s_Initialized ) {}
+            while ( !s_Initialized )
+            {
+            }
             return;
         }
 
@@ -273,10 +291,10 @@
         atexit( MemTracker::DumpLeaksAtExit );
 
         // construct primary mutex in-place
-        INPLACE_NEW ( &GetMutex() ) Mutex;
+        INPLACE_NEW( &GetMutex() ) Mutex;
 
         // init hash table
-        s_AllocationHashTable = new Allocation*[ ALLOCATION_HASH_SIZE ];
+        s_AllocationHashTable = new Allocation *[ ALLOCATION_HASH_SIZE ];
         memset( s_AllocationHashTable, 0, ALLOCATION_HASH_SIZE * sizeof( Allocation * ) );
 
         // init pool for allocation structures

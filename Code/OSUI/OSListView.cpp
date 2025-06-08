@@ -56,8 +56,10 @@ void OSListView::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         m_Handle = CreateWindow( WC_LISTVIEW,
                                  "ListView",
                                  WS_CHILD | LVS_REPORT | WS_VISIBLE | LVS_NOSORTHEADER,
-                                 x, y,
-                                 (int32_t)w, (int32_t)h,
+                                 x,
+                                 y,
+                                 (int32_t)w,
+                                 (int32_t)h,
                                  (HWND)m_Parent->GetHandle(),
                                  nullptr,
                                  nullptr,
@@ -135,7 +137,7 @@ void OSListView::SetItemText( uint32_t index, uint32_t subItemIndex, const char 
         item.iItem = (int32_t)index;
 
         // host name
-        item.pszText = (LPSTR)const_cast<char *>(text);
+        item.pszText = ( LPSTR ) const_cast<char *>( text );
         item.iSubItem = (int32_t)subItemIndex;
         SendMessage( (HWND)m_Handle, LVM_SETITEM, (WPARAM)0, (LPARAM)&item );
     #elif defined( __OSX__ )

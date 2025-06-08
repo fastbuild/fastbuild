@@ -27,10 +27,10 @@
 #endif
 
 // Handle GCC -ffreestanding environment
-#if defined(__STDC_HOSTED__) && (__STDC_HOSTED__ == 0)
+#if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
     extern "C"
     {
-        uint64_t strtoul(const char * nptr, char ** endptr, int32_t base);
+        uint64_t strtoul( const char * nptr, char ** endptr, int32_t base );
     }
 #endif
 
@@ -307,8 +307,8 @@ void IdleDetection::UpdateProcessList()
         }
 
         PROCESSENTRY32 thProcessInfo;
-        memset( &thProcessInfo, 0, sizeof(PROCESSENTRY32) );
-        thProcessInfo.dwSize = sizeof(PROCESSENTRY32);
+        memset( &thProcessInfo, 0, sizeof( PROCESSENTRY32 ) );
+        thProcessInfo.dwSize = sizeof( PROCESSENTRY32 );
         while ( Process32Next( hSnapShot, &thProcessInfo ) != FALSE )
         {
             const uint32_t parentPID = thProcessInfo.th32ParentProcessID;
@@ -386,7 +386,7 @@ void IdleDetection::UpdateProcessList()
 
                 // Determine if this is a PID
                 const char * pos = entry->d_name;
-                for (;;)
+                for ( ;; )
                 {
                     const char c = *pos;
                     if ( ( c >= '0' ) && ( c <= '9' ) )
@@ -492,7 +492,7 @@ void IdleDetection::UpdateProcessList()
         }
 
         // Line was too long or there was some other problem
-        ASSERT( false && "Unexpected proc file size");
+        ASSERT( false && "Unexpected proc file size" );
         outProcessInfoString.Clear();
         return false;
     }

@@ -104,7 +104,7 @@ public:
         const IMetaData * m = m_MetaDataChain;
         while ( m )
         {
-            const T * m2 = ::DynamicCast< const T >( m );
+            const T * m2 = ::DynamicCast<const T>( m );
             if ( m2 )
             {
                 return m2;
