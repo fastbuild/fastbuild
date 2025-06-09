@@ -32,6 +32,7 @@ public:
 
     static uint32_t Calc32( const AString & string ) { return Calc32( string.Get(), string.GetLength() ); }
     static uint64_t Calc64( const AString & string ) { return Calc64( string.Get(), string.GetLength() ); }
+
 private:
     enum { XXHASH_SEED = 0x0 }; // arbitrarily chosen random seed
 };

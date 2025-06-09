@@ -716,7 +716,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
         if ( operatorHistory[ i + 1 ] & IF_AND )
         {
             // Do the AND operation and store it in the right hand operator being tested
-            operatorHistory[ i + 1 ] = ( uint8_t )( operatorHistory[ i ] & operatorHistory[ i + 1 ] );
+            operatorHistory[ i + 1 ] = (uint8_t)( operatorHistory[ i ] & operatorHistory[ i + 1 ] );
             // Clear the left hand operator, its job is now done
             operatorHistory[ i ] = 0;
         }

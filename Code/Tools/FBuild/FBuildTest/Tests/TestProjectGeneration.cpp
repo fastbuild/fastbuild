@@ -528,16 +528,16 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             }
 
             TEST_ASSERT( includes.GetSize() == 41 );
-            TEST_ASSERT( includes[  0 ] == "Intellisense\\Include\\Path" );
-            TEST_ASSERT( includes[  1 ] == "Intellisense\\Include\\Space\\Path" );
-            TEST_ASSERT( includes[  2 ] == "Intellisense\\Include\\Slash\\Path" );
-            TEST_ASSERT( includes[  3 ] == "Intellisense\\Include\\Slash\\Space\\Path" );
-            TEST_ASSERT( includes[  4 ] == "Intellisense\\Include\\Quoted\\Path" );
-            TEST_ASSERT( includes[  5 ] == "Intellisense\\Include\\Quoted\\Space\\Path" );
-            TEST_ASSERT( includes[  6 ] == "Intellisense\\Include\\Quoted\\Slash\\Path" );
-            TEST_ASSERT( includes[  7 ] == "Intellisense\\Include\\Quoted\\Slash\\Space\\Path" );
-            TEST_ASSERT( includes[  8 ] == "Intellisense\\Include\\With Spaces\\Quoted\\Slash\\Space\\Path" );
-            TEST_ASSERT( includes[  9 ] == "Intellisense\\SystemInclude\\Path" );
+            TEST_ASSERT( includes[ 0 ] == "Intellisense\\Include\\Path" );
+            TEST_ASSERT( includes[ 1 ] == "Intellisense\\Include\\Space\\Path" );
+            TEST_ASSERT( includes[ 2 ] == "Intellisense\\Include\\Slash\\Path" );
+            TEST_ASSERT( includes[ 3 ] == "Intellisense\\Include\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[ 4 ] == "Intellisense\\Include\\Quoted\\Path" );
+            TEST_ASSERT( includes[ 5 ] == "Intellisense\\Include\\Quoted\\Space\\Path" );
+            TEST_ASSERT( includes[ 6 ] == "Intellisense\\Include\\Quoted\\Slash\\Path" );
+            TEST_ASSERT( includes[ 7 ] == "Intellisense\\Include\\Quoted\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[ 8 ] == "Intellisense\\Include\\With Spaces\\Quoted\\Slash\\Space\\Path" );
+            TEST_ASSERT( includes[ 9 ] == "Intellisense\\SystemInclude\\Path" );
             TEST_ASSERT( includes[ 10 ] == "Intellisense\\SystemInclude\\Space\\Path" );
             TEST_ASSERT( includes[ 11 ] == "Intellisense\\SystemInclude\\Quoted\\Path" );
             TEST_ASSERT( includes[ 12 ] == "Intellisense\\SystemInclude\\Quoted\\Space\\Path" );
@@ -687,16 +687,16 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     }
 
     TEST_ASSERT( includes.GetSize() == 41 );
-    TEST_ASSERT( includes[  0 ] == "Intellisense/Include/Path" );
-    TEST_ASSERT( includes[  1 ] == "Intellisense/Include/Space/Path" );
-    TEST_ASSERT( includes[  2 ] == "Intellisense/Include/Slash/Path" );
-    TEST_ASSERT( includes[  3 ] == "Intellisense/Include/Slash/Space/Path" );
-    TEST_ASSERT( includes[  4 ] == "Intellisense/Include/Quoted/Path" );
-    TEST_ASSERT( includes[  5 ] == "Intellisense/Include/Quoted/Space/Path" );
-    TEST_ASSERT( includes[  6 ] == "Intellisense/Include/Quoted/Slash/Path" );
-    TEST_ASSERT( includes[  7 ] == "Intellisense/Include/Quoted/Slash/Space/Path" );
-    TEST_ASSERT( includes[  8 ] == "Intellisense/Include/With Spaces/Quoted/Slash/Space/Path" );
-    TEST_ASSERT( includes[  9 ] == "Intellisense/SystemInclude/Path" );
+    TEST_ASSERT( includes[ 0 ] == "Intellisense/Include/Path" );
+    TEST_ASSERT( includes[ 1 ] == "Intellisense/Include/Space/Path" );
+    TEST_ASSERT( includes[ 2 ] == "Intellisense/Include/Slash/Path" );
+    TEST_ASSERT( includes[ 3 ] == "Intellisense/Include/Slash/Space/Path" );
+    TEST_ASSERT( includes[ 4 ] == "Intellisense/Include/Quoted/Path" );
+    TEST_ASSERT( includes[ 5 ] == "Intellisense/Include/Quoted/Space/Path" );
+    TEST_ASSERT( includes[ 6 ] == "Intellisense/Include/Quoted/Slash/Path" );
+    TEST_ASSERT( includes[ 7 ] == "Intellisense/Include/Quoted/Slash/Space/Path" );
+    TEST_ASSERT( includes[ 8 ] == "Intellisense/Include/With Spaces/Quoted/Slash/Space/Path" );
+    TEST_ASSERT( includes[ 9 ] == "Intellisense/SystemInclude/Path" );
     TEST_ASSERT( includes[ 10 ] == "Intellisense/SystemInclude/Space/Path" );
     TEST_ASSERT( includes[ 11 ] == "Intellisense/SystemInclude/Quoted/Path" );
     TEST_ASSERT( includes[ 12 ] == "Intellisense/SystemInclude/Quoted/Space/Path" );
@@ -769,8 +769,8 @@ void TestProjectGeneration::VCXProj_DefaultConfigs() const
     TEST_ASSERT( numConfigs == 4 );
 
     // Ensure each config inherited the project-level settings
-    const uint32_t buildCmdCount    = fileContents.Replace( "<NMakeBuildCommandLine>BASE_BUILD_COMMAND</NMakeBuildCommandLine>", "" );
-    const uint32_t rebuildCmdCount  = fileContents.Replace( "<NMakeReBuildCommandLine>BASE_REBUILD_COMMAND</NMakeReBuildCommandLine>", "" );
+    const uint32_t buildCmdCount = fileContents.Replace( "<NMakeBuildCommandLine>BASE_BUILD_COMMAND</NMakeBuildCommandLine>", "" );
+    const uint32_t rebuildCmdCount = fileContents.Replace( "<NMakeReBuildCommandLine>BASE_REBUILD_COMMAND</NMakeReBuildCommandLine>", "" );
     TEST_ASSERT( buildCmdCount == numConfigs );
     TEST_ASSERT( rebuildCmdCount == numConfigs );
 }
@@ -991,16 +991,16 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
 {
     // Overlapping input and output directories, with common substring in dir names
     #if defined( __WINDOWS__ )
-        AStackString<> basePath       ( "C:\\MyProject\\ProjectSourceFiles\\" );
-        AStackString<> fileA          ( "C:\\MyProject\\ProjectSourceFiles\\File.cpp" );
-        AStackString<> fileB          ( "C:\\MyProject\\ProjectSourceFiles\\SubDir\\File.cpp" );
+        AStackString<> basePath( "C:\\MyProject\\ProjectSourceFiles\\" );
+        AStackString<> fileA( "C:\\MyProject\\ProjectSourceFiles\\File.cpp" );
+        AStackString<> fileB( "C:\\MyProject\\ProjectSourceFiles\\SubDir\\File.cpp" );
         AStackString<> projectFileName( "C:\\MyProject\\Projects\\MyProject.vcxproj" );
         //                                              ^     ^
         //                                              \-----\-- NOTE partial overlap within dir name
     #else
-        AStackString<> basePath       ( "/MyProject/ProjectSourceFiles/" );
-        AStackString<> fileA          ( "/MyProject/ProjectSourceFiles/File.cpp" );
-        AStackString<> fileB          ( "/MyProject/ProjectSourceFiles/SubDir/File.cpp" );
+        AStackString<> basePath( "/MyProject/ProjectSourceFiles/" );
+        AStackString<> fileA( "/MyProject/ProjectSourceFiles/File.cpp" );
+        AStackString<> fileB( "/MyProject/ProjectSourceFiles/SubDir/File.cpp" );
         AStackString<> projectFileName( "/MyProject/Projects/MyProject.vcxproj" );
         //                                          ^     ^
         //                                          \-----\-- NOTE partial overlap within dir name
@@ -1062,16 +1062,16 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
     // Overlapping input and output directories, with source files in same
     // dir as .vcxproject which is a sub-dir of a basepath
     #if defined( __WINDOWS__ )
-        AStackString<> basePath       ( "C:\\MyProject\\" );
-        AStackString<> fileA          ( "C:\\MyProject\\Generated\\GeneratedCpp.cpp" );
-        AStackString<> fileB          ( "C:\\MyProject\\Generated\\SubDir\\GeneratedCpp.cpp" );
+        AStackString<> basePath( "C:\\MyProject\\" );
+        AStackString<> fileA( "C:\\MyProject\\Generated\\GeneratedCpp.cpp" );
+        AStackString<> fileB( "C:\\MyProject\\Generated\\SubDir\\GeneratedCpp.cpp" );
         AStackString<> projectFileName( "C:\\MyProject\\Generated\\MyProject.vcxproj" );
         //                                              ^       ^
         //                                              \-------\-- NOTE common dir name
     #else
-        AStackString<> basePath       ( "/MyProject/" );
-        AStackString<> fileA          ( "/MyProject/Generated/GeneratedCpp.cpp" );
-        AStackString<> fileB          ( "/MyProject/Generated/SubDir/GeneratedCpp.cpp" );
+        AStackString<> basePath( "/MyProject/" );
+        AStackString<> fileA( "/MyProject/Generated/GeneratedCpp.cpp" );
+        AStackString<> fileB( "/MyProject/Generated/SubDir/GeneratedCpp.cpp" );
         AStackString<> projectFileName( "/MyProject/Generated/MyProject.vcxproj" );
         //                                          ^       ^
         //                                          \-------\-- NOTE common dir name
@@ -1155,7 +1155,7 @@ void TestProjectGeneration::VCXProj_InputPaths() const
     {
         const Dependencies & deps = projNode->GetStaticDependencies();
         TEST_ASSERT( deps.GetSize() == 1 );
-        TEST_ASSERT( deps[0].GetNode()->GetType() == Node::Type::DIRECTORY_LIST_NODE );
+        TEST_ASSERT( deps[ 0 ].GetNode()->GetType() == Node::Type::DIRECTORY_LIST_NODE );
         const DirectoryListNode * dirNode = deps[ 0 ].GetNode()->CastTo<DirectoryListNode>();
         bool rootItemFound = false;
         bool subdirItemFound = false;

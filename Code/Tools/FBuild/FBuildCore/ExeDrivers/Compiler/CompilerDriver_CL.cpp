@@ -314,7 +314,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     ASSERT( token.IsEmpty() == false );
 
     // MSVC Compiler args can start with - or /
-    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    if ( ( token[ 0 ] != '/' ) && ( token[ 0 ] != '-' ) )
     {
         return false;
     }
@@ -337,7 +337,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     ASSERT( token.IsEmpty() == false );
 
     // MSVC Compiler args can start with - or /
-    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    if ( ( token[ 0 ] != '/' ) && ( token[ 0 ] != '-' ) )
     {
         return false;
     }

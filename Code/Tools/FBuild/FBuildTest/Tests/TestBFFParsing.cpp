@@ -264,10 +264,10 @@ void TestBFFParsing::Directives() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::DefineDirective() const
 {
-    TEST_PARSE_OK( "#define X");
-    TEST_PARSE_OK( "#define X123");
-    TEST_PARSE_OK( "#define X_");
-    TEST_PARSE_OK( "#define _X_");
+    TEST_PARSE_OK( "#define X" );
+    TEST_PARSE_OK( "#define X123" );
+    TEST_PARSE_OK( "#define X_" );
+    TEST_PARSE_OK( "#define _X_" );
 
     TEST_PARSE_FAIL( "#define X Y",     "Error #1045 - Extraneous token(s)" );
 }
@@ -453,9 +453,9 @@ void TestBFFParsing::IfFileExistsDirective() const
 
     // Check changes are detected (or not) between builds
     {
-        const char * rootBFF    = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
-        const char * fileName   = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
-        const char * db         = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
+        const char * rootBFF = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
+        const char * fileName = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
+        const char * db = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
 
         // Copy root bff to temp dir
         FileIO::SetReadOnly( rootBFF, false );

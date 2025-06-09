@@ -54,7 +54,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
             break; // end of output
         }
 
-        const char * lineEnd = ( lineStart < pos && pos[-1] == '\r' ) ? pos - 1 : pos;
+        const char * lineEnd = ( lineStart < pos && pos[ -1 ] == '\r' ) ? pos - 1 : pos;
 
         ASSERT( *pos == '\n' );
         ++pos; // skip \r for next line
@@ -94,8 +94,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
         do
         {
             ++ch;
-        }
-        while ( *ch == ' ' );
+        } while ( *ch == ' ' );
 
         // must have whitespaces
         if ( ch == colon2 )

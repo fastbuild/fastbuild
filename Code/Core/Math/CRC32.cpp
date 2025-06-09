@@ -63,7 +63,7 @@ static const uint32_t g_CRC32Table[ 256 ] =
 #define CRCPOLY 0xEDB88320
 #define CRCINIT 0xFFFFFFFF
 
-UINT g_crc_slicing[8][256];
+UINT g_crc_slicing[ 8 ][ 256 ];
 
 PRAGMA_DISABLE_PUSH_CLANG( "-Wsign-conversion" )
 
@@ -76,7 +76,7 @@ void SlicingInit()
         {
             x = ( x >> 1 ) ^ ( CRCPOLY & ( -(INT)( x & 1 ) ) );
         }
-        g_crc_slicing[0][i] = x;
+        g_crc_slicing[ 0 ][ i ] = x;
     }
 
     for ( UINT i = 0; i <= 0xFF; i++ )
@@ -84,8 +84,8 @@ void SlicingInit()
         UINT c = g_crc_slicing[ 0 ][ i ];
         for ( UINT j = 1; j < 8; j++ )
         {
-            c = g_crc_slicing[0][c & 0xFF] ^ ( c >> 8 );
-            g_crc_slicing[j][i] = c;
+            c = g_crc_slicing[ 0 ][ c & 0xFF ] ^ ( c >> 8 );
+            g_crc_slicing[ j ][ i ] = c;
         }
     }
 }
@@ -109,7 +109,7 @@ static RES CRC_SlicingBy8( const BYTE * buf, SIZE_T len )
     len -= align;
     for ( ; align; align-- )
     {
-        crc = g_crc_slicing[0][ ( crc ^ *buf++ ) & 0xFF ] ^ ( crc >> 8 );
+        crc = g_crc_slicing[ 0 ][ ( crc ^ *buf++ ) & 0xFF ] ^ ( crc >> 8 );
     }
 
     PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcast-align" )
@@ -121,21 +121,21 @@ static RES CRC_SlicingBy8( const BYTE * buf, SIZE_T len )
         buf += sizeof( uint32_t );
         const UINT next = *(const uint32_t *)buf;
         buf += sizeof( uint32_t );
-        crc = g_crc_slicing[7][( crc ) & 0xFF] ^
-              g_crc_slicing[6][( crc >> 8 ) & 0xFF] ^
-              g_crc_slicing[5][( crc >> 16 ) & 0xFF] ^
-              g_crc_slicing[4][( crc >> 24 )] ^
-              g_crc_slicing[3][( next ) & 0xFF] ^
-              g_crc_slicing[2][( next >> 8 ) & 0xFF] ^
-              g_crc_slicing[1][( next >> 16 ) & 0xFF] ^
-              g_crc_slicing[0][( next >> 24 )];
+        crc = g_crc_slicing[ 7 ][ ( crc ) & 0xFF ] ^
+              g_crc_slicing[ 6 ][ ( crc >> 8 ) & 0xFF ] ^
+              g_crc_slicing[ 5 ][ ( crc >> 16 ) & 0xFF ] ^
+              g_crc_slicing[ 4 ][ ( crc >> 24 ) ] ^
+              g_crc_slicing[ 3 ][ ( next ) & 0xFF ] ^
+              g_crc_slicing[ 2 ][ ( next >> 8 ) & 0xFF ] ^
+              g_crc_slicing[ 1 ][ ( next >> 16 ) & 0xFF ] ^
+              g_crc_slicing[ 0 ][ ( next >> 24 ) ];
     }
 
     PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcast-align
 
     len &= sizeof( uint32_t ) * 2 - 1;
     for ( ; len; len-- )
-        crc = g_crc_slicing[0][( crc ^ *buf++ ) & 0xFF] ^ ( crc >> 8 );
+        crc = g_crc_slicing[ 0 ][ ( crc ^ *buf++ ) & 0xFF ] ^ ( crc >> 8 );
     return ~crc;
 }
 

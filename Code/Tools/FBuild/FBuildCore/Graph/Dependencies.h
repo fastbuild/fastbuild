@@ -84,7 +84,7 @@ public:
 
 protected:
     // Extend to explicit capacity, or with amortized expansion if 0
-    void                                GrowCapacity( size_t newCapacity  = 0 );
+    void                                GrowCapacity( size_t newCapacity = 0 );
 
     // The array of dependencies and list management variables are allocated in
     // a contiguous block to save memory vs using a standard Array
@@ -99,7 +99,7 @@ protected:
     static Dependency *                 GetDependencies( DependencyList * depList );
     static const Dependency *           GetDependencies( const DependencyList * depList );
 
-    DependencyList* m_DependencyList = nullptr;
+    DependencyList * m_DependencyList = nullptr;
 };
 
 // CONSTRUCTOR

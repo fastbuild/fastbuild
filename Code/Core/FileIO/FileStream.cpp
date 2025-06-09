@@ -66,20 +66,20 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
         if ( ( fileMode & READ_ONLY ) != 0 )
         {
             ASSERT( ( fileMode & READ_ONLY ) == fileMode ); // no extra flags allowed
-            desiredAccess       |= GENERIC_READ;
-            shareMode           |= FILE_SHARE_READ; // allow other readers
+            desiredAccess |= GENERIC_READ;
+            shareMode |= FILE_SHARE_READ; // allow other readers
             creationDisposition |= OPEN_EXISTING;
         }
         else if ( ( fileMode & WRITE_ONLY ) != 0 )
         {
-            desiredAccess       |= GENERIC_WRITE;
-            shareMode           |= FILE_SHARE_READ; // allow other readers
+            desiredAccess |= GENERIC_WRITE;
+            shareMode |= FILE_SHARE_READ; // allow other readers
             creationDisposition |= CREATE_ALWAYS; // overwrite existing
         }
         else if ( ( fileMode & OPEN_OR_CREATE_READ_WRITE ) != 0 )
         {
-            desiredAccess       |= ( GENERIC_READ | GENERIC_WRITE );
-            shareMode           |= FILE_SHARE_READ; // allow other readers
+            desiredAccess |= ( GENERIC_READ | GENERIC_WRITE );
+            shareMode |= FILE_SHARE_READ; // allow other readers
             creationDisposition |= OPEN_ALWAYS; // open or create
         }
         else

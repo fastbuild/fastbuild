@@ -133,12 +133,12 @@ void TestListDependencies::Check_SourceResults( const FBuildTestOptions & option
         filename.TrimStart( '\t' );
     }
 
-    TEST_ASSERTM( files.GetSize() == 4 , "Expected 4 dependencies, but got %zu instead" , files.GetSize() );
+    TEST_ASSERTM( files.GetSize() == 4, "Expected 4 dependencies, but got %zu instead", files.GetSize() );
 
-    TEST_ASSERTM( files[0].EndsWithI( "HeaderA.h" ) , "Expected 'HeaderA.h' in files[0], but got '%s' instead" , files[0].Get() );
-    TEST_ASSERTM( files[1].EndsWithI( "HeaderB.h" ) , "Expected 'HeaderB.h' in files[1], but got '%s' instead" , files[1].Get() );
-    TEST_ASSERTM( files[2].EndsWithI( "HeaderC.h" ) , "Expected 'HeaderC.h' in files[2], but got '%s' instead" , files[2].Get() );
-    TEST_ASSERTM( files[3].EndsWithI( "SimpleObject.cpp" ) , "Expected 'SimpleObject.cpp' int file[3], but got '%s' instead" , files[3].Get() );
+    TEST_ASSERTM( files[ 0 ].EndsWithI( "HeaderA.h" ), "Expected 'HeaderA.h' in files[0], but got '%s' instead", files[ 0 ].Get() );
+    TEST_ASSERTM( files[ 1 ].EndsWithI( "HeaderB.h" ), "Expected 'HeaderB.h' in files[1], but got '%s' instead", files[ 1 ].Get() );
+    TEST_ASSERTM( files[ 2 ].EndsWithI( "HeaderC.h" ), "Expected 'HeaderC.h' in files[2], but got '%s' instead", files[ 2 ].Get() );
+    TEST_ASSERTM( files[ 3 ].EndsWithI( "SimpleObject.cpp" ), "Expected 'SimpleObject.cpp' int file[3], but got '%s' instead", files[ 3 ].Get() );
 }
 
 //------------------------------------------------------------------------------

@@ -143,7 +143,7 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
     // - double //
     AStackString<> args( " /FdTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//pdb/file.pdb"
                          " /FaTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//asm/file.asm"
-                         " /sourceDependencies Tools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//srcDeps/file.json");
+                         " /sourceDependencies Tools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//srcDeps/file.json" );
 
     // Get the paths
     AStackString<> pdbPath, asmPath, sourceDependenciesPath;
@@ -309,14 +309,14 @@ void TestObjectList::ObjectListChaining_Bad() const
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ExtraOutputPaths/fbuild.bff";
 
-        const char * objectListASMFile  = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/file.asm";
-        const char * objectListASMDir   = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/";
-        const char * objectListPDBFile  = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/file.pdb";
-        const char * objectListPDBDir   = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/";
-        const char * libraryASMFile     = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/file.asm";
-        const char * libraryASMDir      = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/";
-        const char * libraryPDBFile     = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/file.pdb";
-        const char * libraryPDBDir      = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/";
+        const char * objectListASMFile = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/file.asm";
+        const char * objectListASMDir = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/";
+        const char * objectListPDBFile = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/file.pdb";
+        const char * objectListPDBDir = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/";
+        const char * libraryASMFile = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/file.asm";
+        const char * libraryASMDir = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/";
+        const char * libraryPDBFile = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/file.pdb";
+        const char * libraryPDBDir = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/";
 
         // Cleanup from previous runs to ensure we're really testing folder creation
         EnsureFileDoesNotExist( objectListASMFile );

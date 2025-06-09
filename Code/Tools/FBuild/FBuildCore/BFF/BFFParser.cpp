@@ -764,7 +764,7 @@ bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBraced
         case BFFTokenType::CurlyBracket:    closeTokenChar = '}'; break;
         case BFFTokenType::RoundBracket:    closeTokenChar = ')'; break;
         case BFFTokenType::SquareBracket:   closeTokenChar = ']'; break;
-        default:                            ASSERT(false); return false;
+        default:                            ASSERT( false ); return false;
     }
 
     // Take note of range begin
@@ -795,7 +795,7 @@ bool BFFParser::FindBracedRangeRecurse( BFFTokenRange & iter ) const
         case BFFTokenType::SquareBracket:   closeTokenChar = ']'; break;
         default:
         {
-            ASSERT(false);
+            ASSERT( false );
             return false;
         }
     }
@@ -1288,7 +1288,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
     const BFFVariable * varDst = BFFStackFrame::GetVar( dstName, dstFrame );
 
     const char opChar = operatorToken->GetValueString()[ 0 ];
-    const bool concat = ( opChar== BFF_VARIABLE_CONCATENATION );
+    const bool concat = ( opChar == BFF_VARIABLE_CONCATENATION );
     const bool subtract = ( opChar == BFF_VARIABLE_SUBTRACTION );
 
     // concatenation?
@@ -1307,7 +1307,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
         if ( varDst == varSrc )
         {
             // It's only self-assignment if the dstVar is at the same scope.
-            const BFFVariable * var = (dstFrame ? dstFrame : BFFStackFrame::GetCurrent())->GetLocalVar( dstName );
+            const BFFVariable * var = ( dstFrame ? dstFrame : BFFStackFrame::GetCurrent() )->GetLocalVar( dstName );
             if ( var )
             {
                 return true;
@@ -1677,7 +1677,7 @@ void BFFParser::CreateBuiltInVariables()
     {
         AStackString<> varName( "._FASTBUILD_VERSION_STRING_" );
         ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
-        BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), AStackString<>(FBUILD_VERSION_STRING), &m_BaseStackFrame );
+        BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), AStackString<>( FBUILD_VERSION_STRING ), &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
 

@@ -231,8 +231,8 @@ ExecNode::~ExecNode()
 
     // Print output if appropriate
     if ( buildFailed ||
-        m_ExecAlwaysShowOutput ||
-        FBuild::Get().GetOptions().m_ShowCommandOutput )
+         m_ExecAlwaysShowOutput ||
+         FBuild::Get().GetOptions().m_ShowCommandOutput )
     {
         Node::DumpOutput( job, memOut );
         Node::DumpOutput( job, memErr );

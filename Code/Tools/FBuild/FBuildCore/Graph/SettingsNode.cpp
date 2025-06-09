@@ -20,8 +20,8 @@
 // Defines
 //------------------------------------------------------------------------------
 #define DIST_MEMORY_LIMIT_MIN ( 16 ) // 16MiB
-#define DIST_MEMORY_LIMIT_MAX ( ( sizeof(void *) == 8 ) ? 64 * 1024 : 2048 ) // 64 GiB or 2 GiB
-#define DIST_MEMORY_LIMIT_DEFAULT ( ( sizeof(void *) == 8 ) ? 2048 : 1024 ) // 2 GiB or 1 GiB
+#define DIST_MEMORY_LIMIT_MAX ( ( sizeof( void * ) == 8 ) ? 64 * 1024 : 2048 ) // 64 GiB or 2 GiB
+#define DIST_MEMORY_LIMIT_DEFAULT ( ( sizeof( void * ) == 8 ) ? 2048 : 1024 ) // 2 GiB or 1 GiB
 
 // REFLECTION
 //------------------------------------------------------------------------------

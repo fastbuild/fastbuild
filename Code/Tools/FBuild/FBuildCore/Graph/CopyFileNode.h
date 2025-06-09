@@ -22,7 +22,7 @@ public:
 
     static Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }
 
-    FileNode * GetSourceNode() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
+    FileNode * GetSourceNode() const { return m_StaticDependencies[ 0 ].GetNode()->CastTo<FileNode>(); }
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;

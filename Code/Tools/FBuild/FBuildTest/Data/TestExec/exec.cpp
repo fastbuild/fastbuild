@@ -9,7 +9,7 @@ int main( int argc, char * argv[], char *[] )
     // Touch each file listed
     for ( int i = 1; i < argc; ++i )
     {
-        const char * arg = argv[i];
+        const char * arg = argv[ i ];
 
         // Make a new filename based on the input
         char filename[ 1024 ] = { 0 };

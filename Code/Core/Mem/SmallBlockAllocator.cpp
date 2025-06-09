@@ -34,7 +34,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void *                               SmallBlockAllocator::s_BucketMemoryStart( MEM_BUCKETS_NOT_INITIALIZED );
 /*static*/ uint32_t                             SmallBlockAllocator::s_BucketNextFreePageIndex( 0 );
-/*static*/ uint64_t                             SmallBlockAllocator::s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof (uint64_t) ];
+/*static*/ uint64_t                             SmallBlockAllocator::s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof( uint64_t ) ];
 /*static*/ SmallBlockAllocator::MemBucket *     SmallBlockAllocator::s_Buckets( nullptr );
 /*static*/ uint8_t                              SmallBlockAllocator::s_BucketMappingTable[ BUCKET_MAPPING_TABLE_SIZE ] = { 0 };
 
@@ -135,7 +135,7 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
     // Find the owning bucket
     const size_t alignedSize = Math::RoundUp<size_t>( size, BUCKET_ALIGNMENT );
     const size_t bucketIndex = ( ( alignedSize / BUCKET_ALIGNMENT ) - 1 );
-    MemBucket & bucket  = s_Buckets[ bucketIndex ];
+    MemBucket & bucket = s_Buckets[ bucketIndex ];
     ASSERT( bucket.m_BlockSize >= size );
 
     // Can bucket satisfy alignment requirement?

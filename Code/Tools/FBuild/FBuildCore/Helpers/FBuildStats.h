@@ -73,6 +73,7 @@ public:
     const Array<const Node *> & GetNodesByTime() const { return m_NodesByTime; }
 
     static void SetIgnoreCompilerNodeDeps( bool b ) { s_IgnoreCompilerNodeDeps = b; }
+
 private:
     enum : uint32_t
     {

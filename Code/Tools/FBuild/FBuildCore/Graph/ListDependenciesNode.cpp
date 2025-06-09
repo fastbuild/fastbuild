@@ -138,8 +138,8 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         {
             if ( !dep.IsWeak() )
             {
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetStaticDependencies() );
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetDynamicDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetStaticDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetDynamicDependencies() );
             }
         }
 
@@ -147,8 +147,8 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         {
             if ( !dep.IsWeak() )
             {
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetStaticDependencies() );
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetDynamicDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetStaticDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetDynamicDependencies() );
             }
         }
     }

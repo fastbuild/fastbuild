@@ -1388,7 +1388,7 @@ test_match:
             {
                 return false;
             }
-            if ( ( pat[ i ] == '?' ) && ( str[i] != '.' ) )
+            if ( ( pat[ i ] == '?' ) && ( str[ i ] != '.' ) )
             {
                 continue;
             }
@@ -1454,7 +1454,7 @@ test_match:
             {
                 return false;
             }
-            if ( ( pat[ i ] == '?' ) && ( str[i] != '.' ) )
+            if ( ( pat[ i ] == '?' ) && ( str[ i ] != '.' ) )
             {
                 continue;
             }
@@ -1510,7 +1510,7 @@ test_match:
 /*static*/ void AString::Copy( const char * src, char * dst, size_t len )
 {
     memmove( dst, src, len );
-    dst[len] = '\000';
+    dst[ len ] = '\000';
 }
 
 // StrLen

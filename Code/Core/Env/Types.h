@@ -100,7 +100,7 @@ typedef signed int          int32_t;
     #define SCAN_STRING( fmt, args )
 #endif
 
-#define ARRAY_SIZE( array ) ( sizeof( array ) / sizeof( array[0] ) )
+#define ARRAY_SIZE( array ) ( sizeof( array ) / sizeof( array[ 0 ] ) )
 
 // Warning disabling
 //------------------------------------------------------------------------------

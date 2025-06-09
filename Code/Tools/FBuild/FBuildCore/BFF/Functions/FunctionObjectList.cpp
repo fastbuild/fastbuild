@@ -52,8 +52,8 @@ FunctionObjectList::FunctionObjectList()
 //------------------------------------------------------------------------------
 bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AString & compilerOptions, const ObjectNode::CompilerFlags objFlags ) const
 {
-    bool hasInputToken   = false;
-    bool hasOutputToken  = false;
+    bool hasInputToken = false;
+    bool hasOutputToken = false;
     bool hasCompileToken = false;
 
     StackArray<AString::TokenRange, 128> tokenRanges;
@@ -306,7 +306,7 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args,
 
         // truncate to just the path
         const char * lastSlash = path.FindLast( NATIVE_SLASH );
-        lastSlash  = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
+        lastSlash = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
         path.SetLength( uint32_t( lastSlash - path.Get() ) );
     }
 }

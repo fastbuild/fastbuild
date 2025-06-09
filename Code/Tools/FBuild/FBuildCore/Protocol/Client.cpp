@@ -601,7 +601,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     // (Due to a Race by the main thread for example)
     bool raceLost = false;
     bool raceWon = false;
-    const Node* node = nullptr;
+    const Node * node = nullptr;
     uint32_t jobSystemErrorCount = 0;
     Job * job = JobQueue::Get().OnReturnRemoteJob( jobId,
                                                    systemError,

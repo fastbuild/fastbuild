@@ -9,7 +9,7 @@ int main( int argc, const char ** argv )
         return 1;
     }
 
-    const char * input  = argv[ 1 ];
+    const char * input = argv[ 1 ];
     const char * output = argv[ 2 ];
 
     // Open source - emulate what a generator would do (scanning source file)

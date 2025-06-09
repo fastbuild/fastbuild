@@ -23,7 +23,7 @@
 //------------------------------------------------------------------------------
 #if defined( __OSX__ ) || defined( __LINUX__ )
     // Touch files every 4 hours
-    #define SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS (60.0f * 60.0f * 4.0f)
+    #define SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS ( 60.0f * 60.0f * 4.0f )
 #endif
 
 // CONSTRUCTOR

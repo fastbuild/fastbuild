@@ -252,7 +252,7 @@ void WorkerThread::WaitForStop()
 // CreateTempFile
 //------------------------------------------------------------------------------
 /*static*/ bool WorkerThread::CreateTempFile( const AString & tmpFileName,
-                                        FileStream & file )
+                                              FileStream & file )
 {
     ASSERT( tmpFileName.IsEmpty() == false );
     ASSERT( PathUtils::IsFullPath( tmpFileName ) );

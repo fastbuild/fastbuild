@@ -338,7 +338,7 @@ void Cache::GetCacheFiles( bool showProgress,
                          (uint32_t)i,
                          NATIVE_SLASH,
                          (uint32_t)j,
-                         NATIVE_SLASH);
+                         NATIVE_SLASH );
             FileIO::GetFilesEx( path, nullptr, false, &outInfo );
 
             // Progress

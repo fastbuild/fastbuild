@@ -236,7 +236,7 @@ PRAGMA_DISABLE_POP_MSVC // 4324
 #define LIGHTCACHE_NUM_BUCKETS ( 1ULL << LIGHTCACHE_NUM_BUCKET_BITS )
 #define LIGHTCACHE_BUCKET_MASK_BASE ( LIGHTCACHE_NUM_BUCKETS - 1ULL )
 // use upper bits for bucket selection, as lower bits get used in the hash set
-#define LIGHTCACHE_HASH_TO_BUCKET(hash) ( (( hash ) >> ( 64ULL - LIGHTCACHE_NUM_BUCKET_BITS )) & LIGHTCACHE_BUCKET_MASK_BASE )
+#define LIGHTCACHE_HASH_TO_BUCKET( hash ) ( ( ( hash ) >> ( 64ULL - LIGHTCACHE_NUM_BUCKET_BITS ) ) & LIGHTCACHE_BUCKET_MASK_BASE )
 static IncludedFileBucket g_AllIncludedFiles[ LIGHTCACHE_NUM_BUCKETS ];
 
 // CONSTRUCTOR
@@ -588,9 +588,9 @@ bool LightCache::ParseMacroName( const char *& pos, AString & outMacroName )
     {
         c = *pos;
         if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||
-                ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
-                ( ( c >= '0' ) && ( c <= '9' ) ) ||
-                ( c == '_' ) )
+             ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
+             ( ( c >= '0' ) && ( c <= '9' ) ) ||
+             ( c == '_' ) )
         {
             ++pos;
             continue;

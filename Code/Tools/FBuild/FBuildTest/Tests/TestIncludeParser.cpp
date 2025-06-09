@@ -446,14 +446,14 @@ void TestIncludeParser::ClangLineEndings() const
     // Depending on the line endings of the source file and files being included
     // it's possible to end up with a variety of line ending types in the preprocessed
     // output when using Clang
-    const char* preprocessedData    = "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\"\n"
-                                      "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r\n"   // Note: CR LF
-                                      "# 1 \"./Empty1.cpp\" 1\r\n"                      // Note: CR LF
-                                      "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n"     // Note: LF
-                                      "# 1 \"./Empty2.cpp\" 1\n"                        // Note: LF
-                                      "# 2 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r"     // Note: CR
-                                      "# 1 \"./Empty3.cpp\" 1\r"                        // Note: CR
-                                      "# 3 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n";
+    const char * preprocessedData = "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\"\n"
+                                    "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r\n"   // Note: CR LF
+                                    "# 1 \"./Empty1.cpp\" 1\r\n"                      // Note: CR LF
+                                    "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n"     // Note: LF
+                                    "# 1 \"./Empty2.cpp\" 1\n"                        // Note: LF
+                                    "# 2 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r"     // Note: CR
+                                    "# 1 \"./Empty3.cpp\" 1\r"                        // Note: CR
+                                    "# 3 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n";
 
     FBuild fb; // needed for CleanPath
 

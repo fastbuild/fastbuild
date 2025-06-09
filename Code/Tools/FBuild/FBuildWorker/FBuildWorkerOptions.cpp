@@ -181,8 +181,7 @@ void FBuildWorkerOptions::ShowUsageError()
                        "        (Windows) Don't spawn a sub-process worker copy.\n"
                        " -periodicrestart\n"
                        "        Worker will restart every 4 hours.\n"
-                       "---------------------------------------------------------------------------\n"
-                       ;
+                       "---------------------------------------------------------------------------\n";
 
     #if defined( __WINDOWS__ )
         ::MessageBox( nullptr, msg, "FBuildWorker - Bad Command Line", MB_ICONERROR | MB_OK );

@@ -48,7 +48,7 @@ public:
 
 private:
     MutexHolder( const MutexHolder & other ) = delete;
-    void operator = ( MutexHolder & ) = delete;
+    void operator=( MutexHolder & ) = delete;
 
     Mutex & m_Mutex;
 };

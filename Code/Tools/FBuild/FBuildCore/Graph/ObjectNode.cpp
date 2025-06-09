@@ -947,7 +947,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // set flags known from the context the args will be used in
     if ( creatingPCH )
     {
-        flags .Set( CompilerFlags::FLAG_CREATING_PCH );
+        flags.Set( CompilerFlags::FLAG_CREATING_PCH );
     }
     if ( usingPCH )
     {
@@ -1046,7 +1046,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         {
             if ( isDistributableCompiler &&
                  !usingWinRT &&
-                 !( flags.IsCreatingPCH() )&&
+                 !( flags.IsCreatingPCH() ) &&
                  !( flags.IsUsingStaticAnalysisMSVC() ) &&
                  !hasSourceMapping )
             {
@@ -1183,7 +1183,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     ASSERT( token.IsEmpty() == false );
 
     // MSVC Compiler args can start with - or /
-    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    if ( ( token[ 0 ] != '/' ) && ( token[ 0 ] != '-' ) )
     {
         return false;
     }
@@ -1206,7 +1206,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     ASSERT( token.IsEmpty() == false );
 
     // MSVC Compiler args can start with - or /
-    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    if ( ( token[ 0 ] != '/' ) && ( token[ 0 ] != '-' ) )
     {
         return false;
     }
@@ -1273,7 +1273,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 CompilerNode * ObjectNode::GetCompiler() const
 {
     // node can be null if compiling remotely
-    const Node * node = m_StaticDependencies[0].GetNode();
+    const Node * node = m_StaticDependencies[ 0 ].GetNode();
     return node ? node->CastTo<CompilerNode>() : nullptr;
 }
 
@@ -1421,7 +1421,7 @@ uint32_t ObjectNode::GetCommandLineKey( Job * job ) const
     {
         // Append the source mapping destination only, so different machines with different
         // working directory local paths compute consistent keys.
-        const AString& sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
+        const AString & sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
         args.AddDelimiter();
         args += sourceMapping;
     }
@@ -1470,7 +1470,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             FLOG_WARN( "Cache returned invalid data\n"
                        " - File: '%s'\n"
                        " - Key : %s\n",
-                       m_Name.Get(), cacheFileName.Get() );
+                       m_Name.Get(),
+                       cacheFileName.Get() );
             cache->FreeMemory( cacheData, cacheDataSize );
             return false;
         }
@@ -1544,7 +1545,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
     {
         FLOG_OUTPUT( "Obj: %s\n"
                      " - Cache Miss: %u ms '%s'\n",
-                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+                     GetName().Get(),
+                     uint32_t( t.GetElapsedMS() ),
+                     cacheFileName.Get() );
     }
 
     SetStatFlag( Node::STATS_CACHE_MISS );
@@ -1576,7 +1579,8 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
         {
             FLOG_OUTPUT( "Obj: %s\n"
                          " - Cache Store Fail: '%s' (local IO problem)\n",
-                         GetName().Get(), GetCacheName( job ).Get() );
+                         GetName().Get(),
+                         GetCacheName( job ).Get() );
         }
         return;
     }
@@ -1664,7 +1668,13 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
             AStackString<> output;
             output.Format( "Obj: %s\n"
                            " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %" PRIu64 " - Uncompressed: %" PRIu64 ") '%s'\n",
-                           GetName().Get(), cachingTime, publishTime, compressionTimeMS, compressedDataSize, uncompressedDataSize, cacheFileName.Get() );
+                           GetName().Get(),
+                           cachingTime,
+                           publishTime,
+                           compressionTimeMS,
+                           compressedDataSize,
+                           uncompressedDataSize,
+                           cacheFileName.Get() );
             if ( m_PCHCacheKey != 0 )
             {
                 output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
@@ -1681,7 +1691,9 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
         {
             FLOG_OUTPUT( "Obj: %s\n"
                          " - Cache Store Fail: %u ms '%s'\n",
-                         GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+                         GetName().Get(),
+                         uint32_t( t.GetElapsedMS() ),
+                         cacheFileName.Get() );
         }
     }
 }
@@ -2007,7 +2019,7 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
 void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const
 {
     // We will trim the buffer
-    const char* outputBuffer = data;
+    const char * outputBuffer = data;
     const size_t outputBufferSize = dataSize;
     size_t newBufferSize = outputBufferSize;
     char * bufferCopy = nullptr;
@@ -2032,7 +2044,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
         bool doVS2012Fixup = false;
         if ( GetCompiler()->GetType() == Node::COMPILER_NODE )
         {
-            const CompilerNode* cn = GetCompiler();
+            const CompilerNode * cn = GetCompiler();
             doVS2012Fixup = cn->IsVS2012EnumBugFixEnabled();
         }
 
@@ -2150,7 +2162,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         // That way GCC will be able to deduce the same language from the name
         // of temporary file as it would do from the original name.
         const char * lastDot = fileName.FindLast( '.' );
-        if ( ( lastDot != nullptr ) && ( lastDot[1] != '\0' ) )
+        if ( ( lastDot != nullptr ) && ( lastDot[ 1 ] != '\0' ) )
         {
             AStackString<> extension( lastDot + 1 );
             if ( extension == "c" )
@@ -2300,11 +2312,11 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
     // spawn the process
     CompileHelper ch( true, job->GetAbortFlagPointer() );
     const Node::BuildResult result = ch.SpawnCompiler( job,
-                                     GetName(),
-                                     GetCompiler(),
-                                     compiler,
-                                     fullArgs,
-                                     workingDir.IsEmpty() ? nullptr : workingDir.Get() );
+                                                       GetName(),
+                                                       GetCompiler(),
+                                                       compiler,
+                                                       fullArgs,
+                                                       workingDir.IsEmpty() ? nullptr : workingDir.Get() );
     if ( result != Node::BuildResult::eOk )
     {
         // did spawn fail, or did we spawn and fail to compile?

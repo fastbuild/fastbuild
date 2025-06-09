@@ -243,9 +243,9 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild_BFFChange() const
 //  - Ensure that libraries are rebuilt when files are deleted
 void TestBuildAndLinkLibrary::DeleteFile() const
 {
-    const char* fileA = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileA.cpp";
-    const char* fileB = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileB.cpp";
-    const char* database = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/fbuild.fdb";
+    const char * fileA = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileA.cpp";
+    const char * fileB = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileB.cpp";
+    const char * database = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/fbuild.fdb";
 
     // Create two empty files
     {

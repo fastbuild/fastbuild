@@ -29,7 +29,7 @@
 
 // Globals
 //------------------------------------------------------------------------------
-static const AString g_DefaultProjectTypeGuid( "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
+static const AString g_DefaultProjectTypeGuid( "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" );
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -232,14 +232,14 @@ VCXProjectNode::VCXProjectNode()
 
         // make the configs
         m_ProjectConfigs.SetCapacity( 4 );
-        config.m_Platform   = "Win32";
-        config.m_Config     = "Debug";
+        config.m_Platform = "Win32";
+        config.m_Config = "Debug";
         m_ProjectConfigs.Append( config );
-        config.m_Config     = "Release";
+        config.m_Config = "Release";
         m_ProjectConfigs.Append( config );
-        config.m_Platform   = "x64";
+        config.m_Platform = "x64";
         m_ProjectConfigs.Append( config );
-        config.m_Config     = "Debug";
+        config.m_Config = "Debug";
         m_ProjectConfigs.Append( config );
     }
 

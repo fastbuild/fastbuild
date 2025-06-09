@@ -166,7 +166,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                 }
 
                 // Create/write file which signifies availability
-                FileIO::EnsurePathExists( m_BrokerageRoots[0] );
+                FileIO::EnsurePathExists( m_BrokerageRoots[ 0 ] );
                 FileStream fs;
                 if ( fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ) )
                 {
@@ -229,11 +229,11 @@ void WorkerBrokerageServer::UpdateBrokerageFilePath()
     {
         if ( !m_IPAddress.IsEmpty() )
         {
-            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_IPAddress.Get() );
+            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[ 0 ].Get(), m_IPAddress.Get() );
         }
         else
         {
-            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
+            m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[ 0 ].Get(), m_HostName.Get() );
         }
     }
 }

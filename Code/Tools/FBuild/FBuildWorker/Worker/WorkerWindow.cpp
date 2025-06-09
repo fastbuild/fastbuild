@@ -79,7 +79,7 @@ WorkerWindow::WorkerWindow()
         // get main window dimensions for positioning/sizing child controls
         RECT rcClient; // The parent window's client area.
         GetClientRect( (HWND)GetHandle(), &rcClient );
-        m_ThreadList->Init( 0, 30, (uint32_t)( rcClient.right - rcClient.left) , (uint32_t)( ( rcClient.bottom - rcClient.top ) - 30 ) );
+        m_ThreadList->Init( 0, 30, (uint32_t)( rcClient.right - rcClient.left ), (uint32_t)( ( rcClient.bottom - rcClient.top ) - 30 ) );
     #elif defined( __OSX__ )
         m_ThreadList->Init( 4, 30, w - 8, h - 38 );
     #endif

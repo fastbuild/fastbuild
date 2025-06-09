@@ -40,7 +40,7 @@ public:
                                                 const AString & nodeName,
                                                 Node::Type nodeType );
     static void Error_1006_NothingToBuild( const BFFToken * iter,
-                                        const Function * function );
+                                           const Function * function );
     static void Error_1007_ExpectedVariable( const BFFToken * iter,
                                              const Function * function );
     static void Error_1008_VariableOfWrongType( const BFFToken * iter,
@@ -255,7 +255,8 @@ private:
     static void FormatError( const BFFToken * iter,
                              uint32_t errNum,
                              const Function * function,
-                             MSVC_SAL_PRINTF const char * message, ... ) FORMAT_STRING( 4, 5 );
+                             MSVC_SAL_PRINTF const char * message,
+                             ... ) FORMAT_STRING( 4, 5 );
 };
 
 //------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ private:
     virtual bool DetermineNeedToBuildStatic() const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
-    const FileNode * GetExecutable() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
+    const FileNode * GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->CastTo<FileNode>(); }
     void GetFullArgs( AString & fullArgs ) const;
     void GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
 

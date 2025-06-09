@@ -91,7 +91,7 @@ public:
         m_Int32 = 1000001;
         m_Int64 = 100000000000001;
         m_Bool = true;
-        m_AString =  "Test string.";
+        m_AString = "Test string.";
 
         m_FloatArray.Append( 111.0f );
         m_FloatArray.Append( 222.0f );

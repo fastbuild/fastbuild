@@ -109,13 +109,13 @@ void FBuildStats::GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node *
     // Total the stats
     for ( uint32_t i = 0; i < Node::NUM_NODE_TYPES; ++i )
     {
-        m_Totals.m_NumProcessed     += m_PerTypeStats[ i ].m_NumProcessed;
-        m_Totals.m_NumBuilt         += m_PerTypeStats[ i ].m_NumBuilt;
-        m_Totals.m_NumCacheHits     += m_PerTypeStats[ i ].m_NumCacheHits;
-        m_Totals.m_NumCacheMisses   += m_PerTypeStats[ i ].m_NumCacheMisses;
-        m_Totals.m_NumCacheStores   += m_PerTypeStats[ i ].m_NumCacheStores;
-        m_Totals.m_NumLightCache    += m_PerTypeStats[ i ].m_NumLightCache;
-        m_Totals.m_CachingTimeMS    += m_PerTypeStats[ i ].m_CachingTimeMS;
+        m_Totals.m_NumProcessed += m_PerTypeStats[ i ].m_NumProcessed;
+        m_Totals.m_NumBuilt += m_PerTypeStats[ i ].m_NumBuilt;
+        m_Totals.m_NumCacheHits += m_PerTypeStats[ i ].m_NumCacheHits;
+        m_Totals.m_NumCacheMisses += m_PerTypeStats[ i ].m_NumCacheMisses;
+        m_Totals.m_NumCacheStores += m_PerTypeStats[ i ].m_NumCacheStores;
+        m_Totals.m_NumLightCache += m_PerTypeStats[ i ].m_NumLightCache;
+        m_Totals.m_CachingTimeMS += m_PerTypeStats[ i ].m_CachingTimeMS;
     }
 }
 
@@ -174,11 +174,11 @@ void FBuildStats::OutputSummary() const
             cacheInfo = "-       -       -       ";
         }
         output.AppendFormat( " - %-10s : %-8u%-8u%s%s\n",
-                        typeName,
-                        stats.m_NumProcessed,
-                        stats.m_NumBuilt,
-                        cacheInfo.Get(),
-                        cpuTime.Get() );
+                             typeName,
+                             stats.m_NumProcessed,
+                             stats.m_NumBuilt,
+                             cacheInfo.Get(),
+                             cpuTime.Get() );
     }
     output += "Cache:\n";
     {

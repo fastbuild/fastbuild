@@ -219,7 +219,7 @@ UnityNode::UnityNode()
         if ( !Function::GetFileNode( nodeGraph,
                                      iter,
                                      function,
-                                      m_IsolateListFile,
+                                     m_IsolateListFile,
                                      "UnityInputIsolateListFile",
                                      isolateFileListNodes ) )
         {
@@ -406,7 +406,7 @@ UnityNode::~UnityNode()
                 break;
             }
 
-            filesInThisUnity.Append( files[index ] );
+            filesInThisUnity.Append( files[ index ] );
 
             // files which are modified (writable) can optionally be excluded from the unity
             bool isolate = false;

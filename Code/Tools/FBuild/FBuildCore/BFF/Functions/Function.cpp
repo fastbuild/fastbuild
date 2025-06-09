@@ -405,7 +405,7 @@ bool Function::GetString( const BFFToken * iter, const BFFVariable *& var, const
 //------------------------------------------------------------------------------
 bool Function::GetString( const BFFToken * iter, AString & var, const char * name, bool required ) const
 {
-    const  BFFVariable * stringVar;
+    const BFFVariable * stringVar;
     if ( !GetString( iter, stringVar, name, required ) )
     {
         return false; // required and missing
@@ -973,7 +973,7 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFToken * iter, con
         }
 
         // Handle empty strings (always required because names can never be empty)
-        if ( strings.IsEmpty() || strings[0].IsEmpty() )
+        if ( strings.IsEmpty() || strings[ 0 ].IsEmpty() )
         {
             Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
             return false;
@@ -986,14 +986,14 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFToken * iter, con
         }
 
         // Check that name isn't already used
-        if ( const Node * existingNode = nodeGraph.FindNode( strings[0] ) )
+        if ( const Node * existingNode = nodeGraph.FindNode( strings[ 0 ] ) )
         {
             const BFFToken * existingToken = nodeGraph.FindNodeSourceToken( existingNode );
-            Error::Error_1100_AlreadyDefined( iter, this, strings[0], existingToken );
+            Error::Error_1100_AlreadyDefined( iter, this, strings[ 0 ], existingToken );
             return false;
         }
 
-        name = strings[0];
+        name = strings[ 0 ];
         return true;
     }
 
@@ -1332,7 +1332,7 @@ bool Function::PopulateString( NodeGraph & nodeGraph, const BFFToken * iter, voi
     if ( variable->IsString() )
     {
         // Handle empty strings
-        if ( strings.IsEmpty() || strings[0].IsEmpty() )
+        if ( strings.IsEmpty() || strings[ 0 ].IsEmpty() )
         {
             if ( required )
             {
@@ -1353,7 +1353,7 @@ bool Function::PopulateString( NodeGraph & nodeGraph, const BFFToken * iter, voi
         }
 
         // String to String
-        property.SetProperty( base, strings[0] );
+        property.SetProperty( base, strings[ 0 ] );
         return true;
     }
 

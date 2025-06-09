@@ -203,7 +203,7 @@
         uint64_t numAllocs = 0;
 
         // for each leak, we'll print a view of the memory
-        char displayChar[256];
+        char displayChar[ 256 ];
         memset( displayChar, '.', sizeof( displayChar ) );
         const char * okChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`1234567890-=!@#$^&*()_+[]{};:'\",<>/?|\\";
         const char * ok = okChars;

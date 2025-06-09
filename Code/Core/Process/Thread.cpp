@@ -344,7 +344,7 @@ uint32_t Thread::JoinWithTimeout( uint32_t timeoutMS, bool & outTimedOut )
                     RaiseException( MS_VC_EXCEPTION, 0, sizeof( info ) / sizeof( ULONG_PTR ), (ULONG_PTR *)&info );
                 }
                 PRAGMA_DISABLE_PUSH_MSVC( 6320 ) // Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER
-                __except( EXCEPTION_EXECUTE_HANDLER )
+                __except ( EXCEPTION_EXECUTE_HANDLER )
                 PRAGMA_DISABLE_POP_MSVC
                 {
                     (void)0;

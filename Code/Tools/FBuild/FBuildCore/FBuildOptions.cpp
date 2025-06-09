@@ -45,7 +45,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     AStackString<> programName( "FBuild.exe" );
     if ( argc > 0 )
     {
-        AStackString<> programPath( argv[0] );
+        AStackString<> programPath( argv[ 0 ] );
         if ( !programPath.IsEmpty() )
         {
             const char * slash = programPath.FindLast( NATIVE_SLASH );
@@ -178,7 +178,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 const int sizeIndex = ( i + 1 );
                 int32_t distLevel;
                 if ( ( sizeIndex >= argc ) ||
-                     ( AString::ScanS( argv[sizeIndex], "%i", &distLevel ) != 1 ) ||
+                     ( AString::ScanS( argv[ sizeIndex ], "%i", &distLevel ) != 1 ) ||
                      ( ( distLevel < -128 ) || ( distLevel > 12 ) ) ) // See Compressor for valid ranges
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <level> for '-distcompressionlevel' argument\n" );
@@ -619,7 +619,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
 {
     DisplayVersion();
     OUTPUT( "--------------------------------------------------------------------------------\n"
-            "Usage: %s [options] [target1]..[targetn]\n", programName.Get() );
+            "Usage: %s [options] [target1]..[targetn]\n",
+            programName.Get() );
     OUTPUT( "--------------------------------------------------------------------------------\n"
             "Options:\n"
             " -cache[read|write]\n"

@@ -364,28 +364,28 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
             const uint32_t items = ls->m_ObjectCount;
 
             // out of date items
-            const uint32_t  outOfDateItems      = ls->m_ObjectCount_OutOfDate;
+            const uint32_t outOfDateItems = ls->m_ObjectCount_OutOfDate;
             if ( outOfDateItems == 0 )
             {
                 continue; // skip library if nothing was done
             }
-            const float     outOfDateItemsPerc  = ( (float)outOfDateItems / (float)items ) * 100.0f;
+            const float outOfDateItemsPerc = ( (float)outOfDateItems / (float)items ) * 100.0f;
 
             // cacheable
-            const uint32_t  cItems       = ls->m_ObjectCount_Cacheable;
-            const float     cItemsPerc   = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
+            const uint32_t cItems = ls->m_ObjectCount_Cacheable;
+            const float cItemsPerc = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
 
             // hits
-            const uint32_t  cHits        = ls->m_ObjectCount_CacheHits;
-            const float     cHitsPerc    = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
+            const uint32_t cHits = ls->m_ObjectCount_CacheHits;
+            const float cHitsPerc = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
 
             // misses
-            const uint32_t  cMisses      = ( cItems - cHits );
-            const float     cMissesPerc  = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
+            const uint32_t cMisses = ( cItems - cHits );
+            const float cMissesPerc = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
 
             // stores
-            const uint32_t  cStores     = ls->m_ObjectCount_CacheStores;
-            const float     cStoreTime  = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
+            const uint32_t cStores = ls->m_ObjectCount_CacheStores;
+            const float cStoreTime = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
 
             // start collapsible section
             if ( numOutput == 10 )
@@ -395,13 +395,18 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
 
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td>%s</td><td style=\"width:70px;\">%u</td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:60px;\">%u</td><td style=\"width:100px;\">%2.3fs</td></tr>\n"
                                        : "<tr><td>%s</td><td>%u</td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u</td><td>%2.3fs</td></tr>\n",
-                        libraryName,
-                        items,
-                        outOfDateItems, (double)outOfDateItemsPerc,
-                        cItems, (double)cItemsPerc,
-                        cHits, (double)cHitsPerc,
-                        cMisses, (double)cMissesPerc,
-                        cStores, (double)cStoreTime );
+                   libraryName,
+                   items,
+                   outOfDateItems,
+                   (double)outOfDateItemsPerc,
+                   cItems,
+                   (double)cItemsPerc,
+                   cHits,
+                   (double)cHitsPerc,
+                   cMisses,
+                   (double)cMissesPerc,
+                   cStores,
+                   (double)cStoreTime );
             numOutput++;
         }
 
@@ -467,10 +472,10 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
         const uint32_t cacheHits = nodeStats.m_NumCacheHits;
 
         Write( "<tr><td>%s</td><td>%2.3fs</td><td>%u</td><td>%u</td>",
-                    typeName,
-                    (double)value,
-                    processed,
-                    built );
+               typeName,
+               (double)value,
+               processed,
+               built );
         if ( type == Node::OBJECT_NODE )
         {
             // cacheable
@@ -522,13 +527,19 @@ void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
             const bool cacheStore = node->GetStatFlag( Node::STATS_CACHE_STORE );
 
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td style=\"width:120px;\">%s</td><td>%s</td></tr>\n"
-                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A" ), name );
+                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n",
+                   (double)time,
+                   type,
+                   cacheHit ? "HIT" : ( cacheStore ? "STORE" : "N/A" ),
+                   name );
         }
         else
         {
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td>%s</td></tr>\n"
-                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, name);
-
+                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n",
+                   (double)time,
+                   type,
+                   name );
         }
         numOutput++;
     }
@@ -595,7 +606,11 @@ void HTMLReport::DoCPUTimeByLibrary()
         const char * name = ls->m_Library->GetName().Get();
         Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%2.3fs</td><td style=\"width:50px;\">%2.1f</td><td style=\"width:70px;\">%u</td><td style=\"width:50px;\">%s</td><td>%s</td></tr>\n"
                                    : "<tr><td>%2.3fs</td><td>%2.1f</td><td>%u</td><td>%s</td><td>%s</td></tr>\n",
-                                        (double)time, (double)perc, objCount, type, name );
+               (double)time,
+               (double)perc,
+               objCount,
+               type,
+               name );
         numOutput++;
     }
 
@@ -667,10 +682,10 @@ void HTMLReport::DoIncludes()
 
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%u</td><td style=\"width:80px;\">%u</td><td style=\"width:60px;\">%s</td><td>%s</td></tr>\n"
                                        : "<tr><td>%u</td><td>%u</td><td>%s</td><td>%s</td></tr>\n",
-                        numObjects,
-                        included,
-                        inPCH ? "YES" : "no",
-                        fileName );
+                   numObjects,
+                   included,
+                   inPCH ? "YES" : "no",
+                   fileName );
             numOutput++;
         }
 

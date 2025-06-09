@@ -146,7 +146,7 @@ CSNode::~CSNode() = default;
         ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
         // get the list of files
-        const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
         const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )

@@ -782,9 +782,9 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteConfigurationList()
 {
-    const char * const sections[3] = { "PBXProject", "PBXLegacyTarget", "PBXNativeTarget" };
-    const char * const ext[3] = { "", "", "-doc" };
-    const uint32_t configStartIds[3] = { 0, 100, 200 };
+    const char * const sections[ 3 ] = { "PBXProject", "PBXLegacyTarget", "PBXNativeTarget" };
+    const char * const ext[ 3 ] = { "", "", "-doc" };
+    const uint32_t configStartIds[ 3 ] = { 0, 100, 200 };
 
     Write( "\n" );
     Write( "/* Begin XCConfigurationList section */\n" );

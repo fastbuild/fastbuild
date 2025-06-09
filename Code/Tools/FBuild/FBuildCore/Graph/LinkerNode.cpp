@@ -522,7 +522,7 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
                     cleanValue.Trim( 0, 1 );
                 }
 
-                fullArgs += token[0]; // reuse whichever prefix, / or -
+                fullArgs += token[ 0 ]; // reuse whichever prefix, / or -
                 fullArgs += "LIBPATH:\"";
                 fullArgs += cleanValue;
                 fullArgs += '\"';
@@ -884,7 +884,7 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
     ASSERT( token.IsEmpty() == false );
 
     // MSVC Linker args can start with - or /
-    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    if ( ( token[ 0 ] != '/' ) && ( token[ 0 ] != '-' ) )
     {
         return false;
     }
@@ -907,7 +907,7 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
     ASSERT( token.IsEmpty() == false );
 
     // MSVC Linker args can start with - or /
-    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    if ( ( token[ 0 ] != '/' ) && ( token[ 0 ] != '-' ) )
     {
         return false;
     }
@@ -930,7 +930,7 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
     ASSERT( token.IsEmpty() == false );
 
     // Args start with -
-    if ( token[0] != '-' )
+    if ( token[ 0 ] != '-' )
     {
         return false;
     }

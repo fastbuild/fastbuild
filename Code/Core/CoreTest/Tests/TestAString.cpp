@@ -752,27 +752,27 @@ void TestAString::Tokenize() const
 
     // double quotes
     CheckTokenize<false>( R"(this is "only three tokens")", "this", "is", R"("only three tokens")" );
-    CheckTokenize<true>(  R"(this is "only three tokens")", "this", "is", "only three tokens" );
+    CheckTokenize<true>( R"(this is "only three tokens")", "this", "is", "only three tokens" );
 
     // quotes inside string
     CheckTokenize<false>( R"(this is -DARG="a b")", "this", "is", R"(-DARG="a b")" );
-    CheckTokenize<true>(  R"(this is -DARG="a b")", "this", "is", R"(-DARG=a b)" );
+    CheckTokenize<true>( R"(this is -DARG="a b")", "this", "is", R"(-DARG=a b)" );
 
     // escaped quotes
     CheckTokenize<false>( R"(-D=\")", R"(-D=\")" );
-    CheckTokenize<true>(  R"(-D=\")", R"(-D=")" );
+    CheckTokenize<true>( R"(-D=\")", R"(-D=")" );
     CheckTokenize<false>( R"(-D=\" -D2)", R"(-D=\")", R"(-D2)" );
-    CheckTokenize<true>(  R"(-D=\" -D2)", R"(-D=")",  R"(-D2)" );
+    CheckTokenize<true>( R"(-D=\" -D2)", R"(-D=")", R"(-D2)" );
     CheckTokenize<false>( R"("-D=   \"   ")", R"("-D=   \"   ")" );
-    CheckTokenize<true>(  R"("-D=   \"   ")", R"(-D=   "   )" );
+    CheckTokenize<true>( R"("-D=   \"   ")", R"(-D=   "   )" );
     CheckTokenize<false>( R"("-D=\" string \"  ")", R"("-D=\" string \"  ")" );
-    CheckTokenize<true>(  R"("-D=\" string \"  ")", R"(-D=" string "  )" );
+    CheckTokenize<true>( R"("-D=\" string \"  ")", R"(-D=" string "  )" );
     CheckTokenize<false>( R"(\")", R"(\")" );
-    CheckTokenize<true>(  R"(\")", R"(")" );
+    CheckTokenize<true>( R"(\")", R"(")" );
 
     // malformed - ensure unterminated quotes are correctly handled
-    CheckTokenize<false>( R"(-X=")" , R"(-X=")" );
-    CheckTokenize<true>(  R"(-X=")" , R"(-X=)" );
+    CheckTokenize<false>( R"(-X=")", R"(-X=")" );
+    CheckTokenize<true>( R"(-X=")", R"(-X=)" );
 
     // alternate split char
     CheckTokenize( "c:\\path\\path;d:\\path;e:\\", ';', "c:\\path\\path", "d:\\path", "e:\\" );

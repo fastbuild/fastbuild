@@ -474,14 +474,14 @@ void TestUnity::LinkMultiple() const
     // that linker is passed correct objects can links successfully.
 
     // Code files generated/used by this test
-    const char* fileA = "../tmp/Test/Unity/LinkMultiple/Generated/A/a.cpp";
-    const char* fileB = "../tmp/Test/Unity/LinkMultiple/Generated/B/b.cpp";
-    const char* main = "../tmp/Test/Unity/LinkMultiple/Generated/main.cpp";
-    const char* fileAContents = "void FunctionA() {}\n";
-    const char* fileBContents = "void FunctionB() {}\n";
-    const char* mainContents = "extern void FunctionA();\n"
-                               "extern void FunctionB();\n"
-                               "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
+    const char * fileA = "../tmp/Test/Unity/LinkMultiple/Generated/A/a.cpp";
+    const char * fileB = "../tmp/Test/Unity/LinkMultiple/Generated/B/b.cpp";
+    const char * main = "../tmp/Test/Unity/LinkMultiple/Generated/main.cpp";
+    const char * fileAContents = "void FunctionA() {}\n";
+    const char * fileBContents = "void FunctionB() {}\n";
+    const char * mainContents = "extern void FunctionA();\n"
+                                "extern void FunctionB();\n"
+                                "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
 
     // Cleanup from previous runs (if files exist)
     FileIO::SetReadOnly( fileA, false );
@@ -599,14 +599,14 @@ void TestUnity::LinkMultiple_InputFiles() const
     // discovering them via directory listings
 
     // Code files generated/used by this test
-    const char* fileA = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/A/a.cpp";
-    const char* fileB = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/B/b.cpp";
-    const char* main = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/main.cpp";
-    const char* fileAContents = "void FunctionA() {}\n";
-    const char* fileBContents = "void FunctionB() {}\n";
-    const char* mainContents = "extern void FunctionA();\n"
-                               "extern void FunctionB();\n"
-                               "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
+    const char * fileA = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/A/a.cpp";
+    const char * fileB = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/B/b.cpp";
+    const char * main = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/main.cpp";
+    const char * fileAContents = "void FunctionA() {}\n";
+    const char * fileBContents = "void FunctionB() {}\n";
+    const char * mainContents = "extern void FunctionA();\n"
+                                "extern void FunctionB();\n"
+                                "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
 
     // Cleanup from previous runs (if files exist)
     FileIO::SetReadOnly( fileA, false );

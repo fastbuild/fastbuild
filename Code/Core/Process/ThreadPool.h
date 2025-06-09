@@ -27,7 +27,7 @@ public:
     uint32_t            GetNumThreads() const { return m_NumThreads; }
 
 protected:
-    void                operator=(const ThreadPool & other) = delete;
+    void                operator=( const ThreadPool & other ) = delete;
 
     static uint32_t     ThreadFuncWrapper( void * userData );
     void                ThreadFunc();
@@ -48,7 +48,8 @@ protected:
         ~ThreadPoolThread();
         void            ThreadFunc();
 
-        void            operator=(const ThreadPoolThread & other) = delete;
+        void            operator=( const ThreadPoolThread & other ) = delete;
+
     protected:
         uint32_t            m_ThreadId = 0;
         Thread              m_Thread;

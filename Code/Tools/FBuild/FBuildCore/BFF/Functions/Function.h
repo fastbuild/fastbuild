@@ -159,7 +159,7 @@ protected:
     bool ProcessAlias( NodeGraph & nodeGraph, Dependencies & nodesToAlias ) const;
 
     // Reflection based property population
-    bool GetNameForNode( NodeGraph & nodeGraph, const BFFToken *iter, const ReflectionInfo * ri, AString & name ) const;
+    bool GetNameForNode( NodeGraph & nodeGraph, const BFFToken * iter, const ReflectionInfo * ri, AString & name ) const;
     bool PopulateProperties( NodeGraph & nodeGraph, const BFFToken * iter, Node * node ) const;
     bool PopulateProperties( NodeGraph & nodeGraph, const BFFToken * iter, void * base, const ReflectionInfo * ri ) const;
     bool PopulateProperty( NodeGraph & nodeGraph, const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;

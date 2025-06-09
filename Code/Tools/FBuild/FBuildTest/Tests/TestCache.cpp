@@ -43,9 +43,9 @@ private:
     void LightCache_ResponseFile() const;
 
     // MSVC Static Analysis tests
-    const char* const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
-    const char* const mAnalyzeMSVCXMLFile1 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file1.nativecodeanalysis.xml";
-    const char* const mAnalyzeMSVCXMLFile2 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file2.nativecodeanalysis.xml";
+    const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
+    const char * const mAnalyzeMSVCXMLFile1 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file1.nativecodeanalysis.xml";
+    const char * const mAnalyzeMSVCXMLFile2 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file2.nativecodeanalysis.xml";
     void Analyze_MSVC_WarningsOnly_Write() const;
     void Analyze_MSVC_WarningsOnly_Read() const;
     void Analyze_MSVC_WarningsOnly_WriteFromDist() const;

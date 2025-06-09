@@ -573,7 +573,7 @@
     #if defined( __WINDOWS__ )
         const DWORD res = GetFileAttributes( path.Get() );
         if ( ( res != INVALID_FILE_ATTRIBUTES ) &&
-            ( ( res & FILE_ATTRIBUTE_DIRECTORY ) != 0 ) )
+             ( ( res & FILE_ATTRIBUTE_DIRECTORY ) != 0 ) )
         {
             return true; // exists and is a folder
         }

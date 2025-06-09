@@ -83,14 +83,14 @@ Env::ProcessorInfo::ProcessorInfo()
         bool isECore = false;
         int32_t cpuIdInfo[ 4 ];
         __cpuid( cpuIdInfo, 0x07 ); // Hybrid Part
-        if ( cpuIdInfo[3] & ( 1 << 15 ) ) // Bit 15 in EDX
+        if ( cpuIdInfo[ 3 ] & ( 1 << 15 ) ) // Bit 15 in EDX
         {
             // Query core type
             __cpuid( cpuIdInfo, 0x1A ); // Core Type
 
             // Determine if this core is a PCore or ECore by checking
             // the top 8 bits in EAX
-            if ( ( static_cast<uint32_t>( cpuIdInfo[0] ) >> 24 ) == 0x20 ) // Intel Atom
+            if ( ( static_cast<uint32_t>( cpuIdInfo[ 0 ] ) >> 24 ) == 0x20 ) // Intel Atom
             {
                 isECore = true;
             }
@@ -267,7 +267,7 @@ Env::ProcessorInfo::ProcessorInfo()
             {
                 cmdLine += ' ';
             }
-            cmdLine += argv[i];
+            cmdLine += argv[ i ];
         }
     #else
         FILE * f = fopen( "/proc/self/cmdline", "rb" );
@@ -450,7 +450,7 @@ static bool IsStdOutRedirectedInternal()
     const size_t numEnvVars = environment.GetSize();
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        len += environment[i].GetLength() + 1;
+        len += environment[ i ].GetLength() + 1;
     }
     len += 1; // for double null
 
@@ -459,7 +459,7 @@ static bool IsStdOutRedirectedInternal()
     const char * environmentString = mem;
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        const AString & envVar = environment[i];
+        const AString & envVar = environment[ i ];
         AString::Copy( envVar.Get(), mem, envVar.GetLength() + 1 );
         mem += ( envVar.GetLength() + 1 );
     }

@@ -513,7 +513,7 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
                 AStackString<> normalizedPath; \
                 TEST_ASSERT( FileIO::NormalizeWindowsPathCasing( AStackString<>( badPath ), normalizedPath ) ); \
                 TEST_ASSERT( normalizedPath == expectedPath ); \
-            } while( false )
+            } while ( false )
 
         // Out test needs to rely on some generally available directory.
         // While technically Windows can be installed on different drives or folders

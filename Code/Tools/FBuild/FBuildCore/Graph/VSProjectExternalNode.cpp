@@ -139,7 +139,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
                     if ( VspteModuleWrapper::Instance()->IsLoaded() )
                     {
                         ExtractedProjData projData;
-                        if ( VspteModuleWrapper::Instance()->Vspte_GetProjData( m_Name.Get(), &projData ))
+                        if ( VspteModuleWrapper::Instance()->Vspte_GetProjData( m_Name.Get(), &projData ) )
                         {
                             // copy project type Guid
                             if ( m_ProjectTypeGuid.IsEmpty() )

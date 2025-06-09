@@ -30,8 +30,14 @@ template <class T, class DELETOR = DeleteDeletor>
 class UniquePtr
 {
 public:
-    explicit UniquePtr() : m_Pointer( nullptr ) {}
-    explicit UniquePtr( T * ptr ) : m_Pointer( ptr ) {}
+    explicit UniquePtr()
+        : m_Pointer( nullptr )
+    {
+    }
+    explicit UniquePtr( T * ptr )
+        : m_Pointer( ptr )
+    {
+    }
     ~UniquePtr() { DELETOR::Delete( m_Pointer ); }
 
     // access the pointer

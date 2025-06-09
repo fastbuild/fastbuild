@@ -129,8 +129,8 @@ bool SharedMemory::Open( const char * name, unsigned int size )
 {
     #if defined( __WINDOWS__ )
         m_MapFile = OpenFileMappingA( FILE_MAP_ALL_ACCESS,  // read/write access
-                                        FALSE,              // do not inherit the name
-                                        name );             // name of mapping object
+                                      FALSE,                // do not inherit the name
+                                      name );               // name of mapping object
         if ( m_MapFile )
         {
             m_Memory = MapViewOfFile( m_MapFile,            // handle to map object

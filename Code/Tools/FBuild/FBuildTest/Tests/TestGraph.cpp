@@ -554,8 +554,8 @@ void TestGraph::DBLocationChanged() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseMoved/fbuild.bff";
 
-    const char* dbFile1 = "../tmp/Test/Graph/DatabaseMoved/1/GraphMoved.fdb";
-    const char* dbFile2 = "../tmp/Test/Graph/DatabaseMoved/2/GraphMoved.fdb";
+    const char * dbFile1 = "../tmp/Test/Graph/DatabaseMoved/1/GraphMoved.fdb";
+    const char * dbFile2 = "../tmp/Test/Graph/DatabaseMoved/2/GraphMoved.fdb";
 
     EnsureFileDoesNotExist( dbFile1 );
     EnsureFileDoesNotExist( dbFile2 );
@@ -597,15 +597,15 @@ void TestGraph::DBCorrupt() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseCorrupt/fbuild.bff";
 
     // We'll save a valid DB, corrupt it and ensure that's detected
-    const char* dbFile = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb";
-    const char* dbFileCorrupt = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb.corrupt";
+    const char * dbFile = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb";
+    const char * dbFileCorrupt = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb.corrupt";
 
     // Clear all copies of the DB first
     EnsureFileDoesNotExist( dbFile );
     EnsureFileDoesNotExist( dbFileCorrupt );
 
     // Test corruption at various places in the file
-    static_assert( sizeof(NodeGraphHeader) == 16, "Update test for DB format change" );
+    static_assert( sizeof( NodeGraphHeader ) == 16, "Update test for DB format change" );
     static const uint32_t corruptionOffsets[] =
     {
         0,      // Header - magic identifier
@@ -658,9 +658,9 @@ void TestGraph::DBCorrupt() const
 //------------------------------------------------------------------------------
 void TestGraph::BFFDirtied() const
 {
-    const char * originalBFF   = "Tools/FBuild/FBuildTest/Data/TestGraph/BFFDirtied/fbuild.bff";
-    const char * copyOfBFF     = "../tmp/Test/Graph/BFFDirtied/fbuild.bff";
-    const char * dbFile        = "../tmp/Test/Graph/BFFDirtied/fbuild.fdb";
+    const char * originalBFF = "Tools/FBuild/FBuildTest/Data/TestGraph/BFFDirtied/fbuild.bff";
+    const char * copyOfBFF = "../tmp/Test/Graph/BFFDirtied/fbuild.bff";
+    const char * dbFile = "../tmp/Test/Graph/BFFDirtied/fbuild.fdb";
 
     EnsureFileDoesNotExist( copyOfBFF );
     EnsureFileDoesNotExist( dbFile );

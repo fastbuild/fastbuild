@@ -273,7 +273,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     {
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF("  <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
             Write( "    <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />\n" );
             Write( "  </ImportGroup>\n" );
         }
@@ -414,7 +414,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     {
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF("  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
             Write( "    <BuildLog>\n" );
             if ( !config.m_BuildLogFile.IsEmpty() )
             {
@@ -437,9 +437,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     }
 
     // footer
-    Write("  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />\n" );
-    Write("  <ImportGroup Label=\"ExtensionTargets\">\n" );
-    Write("  </ImportGroup>\n" );
+    Write( "  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />\n" );
+    Write( "  <ImportGroup Label=\"ExtensionTargets\">\n" );
+    Write( "  </ImportGroup>\n" );
     for ( const VSProjectImport & import : projectImports )
     {
         WriteF( "  <Import Condition=\"%s\" Project=\"%s\" />\n", import.m_Condition.Get(), import.m_Project.Get() );

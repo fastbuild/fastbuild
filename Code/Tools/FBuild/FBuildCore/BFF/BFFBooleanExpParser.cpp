@@ -61,8 +61,8 @@ static const BFFVariable * GetVar( const Function * function, const BFFToken * t
     }
 
     const BFFVariable * var = nullptr;
-    const BFFStackFrame * varFrame = (varParentScope) ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
-                                                      : nullptr;
+    const BFFStackFrame * varFrame = ( varParentScope ) ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
+                                                        : nullptr;
     if ( false == varParentScope )
     {
         var = BFFStackFrame::GetVar( varName, nullptr );
@@ -723,7 +723,7 @@ static bool ParseBinaryBooleanExp( const Function * function, bool lhs, BFFToken
 {
     const BFFToken * opToken = iter.GetCurrent();
     BoolOperator op = BoolOperator::OP_UNKNOWN;
-    if ( !ParseOperator( function, iter, op, sBoolOperators, ARRAY_SIZE(sBoolOperators) ) )
+    if ( !ParseOperator( function, iter, op, sBoolOperators, ARRAY_SIZE( sBoolOperators ) ) )
     {
         return false;
     }

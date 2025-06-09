@@ -49,7 +49,7 @@ public:
 
     // Prevent copies (to be sure we're moving)
     BFFToken( BFFToken & ) = delete;
-    BFFToken & operator = ( BFFToken & ) = delete;
+    BFFToken & operator=( BFFToken & ) = delete;
 
     // Convenience wrappers
     bool IsInvalid() const                          { return ( m_Type == BFFTokenType::Invalid ); }

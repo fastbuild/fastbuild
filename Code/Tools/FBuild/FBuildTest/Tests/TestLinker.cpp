@@ -254,8 +254,8 @@ void TestLinker::IncrementalLinking_MSVC() const
     options.m_ShowCommandOutput = true; // Show linker output so we can check analyze /VERBOSE output
 
     // Files
-    const char * dbFile     = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/fbuild.fdb";
-    const char * cppFileB   = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/FileB.cpp";
+    const char * dbFile = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/fbuild.fdb";
+    const char * cppFileB = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/FileB.cpp";
 
     // Create temp output directory
     TEST_ASSERT( FileIO::EnsurePathExistsForFile( AStackString<>( cppFileB ) ) );

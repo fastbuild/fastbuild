@@ -132,10 +132,10 @@ void TestObject::Preprocessor() const
 //------------------------------------------------------------------------------
 void TestObject::TestStaleDynamicDeps() const
 {
-    const char* fileA = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
-    const char* fileB = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
-    const char* fileC = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileC.h";
-    const char* database = "../tmp/Test/Object/StaleDynamicDeps/fbuild.fdb";
+    const char * fileA = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
+    const char * fileB = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
+    const char * fileC = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileC.h";
+    const char * database = "../tmp/Test/Object/StaleDynamicDeps/fbuild.fdb";
 
     // Build CPP Generator
     {
@@ -499,7 +499,7 @@ void TestObject::ClangExplicitLanguageType() const
 {
     // Ensure explicitly set language args ("-x c++" etc) are replaced with the
     // correct equivalent for preprocessed code ("-x c++-cpp-output" etc)
-    const char* const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangExplicitLanguageType/fbuild.bff";
+    const char * const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangExplicitLanguageType/fbuild.bff";
 
     // Local
     {
@@ -543,7 +543,7 @@ void TestObject::ClangDependencyArgs() const
     // Ensure explicitly dependency options are removed from the second pass of
     // compilation. Some integrations (like Unreal) use these commands and process
     // the output.
-    const char* const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangDependencyArgs/fbuild.bff";
+    const char * const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangDependencyArgs/fbuild.bff";
 
     // Local
     {

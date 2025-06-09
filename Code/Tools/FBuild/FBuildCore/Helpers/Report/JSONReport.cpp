@@ -301,28 +301,28 @@ void JSONReport::DoCacheStats( const FBuildStats & /*stats*/ )
             const uint32_t totalItemsCount = ls->m_ObjectCount;
 
             // out of date items
-            const uint32_t  outOfDateItems = ls->m_ObjectCount_OutOfDate;
+            const uint32_t outOfDateItems = ls->m_ObjectCount_OutOfDate;
             if ( outOfDateItems == 0 )
             {
                 continue; // skip library if nothing was done
             }
-            const float     outOfDateItemsPerc = ( (float)outOfDateItems / (float)totalItemsCount ) * 100.0f;
+            const float outOfDateItemsPerc = ( (float)outOfDateItems / (float)totalItemsCount ) * 100.0f;
 
             // cacheable
-            const uint32_t  cItems      = ls->m_ObjectCount_Cacheable;
-            const float     cItemsPerc  = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
+            const uint32_t cItems = ls->m_ObjectCount_Cacheable;
+            const float cItemsPerc = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
 
             // hits
-            const uint32_t  cHits       = ls->m_ObjectCount_CacheHits;
-            const float     cHitsPerc   = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
+            const uint32_t cHits = ls->m_ObjectCount_CacheHits;
+            const float cHitsPerc = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
 
             // misses
-            const uint32_t  cMisses     = ( cItems - cHits );
-            const float     cMissesPerc = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
+            const uint32_t cMisses = ( cItems - cHits );
+            const float cMissesPerc = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
 
             // stores
-            const uint32_t  cStores     = ls->m_ObjectCount_CacheStores;
-            const float     cStoreTime  = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
+            const uint32_t cStores = ls->m_ObjectCount_CacheStores;
+            const float cStoreTime = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
 
             if ( numOutput > 0 )
             {
@@ -421,7 +421,7 @@ void JSONReport::DoCPUTimeByLibrary()
         const uint32_t objCount = ls->m_ObjectCount_OutOfDate;
         const float time = ( (float)ls->m_CPUTimeMS * 0.001f ); // ms to s
         const float perc = (float)( (double)time / (double)totalS * 100 );
-        const char* type = ls->m_Library->GetTypeName();
+        const char * type = ls->m_Library->GetTypeName();
         switch ( ls->m_Library->GetType() )
         {
             case Node::LIBRARY_NODE:        type = "Static"; break;

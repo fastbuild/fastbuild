@@ -88,7 +88,7 @@ NodeGraph::NodeGraph( unsigned nodeMapHashBits )
     m_UsedFiles.SetCapacity( 16 );
 
     ASSERT( nodeMapHashBits > 0 && nodeMapHashBits < 32 );
-    m_NodeMap = FNEW_ARRAY( Node * [ m_NodeMapMaxKey + 1 ] );
+    m_NodeMap = FNEW_ARRAY( Node * [m_NodeMapMaxKey + 1] );
     memset( m_NodeMap, 0, sizeof( Node * ) * ( m_NodeMapMaxKey + 1 ) );
 
     #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
@@ -673,8 +673,8 @@ void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
 // SerializeToDot
 //------------------------------------------------------------------------------
 /*static*/ void NodeGraph::SerializeToDot( Node * node,
-                                                 const bool fullGraph,
-                                                 AString & outBuffer )
+                                           const bool fullGraph,
+                                           AString & outBuffer )
 {
     // Early out for nodes we've already visited
     if ( node->GetBuildPassTag() == s_BuildPassTag )
@@ -713,11 +713,11 @@ void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
 // SerializeToDot
 //------------------------------------------------------------------------------
 /*static*/ void NodeGraph::SerializeToDot( const char * dependencyType,
-                                                 const char * style,
-                                                 const Node * node,
-                                                 const Dependencies & dependencies,
-                                                 const bool fullGraph,
-                                                 AString & outBuffer )
+                                           const char * style,
+                                           const Node * node,
+                                           const Dependencies & dependencies,
+                                           const bool fullGraph,
+                                           AString & outBuffer )
 {
     if ( dependencies.IsEmpty() )
     {
@@ -761,8 +761,8 @@ void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
 // SerializeToDot
 //------------------------------------------------------------------------------
 /*static*/ void NodeGraph::SerializeToDot( const Dependencies & dependencies,
-                                                 const bool fullGraph,
-                                                 AString & outBuffer )
+                                           const bool fullGraph,
+                                           AString & outBuffer )
 {
     for ( const Dependency & dep : dependencies )
     {
@@ -1446,7 +1446,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array<NodeWi
 
     for ( size_t i = 0; i <= m_NodeMapMaxKey; i++ )
     {
-        for ( Node * node = m_NodeMap[i] ; nullptr != node ; node = node->m_Next )
+        for ( Node * node = m_NodeMap[ i ]; nullptr != node; node = node->m_Next )
         {
             const uint32_t d = LevenshteinDistance::DistanceI( fullPath, node->GetName() );
 
@@ -1498,18 +1498,18 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array<NodeWi
                 size_t pos = count;
                 for ( ; pos > 0; pos-- )
                 {
-                    if ( nodes[pos - 1].m_Distance <= d )
+                    if ( nodes[ pos - 1 ].m_Distance <= d )
                     {
                         break;
                     }
                     else if ( pos < nodes.GetSize() )
                     {
-                        nodes[pos] = nodes[pos - 1];
+                        nodes[ pos ] = nodes[ pos - 1 ];
                     }
                 }
 
                 ASSERT( pos < count );
-                nodes[pos] = NodeWithDistance( node, d );
+                nodes[ pos ] = NodeWithDistance( node, d );
                 worstMinDistance = nodes.Top().m_Distance;
             }
         }

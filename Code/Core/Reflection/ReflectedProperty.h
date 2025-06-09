@@ -145,6 +145,7 @@ public:
     const Struct *  GetStructInArray( const void * object, size_t index ) const;
 
     const ReflectionInfo * GetStructReflectionInfo() const { return m_StructReflectionInfo; }
+
 private:
     const ReflectionInfo * m_StructReflectionInfo;
 };

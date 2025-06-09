@@ -78,14 +78,14 @@ public:
     // comparison
     [[nodiscard]] bool          operator==( const char * other ) const;
     [[nodiscard]] bool          operator==( const AString & other ) const;
-    [[nodiscard]] bool          operator!=( const char * other ) const { return !(*this == other ); }
-    [[nodiscard]] bool          operator!=( const AString & other ) const { return !(*this == other ); }
+    [[nodiscard]] bool          operator!=( const char * other ) const { return !( *this == other ); }
+    [[nodiscard]] bool          operator!=( const AString & other ) const { return !( *this == other ); }
     [[nodiscard]] int32_t       Compare( const AString & other ) const;
     [[nodiscard]] int32_t       Compare( const char * other ) const;
     [[nodiscard]] int32_t       CompareI( const AString & other ) const;
     [[nodiscard]] int32_t       CompareI( const char * other ) const;
-    [[nodiscard]] bool          Equals( const char * other ) const { return (*this == other ); }
-    [[nodiscard]] bool          Equals( const AString & other ) const { return (*this == other ); }
+    [[nodiscard]] bool          Equals( const char * other ) const { return ( *this == other ); }
+    [[nodiscard]] bool          Equals( const AString & other ) const { return ( *this == other ); }
     [[nodiscard]] bool          EqualsI( const char * other ) const { return ( CompareI( other ) == 0 ); }
     [[nodiscard]] bool          EqualsI( const AString & other ) const { return ( CompareI( other ) == 0 ); }
     [[nodiscard]] bool          operator < ( const AString & other ) const { return ( Compare( other ) < 0 ); }

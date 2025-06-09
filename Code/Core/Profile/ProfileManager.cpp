@@ -102,7 +102,7 @@ void ProfileEventBuffer::Start( const char * id )
     m_CurrentDepth++;
 
     e->m_Id = id;
-    e->m_TimeStamp =  Timer::GetNow();
+    e->m_TimeStamp = Timer::GetNow();
 
     ++e;
     m_Current = e;

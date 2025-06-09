@@ -80,8 +80,8 @@ public:
     void                        PopFront(); // expensive - shuffles everything in the array!
     void                        Erase( T * const iter );
     void                        EraseIndex( size_t index ) { Erase( m_Begin + index ); }
-    template <class ... ARGS>
-    T &                         EmplaceBack( ARGS && ... args );
+    template <class... ARGS>
+    T &                         EmplaceBack( ARGS &&... args );
 
     Array &                     operator=( const Array<T> & other );
     Array &                     operator=( Array<T> && other );
@@ -680,7 +680,7 @@ public:
     }
     StackArray( const StackArray<T> & other )
     {
-        Array<T>::m_Begin = (T *)& m_Storage;
+        Array<T>::m_Begin = (T *)&m_Storage;
         Array<T>::m_Size = 0;
         Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
         Array<T>::operator=( Move( other ) );

@@ -28,7 +28,7 @@ CompilerDriverBase::~CompilerDriverBase() = default;
 void CompilerDriverBase::Init( const ObjectNode * objectNode,
                                const AString & remoteSourceRoot )
 {
-    m_ObjectNode= objectNode;
+    m_ObjectNode = objectNode;
     m_RemoteSourceRoot = remoteSourceRoot;
 }
 

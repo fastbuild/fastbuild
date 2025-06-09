@@ -274,7 +274,7 @@ bool FBuild::GetTargets( const Array<AString> & targets, Dependencies & outDeps 
                 const size_t count = nearestNodes.GetSize();
                 for ( size_t j = 0; j < count; ++j )
                 {
-                    FLOG_WARN( "    %s", nearestNodes[j].m_Node->GetName().Get() );
+                    FLOG_WARN( "    %s", nearestNodes[ j ].m_Node->GetName().Get() );
                 }
             }
 
@@ -583,7 +583,8 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
             if ( envVar.GetHash() != hash )
             {
                 FLOG_ERROR( "Overwriting imported environment variable '%s' with a different value = '%s'",
-                            name, value.Get() );
+                            name,
+                            value.Get() );
                 return false;
             }
 

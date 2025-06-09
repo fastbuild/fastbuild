@@ -297,9 +297,9 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     if ( !ms.Read( toolId ) ||
          !ms.Read( mainExecutablePath ) ||
          !ms.Read( numFiles ) ||
-        ( AString::StrLen( mainExecutablePath.Get() ) != mainExecutablePath.GetLength() ) ||
-        ( numFiles == 0 ) ||        // Must have at least 1 file
-        ( toolId != m_ToolId ) )    // Must have correct toolId
+         ( AString::StrLen( mainExecutablePath.Get() ) != mainExecutablePath.GetLength() ) ||
+         ( numFiles == 0 ) ||        // Must have at least 1 file
+         ( toolId != m_ToolId ) )    // Must have correct toolId
     {
         return false; // Corrupt stream (likely old broken worker)
     }
@@ -317,9 +317,9 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
              !ms.Read( timeStamp ) ||
              !ms.Read( hash ) ||
              !ms.Read( uncompressedContentSize ) ||
-            ( AString::StrLen( name.Get() ) != name.GetLength() ) ||
-            ( timeStamp == 0 ) ||
-            ( hash == 0 ) )
+             ( AString::StrLen( name.Get() ) != name.GetLength() ) ||
+             ( timeStamp == 0 ) ||
+             ( hash == 0 ) )
         {
             return false; // Corrupt stream (likely old broken worker)
         }
@@ -418,7 +418,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        const AString & envVar = m_CustomEnvironmentVariables[i];
+        const AString & envVar = m_CustomEnvironmentVariables[ i ];
         if ( envVar.Find( "%1" ) )
         {
             len += envVar.GetLength() - 2 + basePath.GetLength() + 1;   // If there is a %1 it will be removed and replaced by the basePath. +1 for the null terminator.
@@ -448,7 +448,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        const AString & envVar = m_CustomEnvironmentVariables[i];
+        const AString & envVar = m_CustomEnvironmentVariables[ i ];
         const char * token = envVar.Find( "%1" );
         if ( token )
         {

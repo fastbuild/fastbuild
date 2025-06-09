@@ -68,16 +68,16 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
 void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
                                 const AString & solutionMinimumVisualStudioVersion )
 {
-    const char * defaultVersion         = "14.0.22823.1"; // Visual Studio 2015 RC
-    const char * defaultMinimumVersion  = "10.0.40219.1"; // Visual Studio Express 2010
+    const char * defaultVersion = "14.0.22823.1"; // Visual Studio 2015 RC
+    const char * defaultMinimumVersion = "10.0.40219.1"; // Visual Studio Express 2010
 
     const char * version = ( solutionVisualStudioVersion.GetLength() > 0 )
                          ? solutionVisualStudioVersion.Get()
-                         : defaultVersion ;
+                         : defaultVersion;
 
     const char * minimumVersion = ( solutionMinimumVisualStudioVersion.GetLength() > 0 )
                                 ? solutionMinimumVisualStudioVersion.Get()
-                                : defaultMinimumVersion ;
+                                : defaultMinimumVersion;
 
     const char * shortVersionStart = version;
     const char * shortVersionEnd = version;
@@ -120,7 +120,7 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
         const AString & projectPath = project->GetName();
 
         // get project base name only
-        const char * lastSlash  = projectPath.FindLast( NATIVE_SLASH );
+        const char * lastSlash = projectPath.FindLast( NATIVE_SLASH );
         const char * lastPeriod = projectPath.FindLast( '.' );
         AStackString<> projectName( lastSlash  ? lastSlash + 1  : projectPath.Get(),
                                     lastPeriod ? lastPeriod     : projectPath.GetEnd() );
@@ -145,7 +145,10 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
         projectTypeGuid.ToUpper();
 
         Write( "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n",
-               projectTypeGuid.Get(), projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
+               projectTypeGuid.Get(),
+               projectName.Get(),
+               solutionRelativePath.Get(),
+               projectGuid.Get() );
 
         // Manage dependencies
         StackArray<AString> dependencyGUIDs;
@@ -248,7 +251,9 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
         solutionFolderGuid.ToUpper();
 
         Write( "Project(\"{2150E333-8FDC-42A3-9474-1A3956D46DE8}\") = \"%s\", \"%s\", \"%s\"\r\n",
-               solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
+               solutionFolderName,
+               solutionFolderName,
+               solutionFolderGuid.Get() );
 
         // lookup solution folder to find out if it contains items
         for ( const SolutionFolder & solutionFolder : solutionFolders )
@@ -291,8 +296,10 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array<SolutionConf
     for ( const SolutionConfig & solutionConfig : solutionConfigs )
     {
         Write( "\t\t%s|%s = %s|%s\r\n",
-               solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
-               solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get() );
+               solutionConfig.m_SolutionConfig.Get(),
+               solutionConfig.m_SolutionPlatform.Get(),
+               solutionConfig.m_SolutionConfig.Get(),
+               solutionConfig.m_SolutionPlatform.Get() );
     }
 
     Write( "\tEndGlobalSection\r\n" );
@@ -315,8 +322,10 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const Array<SolutionConfi
         {
             Write( "\t\t%s.%s|%s.ActiveCfg = %s|%s\r\n",
                    projectGuid.Get(),
-                   solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
-                   solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
+                   solutionConfig.m_SolutionConfig.Get(),
+                   solutionConfig.m_SolutionPlatform.Get(),
+                   solutionConfig.m_Config.Get(),
+                   solutionConfig.m_Platform.Get() );
 
             // Is project active in solution build?
             bool projectIsActive = false;
@@ -344,15 +353,19 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const Array<SolutionConfi
             {
                 Write( "\t\t%s.%s|%s.Build.0 = %s|%s\r\n",
                        projectGuid.Get(),
-                       solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
-                       solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
+                       solutionConfig.m_SolutionConfig.Get(),
+                       solutionConfig.m_SolutionPlatform.Get(),
+                       solutionConfig.m_Config.Get(),
+                       solutionConfig.m_Platform.Get() );
             }
             if ( projectDeployEnabled )
             {
                 Write( "\t\t%s.%s|%s.Deploy.0 = %s|%s\r\n",
                        projectGuid.Get(),
-                       solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
-                       solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
+                       solutionConfig.m_SolutionConfig.Get(),
+                       solutionConfig.m_SolutionPlatform.Get(),
+                       solutionConfig.m_Config.Get(),
+                       solutionConfig.m_Platform.Get() );
             }
         }
     }

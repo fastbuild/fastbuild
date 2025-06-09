@@ -31,7 +31,7 @@ bool LockSystemMutex( const char * name )
         }
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        char tempFileName[256];
+        char tempFileName[ 256 ];
         snprintf( tempFileName, sizeof( tempFileName ), "/tmp/%s.lock", name );
         int handle = open( tempFileName, O_CREAT | O_RDWR, 0666 );
         if ( handle < 0 )
@@ -65,7 +65,7 @@ bool Spawn( const char * exe, const char * mutexId )
         si.wShowWindow = SW_HIDE;
 
         // Prepare args
-        char fullArgs[256];
+        char fullArgs[ 256 ];
         sprintf_s( fullArgs, "\"%s\" %s", exe, mutexId );
 
         // create the child
@@ -141,7 +141,7 @@ int main( int argc, char ** argv )
     // Spawn child if we're not the last one
     if ( mutexId < 4 )
     {
-        char mutexIdString[2] = { ' ', 0 };
+        char mutexIdString[ 2 ] = { ' ', 0 };
         mutexIdString[ 0 ] = (char)( '0' + mutexId + 1 );
         if ( !Spawn( argv[ 0 ], mutexIdString ) )
         {
@@ -151,7 +151,7 @@ int main( int argc, char ** argv )
     }
 
     // Acquire SystemMutex which test uses to check our lifetimes
-    const char * const mutexNames[4] =
+    const char * const mutexNames[ 4 ] =
     {
         "FASTBuildFastCancelTest1",
         "FASTBuildFastCancelTest2",

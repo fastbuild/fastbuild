@@ -277,7 +277,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 {
     // Stamp static and dynamic dependencies (prebuild deps don't need stamping
     // as they are never trigger builds)
-    Dependencies * allDeps[2] = { &m_StaticDependencies, &m_DynamicDependencies };
+    Dependencies * allDeps[ 2 ] = { &m_StaticDependencies, &m_DynamicDependencies };
     for ( Dependencies * deps : allDeps )
     {
         for ( Dependency & dep : *deps )
@@ -1007,7 +1007,7 @@ void Node::ReplaceDummyName( const AString & newName )
     }
     // Ignore warnings from the underlying assembler such as:
     // - warning 2006 in line 307: bad extension - using default
-    if ( tokens[5] != "of" )
+    if ( tokens[ 5 ] != "of" )
     {
         return;
     }
@@ -1053,9 +1053,9 @@ void Node::ReplaceDummyName( const AString & newName )
     // Is this a Linux path (under WSL for example)
     if ( ( path.GetLength() >= 7 ) &&
          path.BeginsWith( "/mnt/" ) &&
-         ( path[6] == '/' ) )
+         ( path[ 6 ] == '/' ) )
     {
-        const char driveLetter = path[5];
+        const char driveLetter = path[ 5 ];
 
         // convert /mnt/X/... -> X:/...
         outFixedPath.AppendFormat( "%c:%s", driveLetter, ( path.Get() + 6 ) );
@@ -1187,7 +1187,7 @@ bool Node::InitializeConcurrencyGroup( NodeGraph & nodeGraph,
 
     // Get the ConcurrencyGroup by name
     const ConcurrencyGroup * group = nullptr;
-    const SettingsNode * settings  = nodeGraph.GetSettings();
+    const SettingsNode * settings = nodeGraph.GetSettings();
     if ( settings )
     {
         group = settings->GetConcurrencyGroup( concurrencyGroupName );

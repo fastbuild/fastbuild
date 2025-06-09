@@ -136,7 +136,7 @@ void TestPrecompiledHeaders::TestPCH() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::EXE_NODE );
-    CheckStatsTotal( stats, numF+7, 10 );
+    CheckStatsTotal( stats, numF + 7, 10 );
 
     // check we wrote all objects to the cache
     TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 ); // pch and obj using pch
@@ -191,7 +191,7 @@ void TestPrecompiledHeaders::TestPCH_NoRebuild() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::EXE_NODE );
-    CheckStatsTotal( stats, 7+numF, 2+numF );
+    CheckStatsTotal( stats, 7 + numF, 2 + numF );
 }
 
 // TestPCH_NoRebuild_BFFChange
@@ -215,7 +215,7 @@ void TestPrecompiledHeaders::TestPCH_NoRebuild_BFFChange() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::EXE_NODE );
-    CheckStatsTotal( stats, 7+numF, 2+numF );
+    CheckStatsTotal( stats, 7 + numF, 2 + numF );
 }
 
 // TestPCHWithCache
@@ -257,7 +257,7 @@ void TestPrecompiledHeaders::TestPCHWithCache() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::EXE_NODE );
-    CheckStatsTotal( stats, 7+numF, 8 );
+    CheckStatsTotal( stats, 7 + numF, 8 );
 
     // check all objects came from the cache
     TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 2 ); // pch & obj
@@ -282,7 +282,7 @@ void TestPrecompiledHeaders::TestPCHWithCache_NoRebuild() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::EXE_NODE );
-    CheckStatsTotal( stats, 7+numF, 2+numF );
+    CheckStatsTotal( stats, 7 + numF, 2 + numF );
 }
 
 // TestPCHWithCache_BFFChange
@@ -328,7 +328,7 @@ void TestPrecompiledHeaders::TestPCHWithCache_BFFChange() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::EXE_NODE );
-    CheckStatsTotal( stats, 7+numF, 4+numF );
+    CheckStatsTotal( stats, 7 + numF, 4 + numF );
 
     // Ensure the object was pulled from the cache
     TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 1 );
@@ -457,7 +457,7 @@ void TestPrecompiledHeaders::CacheUniqueness2() const
 
         TEST_ASSERT( fBuild.Build( target ) );
 
-        TEST_ASSERT(FBuild::Get().GetStats().GetCacheStores() == 4);
+        TEST_ASSERT( FBuild::Get().GetStats().GetCacheStores() == 4 );
         CheckStatsNode ( 4,      4,      Node::OBJECT_NODE );
         CheckStatsNode ( 2,      2,      Node::OBJECT_LIST_NODE );
     }
@@ -471,7 +471,7 @@ void TestPrecompiledHeaders::CacheUniqueness2() const
 
         TEST_ASSERT( fBuild.Build( target ) );
 
-        TEST_ASSERT(FBuild::Get().GetStats().GetCacheHits() == 4);
+        TEST_ASSERT( FBuild::Get().GetStats().GetCacheHits() == 4 );
         CheckStatsNode ( 4,      0,      Node::OBJECT_NODE );
         CheckStatsNode ( 2,      2,      Node::OBJECT_LIST_NODE );
     }
