@@ -363,7 +363,7 @@
                                   GetFilesHelper & helper )
 {
     // make a copy of the path as it will be modified during recursion
-    AStackString<> pathCopy( path );
+    AStackString pathCopy( path );
     PathUtils::EnsureTrailingSlash( pathCopy );
     GetFilesRecurse( pathCopy, helper );
 }
@@ -602,7 +602,7 @@
     }
 
     // take a copy to locally manipulate
-    AStackString<> pathCopy( path );
+    AStackString pathCopy( path );
     PathUtils::FixupFolderPath( pathCopy ); // ensure correct slash type and termination
 
     // handle UNC paths by skipping leading slashes and machine name
@@ -663,7 +663,7 @@
     const char * lastSlashB = name.FindLast( OTHER_SLASH );
     const char * lastSlash = lastSlashA > lastSlashB ? lastSlashA : lastSlashB;
     ASSERT( lastSlash ); // Caller must pass something valid
-    AStackString<> pathOnly( name.Get(), lastSlash );
+    AStackString pathOnly( name.Get(), lastSlash );
     return EnsurePathExists( pathOnly );
 }
 
@@ -702,7 +702,7 @@
             nextSlash = nextSlash ? nextSlash : path.Find( '/', pos );
 
             // Get the actual name for this part of the path
-            AStackString<> pathSoFar( outNormalizedPath );
+            AStackString pathSoFar( outNormalizedPath );
             if ( nextSlash )
             {
                 pathSoFar.Append( pos, static_cast<uint32_t>( nextSlash - pos ) );
@@ -769,7 +769,7 @@
         }
 
         // stat parent dir
-        AStackString<> pathCopy( path ); // dirname modifies string, so we need a copy
+        AStackString pathCopy( path ); // dirname modifies string, so we need a copy
         const char * parentName = dirname( pathCopy.Get() );
         struct stat parentStat;
         if ( stat( parentName, &parentStat ) != 0 )

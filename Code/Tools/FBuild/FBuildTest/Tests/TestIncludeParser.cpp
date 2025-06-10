@@ -178,7 +178,7 @@ void TestIncludeParser::TestMSVC_P() const
     FBuild fBuild( options );
     fBuild.Initialize();
 
-    const AStackString<> file( "../tmp/Test/IncludeParser/MSVC-P/test.i" );
+    const AStackString file( "../tmp/Test/IncludeParser/MSVC-P/test.i" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( file );
@@ -394,7 +394,7 @@ void TestIncludeParser::TestEdgeCases() const
 
     // include on last line
     {
-        AStackString<> data( "#line 1 \"hello\"" );
+        AStackString data( "#line 1 \"hello\"" );
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseMSCL_Preprocessed( data.Get(), data.GetLength() ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 1 );
@@ -405,7 +405,7 @@ void TestIncludeParser::TestEdgeCases() const
 
     // empty
     {
-        AStackString<> data( "" );
+        AStackString data( "" );
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseMSCL_Preprocessed( data.Get(), data.GetLength() ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 0 );
@@ -416,7 +416,7 @@ void TestIncludeParser::TestEdgeCases() const
 
     // #pragma or #   pragma should be ignored
     {
-        AStackString<> data( "#pragma message\"hello\"\n#   pragma message\"hello\"\n" );
+        AStackString data( "#pragma message\"hello\"\n#   pragma message\"hello\"\n" );
         const uint32_t dataLen = data.GetLength();
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseGCC_Preprocessed( data.Get(), dataLen ) );
@@ -428,7 +428,7 @@ void TestIncludeParser::TestEdgeCases() const
 
     // "#line..." should both be found for clang (-fms-compat)
     {
-        AStackString<> data( "#line 15 \"hello\"\n#line 2 \"hello\"" );
+        AStackString data( "#line 15 \"hello\"\n#line 2 \"hello\"" );
         const uint32_t dataLen = data.GetLength();
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseGCC_Preprocessed( data.Get(), dataLen ) );

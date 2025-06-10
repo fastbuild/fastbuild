@@ -76,7 +76,7 @@ void TestCopy::TestCopyFunction_FileToFile() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    AStackString<> dst( "../tmp/Test/Copy/copy.bff.copy" );
+    AStackString dst( "../tmp/Test/Copy/copy.bff.copy" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dst );
@@ -147,7 +147,7 @@ void TestCopy::TestCopyFunction_FileToDir() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dst( "../tmp/Test/Copy/copy.bff" );
+    const AStackString dst( "../tmp/Test/Copy/copy.bff" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dst );
@@ -217,8 +217,8 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dst1( "../tmp/Test/Copy/a.txt" );
-    const AStackString<> dst2( "../tmp/Test/Copy/b.txt" );
+    const AStackString dst1( "../tmp/Test/Copy/a.txt" );
+    const AStackString dst2( "../tmp/Test/Copy/b.txt" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dst1 );
@@ -290,8 +290,8 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dst1( "../tmp/Test/Copy/SourceBasePath/TestCopy/a.txt" );
-    const AStackString<> dst2( "../tmp/Test/Copy/SourceBasePath/TestCopy/b.txt" );
+    const AStackString dst1( "../tmp/Test/Copy/SourceBasePath/TestCopy/a.txt" );
+    const AStackString dst2( "../tmp/Test/Copy/SourceBasePath/TestCopy/b.txt" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dst1 );
@@ -342,7 +342,7 @@ void TestCopy::ChainedCopy() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    AStackString<> dst( "../tmp/Test/Copy/ChainedCopy/copy.copy3" );
+    AStackString dst( "../tmp/Test/Copy/ChainedCopy/copy.copy3" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dst );
@@ -391,8 +391,8 @@ void TestCopy::CopyDir() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    AStackString<> dstA( "../tmp/Test/Copy/CopyDir/a.txt" );
-    AStackString<> dstB( "../tmp/Test/Copy/CopyDir/b.txt" );
+    AStackString dstA( "../tmp/Test/Copy/CopyDir/a.txt" );
+    AStackString dstB( "../tmp/Test/Copy/CopyDir/b.txt" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dstA );
@@ -465,10 +465,10 @@ void TestCopy::CopyDir_NoRebuild_BFFChange() const
 void TestCopy::CopyDirDeleteSrc() const
 {
     // We'll operate on copies of the source files so we can delete on of the src files
-    AStackString<> srcA( "../tmp/Test/Copy/CopyDirDeleteSrc/Src/a.txt" );
-    AStackString<> srcB( "../tmp/Test/Copy/CopyDirDeleteSrc/Src/b.txt" );
-    AStackString<> dstA( "../tmp/Test/Copy/CopyDirDeleteSrc/Dst/a.txt" );
-    AStackString<> dstB( "../tmp/Test/Copy/CopyDirDeleteSrc/Dst/b.txt" );
+    AStackString srcA( "../tmp/Test/Copy/CopyDirDeleteSrc/Src/a.txt" );
+    AStackString srcB( "../tmp/Test/Copy/CopyDirDeleteSrc/Src/b.txt" );
+    AStackString dstA( "../tmp/Test/Copy/CopyDirDeleteSrc/Dst/a.txt" );
+    AStackString dstB( "../tmp/Test/Copy/CopyDirDeleteSrc/Dst/b.txt" );
 
     // Do the normal build, which copies the files
     {
@@ -478,7 +478,7 @@ void TestCopy::CopyDirDeleteSrc() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Set up the source
-        TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../tmp/Test/Copy/CopyDirDeleteSrc/Src/" ) ) );
+        TEST_ASSERT( FileIO::EnsurePathExists( AStackString( "../tmp/Test/Copy/CopyDirDeleteSrc/Src/" ) ) );
         TEST_ASSERT( FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestCopy/a.txt", srcA.Get() ) );
         TEST_ASSERT( FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestCopy/b.txt", srcB.Get() ) );
         TEST_ASSERT( FileIO::SetReadOnly( srcA.Get(), false ) ); // Clear read only so it's not persisted by copy
@@ -649,7 +649,7 @@ void TestCopy::ObjectListChaining2() const
     const char * configFileOriginal = "Tools/FBuild/FBuildTest/Data/TestCopy/ObjectListChaining2/fbuild.bff";
     const char * configFileCopy = "../tmp/Test/Copy/ObjectListChaining2/fbuild.bff";
 
-    FileIO::EnsurePathExistsForFile( AStackString<>( configFileCopy ) );
+    FileIO::EnsurePathExistsForFile( AStackString( configFileCopy ) );
     VERIFY( FileIO::FileCopy( configFileOriginal, configFileCopy ) );
     VERIFY( FileIO::SetReadOnly( configFileCopy, false ) );
 

@@ -1009,7 +1009,7 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
             case Node::BuildResult::eFailed:            resultString = "FAILED";                break;
         }
 
-        AStackString<> msgBuffer;
+        AStackString msgBuffer;
         job->GetMessagesForMonitorLog( msgBuffer );
 
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",

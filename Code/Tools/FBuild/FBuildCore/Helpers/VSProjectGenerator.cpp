@@ -60,7 +60,7 @@ void VSProjectGenerator::SetBasePaths( const Array<AString> & paths )
 void VSProjectGenerator::AddFile( const AString & file )
 {
     // ensure slash consistency which we rely on later
-    AStackString<> fileCopy( file );
+    AStackString fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
     m_Files.EmplaceBack();
     m_Files.Top().m_AbsolutePath = fileCopy;
@@ -81,7 +81,7 @@ void VSProjectGenerator::AddFiles( const Array<AString> & files )
 /*static*/ void VSProjectGenerator::FormatDeterministicProjectGUID( AString & guid, const AString & projectName )
 {
     // Replace native slash with Windows-style slash for GUID generation to keep GUIDs consistent across platforms
-    AStackString<> projectNameNormalized( projectName );
+    AStackString projectNameNormalized( projectName );
     projectNameNormalized.Replace( NATIVE_SLASH, BACK_SLASH );
     guid.Format( "{%08x-6c94-4f93-bc2a-7f5284b7d434}", CRC32::Calc( projectNameNormalized ) );
 }
@@ -99,7 +99,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // determine folder for project
     const char * lastSlash = projectFile.FindLast( NATIVE_SLASH );
-    AStackString<> projectBasePath( projectFile.Get(), lastSlash ? lastSlash + 1 : projectFile.Get() );
+    AStackString projectBasePath( projectFile.Get(), lastSlash ? lastSlash + 1 : projectFile.Get() );
 
     // Canonicalize and de-duplicate files
     CanonicalizeFilePaths( projectBasePath );
@@ -160,12 +160,12 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             // Project References
             for ( const AString & projectReference : m_ProjectReferences )
             {
-                AStackString<> proj( projectReference );
+                AStackString proj( projectReference );
                 const char * pipe = proj.Find( '|' );
                 if ( pipe )
                 {
                     proj.SetLength( (uint32_t)( pipe - proj.Get() ) );
-                    AStackString<> guid( pipe + 1 );
+                    AStackString guid( pipe + 1 );
                     WriteF( "    <ProjectReference Include=\"%s\">\n", proj.Get() );
                     WriteF( "      <Project>%s</Project>\n", guid.Get() );
                     Write( "    </ProjectReference>\n" );
@@ -191,10 +191,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     WritePGItem( "RootNamespace", m_RootNamespace );
     WritePGItem( "ProjectGuid", m_ProjectGuid );
     WritePGItem( "DefaultLanguage", m_DefaultLanguage );
-    WritePGItem( "Keyword", AStackString<>( "MakeFileProj" ) );
+    WritePGItem( "Keyword", AStackString( "MakeFileProj" ) );
     if ( m_ProjectSccEntrySAK )
     {
-        const AStackString<> sakString( "SAK" );
+        const AStackString sakString( "SAK" );
         WritePGItem( "SccProjectName", sakString );
         WritePGItem( "SccAuxPath", sakString );
         WritePGItem( "SccLocalPath", sakString );
@@ -242,7 +242,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
             // If a specific executable is specified, use that, otherwise try to auto-derive
             // the executable from the .Target
-            AStackString<> localDebuggerCommand( config.m_LocalDebuggerCommand );
+            AStackString localDebuggerCommand( config.m_LocalDebuggerCommand );
             if ( localDebuggerCommand.IsEmpty() )
             {
                 // Get the executable path and make it project-relative
@@ -331,7 +331,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 {
                     StackArray<AString, 64> defines;
                     ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, false );
-                    AStackString<> definesStr;
+                    AStackString definesStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, nullptr, ";" );
                     WritePGItem( "NMakePreprocessorDefinitions", definesStr );
                 }
@@ -355,7 +355,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                         include.Replace( '/', '\\' ); // Convert to Windows-style slashes
                     #endif
                 }
-                AStackString<> includePathsStr;
+                AStackString includePathsStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, nullptr, ";" );
                 WritePGItem( "NMakeIncludeSearchPath", includePathsStr );
             }
@@ -372,7 +372,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                         forceInclude.Replace( '/', '\\' ); // Convert to Windows-style slashes
                     #endif
                 }
-                AStackString<> forceIncludePathsStr;
+                AStackString forceIncludePathsStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( forceIncludes, forceIncludePathsStr, nullptr, ";" );
                 WritePGItem( "NMakeForcedIncludes", forceIncludePathsStr );
             }
@@ -388,7 +388,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 {
                     StackArray<AString, 64> additionalOptions;
                     ProjectGeneratorBase::ExtractAdditionalOptions( oln->GetCompilerOptions(), additionalOptions );
-                    AStackString<> additionalOptionsStr;
+                    AStackString additionalOptionsStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( additionalOptions, additionalOptionsStr, nullptr, " " );
                     WritePGItem( "AdditionalOptions", additionalOptionsStr );
                 }
@@ -458,7 +458,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
     // determine folder for project
     const char * lastProjSlash = projectFile.FindLast( NATIVE_SLASH );
-    AStackString<> projectBasePath( projectFile.Get(), lastProjSlash ? lastProjSlash + 1 : projectFile.Get() );
+    AStackString projectBasePath( projectFile.Get(), lastProjSlash ? lastProjSlash + 1 : projectFile.Get() );
 
     // Must already be canonicalized/de-duplicated
     ASSERT( m_FilePathsCanonicalized == true );
@@ -475,7 +475,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
     // files
     {
-        AStackString<> lastFolder;
+        AStackString lastFolder;
         Write( "  <ItemGroup>\n" );
         for ( const VSProjectFilePair & filePathPair : m_Files )
         {
@@ -484,7 +484,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
             // get folder part, relative to base dir(s)
             const AString & fileName = filePathPair.m_AbsolutePath;
-            AStackString<> folder;
+            AStackString folder;
             GetFolderPath( fileName, folder );
 
             if ( !folder.IsEmpty() )
@@ -594,7 +594,7 @@ void VSProjectGenerator::WritePGItem( const char * xmlTag, const AString & value
     }
 
     // Escape value
-    AStackString<> escapedValue;
+    AStackString escapedValue;
     for ( const char c : value )
     {
         switch ( c )

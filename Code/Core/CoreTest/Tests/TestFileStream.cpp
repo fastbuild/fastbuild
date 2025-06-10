@@ -37,7 +37,7 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestFileStream::WriteOnly() const
 {
-    AStackString<> fileName;
+    AStackString fileName;
     GenerateTempFileName( fileName );
 
     // Open a file for writing
@@ -51,7 +51,7 @@ void TestFileStream::WriteOnly() const
     TEST_ASSERT( f.Tell() == 0 );
 
     // Write some data
-    const AStackString<> data( "Some Data To Store In A File" );
+    const AStackString data( "Some Data To Store In A File" );
     TEST_ASSERT( f.WriteBuffer( data.Get(), data.GetLength() ) == data.GetLength() );
 
     // Sanity check new state
@@ -77,10 +77,10 @@ void TestFileStream::WriteOnly() const
 //------------------------------------------------------------------------------
 void TestFileStream::ReadOnly() const
 {
-    AStackString<> fileName;
+    AStackString fileName;
     GenerateTempFileName( fileName );
 
-    const AStackString<> data( "Some Data To Store In A File" );
+    const AStackString data( "Some Data To Store In A File" );
 
     // Create a file and put some data in it
     {
@@ -100,7 +100,7 @@ void TestFileStream::ReadOnly() const
         TEST_ASSERT( f.Tell() == 0 );
 
         // Read
-        AStackString<> buffer;
+        AStackString buffer;
         buffer.SetLength( data.GetLength() );
         TEST_ASSERT( f.ReadBuffer( buffer.Get(), data.GetLength() ) == data.GetLength() );
         TEST_ASSERT( data == buffer );

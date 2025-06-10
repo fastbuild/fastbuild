@@ -93,13 +93,13 @@ CompilerNode::CompilerNode()
     }
 
     // Check for conflicting files
-    AStackString<> relPathExe;
+    AStackString relPathExe;
     ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
 
     const size_t numExtraFiles = extraFiles.GetSize();
     for ( size_t i = 0; i < numExtraFiles; ++i )
     {
-        AStackString<> relPathA;
+        AStackString relPathA;
         ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
 
         // Conflicts with Exe?
@@ -112,7 +112,7 @@ CompilerNode::CompilerNode()
         // Conflicts with another file?
         for ( size_t j = ( i + 1 ); j < numExtraFiles; ++j )
         {
-            AStackString<> relPathB;
+            AStackString relPathB;
             ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
 
             if ( PathUtils::ArePathsEqual( relPathA, relPathB ) )
@@ -162,9 +162,9 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
     {
         // Normalize slashes to make logic consistent on all platforms
-        AStackString<> compiler( GetExecutable() );
+        AStackString compiler( GetExecutable() );
         compiler.Replace( '/', '\\' );
-        AStackString<> compilerWithoutVersion( compiler.Get() );
+        AStackString compilerWithoutVersion( compiler.Get() );
         if ( const char * last = compiler.FindLast( '-' ) )
         {
             compilerWithoutVersion.Assign( compiler.Get(), last );

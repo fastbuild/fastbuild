@@ -109,7 +109,7 @@ CopyDirNode::~CopyDirNode() = default;
             const AString & srcFile = file.m_Name;
 
             // source file (relative to base path)
-            const AStackString<> srcFileRel( srcFile.Get() + dln->GetPath().GetLength() );
+            const AStackString srcFileRel( srcFile.Get() + dln->GetPath().GetLength() );
 
             // source file (as a node)
             Node * srcFileNode = nodeGraph.FindNode( srcFile );
@@ -124,7 +124,7 @@ CopyDirNode::~CopyDirNode() = default;
             }
 
             // generate dest file name
-            AStackString<> dstFile( m_Dest );
+            AStackString dstFile( m_Dest );
             dstFile += srcFileRel;
 
             // make sure dest doesn't already exist

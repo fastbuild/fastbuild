@@ -40,7 +40,7 @@ void TestResources::BuildResource() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> binRes( "../tmp/Test/Resources/resource.res" );
+    const AStackString binRes( "../tmp/Test/Resources/resource.res" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( "binRes" );

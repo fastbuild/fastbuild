@@ -64,15 +64,15 @@ void TestBuildAndLinkLibrary::TestBuildLib() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
+    const AStackString lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
     #if defined( __WINDOWS__ )
-        const AStackString<> obj1( "../tmp/Test/BuildAndLinkLibrary/a.obj" );
-        const AStackString<> obj2( "../tmp/Test/BuildAndLinkLibrary/b.obj" );
-        const AStackString<> obj3( "../tmp/Test/BuildAndLinkLibrary/c.obj" );
+        const AStackString obj1( "../tmp/Test/BuildAndLinkLibrary/a.obj" );
+        const AStackString obj2( "../tmp/Test/BuildAndLinkLibrary/b.obj" );
+        const AStackString obj3( "../tmp/Test/BuildAndLinkLibrary/c.obj" );
     #else
-        const AStackString<> obj1( "../tmp/Test/BuildAndLinkLibrary/a.o" );
-        const AStackString<> obj2( "../tmp/Test/BuildAndLinkLibrary/b.o" );
-        const AStackString<> obj3( "../tmp/Test/BuildAndLinkLibrary/c.o" );
+        const AStackString obj1( "../tmp/Test/BuildAndLinkLibrary/a.o" );
+        const AStackString obj2( "../tmp/Test/BuildAndLinkLibrary/b.o" );
+        const AStackString obj3( "../tmp/Test/BuildAndLinkLibrary/c.o" );
     #endif
 
     // clean up anything left over from previous runs
@@ -111,7 +111,7 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetBuildLibDBFileName() ) );
 
-    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
+    const AStackString lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
 
     // Build
     TEST_ASSERT( fBuild.Build( lib ) );
@@ -138,7 +138,7 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild_BFFChange() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetBuildLibDBFileName() ) );
 
-    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
+    const AStackString lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
 
     // Build
     TEST_ASSERT( fBuild.Build( lib ) );
@@ -164,7 +164,7 @@ void TestBuildAndLinkLibrary::TestLibMerge() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
+    const AStackString lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( lib );
@@ -196,7 +196,7 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetMergeLibDBFileName() ) );
 
-    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
+    const AStackString lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
 
     // Build
     TEST_ASSERT( fBuild.Build( lib ) );
@@ -223,7 +223,7 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild_BFFChange() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetMergeLibDBFileName() ) );
 
-    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
+    const AStackString lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
 
     // Build
     TEST_ASSERT( fBuild.Build( lib ) );

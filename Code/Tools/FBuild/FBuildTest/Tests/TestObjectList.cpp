@@ -141,12 +141,14 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
     // - mixed slashes
     // - ../
     // - double //
-    AStackString<> args( " /FdTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//pdb/file.pdb"
-                         " /FaTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//asm/file.asm"
-                         " /sourceDependencies Tools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//srcDeps/file.json" );
+    AStackString args( " /FdTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//pdb/file.pdb"
+                       " /FaTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//asm/file.asm"
+                       " /sourceDependencies Tools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//srcDeps/file.json" );
 
     // Get the paths
-    AStackString<> pdbPath, asmPath, sourceDependenciesPath;
+    AStackString pdbPath;
+    AStackString asmPath;
+    AStackString sourceDependenciesPath;
     FunctionObjectList::GetExtraOutputPaths( args, pdbPath, asmPath, sourceDependenciesPath );
 
     // Check that the entire span is correctly captured

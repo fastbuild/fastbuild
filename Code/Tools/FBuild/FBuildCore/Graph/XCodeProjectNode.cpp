@@ -160,7 +160,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     XCodeProjectGenerator g;
 
     // Project Name
-    AStackString<> tmp( m_Name );
+    AStackString tmp( m_Name );
     const char * lastSlash = tmp.FindLast( NATIVE_SLASH );
     if ( lastSlash )
     {
@@ -171,7 +171,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     const char * projectNameEnd = tmp.FindLast( '.' );
     projectNameStart = projectNameStart ? projectNameStart + 1 : tmp.Get();
     projectNameEnd = projectNameEnd ? projectNameEnd : tmp.GetEnd();
-    AStackString<> projectName( projectNameStart, projectNameEnd );
+    AStackString projectName( projectNameStart, projectNameEnd );
     g.SetProjectName( projectName );
 
     // Base Paths
@@ -220,7 +220,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
                 const char * ext = n->GetName().Find( ".xcodeproj/" );
                 if ( ext )
                 {
-                    AStackString<> name( n->GetName().Get(), ext + 10 ); // include .xcodeproj
+                    AStackString name( n->GetName().Get(), ext + 10 ); // include .xcodeproj
                     g.AddFile( name );
                     continue;
                 }
@@ -259,12 +259,12 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     // Get folder containing project.pbxproj
     const char * projectFolderSlash = m_Name.FindLast( NATIVE_SLASH );
     ASSERT( projectFolderSlash );
-    const AStackString<> folder( m_Name.Get(), projectFolderSlash );
+    const AStackString folder( m_Name.Get(), projectFolderSlash );
 
     // Generate user-specific xcschememanagement.plist
     {
         // Get the user name
-        AStackString<> userName;
+        AStackString userName;
         if ( Env::GetLocalUserName( userName ) == false )
         {
             FLOG_ERROR( "Failed to determine username for '%s'", m_Name.Get() );
@@ -275,7 +275,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         const AString & output = g.GenerateUserSchemeManagementPList();
 
         // Write to disk if missing (not written if different as this could stomp user settings)
-        AStackString<> plist;
+        AStackString plist;
         #if defined( __WINDOWS__ )
             plist.Format( "%s\\xcuserdata\\%s.xcuserdatad\\xcschemes\\xcschememanagement.plist", folder.Get(), userName.Get() );
         #else
@@ -296,7 +296,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         const AString & output = g.GenerateXCScheme();
 
         // Write to disk if missing (not written if different as this could stomp user settings)
-        AStackString<> xcscheme;
+        AStackString xcscheme;
         #if defined( __WINDOWS__ )
             xcscheme.Format( "%s\\xcshareddata\\xcschemes\\%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
         #else

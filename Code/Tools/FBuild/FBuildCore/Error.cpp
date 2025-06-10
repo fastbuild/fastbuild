@@ -130,7 +130,7 @@
 /*static*/ void Error::Error_1013_UnexpectedCharInVariableName( const BFFToken * iter,
                                                                 const Function * function )
 {
-    AStackString<> buffer;
+    AStackString buffer;
     GetChar( iter, buffer );
     FormatError( iter, 1013u, function, "Unexpected character '%s' in variable name.", buffer.Get() );
 }
@@ -153,7 +153,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1016_UnexpectedCharFollowingVariableName( const BFFToken * iter )
 {
-    AStackString<> buffer;
+    AStackString buffer;
     GetChar( iter, buffer );
     FormatError( iter, 1016u, nullptr, "Unexpected character '%s' following variable name. (Expected operator)", buffer.Get() );
 }
@@ -162,7 +162,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1017_UnexpectedCharInVariableValue( const BFFToken * iter )
 {
-    AStackString<> buffer;
+    AStackString buffer;
     GetChar( iter, buffer );
     FormatError( iter, 1017u, nullptr, "Unexpected character '%s' in variable value.", buffer.Get() );
 }
@@ -273,7 +273,7 @@
                                                                         const char * directiveName,
                                                                         char expectedChar )
 {
-    AStackString<> buffer;
+    AStackString buffer;
     GetChar( iter, buffer );
     FormatError( iter, 1031u, nullptr, "Unknown char '%s' following '%s' directive. (Expected '%c').",
                                        buffer.Get(),
@@ -860,8 +860,8 @@ void Error::FormatError( const BFFToken * iter,
     }
 
     // convert to full path and '/'->'\' cleanup
-    const AStackString<> fileName( iter ? iter->GetSourceFileName().Get() : "Unknown" );
-    AStackString<> fullPath;
+    const AStackString fileName( iter ? iter->GetSourceFileName().Get() : "Unknown" );
+    AStackString fullPath;
     NodeGraph::CleanPath( fileName, fullPath );
 
     // deliberately using OUTPUT here to avoid "Error:" in front

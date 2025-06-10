@@ -124,9 +124,9 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
     buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-3,\"tid\":0,\"args\":{\"name\":\"Network Usage\"}},";
 
     // - Local Processing
-    AStackString<> args( options.GetArgs() );
+    AStackString args( options.GetArgs() );
     JSON::Escape( args );
-    AStackString<> programName( options.m_ProgramName );
+    AStackString programName( options.m_ProgramName );
     JSON::Escape( programName );
     buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"%s %s\"}},", programName.Get(), args.Get() );
     buffer += "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"Phase\"}},";
@@ -148,7 +148,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
     }
 
     // Serialize events
-    AStackString<> nameBuffer;
+    AStackString nameBuffer;
     const double freqMul = ( static_cast<double>( Timer::GetFrequencyInvFloatMS() ) * 1000.0 );
     for ( const Event & event : m_Events )
     {

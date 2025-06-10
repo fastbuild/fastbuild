@@ -91,7 +91,7 @@
             }
 
             // Format and set
-            AStackString<> threadName;
+            AStackString threadName;
             threadName.Format( ( threadType == THREAD_LISTEN ) ? "Listen_%u" : "Connection_%u", bit );
             PROFILE_SET_THREAD_NAME( threadName.Get() );
         }
@@ -310,7 +310,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         {
             // connection initiation failed
             #ifdef TCPCONNECTION_DEBUG
-                AStackString<> host;
+                AStackString host;
                 GetAddressAsString( hostIP, host );
                 TCPDEBUG( "connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
             #endif
@@ -341,7 +341,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         {
             // connection failed
             #ifdef TCPCONNECTION_DEBUG
-                AStackString<> host;
+                AStackString host;
                 GetAddressAsString( hostIP, host );
                 TCPDEBUG( "select() after connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
             #endif
@@ -356,7 +356,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
             {
                 #ifdef TCPCONNECTION_DEBUG
-                    AStackString<> host;
+                    AStackString host;
                     GetAddressAsString( hostIP, host );
                     TCPDEBUG( "connect() aborted (Shutting Down) (Host: %s, Port: %u)\n", host.Get(), port );
                 #endif
@@ -368,7 +368,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             if ( connectionTimer.GetElapsedMS() >= (float)timeout )
             {
                 #ifdef TCPCONNECTION_DEBUG
-                    AStackString<> host;
+                    AStackString host;
                     GetAddressAsString( hostIP, host );
                     TCPDEBUG( "connect() time out %u hit (Host: %s, Port: %u)\n", timeout, host.Get(), port );
                 #endif
@@ -384,7 +384,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         {
             // connection failed
             #ifdef TCPCONNECTION_DEBUG
-                AStackString<> host;
+                AStackString host;
                 GetAddressAsString( hostIP, host );
                 const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
 
@@ -414,7 +414,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
                 if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, &size ) == SOCKET_ERROR )
                 {
                     #ifdef TCPCONNECTION_DEBUG
-                        AStackString<> host;
+                        AStackString host;
                         GetAddressAsString( hostIP, host );
                         TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
                     #endif
@@ -424,7 +424,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
                 if ( error != 0 )
                 {
                     #ifdef TCPCONNECTION_DEBUG
-                        AStackString<> host;
+                        AStackString host;
                         GetAddressAsString( hostIP, host );
                         TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
                     #endif

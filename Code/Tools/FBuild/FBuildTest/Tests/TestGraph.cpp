@@ -93,7 +93,7 @@ public:
     NodeTestHelper()
         : Node( Node::PROXY_NODE )
     {
-        SetName( AStackString<>( "placeholder" ) );
+        SetName( AStackString( "placeholder" ) );
     }
     virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ ) override
     {
@@ -131,9 +131,9 @@ void TestGraph::TestNodeTypes() const
 
     // Node names differ on Window vs other platforms due to paths etc
     #if defined( __WINDOWS__ )
-        #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString<> name( WINDOWS_PATH )
+        #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString name( WINDOWS_PATH )
     #else
-        #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString<> name( OTHER_PATH )
+        #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString name( OTHER_PATH )
     #endif
 
     // Test each node can be created and type mappings are consistent
@@ -143,7 +143,7 @@ void TestGraph::TestNodeTypes() const
         const TYPE * node = ng.CreateNode<TYPE>( name ); \
         TEST_ASSERT( node->GetType() == Node::TYPE_ENUM ); \
         TEST_ASSERT( TYPE::GetTypeS() == Node::TYPE_ENUM ); \
-        TEST_ASSERT( AStackString<>( FRIENDLY_TYPE ) == node->GetTypeName() ); \
+        TEST_ASSERT( AStackString( FRIENDLY_TYPE ) == node->GetTypeName() ); \
     } while ( false )
 
     // TODO:C - It would be nice to restructure this so that new nodes are automatically tested
@@ -173,7 +173,7 @@ void TestGraph::SingleFileNode() const
     NodeGraph ng;
 
     // make sure a node of the name we are going to use doesn't exist
-    const AStackString<> testFileName( "Tools/FBuild/FBuildTest/Data/TestGraph/library.cpp" );
+    const AStackString testFileName( "Tools/FBuild/FBuildTest/Data/TestGraph/library.cpp" );
     TEST_ASSERT( ng.FindNode( testFileName ) == nullptr );
 
     // create the node, and make sure we can access it by name
@@ -198,7 +198,7 @@ void TestGraph::SingleFileNodeMissing() const
     NodeGraph ng;
 
     // make a node for a file that does not exist
-    const AStackString<> testFileName( "ThisFileDoesNotExist.cpp" );
+    const AStackString testFileName( "ThisFileDoesNotExist.cpp" );
     FileNode * node = ng.CreateNode<FileNode>( testFileName );
 
     // Manually build a single node
@@ -222,7 +222,7 @@ void TestGraph::TestSerialization() const
     // load the config file and save the resulting db
     {
         // Ensure we're creating the DB by parsing the BFF
-        EnsureFileDoesNotExist( AStackString<>( dbFile1 ) );
+        EnsureFileDoesNotExist( AStackString( dbFile1 ) );
 
         FBuildOptions options;
         options.m_ConfigFile = "fbuild.bff";
@@ -272,9 +272,9 @@ void TestGraph::TestCleanPath() const
     // Change current dir to a known location that exists on all windows machines
     FBuildOptions fo;
     #if defined( __WINDOWS__ )
-        fo.SetWorkingDir( AStackString<>( "C:\\Windows\\System32" ) );
+        fo.SetWorkingDir( AStackString( "C:\\Windows\\System32" ) );
     #else
-        fo.SetWorkingDir( AStackString<>( "/tmp/subDir" ) );
+        fo.SetWorkingDir( AStackString( "/tmp/subDir" ) );
     #endif
 
     FBuild f( fo );
@@ -282,15 +282,15 @@ void TestGraph::TestCleanPath() const
     #if defined( __WINDOWS__ )
         #define CHECK( a, b, c ) \
         { \
-            AStackString<> cleaned; \
-            NodeGraph::CleanPath( AStackString<>( a ), cleaned ); \
+            AStackString cleaned; \
+            NodeGraph::CleanPath( AStackString( a ), cleaned ); \
             TEST_ASSERT( cleaned == b ); \
         }
     #else
         #define CHECK( a, b, c ) \
         { \
-            AStackString<> cleaned; \
-            NodeGraph::CleanPath( AStackString<>( a ), cleaned ); \
+            AStackString cleaned; \
+            NodeGraph::CleanPath( AStackString( a ), cleaned ); \
             TEST_ASSERT( cleaned == c ); \
         }
     #endif
@@ -370,9 +370,9 @@ void TestGraph::TestCleanPathPartial() const
     // Change current dir to a known location that exists on all windows machines
     FBuildOptions fo;
     #if defined( __WINDOWS__ )
-        fo.SetWorkingDir( AStackString<>( "C:\\Windows\\System32" ) );
+        fo.SetWorkingDir( AStackString( "C:\\Windows\\System32" ) );
     #else
-        fo.SetWorkingDir( AStackString<>( "/tmp/subDir" ) );
+        fo.SetWorkingDir( AStackString( "/tmp/subDir" ) );
     #endif
 
     FBuild f( fo );
@@ -380,8 +380,8 @@ void TestGraph::TestCleanPathPartial() const
     #define CHECK( input, expectedOutput, makeFullPath ) \
         do \
         { \
-            AStackString<> cleaned; \
-            NodeGraph::CleanPath( AStackString<>( input ), cleaned, makeFullPath ); \
+            AStackString cleaned; \
+            NodeGraph::CleanPath( AStackString( input ), cleaned, makeFullPath ); \
             TEST_ASSERT( cleaned == expectedOutput ); \
         } while ( false )
 
@@ -567,7 +567,7 @@ void TestGraph::DBLocationChanged() const
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
 
         // Copy the DB
-        AStackString<> dbPath2( dbFile2 );
+        AStackString dbPath2( dbFile2 );
         dbPath2.SetLength( (uint32_t)( dbPath2.FindLast( FORWARD_SLASH ) - dbPath2.Get() ) );
         TEST_ASSERT( FileIO::EnsurePathExists( dbPath2 ) );
         TEST_ASSERT( FileIO::FileCopy( dbFile1, dbFile2 ) );
@@ -585,7 +585,7 @@ void TestGraph::DBLocationChanged() const
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile2 ) == true );
-        TEST_ASSERT( AStackString<>( GetRecordedOutput() ).Replace( "Database has been moved", "", 2 ) == 2 ); // Find twice
+        TEST_ASSERT( AStackString( GetRecordedOutput() ).Replace( "Database has been moved", "", 2 ) == 2 ); // Find twice
     }
 }
 
@@ -667,7 +667,7 @@ void TestGraph::BFFDirtied() const
 
     // Ensure test output dir exists
     {
-        AStackString<> copyOfBFFPath( copyOfBFF );
+        AStackString copyOfBFFPath( copyOfBFF );
         copyOfBFFPath.SetLength( (uint32_t)( copyOfBFFPath.FindLast( FORWARD_SLASH ) - copyOfBFFPath.Get() ) );
         TEST_ASSERT( FileIO::EnsurePathExists( copyOfBFFPath ) );
     }
@@ -695,7 +695,7 @@ void TestGraph::BFFDirtied() const
     }
 
     // Modify file, ensuring filetime has changed (different file systems have different resolutions)
-    const uint64_t originalTime = FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) );
+    const uint64_t originalTime = FileIO::GetFileLastWriteTime( AStackString( copyOfBFF ) );
     const Timer t;
     uint32_t sleepTimeMS = 2;
     for ( ;; )
@@ -706,7 +706,7 @@ void TestGraph::BFFDirtied() const
         fs.Close();
 
         // See if the mod time has changed
-        if ( FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) ) != originalTime )
+        if ( FileIO::GetFileLastWriteTime( AStackString( copyOfBFF ) ) != originalTime )
         {
             break; // All done
         }
@@ -734,7 +734,7 @@ void TestGraph::BFFDirtied() const
 
         // Get cache path directly from property to ignore environment variables
         const ReflectionInfo * ri = fBuild.GetSettings()->GetReflectionInfoV();
-        AStackString<> cachePath;
+        AStackString cachePath;
         TEST_ASSERT( ri->GetProperty( (void *)fBuild.GetSettings(), "CachePath", &cachePath ) );
 
         // Make sure settings don't "leak" from the original BFF into the new one
@@ -769,7 +769,7 @@ void TestGraph::DBVersionChanged() const
 
     // cleanup & prep
     {
-        AStackString<> oldDBPath( oldDB );
+        AStackString oldDBPath( oldDB );
         oldDBPath.SetLength( (uint32_t)( oldDBPath.FindLast( FORWARD_SLASH ) - oldDBPath.Get() ) );
         TEST_ASSERT( FileIO::EnsurePathExists( oldDBPath ) );
 
@@ -796,9 +796,9 @@ void TestGraph::FixupErrorPaths() const
 {
     // Use a known location we can test for
     #if defined( __WINDOWS__ )
-        const AStackString<> workingDir( "C:\\Windows\\System32" );
+        const AStackString workingDir( "C:\\Windows\\System32" );
     #else
-        const AStackString<> workingDir( "/tmp/subDir" );
+        const AStackString workingDir( "/tmp/subDir" );
     #endif
 
     // FBuild is used during path cleaning to access working dir
@@ -807,7 +807,8 @@ void TestGraph::FixupErrorPaths() const
     FBuild f( fo );
 
     // Helper macro
-    AStackString<> fixup, original;
+    AStackString fixup;
+    AStackString original;
     #define TEST_FIXUP( path ) \
         original = path; \
         fixup = path; \

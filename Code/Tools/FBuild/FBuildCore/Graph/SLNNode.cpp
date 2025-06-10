@@ -247,7 +247,7 @@ SLNNode::SLNNode()
             if ( containsConfig == false )
             {
                 // TODO: specific error message "ProjectConfigNotFound"
-                AStackString<> configName;
+                AStackString configName;
                 configName.Format( "%s|%s", solutionConfig.m_Platform.Get(), solutionConfig.m_Config.Get() );
                 Error::Error_1104_TargetNotDefined( iter, function, configName.Get(), project->GetName() );
                 return false;

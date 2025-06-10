@@ -70,7 +70,7 @@ void TestExec::BuildHelperExe() const
     FBuild fBuild( options );
     fBuild.Initialize();
 
-    const AStackString<> exec( "../tmp/Test/Exec/exec.exe" );
+    const AStackString exec( "../tmp/Test/Exec/exec.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( exec );
@@ -102,11 +102,11 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // Make the relevant inputs
-    const AStackString<> inFile_dummy( "../tmp/Test/Exec/dummy_file_does_not_exist.txt" );
-    const AStackString<> inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
-    const AStackString<> inFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt" );
-    const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
-    const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
+    const AStackString inFile_dummy( "../tmp/Test/Exec/dummy_file_does_not_exist.txt" );
+    const AStackString inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
+    const AStackString inFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt" );
+    const AStackString inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
+    const AStackString inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
 
     // First file commented out because it is supposed to not exist
     CreateInputFile( inFile_oneInput );
@@ -115,11 +115,11 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     CreateInputFile( inFile_multiInputB );
 
     // make sure all output is where it is expected
-    const AStackString<> outFile_dummy( "../tmp/Test/Exec/dummy_file_does_not_exist.txt.out" );
-    const AStackString<> outFile_oneInput( "../tmp/Test/Exec/OneInput.txt.out" );
-    const AStackString<> outFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
-    const AStackString<> outFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt.out" );
-    const AStackString<> outFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt.out" );
+    const AStackString outFile_dummy( "../tmp/Test/Exec/dummy_file_does_not_exist.txt.out" );
+    const AStackString outFile_oneInput( "../tmp/Test/Exec/OneInput.txt.out" );
+    const AStackString outFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
+    const AStackString outFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt.out" );
+    const AStackString outFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt.out" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( outFile_dummy );
@@ -187,7 +187,7 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
     FBuild fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
-    const AStackString<> inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
+    const AStackString inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
     #if defined( __OSX__ )
         // OS X FileSystem time granularity is poor, so we need to ensure enough time passes
         // so file is seen as modified
@@ -228,7 +228,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
         FBuild fBuild( options );
         fBuild.Initialize( dbName );
 
-        const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
+        const AStackString inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
         CreateInputFile( inFile_multiInputA );
 
         TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
@@ -251,7 +251,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
         FBuild fBuild( options );
         fBuild.Initialize( dbName );
 
-        const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
+        const AStackString inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
         CreateInputFile( inFile_multiInputB );
 
         TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
@@ -275,11 +275,11 @@ void TestExec::Build_ExecCommand_UseStdOut() const
     // Make sure the stdout from the executable
     // did actually make it into the stdout file
 
-    const AStackString<> outFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
+    const AStackString outFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
     EnsureFileExists( outFile_stdout );
 
     // Expected contents begin with:
-    const AStackString<> expectedData( "Touched: " );
+    const AStackString expectedData( "Touched: " );
     const size_t firstLineBufferSize = 21;
     char firstLineBuffer[ firstLineBufferSize ];
 
@@ -288,7 +288,7 @@ void TestExec::Build_ExecCommand_UseStdOut() const
     f.ReadBuffer( &firstLineBuffer[ 0 ], firstLineBufferSize - 1 );
     f.Close();
 
-    const AStackString<> firstLine( &firstLineBuffer[ 0 ], &firstLineBuffer[ firstLineBufferSize ] );
+    const AStackString firstLine( &firstLineBuffer[ 0 ], &firstLineBuffer[ firstLineBufferSize ] );
     TEST_ASSERT( firstLine.BeginsWith( expectedData ) );
 }
 

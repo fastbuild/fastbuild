@@ -130,7 +130,7 @@ int32_t Worker::Work()
     {
         // Create UI
         m_MainWindow = FNEW( WorkerWindow() );
-        m_MainWindow->SetStatus( m_WorkerBrokerage.GetHostName(), AStackString<>( "Idle" ) );
+        m_MainWindow->SetStatus( m_WorkerBrokerage.GetHostName(), AStackString( "Idle" ) );
     }
 
     // spawn work thread
@@ -177,7 +177,7 @@ uint32_t Worker::WorkThread()
     // Special folder for Orbis Clang
     // We just create this folder whether it's needed or not
     {
-        AStackString<> tmpPath;
+        AStackString tmpPath;
         VERIFY( FBuild::GetTempDir( tmpPath ) );
         #if defined( __WINDOWS__ )
             tmpPath += ".fbuild.tmp\\target\\include";
@@ -253,7 +253,7 @@ bool Worker::HasEnoughDiskSpace()
         uint64_t totalNumberOfFreeBytes = 0;
 
         // Check available disk space of temp path
-        AStackString<> tmpPath;
+        AStackString tmpPath;
         VERIFY( FBuild::GetTempDir( tmpPath ) );
         const BOOL result = GetDiskFreeSpaceExA( tmpPath.Get(), (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
         if ( result && ( freeBytesAvailable >= MIN_DISK_SPACE ) )
@@ -383,7 +383,7 @@ void Worker::UpdateUI()
 
     // title bar
     const size_t numConnections = m_ConnectionPool->GetNumConnections();
-    AStackString<> status;
+    AStackString status;
     status.Format( "%u Connections", (uint32_t)numConnections );
     if ( m_RestartNeeded )
     {
@@ -413,15 +413,15 @@ void Worker::UpdateUI()
         for ( size_t i = 0; i < numWorkers; ++i )
         {
             // get status of worker
-            AStackString<> workerStatus;
-            AStackString<> hostName;
+            AStackString workerStatus;
+            AStackString hostName;
             bool isIdle;
             jqr.GetWorkerStatus( i, hostName, workerStatus, isIdle );
 
             // are we syncing tools?
             if ( isIdle )
             {
-                AStackString<> statusStr;
+                AStackString statusStr;
                 if ( m_ConnectionPool->IsSynchingTool( statusStr ) )
                 {
                     // show status of synchronization
@@ -507,7 +507,7 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
         return;
     }
 
-    AStackString<> buffer;
+    AStackString buffer;
 
     va_list args;
     va_start( args, fmtString );
@@ -533,7 +533,7 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
 //------------------------------------------------------------------------------
 void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
 {
-    AStackString<> buffer;
+    AStackString buffer;
 
     va_list args;
     va_start( args, fmtString );

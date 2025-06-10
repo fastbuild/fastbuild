@@ -308,7 +308,7 @@ bool Process::Spawn( const char * executable,
         {
             // Tokenize
             StackArray<AString::TokenRange, 128> tokenRanges;
-            const AStackString<> argsCopy( args );
+            const AStackString argsCopy( args );
             argsCopy.Tokenize( tokenRanges );
 
             // Allocate worst case space for processed args. They can only be
@@ -323,8 +323,8 @@ bool Process::Spawn( const char * executable,
                 // Remove quotes from split args. Unlike Windows, on Linux/OSX we're
                 // passing the arg vector essentially directly to the process and
                 // it's not split/de-quoted by the API used for process spawning
-                AStackString<> arg( ( argsCopy.Get() + tokenRange.m_StartIndex ),
-                                    ( argsCopy.Get() + tokenRange.m_EndIndex ) );
+                AStackString arg( ( argsCopy.Get() + tokenRange.m_StartIndex ),
+                                  ( argsCopy.Get() + tokenRange.m_EndIndex ) );
                 arg.RemoveQuotes();
 
                 // Add to pointer array

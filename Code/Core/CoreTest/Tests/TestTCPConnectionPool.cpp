@@ -98,7 +98,7 @@ void TestTestTCPConnectionPool::TestOneServerMultipleClients() const
         {
             // All each client to retry in case of local resource exhaustion
             const Timer t;
-            while ( clients[ j ].Connect( AStackString<>( "127.0.0.1" ), testPort ) == nullptr )
+            while ( clients[ j ].Connect( AStackString( "127.0.0.1" ), testPort ) == nullptr )
             {
                 TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
                 Thread::Sleep( 50 );
@@ -136,7 +136,7 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
             // All each connection to be retried in case of local resource exhaustion
             const Timer t;
             const uint16_t port = (uint16_t)( testPort + j );
-            while ( clientA.Connect( AStackString<>( "127.0.0.1" ), port ) == nullptr )
+            while ( clientA.Connect( AStackString( "127.0.0.1" ), port ) == nullptr )
             {
                 TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
                 Thread::Sleep( 50 );
@@ -175,7 +175,7 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
                 // All each connection to be retried in case of local resource exhaustion
                 const Timer t;
                 const uint16_t port = (uint16_t)( testPort + j );
-                while ( clientA.Connect( AStackString<>( "127.0.0.1" ), port ) == nullptr )
+                while ( clientA.Connect( AStackString( "127.0.0.1" ), port ) == nullptr )
                 {
                     TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
                     Thread::Sleep( 50 );
@@ -232,7 +232,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
 
     // client
     TCPConnectionPool client;
-    const ConnectionInfo * ci = client.Connect( AStackString<>( "127.0.0.1" ), testPort );
+    const ConnectionInfo * ci = client.Connect( AStackString( "127.0.0.1" ), testPort );
     TEST_ASSERT( ci );
 
     size_t sendSize = 31;
@@ -285,7 +285,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 
     // connect to slow server
     TCPConnectionPool client;
-    const ConnectionInfo * ci = client.Connect( AStackString<>( "127.0.0.1" ), testPort );
+    const ConnectionInfo * ci = client.Connect( AStackString( "127.0.0.1" ), testPort );
     TEST_ASSERT( ci );
 
     // start a thread to flood the slow server
@@ -338,7 +338,7 @@ void TestTestTCPConnectionPool::TestConnectionFailure() const
     // Check that TCPConnectionPool doesn't create ConnectionInfo when
     // connection fails after wait for it via select().
     // To do that we try to connect to our chosen test port without listening on it.
-    TEST_ASSERT( client.Connect( AStackString<>( "127.0.0.1" ), testPort, timeoutMS ) == nullptr );
+    TEST_ASSERT( client.Connect( AStackString( "127.0.0.1" ), testPort, timeoutMS ) == nullptr );
 
     client.ShutdownAllConnections();
 }

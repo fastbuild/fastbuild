@@ -96,7 +96,7 @@ public:
 //------------------------------------------------------------------------------
 /*virtual*/ bool Cache::Publish( const AString & cacheId, const void * data, size_t dataSize )
 {
-    AStackString<> fullPath;
+    AStackString fullPath;
     GetFullPathForCacheEntry( cacheId, fullPath );
 
     // make sure the cache output path exists
@@ -106,7 +106,7 @@ public:
     }
 
     // open output cache (tmp) file
-    AStackString<> fullPathTmp( fullPath );
+    AStackString fullPathTmp( fullPath );
     fullPathTmp += ".tmp";
     FileStream cacheTmpFile;
     if ( !cacheTmpFile.Open( fullPathTmp.Get(), FileStream::WRITE_ONLY ) )
@@ -150,7 +150,7 @@ public:
     data = nullptr;
     dataSize = 0;
 
-    AStackString<> fullPath;
+    AStackString fullPath;
     GetFullPathForCacheEntry( cacheId, fullPath );
 
     FileStream cacheFile;
@@ -224,7 +224,7 @@ public:
         const uint32_t num = perDay[ i ].m_NumFiles;
         const uint64_t size = perDay[ i ].m_NumBytes / MEGABYTE;
         const float sizePerc = ( total.m_NumBytes > 0 ) ? 100.0f * ( (float)size / (float)( total.m_NumBytes / MEGABYTE ) ) : 0.0f;
-        AStackString<> graphBar;
+        AStackString graphBar;
         for ( uint32_t j = 0; j < (uint32_t)( sizePerc ); ++j )
         {
             if ( graphBar.GetLength() < 35 )
@@ -332,7 +332,7 @@ void Cache::GetCacheFiles( bool showProgress,
         for ( size_t j = 0; j < 256; ++j )
         {
             // Get Files
-            AStackString<> path;
+            AStackString path;
             path.Format( "%s%02X%c%02X%c",
                          m_CachePath.Get(),
                          (uint32_t)i,

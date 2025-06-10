@@ -267,7 +267,7 @@ const char * TestNode::GetEnvironmentString() const
 //------------------------------------------------------------------------------
 void TestNode::EmitCompilationMessage( const char * workingDir ) const
 {
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Running Test: ";

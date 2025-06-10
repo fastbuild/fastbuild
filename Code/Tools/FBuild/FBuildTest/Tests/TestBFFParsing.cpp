@@ -490,13 +490,13 @@ void TestBFFParsing::IfFileExistsDirective() const
             fBuild.SaveDependencyGraph( db );
 
             // Should not re-parse
-            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
             TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
         }
 
         // Create file
         {
-            FileIO::EnsurePathExistsForFile( AStackString<>( fileName ) );
+            FileIO::EnsurePathExistsForFile( AStackString( fileName ) );
             FileStream f;
             TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
         }
@@ -509,7 +509,7 @@ void TestBFFParsing::IfFileExistsDirective() const
             TEST_ASSERT( fBuild.Initialize( db ) );
             fBuild.SaveDependencyGraph( db );
 
-            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
             // Check re-parse was triggered
             TEST_ASSERT( output.Find( "File used in file_exists was added" ) );
@@ -528,7 +528,7 @@ void TestBFFParsing::IfFileExistsDirective() const
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize( db ) );
 
-            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
             // Check re-parse was triggered
             TEST_ASSERT( output.Find( "File used in file_exists was removed" ) );
@@ -575,7 +575,7 @@ void TestBFFParsing::IfBooleanOperators() const
                      "#endif",              "#1045 - Extraneous token(s) following 'if' directive." );
 
     // Expression too complex
-    AStackString<> complex( "#if " );
+    AStackString complex( "#if " );
     for ( size_t i = 0; i < 256; ++i )
     {
         complex.AppendFormat( "A%u &&", (uint32_t)i );

@@ -27,7 +27,7 @@ FunctionSettings::FunctionSettings()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionSettings::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
-    AStackString<> name( "$$Settings$$" );
+    AStackString name( "$$Settings$$" );
     if ( const Node * existingNode = nodeGraph.FindNode( name ) )
     {
         const BFFToken * existingToken = nodeGraph.FindNodeSourceToken( existingNode );

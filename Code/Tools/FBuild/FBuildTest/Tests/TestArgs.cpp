@@ -229,8 +229,8 @@ void TestArgs::CheckParsing( const char * commandLine,
                           nullptr ) ); // environment
 
     // Capture the output
-    AStackString<> out;
-    AStackString<> err;
+    AStackString out;
+    AStackString err;
     TEST_ASSERT( p.ReadAllData( out, err ) );
     TEST_ASSERT( p.WaitForExit() == 0 );
 
@@ -240,7 +240,7 @@ void TestArgs::CheckParsing( const char * commandLine,
     #endif
 
     // Generate expected results
-    AStackString<> expected;
+    AStackString expected;
     const size_t numArgsExpected = static_cast<size_t>( arg1 ? 1 : 0 )
                                  + static_cast<size_t>( arg2 ? 1 : 0 );
     expected.Format( "%zu\n", numArgsExpected );

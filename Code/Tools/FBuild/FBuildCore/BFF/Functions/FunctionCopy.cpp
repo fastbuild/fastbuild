@@ -45,7 +45,7 @@ FunctionCopy::FunctionCopy()
     }
 
     // Optional
-    AStackString<> sourceBasePath;
+    AStackString sourceBasePath;
     if ( !GetString( funcStartIter, sourceBasePath, ".SourceBasePath", false ) )
     {
         return false; // GetString will have emitted errors
@@ -54,7 +54,7 @@ FunctionCopy::FunctionCopy()
     // Canonicalize the SourceBasePath
     if ( !sourceBasePath.IsEmpty() )
     {
-        AStackString<> cleanValue;
+        AStackString cleanValue;
         NodeGraph::CleanPath( sourceBasePath, cleanValue );
         PathUtils::EnsureTrailingSlash( cleanValue );
         sourceBasePath = cleanValue;
@@ -106,7 +106,7 @@ FunctionCopy::FunctionCopy()
         }
     }
 
-    AStackString<> dstFile;
+    AStackString dstFile;
     NodeGraph::CleanPath( dstFileV->GetString(), dstFile );
     const bool dstIsFolderPath = PathUtils::IsFolderPath( dstFile );
 
@@ -121,7 +121,7 @@ FunctionCopy::FunctionCopy()
     Dependencies copyNodes( srcNodes.GetSize() );
     for ( const Node * srcNode : srcNodes )
     {
-        AStackString<> dst( dstFile );
+        AStackString dst( dstFile );
 
         // dest can be a file OR a path.  If it's a path, use the source filename part
         if ( dstIsFolderPath )

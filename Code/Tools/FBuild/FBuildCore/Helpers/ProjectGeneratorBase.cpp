@@ -171,7 +171,7 @@ ProjectGeneratorBase::Folder * ProjectGeneratorBase::GetFolderFor( const AString
     }
 
     // Search for existing folder
-    AStackString<> folderPath( path.Get(), lastSlash );
+    AStackString folderPath( path.Get(), lastSlash );
     for ( Folder * folder : m_Folders )
     {
         if ( folder->m_Path == folderPath )
@@ -224,7 +224,7 @@ void ProjectGeneratorBase::SortFilesAndFolders()
 void ProjectGeneratorBase::AddFile( const AString & fileName )
 {
     // Handle BasePath
-    AStackString<> relativePath;
+    AStackString relativePath;
     GetProjectRelativePath_Deprecated( fileName, relativePath );
 
     // Find existing folder
@@ -408,7 +408,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         }
 
         // convert ".ext" to "*.ext"
-        AStackString<> tmp;
+        AStackString tmp;
         tmp.Format( "*%s", ext.Get() );
         ext = tmp;
     }
@@ -558,11 +558,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
     for ( size_t i = 0; i < numTokens; ++i )
     {
-        AStackString<> token( ( compilerArgs.Get() + tokenRanges[ i ].m_StartIndex ),
-                              ( compilerArgs.Get() + tokenRanges[ i ].m_EndIndex ) );
+        AStackString token( ( compilerArgs.Get() + tokenRanges[ i ].m_StartIndex ),
+                            ( compilerArgs.Get() + tokenRanges[ i ].m_EndIndex ) );
         token.RemoveQuotes();
 
-        AStackString<> optionBody;
+        AStackString optionBody;
 
         // Handle space between option and payload
         for ( const AString & prefix : prefixes )
@@ -701,11 +701,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                        const AString & fileName,
                                                        AString & outRelativeFileName )
 {
-    AStackString<> cleanFileName;
+    AStackString cleanFileName;
     #if !defined( __WINDOWS__ )
         // Normally we keep all paths with native slashes, but in this case we
         // have windows slashes, so convert to native for the relative check
-        AStackString<> pathCopy( fileName );
+        AStackString pathCopy( fileName );
         pathCopy.Replace( '\\', '/' );
         NodeGraph::CleanPath( pathCopy, cleanFileName );
     #else

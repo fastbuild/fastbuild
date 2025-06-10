@@ -271,7 +271,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
     sd->ReturnCode = FBUILD_WRAPPER_CRASHED;
 
     // launch intermediate process
-    AStackString<> argsCopy( args );
+    AStackString argsCopy( args );
     argsCopy += " -wrapperintermediate";
 
     Process p;
@@ -318,7 +318,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
 int WrapperIntermediateProcess( const FBuildOptions & options )
 {
     // launch final process
-    AStackString<> argsCopy( options.m_Args );
+    AStackString argsCopy( options.m_Args );
     argsCopy += " -wrapperfinal";
 
     Process p;

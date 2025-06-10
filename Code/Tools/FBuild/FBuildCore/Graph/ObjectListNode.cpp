@@ -140,7 +140,7 @@ ObjectListNode::ObjectListNode()
     // Check Deoptimized compiler options which are conditionally not optional
     if ( ( m_DeoptimizeWritableFiles || m_DeoptimizeWritableFilesWithToken ) && m_CompilerOptionsDeoptimized.IsEmpty() )
     {
-        Error::Error_1101_MissingProperty( iter, function, AStackString<>( ".CompilerOptionsDeoptimized" ) );
+        Error::Error_1101_MissingProperty( iter, function, AStackString( ".CompilerOptionsDeoptimized" ) );
         return false;
     }
 
@@ -157,7 +157,7 @@ ObjectListNode::ObjectListNode()
         }
 
         // Check PCH creation command line options
-        AStackString<> pchObjectName; // TODO:A Use this
+        AStackString pchObjectName; // TODO:A Use this
         const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
         if ( pchFlags.IsMSVC() || pchFlags.IsClangCl() )
         {
@@ -241,7 +241,7 @@ ObjectListNode::ObjectListNode()
         // .CompilerOutputPath is required when compiling files (not needed if only creating a PCH)
         if ( m_CompilerOutputPath.IsEmpty() )
         {
-            Error::Error_1101_MissingProperty( iter, function, AStackString<>( "CompilerOutputPath" ) );
+            Error::Error_1101_MissingProperty( iter, function, AStackString( "CompilerOutputPath" ) );
             return false;
         }
     }
@@ -674,7 +674,7 @@ void ObjectListNode::GetObjectFileName( const AString & fileName, const AString 
 
     // if source comes from a directory listing, use path relative to dirlist base
     // to replicate the folder hierarchy in the output
-    AStackString<> subPath;
+    AStackString subPath;
     if ( baseDir.IsEmpty() == false )
     {
         ASSERT( NodeGraph::IsCleanPath( baseDir ) );
@@ -693,7 +693,7 @@ void ObjectListNode::GetObjectFileName( const AString & fileName, const AString 
         }
     }
 
-    AStackString<> fileNameOnly( lastSlash, lastDot );
+    const AStackString fileNameOnly( lastSlash, lastDot );
     objFile = m_CompilerOutputPath;
     objFile += subPath;
     objFile += m_CompilerOutputPrefix;
@@ -709,7 +709,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
                                               bool isUnityNode,
                                               bool isIsolatedFromUnityNode )
 {
-    AStackString<> objFile;
+    AStackString objFile;
     GetObjectFileName( inputFileName, baseDir, objFile );
 
     // Create an ObjectNode to compile the above file

@@ -335,8 +335,8 @@ void TestCache::ConsistentCacheKeysWithDist() const
     const char * storeQuote2 = output.Find( '\'', storeQuote1 + 1 );
     const char * hitQuote2 = output.Find( '\'', hitQuote1 + 1 );
     TEST_ASSERT( storeQuote2 && hitQuote2 );
-    AStackString<> storeKey( storeQuote1 + 1, storeQuote2 );
-    AStackString<> hitKey( hitQuote1 + 1, hitQuote2 );
+    AStackString storeKey( storeQuote1 + 1, storeQuote2 );
+    AStackString hitKey( hitQuote1 + 1, hitQuote2 );
     TEST_ASSERT( storeKey.IsEmpty() == false );
     TEST_ASSERT( storeKey == hitKey );
 }
@@ -1157,7 +1157,7 @@ void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char *
     fBuild.GetNodesOfType( Node::FILE_NODE, nodes );
     for ( size_t i = 0; i < numFiles; ++i )
     {
-        AStackString<> file( files[ i ] );
+        AStackString file( files[ i ] );
         #if defined( __WINDOWS__ )
             file.Replace( '/', '\\' ); // Allow calling code to not have to care about the platform
         #endif

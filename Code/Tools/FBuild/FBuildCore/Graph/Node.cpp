@@ -299,7 +299,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 {
     const char * lastSlash = name.FindLast( NATIVE_SLASH );
     ASSERT( PathUtils::IsFullPath( name ) ); // should be guaranteed to be a full path
-    AStackString<> pathOnly( name.Get(), lastSlash );
+    AStackString pathOnly( name.Get(), lastSlash );
     if ( FileIO::EnsurePathExists( pathOnly ) == false )
     {
         FLOG_ERROR( "Failed to create path '%s'", pathOnly.Get() );
@@ -899,7 +899,7 @@ void Node::ReplaceDummyName( const AString & newName )
 //------------------------------------------------------------------------------
 /*static*/ void Node::FixupPathForVSIntegration_GCC( AString & line, const char * tag )
 {
-    AStackString<> beforeTag( line.Get(), tag );
+    AStackString beforeTag( line.Get(), tag );
 
     // is the error position in (x,y) style? (As opposed to :x:y: style)
     const bool commaStyle = ( ( beforeTag.Find( ':' ) == nullptr ) && beforeTag.Find( ',' ) );
@@ -932,7 +932,7 @@ void Node::ReplaceDummyName( const AString & newName )
     }
 
     // rebuild fixed string
-    AStackString<> fixed;
+    AStackString fixed;
 
     // Normalize path
     CleanPathForVSIntegration( tokens[ 0 ], fixed );
@@ -961,7 +961,7 @@ void Node::ReplaceDummyName( const AString & newName )
 //------------------------------------------------------------------------------
 /*static*/ void Node::FixupPathForVSIntegration_SNC( AString & line, const char * tag )
 {
-    AStackString<> beforeTag( line.Get(), tag );
+    AStackString beforeTag( line.Get(), tag );
 
     const char * openBracket = beforeTag.Find( '(' );
     if ( openBracket == nullptr )
@@ -970,10 +970,10 @@ void Node::ReplaceDummyName( const AString & newName )
     }
 
     // rebuild fixed string
-    AStackString<> fixed;
+    AStackString fixed;
 
     // Normalize path
-    AStackString<> path( beforeTag.Get(), openBracket );
+    const AStackString path( beforeTag.Get(), openBracket );
     CleanPathForVSIntegration( path, fixed );
 
     // add back row, column
@@ -1015,14 +1015,14 @@ void Node::ReplaceDummyName( const AString & newName )
     const char * problemType = tokens[ 0 ].Get(); // Warning or error
     const char * warningNum = tokens[ 1 ].Get();
     const char * warningLine = tokens[ 4 ].Get();
-    AStackString<> fileName( tokens[ 6 ] );
+    AStackString fileName( tokens[ 6 ] );
     if ( fileName.BeginsWith( '"' ) && fileName.EndsWith( "\":" ) )
     {
         fileName.Trim( 1, 2 );
     }
 
     // Rebuild fixed string
-    AStackString<> fixed;
+    AStackString fixed;
 
     // Normalize path
     CleanPathForVSIntegration( fileName, fixed );
@@ -1074,7 +1074,7 @@ void Node::ReplaceDummyName( const AString & newName )
 /*static*/ uint32_t Node::CalcNameHash( const AString & name )
 {
     // xxHash3 returns a 64 bit hash and we use the lower 32 bits
-    AStackString<> nameLower( name );
+    AStackString nameLower( name );
     nameLower.ToLower();
     return static_cast<uint32_t>( xxHash3::Calc64( nameLower ) );
 }

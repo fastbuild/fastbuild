@@ -174,11 +174,11 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
 //------------------------------------------------------------------------------
 void CompilationDatabase::HandleInputFile( const AString & inputFile, const AString & baseDir, ObjectListContext * ctx )
 {
-    AStackString<> inputFileEscaped;
+    AStackString inputFileEscaped;
     inputFileEscaped = inputFile;
     JSON::Escape( inputFileEscaped );
 
-    AStackString<> outputFileEscaped;
+    AStackString outputFileEscaped;
     ctx->m_ObjectListNode->GetObjectFileName( inputFile, baseDir, outputFileEscaped );
     JSON::Escape( outputFileEscaped );
 
@@ -196,7 +196,7 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
         const char * found = argument.Find( "%1" );
         if ( found )
         {
-            AStackString<> arg;
+            AStackString arg;
             arg.Append( argument.Get(), (size_t)( found - argument.Get() ) );
             arg.Append( inputFileEscaped );
             arg.Append( found + 2, (size_t)( argument.GetEnd() - ( found + 2 ) ) );
@@ -209,7 +209,7 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
         found = argument.Find( "%2" );
         if ( found )
         {
-            AStackString<> arg;
+            AStackString arg;
             arg.Append( argument.Get(), (size_t)( found - argument.Get() ) );
             arg.Append( outputFileEscaped );
             arg.Append( found + 2, (size_t)( argument.GetEnd() - ( found + 2 ) ) );

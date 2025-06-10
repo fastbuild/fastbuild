@@ -281,7 +281,7 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
 //------------------------------------------------------------------------------
 /*static*/ const BFFVariable * BFFStackFrame::GetVar( const char * name, BFFStackFrame * frame )
 {
-    AStackString<> strName( name );
+    AStackString strName( name );
     return GetVar( strName, frame );
 }
 
@@ -339,7 +339,7 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 //------------------------------------------------------------------------------
 /*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable )
 {
-    AStackString<> strName( name );
+    AStackString strName( name );
     return GetParentDeclaration( strName, frame, variable );
 }
 

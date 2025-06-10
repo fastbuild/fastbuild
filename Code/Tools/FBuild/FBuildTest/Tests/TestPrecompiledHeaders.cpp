@@ -106,14 +106,14 @@ void TestPrecompiledHeaders::TestPCH() const
     options.m_UseCacheWrite = true;
 
     #if defined( __WINDOWS__ )
-        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
-        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
+        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
     #elif defined( __LINUX__ )
-        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
+        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
     #elif defined( __OSX__ )
-        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
     #endif
     EnsureFileDoesNotExist( obj );
     EnsureFileDoesNotExist( pch );
@@ -149,8 +149,8 @@ void TestPrecompiledHeaders::TestPCH_DifferentObj_MSVC() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/DifferentObj_MSVC/fbuild.bff";
 
-    const AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
-    const AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+    const AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
+    const AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
 
     EnsureFileDoesNotExist( obj );
     EnsureFileDoesNotExist( pch );
@@ -227,14 +227,14 @@ void TestPrecompiledHeaders::TestPCHWithCache() const
     options.m_UseCacheRead = true;
 
     #if defined( __WINDOWS__ )
-        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
-        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
+        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
     #elif defined( __LINUX__ )
-        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
+        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
     #elif defined( __OSX__ )
-        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
     #endif
     EnsureFileDoesNotExist( obj );
     EnsureFileDoesNotExist( pch );
@@ -387,7 +387,7 @@ void TestPrecompiledHeaders::CacheUniqueness() const
     const char * dstPCHUser = "../tmp/Test/PrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
 
     // Copy the files to the tmp Dir
-    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../tmp/Test/PrecompiledHeaders/CacheUniqueness/" ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString( "../tmp/Test/PrecompiledHeaders/CacheUniqueness/" ) ) );
     TEST_ASSERT( FileIO::FileCopy( pchA, dstPCH ) );
     #if defined( __WINDOWS__ )
         TEST_ASSERT( FileIO::FileCopy( pchCPP, dstPCHCPP ) );
@@ -406,7 +406,7 @@ void TestPrecompiledHeaders::CacheUniqueness() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
-        AStackString<> target( "PCHTest-Uniqueness" );
+        AStackString target( "PCHTest-Uniqueness" );
 
         TEST_ASSERT( fBuild.Build( target ) );
 
@@ -425,7 +425,7 @@ void TestPrecompiledHeaders::CacheUniqueness() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
-        AStackString<> target( "PCHTest-Uniqueness" );
+        AStackString target( "PCHTest-Uniqueness" );
 
         TEST_ASSERT( fBuild.Build( target ) );
 
@@ -446,7 +446,7 @@ void TestPrecompiledHeaders::CacheUniqueness2() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/fbuild.bff";
     options.m_ForceCleanBuild = true;
 
-    AStackString<> target( "PCHTest-CacheUniqueness2" );
+    AStackString target( "PCHTest-CacheUniqueness2" );
 
     // Write to cache
     {
@@ -490,7 +490,7 @@ void TestPrecompiledHeaders::Deoptimization() const
     TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
     // Copy files to temp dir
-    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../tmp/Test/PrecompiledHeaders/Deoptimization/" ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString( "../tmp/Test/PrecompiledHeaders/Deoptimization/" ) ) );
     TEST_ASSERT( FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp", "../tmp/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp" ) );
     TEST_ASSERT( FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/Deoptimization/PrecompiledHeader.h", "../tmp/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h" ) );
 
@@ -499,7 +499,7 @@ void TestPrecompiledHeaders::Deoptimization() const
     TEST_ASSERT( FileIO::SetReadOnly( "../tmp/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp", false ) );
     TEST_ASSERT( FileIO::SetReadOnly( "../tmp/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h", false ) );
 
-    AStackString<> target( "PCHTest-Deoptimization" );
+    AStackString target( "PCHTest-Deoptimization" );
 
     TEST_ASSERT( fBuild.Build( target ) );
 
@@ -603,7 +603,7 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/fbuild.bff";
     options.m_ForceCleanBuild = true;
 
-    AStackString<> target( "PCHTest-CacheAnalyze_MSVC" );
+    AStackString target( "PCHTest-CacheAnalyze_MSVC" );
     const char * files[] = {
                              "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch",
                              "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch.obj",
@@ -696,9 +696,9 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
         options.m_ForceCleanBuild = true;
         options.m_UseCacheWrite = true;
 
-        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
-        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
-        AStackString<> pchObj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
+        AStackString obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
+        AStackString pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
+        AStackString pchObj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
         EnsureFileDoesNotExist( obj );
         EnsureFileDoesNotExist( pch );
         EnsureFileDoesNotExist( pchObj );
@@ -706,7 +706,7 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
-        AStackString<> target( "PCHTestClang-Windows" );
+        AStackString target( "PCHTestClang-Windows" );
 
         TEST_ASSERT( fBuild.Build( target ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
@@ -738,7 +738,7 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetPCHDBClangFileName() ) );
 
-        AStackString<> target( "PCHTestClang-Windows" );
+        AStackString target( "PCHTestClang-Windows" );
 
         TEST_ASSERT( fBuild.Build( target ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
@@ -762,9 +762,9 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
         options.m_ForceCleanBuild = true;
         options.m_UseCacheRead = true;
 
-        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
-        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
-        AStackString<> pchObj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
+        AStackString obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
+        AStackString pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
+        AStackString pchObj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
         EnsureFileDoesNotExist( obj );
         EnsureFileDoesNotExist( pch );
         EnsureFileDoesNotExist( pchObj );
@@ -772,7 +772,7 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
-        AStackString<> target( "PCHTestClang-Windows" );
+        AStackString target( "PCHTestClang-Windows" );
 
         TEST_ASSERT( fBuild.Build( target ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
@@ -803,7 +803,7 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetPCHDBClangFileName() ) );
 
-        AStackString<> target( "PCHTestClang-Windows" );
+        AStackString target( "PCHTestClang-Windows" );
 
         TEST_ASSERT( fBuild.Build( target ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );

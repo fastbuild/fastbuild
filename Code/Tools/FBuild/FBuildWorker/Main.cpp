@@ -45,7 +45,7 @@ int Main( const AString & args );
                         LPSTR lpCmdLine,
                         int /*nCmdShow*/ )
     {
-        AStackString<> args( lpCmdLine );
+        AStackString args( lpCmdLine );
         const int32_t result = Main( args );
         PROFILE_SYNCHRONIZE
         return result;
@@ -54,7 +54,7 @@ int Main( const AString & args );
 #else
     int main( int argc, char ** argv )
     {
-        AStackString<> args;
+        AStackString args;
         for ( int i = 1; i < argc; ++i ) // NOTE: Skip argv[0] exe name
         {
             if ( i > 0 )
@@ -151,16 +151,16 @@ int Main( const AString & args )
     int LaunchSubProcess( const AString & args )
     {
         // try to make a copy of our exe
-        AStackString<> exeName;
+        AStackString exeName;
         Env::GetExePath( exeName );
-        AStackString<> exeNameCopy( exeName );
+        AStackString exeNameCopy( exeName );
         exeNameCopy += ".copy";
         const Timer t;
         while ( FileIO::FileCopy( exeName.Get(), exeNameCopy.Get() ) == false )
         {
             if ( t.GetElapsed() > 5.0f )
             {
-                AStackString<> msg;
+                AStackString msg;
                 msg.Format( "Failed to make sub-process copy. Error: %s\n\nSrc: %s\nDst: %s\n", LAST_ERROR_STR, exeName.Get(), exeNameCopy.Get() );
                 Env::ShowMsgBox( "FBuildWorker", msg.Get() );
                 return -2;
@@ -168,7 +168,7 @@ int Main( const AString & args )
             Thread::Sleep( 100 );
         }
 
-        AStackString<> argsCopy( args );
+        AStackString argsCopy( args );
         argsCopy += " -subprocess";
 
         // allow subprocess to access the mutex

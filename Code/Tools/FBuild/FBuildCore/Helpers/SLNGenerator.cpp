@@ -43,7 +43,7 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
 
     // determine folder for project
     const char * lastSlash = solutionFile.FindLast( NATIVE_SLASH );
-    AStackString<> solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
+    AStackString solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
 
     StackArray<AString> solutionProjectsToFolder;
     solutionProjectsToFolder.SetCapacity( projects.GetSize() );
@@ -85,7 +85,7 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
     {
     }
 
-    AStackString<> shortVersion( shortVersionStart, shortVersionEnd );
+    AStackString shortVersion( shortVersionStart, shortVersionEnd );
 
     // Extract primary version as an int
     uint32_t shortVersionInt = 0;
@@ -122,24 +122,24 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
         // get project base name only
         const char * lastSlash = projectPath.FindLast( NATIVE_SLASH );
         const char * lastPeriod = projectPath.FindLast( '.' );
-        AStackString<> projectName( lastSlash  ? lastSlash + 1  : projectPath.Get(),
-                                    lastPeriod ? lastPeriod     : projectPath.GetEnd() );
+        AStackString projectName( lastSlash  ? lastSlash + 1  : projectPath.Get(),
+                                  lastPeriod ? lastPeriod     : projectPath.GetEnd() );
 
         // make project path relative
-        AStackString<> solutionRelativePath;
+        AStackString solutionRelativePath;
         ProjectGeneratorBase::GetRelativePath( solutionBasePath, projectPath, solutionRelativePath );
         #if !defined( __WINDOWS__ )
             solutionRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
         #endif
 
         // retrieve projectGuid
-        AStackString<> projectGuid( project->GetProjectGuid() );
+        AStackString projectGuid( project->GetProjectGuid() );
 
         // Visual Studio expects the GUID to be uppercase
         projectGuid.ToUpper();
 
         // retrieve projectTypeGuid
-        AStackString<> projectTypeGuid( project->GetProjectTypeGuid() );
+        AStackString projectTypeGuid( project->GetProjectTypeGuid() );
 
         // Visual Studio expects the GUID to be uppercase
         projectTypeGuid.ToUpper();
@@ -192,12 +192,12 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
             if ( solutionFolder.m_Projects.Find( projectPath ) )
             {
                 // generate a guid for the solution folder
-                AStackString<> solutionFolderGuid;
+                AStackString solutionFolderGuid;
                 VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, solutionFolder.m_Path );
 
                 solutionFolderGuid.ToUpper();
 
-                AStackString<> projectToFolder;
+                AStackString projectToFolder;
                 projectToFolder.Format( "\t\t%s = %s\r\n", projectGuid.Get(), solutionFolderGuid.Get() );
 
                 solutionProjectsToFolder.Append( projectToFolder );
@@ -223,7 +223,7 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
         const char * pathEnd = solutionFolder.m_Path.Find( BACK_SLASH ); // Always windows-style
         while ( pathEnd )
         {
-            AStackString<> solutionFolderPath( solutionFolder.m_Path.Get(), pathEnd );
+            AStackString solutionFolderPath( solutionFolder.m_Path.Get(), pathEnd );
             if ( solutionFolderPaths.Find( solutionFolderPath ) == nullptr )
             {
                 solutionFolderPaths.Append( solutionFolderPath );
@@ -244,7 +244,7 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
         solutionFolderName = solutionFolderName ? solutionFolderName + 1 : solutionFolderPath.Get();
 
         // generate a guid for the solution folder
-        AStackString<> solutionFolderGuid;
+        AStackString solutionFolderGuid;
         VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, solutionFolderPath );
 
         // Guid must be uppercase (like visual)
@@ -270,7 +270,7 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
                     for ( const AString & item : items )
                     {
                         // make item path relative
-                        AStackString<> itemRelativePath;
+                        AStackString itemRelativePath;
                         ProjectGeneratorBase::GetRelativePath( solutionBasePath, item, itemRelativePath );
                         #if !defined( __WINDOWS__ )
                             itemRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
@@ -315,7 +315,7 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const Array<SolutionConfi
     // Solution Configuration Mappings to Projects
     for ( const VSProjectBaseNode * project : projects )
     {
-        AStackString<> projectGuid( project->GetProjectGuid() );
+        AStackString projectGuid( project->GetProjectGuid() );
         projectGuid.ToUpper();
 
         for ( const SolutionConfig & solutionConfig : solutionConfigs )
@@ -399,18 +399,18 @@ void SLNGenerator::WriteNestedProjects( const Array<AString> & solutionProjectsT
     for ( const AString & solutionFolderPath : solutionFolderPaths )
     {
         // parse solution folder parent path
-        AStackString<> solutionFolderParentGuid;
+        AStackString solutionFolderParentGuid;
         const char * lastSlash = solutionFolderPath.FindLast( NATIVE_SLASH );
         if ( lastSlash )
         {
-            AStackString<> solutionFolderParentPath( solutionFolderPath.Get(), lastSlash );
+            AStackString solutionFolderParentPath( solutionFolderPath.Get(), lastSlash );
             VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderParentGuid, solutionFolderParentPath );
         }
 
         if ( solutionFolderParentGuid.GetLength() > 0 )
         {
             // generate a guid for the solution folder
-            AStackString<> solutionFolderGuid;
+            AStackString solutionFolderGuid;
             VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, solutionFolderPath );
 
             solutionFolderGuid.ToUpper();

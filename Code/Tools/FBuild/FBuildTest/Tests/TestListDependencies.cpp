@@ -110,7 +110,7 @@ void TestListDependencies::Build_NoRebuild_BFFChange() const
 //------------------------------------------------------------------------------
 void TestListDependencies::Check_SourceResults( const FBuildTestOptions & options ) const
 {
-    AStackString<> outputFilename( options.GetWorkingDir() );
+    AStackString outputFilename( options.GetWorkingDir() );
     outputFilename += "/../tmp/Test/ListDependencies/SourceDeps.txt";
 
     PathUtils::FixupFilePath( outputFilename );

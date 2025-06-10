@@ -271,7 +271,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     // check for valid/supported protocol version
     if ( msg->GetProtocolVersion() != Protocol::PROTOCOL_VERSION_MAJOR )
     {
-        AStackString<> remoteAddr;
+        AStackString remoteAddr;
         TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
         FLOG_WARN( "Disconnecting '%s' due to bad protocol version\n", remoteAddr.Get() );
         Disconnect( connection );
@@ -281,7 +281,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     // Check for matching platform
     if ( msg->GetPlatform() != Env::GetPlatform() )
     {
-        AStackString<> remoteAddr;
+        AStackString remoteAddr;
         TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
         FLOG_WARN( "Disconnecting '%s' (%s) due to mismatched platform\n", remoteAddr.Get(), msg->GetHostName() );
         Disconnect( connection );
@@ -455,7 +455,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
 
             // Disconnect to handle old workers misbehaving
             ClientState * cs = (ClientState *)connection->GetUserData();
-            AStackString<> remoteAddr;
+            AStackString remoteAddr;
             TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
             FLOG_WARN( "Disconnecting '%s' (%s) due to corrupt MsgManifest (Client protocol %u.%u)\n",
                        remoteAddr.Get(),
@@ -517,7 +517,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
 
                 // Disconnect to handle old workers misbehaving
                 ClientState * cs = (ClientState *)connection->GetUserData();
-                AStackString<> remoteAddr;
+                AStackString remoteAddr;
                 TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
                 FLOG_WARN( "Disconnecting '%s' (%s) due to corrupt MsgFile (Client protocol %u.%u)\n",
                            remoteAddr.Get(),
@@ -528,7 +528,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
             else
             {
                 // something went wrong storing the file
-                AStackString<> fileName;
+                AStackString fileName;
                 manifest->GetRemoteFilePath( fileId, fileName );
                 FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n"
                            " - %s\n",

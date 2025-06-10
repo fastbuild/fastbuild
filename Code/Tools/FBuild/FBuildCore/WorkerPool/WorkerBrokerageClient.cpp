@@ -31,7 +31,7 @@ void WorkerBrokerageClient::FindWorkers( Array<AString> & outWorkerList )
 
     // Check for workers for the FASTBUILD_WORKERS environment variable
     // which is a list of worker addresses separated by a semi-colon.
-    AStackString<> workersEnv;
+    AStackString workersEnv;
     if ( Env::GetEnvVariable( "FASTBUILD_WORKERS", workersEnv ) )
     {
         // If we find a valid list of workers, we'll use that
@@ -58,7 +58,7 @@ void WorkerBrokerageClient::FindWorkers( Array<AString> & outWorkerList )
     {
         const size_t filesBeforeSearch = results.GetSize();
         if ( !FileIO::GetFiles( root,
-                                AStackString<>( "*" ),
+                                AStackString( "*" ),
                                 false,
                                 &results ) )
         {
@@ -84,7 +84,7 @@ void WorkerBrokerageClient::FindWorkers( Array<AString> & outWorkerList )
     for ( const AString & fileName : results )
     {
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
-        AStackString<> workerName( lastSlash + 1 );
+        AStackString workerName( lastSlash + 1 );
 
         // Filter out local addresses
         if ( localAddresses.Find( workerName ) )

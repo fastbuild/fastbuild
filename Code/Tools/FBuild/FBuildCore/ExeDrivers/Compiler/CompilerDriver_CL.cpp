@@ -111,7 +111,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
         {
             --end;
         }
-        AStackString<> includePath( start, end );
+        AStackString includePath( start, end );
         const bool isFullPath = PathUtils::IsFullPath( includePath );
 
         // Replace relative paths and leave full paths alone
@@ -205,10 +205,10 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
         {
             // handle /Option:%3 -> /Option:A
             const AString & pchObjectFileName = m_ObjectNode->GetPCHObjectName();
-            outFullArgs += AStackString<>( token.Get(), found );
+            outFullArgs += AStackString( token.Get(), found );
             ASSERT( pchObjectFileName.IsEmpty() == false ); // Should have been populated
             outFullArgs += pchObjectFileName;
-            outFullArgs += AStackString<>( found + 2, token.GetEnd() );
+            outFullArgs += AStackString( found + 2, token.GetEnd() );
             outFullArgs.AddDelimiter();
             return true;
         }
@@ -219,8 +219,8 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
         const char * const found = token.Find( "%4" );
         if ( found )
         {
-            const AStackString<> pre( token.Get(), found );
-            const AStackString<> post( found + 2, token.GetEnd() );
+            const AStackString pre( token.Get(), found );
+            const AStackString post( found + 2, token.GetEnd() );
             m_ObjectNode->ExpandCompilerForceUsing( outFullArgs, pre, post );
             outFullArgs.AddDelimiter();
             return true;
@@ -262,9 +262,9 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     if ( ( isLocal == false ) &&
          ( m_ObjectNode->IsUsingPDB() ) )
     {
-        AStackString<> pdbName;
+        AStackString pdbName;
         m_ObjectNode->GetPDBName( pdbName );
-        outFullArgs += AStackString<>().Format( " /Fd\"%s\"", pdbName.Get() );
+        outFullArgs += AStackString().Format( " /Fd\"%s\"", pdbName.Get() );
     }
 
     // Add args for source mapping
@@ -273,7 +273,7 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
         if ( ( m_SourceMapping.IsEmpty() == false ) && isLocal )
         {
             const AString & workingDir = FBuild::Get().GetOptions().GetWorkingDir();
-            AStackString<> tmp;
+            AStackString tmp;
             // Using -ffile-prefix-map would be better since that would change not only the file paths in
             // the DWARF debugging information but also in the __FILE__ and related predefined macros, but
             // -ffile-prefix-map is only supported starting with GCC 8 and Clang 10. The -fdebug-prefix-map

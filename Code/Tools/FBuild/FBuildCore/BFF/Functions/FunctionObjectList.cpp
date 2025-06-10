@@ -60,8 +60,8 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AStr
     compilerOptions.Tokenize( tokenRanges );
     for ( const AString::TokenRange & tokenRange : tokenRanges )
     {
-        const AStackString<> token( ( compilerOptions.Get() + tokenRange.m_StartIndex ),
-                                    ( compilerOptions.Get() + tokenRange.m_EndIndex ) );
+        const AStackString token( ( compilerOptions.Get() + tokenRange.m_StartIndex ),
+                                  ( compilerOptions.Get() + tokenRange.m_EndIndex ) );
 
         if ( token.Find( "%1" ) )
         {

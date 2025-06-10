@@ -126,7 +126,7 @@ bool BFFTokenizer::Tokenize( const AString & fileName, const BFFToken * token )
     ASSERT( token || ( m_Depth == 0 ) );
 
     // Canonicalize path
-    AStackString<> cleanFileName;
+    AStackString cleanFileName;
     NodeGraph::CleanPath( fileName, cleanFileName );
 
     // Have we seen this file before?
@@ -174,7 +174,7 @@ bool BFFTokenizer::TokenizeFromString( const AString & fileName, const AString &
     PROFILE_FUNCTION;
 
     // Canonicalize path
-    AStackString<> cleanFileName;
+    AStackString cleanFileName;
     NodeGraph::CleanPath( fileName, cleanFileName );
 
     // A file seen for the first time
@@ -255,7 +255,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         // String
         if ( IsStringStart( c ) )
         {
-            AStackString<> string;
+            AStackString string;
             if ( GetQuotedString( file, pos, string ) == false )
             {
                 return false; // GetQuotedString will have emitted an error
@@ -269,7 +269,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         {
             if ( ( pos + 1 ) < end )
             {
-                AStackString<> opString;
+                AStackString opString;
                 opString += pos[ 0 ];
                 opString += pos[ 1 ];
 
@@ -382,7 +382,7 @@ bool BFFTokenizer::HandleIdentifier( const char *& pos, const char * /*end*/, co
     {
         ++pos;
     }
-    const AStackString<> identifier( idStart, pos );
+    const AStackString identifier( idStart, pos );
 
     // TODO:C Check valid character follows:
     //   - whitespace
@@ -443,7 +443,7 @@ bool BFFTokenizer::HandleVariable( const char *& pos, const char * /*end*/, cons
 
     if ( IsStringStart( *pos ) )
     {
-        AStackString<> variable;
+        AStackString variable;
         if ( GetQuotedString( file, pos, variable ) == false )
         {
             return false; // GetQuotedString will have emitted an error
@@ -466,7 +466,7 @@ bool BFFTokenizer::HandleVariable( const char *& pos, const char * /*end*/, cons
     if ( ( pos - variableStart ) < 2 )
     {
         // TODO:C Improve error
-        const BFFToken error( file, pos, BFFTokenType::Invalid, AStackString<>( "???" ) );
+        const BFFToken error( file, pos, BFFTokenType::Invalid, AStackString( "???" ) );
         Error::Error_1017_UnexpectedCharInVariableValue( &error );
         return false;
     }
@@ -810,7 +810,7 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     iter++; // consume close )
 
     // look for varName in system environment
-    AStackString<> varValue;
+    AStackString varValue;
     uint32_t varHash = 0;
     const bool optional = true;
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
@@ -849,7 +849,7 @@ bool BFFTokenizer::HandleDirective_IfFileExists( const BFFFile & file, BFFTokenR
     }
     iter++; // consume close )
 
-    AStackString<> includePath( fileName );
+    AStackString includePath( fileName );
     ExpandIncludePath( file, includePath );
 
     // check if file exists
@@ -903,7 +903,7 @@ bool BFFTokenizer::ParseToEndIf( const char *& pos,
             SkipWhitespaceOnCurrentLine( pos );
 
             // get directive
-            AStackString<> directiveName;
+            AStackString directiveName;
             if ( GetDirective( file, pos, directiveName ) == false )
             {
                 return false; // GetDirective will have emitted an error
@@ -970,7 +970,7 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file,
     // TODO:B Check validity of macro arg
 
     // look for varName in system environment
-    AStackString<> varValue;
+    AStackString varValue;
     uint32_t varHash = 0;
     const bool optional = false;
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
@@ -989,10 +989,10 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file,
     varValue.Replace( "$", "^$" );
 
     // Inject variable declaration
-    AStackString<> varName( "." );
+    AStackString varName( "." );
     varName += envVarToImport;
     m_Tokens.EmplaceBack( file, pos, BFFTokenType::Variable, varName );
-    m_Tokens.EmplaceBack( file, pos, BFFTokenType::Operator, AStackString<>( "=" ) );
+    m_Tokens.EmplaceBack( file, pos, BFFTokenType::Operator, AStackString( "=" ) );
     m_Tokens.EmplaceBack( file, pos, BFFTokenType::String, varValue );
 
     return true;
@@ -1022,7 +1022,7 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file,
         Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "include", '?' ); // TODO:B A better error
         return false;
     }
-    AStackString<> include( argsIter->GetValueString() );
+    AStackString include( argsIter->GetValueString() );
 
     // TODO:B Check for empty string
 
@@ -1184,7 +1184,7 @@ void BFFTokenizer::ExpandIncludePath( const BFFFile & file, AString & includePat
         const char * lastSlash = currentFile.FindLast( NATIVE_SLASH );
         lastSlash = lastSlash ? lastSlash : currentFile.FindLast( OTHER_SLASH );
         lastSlash = lastSlash ? ( lastSlash + 1 ) : currentFile.Get(); // file only, truncate to empty
-        AStackString<> tmp( currentFile.Get(), lastSlash );
+        AStackString tmp( currentFile.Get(), lastSlash );
         tmp += includePath;
         includePath = tmp;
     }

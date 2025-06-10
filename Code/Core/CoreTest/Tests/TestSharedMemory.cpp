@@ -48,7 +48,7 @@ void TestSharedMemory::CreateAccessDestroy() const
 #if defined( __WINDOWS__ )
     // TODO:WINDOWS Test SharedMemory (without fork, so).
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
-    AStackString<> sharedMemoryName;
+    AStackString sharedMemoryName;
     sharedMemoryName.Format( "FBuild_SHM_Test_%u", (uint32_t)Process::GetCurrentId() );
 
     int pid = fork();

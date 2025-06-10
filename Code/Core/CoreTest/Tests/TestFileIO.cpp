@@ -73,7 +73,7 @@ REGISTER_TESTS_END
 void TestFileIO::FileExists() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // File
@@ -98,7 +98,7 @@ void TestFileIO::FileExists() const
     // Folder
     {
         // Create a directory
-        AStackString<> dirPath( path );
+        AStackString dirPath( path );
         dirPath += "_dir";
         FileIO::DirectoryCreate( dirPath );
         TEST_ASSERT( FileIO::DirectoryExists( dirPath ) );
@@ -113,7 +113,7 @@ void TestFileIO::FileExists() const
 void TestFileIO::FileDelete() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // create it
@@ -134,11 +134,11 @@ void TestFileIO::FileDelete() const
 void TestFileIO::FileCopy() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // generate copy file name
-    AStackString<> pathCopy( path );
+    AStackString pathCopy( path );
     pathCopy += ".copy";
 
     // make sure nothing is left from previous runs
@@ -181,14 +181,14 @@ void TestFileIO::FileCopySymlink() const
         // by the file copy API.  Also on Windows, it would make unit
         // tests require administrator privileges.
     #elif defined( __LINUX__ )
-        AStackString<> symlinkTarget( "symlink" );
+        AStackString symlinkTarget( "symlink" );
 
         // generate a process unique file path
-        AStackString<> path;
+        AStackString path;
         GenerateTempFileName( path );
 
         // generate copy file name
-        AStackString<> pathCopy( path );
+        AStackString pathCopy( path );
         pathCopy += ".copy";
 
         // make sure nothing is left from previous runs
@@ -205,7 +205,7 @@ void TestFileIO::FileCopySymlink() const
         TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
 
         // validate link
-        AStackString<> linkPath;
+        AStackString linkPath;
         ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
         TEST_ASSERT( length == symlinkTarget.GetLength() );
         linkPath.SetLength( length );
@@ -235,11 +235,11 @@ void TestFileIO::FileCopySymlink() const
 void TestFileIO::FileMove() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // generate copy file name
-    AStackString<> pathCopy( path );
+    AStackString pathCopy( path );
     pathCopy += ".copy";
 
     // make sure nothing is left from previous runs
@@ -265,7 +265,7 @@ void TestFileIO::FileMove() const
 void TestFileIO::ReadOnly() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // create it
@@ -296,7 +296,7 @@ void TestFileIO::ReadOnly() const
 void TestFileIO::FileTime() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // create it
@@ -362,8 +362,8 @@ void TestFileIO::LongPaths() const
     }
 
     // We'll operate in the tmp dir under a long sub folder (256 chars long)
-    AStackString<> tmpPath1;
-    AStackString<> tmpPath2;
+    AStackString tmpPath1;
+    AStackString tmpPath2;
     {
         VERIFY( FileIO::GetTempDir( tmpPath1 ) );
         tmpPath1 += "CoreTest_TestFileIO";
@@ -372,11 +372,11 @@ void TestFileIO::LongPaths() const
     }
 
     // Create some file paths to work with
-    AStackString<> filePathA;
-    AStackString<> filePathB;
-    AStackString<> subDir1;
-    AStackString<> subDir2;
-    AStackString<> filePathC;
+    AStackString filePathA;
+    AStackString filePathB;
+    AStackString subDir1;
+    AStackString subDir2;
+    AStackString filePathC;
     {
         // long file name A
         filePathA.Format( "%s/%s", tmpPath2.Get(), b.Get() );
@@ -463,7 +463,7 @@ void TestFileIO::LongPaths() const
     // GetFiles
     {
         StackArray<AString> files;
-        TEST_ASSERT( FileIO::GetFiles( tmpPath1, AStackString<>( "*" ), true, &files ) );
+        TEST_ASSERT( FileIO::GetFiles( tmpPath1, AStackString( "*" ), true, &files ) );
         TEST_ASSERT( files.GetSize() == 2 );
         files.Sort();
         TEST_ASSERT( files[ 0 ].EndsWith( filePathB.FindLast( '/' ) + 1 ) );
@@ -472,7 +472,7 @@ void TestFileIO::LongPaths() const
 
     // Get/SetCurrentDir
     {
-        AStackString<> original;
+        AStackString original;
         TEST_ASSERT( FileIO::GetCurrentDir( original ) );
         TEST_ASSERT( FileIO::SetCurrentDir( tmpPath2 ) );
         TEST_ASSERT( FileIO::SetCurrentDir( original ) );
@@ -497,7 +497,7 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
     VERIFY( FileIO::GetTempDir( tmpFileName ) );
 
     // add process unique identifier
-    AStackString<> buffer;
+    AStackString buffer;
     buffer.Format( "TestFileIO.%u.%u", Process::GetCurrentId(), m_Random.GetRand() );
     tmpFileName += buffer;
 }
@@ -510,15 +510,15 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
         #define CHECK_NORMALIZATION( badPath, expectedPath ) \
             do \
             { \
-                AStackString<> normalizedPath; \
-                TEST_ASSERT( FileIO::NormalizeWindowsPathCasing( AStackString<>( badPath ), normalizedPath ) ); \
+                AStackString normalizedPath; \
+                TEST_ASSERT( FileIO::NormalizeWindowsPathCasing( AStackString( badPath ), normalizedPath ) ); \
                 TEST_ASSERT( normalizedPath == expectedPath ); \
             } while ( false )
 
         // Out test needs to rely on some generally available directory.
         // While technically Windows can be installed on different drives or folders
         // it's reasonable for our test to not support that.
-        TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( "C:\\Windows" ) ) );
+        TEST_ASSERT( FileIO::DirectoryExists( AStackString( "C:\\Windows" ) ) );
 
         // Folder parts get the actual case of folders on disk
         CHECK_NORMALIZATION( "C:\\WINDOWS", "C:\\Windows" );
@@ -544,7 +544,7 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
 void TestFileIO::CreateOrOpenReadWrite() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // Make sure file does not exist (handle potential previous failed runs)
@@ -564,7 +564,7 @@ void TestFileIO::CreateOrOpenReadWrite() const
         TEST_ASSERT( fileSize == f.Tell() );
 
         // Read it back
-        AStackString<> pathCopy;
+        AStackString pathCopy;
         TEST_ASSERT( f.Seek( 0 ) );
         TEST_ASSERT( f.Read( pathCopy ) );
         TEST_ASSERT( path == pathCopy );
@@ -582,7 +582,7 @@ void TestFileIO::CreateOrOpenReadWrite() const
         TEST_ASSERT( f.Tell() == 0 );
 
         // Read content
-        AStackString<> pathCopy;
+        AStackString pathCopy;
         TEST_ASSERT( f.Read( pathCopy ) );
         TEST_ASSERT( path == pathCopy );
 
@@ -619,7 +619,7 @@ void TestFileIO::CreateOrOpenReadWrite() const
 void TestFileIO::CreateOrOpenReadWritePerf() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // Allocate a buffer. Each iteration will write a different subset of this

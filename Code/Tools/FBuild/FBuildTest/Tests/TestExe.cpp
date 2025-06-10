@@ -42,7 +42,7 @@ void TestExe::Build() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> exe( "../tmp/Test/Exe/exe.exe" );
+    const AStackString exe( "../tmp/Test/Exe/exe.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( exe );

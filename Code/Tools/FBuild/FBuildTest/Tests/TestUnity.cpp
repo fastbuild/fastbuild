@@ -122,8 +122,8 @@ void TestUnity::TestGenerate() const
 //------------------------------------------------------------------------------
 void TestUnity::TestGenerate_NoRebuild() const
 {
-    AStackString<> unity1( "../tmp/Test/Unity/Unity1.cpp" );
-    AStackString<> unity2( "../tmp/Test/Unity/Unity2.cpp" );
+    AStackString unity1( "../tmp/Test/Unity/Unity1.cpp" );
+    AStackString unity2( "../tmp/Test/Unity/Unity2.cpp" );
 
     EnsureFileExists( unity1 );
     EnsureFileExists( unity2 );
@@ -160,8 +160,8 @@ void TestUnity::TestGenerate_NoRebuild() const
 //------------------------------------------------------------------------------
 void TestUnity::TestGenerate_NoRebuild_BFFChange() const
 {
-    AStackString<> unity1( "../tmp/Test/Unity/Unity1.cpp" );
-    AStackString<> unity2( "../tmp/Test/Unity/Unity2.cpp" );
+    AStackString unity1( "../tmp/Test/Unity/Unity1.cpp" );
+    AStackString unity2( "../tmp/Test/Unity/Unity2.cpp" );
 
     EnsureFileExists( unity1 );
     EnsureFileExists( unity2 );
@@ -895,7 +895,8 @@ void TestUnity::CacheUsingRelativePaths() const
     {
         for ( const char * file : files )
         {
-            AStackString<> src, dst;
+            AStackString src;
+            AStackString dst;
             src.Format( "%s/%s", srcPath, file );
             dst.Format( "%s/%s", dstPath, file );
             TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
@@ -909,7 +910,7 @@ void TestUnity::CacheUsingRelativePaths() const
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheWrite = true;
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Unity/CacheUsingRelativePaths/A/Code/";
@@ -952,7 +953,7 @@ void TestUnity::CacheUsingRelativePaths() const
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheRead = true;
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Unity/CacheUsingRelativePaths/B/Code/";

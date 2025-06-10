@@ -44,7 +44,7 @@ void TestCUDA::Build() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        const AStackString<> obj( "../tmp/Test/CUDA/test.obj" );
+        const AStackString obj( "../tmp/Test/CUDA/test.obj" );
 
         // clean up anything left over from previous runs
         EnsureFileDoesNotExist( obj );
@@ -81,7 +81,7 @@ void TestCUDA::Build_NoRebuild() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CUDA/cuda.fdb" ) );
 
-        const AStackString<> obj( "../tmp/Test/CUDA/test.obj" );
+        const AStackString obj( "../tmp/Test/CUDA/test.obj" );
 
         // build (via alias)
         TEST_ASSERT( fBuild.Build( "CUDA-Obj" ) );
@@ -111,7 +111,7 @@ void TestCUDA::Build_CacheHit() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CUDA/cuda.fdb" ) );
 
-        const AStackString<> obj( "../tmp/Test/CUDA/test.obj" );
+        const AStackString obj( "../tmp/Test/CUDA/test.obj" );
 
         // clean up anything left over from previous runs
         EnsureFileDoesNotExist( obj );

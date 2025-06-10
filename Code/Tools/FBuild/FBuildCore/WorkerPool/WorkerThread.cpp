@@ -55,7 +55,7 @@ WorkerThread::~WorkerThread()
 {
     PROFILE_FUNCTION;
 
-    AStackString<> tmpDirPath;
+    AStackString tmpDirPath;
     VERIFY( FBuild::GetTempDir( tmpDirPath ) );
     #if defined( __WINDOWS__ )
         tmpDirPath += ".fbuild.tmp\\";
@@ -70,7 +70,7 @@ WorkerThread::~WorkerThread()
 
     VERIFY( FileIO::EnsurePathExists( tmpDirPath ) );
 
-    MutexHolder lock( s_TmpRootMutex );
+    const MutexHolder lock( s_TmpRootMutex );
     s_TmpRoot = tmpDirPath;
 }
 
@@ -266,7 +266,7 @@ void WorkerThread::WaitForStop()
     PROFILE_FUNCTION;
 
     // create isolated subdir
-    AStackString<> tmpFileName;
+    AStackString tmpFileName;
     CreateTempFilePath( ".tmp", tmpFileName );
     const char * lastSlash = tmpFileName.FindLast( NATIVE_SLASH );
     tmpFileName.SetLength( (uint32_t)( lastSlash - tmpFileName.Get() ) );

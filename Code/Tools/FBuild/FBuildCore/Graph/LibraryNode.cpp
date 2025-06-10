@@ -250,7 +250,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
-            AStackString<> pre;
+            AStackString pre;
             if ( token.GetLength() > 2 )
             {
                 pre.Assign( token.Get(), token.GetEnd() - 2 );
@@ -269,8 +269,8 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
-            AStackString<> post( "\"" );
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString post( "\"" );
 
             // concatenate files, quoted
             StackArray<AString> inputs;
@@ -288,14 +288,14 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             // handle /Option:%2 -> /Option:A
             if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>( token.Get(), token.GetEnd() - 2 );
+                fullArgs += AStackString( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += m_Name;
         }
         else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += m_Name;
             fullArgs += '"'; // post
@@ -384,8 +384,8 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         args.Tokenize( tokenRanges );
         for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            const AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
-                                        ( args.Get() + tokenRange.m_EndIndex ) );
+            const AStackString token( ( args.Get() + tokenRange.m_StartIndex ),
+                                      ( args.Get() + tokenRange.m_EndIndex ) );
 
             if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
             {
@@ -402,7 +402,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 //------------------------------------------------------------------------------
 void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Lib: ";

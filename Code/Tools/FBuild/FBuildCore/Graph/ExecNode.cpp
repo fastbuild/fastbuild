@@ -303,14 +303,14 @@ void ExecNode::GetFullArgs( AString & fullArgs ) const
     StackArray<AString> tokens;
     m_ExecArguments.Tokenize( tokens );
 
-    AStackString<> quote( "\"" );
+    AStackString quote( "\"" );
 
     for ( const AString & token : tokens )
     {
         if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
-            AStackString<> pre;
+            AStackString pre;
             if ( token.GetLength() > 2 )
             {
                 pre.Assign( token.Get(), token.GetEnd() - 2 );
@@ -322,7 +322,7 @@ void ExecNode::GetFullArgs( AString & fullArgs ) const
         else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
 
             // concatenate files, quoted
             GetInputFiles( fullArgs, pre, quote );
@@ -332,14 +332,14 @@ void ExecNode::GetFullArgs( AString & fullArgs ) const
             // handle /Option:%2 -> /Option:A
             if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>( token.Get(), token.GetEnd() - 2 );
+                fullArgs += AStackString( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += GetName().Get();
         }
         else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += GetName().Get();
             fullArgs += '"'; // post

@@ -154,7 +154,7 @@
     #if defined( __WINDOWS__ )
         if ( isUNCPath )
         {
-            AStackString<> copy( path );
+            AStackString copy( path );
             path.Clear();
             path += NATIVE_SLASH; // Restore double slash by adding one back
             path += copy;
@@ -208,7 +208,7 @@
     // Handle base paths which are not slash terminated
     if ( basePath.EndsWith( NATIVE_SLASH ) == false )
     {
-        AStackString<> basePathCopy( basePath );
+        AStackString basePathCopy( basePath );
         basePathCopy += NATIVE_SLASH;
         GetRelativePath( basePathCopy, fileName, outRelativeFileName );
         return;

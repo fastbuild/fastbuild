@@ -569,7 +569,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
     uint32_t jobId = 0;
     ms.Read( jobId );
 
-    AStackString<> name;
+    AStackString name;
     ms.Read( name );
 
     bool result = false;
@@ -622,7 +622,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
             // uses regexs to pattern match these strings and force an error
             // which we don't want. So we "clean" these strings to tweak the
             // message slightly to avoid that
-            AStackString<> messageCleaned;
+            AStackString messageCleaned;
             Node::CleanMessageToPreventMSBuildFailure( message, messageCleaned );
             failureOutput += messageCleaned;
         }
@@ -705,7 +705,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
 
     if ( FLog::IsMonitorEnabled() )
     {
-        AStackString<> msgBuffer;
+        AStackString msgBuffer;
         Job::GetMessagesForMonitorLog( messages, msgBuffer );
 
         FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
@@ -778,7 +778,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
             // 2. PDB file (optional)
             if ( result && on->IsUsingPDB() )
             {
-                AStackString<> pdbName;
+                AStackString pdbName;
                 on->GetPDBName( pdbName );
                 result = WriteFileToDisk( pdbName, mb, fileIndex++ );
             }
@@ -786,7 +786,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
             // 3. .nativecodeanalysis.xml (optional)
             if ( result && on->IsUsingStaticAnalysisMSVC() )
             {
-                AStackString<> xmlFileName;
+                AStackString xmlFileName;
                 on->GetNativeAnalysisXMLPath( xmlFileName );
                 result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
             }
@@ -794,7 +794,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
             // 4. .alt.obj (optional)
             if ( result && on->IsUsingDynamicDeopt() )
             {
-                AStackString<> altObjName;
+                AStackString altObjName;
                 on->GetAltObjPath( altObjName );
                 result = WriteFileToDisk( altObjName, mb, fileIndex++ );
             }
@@ -816,7 +816,7 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         }
 
         // get list of messages during remote work
-        AStackString<> msgBuffer;
+        AStackString msgBuffer;
         job->GetMessagesForLog( msgBuffer );
 
         if ( objectNode->IsMSVC() )

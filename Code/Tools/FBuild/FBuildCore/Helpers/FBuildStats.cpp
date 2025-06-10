@@ -158,10 +158,10 @@ void FBuildStats::OutputSummary() const
 
         const char * typeName = Node::GetTypeName( Node::Type( i ) );
 
-        AStackString<> cpuTime;
+        AStackString cpuTime;
         FormatTime( (float)( (double)stats.m_ProcessingTimeMS / (double)1000 ), cpuTime );
 
-        AStackString<> cacheInfo;
+        AStackString cacheInfo;
         if ( ( stats.m_NumCacheHits + stats.m_NumCacheMisses + stats.m_NumCacheStores ) > 0 )
         {
             cacheInfo.Format( "%-8u%-8u%-8u",
@@ -195,7 +195,7 @@ void FBuildStats::OutputSummary() const
         output.AppendFormat( " - Stores     : %u\n", stores );
     }
 
-    AStackString<> buffer;
+    AStackString buffer;
     FormatTime( m_TotalBuildTime, buffer );
     output += "Time:\n";
     output.AppendFormat( " - Real       : %s\n", buffer.Get() );

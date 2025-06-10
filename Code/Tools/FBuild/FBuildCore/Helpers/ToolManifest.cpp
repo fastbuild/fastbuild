@@ -212,7 +212,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
         ++pos;
 
         // file name & sub-path (relative to remote folder)
-        AStackString<> relativePath;
+        AStackString relativePath;
         GetRelativePath( m_MainExecutableRootPath, f.GetName(), relativePath );
         *pos = xxHash::Calc32( relativePath );
         ++pos;
@@ -292,7 +292,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 
     // Read header info
     uint64_t toolId;
-    AStackString<> mainExecutablePath;
+    AStackString mainExecutablePath;
     uint32_t numFiles( 0 );
     if ( !ms.Read( toolId ) ||
          !ms.Read( mainExecutablePath ) ||
@@ -309,7 +309,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     files.SetCapacity( numFiles );
     for ( size_t i = 0; i < (size_t)numFiles; ++i )
     {
-        AStackString<> name;
+        AStackString name;
         uint64_t timeStamp( 0 );
         uint32_t hash( 0 );
         uint32_t uncompressedContentSize( 0 );
@@ -351,7 +351,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     size_t numFilesAlreadySynchronized = 0;
     for ( size_t i = 0; i < (size_t)numFiles; ++i )
     {
-        AStackString<> localFile;
+        AStackString localFile;
         GetRemoteFilePath( (uint32_t)i, localFile );
 
         // Set modification time to now
@@ -393,20 +393,20 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     ASSERT( m_RemoteEnvironmentString == nullptr );
 
     // PATH=
-    AStackString<> basePath;
+    AStackString basePath;
     GetRemotePath( basePath );
-    AStackString<> paths;
+    AStackString paths;
     paths.Format( "PATH=%s", basePath.Get() );
 
     #if defined( __WINDOWS__ )
         // TMP=
-        AStackString<> normalTmp;
+        AStackString normalTmp;
         Env::GetEnvVariable( "TMP", normalTmp );
-        AStackString<> tmp;
+        AStackString tmp;
         tmp.Format( "TMP=%s", normalTmp.Get() );
 
         // SystemRoot=
-        AStackString<> sysRoot( "SystemRoot=C:\\Windows" );
+        AStackString sysRoot( "SystemRoot=C:\\Windows" );
     #endif
 
     // Calculate the length of the full environment string
@@ -618,11 +618,11 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     const size_t uncompressedDataSize = c.GetResultSize();
 
     // prepare name for this file
-    AStackString<> fileName;
+    AStackString fileName;
     GetRemoteFilePath( fileId, fileName );
 
     // prepare destination
-    AStackString<> pathOnly( fileName.Get(), fileName.FindLast( NATIVE_SLASH ) );
+    AStackString pathOnly( fileName.Get(), fileName.FindLast( NATIVE_SLASH ) );
     if ( !FileIO::EnsurePathExists( pathOnly ) )
     {
         return false; // FAILED
@@ -697,7 +697,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
         for ( size_t fileId = 0; fileId < numFiles; ++fileId )
         {
             // Get path to file
-            AStackString<> fileName;
+            AStackString fileName;
             GetRemoteFilePath( static_cast<uint32_t>( fileId ), fileName );
 
             // Make modification time now
@@ -715,7 +715,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
     ASSERT( remotePath.EndsWith( NATIVE_SLASH ) );
 
     // Get relative path for file and append
-    AStackString<> relativePath;
+    AStackString relativePath;
     GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].GetName(), relativePath );
     remotePath += relativePath;
 }
@@ -725,7 +725,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
 void ToolManifest::GetRemotePath( AString & path ) const
 {
     VERIFY( FBuild::GetTempDir( path ) );
-    AStackString<> subDir;
+    AStackString subDir;
     #if defined( __WINDOWS__ )
         subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
     #else

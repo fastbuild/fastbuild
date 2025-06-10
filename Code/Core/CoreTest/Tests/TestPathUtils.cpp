@@ -38,7 +38,7 @@ void TestPathUtils::TestFixupFolderPath() const
     #if defined( __WINDOWS__ )
         #define DOCHECK( before, after ) \
         { \
-            AStackString<> path( before ); \
+            AStackString path( before ); \
             PathUtils::FixupFolderPath( path ); \
             TEST_ASSERT( path == after ); \
         }
@@ -62,8 +62,8 @@ void TestPathUtils::TestPathBeginsWith() const
 {
     #define DOCHECK( path, subPath, expectedResult ) \
     { \
-        const AStackString<> a( path ); \
-        const AStackString<> b( subPath ); \
+        const AStackString a( path ); \
+        const AStackString b( subPath ); \
         const bool result = PathUtils::PathBeginsWith( a, b ); \
         TEST_ASSERT( result == expectedResult ); \
     }
@@ -97,8 +97,8 @@ void TestPathUtils::TestPathEndsWithFile() const
 {
     #define DOCHECK( path, subPath, expectedResult ) \
     { \
-        const AStackString<> a( path ); \
-        const AStackString<> b( subPath ); \
+        const AStackString a( path ); \
+        const AStackString b( subPath ); \
         const bool result = PathUtils::PathEndsWithFile( a, b ); \
         TEST_ASSERT( result == expectedResult ); \
     }
@@ -132,9 +132,9 @@ void TestPathUtils::GetRelativePath() const
 {
     #define DOCHECK( base, path, expectedResult ) \
     { \
-        AStackString<> result; \
-        PathUtils::GetRelativePath( AStackString<>( base ), \
-                                    AStackString<>( path ), \
+        AStackString result; \
+        PathUtils::GetRelativePath( AStackString( base ), \
+                                    AStackString( path ), \
                                     result ); \
         TEST_ASSERTM( result == expectedResult, "Expected: %s\nGot     : %s", expectedResult, result.Get() ); \
     }

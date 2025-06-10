@@ -252,7 +252,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     // print basic or detailed output, depending on options
     // we combine everything into one string to ensure it is contiguous in
     // the output
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "C#: ";
@@ -280,14 +280,14 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
     StackArray<AString> tokens;
     m_CompilerOptions.Tokenize( tokens );
 
-    AStackString<> quote( "\"" );
+    AStackString quote( "\"" );
 
     for ( const AString & token : tokens )
     {
         if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
-            AStackString<> pre;
+            AStackString pre;
             if ( token.GetLength() > 2 )
             {
                 pre.Assign( token.Get(), token.GetEnd() - 2 );
@@ -299,7 +299,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
 
             // concatenate files, quoted
             GetInputFiles( fullArgs, pre, quote );
@@ -309,14 +309,14 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
             // handle /Option:%2 -> /Option:A
             if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>( token.Get(), token.GetEnd() - 2 );
+                fullArgs += AStackString( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += m_Name;
         }
         else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += m_Name;
             fullArgs += '"'; // post
@@ -324,7 +324,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "%3" ) )
         {
             // handle /Option:%3 -> /Option:A,B,C
-            AStackString<> pre( token.Get(), token.GetEnd() - 2 );
+            AStackString pre( token.Get(), token.GetEnd() - 2 );
             fullArgs += pre;
 
             // concatenate files, unquoted
@@ -333,7 +333,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "\"%3\"" ) )
         {
             // handle /Option:"%3" -> /Option:"A","B","C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 4 );
+            AStackString pre( token.Get(), token.GetEnd() - 4 );
             fullArgs += pre;
 
             // concatenate files, quoted

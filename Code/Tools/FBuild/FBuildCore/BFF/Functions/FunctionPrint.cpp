@@ -120,7 +120,7 @@ FunctionPrint::FunctionPrint()
 //------------------------------------------------------------------------------
 /*static*/ void FunctionPrint::PrintVarRecurse( const BFFVariable & var, uint32_t indent )
 {
-    AStackString<> indentStr;
+    AStackString indentStr;
     for ( uint32_t i = 0; i < indent; ++i )
     {
         indentStr += "    ";
@@ -137,7 +137,7 @@ FunctionPrint::FunctionPrint()
         }
         case BFFVariable::VAR_STRING:
         {
-            AStackString<> value( var.GetString() );
+            AStackString value( var.GetString() );
             value.Replace( "'", "^'" ); // escape single quotes
             FLOG_OUTPUT( "%s = '%s'\n", var.GetName().Get(), value.Get() );
             break;
@@ -153,7 +153,7 @@ FunctionPrint::FunctionPrint()
             FLOG_OUTPUT( "%s = // ArrayOfStrings, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)strings.GetSize(), indentStr.Get() );
             for ( const AString & string : strings )
             {
-                AStackString<> value( string );
+                AStackString value( string );
                 value.Replace( "'", "^'" ); // escape single quotes
                 FLOG_OUTPUT( "%s    '%s'\n", indentStr.Get(), value.Get() );
             }

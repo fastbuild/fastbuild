@@ -84,7 +84,7 @@ void WorkerSettings::SetMinimumFreeMemoryMiB( uint32_t value )
 //------------------------------------------------------------------------------
 void WorkerSettings::Load()
 {
-    AStackString<> settingsPath;
+    AStackString settingsPath;
     Env::GetExePath( settingsPath );
     settingsPath += ".settings";
 
@@ -122,7 +122,7 @@ void WorkerSettings::Load()
 //------------------------------------------------------------------------------
 void WorkerSettings::Save()
 {
-    AStackString<> settingsPath;
+    AStackString settingsPath;
     Env::GetExePath( settingsPath );
     settingsPath += ".settings";
 

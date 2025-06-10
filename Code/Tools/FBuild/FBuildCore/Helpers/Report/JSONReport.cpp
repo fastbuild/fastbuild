@@ -71,13 +71,13 @@ void JSONReport::Save() const
 //------------------------------------------------------------------------------
 void JSONReport::CreateOverview( const FBuildStats & stats )
 {
-    AStackString<> buffer;
+    AStackString buffer;
 
     Write( "\"Overview\": {\n" );
     Write( "\t\t" );
 
     // Full command line
-    AStackString<> commandLineBuffer;
+    AStackString commandLineBuffer;
     Env::GetCmdLine( commandLineBuffer );
     #if defined( __WINDOWS__ )
         const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
@@ -86,12 +86,12 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
         const char * commandLine = commandLineBuffer.Get();
     #endif
 
-    AStackString<> programName( commandLine );
+    AStackString programName( commandLine );
     JSON::Escape( programName );
     Write( "\"cmd line options\": \"%s\",\n\t\t", programName.Get() );
 
     // Target
-    AStackString<> targets;
+    AStackString targets;
     const Node * rootNode = stats.GetRootNode();
     if ( rootNode->GetType() != Node::PROXY_NODE )
     {
@@ -139,7 +139,7 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
     Write( "\"Version\": \"%s %s\",\n\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
 
     // report time
-    AStackString<> reportDateTime;
+    AStackString reportDateTime;
     GetReportDateTime( reportDateTime );
 
     // NOTE: leave space to patch in time taken later
@@ -180,7 +180,7 @@ void JSONReport::DoCPUTimeByType( const FBuildStats & stats )
         total += items[ i ].m_Value;
     }
 
-    AStackString<> buffer;
+    AStackString buffer;
     for ( size_t i = 0; i < items.GetSize(); ++i )
     {
         const Node::Type type = ( Node::Type )(size_t)items[ i ].m_UserData;
@@ -264,7 +264,7 @@ void JSONReport::DoCacheStats( const FBuildStats & /*stats*/ )
         items.EmplaceBack( "Cache Miss", (float)totalCacheMisses );
         items.EmplaceBack( "Cache Hit", (float)totalCacheHits );
 
-        AStackString<> buffer;
+        AStackString buffer;
         for ( size_t i = 0; i < items.GetSize(); ++i )
         {
             const float percent = ( items[ i ].m_Value / (float)totalOutOfDateItems ) * 100.0f;
@@ -440,7 +440,7 @@ void JSONReport::DoCPUTimeByLibrary()
         Write( "\"Obj Built\": %u,\n\t\t\t", objCount );
         Write( "\"Type\": \"%s\",\n\t\t\t", type );
 
-        AStackString<> itemName( name );
+        AStackString itemName( name );
         JSON::Escape( itemName );
         Write( "\"Name\": \"%s\"\n\t\t", itemName.Get() );
 
@@ -490,7 +490,7 @@ void JSONReport::DoCPUTimeByItem( const FBuildStats & stats )
             Write( "\"Type\": \"%s\",\n\t\t\t", type );
             Write( "\"Cache\": \"%s\",\n\t\t\t", cacheHit ? "HIT" : ( cacheStore ? "STORE" : "N/A" ) );
 
-            AStackString<> itemName( name );
+            AStackString itemName( name );
             JSON::Escape( itemName );
             Write( "\"Name\": \"%s\"\n\t\t", itemName.Get() );
 
@@ -504,7 +504,7 @@ void JSONReport::DoCPUTimeByItem( const FBuildStats & stats )
             Write( "\"Time\": \"%2.3fs\",\n\t\t\t", (double)time );
             Write( "\"Type\": \"%s\",\n\t\t\t", type );
 
-            AStackString<> itemName( name );
+            AStackString itemName( name );
             JSON::Escape( itemName );
             Write( "\"Name\": \"%s\"\n\t\t", itemName.Get() );
 
@@ -590,7 +590,7 @@ void JSONReport::DoIncludes()
             Write( "\"Included\": %u,\n\t\t\t\t\t", included );
             Write( "\"PCH\": \"%s\",\n\t\t\t\t\t", inPCH ? "YES" : "no" );
 
-            AStackString<> programName( fileName );
+            AStackString programName( fileName );
             JSON::Escape( programName );
 
             Write( "\"Name\": \"%s\"\n\t\t\t\t", programName.Get() );

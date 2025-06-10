@@ -173,7 +173,7 @@ void Job::Serialize( IOStream & stream )
     // write jobid
     stream.Write( m_JobId );
     stream.Write( m_Node->GetName() );
-    AStackString<> workingDir;
+    AStackString workingDir;
     VERIFY( FileIO::GetCurrentDir( workingDir ) );
     stream.Write( workingDir );
 

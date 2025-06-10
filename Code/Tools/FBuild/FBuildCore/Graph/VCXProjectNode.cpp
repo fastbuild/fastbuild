@@ -210,7 +210,7 @@ VCXProjectNode::VCXProjectNode()
     // generate GUID if not specified
     if ( m_ProjectGuid.IsEmpty() )
     {
-        AStackString<> relativePath;
+        AStackString relativePath;
         if ( m_Name.BeginsWith( FBuild::Get().GetWorkingDir() ) )
         {
             relativePath = m_Name.Get() + FBuild::Get().GetWorkingDir().GetLength() + 1;
@@ -316,7 +316,7 @@ VCXProjectNode::~VCXProjectNode() = default;
 
     // .vcxproj.filters
     const AString & filters = pg.GenerateVCXProjFilters( m_Name );
-    AStackString<> filterFile( m_Name );
+    AStackString filterFile( m_Name );
     filterFile += ".filters";
     if ( ProjectGeneratorBase::WriteIfDifferent( "VCXProject", filters, filterFile ) == false )
     {

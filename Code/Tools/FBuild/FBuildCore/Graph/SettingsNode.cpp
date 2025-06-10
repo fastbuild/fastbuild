@@ -175,7 +175,7 @@ void SettingsNode::ProcessEnvironment( const Array<AString> & envStrings ) const
     UniquePtr<char, FreeDeletor> envString( (char *)ALLOC( size + 1 ) ); // +1 for extra double-null
 
     // while iterating, extract the LIB environment variable (if there is one)
-    AStackString<> libEnvVar;
+    AStackString libEnvVar;
 
     // copy strings end to end
     char * dst = envString.Get();

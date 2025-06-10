@@ -85,7 +85,7 @@
                                             const char * fmtString,
                                             ... )
     {
-        AStackString<> buffer;
+        AStackString buffer;
 
         va_list args;
         va_start( args, fmtString );

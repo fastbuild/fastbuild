@@ -102,7 +102,7 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
 /*static*/ void CachePlugin::CacheOutputWrapper( const char * message )
 {
     // Ensure message includes newline ending
-    AStackString<> buffer( message );
+    AStackString buffer( message );
     if ( buffer.EndsWith( '\n' ) == false )
     {
         buffer += '\n';

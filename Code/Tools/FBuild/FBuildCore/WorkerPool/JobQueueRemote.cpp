@@ -316,7 +316,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         // file name should be the same as on host
         const char * fileName = ( job->GetRemoteName().FindLast( NATIVE_SLASH ) + 1 );
 
-        AStackString<> tmpFileName;
+        AStackString tmpFileName;
         WorkerThread::CreateTempFilePath( fileName, tmpFileName );
         node->ReplaceDummyName( tmpFileName );
 
@@ -335,7 +335,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     // Delete any left over PDB from a previous run (to be sure we have a clean pdb)
     if ( node->IsUsingPDB() && ( job->IsLocal() == false ) )
     {
-        AStackString<> pdbName;
+        AStackString pdbName;
         node->GetPDBName( pdbName );
         FileIO::FileDelete( pdbName.Get() );
     }
@@ -417,7 +417,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         // Cleanup PDB file
         if ( node->IsUsingPDB() )
         {
-            AStackString<> pdbName;
+            AStackString pdbName;
             node->GetPDBName( pdbName );
             FileIO::FileDelete( pdbName.Get() );
         }
@@ -428,7 +428,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
 
     if ( job->IsLocal() && FLog::IsMonitorEnabled() )
     {
-        AStackString<> msgBuffer;
+        AStackString msgBuffer;
         job->GetMessagesForMonitorLog( msgBuffer );
 
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
@@ -460,7 +460,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     //-----------------------
     if ( includePDB )
     {
-        AStackString<> pdbFileName;
+        AStackString pdbFileName;
         node->GetPDBName( pdbFileName );
         fileNames.Append( pdbFileName );
     }
@@ -469,7 +469,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     //--------------------------------------------
     if ( usingStaticAnalysis )
     {
-        AStackString<> xmlFileName;
+        AStackString xmlFileName;
         node->GetNativeAnalysisXMLPath( xmlFileName );
         fileNames.Append( xmlFileName );
     }
@@ -478,7 +478,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     //--------------------------------------------
     if ( usingDynamicDeoptimization )
     {
-        AStackString<> altObjName;
+        AStackString altObjName;
         node->GetAltObjPath( altObjName );
         fileNames.Append( altObjName );
     }

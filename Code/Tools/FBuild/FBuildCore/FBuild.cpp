@@ -226,7 +226,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 //------------------------------------------------------------------------------
 bool FBuild::Build( const char * target )
 {
-    return Build( AStackString<>( target ) );
+    return Build( AStackString( target ) );
 }
 
 // Build
@@ -330,12 +330,12 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
     m_DependencyGraph->Save( memoryStream, nodeGraphDBFile );
 
     // Ensure output dir exists where we'll save the DB
-    AStackString<> fileName( nodeGraphDBFile );
+    AStackString fileName( nodeGraphDBFile );
     const char * lastSlash = fileName.FindLast( '/' );
     lastSlash = lastSlash ? lastSlash : fileName.FindLast( '\\' );
     if ( lastSlash )
     {
-        AStackString<> pathOnly( fileName.Get(), lastSlash );
+        AStackString pathOnly( fileName.Get(), lastSlash );
         if ( FileIO::EnsurePathExists( pathOnly ) == false )
         {
             FLOG_ERROR( "Failed to create directory for DepGraph saving '%s'", pathOnly.Get() );

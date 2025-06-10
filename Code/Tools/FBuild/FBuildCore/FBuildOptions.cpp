@@ -32,7 +32,7 @@ FBuildOptions::FBuildOptions()
     m_NumWorkerThreads = Env::GetNumProcessors();
 
     // Default working dir is the system working dir
-    AStackString<> workingDir;
+    AStackString workingDir;
     VERIFY( FileIO::GetCurrentDir( workingDir ) );
     SetWorkingDir( workingDir );
 }
@@ -42,10 +42,10 @@ FBuildOptions::FBuildOptions()
 FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char * argv[] )
 {
     // Store executable name
-    AStackString<> programName( "FBuild.exe" );
+    AStackString programName( "FBuild.exe" );
     if ( argc > 0 )
     {
-        AStackString<> programPath( argv[ 0 ] );
+        AStackString programPath( argv[ 0 ] );
         if ( !programPath.IsEmpty() )
         {
             const char * slash = programPath.FindLast( NATIVE_SLASH );
@@ -58,7 +58,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     // Parse options
     for ( int32_t i = 1; i < argc; ++i ) // start from 1 to skip exe name
     {
-        AStackString<> thisArg( argv[ i ] );
+        AStackString thisArg( argv[ i ] );
 
         // Check WSL wrapper
         #if defined( __WINDOWS__ )
@@ -497,7 +497,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     // cache mode environment variable (if not supplied on cmd line)
     if ( ( m_UseCacheRead == false ) && ( m_UseCacheWrite == false ) )
     {
-        AStackString<> cacheMode;
+        AStackString cacheMode;
         if ( Env::GetEnvVariable( "FASTBUILD_CACHE_MODE", cacheMode ) )
         {
             if ( cacheMode == "r" )
@@ -550,7 +550,7 @@ void FBuildOptions::SetWorkingDir( const AString & path )
         // work as expected:
         // a) Compilers with path portability warnings (Clang)
         // b) Caching
-        AStackString<> normalizedWorkingDir;
+        AStackString normalizedWorkingDir;
         if ( FileIO::NormalizeWindowsPathCasing( m_WorkingDir, normalizedWorkingDir ) )
         {
             m_WorkingDir = normalizedWorkingDir;
@@ -563,14 +563,14 @@ void FBuildOptions::SetWorkingDir( const AString & path )
             // convert subst drive mappings to the read path
             // (so you can't compile from the real path and the subst path at the
             // same time which would cause problems)
-            AStackString<> canonicalPath;
+            AStackString canonicalPath;
             if ( ( m_WorkingDir.GetLength() >= 2 ) &&
                  ( m_WorkingDir[ 1 ] == ':' ) &&
                  ( m_WorkingDir[ 0 ] >= 'A' ) &&
                  ( m_WorkingDir[ 0 ] <= 'Z' ) )
             {
                 // get drive letter without slash
-                AStackString<> driveLetter( m_WorkingDir.Get(), m_WorkingDir.Get() + 2 );
+                AStackString driveLetter( m_WorkingDir.Get(), m_WorkingDir.Get() + 2 );
 
                 // get real path for drive letter (could be the same, or a subst'd path)
                 char actualPath[ MAX_PATH ];
@@ -597,14 +597,14 @@ void FBuildOptions::SetWorkingDir( const AString & path )
                 canonicalPath = m_WorkingDir;
             }
         #elif defined( __OSX__ )
-            AStackString<> canonicalPath( m_WorkingDir );
+            AStackString canonicalPath( m_WorkingDir );
         #endif
 
         // case insensitive
         canonicalPath.ToLower();
     #elif defined( __LINUX__ )
         // case sensitive
-        AStackString<> canonicalPath( m_WorkingDir );
+        AStackString canonicalPath( m_WorkingDir );
     #endif
 
     m_WorkingDirHash = xxHash::Calc32( canonicalPath );

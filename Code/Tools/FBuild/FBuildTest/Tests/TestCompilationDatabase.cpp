@@ -56,7 +56,7 @@ void TestCompilationDatabase::JSONEscape() const
 {
     #define CHECK_JSONESCAPE( str, result ) \
     { \
-        AStackString<> string( str ); \
+        AStackString string( str ); \
         JSON::Escape( string ); \
         TEST_ASSERT( string == result ); \
     }
@@ -147,14 +147,14 @@ void TestCompilationDatabase::DoTest( const char * bffFile, const char * target,
     TEST_ASSERT( p.ParseFromFile( bffFile ) );
 
     Dependencies deps;
-    Node * node = ng.FindNode( AStackString<>( target ) );
+    Node * node = ng.FindNode( AStackString( target ) );
     TEST_ASSERT( node != nullptr );
     deps.Add( node );
 
     CompilationDatabase compdb;
     const AString & actualResult = compdb.Generate( ng, deps );
 
-    AStackString<> expectedResult( result );
+    AStackString expectedResult( result );
     PrepareExpectedResult( expectedResult );
 
     TEST_ASSERT( actualResult == expectedResult );
@@ -164,20 +164,20 @@ void TestCompilationDatabase::DoTest( const char * bffFile, const char * target,
 //------------------------------------------------------------------------------
 /*static*/ void TestCompilationDatabase::PrepareExpectedResult( AString & result )
 {
-    AStackString<> workDir;
+    AStackString workDir;
     workDir = FBuild::Get().GetWorkingDir();
 
-    AStackString<> testDir;
+    AStackString testDir;
     testDir += workDir;
     testDir += "/Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/";
     NodeGraph::CleanPath( testDir );
 
-    AStackString<> outDir;
+    AStackString outDir;
     outDir += workDir;
     outDir += "/../tmp/Test/CompilationDatabase/";
     NodeGraph::CleanPath( outDir );
 
-    AStackString<> slash;
+    AStackString slash;
     slash = NATIVE_SLASH_STR;
 
     JSON::Escape( workDir );

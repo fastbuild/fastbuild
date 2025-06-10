@@ -217,7 +217,7 @@ Function::~Function() = default;
             else if ( headerArgsIter->IsVariable() )
             {
                 // a variable, possibly with substitutions
-                AStackString<> srcVarName;
+                AStackString srcVarName;
                 bool srcParentScope;
                 if ( BFFParser::ParseVariableName( headerArgsIter, srcVarName, srcParentScope ) == false )
                 {
@@ -380,7 +380,7 @@ bool Function::GetString( const BFFToken * iter, const BFFVariable *& var, const
     {
         if ( required )
         {
-            Error::Error_1101_MissingProperty( iter, this, AStackString<>( name ) );
+            Error::Error_1101_MissingProperty( iter, this, AStackString( name ) );
             return false;
         }
         return true;
@@ -430,7 +430,7 @@ bool Function::GetStringOrArrayOfStrings( const BFFToken * iter, const BFFVariab
     {
         if ( required )
         {
-            Error::Error_1101_MissingProperty( iter, this, AStackString<>( name ) );
+            Error::Error_1101_MissingProperty( iter, this, AStackString( name ) );
             return false;
         }
         return true;
@@ -464,7 +464,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         // missing
         if ( required )
         {
-            Error::Error_1101_MissingProperty( iter, this, AStackString<>( propertyName ) );
+            Error::Error_1101_MissingProperty( iter, this, AStackString( propertyName ) );
             return false; // required!
         }
         return true; // missing but not required
@@ -538,7 +538,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     filesToExcludeCleaned.SetCapacity( filesToExclude.GetSize() );
     for ( const AString & file : filesToExclude )
     {
-        AStackString<> cleanPath;
+        AStackString cleanPath;
         NodeGraph::CleanPath( file, cleanPath, false );
         if ( cleanPath.BeginsWith( ".." ) )
         {
@@ -551,7 +551,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     for ( const AString & path : paths )
     {
         // get node for the dir we depend on
-        AStackString<> name;
+        AStackString name;
         DirectoryListNode::FormatName( path,
                                        patterns,
                                        recurse,
@@ -609,7 +609,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( cn->GetType() == Node::FILE_NODE )
         {
             // Generate a name for the CompilerNode
-            AStackString<> implicitCompilerNodeName( "?AutoCompiler?" );
+            AStackString implicitCompilerNodeName( "?AutoCompiler?" );
             implicitCompilerNodeName += compiler;
             Node * implicitCompilerNode = nodeGraph.FindNode( implicitCompilerNodeName );
             if ( implicitCompilerNode && ( implicitCompilerNode->GetType() == Node::COMPILER_NODE ) )
@@ -631,7 +631,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         // set the default executable path to be the compiler exe directory
 
         // Generate a name for the CompilerNode
-        AStackString<> nodeName( "?AutoCompiler?" );
+        AStackString nodeName( "?AutoCompiler?" );
         nodeName += compiler;
 
         // Check if we've already implicitly created this Compiler
@@ -654,7 +654,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         const char * lastSlash = compiler.FindLast( NATIVE_SLASH );
         if ( lastSlash )
         {
-            AStackString<> executableRootPath( compiler.Get(), lastSlash + 1 );
+            AStackString executableRootPath( compiler.Get(), lastSlash + 1 );
             VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "ExecutableRootPath", executableRootPath ) );
         }
         if ( !compilerNode->Initialize( nodeGraph, iter, nullptr ) )
@@ -954,7 +954,7 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFToken * iter, con
     }
 
     // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
-    AStackString<> propertyName( "." );
+    AStackString propertyName( "." );
     propertyName += nameMD->GetName();
 
     // Find the value for this property from the BFF
@@ -1027,7 +1027,7 @@ bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFToken * iter,
             }
 
             // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
-            AStackString<> propertyName( "." );
+            AStackString propertyName( "." );
             propertyName += property.GetName();
 
             // Find the value for this property from the BFF
@@ -1069,7 +1069,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
         const bool required = ( property.HasMetaData<Meta_Optional>() == nullptr );
         if ( required )
         {
-            Error::Error_1101_MissingProperty( iter, this, AStackString<>( property.GetName() ) );
+            Error::Error_1101_MissingProperty( iter, this, AStackString( property.GetName() ) );
             return false;
         }
 
@@ -1214,7 +1214,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
         // Fall through to normal file handling
     }
 
-    AStackString<> stringToFix( string );
+    AStackString stringToFix( string );
     if ( !PopulatePathAndFileHelper( iter, pathMD, fileMD, variable->GetName(), stringToFix ) )
     {
         return false; // PopulatePathAndFileHelper will have emitted an error
@@ -1509,7 +1509,7 @@ bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
                 continue;
             }
 
-            AStackString<> propertyName( "." ); // TODO:C Eliminate copy
+            AStackString propertyName( "." ); // TODO:C Eliminate copy
             propertyName += property.GetName();
 
             // Try to find property in BFF

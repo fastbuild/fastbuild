@@ -110,7 +110,7 @@ void FileNode::DumpOutput( Job * job, const AString & name, const AString & data
         exclusions.EmplaceBack( "Note: including file:" );
         exclusions.EmplaceBack( "#line" );
 
-        AStackString<> msg;
+        AStackString msg;
         msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
 
         AString finalBuffer( data.GetLength() + msg.GetLength() );

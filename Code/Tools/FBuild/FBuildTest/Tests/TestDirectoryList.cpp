@@ -39,11 +39,11 @@ void TestDirectoryList::Build() const
     NodeGraph ng;
 
     // Generate a valid DirectoryListNode name
-    AStackString<> name;
+    AStackString name;
     #if defined( __WINDOWS__ )
-        const AStackString<> testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
+        const AStackString testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
     #else
-        const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
+        const AStackString testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
     #endif
     Array<AString> patterns;
     patterns.EmplaceBack( "library.*" );
@@ -98,7 +98,7 @@ void TestDirectoryList::Names() const
     // given differing search params
 
     // Use the same path in each case
-    AStackString<> path( "Tools/FBuild/FBuildTest/Data/TestDirectoryList/" );
+    AStackString path( "Tools/FBuild/FBuildTest/Data/TestDirectoryList/" );
     PathUtils::FixupFolderPath( path );
 
     // Build a list of node names we can verify for uniqueness later

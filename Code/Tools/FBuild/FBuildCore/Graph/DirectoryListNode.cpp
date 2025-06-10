@@ -127,7 +127,7 @@ DirectoryListNode::DirectoryListNode()
 {
     #if defined( ASSERTS_ENABLED )
         // ensure name is correctly formatted
-        AStackString<> expectedName;
+        AStackString expectedName;
         FormatName( m_Path,
                     &m_Patterns,
                     m_Recursive,
@@ -256,7 +256,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 
     if ( FLog::ShowVerbose() )
     {
-        AStackString<> buffer;
+        AStackString buffer;
         buffer.AppendFormat( "Dir: '%s' (%zu files)\n",
                              m_Name.Get(),
                              m_Files.GetSize() );
@@ -314,7 +314,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 //------------------------------------------------------------------------------
 void DirectoryListNode::MakePrettyName()
 {
-    AStackString<> prettyName( m_Path );
+    AStackString prettyName( m_Path );
     if ( m_Recursive )
     {
         prettyName += " (recursive)";

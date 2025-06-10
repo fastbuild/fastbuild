@@ -266,7 +266,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
     #elif defined( __LINUX__ )
         // Read first line of /proc/<pid>/stat for the process
         AStackString<1024> processInfo;
-        if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pi.m_PID ).Get(),
+        if ( GetProcessInfoString( AStackString().Format( "/proc/%u/stat", pi.m_PID ).Get(),
                                    processInfo ) )
         {
             StackArray<AString> tokens;
@@ -351,7 +351,7 @@ void IdleDetection::UpdateProcessList()
     #elif defined( __LINUX__ )
         // Each process has a directory in /proc/
         // The name of the dir is the pid
-        AStackString<> path( "/proc/" );
+        AStackString path( "/proc/" );
         DIR * dir = opendir( path.Get() );
         ASSERT( dir ); // This should never fail
         if ( dir )
@@ -409,7 +409,7 @@ void IdleDetection::UpdateProcessList()
 
                 // Read the first line of /proc/<pid>/stat for the process
                 AStackString<1024> processInfo;
-                if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pid ).Get(),
+                if ( GetProcessInfoString( AStackString().Format( "/proc/%u/stat", pid ).Get(),
                                            processInfo ) == false )
                 {
                     continue; // Process might have exited

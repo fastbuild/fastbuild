@@ -65,7 +65,7 @@ WorkerWindow::WorkerWindow()
     Init( x, y, w, h );
 
     // Create the tray icon
-    AStackString<> toolTip;
+    AStackString toolTip;
     toolTip.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
     #if defined( __WINDOWS__ )
         m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
@@ -90,7 +90,7 @@ WorkerWindow::WorkerWindow()
     m_ThreadList->SetItemCount( (uint32_t)numWorkers );
     for ( size_t i = 0; i < numWorkers; ++i )
     {
-        AStackString<> string;
+        AStackString string;
         string.Format( "%u", (uint32_t)( i + 1 ) );
         m_ThreadList->AddItem( string.Get() );
     }
@@ -122,7 +122,7 @@ WorkerWindow::WorkerWindow()
     m_ThresholdDropDown->Init( 376, 3, 67, 200 );
     for ( uint32_t i = 1; i < 6; ++i )
     {
-        AStackString<> buffer;
+        AStackString buffer;
         buffer.Format( "%u%%", i * 10 );
         m_ThresholdDropDown->AddItem( buffer.Get() );
     }
@@ -144,7 +144,7 @@ WorkerWindow::WorkerWindow()
     {
         // add items
         const uint32_t numProcessors = Env::GetNumProcessors();
-        AStackString<> buffer;
+        AStackString buffer;
         for ( uint32_t i = 0; i < numProcessors; ++i )
         {
             const float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;

@@ -616,8 +616,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     }
 
     Args fullArgs;
-    AStackString<> tmpDirectoryName;
-    AStackString<> tmpFileName;
+    AStackString tmpDirectoryName;
+    AStackString tmpFileName;
     if ( usePreProcessedOutput )
     {
         if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
@@ -755,7 +755,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         {
             if ( line.GetLength() > 0 )
             {
-                AStackString<> cleanedInclude;
+                AStackString cleanedInclude;
                 NodeGraph::CleanPath( line, cleanedInclude );
                 m_Includes.Append( cleanedInclude );
             }
@@ -921,7 +921,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     AString name;
     AString sourceFile;
     uint32_t flags;
-    AStackString<> compilerArgs;
+    AStackString compilerArgs;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
@@ -990,8 +990,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         args.Tokenize( tokenRanges );
         for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            const AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
-                                        ( args.Get() + tokenRange.m_EndIndex ) );
+            const AStackString token( ( args.Get() + tokenRange.m_StartIndex ),
+                                      ( args.Get() + tokenRange.m_EndIndex ) );
 
             if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
@@ -1077,8 +1077,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         const size_t numTokens = tokenRanges.GetSize();
         for ( size_t i = 0; i < numTokens; ++i )
         {
-            const AStackString<> token( ( args.Get() + tokenRanges[ i ].m_StartIndex ),
-                                        ( args.Get() + tokenRanges[ i ].m_EndIndex ) );
+            const AStackString token( ( args.Get() + tokenRanges[ i ].m_StartIndex ),
+                                      ( args.Get() + tokenRanges[ i ].m_EndIndex ) );
 
             if ( token == "-fdiagnostics-color=auto" )
             {
@@ -1114,8 +1114,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             {
                 if ( i < ( numTokens - 1 ) )
                 {
-                    const AStackString<> nextToken( ( args.Get() + tokenRanges[ i + 1 ].m_StartIndex ),
-                                                    ( args.Get() + tokenRanges[ i + 1 ].m_EndIndex ) );
+                    const AStackString nextToken( ( args.Get() + tokenRanges[ i + 1 ].m_StartIndex ),
+                                                  ( args.Get() + tokenRanges[ i + 1 ].m_EndIndex ) );
                     if ( nextToken == "objective-c" )
                     {
                         objectiveC = true;
@@ -1399,7 +1399,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         ASSERT( pchKey != 0 ); // Should not be in here if PCH is not cached
     }
 
-    AStackString<> cacheName;
+    AStackString cacheName;
     ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
     job->SetCacheName( cacheName );
 
@@ -1518,7 +1518,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         if ( FBuild::Get().GetOptions().m_ShowCommandSummary ||
              FBuild::Get().GetOptions().m_CacheVerbose )
         {
-            AStackString<> output;
+            AStackString output;
             output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
@@ -1665,7 +1665,7 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
         if ( FBuild::Get().GetOptions().m_CacheVerbose )
         {
             const uint64_t uncompressedDataSize = Compressor::GetUncompressedSize( compressedData, compressedDataSize );
-            AStackString<> output;
+            AStackString output;
             output.Format( "Obj: %s\n"
                            " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %" PRIu64 " - Uncompressed: %" PRIu64 ") '%s'\n",
                            GetName().Get(),
@@ -1728,7 +1728,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
             // Get file name start
             ASSERT( PathUtils::IsFullPath( m_PCHObjectFileName ) ); // Something is terribly wrong
 
-            AStackString<> pchASTFileName( m_PCHObjectFileName );
+            AStackString pchASTFileName( m_PCHObjectFileName );
             if ( pchASTFileName.EndsWithI( ".obj" ) )
             {
                 pchASTFileName.SetLength( pchASTFileName.GetLength() - 4 );
@@ -1739,7 +1739,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
         }
 
         // .nativecodeanalysis.xml (all files)
-        AStackString<> xmlFileName;
+        AStackString xmlFileName;
         GetNativeAnalysisXMLPath( xmlFileName );
         outFileNames.Append( xmlFileName );
     }
@@ -1748,7 +1748,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
     if ( objectNode->m_CompilerFlags.IsUsingGcovCoverage() )
     {
         // .gcno
-        AStackString<> gcnoFileName;
+        AStackString gcnoFileName;
         GetGCNOPath( gcnoFileName );
         outFileNames.Append( gcnoFileName );
     }
@@ -1757,7 +1757,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
     if ( objectNode->m_CompilerFlags.IsUsingDynamicDeopt() )
     {
         // .alt.obj
-        AStackString<> altObjName;
+        AStackString altObjName;
         GetAltObjPath( altObjName );
         outFileNames.Append( altObjName );
     }
@@ -1770,7 +1770,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     // print basic or detailed output, depending on options
     // we combine everything into one string to ensure it is contiguous in
     // the output
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Obj: ";
@@ -1831,7 +1831,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     fullArgs.Clear();
 
     // Get base path if needed
-    AStackString<> basePath;
+    AStackString basePath;
     const bool useRelativePaths = job->IsLocal() && // TODO:C We'd want to support this remotely as well
                                   job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetUseRelativePaths();
     if ( useRelativePaths )
@@ -1908,7 +1908,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     }
 
     // Handle all the special needs of args
-    AStackString<> remoteCompiler;
+    AStackString remoteCompiler;
     if ( job->IsLocal() == false )
     {
         job->GetToolManifest()->GetRemoteFilePath( 0, remoteCompiler );
@@ -2142,9 +2142,9 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     if ( job->IsLocal() )
     {
         // Make the source file path relative to the working dir so the hash is deterministic.
-        AStackString<> basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
+        AStackString basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
         PathUtils::EnsureTrailingSlash( basePath );
-        AStackString<> relativeFileName;
+        AStackString relativeFileName;
         PathUtils::GetRelativePath( basePath, sourceFile->GetName(), relativeFileName );
         sourceNameHash = xxHash::Calc32( relativeFileName.Get(), relativeFileName.GetLength() );
     }
@@ -2154,7 +2154,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     }
 
     FileStream tmpFile;
-    AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
+    AStackString fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
     if ( IsGCC() )
     {
         // Add extension to the name of the temporary file that corresponds to
@@ -2164,7 +2164,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         const char * lastDot = fileName.FindLast( '.' );
         if ( ( lastDot != nullptr ) && ( lastDot[ 1 ] != '\0' ) )
         {
-            AStackString<> extension( lastDot + 1 );
+            AStackString extension( lastDot + 1 );
             if ( extension == "c" )
             {
                 fileName += ".i";
@@ -2296,8 +2296,8 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 {
     // Use the remotely synchronized compiler if building remotely
-    AStackString<> compiler;
-    AStackString<> workingDir;
+    AStackString compiler;
+    AStackString workingDir;
     if ( job->IsLocal() )
     {
         compiler = GetCompiler()->GetExecutable();
@@ -2810,7 +2810,7 @@ bool ObjectNode::GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) cons
     const AString & sourceFileName = GetSourceFile()->GetName();
     const char * lastDot = sourceFileName.FindLast( '.' );
     lastDot = lastDot ? lastDot : sourceFileName.GetEnd();
-    AStackString<> preprocessedFile( sourceFileName.Get(), lastDot );
+    AStackString preprocessedFile( sourceFileName.Get(), lastDot );
     preprocessedFile += ".i";
 
     // Try to open the file
@@ -2871,14 +2871,14 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
 
     // We'll walk the output and fix it up in-place
 
-    AStackString<> srcFileName( GetSourceFile()->GetName() );
+    AStackString srcFileName( GetSourceFile()->GetName() );
     #if defined( __WINDOWS__ )
         // Clang escapes backslashes, so we must do the same
         srcFileName.Replace( "\\", "\\\\" );
     #endif
 
     // Build the string used to find "pop" directives when returning to this file
-    AStackString<> popDirectiveString;
+    AStackString popDirectiveString;
     popDirectiveString = " \"";
     popDirectiveString += srcFileName;
     popDirectiveString += "\" 2"; // 2 is "pop" flag
@@ -2889,10 +2889,10 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     if ( pos == nullptr )
     {
         // If not found, try relative path
-        AStackString<> basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
+        AStackString basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
         PathUtils::EnsureTrailingSlash( basePath );
 
-        AStackString<> relativeFileName;
+        AStackString relativeFileName;
         PathUtils::GetRelativePath( basePath, GetSourceFile()->GetName(), relativeFileName );
         #if defined( __WINDOWS__ )
             // Clang escapes backslashes, so we must do the same

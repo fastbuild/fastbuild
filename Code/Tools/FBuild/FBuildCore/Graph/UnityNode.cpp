@@ -356,7 +356,7 @@ UnityNode::~UnityNode()
     stamps.SetCapacity( m_NumUnityFilesToCreate );
 
     // Includes will be relative to root
-    AStackString<> includeBasePath;
+    AStackString includeBasePath;
     if ( m_UseRelativePaths_Experimental )
     {
         includeBasePath = FBuild::Get().GetOptions().GetWorkingDir();
@@ -378,7 +378,7 @@ UnityNode::~UnityNode()
             output += "#include \"";
             if ( m_UseRelativePaths_Experimental )
             {
-                AStackString<> relativePath;
+                AStackString relativePath;
                 PathUtils::GetRelativePath( includeBasePath, m_PrecompiledHeader, relativePath );
                 output += relativePath;
             }
@@ -469,14 +469,14 @@ UnityNode::~UnityNode()
             }
 
             // Get relative file path
-            AStackString<> relativePath;
+            AStackString relativePath;
             if ( m_UseRelativePaths_Experimental )
             {
                 PathUtils::GetRelativePath( includeBasePath, file.GetName(), relativePath );
             }
 
             // write pragma showing cpp file being compiled to assist resolving compilation errors
-            AStackString<> buffer( m_UseRelativePaths_Experimental ? relativePath : file.GetName() );
+            AStackString buffer( m_UseRelativePaths_Experimental ? relativePath : file.GetName() );
             buffer.Replace( BACK_SLASH, FORWARD_SLASH ); // avoid problems with slashes in generated code
             #if defined( __LINUX__ )
                 output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
@@ -509,10 +509,10 @@ UnityNode::~UnityNode()
         output += "\r\n";
 
         // generate the destination unity file name
-        AStackString<> unityName( m_OutputPath );
+        AStackString unityName( m_OutputPath );
         unityName += m_OutputPattern;
         {
-            AStackString<> tmp;
+            AStackString tmp;
             tmp.Format( "%u", (uint32_t)i + 1 ); // number from 1
             unityName.Replace( "*", tmp.Get() );
         }
@@ -637,7 +637,7 @@ bool UnityNode::GetFiles( Array<UnityFileAndOrigin> & files )
     bool ok = true;
 
     // automatically exclude the associated CPP file for a PCH (if there is one)
-    AStackString<> pchCPP;
+    AStackString pchCPP;
     if ( m_PrecompiledHeader.IsEmpty() == false )
     {
         if ( m_PrecompiledHeader.EndsWithI( ".h" ) )
@@ -830,7 +830,7 @@ bool UnityNode::GetIsolatedFilesFromList( Array<AString> & files ) const
     }
 
     // Read file into memory
-    AStackString<> buffer;
+    AStackString buffer;
     buffer.SetLength( (uint32_t)input.GetFileSize() );
     if ( input.ReadBuffer( buffer.Get(), buffer.GetLength() ) != buffer.GetLength() )
     {

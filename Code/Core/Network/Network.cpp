@@ -239,7 +239,7 @@
 
         const NetworkStartupHelper helper;
 
-        AStackString<> hostName;
+        AStackString hostName;
 
         {
             // take a copy of the HostName

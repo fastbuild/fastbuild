@@ -34,7 +34,7 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestEnv::GetCommandLine() const
 {
-    AStackString<> cmdLine;
+    AStackString cmdLine;
     Env::GetCmdLine( cmdLine );
     TEST_ASSERT( cmdLine.FindI( "CoreTest" ) );
 }
@@ -43,7 +43,7 @@ void TestEnv::GetCommandLine() const
 //------------------------------------------------------------------------------
 void TestEnv::GetExePath() const
 {
-    AStackString<> cmdLine;
+    AStackString cmdLine;
     Env::GetExePath( cmdLine );
     #if defined( __WINDOWS__ )
         TEST_ASSERT( cmdLine.EndsWithI( "CoreTest.exe" ) );

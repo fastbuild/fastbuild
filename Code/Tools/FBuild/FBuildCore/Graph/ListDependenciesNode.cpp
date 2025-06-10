@@ -157,7 +157,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     dependencyList.Sort( DependencyAscendingCompareIDeref{} );
 
     // Format file content
-    AStackString<> fileContents;
+    AStackString fileContents;
 
     const AString * prevDep = nullptr;
     for ( const AString * depName : dependencyList )

@@ -241,7 +241,7 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
 {
     DoSectionTitle( "Overview", "overview" );
 
-    AStackString<> buffer;
+    AStackString buffer;
 
     DoTableStart();
 
@@ -249,7 +249,7 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
     Write( "<tr><th width=150>Item</th><th>Details</th></tr>\n" );
 
     // Full command line
-    AStackString<> commandLineBuffer;
+    AStackString commandLineBuffer;
     Env::GetCmdLine( commandLineBuffer );
     #if defined( __WINDOWS__ )
         const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
@@ -260,7 +260,7 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
     Write( "<tr><td width=80>Cmd Line Options</td><td>%s</td></tr>", commandLine );
 
     // Target
-    AStackString<> targets;
+    AStackString targets;
     const Node * rootNode = stats.GetRootNode();
     if ( rootNode->GetType() != Node::PROXY_NODE )
     {
@@ -307,7 +307,7 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
     Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
 
     // report time
-    AStackString<> reportDateTime;
+    AStackString reportDateTime;
     GetReportDateTime( reportDateTime );
 
     // NOTE: time is patched in later
@@ -711,7 +711,7 @@ PRAGMA_DISABLE_POP_MSVC // warning C6262: Function uses '262212' bytes of stack
 //------------------------------------------------------------------------------
 void HTMLReport::DoPieChart( const Array<PieItem> & items, const char * units )
 {
-    AStackString<> buffer;
+    AStackString buffer;
 
     const uint32_t height = Math::Max<uint32_t>( 140, 40 + 25 * (uint32_t)items.GetSize() );
 
@@ -783,7 +783,7 @@ void HTMLReport::DoSectionTitle( const char * sectionName, const char * sectionI
 //------------------------------------------------------------------------------
 void HTMLReport::DoTableStart( uint32_t width, const char * id, bool hidden )
 {
-    AStackString<> output;
+    AStackString output;
     output.Format( "<table width=%u", width );
     if ( id )
     {
@@ -812,11 +812,11 @@ void HTMLReport::DoToggleSection( size_t numMore )
 {
     static uint32_t tableId = 0;
     ++tableId;
-    AStackString<> tableIdStr;
+    AStackString tableIdStr;
     tableIdStr.Format( "table%u", tableId );
 
     DoTableStop();
-    AStackString<> more;
+    AStackString more;
     if ( numMore )
     {
         more.Format( "%u ", (uint32_t)numMore );

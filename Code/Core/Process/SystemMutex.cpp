@@ -59,7 +59,7 @@ bool SystemMutex::TryLock()
         m_Handle = handle;
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        AStackString<> tempFileName;
+        AStackString tempFileName;
         tempFileName.Format( "/tmp/%s.lock", m_Name.Get() );
         int handle = open( tempFileName.Get(), O_CREAT | O_RDWR | O_CLOEXEC, 0666 );
         if ( handle < 0 )

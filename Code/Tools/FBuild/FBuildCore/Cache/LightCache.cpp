@@ -475,7 +475,7 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char *& pos )
     SkipWhitespace( pos );
 
     // Get macro name
-    AStackString<> macroName;
+    AStackString macroName;
     const char * macroStart = pos;
     if ( ParseMacroName( pos, macroName ) == false )
     {
@@ -487,7 +487,7 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char *& pos )
     SkipWhitespace( pos );
 
     // Is this defining an include path?
-    AStackString<> include;
+    AStackString include;
     IncludeType includeType;
     if ( ParseIncludeString( pos, include, includeType ) == false )
     {
@@ -774,7 +774,7 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString &
     const int32_t stackSize = (int32_t)m_IncludeStack.GetSize();
     for ( int32_t i = ( stackSize - 1 ); i >= 0; --i )
     {
-        AStackString<> possibleIncludePath( m_IncludeStack[ (size_t)i ]->m_FileName );
+        AStackString possibleIncludePath( m_IncludeStack[ (size_t)i ]->m_FileName );
         const char * lastFwdSlash = possibleIncludePath.FindLast( '/' );
         const char * lastBackSlash = possibleIncludePath.FindLast( '\\' );
         const char * lastSlash = ( lastFwdSlash > lastBackSlash ) ? lastFwdSlash : lastBackSlash;
@@ -815,7 +815,7 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & 
 {
     outCyclic = false;
 
-    AStackString<> possibleIncludePath;
+    AStackString possibleIncludePath;
     for ( const AString & includePath : m_IncludePaths )
     {
         possibleIncludePath = includePath;
@@ -930,7 +930,7 @@ void LightCache::AddError( IncludedFile * file,
     if ( pos )
     {
         // Get the problem line
-        AStackString<> line;
+        AStackString line;
         ExtractLine( pos, line );
         finalBuffer.AppendFormat( "  Line   : %s\n", line.Get() );
     }

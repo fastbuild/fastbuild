@@ -66,7 +66,7 @@ void TestTrayIcon::Init() const
     #if defined( __WINDOWS__ )
         OSWindow window;
         window.Init( 32, 32, 500, 200 );
-        OSTrayIcon trayIcon( &window, AStackString<>( "Tooltip" ) );
+        OSTrayIcon trayIcon( &window, AStackString( "Tooltip" ) );
     #else
         OSTrayIcon trayIcon( gIconData, sizeof( gIconData ) );
     #endif
@@ -93,7 +93,7 @@ void TestTrayIcon::SetMenu() const
     OSWindow window;
     window.Init( 32, 32, 500, 200 );
     #if defined( __WINDOWS__ )
-        OSTrayIcon trayIcon( &window, AStackString<>( "Tooltip" ) );
+        OSTrayIcon trayIcon( &window, AStackString( "Tooltip" ) );
     #else
         OSTrayIcon trayIcon( gIconData, sizeof( gIconData ) );
     #endif

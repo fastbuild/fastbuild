@@ -36,18 +36,18 @@ void WorkerBrokerage::InitBrokerage()
     const uint32_t protocolVersion = Protocol::PROTOCOL_VERSION_MAJOR;
 
     // root folder
-    AStackString<> brokeragePath;
+    AStackString brokeragePath;
     if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath ) )
     {
         // FASTBUILD_BROKERAGE_PATH can contain multiple paths separated by semi-colon. The worker will register itself into the first path only but
         // the additional paths are paths to additional broker roots allowed for finding remote workers (in order of priority)
         const char * start = brokeragePath.Get();
         const char * end = brokeragePath.GetEnd();
-        AStackString<> pathSeparator( ";" );
+        AStackString pathSeparator( ";" );
         while ( true )
         {
-            AStackString<> root;
-            AStackString<> brokerageRoot;
+            AStackString root;
+            AStackString brokerageRoot;
 
             const char * separator = brokeragePath.Find( pathSeparator, start, end );
             if ( separator != nullptr )

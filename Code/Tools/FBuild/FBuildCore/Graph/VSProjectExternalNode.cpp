@@ -121,7 +121,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
                 // some projects do not contain enclosing curled braces around the project GUID
                 if ( !m_ProjectGuid.BeginsWith( '{' ) )
                 {
-                    AStackString<> tmp( "{" );
+                    AStackString tmp( "{" );
                     tmp += m_ProjectGuid;
                     m_ProjectGuid = tmp;
                 }

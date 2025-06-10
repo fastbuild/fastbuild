@@ -53,7 +53,7 @@ static const BFFVariable * GetVar( const Function * function, const BFFToken * t
         return nullptr;
     }
 
-    AStackString<> varName;
+    AStackString varName;
     bool varParentScope = false;
     if ( BFFParser::ParseVariableName( token, varName, varParentScope ) == false )
     {

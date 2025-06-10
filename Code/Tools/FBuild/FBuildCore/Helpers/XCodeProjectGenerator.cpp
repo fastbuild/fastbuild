@@ -54,7 +54,7 @@ const AString & XCodeProjectGenerator::GenerateUserSchemeManagementPList()
     m_Tmp.SetReserved( MEGABYTE );
     m_Tmp.SetLength( 0 );
 
-    AStackString<> pbxNativeTargetGUID;
+    AStackString pbxNativeTargetGUID;
     GetGUID_PBXNativeTarget( 0, pbxNativeTargetGUID );
 
     // Header
@@ -102,14 +102,14 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
     m_Tmp.SetReserved( MEGABYTE );
     m_Tmp.SetLength( 0 );
 
-    AStackString<> pbxLegacyTargetGUID;
+    AStackString pbxLegacyTargetGUID;
     GetGUID_PBXLegacyTarget( 0, pbxLegacyTargetGUID );
 
     const AString & defaultConfigName = m_Configs[ 0 ]->m_Config;
     const char * documentVersioning = m_XCodeDocumentVersioning ? "YES" : "NO";
 
     // Macro Expansion
-    AStackString<> macroExpansion;
+    AStackString macroExpansion;
     macroExpansion.Format( "      <MacroExpansion>\n"
                            "         <BuildableReference\n"
                            "            BuildableIdentifier = \"primary\"\n"
@@ -190,7 +190,7 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
         m_Tmp.AppendFormat( "      <CommandLineArguments>\n" );
         for ( const AString & arg : m_XCodeCommandLineArguments )
         {
-            AStackString<> escapedArgument;
+            AStackString escapedArgument;
             EscapeArgument( arg, escapedArgument );
             m_Tmp.AppendFormat( "         <CommandLineArgument\n"
                                 "            argument = \"%s\"\n"
@@ -200,7 +200,7 @@ const AString & XCodeProjectGenerator::GenerateXCScheme()
         }
         for ( const AString & arg : m_XCodeCommandLineArgumentsDisabled )
         {
-            AStackString<> escapedArgument;
+            AStackString escapedArgument;
             EscapeArgument( arg, escapedArgument );
             m_Tmp.AppendFormat( "         <CommandLineArgument\n"
                                 "            argument = \"%s\"\n"
@@ -363,8 +363,8 @@ void XCodeProjectGenerator::WriteFiles()
 
         const AString & fullPath = file->m_FullPath;
 
-        AStackString<> processedShortName;
-        AStackString<> processedFullPath;
+        AStackString processedShortName;
+        AStackString processedFullPath;
         ProcessString( shortName, processedShortName );
         ProcessString( fullPath, processedFullPath );
 
@@ -388,7 +388,7 @@ void XCodeProjectGenerator::WriteFolders()
     Write( "/* Begin PBXGroup section */\n" );
     for ( const Folder * folder : m_Folders )
     {
-        AStackString<> pbxGroupGUID;
+        AStackString pbxGroupGUID;
         GetGUID_PBXGroup( folder->m_SortedIndex, pbxGroupGUID );
 
         const char * folderName = nullptr; // root folder is unnamed
@@ -427,7 +427,7 @@ void XCodeProjectGenerator::WriteFolders()
         {
             const char * shortName = childFolder->m_Path.FindLast( NATIVE_SLASH );
             shortName = shortName ? ( shortName + 1 ) : childFolder->m_Path.Get();
-            AStackString<> pbxGroupGUIDChild;
+            AStackString pbxGroupGUIDChild;
             GetGUID_PBXGroup( childFolder->m_SortedIndex, pbxGroupGUIDChild );
             Write( "\t\t\t\t%s /* %s */,\n", pbxGroupGUIDChild.Get(), shortName );
         }
@@ -450,15 +450,15 @@ void XCodeProjectGenerator::WriteFolders()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteBuildCommand()
 {
-    AStackString<> buildPhaseGuid;
+    AStackString buildPhaseGuid;
     GetGUID_PBXSourcesBuildPhase( 0, buildPhaseGuid );
 
     // PBXLegacyTarget
     {
-        AStackString<> pbxLegacyTargetGUID;
+        AStackString pbxLegacyTargetGUID;
         GetGUID_PBXLegacyTarget( 0, pbxLegacyTargetGUID );
 
-        AStackString<> xConfigurationListGUID;
+        AStackString xConfigurationListGUID;
         GetGUID_XConfigurationList( 1, xConfigurationListGUID );
 
         Write( "\n" );
@@ -485,10 +485,10 @@ void XCodeProjectGenerator::WriteBuildCommand()
 
     // PBXNativeTarget
     {
-        AStackString<> pbxNativeTargetGUID;
+        AStackString pbxNativeTargetGUID;
         GetGUID_PBXNativeTarget( 0, pbxNativeTargetGUID );
 
-        AStackString<> xConfigurationListGUID;
+        AStackString xConfigurationListGUID;
         GetGUID_XConfigurationList( 2, xConfigurationListGUID );
 
         Write( "\n" );
@@ -519,19 +519,19 @@ void XCodeProjectGenerator::WriteBuildCommand()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteGeneralSettings()
 {
-    AStackString<> pbxLegacyTargetGUID;
+    AStackString pbxLegacyTargetGUID;
     GetGUID_PBXLegacyTarget( 0, pbxLegacyTargetGUID );
 
-    AStackString<> pbxNativeTargetGUID;
+    AStackString pbxNativeTargetGUID;
     GetGUID_PBXNativeTarget( 0, pbxNativeTargetGUID );
 
-    AStackString<> pbxProjectGUID;
+    AStackString pbxProjectGUID;
     GetGUID_PBXProject( 0, pbxProjectGUID );
 
-    AStackString<> xConfigurationListGUID;
+    AStackString xConfigurationListGUID;
     GetGUID_XConfigurationList( 0, xConfigurationListGUID );
 
-    AStackString<> pbxGroupGUID;
+    AStackString pbxGroupGUID;
     GetGUID_PBXGroup( 0, pbxGroupGUID );
 
     Write( "\n" );
@@ -577,7 +577,7 @@ void XCodeProjectGenerator::WriteGeneralSettings()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WritePBXSourcesBuildPhase()
 {
-    AStackString<> buildPhaseGuid;
+    AStackString buildPhaseGuid;
     GetGUID_PBXSourcesBuildPhase( 0, buildPhaseGuid );
 
     Write( "\n" );
@@ -609,7 +609,7 @@ void XCodeProjectGenerator::WritePBXSourcesBuildPhase()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteBuildConfiguration()
 {
-    const AStackString<> yesString( "YES" );
+    const AStackString yesString( "YES" );
 
     Write( "\n" );
     Write( "/* Begin XCBuildConfiguration section */\n" );
@@ -619,14 +619,14 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
     {
         const XCodeProjectConfig & config = *( (const XCodeProjectConfig *)baseConfig );
 
-        AStackString<> xcBuildConfigurationGUID;
+        AStackString xcBuildConfigurationGUID;
         GetGUID_XCBuildConfiguration( configId, xcBuildConfigurationGUID );
         ++configId;
 
         const AString & target = config.m_TargetNode ? config.m_TargetNode->GetName() : AString::GetEmpty();
 
         // Use user specified working dir if available
-        AStackString<> debugWorkingDir( config.m_XCodeDebugWorkingDir );
+        AStackString debugWorkingDir( config.m_XCodeDebugWorkingDir );
         if ( debugWorkingDir.IsEmpty() )
         {
             // Fall back to the executable working dir if we can find it
@@ -672,7 +672,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
     configId = 100;
     for ( const ProjectGeneratorBaseConfig * config : m_Configs )
     {
-        AStackString<> xcBuildConfigurationGUID;
+        AStackString xcBuildConfigurationGUID;
         GetGUID_XCBuildConfiguration( configId, xcBuildConfigurationGUID );
         ++configId;
 
@@ -695,7 +695,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
     configId = 200;
     for ( const ProjectGeneratorBaseConfig * config : m_Configs )
     {
-        AStackString<> xcBuildConfigurationGUID;
+        AStackString xcBuildConfigurationGUID;
         GetGUID_XCBuildConfiguration( configId, xcBuildConfigurationGUID );
         ++configId;
 
@@ -711,7 +711,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         const ObjectListNode * oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( config->m_TargetNode );
 
         // Languages Standard
-        AStackString<> languageStandard( "gnu++0x" );
+        AStackString languageStandard( "gnu++0x" );
         if ( oln )
         {
             StackArray<AString> extraOptions;
@@ -758,7 +758,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                 ProjectGeneratorBase::ExtractIncludePaths( oln->GetCompilerOptions(), includePaths, forceIncludePaths, true );
                 for ( AString & include : includePaths )
                 {
-                    AStackString<> fullIncludePath;
+                    AStackString fullIncludePath;
                     NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path - TODO:C would be better to be project relative
                     include = fullIncludePath;
                     #if defined( __WINDOWS__ )
@@ -790,7 +790,7 @@ void XCodeProjectGenerator::WriteConfigurationList()
     Write( "/* Begin XCConfigurationList section */\n" );
     for ( uint32_t i = 0; i < 3; ++i )
     {
-        AStackString<> xConfigurationListGUID;
+        AStackString xConfigurationListGUID;
         GetGUID_XConfigurationList( i, xConfigurationListGUID );
 
         Write( "\t\t%s /* Build configuration list for %s \"%s%s\" */ = {\n", xConfigurationListGUID.Get(), sections[ i ], m_ProjectName.Get(), ext[ i ] );
@@ -799,7 +799,7 @@ void XCodeProjectGenerator::WriteConfigurationList()
         uint32_t configId( configStartIds[ i ] );
         for ( const ProjectGeneratorBaseConfig * config : m_Configs )
         {
-            AStackString<> xcBuildConfigurationGUID;
+            AStackString xcBuildConfigurationGUID;
             GetGUID_XCBuildConfiguration( configId, xcBuildConfigurationGUID );
             ++configId;
 
@@ -817,7 +817,7 @@ void XCodeProjectGenerator::WriteConfigurationList()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteFooter()
 {
-    AStackString<> pbxProjectGUID;
+    AStackString pbxProjectGUID;
     GetGUID_PBXProject( 0, pbxProjectGUID );
 
     Write( "\t};\n"
@@ -833,14 +833,14 @@ void XCodeProjectGenerator::WriteString( uint32_t indentDepth,
                                          const AString & value )
 {
     // Prepare the indent string
-    AStackString<> tabs;
+    AStackString tabs;
     for ( uint32_t i = 0; i < indentDepth; ++i )
     {
         tabs += '\t';
     }
 
     // Empty strings and strings with spaces are quoted
-    AStackString<> processedValue;
+    AStackString processedValue;
     ProcessString( value, processedValue );
     Write( "%s%s = %s;\n", tabs.Get(), propertyName, processedValue.Get() );
 }
@@ -852,7 +852,7 @@ void XCodeProjectGenerator::WriteArray( uint32_t indentDepth,
                                         const Array<AString> & values )
 {
     // Prepare the indent string
-    AStackString<> tabs;
+    AStackString tabs;
     for ( uint32_t i = 0; i < indentDepth; ++i )
     {
         tabs += '\t';
@@ -872,7 +872,7 @@ void XCodeProjectGenerator::WriteArray( uint32_t indentDepth,
     for ( const AString & value : values )
     {
         // Empty strings and strings with spaces are quoted
-        AStackString<> processedValue;
+        AStackString processedValue;
         ProcessString( value, processedValue );
         Write( "%s\t%s,\n", tabs.Get(), processedValue.Get() );
     }
@@ -953,7 +953,7 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
     // Surround with quotes if needed
     if ( needsQuotes )
     {
-        AStackString<> tmp;
+        AStackString tmp;
         tmp += '\"';
         tmp += outString;
         tmp += '\"';

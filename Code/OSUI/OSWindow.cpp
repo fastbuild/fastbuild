@@ -148,7 +148,7 @@ OSWindow::~OSWindow()
             DestroyWindow( (HWND)m_Handle );
 
             // Unregister Window class
-            AStackString<> uniqueWindowClass;
+            AStackString uniqueWindowClass;
             GetWindowClassName( uniqueWindowClass );
             VERIFY( UnregisterClassA( uniqueWindowClass.Get(), static_cast<HINSTANCE>( m_HInstance ) ) );
         }
@@ -168,7 +168,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         ASSERT( m_Handle == nullptr );
 
         // Register Window class
-        AStackString<> uniqueWindowClass;
+        AStackString uniqueWindowClass;
         GetWindowClassName( uniqueWindowClass );
 
         WNDCLASSEX wc;

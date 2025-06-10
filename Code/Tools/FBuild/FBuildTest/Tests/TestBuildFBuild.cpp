@@ -87,7 +87,7 @@ void TestBuildFBuild::BuildClean() const
     // delete files from previous runs
     Array<AString> files;
     files.SetCapacity( 1024 );
-    FileIO::GetFiles( AStackString<>( "../tmp/Test/BuildFBuild" ), AStackString<>( "*" ), true, &files );
+    FileIO::GetFiles( AStackString( "../tmp/Test/BuildFBuild" ), AStackString( "*" ), true, &files );
     for ( const AString & file : files )
     {
         FileIO::FileDelete( file.Get() );

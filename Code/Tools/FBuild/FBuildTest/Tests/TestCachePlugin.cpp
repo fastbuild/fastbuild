@@ -124,8 +124,8 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/OldInterface/useplugin.bff";
 
-    AStackString<> cachePath;
-    AStackString<> cachePluginDLL;
+    AStackString cachePath;
+    AStackString cachePluginDLL;
 
     {
         // Init the DB from the BFF

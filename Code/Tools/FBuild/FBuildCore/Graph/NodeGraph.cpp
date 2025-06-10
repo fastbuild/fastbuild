@@ -156,9 +156,9 @@ NodeGraph::~NodeGraph()
             // Failed due to corrupt DB? Make a backup to assist triage
             if ( res == LoadResult::LOAD_ERROR )
             {
-                AStackString<> corruptDBName( nodeGraphDBFile );
+                AStackString corruptDBName( nodeGraphDBFile );
                 corruptDBName += ".corrupt";
-                FileIO::FileMove( AStackString<>( nodeGraphDBFile ), corruptDBName ); // Will overwrite if needed
+                FileIO::FileMove( AStackString( nodeGraphDBFile ), corruptDBName ); // Will overwrite if needed
             }
 
             // Create a fresh DB by parsing the BFF
@@ -215,7 +215,7 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
         if ( m_Settings == nullptr )
         {
             // Create a default
-            const AStackString<> settingsNodeName( "$$Settings$$" );
+            const AStackString settingsNodeName( "$$Settings$$" );
             SettingsNode * settingsNode = CreateNode<SettingsNode>( settingsNodeName, &BFFToken::GetBuiltInToken() );
             settingsNode->Initialize( *this, &BFFToken::GetBuiltInToken(), nullptr );
             ASSERT( m_Settings ); // SettingsNode registers itself
@@ -341,7 +341,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
     uint32_t envStringSize = 0;
     VERIFY( stream.Read( envStringSize ) );
     UniquePtr<char, FreeDeletor> envString;
-    AStackString<> libEnvVar;
+    AStackString libEnvVar;
     if ( envStringSize > 0 )
     {
         envString = ( (char *)ALLOC( envStringSize ) );
@@ -354,8 +354,8 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
     VERIFY( stream.Read( importedEnvironmentsVarsSize ) );
     if ( importedEnvironmentsVarsSize > 0 )
     {
-        AStackString<> varName;
-        AStackString<> varValue;
+        AStackString varName;
+        AStackString varValue;
         uint32_t savedVarHash = 0;
         uint32_t importedVarHash = 0;
 
@@ -444,7 +444,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
         }
     }
 
-    m_Settings = FindNode( AStackString<>( "$$Settings$$" ) )->CastTo<SettingsNode>();
+    m_Settings = FindNode( AStackString( "$$Settings$$" ) )->CastTo<SettingsNode>();
     ASSERT( m_Settings );
 
     if ( bffNeedsReparsing )
@@ -475,7 +475,7 @@ void NodeGraph::Save( ChainedMemoryStream & stream, const char * nodeGraphDBFile
     const NodeGraphHeader header;
     stream.Write( (const void *)&header, sizeof( header ) );
 
-    AStackString<> nodeGraphDBFileClean( nodeGraphDBFile );
+    AStackString nodeGraphDBFileClean( nodeGraphDBFile );
     NodeGraph::CleanPath( nodeGraphDBFileClean );
     stream.Write( nodeGraphDBFileClean );
 
@@ -500,7 +500,7 @@ void NodeGraph::Save( ChainedMemoryStream & stream, const char * nodeGraphDBFile
             const char * envString = FBuild::Get().GetEnvironmentString();
             stream.Write( envString, envStringSize );
 
-            AStackString<> libEnvVar;
+            AStackString libEnvVar;
             FBuild::Get().GetLibEnvVar( libEnvVar );
             stream.Write( libEnvVar );
         }
@@ -692,7 +692,7 @@ void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
     }
 
     // Name of this node
-    AStackString<> name( node->GetName() );
+    AStackString name( node->GetName() );
     name.Replace( "\\", "\\\\" ); // Escape slashes in this name
     outBuffer.AppendFormat( "\n\t\"%s\" %s // %s\n",
                             name.Get(),
@@ -725,7 +725,7 @@ void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
     }
 
     // Escape slashes in this name
-    AStackString<> left( node->GetName() );
+    AStackString left( node->GetName() );
     left.Replace( "\\", "\\\\" );
 
     // All the dependencies
@@ -739,7 +739,7 @@ void NodeGraph::SerializeToDotFormat( const Dependencies & deps,
         }
 
         // Write the graph edge
-        AStackString<> right( dep.GetNode()->GetName() );
+        AStackString right( dep.GetNode()->GetName() );
         right.Replace( "\\", "\\\\" );
         outBuffer.AppendFormat( "\t\t/*%-8s*/ \"%s\" -> \"%s\"",
                                 dependencyType,
@@ -1241,7 +1241,7 @@ const BFFToken * NodeGraph::FindNodeSourceToken( const Node * node ) const
 //------------------------------------------------------------------------------
 /*static*/ void NodeGraph::CleanPath( AString & name, bool makeFullPath )
 {
-    AStackString<> nameCopy( name );
+    AStackString nameCopy( name );
     CleanPath( nameCopy, name, makeFullPath );
 }
 
@@ -1655,7 +1655,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array<NodeWi
     // Check if we've recursed into ourselves
     if ( dependencyStack.Find( node ) )
     {
-        AStackString<> buffer( "Error: Cyclic dependency detected. Dependency chain:\n" );
+        AStackString buffer( "Error: Cyclic dependency detected. Dependency chain:\n" );
         for ( const Node * nodeInStack : dependencyStack )
         {
             // Exclude the proxy node that can sometimes appear at the root
@@ -1745,12 +1745,12 @@ bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, con
     }
 
     // Read location where .fdb was originally saved
-    AStackString<> originalNodeGraphDBFile;
+    AStackString originalNodeGraphDBFile;
     if ( !nodeGraphStream.Read( originalNodeGraphDBFile ) )
     {
         return false;
     }
-    AStackString<> nodeGraphDBFileClean( nodeGraphDBFile );
+    AStackString nodeGraphDBFileClean( nodeGraphDBFile );
     NodeGraph::CleanPath( nodeGraphDBFileClean );
     if ( PathUtils::ArePathsEqual( originalNodeGraphDBFile, nodeGraphDBFileClean ) == false )
     {
@@ -1778,7 +1778,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, con
         {
             return false;
         }
-        AStackString<> fileName;
+        AStackString fileName;
         fileName.SetLength( fileNameLen ); // handles null terminate
         if ( nodeGraphStream.Read( fileName.Get(), fileNameLen ) != fileNameLen )
         {
@@ -1806,7 +1806,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, con
 uint32_t NodeGraph::GetLibEnvVarHash() const
 {
     // ok for LIB var to be missing, we'll hash the empty string
-    AStackString<> libVar;
+    AStackString libVar;
     FBuild::Get().GetLibEnvVar( libVar );
     return xxHash::Calc32( libVar );
 }

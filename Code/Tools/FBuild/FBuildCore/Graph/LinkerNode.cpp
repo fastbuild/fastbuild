@@ -201,7 +201,7 @@ LinkerNode::~LinkerNode()
     // Make sure the implib output directory exists
     if ( m_ImportLibName.IsEmpty() == false )
     {
-        AStackString<> cleanPath;
+        AStackString cleanPath;
         NodeGraph::CleanPath( m_ImportLibName, cleanPath );
 
         if ( EnsurePathExistsForFile( cleanPath ) == false )
@@ -436,11 +436,11 @@ bool LinkerNode::DoPreLinkCleanup() const
     {
         // .ilk
         const char * lastDot = GetName().FindLast( '.' );
-        AStackString<> ilkName( GetName().Get(), lastDot ? lastDot : GetName().GetEnd() );
+        AStackString ilkName( GetName().Get(), lastDot ? lastDot : GetName().GetEnd() );
         ilkName += ".ilk";
 
         // .pdb - TODO: Handle manually specified /PDB
-        AStackString<> pdbName( GetName().Get(), lastDot ? lastDot : GetName().GetEnd() );
+        AStackString pdbName( GetName().Get(), lastDot ? lastDot : GetName().GetEnd() );
         pdbName += ".pdb";
 
         return ( DoPreBuildFileDeletion( GetName() ) && // output file
@@ -476,9 +476,9 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
         found = token.Find( "%2" );
         if ( found )
         {
-            fullArgs += AStackString<>( token.Get(), found );
+            fullArgs += AStackString( token.Get(), found );
             fullArgs += m_Name;
-            fullArgs += AStackString<>( found + 2, token.GetEnd() );
+            fullArgs += AStackString( found + 2, token.GetEnd() );
             fullArgs.AddDelimiter();
             continue;
         }
@@ -489,8 +489,8 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
             found = token.Find( "%3" );
             if ( found )
             {
-                AStackString<> pre( token.Get(), found );
-                AStackString<> post( found + 2, token.GetEnd() );
+                AStackString pre( token.Get(), found );
+                AStackString post( found + 2, token.GetEnd() );
                 StackArray<AString> inputs;
                 GetAssemblyResourceFiles( inputs );
                 for ( const AString & input : inputs )
@@ -509,10 +509,10 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
                 const char * valueStart = token.Get() + 8 + 1;
                 const char * valueEnd = token.GetEnd();
 
-                AStackString<> value;
+                AStackString value;
                 Args::StripQuotes( valueStart, valueEnd, value );
 
-                AStackString<> cleanValue;
+                AStackString cleanValue;
                 NodeGraph::CleanPath( value, cleanValue, false );
 
                 // Remove trailing backslashes as they escape quotes
@@ -567,8 +567,8 @@ void LinkerNode::GetInputFiles( const AString & token, Args & fullArgs ) const
     const char * foundA = token.Find( "%1[0]" );
     if ( foundA )
     {
-        AStackString<> pre( token.Get(), foundA );
-        AStackString<> post( foundA + 5, token.GetEnd() );
+        AStackString pre( token.Get(), foundA );
+        AStackString post( foundA + 5, token.GetEnd() );
         GetInputFiles( fullArgs, 1, m_Libraries2StartIndex, pre, post );
         return;
     }
@@ -576,16 +576,16 @@ void LinkerNode::GetInputFiles( const AString & token, Args & fullArgs ) const
     const char * foundB = token.Find( "%1[1]" );
     if ( foundB )
     {
-        AStackString<> pre( token.Get(), foundB );
-        AStackString<> post( foundB + 5, token.GetEnd() );
+        AStackString pre( token.Get(), foundB );
+        AStackString post( foundB + 5, token.GetEnd() );
         GetInputFiles( fullArgs, m_Libraries2StartIndex, m_AssemblyResourcesStartIndex, pre, post );
         return;
     }
 
     const char * found = token.Find( "%1" );
     ASSERT( found );
-    AStackString<> pre( token.Get(), found );
-    AStackString<> post( found + 2, token.GetEnd() );
+    AStackString pre( token.Get(), found );
+    AStackString post( found + 2, token.GetEnd() );
     GetInputFiles( fullArgs, 1, m_AssemblyResourcesStartIndex, pre, post );
 }
 
@@ -774,8 +774,8 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
 
         for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            const AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
-                                        ( args.Get() + tokenRange.m_EndIndex ) );
+            const AStackString token( ( args.Get() + tokenRange.m_StartIndex ),
+                                      ( args.Get() + tokenRange.m_EndIndex ) );
 
             if ( IsLinkerArg_MSVC( token, "DLL" ) )
             {
@@ -858,8 +858,8 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
     {
         for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
-                                  ( args.Get() + tokenRange.m_EndIndex ) );
+            AStackString token( ( args.Get() + tokenRange.m_StartIndex ),
+                                ( args.Get() + tokenRange.m_EndIndex ) );
             token.ToLower();
 
             if ( ( token == "-shared" ) ||
@@ -950,7 +950,7 @@ void LinkerNode::GetAssemblyResourceFiles( Array<AString> & outInputs ) const
 //------------------------------------------------------------------------------
 void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += GetDLLOrExe();
@@ -977,7 +977,7 @@ void LinkerNode::EmitStampMessage() const
 {
     ASSERT( m_LinkerStampExe.IsEmpty() == false );
 
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Stamp: ";
@@ -1211,7 +1211,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         }
 
         // anything left is an input to the linker
-        AStackString<> libName;
+        AStackString libName;
         Args::StripQuotes( token.Get(), token.GetEnd(), libName );
         if ( token.IsEmpty() == false )
         {
@@ -1283,11 +1283,11 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     {
         for ( const AString & lib : dashlDynamicLibs )
         {
-            AStackString<> dynamicLib;
+            AStackString dynamicLib;
             dynamicLib += "lib";
             dynamicLib += lib;
             dynamicLib += ".so";
-            AStackString<> staticLib;
+            AStackString staticLib;
             staticLib += "lib";
             staticLib += lib;
             staticLib += ".a";
@@ -1320,7 +1320,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 
         for ( const AString & lib : dashlStaticLibs )
         {
-            AStackString<> staticLib;
+            AStackString staticLib;
             staticLib += "lib";
             staticLib += lib;
             staticLib += ".a";
@@ -1354,13 +1354,13 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 {
     found = false;
 
-    AStackString<> potentialNodeName( path );
+    AStackString potentialNodeName( path );
     if ( !potentialNodeName.IsEmpty() )
     {
         PathUtils::EnsureTrailingSlash( potentialNodeName );
     }
     potentialNodeName += lib;
-    AStackString<> potentialNodeNameClean;
+    AStackString potentialNodeNameClean;
     NodeGraph::CleanPath( potentialNodeName, potentialNodeNameClean );
 
     // see if a node already exists

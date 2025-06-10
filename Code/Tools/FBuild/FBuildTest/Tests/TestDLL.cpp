@@ -62,7 +62,7 @@ void TestDLL::TestSingleDLL() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dll( "../tmp/Test/DLL/dll.dll" );
+    const AStackString dll( "../tmp/Test/DLL/dll.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dll );
@@ -90,7 +90,7 @@ void TestDLL::TestSingleDLL_NoRebuild() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetSingleDLLDBFileName() ) );
 
-    const AStackString<> dll( "../tmp/Test/DLL/dll.dll" );
+    const AStackString dll( "../tmp/Test/DLL/dll.dll" );
 
     TEST_ASSERT( fBuild.Build( dll ) );
 
@@ -111,8 +111,8 @@ void TestDLL::TestTwoDLLs() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dllA( "../tmp/Test/DLL/dllA.dll" );
-    const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
+    const AStackString dllA( "../tmp/Test/DLL/dllA.dll" );
+    const AStackString dllB( "../tmp/Test/DLL/dllB.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dllA );
@@ -144,7 +144,7 @@ void TestDLL::TestTwoDLLs_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
     // build again
-    const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
+    const AStackString dllB( "../tmp/Test/DLL/dllB.dll" );
     TEST_ASSERT( fBuild.Build( dllB ) );
 
     // Check stats to be sure nothing was built
@@ -167,7 +167,7 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
-        const AStackString<> dllA( "../tmp/Test/DLL/dllA.dll" );
+        const AStackString dllA( "../tmp/Test/DLL/dllA.dll" );
 
         // delete DLL A to have it relink (and regen the import lib)
         EnsureFileDoesNotExist( dllA );
@@ -190,7 +190,7 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
         // build again
-        const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
+        const AStackString dllB( "../tmp/Test/DLL/dllB.dll" );
         TEST_ASSERT( fBuild.Build( dllB ) );
 
         // Check stats to be sure nothing was built
@@ -211,7 +211,7 @@ void TestDLL::TestDLLWithPCH() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
+    const AStackString dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dllPCH );
@@ -241,7 +241,7 @@ void TestDLL::TestDLLWithPCH_NoRebuild() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetDLLWithPCHDBFileName() ) );
 
-    const AStackString<> dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
+    const AStackString dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
 
     // build dllB which depends on dllA
     TEST_ASSERT( fBuild.Build( dllPCH ) );
@@ -263,7 +263,7 @@ void TestDLL::TestExeWithDLL() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
+    const AStackString exe( "../tmp/Test/DLL/exe.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( exe );
@@ -309,7 +309,7 @@ void TestDLL::TestExeWithDLL_NoRebuild() const
 //------------------------------------------------------------------------------
 void TestDLL::TestValidExeWithDLL() const
 {
-    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
+    const AStackString exe( "../tmp/Test/DLL/exe.exe" );
 
     Process p;
     TEST_ASSERT( p.Spawn( exe.Get(), nullptr, nullptr, nullptr ) );

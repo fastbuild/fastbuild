@@ -108,7 +108,7 @@ void Report::FixupTimeTakenPlaceholder()
     const float timeTakenSecs = m_Timer.GetElapsed();
 
     // patch in time take
-    AStackString<> timeTakenBuffer;
+    AStackString timeTakenBuffer;
     FBuildStats::FormatTime( timeTakenSecs, timeTakenBuffer );
     m_Output.Replace( GetTimeTakenPlaceholder(), timeTakenBuffer.Get() );
 }

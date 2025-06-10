@@ -77,9 +77,9 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                  m_IPAddress.IsEmpty() ||
                  ( m_TimerLastIPUpdate.GetElapsed() >= sBrokerageIPAddressUpdateTime ) )
             {
-                AStackString<> hostName;
-                AStackString<> domainName;
-                AStackString<> ipAddress;
+                AStackString hostName;
+                AStackString domainName;
+                AStackString ipAddress;
 
                 // Get host and domain name as FQDN could have changed
                 Network::GetHostName( hostName );
@@ -126,11 +126,11 @@ void WorkerBrokerageServer::SetAvailability( bool available )
             if ( createBrokerageFile )
             {
                 // Version
-                AStackString<> buffer;
+                AStackString buffer;
                 buffer.AppendFormat( "Version: %s\n", FBUILD_VERSION_STRING );
 
                 // Username
-                AStackString<> userName;
+                AStackString userName;
                 Env::GetLocalUserName( userName );
                 buffer.AppendFormat( "User: %s\n", userName.Get() );
 
@@ -199,7 +199,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
         Array<AString> files;
         files.SetCapacity( 256 );
         if ( !FileIO::GetFiles( m_BrokerageRoots[ 0 ],
-                                AStackString<>( "*" ),
+                                AStackString( "*" ),
                                 false,
                                 &files ) )
         {

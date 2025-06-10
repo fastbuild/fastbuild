@@ -125,7 +125,7 @@ void TestCompiler::BuildCompiler_Implicit() const
     uint64_t toolIdA;
     uint64_t toolIdB;
     uint64_t toolIdC;
-    AStackString<> compilerNodeName;
+    AStackString compilerNodeName;
 
     // Implicit Definition
     {

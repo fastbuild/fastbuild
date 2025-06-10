@@ -61,25 +61,25 @@ void TestObject::MSVCArgHelpers() const
 {
     // Exact match args, using /
     {
-        AStackString<> token( "/Zi" );
+        AStackString token( "/Zi" );
         TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) );
     }
 
     // Exact match args, using -
     {
-        AStackString<> token( "-Zi" );
+        AStackString token( "-Zi" );
         TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) );
     }
 
     // Starts with args, using /
     {
-        AStackString<> token( "/Ipath/path" );
+        AStackString token( "/Ipath/path" );
         TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) );
     }
 
     // Starts with args, using -
     {
-        AStackString<> token( "-Ipath/path" );
+        AStackString token( "-Ipath/path" );
         TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) );
     }
 }
@@ -215,12 +215,12 @@ void TestObject::TestStaleDynamicDeps() const
 //  - Ensure a file rebuilds if the time changes into the past
 void TestObject::ModTimeChangeBackwards() const
 {
-    const AStackString<> fileA( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileA.cpp" );
-    const AStackString<> fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
+    const AStackString fileA( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileA.cpp" );
+    const AStackString fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
     const char * database = "../tmp/Test/Object/ModTimeChangeBackwards/fbuild.fdb";
 
     // Generate full path file fileA
-    AStackString<> fileAFullPath;
+    AStackString fileAFullPath;
     {
         FileIO::GetCurrentDir( fileAFullPath );
         fileAFullPath += '/';
@@ -361,7 +361,8 @@ void TestObject::CacheUsingRelativePaths() const
     {
         for ( const char * file : files )
         {
-            AStackString<> src, dst;
+            AStackString src;
+            AStackString dst;
             src.Format( "%s/%s", srcPath, file );
             dst.Format( "%s/%s", dstPath, file );
             TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
@@ -376,7 +377,7 @@ void TestObject::CacheUsingRelativePaths() const
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheWrite = true;
         //options.m_ForceCleanBuild = true;
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/CacheUsingRelativePaths/A/Code/";
@@ -385,7 +386,7 @@ void TestObject::CacheUsingRelativePaths() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
 
         TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
     }
@@ -416,7 +417,7 @@ void TestObject::CacheUsingRelativePaths() const
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheRead = true;
         //options.m_ForceCleanBuild = true;
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/CacheUsingRelativePaths/B/Code/";
@@ -425,7 +426,7 @@ void TestObject::CacheUsingRelativePaths() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
 
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
     }
@@ -453,7 +454,8 @@ void TestObject::SourceMapping() const
     // Copy file structure to destination
     for ( const char * file : files )
     {
-        AStackString<> src, dst;
+        AStackString src;
+        AStackString dst;
         src.Format( "%s/%s", srcPath, file );
         dst.Format( "%s/%s", dstPath, file );
         TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
@@ -465,7 +467,7 @@ void TestObject::SourceMapping() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/SourceMapping/Code/";
@@ -474,7 +476,7 @@ void TestObject::SourceMapping() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
     }
 
     // Check the object file to make sure the debugging information has been remapped

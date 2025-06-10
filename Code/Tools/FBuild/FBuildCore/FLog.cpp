@@ -200,7 +200,7 @@ static FileStream * g_MonitorFileStream = nullptr;
         // TODO:B Change the monitoring log path
         //  - it's not uniquified per instance
         //  - we already have a .fbuild.tmp folder we should use
-        AStackString<> fullPath;
+        AStackString fullPath;
         FBuild::GetTempDir( fullPath );
         fullPath += "FastBuild";
         if ( FileIO::DirectoryCreate( fullPath ) )

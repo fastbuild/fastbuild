@@ -44,7 +44,7 @@ FBuildTest::FBuildTest()
     VERIFY( FileIO::GetCurrentDir( m_OriginalWorkingDir ) );
 
     // Set the WorkingDir to be the source code "Code" dir
-    AStackString<> codeDir;
+    AStackString codeDir;
     GetCodeDir( codeDir );
     VERIFY( FileIO::SetCurrentDir( codeDir ) );
 }
@@ -86,15 +86,15 @@ void FBuildTest::EnsureFileExists( const char * fileName ) const
 //------------------------------------------------------------------------------
 void FBuildTest::EnsureDirDoesNotExist( const char * dirPath ) const
 {
-    FileIO::DirectoryDelete( AStackString<>( dirPath ) );
-    TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( dirPath ) ) == false );
+    FileIO::DirectoryDelete( AStackString( dirPath ) );
+    TEST_ASSERT( FileIO::DirectoryExists( AStackString( dirPath ) ) == false );
 }
 
 // EnsureDirExists
 //------------------------------------------------------------------------------
 void FBuildTest::EnsureDirExists( const char * dirPath ) const
 {
-    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( dirPath ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString( dirPath ) ) );
 }
 
 // LoadFileContentsAsString
@@ -309,7 +309,7 @@ size_t FBuildForTest::GetRecursiveDependencyCount( const Node * node ) const
 //------------------------------------------------------------------------------
 size_t FBuildForTest::GetRecursiveDependencyCount( const char * nodeName ) const
 {
-    const Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    const Node * node = m_DependencyGraph->FindNode( AStackString( nodeName ) );
     TEST_ASSERT( node );
     return GetRecursiveDependencyCount( node );
 }
@@ -333,14 +333,14 @@ void FBuildForTest::GetNodesOfType( Node::Type type, Array<const Node *> & outNo
 //------------------------------------------------------------------------------
 const Node * FBuildForTest::GetNode( const char * nodeName ) const
 {
-    return m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    return m_DependencyGraph->FindNode( AStackString( nodeName ) );
 }
 
 // SerializeDepGraphToText
 //------------------------------------------------------------------------------
 void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const
 {
-    Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    Node * node = m_DependencyGraph->FindNode( AStackString( nodeName ) );
     Dependencies deps( 1 );
     deps.Add( node );
     m_DependencyGraph->SerializeToText( deps, outBuffer );

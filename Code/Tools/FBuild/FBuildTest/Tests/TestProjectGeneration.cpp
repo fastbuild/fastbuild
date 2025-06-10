@@ -104,7 +104,7 @@ REGISTER_TESTS_END
 void TestProjectGeneration::Test() const
 {
     // work out where we are running, and find "Core"
-    AStackString<> baseDir;
+    AStackString baseDir;
     TEST_ASSERT( FileIO::GetCurrentDir( baseDir ) );
     TEST_ASSERT( baseDir.FindI( "code" ) );
     #if defined( __WINDOWS__ )
@@ -118,8 +118,8 @@ void TestProjectGeneration::Test() const
     VSProjectGenerator pg;
 
     // project name/guid
-    AStackString<> name( "Core" );
-    AStackString<> guid;
+    AStackString name( "Core" );
+    AStackString guid;
     VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
     pg.SetProjectGuid( guid );
     pg.SetBasePaths( baseDirs );
@@ -155,8 +155,8 @@ void TestProjectGeneration::Test() const
 
     // files
     Array<AString> files;
-    FileIO::GetFiles( baseDir, AStackString<>( "*.cpp" ), true, &files );
-    FileIO::GetFiles( baseDir, AStackString<>( "*.h" ), true, &files );
+    FileIO::GetFiles( baseDir, AStackString( "*.cpp" ), true, &files );
+    FileIO::GetFiles( baseDir, AStackString( "*.h" ), true, &files );
     pg.AddFiles( files );
 
     // fileTypes
@@ -173,14 +173,14 @@ void TestProjectGeneration::Test() const
 
     FBuild fBuild; // needed for NodeGraph::CleanPath
 
-    AStackString<> projectFile( "../tmp/Test/ProjectGeneration/Core.vcxproj" );
-    AStackString<> projectFileClean;
+    AStackString projectFile( "../tmp/Test/ProjectGeneration/Core.vcxproj" );
+    AStackString projectFileClean;
     NodeGraph::CleanPath( projectFile, projectFileClean );
 
     const AString & vcxproj = pg.GenerateVCXProj( projectFileClean, configs, fileTypes, projectImports );
     const AString & filters = pg.GenerateVCXProjFilters( projectFileClean );
 
-    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../tmp/Test/ProjectGeneration/" ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString( "../tmp/Test/ProjectGeneration/" ) ) );
 
     FileStream f;
     TEST_ASSERT( f.Open( projectFileClean.Get(), FileStream::WRITE_ONLY ) );
@@ -194,9 +194,9 @@ void TestProjectGeneration::Test() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::TestFunction() const
 {
-    AStackString<> project( "../tmp/Test/ProjectGeneration/testproj.vcxproj" );
-    AStackString<> solution( "../tmp/Test/ProjectGeneration/testsln.sln" );
-    AStackString<> filters( "../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
+    AStackString project( "../tmp/Test/ProjectGeneration/testproj.vcxproj" );
+    AStackString solution( "../tmp/Test/ProjectGeneration/testsln.sln" );
+    AStackString filters( "../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
 
     // Initialize
     FBuildTestOptions options;
@@ -248,8 +248,8 @@ void TestProjectGeneration::TestFunction() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::TestFunction_NoRebuild() const
 {
-    AStackString<> project( "../tmp/Test/ProjectGeneration/testproj.vcxproj" );
-    AStackString<> filters( "../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
+    AStackString project( "../tmp/Test/ProjectGeneration/testproj.vcxproj" );
+    AStackString filters( "../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
 
     // Initialize
     FBuildTestOptions options;
@@ -296,14 +296,14 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
 void TestProjectGeneration::TestFunction_Speed() const
 {
     VSProjectGenerator pg;
-    AStackString<> baseDir;
+    AStackString baseDir;
     GetCodeDir( baseDir );
     Array<AString> baseDirs;
     baseDirs.Append( baseDir );
 
     // project name
-    AStackString<> name( "Big" );
-    AStackString<> guid;
+    const AStackString name( "Big" );
+    AStackString guid;
     VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
     pg.SetProjectGuid( guid );
     pg.SetBasePaths( baseDirs );
@@ -326,7 +326,7 @@ void TestProjectGeneration::TestFunction_Speed() const
     files.SetCapacity( numFiles );
     for ( size_t i = 0; i < numFiles; ++i )
     {
-        AStackString<> fileName( baseDir );
+        AStackString fileName( baseDir );
 
         // Add to different sub-directories
         const size_t subDirDepth = r.GetRandIndex( maxSubDirDepth );
@@ -353,9 +353,9 @@ void TestProjectGeneration::TestFunction_Speed() const
         fileTypes.Append( ft );
     }
 
-    Array<VSProjectImport> projectImports;
+    const Array<VSProjectImport> projectImports;
 
-    AStackString<> projectFileName;
+    AStackString projectFileName;
     projectFileName.Format( "%s//dummy.vcxproj", baseDir.Get() );
     PathUtils::FixupFilePath( projectFileName );
 
@@ -465,7 +465,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
         if ( token.Find( "NMakePreprocessorDefinitions" ) )
         {
             // Split the define string back into its constituent parts
-            AStackString<> copy( token );
+            AStackString copy( token );
             while ( copy.BeginsWith( ' ' ) )
             {
                 copy.Trim( 1, 0 );
@@ -509,7 +509,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( closeTagBegin != nullptr );
             TEST_ASSERT( openTagEnd < closeTagBegin );
 
-            const AStackString<> tagValue( openTagEnd + 1, closeTagBegin );
+            const AStackString tagValue( openTagEnd + 1, closeTagBegin );
             StackArray<AString> paths;
             tagValue.Tokenize( paths, ';' );
 
@@ -738,7 +738,7 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
 //------------------------------------------------------------------------------
 void TestProjectGeneration::VCXProj_DefaultConfigs() const
 {
-    AStackString<> project( "../tmp/Test/ProjectGeneration/VCXProj_DefaultConfigs/DefaultConfigs.vcxproj" );
+    AStackString project( "../tmp/Test/ProjectGeneration/VCXProj_DefaultConfigs/DefaultConfigs.vcxproj" );
 
     // Initialize
     FBuildTestOptions options;
@@ -782,7 +782,7 @@ void TestProjectGeneration::VCXProj_DefaultConfigs() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::VCXProj_PerConfigOverrides() const
 {
-    AStackString<> project( "../tmp/Test/ProjectGeneration/VCXProj_PerConfigOverrides/PerConfigOverrides.vcxproj" );
+    AStackString project( "../tmp/Test/ProjectGeneration/VCXProj_PerConfigOverrides/PerConfigOverrides.vcxproj" );
 
     // Initialize
     FBuildTestOptions options;
@@ -831,8 +831,8 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
     VSProjectGenerator pg;
 
     // Project name
-    AStackString<> name( "Project" );
-    AStackString<> guid;
+    AStackString name( "Project" );
+    AStackString guid;
     VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
     pg.SetProjectGuid( guid );
 
@@ -850,31 +850,31 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
     // TODO:C This test adds paths that are not normalized, but project nodes
     // should only be passing in normalized paths
     #if defined( __WINDOWS__ )
-        pg.AddFile( AStackString<>( "C:\\Code\\File.cpp" ) );
-        pg.AddFile( AStackString<>( "C:\\Code\\file.cpp" ) );               // Duplicate with case difference
-        pg.AddFile( AStackString<>( "C:\\Code\\File.cpp" ) );               // Exact duplicate
-        pg.AddFile( AStackString<>( "C:\\Code\\../Code/File.cpp" ) );       // Duplicate with path difference
-        pg.AddFile( AStackString<>( "C:\\Code\\../Dir/../Code/File.cpp" ) );// Duplicate with path difference
-        AStackString<> projectFileName( "C:\\Code\\dummy.vcxproj" );
+        pg.AddFile( AStackString( "C:\\Code\\File.cpp" ) );
+        pg.AddFile( AStackString( "C:\\Code\\file.cpp" ) );               // Duplicate with case difference
+        pg.AddFile( AStackString( "C:\\Code\\File.cpp" ) );               // Exact duplicate
+        pg.AddFile( AStackString( "C:\\Code\\../Code/File.cpp" ) );       // Duplicate with path difference
+        pg.AddFile( AStackString( "C:\\Code\\../Dir/../Code/File.cpp" ) );// Duplicate with path difference
+        AStackString projectFileName( "C:\\Code\\dummy.vcxproj" );
     #else
-        pg.AddFile( AStackString<>( "/Code/File.cpp" ) );
-        pg.AddFile( AStackString<>( "/Code/file.cpp" ) );                   // Duplicate with case difference
-        pg.AddFile( AStackString<>( "/Code/File.cpp" ) );                   // Exact duplicate
-        pg.AddFile( AStackString<>( "/Code/../Code/File.cpp" ) );           // Duplicate with path difference
-        pg.AddFile( AStackString<>( "/Code/../Dir/../Code/File.cpp" ) );    // Duplicate with path difference
-        AStackString<> projectFileName( "/Code/dummy.vcxproj" );
+        pg.AddFile( AStackString( "/Code/File.cpp" ) );
+        pg.AddFile( AStackString( "/Code/file.cpp" ) );                   // Duplicate with case difference
+        pg.AddFile( AStackString( "/Code/File.cpp" ) );                   // Exact duplicate
+        pg.AddFile( AStackString( "/Code/../Code/File.cpp" ) );           // Duplicate with path difference
+        pg.AddFile( AStackString( "/Code/../Dir/../Code/File.cpp" ) );    // Duplicate with path difference
+        AStackString projectFileName( "/Code/dummy.vcxproj" );
     #endif
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
+        AStackString proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
         TEST_ASSERT( proj.Replace( "File.cpp", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "File.cpp" ) == nullptr );
     }
 
     // Check vcxproj.filters
     {
-        AStackString<> filter( pg.GenerateVCXProjFilters( projectFileName ) );
+        AStackString filter( pg.GenerateVCXProjFilters( projectFileName ) );
         TEST_ASSERT( filter.Replace( "File.cpp", "" ) == 1 );
         TEST_ASSERT( filter.FindI( "File.cpp" ) == nullptr );
     }
@@ -885,37 +885,37 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
 void TestProjectGeneration::VCXProj_Folders() const
 {
     #if defined( __WINDOWS__ )
-        AStackString<> basePath( "C:\\" );
+        AStackString basePath( "C:\\" );
 
         // Files in various sub-dirs
-        AStackString<> file1( "C:\\FolderA\\AFile.cpp" );
-        AStackString<> file2( "C:\\FolderA\\BFolder\\SubDir\\AFile.cpp" );
-        AStackString<> file3( "C:\\FolderA\\ZFile.cpp" );
-        AStackString<> file4( "C:\\FolderA\\ZFolder\\SubDir\\AFile.cpp" );
-        AStackString<> file5( "C:\\FolderZ\\ZFile.cpp" );
+        AStackString file1( "C:\\FolderA\\AFile.cpp" );
+        AStackString file2( "C:\\FolderA\\BFolder\\SubDir\\AFile.cpp" );
+        AStackString file3( "C:\\FolderA\\ZFile.cpp" );
+        AStackString file4( "C:\\FolderA\\ZFolder\\SubDir\\AFile.cpp" );
+        AStackString file5( "C:\\FolderZ\\ZFile.cpp" );
 
         // Dirs which are substrings of each other but unique
-        AStackString<> file6( "C:\\Data\\TestPrecompiledHeaders\\CacheUniqueness2\\PrecompiledHeader.cpp" );
-        AStackString<> file7( "C:\\Data\\TestPrecompiledHeaders\\CacheUniqueness\\PrecompiledHeader.cpp" );
+        AStackString file6( "C:\\Data\\TestPrecompiledHeaders\\CacheUniqueness2\\PrecompiledHeader.cpp" );
+        AStackString file7( "C:\\Data\\TestPrecompiledHeaders\\CacheUniqueness\\PrecompiledHeader.cpp" );
 
         // Project name
-        AStackString<> projectFileName( "C:\\dummy.vcxproj" );
+        AStackString projectFileName( "C:\\dummy.vcxproj" );
     #else
-        AStackString<> basePath( "/" );
+        AStackString basePath( "/" );
 
         // Files in various sub-dirs
-        AStackString<> file1( "/FolderA/AFile.cpp" );
-        AStackString<> file2( "/FolderA/BFolder/SubDir/AFile.cpp" );
-        AStackString<> file3( "/FolderA/ZFile.cpp" );
-        AStackString<> file4( "/FolderA/ZFolder/SubDir/AFile.cpp" );
-        AStackString<> file5( "/FolderZ/ZFile.cpp" );
+        AStackString file1( "/FolderA/AFile.cpp" );
+        AStackString file2( "/FolderA/BFolder/SubDir/AFile.cpp" );
+        AStackString file3( "/FolderA/ZFile.cpp" );
+        AStackString file4( "/FolderA/ZFolder/SubDir/AFile.cpp" );
+        AStackString file5( "/FolderZ/ZFile.cpp" );
 
         // Dirs which are substrings of each other but unique
-        AStackString<> file6( "/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp" );
-        AStackString<> file7( "/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp" );
+        AStackString file6( "/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp" );
+        AStackString file7( "/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp" );
 
         // Project name
-        AStackString<> projectFileName( "/dummy.vcxproj" );
+        AStackString projectFileName( "/dummy.vcxproj" );
     #endif
 
     FBuild fb; // For CleanPath
@@ -923,8 +923,8 @@ void TestProjectGeneration::VCXProj_Folders() const
     VSProjectGenerator pg;
 
     // Project name
-    AStackString<> name( "Project" );
-    AStackString<> guid;
+    AStackString name( "Project" );
+    AStackString guid;
     VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
     pg.SetProjectGuid( guid );
 
@@ -952,7 +952,7 @@ void TestProjectGeneration::VCXProj_Folders() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
+        AStackString proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
         TEST_ASSERT( proj.Replace( "AFile.cpp", "" ) == 3 );
         TEST_ASSERT( proj.FindI( "AFile.cpp" ) == nullptr );
         TEST_ASSERT( proj.Replace( "ZFile.cpp", "" ) == 2 );
@@ -963,7 +963,7 @@ void TestProjectGeneration::VCXProj_Folders() const
 
     // Check vcxproj.filters
     {
-        AStackString<> filter( pg.GenerateVCXProjFilters( projectFileName ) );
+        AStackString filter( pg.GenerateVCXProjFilters( projectFileName ) );
 
         // Should have a folder entry for each unique folder, including
         // directories who don't directly have any files in them
@@ -991,17 +991,17 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
 {
     // Overlapping input and output directories, with common substring in dir names
     #if defined( __WINDOWS__ )
-        AStackString<> basePath( "C:\\MyProject\\ProjectSourceFiles\\" );
-        AStackString<> fileA( "C:\\MyProject\\ProjectSourceFiles\\File.cpp" );
-        AStackString<> fileB( "C:\\MyProject\\ProjectSourceFiles\\SubDir\\File.cpp" );
-        AStackString<> projectFileName( "C:\\MyProject\\Projects\\MyProject.vcxproj" );
+        AStackString basePath( "C:\\MyProject\\ProjectSourceFiles\\" );
+        AStackString fileA( "C:\\MyProject\\ProjectSourceFiles\\File.cpp" );
+        AStackString fileB( "C:\\MyProject\\ProjectSourceFiles\\SubDir\\File.cpp" );
+        AStackString projectFileName( "C:\\MyProject\\Projects\\MyProject.vcxproj" );
         //                                              ^     ^
         //                                              \-----\-- NOTE partial overlap within dir name
     #else
-        AStackString<> basePath( "/MyProject/ProjectSourceFiles/" );
-        AStackString<> fileA( "/MyProject/ProjectSourceFiles/File.cpp" );
-        AStackString<> fileB( "/MyProject/ProjectSourceFiles/SubDir/File.cpp" );
-        AStackString<> projectFileName( "/MyProject/Projects/MyProject.vcxproj" );
+        AStackString basePath( "/MyProject/ProjectSourceFiles/" );
+        AStackString fileA( "/MyProject/ProjectSourceFiles/File.cpp" );
+        AStackString fileB( "/MyProject/ProjectSourceFiles/SubDir/File.cpp" );
+        AStackString projectFileName( "/MyProject/Projects/MyProject.vcxproj" );
         //                                          ^     ^
         //                                          \-----\-- NOTE partial overlap within dir name
     #endif
@@ -1011,8 +1011,8 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
     VSProjectGenerator pg;
 
     // Project name
-    AStackString<> name( "Project" );
-    AStackString<> guid;
+    AStackString name( "Project" );
+    AStackString guid;
     VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
     pg.SetProjectGuid( guid );
 
@@ -1034,7 +1034,7 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
+        AStackString proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\File.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\SubDir\\File.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );
@@ -1042,7 +1042,7 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
 
     // Check vcxproj.filters
     {
-        AStackString<> filter( pg.GenerateVCXProjFilters( projectFileName ) );
+        AStackString filter( pg.GenerateVCXProjFilters( projectFileName ) );
 
         // Should have an entry for each file
         TEST_ASSERT( filter.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\File.cpp\">", "" ) == 1 );
@@ -1062,19 +1062,19 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
     // Overlapping input and output directories, with source files in same
     // dir as .vcxproject which is a sub-dir of a basepath
     #if defined( __WINDOWS__ )
-        AStackString<> basePath( "C:\\MyProject\\" );
-        AStackString<> fileA( "C:\\MyProject\\Generated\\GeneratedCpp.cpp" );
-        AStackString<> fileB( "C:\\MyProject\\Generated\\SubDir\\GeneratedCpp.cpp" );
-        AStackString<> projectFileName( "C:\\MyProject\\Generated\\MyProject.vcxproj" );
-        //                                              ^       ^
-        //                                              \-------\-- NOTE common dir name
+        AStackString basePath( "C:\\MyProject\\" );
+        AStackString fileA( "C:\\MyProject\\Generated\\GeneratedCpp.cpp" );
+        AStackString fileB( "C:\\MyProject\\Generated\\SubDir\\GeneratedCpp.cpp" );
+        AStackString projectFileName( "C:\\MyProject\\Generated\\MyProject.vcxproj" );
+        //                                            ^       ^
+        //                                            \-------\-- NOTE common dir name
     #else
-        AStackString<> basePath( "/MyProject/" );
-        AStackString<> fileA( "/MyProject/Generated/GeneratedCpp.cpp" );
-        AStackString<> fileB( "/MyProject/Generated/SubDir/GeneratedCpp.cpp" );
-        AStackString<> projectFileName( "/MyProject/Generated/MyProject.vcxproj" );
-        //                                          ^       ^
-        //                                          \-------\-- NOTE common dir name
+        AStackString basePath( "/MyProject/" );
+        AStackString fileA( "/MyProject/Generated/GeneratedCpp.cpp" );
+        AStackString fileB( "/MyProject/Generated/SubDir/GeneratedCpp.cpp" );
+        AStackString projectFileName( "/MyProject/Generated/MyProject.vcxproj" );
+        //                                        ^       ^
+        //                                        \-------\-- NOTE common dir name
     #endif
 
     FBuild fb; // For CleanPath
@@ -1082,8 +1082,8 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
     VSProjectGenerator pg;
 
     // Project name
-    AStackString<> name( "Project" );
-    AStackString<> guid;
+    AStackString name( "Project" );
+    AStackString guid;
     VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
     pg.SetProjectGuid( guid );
 
@@ -1105,7 +1105,7 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
+        AStackString proj( pg.GenerateVCXProj( projectFileName, configs, Array<VSProjectFileType>(), Array<VSProjectImport>() ) );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"GeneratedCpp.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"SubDir\\GeneratedCpp.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );
@@ -1113,7 +1113,7 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
 
     // Check vcxproj.filters
     {
-        AStackString<> filter( pg.GenerateVCXProjFilters( projectFileName ) );
+        AStackString filter( pg.GenerateVCXProjFilters( projectFileName ) );
 
         // Should have an entry for each file
         TEST_ASSERT( filter.Replace( "<CustomBuild Include=\"GeneratedCpp.cpp\">", "" ) == 1 ); // File path is still project-relative
@@ -1186,7 +1186,7 @@ void TestProjectGeneration::VCXProj_InputPaths() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::Solution_Empty() const
 {
-    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_Empty/empty.sln" );
+    AStackString solution( "../tmp/Test/ProjectGeneration/Solution_Empty/empty.sln" );
 
     // Initialize
     FBuildTestOptions options;
@@ -1215,7 +1215,7 @@ void TestProjectGeneration::Solution_Empty() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::Solution_SolutionRelativePaths() const
 {
-    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_SolutionRelativePaths/SubDir2/solution.sln" );
+    AStackString solution( "../tmp/Test/ProjectGeneration/Solution_SolutionRelativePaths/SubDir2/solution.sln" );
 
     // Initialize
     FBuildTestOptions options;
@@ -1236,7 +1236,7 @@ void TestProjectGeneration::Solution_SolutionRelativePaths() const
     // Read the project into memory
     FileStream f;
     VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
-    AStackString<> solutionData;
+    AStackString solutionData;
     solutionData.SetLength( (uint32_t)f.GetFileSize() );
     VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
 
@@ -1255,7 +1255,7 @@ void TestProjectGeneration::Solution_SolutionRelativePaths() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::Solution_BuildAndDeploy_None() const
 {
-    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_None/solution.sln" );
+    AStackString solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_None/solution.sln" );
 
     // Initialize
     FBuildTestOptions options;
@@ -1276,7 +1276,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_None() const
     // Read the project into memory
     FileStream f;
     VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
-    AStackString<> solutionData;
+    AStackString solutionData;
     solutionData.SetLength( (uint32_t)f.GetFileSize() );
     VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
 
@@ -1289,7 +1289,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_None() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
 {
-    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_Project/solution.sln" );
+    AStackString solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_Project/solution.sln" );
 
     // Initialize
     FBuildTestOptions options;
@@ -1310,7 +1310,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
     // Read the project into memory
     FileStream f;
     VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
-    AStackString<> solutionData;
+    AStackString solutionData;
     solutionData.SetLength( (uint32_t)f.GetFileSize() );
     VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
 
@@ -1335,7 +1335,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
 {
-    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_PerSolutionConfig/solution.sln" );
+    AStackString solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_PerSolutionConfig/solution.sln" );
 
     // Initialize
     FBuildTestOptions options;
@@ -1356,7 +1356,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     // Read the project into memory
     FileStream f;
     VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
-    AStackString<> solutionData;
+    AStackString solutionData;
     solutionData.SetLength( (uint32_t)f.GetFileSize() );
     VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
 
@@ -1375,7 +1375,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::Solution_Items() const
 {
-    const AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_Items/solution_with_items.sln" );
+    const AStackString solution( "../tmp/Test/ProjectGeneration/Solution_Items/solution_with_items.sln" );
 
     // Initialize
     FBuildTestOptions options;
@@ -1403,7 +1403,7 @@ void TestProjectGeneration::Solution_Items() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::VSExternalProj_ExternalProject() const
 {
-    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/External.sln" );
+    AStackString solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/External.sln" );
 
     // Initialize
     FBuildTestOptions options;
@@ -1443,7 +1443,7 @@ void TestProjectGeneration::VSExternalProj_ExternalProjectWrongData() const
     // this test really needs to use the external module on a wrong project, in order to validate a failure scenario
     // therefore it should only be ever run on windows, with properly installed VS
 
-    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/ExternalWrongData.sln" );
+    AStackString solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/ExternalWrongData.sln" );
 
     // Initialize
     FBuildTestOptions options;
@@ -1481,7 +1481,7 @@ void TestProjectGeneration::VSExternalProj_ExternalProject_MissingProjectGUID() 
 //------------------------------------------------------------------------------
 void TestProjectGeneration::XCode() const
 {
-    AStackString<> project( "../tmp/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj" );
+    AStackString project( "../tmp/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj" );
 
     // Initialize
     FBuildTestOptions options;

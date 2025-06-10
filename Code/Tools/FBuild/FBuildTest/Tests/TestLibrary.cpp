@@ -35,8 +35,8 @@ void TestLibrary::LibraryType() const
     #define TEST_LIBRARYTYPE( exeName, expectedFlag ) \
     do \
     { \
-        const uint32_t flags = LibraryNode::DetermineFlags( AStackString<>( "auto" ), \
-                                                            AStackString<>( exeName ), \
+        const uint32_t flags = LibraryNode::DetermineFlags( AStackString( "auto" ), \
+                                                            AStackString( exeName ), \
                                                             AString::GetEmpty() ); \
         TEST_ASSERT( flags & expectedFlag ); \
     } while ( false )

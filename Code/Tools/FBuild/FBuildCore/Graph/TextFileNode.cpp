@@ -114,7 +114,7 @@ void TextFileNode::EmitCompilationMessage() const
 {
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        AStackString<> output;
+        AStackString output;
         output += "Txt: ";
         output += GetName();
         output += '\n';

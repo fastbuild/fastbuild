@@ -395,7 +395,7 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
     NodeGraph::CleanPath( include, cleanInclude );
     #if defined( __WINDOWS__ ) || defined( __OSX__ )
         // Windows and OSX are case-insensitive
-        AStackString<> lowerCopy( cleanInclude );
+        AStackString lowerCopy( cleanInclude );
         lowerCopy.ToLower();
         const uint32_t crc2 = xxHash::Calc32( lowerCopy );
     #else

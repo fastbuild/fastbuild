@@ -50,7 +50,7 @@ void TestTest::Build() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> testExe( "../tmp/Test/Test/test.exe" );
+    const AStackString testExe( "../tmp/Test/Test/test.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( testExe );

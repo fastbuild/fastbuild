@@ -247,7 +247,7 @@ void TestReflection::MetaData() const
     TEST_ASSERT( ri->HasMetaData<Meta_Path>() );
 
     // Check all MetaData is present on property
-    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString<>( "Property" ) );
+    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString( "Property" ) );
     TEST_ASSERT( rp->HasMetaData<Meta_File>() );
     TEST_ASSERT( rp->HasMetaData<Meta_Optional>() );
     TEST_ASSERT( rp->HasMetaData<Meta_Path>() );
@@ -262,7 +262,7 @@ void TestReflection::ArraySize() const
     // This test should fail if our assumptions are invalidated
     TestObject o;
     const ReflectionInfo * ri = TestObject::GetReflectionInfoS();
-    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString<>( "StructArray" ) );
+    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString( "StructArray" ) );
     const ReflectedPropertyStruct * rps = (const ReflectedPropertyStruct *)rp;
     TEST_ASSERT( rps->GetArraySize( &o ) == 0 );
     o.m_StructArray.SetSize( 4 );

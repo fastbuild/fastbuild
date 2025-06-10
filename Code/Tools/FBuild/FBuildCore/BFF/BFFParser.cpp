@@ -46,7 +46,7 @@ bool BFFParser::ParseFromFile( const char * fileName )
     BuildProfilerScope buildProfileScope( "ParseBFF" );
 
     // Tokenize file
-    if ( m_Tokenizer.TokenizeFromFile( AStackString<>( fileName ) ) == false )
+    if ( m_Tokenizer.TokenizeFromFile( AStackString( fileName ) ) == false )
     {
         return false; // Tokenize will have emitted an error
     }
@@ -71,7 +71,7 @@ bool BFFParser::ParseFromString( const char * fileName, const char * fileContent
     PROFILE_FUNCTION;
 
     // Tokenize string
-    if ( m_Tokenizer.TokenizeFromString( AStackString<>( fileName ), AStackString<>( fileContents ) ) == false )
+    if ( m_Tokenizer.TokenizeFromString( AStackString( fileName ), AStackString( fileContents ) ) == false )
     {
         return false; // Tokenize will have emitted an error
     }
@@ -215,7 +215,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         ASSERT( iter->GetValueString().GetLength() >= 4 ); // at least one char inside: ."x"
 
         // unescape and substitute embedded variables
-        AStackString<> value;
+        AStackString value;
         if ( PerformVariableSubstitutions( iter, value ) == false )
         {
             return false;
@@ -267,7 +267,7 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFTokenRange & iter )
     ASSERT( varToken->IsVariable() );
 
     bool parentScope = false;
-    AStackString<> varName;
+    AStackString varName;
     if ( ParseVariableName( varToken, varName, parentScope ) == false )
     {
         return false; // ParseVariableName() would have display an error
@@ -710,7 +710,7 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
             ASSERT( arg->IsVariable() );
 
             // a variable, possibly with substitutions
-            AStackString<> srcVarName;
+            AStackString srcVarName;
             bool srcParentScope;
             if ( ParseVariableName( arg, srcVarName, srcParentScope ) == false )
             {
@@ -1047,7 +1047,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
         else if ( iter->IsVariable() )
         {
             // a variable, possibly with substitutions
-            AStackString<> srcVarName;
+            AStackString srcVarName;
             bool srcParentScope;
             if ( ParseVariableName( iter.GetCurrent(), srcVarName, srcParentScope ) == false )
             {
@@ -1667,33 +1667,33 @@ void BFFParser::CreateBuiltInVariables()
 
     // _WORKING_DIR_
     {
-        AStackString<> varName( "._WORKING_DIR_" );
-        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
+        AStackString varName( "._WORKING_DIR_" );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString( varName.Get() + 1 ) ) == nullptr );
         BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), FBuild::Get().GetWorkingDir(), &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
 
     // _FASTBUILD_VERSION_STRING_
     {
-        AStackString<> varName( "._FASTBUILD_VERSION_STRING_" );
-        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
-        BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), AStackString<>( FBUILD_VERSION_STRING ), &m_BaseStackFrame );
+        AStackString varName( "._FASTBUILD_VERSION_STRING_" );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString( varName.Get() + 1 ) ) == nullptr );
+        BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), AStackString( FBUILD_VERSION_STRING ), &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
 
     // _FASTBUILD_VERSION_NUMBER_
     {
-        AStackString<> varName( "._FASTBUILD_VERSION_" );
-        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
+        AStackString varName( "._FASTBUILD_VERSION_" );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString( varName.Get() + 1 ) ) == nullptr );
         BFFStackFrame::SetVarInt( varName, BFFToken::GetBuiltInToken(), (int32_t)FBUILD_VERSION, &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
 
     // _FASTBUILD_EXE_PATH_
     {
-        AStackString<> varName( "._FASTBUILD_EXE_PATH_" );
-        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
-        AStackString<> exeName;
+        AStackString varName( "._FASTBUILD_EXE_PATH_" );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString( varName.Get() + 1 ) ) == nullptr );
+        AStackString exeName;
         Env::GetExePath( exeName );
         BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), exeName, &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
@@ -1718,11 +1718,11 @@ void BFFParser::SetBuiltInVariable_CurrentBFFDir( const BFFFile & file )
     }
 
     // Get absolute path to bff
-    AStackString<> fullPath( file.GetFileName() );
+    AStackString fullPath( file.GetFileName() );
     NodeGraph::CleanPath( fullPath );
 
     // Get path to bff relative to working dir
-    AStackString<> relativePath;
+    AStackString relativePath;
     PathUtils::GetRelativePath( FBuild::Get().GetWorkingDir(), fullPath, relativePath );
 
     // Get dir part only
@@ -1731,7 +1731,7 @@ void BFFParser::SetBuiltInVariable_CurrentBFFDir( const BFFFile & file )
     relativePath.SetLength( (uint32_t)( lastSlash - relativePath.Get() ) );
 
     // Set the variable - always in the base scope
-    const AStackString<> varName( "._CURRENT_BFF_DIR_" );
+    const AStackString varName( "._CURRENT_BFF_DIR_" );
     BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), relativePath, &m_BaseStackFrame );
     // TODO:B Add a mechanism to mark variable as read-only
 }

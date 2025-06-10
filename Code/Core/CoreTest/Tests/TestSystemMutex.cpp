@@ -36,7 +36,7 @@ void TestSystemMutex::LeakRegression() const
 
     // Create a unique name based on architecture/config to avoid
     // collisions when tests can run in parallel
-    AStackString<> mutexName( "SysMutexName_" );
+    AStackString mutexName( "SysMutexName_" );
     #if defined( __clang__ )
         mutexName += "Clang";
     #endif
