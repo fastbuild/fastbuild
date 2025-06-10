@@ -20,9 +20,6 @@
 CIncludeParser::CIncludeParser()
     : m_LastCRC1( 0 )
     , m_LastCRC2( 0 )
-#ifdef DEBUG
-    , m_NonUniqueCount( 0 )
-#endif
 {
     m_CRCs1.SetCapacity( 4096 );
     m_CRCs2.SetCapacity( 4096 );
@@ -372,7 +369,7 @@ void CIncludeParser::SwapIncludes( Array<AString> & includes )
 //------------------------------------------------------------------------------
 void CIncludeParser::AddInclude( const char * begin, const char * end )
 {
-    #ifdef DEBUG
+    #if defined( ASSERTS_ENABLED )
         m_NonUniqueCount++;
     #endif
 

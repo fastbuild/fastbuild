@@ -9,13 +9,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 MemPoolBlock::MemPoolBlock( size_t blockSize, size_t blockAlignment )
-    : m_FreeBlockChain( nullptr )
-    #ifdef DEBUG
-        , m_NumActiveAllocations( 0 )
-        , m_NumLifetimeAllocations( 0 )
-        , m_PeakActiveAllocations( 0 )
-    #endif
-    , m_BlockSize( (uint32_t)blockSize )
+    : m_BlockSize( (uint32_t)blockSize )
     , m_BlockAlignment( (uint32_t)blockAlignment )
 {
     ASSERT( blockSize >= sizeof( FreeBlock ) );
@@ -29,9 +23,7 @@ MemPoolBlock::MemPoolBlock( size_t blockSize, size_t blockAlignment )
 MemPoolBlock::~MemPoolBlock()
 {
     // Ensure no memory leaks
-    #ifdef DEBUG
-        ASSERT( m_NumActiveAllocations == 0 );
-    #endif
+    ASSERT( m_NumActiveAllocations == 0 );
 
     // free pages
     for ( void * page : m_Pages )
@@ -53,7 +45,7 @@ void * MemPoolBlock::Alloc()
         ASSERT( m_FreeBlockChain );
     }
 
-    #ifdef DEBUG
+    #if defined( ASSERTS_ENABLED )
         m_NumActiveAllocations++;
         if ( m_NumLifetimeAllocations < 0xFFFFFFFF )
         {
@@ -75,16 +67,14 @@ void * MemPoolBlock::Alloc()
 //------------------------------------------------------------------------------
 void MemPoolBlock::Free( void * ptr )
 {
-    #ifdef DEBUG
-        ASSERT( m_NumActiveAllocations > 0 );
-    #endif
+    ASSERT( m_NumActiveAllocations > 0 );
 
     // Insert free block into head of chain
     FreeBlock * freeBlock = static_cast<FreeBlock *>( ptr );
     freeBlock->m_Next = m_FreeBlockChain;
     m_FreeBlockChain = freeBlock;
 
-    #ifdef DEBUG
+    #if defined( ASSERTS_ENABLED )
         --m_NumActiveAllocations;
     #endif
 }

@@ -57,9 +57,10 @@ private:
     TCPConnectionPool *     m_TCPConnectionPool; // back pointer to parent pool
     mutable void *          m_UserData;
 
-#ifdef DEBUG
-    mutable Thread::ThreadId m_SendSocketInUseThreadId; // sanity check we aren't sending from multiple threads unsafely
-#endif
+    #if defined( ASSERTS_ENABLED )
+        // sanity check we aren't sending from multiple threads unsafely
+        mutable Thread::ThreadId m_SendSocketInUseThreadId = INVALID_THREAD_ID;
+    #endif
 };
 
 // TCPConnectionPool

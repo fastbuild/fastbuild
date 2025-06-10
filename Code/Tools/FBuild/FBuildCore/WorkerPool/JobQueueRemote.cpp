@@ -387,13 +387,9 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
             node->SetLastBuildTime( timeTakenMS );
             node->SetStatFlag( Node::STATS_BUILT );
 
-            #ifdef DEBUG
-                if ( job->IsLocal() )
-                {
-                    // we should have recorded the new file time for remote job we built locally
-                    ASSERT( node->m_Stamp == FileIO::GetFileLastWriteTime( node->GetName() ) );
-                }
-            #endif
+            // we should have recorded the new file time for remote job we built locally
+            ASSERT( !job->IsLocal() ||
+                    ( node->m_Stamp == FileIO::GetFileLastWriteTime( node->GetName() ) ) );
 
             // TODO:A Also read into job if cache is being used
             if ( job->IsLocal() == false )

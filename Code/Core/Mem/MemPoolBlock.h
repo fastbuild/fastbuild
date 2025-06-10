@@ -33,7 +33,7 @@ protected:
     FreeBlock * m_FreeBlockChain            = nullptr;
 
     // debug active allocations
-    #if defined( DEBUG )
+    #if defined( ASSERTS_ENABLED )
         uint32_t m_NumActiveAllocations     = 0;
         uint32_t m_NumLifetimeAllocations   = 0;
         uint32_t m_PeakActiveAllocations    = 0;

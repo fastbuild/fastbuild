@@ -24,7 +24,7 @@ public:
 
     // take ownership of includes array to avoid re-allocations
     void SwapIncludes( Array<AString> & includes );
-    #ifdef DEBUG
+    #if defined( ASSERTS_ENABLED )
         size_t GetNonUniqueCount() const { return m_NonUniqueCount; }
     #endif
 
@@ -41,8 +41,8 @@ private:
 
     // final data
     Array<AString> m_Includes;    // list of unique includes
-    #ifdef DEBUG
-        size_t m_NonUniqueCount;    // number of include directives seen
+    #if defined( ASSERTS_ENABLED )
+        size_t m_NonUniqueCount = 0; // number of include directives seen
     #endif
 };
 
