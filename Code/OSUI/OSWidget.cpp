@@ -30,8 +30,6 @@
 //------------------------------------------------------------------------------
 OSWidget::OSWidget( OSWindow * parentWindow )
     : m_Parent( parentWindow )
-    , m_Handle( nullptr )
-    , m_Initialized( false )
 {
     #if defined( __WINDOWS__ )
         static bool commCtrlInit( false );

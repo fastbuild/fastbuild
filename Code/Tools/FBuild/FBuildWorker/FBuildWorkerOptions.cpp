@@ -21,18 +21,7 @@
 
 // FBuildWorkerOptions (CONSTRUCTOR)
 //------------------------------------------------------------------------------
-FBuildWorkerOptions::FBuildWorkerOptions() :
-#if defined( __WINDOWS__ )
-    m_IsSubprocess( false ),
-    m_UseSubprocess( true ),
-#endif
-    m_OverrideCPUAllocation( false ),
-    m_CPUAllocation( 0 ),
-    m_OverrideWorkMode( false ),
-    m_WorkMode( WorkerSettings::WHEN_IDLE ),
-    m_MinimumFreeMemoryMiB( 0 ),
-    m_ConsoleMode( false ),
-    m_PeriodicRestart( false )
+FBuildWorkerOptions::FBuildWorkerOptions()
 {
     #ifdef __LINUX__
         m_ConsoleMode = true; // Only console mode supported on Linux

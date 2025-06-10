@@ -35,7 +35,6 @@
 //------------------------------------------------------------------------------
 OSDropDown::OSDropDown( OSWindow * parentWindow )
     : OSWidget( parentWindow )
-    , m_Font( nullptr )
 {
 }
 

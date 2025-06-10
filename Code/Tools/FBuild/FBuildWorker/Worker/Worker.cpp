@@ -44,17 +44,7 @@
 Worker::Worker( const AString & args, bool consoleMode, bool periodicRestart )
     : m_ConsoleMode( consoleMode )
     , m_PeriodicRestart( periodicRestart )
-    , m_MainWindow( nullptr )
-    , m_ConnectionPool( nullptr )
-    , m_NetworkStartupHelper( nullptr )
     , m_BaseArgs( args )
-    , m_LastWriteTime( 0 )
-    , m_WantToQuit( false )
-    , m_RestartNeeded( false )
-    #if defined( __WINDOWS__ )
-        , m_LastDiskSpaceResult( -1 )
-        , m_LastMemoryCheckResult( -1 )
-    #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );

@@ -30,7 +30,6 @@
 //------------------------------------------------------------------------------
 OSLabel::OSLabel( OSWindow * parentWindow )
     : OSWidget( parentWindow )
-    , m_Font( nullptr )
 {
 }
 

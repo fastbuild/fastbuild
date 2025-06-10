@@ -24,12 +24,6 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 /*explicit*/ CachePlugin::CachePlugin( const AString & dllName )
-    : m_DLL( nullptr )
-    , m_InitFunc( nullptr )
-    , m_ShutdownFunc( nullptr )
-    , m_PublishFunc( nullptr )
-    , m_RetrieveFunc( nullptr )
-    , m_FreeMemoryFunc( nullptr )
 {
     #if defined( __WINDOWS__ )
         m_DLL = ::LoadLibrary( dllName.Get() );

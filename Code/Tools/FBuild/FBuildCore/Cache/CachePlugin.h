@@ -38,16 +38,16 @@ private:
 
     static void CacheOutputWrapper( const char * message );
 
-    void *              m_DLL;
-    bool                m_Valid;
-    CacheInitFunc       m_InitFunc;
-    CacheInitExFunc     m_InitExFunc;
-    CacheShutdownFunc   m_ShutdownFunc;
-    CachePublishFunc    m_PublishFunc;
-    CacheRetrieveFunc   m_RetrieveFunc;
-    CacheFreeMemoryFunc m_FreeMemoryFunc;
-    CacheOutputInfoFunc m_OutputInfoFunc;
-    CacheTrimFunc       m_TrimFunc;
+    void *              m_DLL = nullptr;
+    bool                m_Valid = false;
+    CacheInitFunc       m_InitFunc = nullptr;
+    CacheInitExFunc     m_InitExFunc = nullptr;
+    CacheShutdownFunc   m_ShutdownFunc = nullptr;
+    CachePublishFunc    m_PublishFunc = nullptr;
+    CacheRetrieveFunc   m_RetrieveFunc = nullptr;
+    CacheFreeMemoryFunc m_FreeMemoryFunc = nullptr;
+    CacheOutputInfoFunc m_OutputInfoFunc = nullptr;
+    CacheTrimFunc       m_TrimFunc = nullptr;
 };
 
 //------------------------------------------------------------------------------

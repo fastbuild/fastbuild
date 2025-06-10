@@ -120,9 +120,8 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 OSWindow::OSWindow( void * hInstance )
-    : m_Handle( nullptr )
     #if defined( __WINDOWS__ )
-        , m_HInstance( hInstance )
+        : m_HInstance( hInstance )
     #endif
 {
     #if defined( __WINDOWS__ )

@@ -34,7 +34,6 @@
 //------------------------------------------------------------------------------
 OSListView::OSListView( OSWindow * parentWindow )
     : OSWidget( parentWindow )
-    , m_Font( nullptr )
 {
 }
 

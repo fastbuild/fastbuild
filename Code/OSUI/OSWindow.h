@@ -64,9 +64,9 @@ protected:
         void GetWindowClassName( AString & outClassName );
     #endif
 
-    void * m_Handle;
+    void * m_Handle = nullptr;
     #if defined( __WINDOWS__ )
-        void * m_HInstance;
+        void * m_HInstance = nullptr;
     #endif
     Array<OSWidget *> m_ChildWidgets;
 };

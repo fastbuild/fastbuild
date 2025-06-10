@@ -31,9 +31,6 @@
 //------------------------------------------------------------------------------
 OSMenu::OSMenu( OSWindow * parentWindow )
     : OSWidget( parentWindow )
-    #if defined( __WINDOWS__ )
-        , m_Menu( nullptr )
-    #endif
 {
 }
 

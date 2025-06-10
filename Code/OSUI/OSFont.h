@@ -26,7 +26,7 @@ public:
 
 protected:
     #if defined( __WINDOWS__ )
-        void * m_Font;
+        void * m_Font = nullptr;
     #endif
 };
 

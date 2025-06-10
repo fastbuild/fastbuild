@@ -28,7 +28,7 @@ public:
 
 protected:
     #if defined( __WINDOWS__ )
-        void * m_Menu;
+        void * m_Menu = nullptr;
     #endif
 };
 

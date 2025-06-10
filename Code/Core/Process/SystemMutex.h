@@ -20,9 +20,9 @@ public:
 
 private:
     #if defined( __WINDOWS__ )
-        void * m_Handle;
+        void * m_Handle = reinterpret_cast<void *>( -1 );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        int m_Handle;
+        int m_Handle = -1;
     #endif
     AString m_Name;
 };

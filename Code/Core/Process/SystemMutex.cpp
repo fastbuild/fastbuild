@@ -21,12 +21,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SystemMutex::SystemMutex( const char * name )
-    #if defined( __WINDOWS__ )
-        : m_Handle( INVALID_HANDLE_VALUE )
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        : m_Handle( -1 )
-    #endif
-    , m_Name( name )
+    : m_Name( name )
 {
 }
 

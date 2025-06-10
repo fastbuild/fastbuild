@@ -24,9 +24,9 @@ public:
     void * GetHandle() const { return m_Handle; }
 
 protected:
-    OSWindow *  m_Parent;
-    void *      m_Handle;
-    bool        m_Initialized;
+    OSWindow * m_Parent = nullptr;
+    void * m_Handle = nullptr;
+    bool m_Initialized = false;
 
     #if defined( __WINDOWS__ )
         void InitCommonControls(); // Called by Widgets that need commctl
