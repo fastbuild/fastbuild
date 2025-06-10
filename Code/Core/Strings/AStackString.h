@@ -31,6 +31,10 @@ private:
     char m_Storage[ RESERVED + 1 ];
 };
 
+// CTAD template deduction guide
+template <int RESERVED = 256>
+AStackString() -> AStackString<RESERVED>;
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 template <int RESERVED>
