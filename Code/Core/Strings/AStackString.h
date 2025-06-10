@@ -34,6 +34,8 @@ private:
 // CTAD template deduction guide
 template <int RESERVED = 256>
 AStackString() -> AStackString<RESERVED>;
+template <int RESERVED = 256>
+AStackString( const AStackString<> & ) -> AStackString<RESERVED>;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
