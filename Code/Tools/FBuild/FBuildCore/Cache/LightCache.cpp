@@ -47,19 +47,19 @@ public:
         {
         }
 
-        AString                     m_Include;
-        IncludeType                 m_Type;
+        AString m_Include;
+        IncludeType m_Type;
     };
 
     ~IncludedFile();
 
-    uint64_t                        m_FileNameHash;
-    AString                         m_FileName;
-    bool                            m_Exists;
-    uint64_t                        m_ContentHash;
-    Array<Include>                  m_Includes;
-    Array<const IncludeDefine *>    m_IncludeDefines;
-    Array<uint64_t>                 m_NonIncludeDefines;
+    uint64_t m_FileNameHash;
+    AString m_FileName;
+    bool m_Exists;
+    uint64_t m_ContentHash;
+    Array<Include> m_Includes;
+    Array<const IncludeDefine *> m_IncludeDefines;
+    Array<uint64_t> m_NonIncludeDefines;
 
     bool operator==( const AString & fileName ) const     { return ( m_FileName == fileName ); }
     bool operator==( const IncludedFile & other ) const   { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
@@ -198,9 +198,9 @@ public:
     {
     }
 
-    AString                         m_Macro;
-    AString                         m_Include;
-    IncludeType                     m_Type;
+    AString m_Macro;
+    AString m_Include;
+    IncludeType m_Type;
 };
 
 // DESTRUCTOR
@@ -227,8 +227,8 @@ public:
     {
         m_HashSet.Destruct();
     }
-    Mutex                   m_Mutex;
-    IncludedFileHashSet     m_HashSet;
+    Mutex m_Mutex;
+    IncludedFileHashSet m_HashSet;
 };
 PRAGMA_DISABLE_POP_MSVC // 4324
 // Power of two number of buckets

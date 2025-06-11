@@ -13,8 +13,8 @@ class VSExternalProjectConfig : public Struct
 {
     REFLECT_STRUCT_DECLARE( VSExternalProjectConfig )
 public:
-    AString             m_Platform;
-    AString             m_Config;
+    AString m_Platform;
+    AString m_Config;
 };
 
 // VSProjectExternalNode
@@ -37,8 +37,8 @@ private:
     virtual const AString & GetProjectTypeGuid() const override;
 
     // Exposed
-    AString                         m_ProjectTypeGuid;
-    Array<VSExternalProjectConfig>  m_ProjectConfigs;
+    AString m_ProjectTypeGuid;
+    Array<VSExternalProjectConfig> m_ProjectConfigs;
 };
 
 //------------------------------------------------------------------------------

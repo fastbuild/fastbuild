@@ -51,30 +51,30 @@ private:
     void StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
     void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
-    const bool          m_ConsoleMode;
-    const bool          m_PeriodicRestart;
-    WorkerWindow        * m_MainWindow = nullptr;
-    Server              * m_ConnectionPool = nullptr;
+    const bool m_ConsoleMode;
+    const bool m_PeriodicRestart;
+    WorkerWindow * m_MainWindow = nullptr;
+    Server * m_ConnectionPool = nullptr;
     NetworkStartupHelper * m_NetworkStartupHelper = nullptr;
-    WorkerSettings      * m_WorkerSettings = nullptr;
-    IdleDetection       m_IdleDetection;
+    WorkerSettings * m_WorkerSettings = nullptr;
+    IdleDetection m_IdleDetection;
     WorkerBrokerageServer m_WorkerBrokerage;
-    AString             m_BaseExeName;
-    AString             m_BaseArgs;
-    uint64_t            m_LastWriteTime = 0;
-    bool                m_WantToQuit = false;
-    bool                m_RestartNeeded = false;
-    Timer               m_PeriodicRestartTimer;
-    Timer               m_UIUpdateTimer;
-    FileStream          m_TargetIncludeFolderLock;
+    AString m_BaseExeName;
+    AString m_BaseArgs;
+    uint64_t m_LastWriteTime = 0;
+    bool m_WantToQuit = false;
+    bool m_RestartNeeded = false;
+    Timer m_PeriodicRestartTimer;
+    Timer m_UIUpdateTimer;
+    FileStream m_TargetIncludeFolderLock;
     #if defined( __WINDOWS__ )
-        Timer               m_TimerLastDiskSpaceCheck;
-        int32_t             m_LastDiskSpaceResult = -1; // -1 : No check done yet. 0=Not enough space right now. 1=OK for now.
+        Timer m_TimerLastDiskSpaceCheck;
+        int32_t m_LastDiskSpaceResult = -1; // -1 : No check done yet. 0=Not enough space right now. 1=OK for now.
 
-        Timer               m_TimerLastMemoryCheck;
-        int32_t             m_LastMemoryCheckResult = -1; // -1 : No check done yet. 0=Not enough memory right now. 1=OK for now.
+        Timer m_TimerLastMemoryCheck;
+        int32_t m_LastMemoryCheckResult = -1; // -1 : No check done yet. 0=Not enough memory right now. 1=OK for now.
     #endif
-    mutable AString     m_LastStatusMessage;
+    mutable AString m_LastStatusMessage;
 };
 
 //------------------------------------------------------------------------------

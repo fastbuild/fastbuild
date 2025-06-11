@@ -132,7 +132,7 @@ public:
                              const GetNodeListOptions & options = GetNodeListOptions() );
 
 protected:
-    AString     m_Name;
+    AString m_Name;
     mutable bool m_Seen; // track for unique enforcement
 
     // for functions that support a simple alias parameter, the base class can

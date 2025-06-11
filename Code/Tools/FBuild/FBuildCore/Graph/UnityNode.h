@@ -77,10 +77,10 @@ protected:
         bool operator<( const UnityFileAndOrigin & other ) const;
 
     protected:
-        FileIO::FileInfo *      m_Info              = nullptr;
-        DirectoryListNode *     m_DirListOrigin     = nullptr;
-        uint32_t                m_LastSlashIndex    = 0;
-        bool                    m_Isolated          = false;
+        FileIO::FileInfo * m_Info = nullptr;
+        DirectoryListNode * m_DirListOrigin = nullptr;
+        uint32_t m_LastSlashIndex = 0;
+        bool m_Isolated = false;
     };
 
     bool GetFiles( Array<UnityFileAndOrigin> & files );

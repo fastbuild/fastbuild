@@ -38,9 +38,9 @@ public:
     void Stamp( uint64_t stamp ) { m_NodeStamp = stamp; }
 
 private:
-    Node * m_Node;  // Node being depended on
+    Node * m_Node; // Node being depended on
     uint64_t m_NodeStamp; // Stamp of node at last build
-    bool m_IsWeak;  // Is node used for build ordering, but not triggering a rebuild
+    bool m_IsWeak; // Is node used for build ordering, but not triggering a rebuild
 };
 
 // Dependencies
@@ -91,8 +91,8 @@ protected:
     class DependencyList
     {
     public:
-        uint32_t    m_Size;
-        uint32_t    m_Capacity;
+        uint32_t m_Size;
+        uint32_t m_Capacity;
 
         // Dependencies immediately follow Size & Capacity
     };

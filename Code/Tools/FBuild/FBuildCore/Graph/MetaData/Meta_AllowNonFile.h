@@ -25,8 +25,8 @@ public:
     Node::Type GetLimitedType() const { return m_LimitToType; }
 
 protected:
-    bool        m_LimitToTypeEnabled = false;
-    Node::Type  m_LimitToType;
+    bool m_LimitToTypeEnabled = false;
+    Node::Type m_LimitToType;
 };
 
 //------------------------------------------------------------------------------

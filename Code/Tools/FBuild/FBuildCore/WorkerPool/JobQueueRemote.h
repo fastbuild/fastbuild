@@ -58,20 +58,20 @@ private:
     // internal helpers
     static bool ReadResults( Job * job );
 
-    mutable Mutex       m_PendingJobsMutex;
-    Array<Job *>        m_PendingJobs;
-    mutable Mutex       m_InFlightJobsMutex;
-    Array<Job *>        m_InFlightJobs;
-    Mutex               m_CompletedJobsMutex;
-    Array<Job *>        m_CompletedJobs;
-    Array<Job *>        m_CompletedJobsFailed;
-    Array<Job *>        m_CompletedJobsAborted;
+    mutable Mutex m_PendingJobsMutex;
+    Array<Job *> m_PendingJobs;
+    mutable Mutex m_InFlightJobsMutex;
+    Array<Job *> m_InFlightJobs;
+    Mutex m_CompletedJobsMutex;
+    Array<Job *> m_CompletedJobs;
+    Array<Job *> m_CompletedJobsFailed;
+    Array<Job *> m_CompletedJobsAborted;
 
-    Semaphore           m_MainThreadSemaphore;
-    Semaphore           m_WorkerThreadSemaphore;
-    Semaphore           m_WorkerThreadSleepSemaphore;
+    Semaphore m_MainThreadSemaphore;
+    Semaphore m_WorkerThreadSemaphore;
+    Semaphore m_WorkerThreadSleepSemaphore;
 
-    ThreadPool *        m_ThreadPool;
+    ThreadPool * m_ThreadPool;
     Array<WorkerThread *> m_Workers;
 };
 

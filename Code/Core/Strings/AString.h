@@ -104,8 +104,8 @@ public:
     class TokenRange
     {
     public:
-        uint32_t    m_StartIndex = 0;
-        uint32_t    m_EndIndex = 0;
+        uint32_t m_StartIndex = 0;
+        uint32_t m_EndIndex = 0;
     };
     void                        Tokenize( Array<TokenRange> & outTokenRanges,
                                           char splitChar = ' ' ) const;
@@ -205,12 +205,12 @@ protected:
     NO_INLINE void Grow( uint32_t newLen );     // Grow capacity, transferring existing string data (for concatenation)
     NO_INLINE void GrowNoCopy( uint32_t newLen ); // Grow capacity, discarding existing string data (for assignment/construction)
 
-    char *      m_Contents;         // always points to valid null terminated string (even when empty)
-    uint32_t    m_Length;           // length in characters
-    uint32_t    m_ReservedAndFlags; // reserved space in characters (even) and least significant bit used for static flag
+    char * m_Contents; // always points to valid null terminated string (even when empty)
+    uint32_t m_Length; // length in characters
+    uint32_t m_ReservedAndFlags; // reserved space in characters (even) and least significant bit used for static flag
 
-    static const char * const   s_EmptyString;
-    static const AString    s_EmptyAString;
+    static const char * const s_EmptyString;
+    static const AString s_EmptyAString;
 };
 
 //------------------------------------------------------------------------------

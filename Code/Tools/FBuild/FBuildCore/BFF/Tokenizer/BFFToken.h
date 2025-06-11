@@ -85,16 +85,16 @@ public:
     static const BFFToken & GetBuiltInToken()       { return s_BuiltInToken; }
 
 private:
-    BFFTokenType    m_Type;
-    bool            m_Boolean   = false;
-    int32_t         m_Integer   = 0;
-    AString         m_String;
+    BFFTokenType m_Type;
+    bool m_Boolean = false;
+    int32_t m_Integer = 0;
+    AString m_String;
     const BFFFile & m_BFFFile;
-    const char *    m_SourcePos = nullptr;
+    const char * m_SourcePos = nullptr;
 
     // Static Data
-    static const BFFFile    s_BuiltInFile;
-    static const BFFToken   s_BuiltInToken;
+    static const BFFFile s_BuiltInFile;
+    static const BFFToken s_BuiltInToken;
 };
 
 //------------------------------------------------------------------------------

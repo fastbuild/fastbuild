@@ -28,8 +28,8 @@ class TCPConnectionPool;
 //------------------------------------------------------------------------------
 namespace
 {
-    static const uint32_t kDefaultConnectionTimeoutMS   = ( 2 * 1000 );
-    static const uint32_t kDefaultSendTimeoutMS         = ( 10 * 60 * 1000 );
+    static const uint32_t kDefaultConnectionTimeoutMS = ( 2 * 1000 );
+    static const uint32_t kDefaultSendTimeoutMS = ( 10 * 60 * 1000 );
 }
 
 // ConnectionInfo - one connection in the pool
@@ -50,17 +50,17 @@ public:
 private:
     friend class TCPConnectionPool;
 
-    TCPSocket               m_Socket;
-    uint32_t                m_RemoteAddress;
-    uint16_t                m_RemotePort;
-    mutable Atomic<bool>    m_ThreadQuitNotification;
-    TCPConnectionPool *     m_TCPConnectionPool; // back pointer to parent pool
-    mutable void *          m_UserData;
+    TCPSocket m_Socket;
+    uint32_t m_RemoteAddress;
+    uint16_t m_RemotePort;
+    mutable Atomic<bool> m_ThreadQuitNotification;
+    TCPConnectionPool * m_TCPConnectionPool; // back pointer to parent pool
+    mutable void * m_UserData;
 
-    #if defined( ASSERTS_ENABLED )
-        // sanity check we aren't sending from multiple threads unsafely
-        mutable Thread::ThreadId m_SendSocketInUseThreadId = INVALID_THREAD_ID;
-    #endif
+#if defined( ASSERTS_ENABLED )
+    // sanity check we aren't sending from multiple threads unsafely
+    mutable Thread::ThreadId m_SendSocketInUseThreadId = INVALID_THREAD_ID;
+#endif
 };
 
 // TCPConnectionPool
@@ -139,8 +139,8 @@ private:
 
     struct SendBuffer
     {
-        uint32_t        size;
-        const void *    data;
+        uint32_t size;
+        const void * data;
     };
     bool        SendInternal( const ConnectionInfo * connection, const SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS );
 
@@ -160,14 +160,14 @@ private:
     void                SetNonBlocking( TCPSocket socket ) const;
 
     // listen socket related info
-    ConnectionInfo *            m_ListenConnection;
+    ConnectionInfo * m_ListenConnection;
 
     // remote connection related info
-    mutable Mutex               m_ConnectionsMutex;
-    Array<ConnectionInfo *>     m_Connections;
+    mutable Mutex m_ConnectionsMutex;
+    Array<ConnectionInfo *> m_Connections;
 
-    bool                        m_ShuttingDown;
-    Semaphore                   m_ShutdownSemaphore;
+    bool m_ShuttingDown;
+    Semaphore m_ShutdownSemaphore;
 
     // object to manage network subsystem lifetime
 protected:

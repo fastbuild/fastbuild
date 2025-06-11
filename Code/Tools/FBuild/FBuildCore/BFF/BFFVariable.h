@@ -98,15 +98,15 @@ private:
     AString m_Name;
     VarType m_Type;
 
-    mutable uint8_t     m_FreezeCount   = 0;
+    mutable uint8_t m_FreezeCount = 0;
 
     //
-    bool                m_BoolValue     = false;
-    int32_t             m_IntValue      = 0;
-    AString             m_StringValue;
-    Array<AString>      m_ArrayValues;
+    bool m_BoolValue = false;
+    int32_t m_IntValue = 0;
+    AString m_StringValue;
+    Array<AString> m_ArrayValues;
     Array<BFFVariable *> m_SubVariables; // Used for struct members of arrays of structs
-    const BFFToken &    m_Token;
+    const BFFToken & m_Token;
 
     static const char * s_TypeNames[ MAX_VAR_TYPES ];
 };

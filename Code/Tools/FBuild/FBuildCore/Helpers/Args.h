@@ -56,14 +56,14 @@ public:
     static void StripQuotes( const char * start, const char * end, AString & out );
 
 protected:
-    AStackString<4096>      m_Args;
-    AString                 m_ResponseFileArgs;
-    Array<uint32_t>         m_DelimiterIndices;
-    ResponseFile            m_ResponseFile;
-    #if defined( ASSERTS_ENABLED )
-        bool                m_Finalized;
-    #endif
-    bool                    m_DisableResponseFileWrite; // Used by tests
+    AStackString<4096> m_Args;
+    AString m_ResponseFileArgs;
+    Array<uint32_t> m_DelimiterIndices;
+    ResponseFile m_ResponseFile;
+#if defined( ASSERTS_ENABLED )
+    bool m_Finalized;
+#endif
+    bool m_DisableResponseFileWrite; // Used by tests
 };
 
 //------------------------------------------------------------------------------

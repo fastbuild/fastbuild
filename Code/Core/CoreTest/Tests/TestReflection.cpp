@@ -103,19 +103,19 @@ public:
 private: // ensure reflection can set private members
     friend class TestReflection;
 
-    float       m_Float;
-    uint8_t     m_UInt8;
-    uint16_t    m_UInt16;
-    uint32_t    m_UInt32;
-    uint64_t    m_UInt64;
-    int8_t      m_Int8;
-    int16_t     m_Int16;
-    int32_t     m_Int32;
-    int64_t     m_Int64;
-    bool        m_Bool;
-    AString     m_AString;
+    float m_Float;
+    uint8_t m_UInt8;
+    uint16_t m_UInt16;
+    uint32_t m_UInt32;
+    uint64_t m_UInt64;
+    int8_t m_Int8;
+    int16_t m_Int16;
+    int32_t m_Int32;
+    int64_t m_Int64;
+    bool m_Bool;
+    AString m_AString;
 
-    TestStruct  m_TestStruct;
+    TestStruct m_TestStruct;
 
     Array<float> m_FloatArray;
 

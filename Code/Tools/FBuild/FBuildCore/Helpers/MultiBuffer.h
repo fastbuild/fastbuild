@@ -38,7 +38,7 @@ private:
     enum : uint32_t { MAX_FILES = 4 };
 
     ConstMemoryStream * m_ReadStream;
-    MemoryStream *      m_WriteStream;
+    MemoryStream * m_WriteStream;
 };
 
 //------------------------------------------------------------------------------

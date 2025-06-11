@@ -251,27 +251,27 @@ protected:
 
     // Members are ordered to minimize wasted bytes due to padding.
     // Most frequently accessed members are favored for placement in the first cache line.
-    AString             m_Name;                     // Full name. **Set by constructor**
-    State               m_State = NOT_PROCESSED;    // State in the current build
-    Type                m_Type;                     // Node type. **Set by constructor**
-    mutable uint16_t    m_StatsFlags = 0;           // Stats recorded in the current build
-    mutable uint32_t    m_BuildPassTag = 0;         // Prevent multiple recursions into the same node during a single sweep
-    uint64_t            m_Stamp = 0;                // "Stamp" representing this node for dependency comparisons
-    uint8_t             m_ControlFlags = FLAG_NONE; // Control build behavior special cases - Set by constructor
-    bool                m_Hidden = false;           // Hidden from -showtargets?
-    uint8_t             m_ConcurrencyGroupIndex = 0; // Concurrency group, or 0 if not set
+    AString m_Name; // Full name. **Set by constructor**
+    State m_State = NOT_PROCESSED; // State in the current build
+    Type m_Type; // Node type. **Set by constructor**
+    mutable uint16_t m_StatsFlags = 0; // Stats recorded in the current build
+    mutable uint32_t m_BuildPassTag = 0; // Prevent multiple recursions into the same node during a single sweep
+    uint64_t m_Stamp = 0; // "Stamp" representing this node for dependency comparisons
+    uint8_t m_ControlFlags = FLAG_NONE; // Control build behavior special cases - Set by constructor
+    bool m_Hidden = false; // Hidden from -showtargets?
+    uint8_t m_ConcurrencyGroupIndex = 0; // Concurrency group, or 0 if not set
     // Note: Unused 1 byte here
-    uint32_t            m_RecursiveCost = 0;        // Recursive cost used during task ordering
-    Node *              m_Next = nullptr;           // Node map in-place linked list pointer
-    uint32_t            m_NameHash;                 // Hash of mName
-    uint32_t            m_LastBuildTimeMs = 0;      // Time it took to do last known full build of this node
-    uint32_t            m_ProcessingTime = 0;       // Time spent on this node during this build
-    uint32_t            m_CachingTime = 0;          // Time spent caching this node
-    mutable uint32_t    m_ProgressAccumulator = 0;  // Used to estimate build progress percentage
+    uint32_t m_RecursiveCost = 0; // Recursive cost used during task ordering
+    Node * m_Next = nullptr; // Node map in-place linked list pointer
+    uint32_t m_NameHash; // Hash of mName
+    uint32_t m_LastBuildTimeMs = 0; // Time it took to do last known full build of this node
+    uint32_t m_ProcessingTime = 0; // Time spent on this node during this build
+    uint32_t m_CachingTime = 0; // Time spent caching this node
+    mutable uint32_t m_ProgressAccumulator = 0; // Used to estimate build progress percentage
 
-    Dependencies        m_PreBuildDependencies;
-    Dependencies        m_StaticDependencies;
-    Dependencies        m_DynamicDependencies;
+    Dependencies m_PreBuildDependencies;
+    Dependencies m_StaticDependencies;
+    Dependencies m_DynamicDependencies;
 
     // Static Data
     static const char * const s_NodeTypeNames[];

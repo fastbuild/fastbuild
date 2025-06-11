@@ -98,10 +98,10 @@ namespace
             }
         }
 
-        Array<Array<AString>>   m_IncludePrefixes;
-        Array<AString>          m_ForceIncludePrefixes;
-        Array<AString>          m_DefinePrefixes;
-        Array<AString>          m_AdditionalOptionPrefixes;
+        Array<Array<AString>> m_IncludePrefixes;
+        Array<AString> m_ForceIncludePrefixes;
+        Array<AString> m_DefinePrefixes;
+        Array<AString> m_AdditionalOptionPrefixes;
     };
 
     static const ProjectGeneratorBaseConstants g_ProjectGeneratorBaseConstants;

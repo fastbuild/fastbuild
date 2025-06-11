@@ -31,11 +31,11 @@ public:
     void            SetParseOnce() const { m_Once = true; }
 
 protected:
-    AString         m_FileName;
-    AString         m_FileContents;
-    mutable bool    m_Once          = false; // Set if #once directive is seen
-    uint64_t        m_ModTime       = 0;
-    uint64_t        m_Hash          = 0;
+    AString m_FileName;
+    AString m_FileContents;
+    mutable bool m_Once = false; // Set if #once directive is seen
+    uint64_t m_ModTime = 0;
+    uint64_t m_Hash = 0;
 };
 
 //------------------------------------------------------------------------------

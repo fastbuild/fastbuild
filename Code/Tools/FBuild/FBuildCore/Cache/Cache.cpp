@@ -25,8 +25,8 @@
 class CacheStats
 {
 public:
-    uint32_t    m_NumFiles = 0;
-    uint64_t    m_NumBytes = 0;
+    uint32_t m_NumFiles = 0;
+    uint64_t m_NumBytes = 0;
 };
 
 // OldestFileTimeSorter

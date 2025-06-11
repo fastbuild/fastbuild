@@ -69,12 +69,12 @@ protected:
                             const AString & token,
                             bool allowStartsWith = false );
 
-    const ObjectNode *  m_ObjectNode                = nullptr;
-    bool                m_ForceColoredDiagnostics   = false;
-    AString             m_SourceMapping;
-    AString             m_RelativeBasePath;
-    AString             m_OverrideSourceFile;
-    AString             m_RemoteSourceRoot;
+    const ObjectNode * m_ObjectNode = nullptr;
+    bool m_ForceColoredDiagnostics = false;
+    AString m_SourceMapping;
+    AString m_RelativeBasePath;
+    AString m_OverrideSourceFile;
+    AString m_RemoteSourceRoot;
 };
 
 //------------------------------------------------------------------------------

@@ -74,9 +74,9 @@ private:
     #endif
 
     #if defined( __WINDOWS__ )
-        void * m_StdOutRead;    // HANDLE
-        void * m_StdErrRead;    // HANDLE
-        void * m_StdInWrite;    // HANDLE
+        void * m_StdOutRead; // HANDLE
+        void * m_StdErrRead; // HANDLE
+        void * m_StdInWrite; // HANDLE
     #endif
 
     #if defined( __LINUX__ ) || defined( __APPLE__ )

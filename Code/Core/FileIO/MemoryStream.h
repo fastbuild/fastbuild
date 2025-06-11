@@ -38,10 +38,10 @@ public:
 private:
     NO_INLINE void GrowToAccommodate( uint64_t bytesToAccomodate );
 
-    char *          m_Begin;
-    char *          m_End;
-    char *          m_MaxEnd;
-    size_t          m_MinGrowth;
+    char * m_Begin;
+    char * m_End;
+    char * m_MaxEnd;
+    size_t m_MinGrowth;
 };
 
 //------------------------------------------------------------------------------

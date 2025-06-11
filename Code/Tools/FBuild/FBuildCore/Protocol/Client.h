@@ -68,35 +68,35 @@ private:
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const ConstMemoryStream & memoryStream );
 
-    Array<AString>      m_WorkerList;   // workers to connect to
-    Atomic<bool>        m_ShouldExit;   // signal from main thread
-    bool                m_DetailedLogging;
-    Thread              m_Thread;       // the thread to find and manage workers
+    Array<AString> m_WorkerList; // workers to connect to
+    Atomic<bool> m_ShouldExit; // signal from main thread
+    bool m_DetailedLogging;
+    Thread m_Thread; // the thread to find and manage workers
 
     // state
-    Timer               m_StatusUpdateTimer;
+    Timer m_StatusUpdateTimer;
 
     struct ServerState
     {
         explicit ServerState();
 
-        const ConnectionInfo *  m_Connection;
-        AString                 m_RemoteName;
-        Atomic<uint16_t>        m_WorkerVersion;
-        Atomic<uint8_t>         m_ProtocolVersionMinor;
+        const ConnectionInfo * m_Connection;
+        AString m_RemoteName;
+        Atomic<uint16_t> m_WorkerVersion;
+        Atomic<uint8_t> m_ProtocolVersionMinor;
 
-        Mutex                   m_Mutex;
+        Mutex m_Mutex;
         const Protocol::IMessage * m_CurrentMessage;
-        Timer                   m_DelayTimer;
-        uint32_t                m_NumJobsAvailable;     // num jobs we've told this server we have available
-        Array<Job *>            m_Jobs;                 // jobs we've sent to this server
+        Timer m_DelayTimer;
+        uint32_t m_NumJobsAvailable; // num jobs we've told this server we have available
+        Array<Job *> m_Jobs; // jobs we've sent to this server
 
-        bool                    m_Denylisted;
+        bool m_Denylisted;
     };
-    Mutex                   m_ServerListMutex;
-    Array<ServerState>      m_ServerList;
-    uint32_t                m_WorkerConnectionLimit;
-    uint16_t                m_Port;
+    Mutex m_ServerListMutex;
+    Array<ServerState> m_ServerList;
+    uint32_t m_WorkerConnectionLimit;
+    uint16_t m_Port;
 };
 
 //------------------------------------------------------------------------------

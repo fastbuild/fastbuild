@@ -25,8 +25,8 @@ class VSProjectPlatformConfigTuple
 public:
     VSProjectPlatformConfigTuple() = default;
 
-    AString             m_Platform;
-    AString             m_Config;
+    AString m_Platform;
+    AString m_Config;
 };
 
 // VSProjectBaseNode
@@ -49,7 +49,7 @@ public:
 
 protected:
     // Exposed
-    AString             m_ProjectGuid;
+    AString m_ProjectGuid;
 
     // Internal
     Array<VSProjectPlatformConfigTuple> m_ProjectPlatformConfigTuples;

@@ -32,10 +32,10 @@ private:
     void EmitCompilationMessage() const;
 
     // Exposed Properties
-    AString             m_TextFileOutput;
-    Array<AString>      m_TextFileInputStrings;
-    bool                m_TextFileAlways;
-    Array<AString>      m_PreBuildDependencyNames;
+    AString m_TextFileOutput;
+    Array<AString> m_TextFileInputStrings;
+    bool m_TextFileAlways;
+    Array<AString> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

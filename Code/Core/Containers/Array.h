@@ -105,9 +105,9 @@ protected:
         CAPACITY_MASK = 0x7FFFFFFF,
     };
 
-    T *         m_Begin;
-    uint32_t    m_Size;
-    uint32_t    m_CapacityAndFlags;
+    T * m_Begin;
+    uint32_t m_Size;
+    uint32_t m_CapacityAndFlags;
 };
 
 // CONSTRUCTOR

@@ -765,8 +765,8 @@ void TestUnity::SortFiles() const
 
         const AString & operator[] ( size_t index ) const { return m_HelperFiles[ index ].GetName(); }
 
-        Array<UnityNode::UnityFileAndOrigin>    m_HelperFiles;
-        Array<FileIO::FileInfo *>               m_HelperFileInfos;
+        Array<UnityNode::UnityFileAndOrigin> m_HelperFiles;
+        Array<FileIO::FileInfo *> m_HelperFileInfos;
     };
 
     // Helper macros to reduce boilerplate code

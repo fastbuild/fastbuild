@@ -77,8 +77,8 @@ private:
     TryMutexHolder( const TryMutexHolder & other ) = delete;
     void operator=( TryMutexHolder & other ) = delete;
 
-    Mutex &     m_Mutex;
-    const bool  m_Locked;
+    Mutex & m_Mutex;
+    const bool m_Locked;
 };
 
 //------------------------------------------------------------------------------

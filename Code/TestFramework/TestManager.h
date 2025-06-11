@@ -43,7 +43,7 @@ public:
                                 ... ) FORMAT_STRING( 4, 5 );
 
 private:
-    Timer       m_Timer;
+    Timer m_Timer;
 
     // Track allocations for tests to catch leaks
     #ifdef MEMTRACKER_ENABLED
@@ -54,16 +54,16 @@ private:
     class TestInfo
     {
     public:
-        TestGroup *     m_TestGroup = nullptr;
-        const char *    m_TestName = nullptr;
-        bool            m_Passed = false;
-        bool            m_MemoryLeaks = false;
-        float           m_TimeTaken = 0.0f;
+        TestGroup * m_TestGroup = nullptr;
+        const char * m_TestName = nullptr;
+        bool m_Passed = false;
+        bool m_MemoryLeaks = false;
+        float m_TimeTaken = 0.0f;
     };
-    static uint32_t     s_NumTests;
-    static TestInfo     s_TestInfos[ MAX_TESTS ];
+    static uint32_t s_NumTests;
+    static TestInfo s_TestInfos[ MAX_TESTS ];
 
-    static TestGroup *  s_FirstTest;
+    static TestGroup * s_FirstTest;
 };
 
 //------------------------------------------------------------------------------

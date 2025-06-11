@@ -181,8 +181,8 @@ public:
     }
     virtual bool IsAFile() const override { return true; }
 
-    AString         m_String;
-    Array<AString>  m_ArrayOfStrings;
+    AString m_String;
+    Array<AString> m_ArrayOfStrings;
 };
 REFLECT_BEGIN( BaseNode, Node, MetaNone() )
 REFLECT_END( BaseNode )
@@ -222,12 +222,12 @@ public:
         delete m_Function;
     }
 
-    NodeGraph           m_NodeGraph;
-    FBuild              m_FBuild;
-    BFFToken *          m_Token = nullptr;
-    BaseNode *          m_Node;
-    FunctionWrapper *   m_Function = new FunctionWrapper(); // Freed by FBuild destructor
-    BFFStackFrame       m_Frame;
+    NodeGraph m_NodeGraph;
+    FBuild m_FBuild;
+    BFFToken * m_Token = nullptr;
+    BaseNode * m_Node;
+    FunctionWrapper * m_Function = new FunctionWrapper(); // Freed by FBuild destructor
+    BFFStackFrame m_Frame;
 
     bool Populate() { return m_Function->Populate( m_NodeGraph, m_Token, *m_Node ); }
 

@@ -47,12 +47,12 @@ public:
 
         KeyValue & operator=( const KeyValue & other ) = delete;
 
-        const KEY   m_Key;
-        VALUE       m_Value;
+        const KEY m_Key;
+        VALUE m_Value;
 
     protected:
         friend class UnorderedMap<KEY, VALUE>;
-        KeyValue    * m_Next; // In-place linked list for each bucket
+        KeyValue * m_Next; // In-place linked list for each bucket
     };
 
     // Check if an item exists in the map

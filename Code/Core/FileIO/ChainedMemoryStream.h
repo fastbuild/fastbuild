@@ -33,10 +33,10 @@ public:
     virtual uint64_t    GetFileSize() const override;
 
 private:
-    const uint32_t      m_PageSize;
-    uint32_t            m_CurrentPageIndex = 0;
-    uint32_t            m_PosInPage = 0;
-    Array<char *>       m_Pages;
+    const uint32_t m_PageSize;
+    uint32_t m_CurrentPageIndex = 0;
+    uint32_t m_PosInPage = 0;
+    Array<char *> m_Pages;
 };
 
 //------------------------------------------------------------------------------

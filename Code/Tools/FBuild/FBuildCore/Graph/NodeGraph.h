@@ -74,10 +74,10 @@ public:
     uint64_t    GetContentHash() const          { return m_ContentHash; }
     void        SetContentHash( uint64_t hash ) { m_ContentHash = hash; }
 private:
-    char        m_Identifier[ 3 ];
-    uint8_t     m_Version;
-    uint32_t    m_Padding;          // Unused
-    uint64_t    m_ContentHash;      // Hash of data excluding this header
+    char m_Identifier[ 3 ];
+    uint8_t m_Version;
+    uint32_t m_Padding; // Unused
+    uint64_t m_ContentHash; // Hash of data excluding this header
 };
 
 // NodeGraph
@@ -178,9 +178,9 @@ private:
             , m_Distance( dist )
         {
         }
-        
-        Node *      m_Node;
-        uint32_t    m_Distance;
+
+        Node * m_Node;
+        uint32_t m_Distance;
     };
     void FindNearestNodesInternal( const AString & fullPath, Array<NodeWithDistance> & nodes, const uint32_t maxDistance = 5 ) const;
 
@@ -219,9 +219,9 @@ private:
     static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property );
     static bool DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB );
 
-    Node **         m_NodeMap;
-    uint32_t        m_NodeMapMaxKey; // Always equals to some power of 2 minus 1, can be used as mask.
-    Array<Node *>   m_AllNodes;
+    Node ** m_NodeMap;
+    uint32_t m_NodeMapMaxKey; // Always equals to some power of 2 minus 1, can be used as mask.
+    Array<Node *> m_AllNodes;
 
     Timer m_Timer;
 
@@ -235,9 +235,9 @@ private:
         {
         }
 
-        AString     m_FileName;
-        uint64_t    m_TimeStamp;
-        uint64_t    m_DataHash;
+        AString m_FileName;
+        uint64_t m_TimeStamp;
+        uint64_t m_DataHash;
     };
     Array<UsedFile> m_UsedFiles;
 

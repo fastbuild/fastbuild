@@ -39,9 +39,9 @@ private:
     #if defined( __WINDOWS__ )
         struct PaddingStruct
         {
-            Mutex   m_Mutex1;
+            Mutex m_Mutex1;
             uint8_t m_Padding;
-            Mutex   m_Mutex2;
+            Mutex m_Mutex2;
         };
         void TestAlignment() const;
     #endif

@@ -39,9 +39,9 @@ public:
     Job * RemoveJob();
 
 private:
-    uint32_t    m_Count;    // access the current count
-    Mutex       m_Mutex;    // lock to add/remove jobs
-    Array<Job *> m_Jobs;  // Sorted, most expensive at end
+    uint32_t m_Count; // access the current count
+    Mutex m_Mutex; // lock to add/remove jobs
+    Array<Job *> m_Jobs; // Sorted, most expensive at end
 };
 
 // JobQueue
@@ -96,39 +96,39 @@ private:
     void        ReturnUnfinishedDistributableJob( Job * job );
 
     // Semaphore to manage work
-    Semaphore           m_WorkerThreadSemaphore;
+    Semaphore m_WorkerThreadSemaphore;
 
     // Jobs available for local processing
     class ConcurrencyGroupState
     {
     public:
-        Array<Node *>       m_LocalJobs_Staging; // Jobs ready to be made available
-        uint32_t            m_ActiveJobs = 0; // Jobs made available for processing
+        Array<Node *> m_LocalJobs_Staging; // Jobs ready to be made available
+        uint32_t m_ActiveJobs = 0; // Jobs made available for processing
     };
-    Array<ConcurrencyGroupState>    m_ConcurrencyGroupsState;
-    JobSubQueue         m_LocalJobs_Available;
+    Array<ConcurrencyGroupState> m_ConcurrencyGroupsState;
+    JobSubQueue m_LocalJobs_Available;
 
     // Jobs in progress locally
-    uint32_t            m_NumLocalJobsActive;
+    uint32_t m_NumLocalJobsActive;
 
     // Jobs available for distributed processing (can also be done locally)
-    mutable Mutex       m_DistributedJobsMutex;
-    Array<Job *>        m_DistributableJobs_Available;  // Available, not in progress anywhere
-    Array<Job *>        m_DistributableJobs_InProgress; // In progress remotely, locally or both
+    mutable Mutex m_DistributedJobsMutex;
+    Array<Job *> m_DistributableJobs_Available; // Available, not in progress anywhere
+    Array<Job *> m_DistributableJobs_InProgress; // In progress remotely, locally or both
 
     // Semaphore to manage thread idle
-    Semaphore           m_MainThreadSemaphore;
+    Semaphore m_MainThreadSemaphore;
 
     // completed jobs
-    mutable Mutex       m_CompletedJobsMutex;
-    Array<Job *>        m_CompletedJobs;
-    Array<Job *>        m_CompletedJobsAborted;
-    Array<Job *>        m_CompletedJobsFailed;
+    mutable Mutex m_CompletedJobsMutex;
+    Array<Job *> m_CompletedJobs;
+    Array<Job *> m_CompletedJobsAborted;
+    Array<Job *> m_CompletedJobsFailed;
 
     // we have pair of arrays to enable a swap, avoiding locking the mutex too long
-    Array<Job *>        m_CompletedJobs2;
-    Array<Job *>        m_CompletedJobsAborted2;
-    Array<Job *>        m_CompletedJobsFailed2;
+    Array<Job *> m_CompletedJobs2;
+    Array<Job *> m_CompletedJobsAborted2;
+    Array<Job *> m_CompletedJobsFailed2;
 
     Array<WorkerThread *> m_Workers;
 };

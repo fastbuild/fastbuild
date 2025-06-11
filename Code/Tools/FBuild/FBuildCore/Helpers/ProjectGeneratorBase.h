@@ -20,8 +20,8 @@ class ObjectListNode;
 class ProjectGeneratorBaseConfig
 {
 public:
-    AString         m_Config;                   // Config name (e.g. Debug, Release etc.)
-    const Node *    m_TargetNode = nullptr;     // Target to pass on cmdline to FASTBuild and used for Intellisense
+    AString m_Config; // Config name (e.g. Debug, Release etc.)
+    const Node * m_TargetNode = nullptr; // Target to pass on cmdline to FASTBuild and used for Intellisense
 };
 
 // ProjectGeneratorBase
@@ -86,28 +86,28 @@ protected:
     struct File;
     struct Folder
     {
-        AString             m_Path;         // Project Base Path(s) relative
-        Array<File *>       m_Files;        // Child Files
-        Array<Folder *>     m_Folders;      // Child Folders
-        uint32_t            m_SortedIndex;
+        AString m_Path; // Project Base Path(s) relative
+        Array<File *> m_Files; // Child Files
+        Array<Folder *> m_Folders; // Child Folders
+        uint32_t m_SortedIndex;
 
         bool operator<( const Folder & other ) const { return m_Path < other.m_Path; }
     };
     struct File
     {
-        AString             m_FileName;     // FileName with no path info
-        AString             m_FullPath;     // Full path
-        Folder *            m_Folder;       // Index into m_Folders
-        uint32_t            m_SortedIndex;
+        AString m_FileName; // FileName with no path info
+        AString m_FullPath; // Full path
+        Folder * m_Folder; // Index into m_Folders
+        uint32_t m_SortedIndex;
 
         bool operator<( const File & other ) const { return m_FileName < other.m_FileName; }
     };
 
     // Input Data
-    Array<AString>  m_BasePaths;
-    Folder *        m_RootFolder;
+    Array<AString> m_BasePaths;
+    Folder * m_RootFolder;
     Array<Folder *> m_Folders;
-    Array<File *>   m_Files;
+    Array<File *> m_Files;
     Array<const ProjectGeneratorBaseConfig *> m_Configs;
 
     // working buffer

@@ -57,8 +57,8 @@ public:
     }
 
     Thread::ThreadEntryFunction m_UserEntryFunction;
-    void *          m_UserData;
-    AString         m_ThreadName;
+    void * m_UserData;
+    AString m_ThreadName;
 
     #if defined( __WINDOWS__ )
         static uint32_t WINAPI ThreadStartFunction( void * userData )

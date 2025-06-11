@@ -50,8 +50,8 @@ int Main( int argc, char * argv[] );
 // data passed between processes in "wrapper" mode
 struct SharedData
 {
-    bool    Started;
-    int     ReturnCode;
+    bool Started;
+    int ReturnCode;
 };
 
 // Global

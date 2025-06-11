@@ -116,10 +116,10 @@ public:
 protected:
     enum { MAX_OFFSET = ( 1 << 16 ) };
 
-    uint32_t        m_NameCRC;
-    uint16_t        m_Offset; // validated by MAX_OFFSET
-    PropertyType    m_Type;
-    bool            m_IsArray;
+    uint32_t m_NameCRC;
+    uint16_t m_Offset; // validated by MAX_OFFSET
+    PropertyType m_Type;
+    bool m_IsArray;
 
     #if defined( REFLECTION_KEEP_STRING_NAMES )
         const char * m_Name;

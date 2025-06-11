@@ -36,8 +36,8 @@ protected:
     class ThreadJob
     {
     public:
-        ThreadJobFunc   m_Function = nullptr;
-        void *          m_UserData = nullptr;
+        ThreadJobFunc m_Function = nullptr;
+        void * m_UserData = nullptr;
     };
 
     // Thread structure
@@ -51,21 +51,21 @@ protected:
         void            operator=( const ThreadPoolThread & other ) = delete;
 
     protected:
-        uint32_t            m_ThreadId = 0;
-        Thread              m_Thread;
-        ThreadPoolThread *  m_Next = nullptr;
-        ThreadPool &        m_OwnerPool;
+        uint32_t m_ThreadId = 0;
+        Thread m_Thread;
+        ThreadPoolThread * m_Next = nullptr;
+        ThreadPool & m_OwnerPool;
     };
 
     // Thread management
-    const uint32_t      m_NumThreads = 0;
-    Atomic<bool>        m_WantToQuit;
-    Semaphore           m_WakeSemaphore;
-    ThreadPoolThread *  m_FirstThread;
+    const uint32_t m_NumThreads = 0;
+    Atomic<bool> m_WantToQuit;
+    Semaphore m_WakeSemaphore;
+    ThreadPoolThread * m_FirstThread;
 
     // Job queue
-    Mutex               m_JobQueueMutex;
-    Array<ThreadJob>    m_JobQueue;
+    Mutex m_JobQueueMutex;
+    Array<ThreadJob> m_JobQueue;
 };
 
 //------------------------------------------------------------------------------

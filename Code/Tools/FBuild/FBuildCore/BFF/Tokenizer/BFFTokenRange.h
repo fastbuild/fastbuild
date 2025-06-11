@@ -36,9 +36,9 @@ public:
     bool IsEmpty() const { return ( m_Begin == m_End ); }
 
 protected:
-    const BFFToken * m_Pos      = nullptr;
-    const BFFToken * m_End      = nullptr;
-    const BFFToken * m_Begin    = nullptr;
+    const BFFToken * m_Pos = nullptr;
+    const BFFToken * m_End = nullptr;
+    const BFFToken * m_Begin = nullptr;
 };
 
 //------------------------------------------------------------------------------

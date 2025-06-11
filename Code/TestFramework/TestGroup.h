@@ -123,8 +123,8 @@ private:
         {
         }
 
-        uint32_t    m_AllocationId;
-        uint32_t    m_ActiveAllocationCount;
+        uint32_t m_AllocationId;
+        uint32_t m_ActiveAllocationCount;
     };
 
     // Take a snapshot of the memory state

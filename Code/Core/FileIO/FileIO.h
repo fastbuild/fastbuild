@@ -36,10 +36,10 @@ public:
                           GetFilesHelper & helper );
     struct FileInfo
     {
-        AString     m_Name;
-        uint32_t    m_Attributes;
-        uint64_t    m_LastWriteTime;
-        uint64_t    m_Size;
+        AString m_Name;
+        uint32_t m_Attributes;
+        uint64_t m_LastWriteTime;
+        uint64_t m_Size;
 
         bool        IsReadOnly() const;
     };

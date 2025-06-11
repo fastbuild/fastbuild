@@ -70,29 +70,29 @@ private:
     virtual void Migrate( const Node & oldNode ) override;
 
     // Exposed params
-    AString                 m_Executable;
-    Array<AString>          m_ExtraFiles;
-    Array<AString>          m_CustomEnvironmentVariables;
-    bool                    m_AllowDistribution;
-    bool                    m_AllowResponseFile;
-    bool                    m_ForceResponseFile;
-    bool                    m_VS2012EnumBugFix;
-    bool                    m_ClangRewriteIncludes;
-    bool                    m_ClangGCCUpdateXLanguageArg;
-    bool                    m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
-    AString                 m_ExecutableRootPath;
-    AString                 m_CompilerFamilyString;
-    uint8_t                 m_CompilerFamilyEnum;
-    bool                    m_SimpleDistributionMode;
-    bool                    m_UseLightCache;
-    bool                    m_UseRelativePaths;
-    bool                    m_UseDeterministicPaths;
-    ToolManifest            m_Manifest;
-    Array<AString>          m_Environment;
-    AString                 m_SourceMapping;
+    AString m_Executable;
+    Array<AString> m_ExtraFiles;
+    Array<AString> m_CustomEnvironmentVariables;
+    bool m_AllowDistribution;
+    bool m_AllowResponseFile;
+    bool m_ForceResponseFile;
+    bool m_VS2012EnumBugFix;
+    bool m_ClangRewriteIncludes;
+    bool m_ClangGCCUpdateXLanguageArg;
+    bool m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
+    AString m_ExecutableRootPath;
+    AString m_CompilerFamilyString;
+    uint8_t m_CompilerFamilyEnum;
+    bool m_SimpleDistributionMode;
+    bool m_UseLightCache;
+    bool m_UseRelativePaths;
+    bool m_UseDeterministicPaths;
+    ToolManifest m_Manifest;
+    Array<AString> m_Environment;
+    AString m_SourceMapping;
 
     // Internal state
-    mutable const char *    m_EnvironmentString;
+    mutable const char * m_EnvironmentString;
 };
 
 //------------------------------------------------------------------------------

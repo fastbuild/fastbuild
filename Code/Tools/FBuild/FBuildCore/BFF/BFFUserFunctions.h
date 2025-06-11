@@ -28,9 +28,9 @@ public:
     bool operator==( const AString & name ) const { return ( m_Name == name ); }
 
 protected:
-    AString                 m_Name;
+    AString m_Name;
     Array<const BFFToken *> m_Args;
-    BFFTokenRange           m_BodyTokenRange;
+    BFFTokenRange m_BodyTokenRange;
 };
 
 // BFFUserFunctions

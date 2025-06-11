@@ -32,11 +32,11 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ void *                               SmallBlockAllocator::s_BucketMemoryStart( MEM_BUCKETS_NOT_INITIALIZED );
-/*static*/ uint32_t                             SmallBlockAllocator::s_BucketNextFreePageIndex( 0 );
-/*static*/ uint64_t                             SmallBlockAllocator::s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof( uint64_t ) ];
-/*static*/ SmallBlockAllocator::MemBucket *     SmallBlockAllocator::s_Buckets( nullptr );
-/*static*/ uint8_t                              SmallBlockAllocator::s_BucketMappingTable[ BUCKET_MAPPING_TABLE_SIZE ] = { 0 };
+/*static*/ void * SmallBlockAllocator::s_BucketMemoryStart( MEM_BUCKETS_NOT_INITIALIZED );
+/*static*/ uint32_t SmallBlockAllocator::s_BucketNextFreePageIndex( 0 );
+/*static*/ uint64_t SmallBlockAllocator::s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof( uint64_t ) ];
+/*static*/ SmallBlockAllocator::MemBucket * SmallBlockAllocator::s_Buckets( nullptr );
+/*static*/ uint8_t SmallBlockAllocator::s_BucketMappingTable[ BUCKET_MAPPING_TABLE_SIZE ] = { 0 };
 
 // InitBuckets
 //------------------------------------------------------------------------------

@@ -43,14 +43,14 @@ protected:
     class LibraryStats
     {
     public:
-        const Node *    m_Library;
-        uint32_t        m_CPUTimeMS;
-        uint32_t        m_ObjectCount;
-        uint32_t        m_ObjectCount_OutOfDate;
-        uint32_t        m_ObjectCount_Cacheable;
-        uint32_t        m_ObjectCount_CacheHits;
-        uint32_t        m_ObjectCount_CacheStores;
-        uint32_t        m_CacheTimeMS;
+        const Node * m_Library;
+        uint32_t m_CPUTimeMS;
+        uint32_t m_ObjectCount;
+        uint32_t m_ObjectCount_OutOfDate;
+        uint32_t m_ObjectCount_Cacheable;
+        uint32_t m_ObjectCount_CacheHits;
+        uint32_t m_ObjectCount_CacheStores;
+        uint32_t m_CacheTimeMS;
 
         bool operator<( const LibraryStats & other ) const { return m_CPUTimeMS > other.m_CPUTimeMS; }
     };
@@ -58,13 +58,13 @@ protected:
     class IncludeStats
     {
     public:
-        const Node *    m_Node;
-        uint32_t        m_Count;
-        bool            m_InPCH;
+        const Node * m_Node;
+        uint32_t m_Count;
+        bool m_InPCH;
 
         bool operator<( const IncludeStats & other ) const { return m_Count > other.m_Count; }
 
-        IncludeStats *  m_Next; // in-place hash map chain
+        IncludeStats * m_Next; // in-place hash map chain
     };
 
     class IncludeStatsMap

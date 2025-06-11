@@ -98,28 +98,28 @@ protected:
                               Dependencies & nodes );
 
     // Reflected
-    AString             m_Linker;
-    AString             m_LinkerOptions;
-    AString             m_LinkerType;
-    Array<AString>      m_Libraries;
-    Array<AString>      m_Libraries2;
-    Array<AString>      m_LinkerAssemblyResources;
-    bool                m_LinkerLinkObjects             = false;
-    bool                m_LinkerAllowResponseFile;
-    bool                m_LinkerForceResponseFile;
-    AString             m_LinkerStampExe;
-    AString             m_LinkerStampExeArgs;
-    Array<AString>      m_PreBuildDependencyNames;
-    Array<AString>      m_Environment;
-    AString             m_ConcurrencyGroupName;
+    AString m_Linker;
+    AString m_LinkerOptions;
+    AString m_LinkerType;
+    Array<AString> m_Libraries;
+    Array<AString> m_Libraries2;
+    Array<AString> m_LinkerAssemblyResources;
+    bool m_LinkerLinkObjects = false;
+    bool m_LinkerAllowResponseFile;
+    bool m_LinkerForceResponseFile;
+    AString m_LinkerStampExe;
+    AString m_LinkerStampExeArgs;
+    Array<AString> m_PreBuildDependencyNames;
+    Array<AString> m_Environment;
+    AString m_ConcurrencyGroupName;
 
     // Internal State
-    uint32_t            m_Libraries2StartIndex          = 0;
-    uint32_t            m_Flags                         = 0;
-    uint32_t            m_AssemblyResourcesStartIndex   = 0;
-    uint32_t            m_AssemblyResourcesNum          = 0;
-    AString             m_ImportLibName;
-    mutable const char * m_EnvironmentString            = nullptr;
+    uint32_t m_Libraries2StartIndex = 0;
+    uint32_t m_Flags = 0;
+    uint32_t m_AssemblyResourcesStartIndex = 0;
+    uint32_t m_AssemblyResourcesNum = 0;
+    AString m_ImportLibName;
+    mutable const char * m_EnvironmentString = nullptr;
 };
 
 //------------------------------------------------------------------------------

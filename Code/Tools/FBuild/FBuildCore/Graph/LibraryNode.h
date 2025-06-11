@@ -58,19 +58,19 @@ private:
     ArgsResponseFileMode GetResponseFileMode() const;
 
     // Exposed Properties
-    AString             m_Librarian;
-    AString             m_LibrarianOptions;
-    AString             m_LibrarianType;
-    AString             m_LibrarianOutput;
-    Array<AString>      m_LibrarianAdditionalInputs;
-    Array<AString>      m_Environment;
-    bool                m_LibrarianAllowResponseFile;
-    bool                m_LibrarianForceResponseFile;
+    AString m_Librarian;
+    AString m_LibrarianOptions;
+    AString m_LibrarianType;
+    AString m_LibrarianOutput;
+    Array<AString> m_LibrarianAdditionalInputs;
+    Array<AString> m_Environment;
+    bool m_LibrarianAllowResponseFile;
+    bool m_LibrarianForceResponseFile;
 
     // Internal State
-    uint32_t            m_NumLibrarianAdditionalInputs  = 0;
-    uint32_t            m_LibrarianFlags                = 0;
-    mutable const char * m_EnvironmentString            = nullptr;
+    uint32_t m_NumLibrarianAdditionalInputs = 0;
+    uint32_t m_LibrarianFlags = 0;
+    mutable const char * m_EnvironmentString = nullptr;
 };
 
 //------------------------------------------------------------------------------

@@ -72,8 +72,8 @@
         {
             VERIFY( dlclose( m_LibCHandle ) == 0 );
         }
-        void *          m_LibCHandle    = nullptr;
-        FuncPtr         m_FuncPtr       = nullptr;
+        void * m_LibCHandle = nullptr;
+        FuncPtr m_FuncPtr = nullptr;
     } gOSXHelper_utimensat;
 #endif
 

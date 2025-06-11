@@ -71,43 +71,43 @@ protected:
 
         enum : int32_t { LOCAL_MACHINE_ID = -1 };
 
-        int32_t             m_MachineId;    // Local or remote machine identifier
-        uint32_t            m_ThreadId;     // Thread identifier
-        int64_t             m_StartTime;
-        int64_t             m_EndTime;
-        const char *        m_StepName;
-        const char *        m_TargetName;
+        int32_t m_MachineId; // Local or remote machine identifier
+        uint32_t m_ThreadId; // Thread identifier
+        int64_t m_StartTime;
+        int64_t m_EndTime;
+        const char * m_StepName;
+        const char * m_TargetName;
     };
 
     // System wide metrics, gathered periodically
     class Metrics
     {
     public:
-        int64_t             m_Time = 0;
+        int64_t m_Time = 0;
 
         // Memory
-        uint32_t            m_TotalMemoryMiB = 0;
-        uint32_t            m_JobMemoryMiB = 0;
+        uint32_t m_TotalMemoryMiB = 0;
+        uint32_t m_JobMemoryMiB = 0;
 
         // Network
-        uint16_t            m_NumConnections = 0;
+        uint16_t m_NumConnections = 0;
     };
 
     // Track information about workers which performed useful work
     class WorkerInfo
     {
     public:
-        uint32_t            m_MaxThreadId = 0;
-        AString             m_WorkerName;
+        uint32_t m_MaxThreadId = 0;
+        AString m_WorkerName;
     };
 
-    Mutex                   m_Mutex;
-    Atomic<bool>            m_ThreadExit{ false };
-    Semaphore               m_ThreadSignalSemaphore;
-    Thread                  m_Thread;
-    Array<Event>            m_Events;
-    Array<Metrics>          m_Metrics;
-    Array<WorkerInfo>       m_WorkerInfo;
+    Mutex m_Mutex;
+    Atomic<bool> m_ThreadExit{ false };
+    Semaphore m_ThreadSignalSemaphore;
+    Thread m_Thread;
+    Array<Event> m_Events;
+    Array<Metrics> m_Metrics;
+    Array<WorkerInfo> m_WorkerInfo;
 };
 
 // BuildProfilerScope
@@ -127,12 +127,12 @@ public:
 protected:
     BuildProfilerScope & operator=( BuildProfilerScope & other ) = delete;
 
-    bool            m_Active;
-    uint32_t        m_ThreadId;
-    const char *    m_StepName;
-    const char *    m_TargetName;
-    int64_t         m_StartTime;
-    Job *           m_Job;
+    bool m_Active;
+    uint32_t m_ThreadId;
+    const char * m_StepName;
+    const char * m_TargetName;
+    int64_t m_StartTime;
+    Job * m_Job;
 };
 
 //------------------------------------------------------------------------------

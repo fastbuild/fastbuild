@@ -110,26 +110,26 @@ public:
     BuildProfilerScope *    GetBuildProfilerScope() const { return m_BuildProfilerScope; }
 
 private:
-    uint32_t            m_JobId             = 0;
-    uint32_t            m_DataSize          = 0;
-    Node *              m_Node              = nullptr;
-    void *              m_Data              = nullptr;
-    void *              m_UserData          = nullptr;
-    volatile bool       m_Abort             = false;
-    bool                m_DataIsCompressed:1;
-    bool                m_IsLocal:1;
-    bool                m_AllowZstdUse:1; // Can client accept Zstd results?
-    uint8_t             m_SystemErrorCount  = 0; // On client, the total error count, on the worker a flag for the current attempt
-    DistributionState   m_DistributionState = DIST_NONE;
-    int16_t             m_ResultCompressionLevel = 0; // Compression level of returned results
-    uint16_t            m_RemoteThreadIndex = 0; // On server, the thread index used to build
-    AString             m_RemoteName;
-    AString             m_RemoteSourceRoot;
-    AString             m_CacheName;
-    BuildProfilerScope * m_BuildProfilerScope = nullptr;    // Additional context when profiling a build
-    ToolManifest *      m_ToolManifest      = nullptr;
+    uint32_t m_JobId = 0;
+    uint32_t m_DataSize = 0;
+    Node * m_Node = nullptr;
+    void * m_Data = nullptr;
+    void * m_UserData = nullptr;
+    volatile bool m_Abort = false;
+    bool m_DataIsCompressed:1;
+    bool m_IsLocal:1;
+    bool m_AllowZstdUse:1; // Can client accept Zstd results?
+    uint8_t m_SystemErrorCount = 0; // On client, the total error count, on the worker a flag for the current attempt
+    DistributionState m_DistributionState = DIST_NONE;
+    int16_t m_ResultCompressionLevel = 0; // Compression level of returned results
+    uint16_t m_RemoteThreadIndex = 0; // On server, the thread index used to build
+    AString m_RemoteName;
+    AString m_RemoteSourceRoot;
+    AString m_CacheName;
+    BuildProfilerScope * m_BuildProfilerScope = nullptr; // Additional context when profiling a build
+    ToolManifest * m_ToolManifest = nullptr;
 
-    Array<AString>      m_Messages;
+    Array<AString> m_Messages;
 
     static Atomic<int64_t> s_TotalLocalDataMemoryUsage; // Total memory being managed by OwnData
 };

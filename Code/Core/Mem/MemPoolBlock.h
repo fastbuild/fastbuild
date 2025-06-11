@@ -30,18 +30,18 @@ protected:
     };
 
     // in-place linked list of free blocks
-    FreeBlock * m_FreeBlockChain            = nullptr;
+    FreeBlock * m_FreeBlockChain = nullptr;
 
     // debug active allocations
     #if defined( ASSERTS_ENABLED )
-        uint32_t m_NumActiveAllocations     = 0;
-        uint32_t m_NumLifetimeAllocations   = 0;
-        uint32_t m_PeakActiveAllocations    = 0;
+        uint32_t m_NumActiveAllocations = 0;
+        uint32_t m_NumLifetimeAllocations = 0;
+        uint32_t m_PeakActiveAllocations = 0;
     #endif
 
     // internal control params
-    uint32_t    m_BlockSize                 = 0;
-    uint32_t    m_BlockAlignment            = 0;
+    uint32_t m_BlockSize = 0;
+    uint32_t m_BlockAlignment = 0;
 
     // allocated pages
     Array<void *> m_Pages;

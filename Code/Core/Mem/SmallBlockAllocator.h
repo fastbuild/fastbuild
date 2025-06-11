@@ -65,19 +65,19 @@
             virtual void *  AllocateMemoryForPage() override;
 
             friend class SmallBlockAllocator;
-            Mutex           m_Mutex;
+            Mutex m_Mutex;
         };
 
         // Address space used by allocators
-        static void *       s_BucketMemoryStart;
-        static uint32_t     s_BucketNextFreePageIndex; // Next free memory page to commit
+        static void * s_BucketMemoryStart;
+        static uint32_t s_BucketNextFreePageIndex; // Next free memory page to commit
 
         // The actual buckets (using this placeholder memory to avoid static init issues)
-        static uint64_t     s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof (uint64_t) ];
-        static MemBucket *  s_Buckets;
+        static uint64_t s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof( uint64_t ) ];
+        static MemBucket * s_Buckets;
 
         // A table to allow 0(1) conversion of any address to the bucket that owns it
-        static uint8_t      s_BucketMappingTable[ BUCKET_MAPPING_TABLE_SIZE ];
+        static uint8_t s_BucketMappingTable[ BUCKET_MAPPING_TABLE_SIZE ];
     };
 
 //------------------------------------------------------------------------------

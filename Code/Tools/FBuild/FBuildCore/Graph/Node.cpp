@@ -96,15 +96,15 @@ namespace
     class SerializedFileNode
     {
     public:
-        uint8_t     m_Type;
-        uint32_t    m_NameHash;
+        uint8_t m_Type;
+        uint32_t m_NameHash;
     };
 
     class SerializedNode : public SerializedFileNode
     {
     public:
-        uint64_t    m_Stamp;
-        uint32_t    m_LastBuildTime;
+        uint64_t m_Stamp;
+        uint32_t m_LastBuildTime;
     };
     #pragma pack( pop )
 }

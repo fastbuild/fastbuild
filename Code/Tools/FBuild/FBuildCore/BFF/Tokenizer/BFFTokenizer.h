@@ -63,15 +63,15 @@ protected:
 
     struct IncludedFile
     {
-        AString     m_FileName;
-        bool        m_Once;
+        AString m_FileName;
+        bool m_Once;
     };
 
-    Array<BFFToken>     m_Tokens;
-    Array<BFFFile *>    m_Files;
-    BFFMacros           m_Macros;
-    uint32_t            m_Depth = 0;
-    bool                m_ParsingDirective = false;
+    Array<BFFToken> m_Tokens;
+    Array<BFFFile *> m_Files;
+    BFFMacros m_Macros;
+    uint32_t m_Depth = 0;
+    bool m_ParsingDirective = false;
 };
 
 //------------------------------------------------------------------------------

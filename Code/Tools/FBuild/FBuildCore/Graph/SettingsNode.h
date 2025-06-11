@@ -44,19 +44,19 @@ private:
                                                     const Function * function );
 
     // Settings from environment variables
-    AString             m_CachePathFromEnvVar;
-    AString             m_CachePathMountPointFromEnvVar;
+    AString m_CachePathFromEnvVar;
+    AString m_CachePathMountPointFromEnvVar;
 
     // Exposed settings
-    //friend class FunctionSettings;
-    Array<AString>      m_Environment;
-    AString             m_CachePath;
-    AString             m_CachePathMountPoint;
-    AString             m_CachePluginDLL;
-    AString             m_CachePluginDLLConfig;
-    Array<AString>      m_Workers;
-    uint32_t            m_WorkerConnectionLimit;
-    uint32_t            m_DistributableJobMemoryLimitMiB;
+    // friend class FunctionSettings;
+    Array<AString> m_Environment;
+    AString m_CachePath;
+    AString m_CachePathMountPoint;
+    AString m_CachePluginDLL;
+    AString m_CachePluginDLLConfig;
+    Array<AString> m_Workers;
+    uint32_t m_WorkerConnectionLimit;
+    uint32_t m_DistributableJobMemoryLimitMiB;
     Array<ConcurrencyGroup> m_ConcurrencyGroups;
 };
 
@@ -82,13 +82,13 @@ protected:
     uint32_t        GetMemoryBasedLimit() const { return m_ConcurrencyPerJobMiB; }
 
     // Exposed
-    AString     m_ConcurrencyGroupName;
-    uint32_t    m_ConcurrencyLimit = 0; // No limit by default
-    uint32_t    m_ConcurrencyPerJobMiB = 0; // No limit by default
+    AString m_ConcurrencyGroupName;
+    uint32_t m_ConcurrencyLimit = 0; // No limit by default
+    uint32_t m_ConcurrencyPerJobMiB = 0; // No limit by default
 
     // Internal
-    uint8_t     m_Index = 0;
-    uint32_t    m_Limit = 0;    // Limit evaluated from exposed settings
+    uint8_t m_Index = 0;
+    uint32_t m_Limit = 0; // Limit evaluated from exposed settings
 };
 
 //------------------------------------------------------------------------------

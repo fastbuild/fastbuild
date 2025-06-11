@@ -63,14 +63,14 @@ private:
     protected:
         // Tracing can occur during static initialization or shutdown
         // so we need a way to detect that to prevent unsafe access
-        static bool         s_Valid;
+        static bool s_Valid;
 
-        Mutex               m_CallbacksMutex;
-        bool                m_InCallbackDispatch;
-        Array<Callback *>   m_CallbacksDebugSpam;
-        Array<Callback *>   m_CallbacksOutput;
+        Mutex m_CallbacksMutex;
+        bool m_InCallbackDispatch;
+        Array<Callback *> m_CallbacksDebugSpam;
+        Array<Callback *> m_CallbacksOutput;
     };
-    static Callbacks        s_Callbacks;
+    static Callbacks s_Callbacks;
 };
 
 //------------------------------------------------------------------------------

@@ -18,8 +18,8 @@ class VSProjectImport;
 class VSProjectFilePair
 {
 public:
-    AString m_ProjectRelativePath;  // Paths to files are project-relative
-    AString m_AbsolutePath;         // Folder structure is relative to BasePaths which can be outside of the project folder
+    AString m_ProjectRelativePath; // Paths to files are project-relative
+    AString m_AbsolutePath; // Folder structure is relative to BasePaths which can be outside of the project folder
 };
 
 // VSProjectGenerator

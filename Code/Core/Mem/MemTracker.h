@@ -53,12 +53,12 @@
 
         struct Allocation
         {
-            void *          m_Ptr;
-            size_t          m_Size;
-            Allocation *    m_Next;
-            const char *    m_File;
-            uint32_t        m_Line;
-            uint32_t        m_Id;
+            void * m_Ptr;
+            size_t m_Size;
+            Allocation * m_Next;
+            const char * m_File;
+            uint32_t m_Line;
+            uint32_t m_Id;
         };
     private:
         static void Init();
@@ -66,14 +66,14 @@
 
         static Mutex & GetMutex() { return reinterpret_cast<Mutex &>( s_Mutex ); }
 
-        static uint32_t         s_Id;
-        static bool             s_Enabled;
-        static volatile bool    s_Initialized;
-        static uint32_t         s_AllocationCount;
-        static Allocation *     s_LastAllocation;
-        static uint64_t         s_Mutex[ sizeof( Mutex ) / sizeof( uint64_t ) ];
-        static Allocation **    s_AllocationHashTable;
-        static MemPoolBlock *   s_Allocations;
+        static uint32_t s_Id;
+        static bool s_Enabled;
+        static volatile bool s_Initialized;
+        static uint32_t s_AllocationCount;
+        static Allocation * s_LastAllocation;
+        static uint64_t s_Mutex[ sizeof( Mutex ) / sizeof( uint64_t ) ];
+        static Allocation ** s_AllocationHashTable;
+        static MemPoolBlock * s_Allocations;
     };
 
 #endif // MEMTRACKER_ENABLED

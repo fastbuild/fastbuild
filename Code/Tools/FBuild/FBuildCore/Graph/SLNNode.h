@@ -60,9 +60,9 @@ class SolutionFolder : public Struct
 {
     REFLECT_STRUCT_DECLARE( SolutionFolder )
 public:
-    AString         m_Path;
-    Array<AString>  m_Projects;
-    Array<AString>  m_Items;
+    AString m_Path;
+    Array<AString> m_Projects;
+    Array<AString> m_Items;
 };
 
 // SolutionDependency
@@ -71,8 +71,8 @@ class SolutionDependency : public Struct
 {
     REFLECT_STRUCT_DECLARE( SolutionDependency )
 public:
-    Array<AString>  m_Projects;
-    Array<AString>  m_Dependencies;
+    Array<AString> m_Projects;
+    Array<AString> m_Dependencies;
 };
 
 // SLNNode
@@ -104,13 +104,13 @@ private:
                                             Array<VSProjectBaseNode *> & inOutProjects ) const;
 
     // Reflected
-    Array<AString>              m_SolutionProjects;
-    AString                     m_SolutionVisualStudioVersion;
-    AString                     m_SolutionMinimumVisualStudioVersion;
-    Array<SolutionConfig>       m_SolutionConfigs;
-    Array<SolutionFolder>       m_SolutionFolders;
-    Array<SolutionDependency>   m_SolutionDependencies;
-    SolutionConfigBase          m_BaseSolutionConfig;
+    Array<AString> m_SolutionProjects;
+    AString m_SolutionVisualStudioVersion;
+    AString m_SolutionMinimumVisualStudioVersion;
+    Array<SolutionConfig> m_SolutionConfigs;
+    Array<SolutionFolder> m_SolutionFolders;
+    Array<SolutionDependency> m_SolutionDependencies;
+    SolutionConfigBase m_BaseSolutionConfig;
 };
 
 //------------------------------------------------------------------------------

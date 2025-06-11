@@ -39,10 +39,10 @@ private:
     class ThreadInfo
     {
     public:
-        Thread              m_Thread;
-        Array<uint32_t> *   m_AllocationSizes   = nullptr;
-        uint32_t            m_RepeatCount       = 0;
-        float               m_TimeTaken         = 0.0f;
+        Thread m_Thread;
+        Array<uint32_t> * m_AllocationSizes = nullptr;
+        uint32_t m_RepeatCount = 0;
+        float m_TimeTaken = 0.0f;
     };
 
     // Helper functions

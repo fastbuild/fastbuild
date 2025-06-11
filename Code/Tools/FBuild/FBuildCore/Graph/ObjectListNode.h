@@ -73,49 +73,49 @@ protected:
                                    const AString & pchObjectName );
 
     // Exposed Properties
-    AString             m_Compiler;
-    AString             m_CompilerOptions;
-    AString             m_CompilerOptionsDeoptimized;
-    AString             m_CompilerOutputPath;
-    AString             m_CompilerOutputPrefix;
-    AString             m_CompilerOutputExtension;
-    Array<AString>      m_CompilerInputPath;
-    Array<AString>      m_CompilerInputPattern;
-    Array<AString>      m_CompilerInputExcludePath;
-    Array<AString>      m_CompilerInputExcludedFiles;
-    Array<AString>      m_CompilerInputExcludePattern;
-    Array<AString>      m_CompilerInputFiles;
-    Array<AString>      m_CompilerInputUnity;
-    AString             m_CompilerInputFilesRoot;
-    Array<AString>      m_CompilerInputObjectLists;
-    Array<AString>      m_CompilerForceUsing;
-    bool                m_CompilerInputAllowNoFiles         = false;
-    bool                m_CompilerInputPathRecurse          = true;
-    bool                m_CompilerOutputKeepBaseExtension   = false;
-    bool                m_DeoptimizeWritableFiles           = false;
-    bool                m_DeoptimizeWritableFilesWithToken  = false;
-    bool                m_AllowDistribution                 = true;
-    bool                m_AllowCaching                      = true;
-    AString             m_PCHInputFile;
-    AString             m_PCHOutputFile;
-    AString             m_PCHOptions;
-    AString             m_Preprocessor;
-    AString             m_PreprocessorOptions;
-    Array<AString>      m_PreBuildDependencyNames;
-    AString             m_ConcurrencyGroupName;
+    AString m_Compiler;
+    AString m_CompilerOptions;
+    AString m_CompilerOptionsDeoptimized;
+    AString m_CompilerOutputPath;
+    AString m_CompilerOutputPrefix;
+    AString m_CompilerOutputExtension;
+    Array<AString> m_CompilerInputPath;
+    Array<AString> m_CompilerInputPattern;
+    Array<AString> m_CompilerInputExcludePath;
+    Array<AString> m_CompilerInputExcludedFiles;
+    Array<AString> m_CompilerInputExcludePattern;
+    Array<AString> m_CompilerInputFiles;
+    Array<AString> m_CompilerInputUnity;
+    AString m_CompilerInputFilesRoot;
+    Array<AString> m_CompilerInputObjectLists;
+    Array<AString> m_CompilerForceUsing;
+    bool m_CompilerInputAllowNoFiles = false;
+    bool m_CompilerInputPathRecurse = true;
+    bool m_CompilerOutputKeepBaseExtension = false;
+    bool m_DeoptimizeWritableFiles = false;
+    bool m_DeoptimizeWritableFilesWithToken = false;
+    bool m_AllowDistribution = true;
+    bool m_AllowCaching = true;
+    AString m_PCHInputFile;
+    AString m_PCHOutputFile;
+    AString m_PCHOptions;
+    AString m_Preprocessor;
+    AString m_PreprocessorOptions;
+    Array<AString> m_PreBuildDependencyNames;
+    AString m_ConcurrencyGroupName;
 
     // Internal State
-    AString             m_PrecompiledHeaderName;
+    AString m_PrecompiledHeaderName;
     #if defined( __WINDOWS__ )
-        AString             m_PrecompiledHeaderCPPFile;
+        AString m_PrecompiledHeaderCPPFile;
     #endif
-    AString             m_ExtraPDBPath;
-    AString             m_ExtraASMPath;
-    AString             m_ExtraSourceDependenciesPath;
-    uint32_t            m_ObjectListInputStartIndex         = 0;
-    uint32_t            m_ObjectListInputEndIndex           = 0;
-    ObjectNode::CompilerFlags   m_CompilerFlags;
-    ObjectNode::CompilerFlags   m_PreprocessorFlags;
+    AString m_ExtraPDBPath;
+    AString m_ExtraASMPath;
+    AString m_ExtraSourceDependenciesPath;
+    uint32_t m_ObjectListInputStartIndex = 0;
+    uint32_t m_ObjectListInputEndIndex = 0;
+    ObjectNode::CompilerFlags m_CompilerFlags;
+    ObjectNode::CompilerFlags m_PreprocessorFlags;
 };
 
 //------------------------------------------------------------------------------

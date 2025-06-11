@@ -29,13 +29,13 @@ private:
     virtual BuildResult DoBuild( Job * job ) override;
 
     // Exposed Properties
-    Array<AString>      m_SourcePaths;
-    AString             m_Dest;
-    Array<AString>      m_SourcePathsPattern;
-    Array<AString>      m_SourceExcludePaths;
-    bool                m_SourcePathsRecurse = true;
+    Array<AString> m_SourcePaths;
+    AString m_Dest;
+    Array<AString> m_SourcePathsPattern;
+    Array<AString> m_SourceExcludePaths;
+    bool m_SourcePathsRecurse = true;
 
-    Array<AString>      m_PreBuildDependencyNames;
+    Array<AString> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

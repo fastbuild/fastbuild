@@ -110,16 +110,16 @@
         }
 
     protected:
-        ThreadType          m_ThreadType;
-        uint32_t            m_Bit;
+        ThreadType m_ThreadType;
+        uint32_t m_Bit;
 
-        static Mutex        s_Mutex;
-        static uint64_t     s_IdBitmapListen;
-        static uint64_t     s_IdBitmapConnection;
+        static Mutex s_Mutex;
+        static uint64_t s_IdBitmapListen;
+        static uint64_t s_IdBitmapConnection;
     };
-    /*static*/ Mutex    TCPConnectionPoolProfileHelper::s_Mutex;
-    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapListen        = 0;
-    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection    = 0;
+    /*static*/ Mutex TCPConnectionPoolProfileHelper::s_Mutex;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapListen = 0;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection = 0;
 
     #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )   \
         TCPConnectionPoolProfileHelper threadNameHelper( threadType )

@@ -12,8 +12,8 @@ class SystemMemInfo
 {
 public:
     // Physical memory
-    uint32_t    mTotalPhysMiB = 0; // Usable by OS (<= physically installed)
-    uint32_t    mAvailPhysMiB = 0; // Free
+    uint32_t mTotalPhysMiB = 0; // Usable by OS (<= physically installed)
+    uint32_t mAvailPhysMiB = 0; // Free
 };
 
 // MemInfo

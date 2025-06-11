@@ -30,8 +30,8 @@ public:
     const ReflectedProperty & operator*() const;
 
 protected:
-    const ReflectionInfo *  m_Info;
-    uint32_t                m_Index;
+    const ReflectionInfo * m_Info;
+    uint32_t m_Index;
 };
 
 //------------------------------------------------------------------------------

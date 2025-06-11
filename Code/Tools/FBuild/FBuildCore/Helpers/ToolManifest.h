@@ -56,18 +56,18 @@ protected:
     bool                LoadFile( void *& uncompressedContent, uint32_t & uncompressedContentSize ) const;
 
     // common members
-    AString          m_Name;
-    uint64_t         m_TimeStamp     = 0;
-    uint32_t         m_Hash          = 0;
+    AString m_Name;
+    uint64_t m_TimeStamp = 0;
+    uint32_t m_Hash = 0;
     mutable uint32_t m_UncompressedContentSize = 0;
     mutable uint32_t m_CompressedContentSize = 0;
 
     // "local" members
-    mutable void *   m_CompressedContent = nullptr;
+    mutable void * m_CompressedContent = nullptr;
 
     // "remote" members
-    SyncState       m_SyncState     = NOT_SYNCHRONIZED;
-    FileStream *    m_FileLock      = nullptr; // keep the file locked when sync'd
+    SyncState m_SyncState = NOT_SYNCHRONIZED;
+    FileStream * m_FileLock = nullptr; // keep the file locked when sync'd
 };
 
 // ToolManifest
@@ -120,19 +120,19 @@ public:
     #endif
 
 private:
-    mutable Mutex   m_Mutex;
+    mutable Mutex m_Mutex;
 
     // Reflected
-    uint64_t                m_ToolId;       // Global identifier for this toolchain
-    uint64_t                m_TimeStamp;    // Time stamp of most recent file
-    AString                 m_MainExecutableRootPath;
+    uint64_t m_ToolId; // Global identifier for this toolchain
+    uint64_t m_TimeStamp; // Time stamp of most recent file
+    AString m_MainExecutableRootPath;
     Array<ToolManifestFile> m_Files;
-    Array<AString>          m_CustomEnvironmentVariables;
+    Array<AString> m_CustomEnvironmentVariables;
 
     // Internal state
-    bool            m_Synchronized;
-    const char *    m_RemoteEnvironmentString;
-    void *          m_UserData;
+    bool m_Synchronized;
+    const char * m_RemoteEnvironmentString;
+    void * m_UserData;
 };
 
 //------------------------------------------------------------------------------

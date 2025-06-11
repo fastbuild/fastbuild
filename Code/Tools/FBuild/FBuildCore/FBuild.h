@@ -81,8 +81,8 @@ public:
         uint32_t        GetHash() const             { return m_Hash; }
 
     protected:
-        AString     m_Name;
-        uint32_t    m_Hash;
+        AString m_Name;
+        uint32_t m_Hash;
     };
 
     bool ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash );
@@ -130,7 +130,7 @@ protected:
     bool GetFinalStatusFailure( const Dependencies & deps ) const;
 
     static bool s_StopBuild;
-    static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild
+    static volatile bool s_AbortBuild; // -fastcancel - TODO:C merge with StopBuild
 
     NodeGraph * m_DependencyGraph;
     ThreadPool * m_ThreadPool = nullptr;
@@ -156,9 +156,9 @@ protected:
     AString m_OldWorkingDir;
 
     // a double-null terminated string
-    char *      m_EnvironmentString;
-    uint32_t    m_EnvironmentStringSize; // size excluding last null
-    AString     m_LibEnvVar; // LIB= value
+    char * m_EnvironmentString;
+    uint32_t m_EnvironmentStringSize; // size excluding last null
+    AString m_LibEnvVar; // LIB= value
 
     Array<EnvironmentVarAndHash> m_ImportedEnvironmentVars;
     BFFFileExists m_FileExistsInfo;

@@ -272,42 +272,42 @@ private:
         bool                            HasAborted() const { return m_Process.HasAborted(); }
 
     private:
-        bool            m_HandleOutput;
-        Process         m_Process;
-        AString         m_Out;
-        AString         m_Err;
-        int             m_Result;
+        bool m_HandleOutput;
+        Process m_Process;
+        AString m_Out;
+        AString m_Err;
+        int m_Result;
     };
 
     // Exposed Properties
     friend class ObjectListNode;
-    AString             m_Compiler;
-    AString             m_CompilerOptions;
-    AString             m_CompilerOptionsDeoptimized;
-    AString             m_CompilerInputFile;
-    AString             m_CompilerOutputExtension;
-    AString             m_PCHObjectFileName;
-    bool                m_DeoptimizeWritableFiles           = false;
-    bool                m_DeoptimizeWritableFilesWithToken  = false;
-    bool                m_AllowDistribution                 = true;
-    bool                m_AllowCaching                      = true;
-    Array<AString>      m_CompilerForceUsing;
-    AString             m_Preprocessor;
-    AString             m_PreprocessorOptions;
-    Array<AString>      m_PreBuildDependencyNames;
-    AString             m_ConcurrencyGroupName;
+    AString m_Compiler;
+    AString m_CompilerOptions;
+    AString m_CompilerOptionsDeoptimized;
+    AString m_CompilerInputFile;
+    AString m_CompilerOutputExtension;
+    AString m_PCHObjectFileName;
+    bool m_DeoptimizeWritableFiles = false;
+    bool m_DeoptimizeWritableFilesWithToken = false;
+    bool m_AllowDistribution = true;
+    bool m_AllowCaching = true;
+    Array<AString> m_CompilerForceUsing;
+    AString m_Preprocessor;
+    AString m_PreprocessorOptions;
+    Array<AString> m_PreBuildDependencyNames;
+    AString m_ConcurrencyGroupName;
 
     // Internal State
-    AString             m_PrecompiledHeader;
-    CompilerFlags       m_CompilerFlags;
-    CompilerFlags       m_PreprocessorFlags;
-    uint64_t            m_PCHCacheKey                       = 0;
-    uint64_t            m_LightCacheKey                     = 0;
-    AString             m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
+    AString m_PrecompiledHeader;
+    CompilerFlags m_CompilerFlags;
+    CompilerFlags m_PreprocessorFlags;
+    uint64_t m_PCHCacheKey = 0;
+    uint64_t m_LightCacheKey = 0;
+    AString m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
 
     // Not serialized
-    Array<AString>      m_Includes;
-    bool                m_Remote                            = false;
+    Array<AString> m_Includes;
+    bool m_Remote = false;
 
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
     // Fake system failure for tests

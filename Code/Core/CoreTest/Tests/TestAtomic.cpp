@@ -92,8 +92,8 @@ protected:
     }
 
     // Test values to operator on
-    volatile T          m_Count;    // Direct access
-    Atomic<T>           m_Count2;   // Via Atomic<> helper
+    volatile T m_Count; // Direct access
+    Atomic<T> m_Count2; // Via Atomic<> helper
 };
 
 // TestAtomic

@@ -117,7 +117,7 @@ private:
     // pointer to parent scope
     BFFStackFrame * m_Next;
     BFFStackFrame * m_OldHeadToRestore;
-    uint32_t        m_Depth;
+    uint32_t m_Depth;
 
     // Track last variable to allow omission of left hand side in operations on the same var
     AString m_LastVariableSeen;

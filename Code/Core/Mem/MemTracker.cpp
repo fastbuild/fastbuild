@@ -21,17 +21,17 @@
 
     // Static Data
     //------------------------------------------------------------------------------
-    /*static*/ uint32_t         MemTracker::s_Id( 0 );
-    /*static*/ bool             MemTracker::s_Enabled( true );
-    /*static*/ volatile bool    MemTracker::s_Initialized( false );
-    /*static*/ uint32_t         MemTracker::s_AllocationCount( 0 );
-    /*static*/ uint64_t         MemTracker::s_Mutex[];
+    /*static*/ uint32_t MemTracker::s_Id( 0 );
+    /*static*/ bool MemTracker::s_Enabled( true );
+    /*static*/ volatile bool MemTracker::s_Initialized( false );
+    /*static*/ uint32_t MemTracker::s_AllocationCount( 0 );
+    /*static*/ uint64_t MemTracker::s_Mutex[];
     /*static*/ MemTracker::Allocation ** MemTracker::s_AllocationHashTable = nullptr;
-    /*static*/ MemPoolBlock *   MemTracker::s_Allocations( nullptr );
+    /*static*/ MemPoolBlock * MemTracker::s_Allocations( nullptr );
 
     // Thread-Local Data
     //------------------------------------------------------------------------------
-    THREAD_LOCAL uint32_t       g_MemTrackerDisabledOnThisThread( 0 );
+    THREAD_LOCAL uint32_t g_MemTrackerDisabledOnThisThread( 0 );
 
     // Defines
     #define ALLOCATION_HASH_SHIFT       ( 0x2 )         // shift off lower bits

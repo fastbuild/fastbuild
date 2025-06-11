@@ -30,8 +30,8 @@ FileStream g_ProfileEventLog;
 //------------------------------------------------------------------------------
 struct ProfileEvent
 {
-    const char *    m_Id;
-    int64_t         m_TimeStamp;
+    const char * m_Id;
+    int64_t m_TimeStamp;
 };
 
 // FormatU64
@@ -73,12 +73,12 @@ struct ProfileEventBuffer
 
     NO_INLINE ProfileEvent * AllocateEventStorage();
 
-    size_t          m_CurrentDepth;
+    size_t m_CurrentDepth;
 
     // keep an expanding buffer of events
-    ProfileEvent *  m_Begin;
-    ProfileEvent *  m_Current;
-    ProfileEvent *  m_MaxEnd;
+    ProfileEvent * m_Begin;
+    ProfileEvent * m_Current;
+    ProfileEvent * m_MaxEnd;
 
     enum { MAX_THREAD_NAME_LEN = 31 };
     char m_ThreadName[ MAX_THREAD_NAME_LEN + 1 ];

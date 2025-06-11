@@ -25,13 +25,13 @@ public:
     // statistics updated from the main thread
 
     // time estimation/progress
-    uint32_t    m_NodeTimeTotalms;
-    uint32_t    m_NodeTimeProgressms;
+    uint32_t m_NodeTimeTotalms;
+    uint32_t m_NodeTimeProgressms;
 
     // total time spent
-    float       m_TotalBuildTime;       // Total time taken
-    uint32_t    m_TotalLocalCPUTimeMS;  // Total CPU time on local host
-    uint32_t    m_TotalRemoteCPUTimeMS; // Total CPU time on remote workers
+    float m_TotalBuildTime; // Total time taken
+    uint32_t m_TotalLocalCPUTimeMS; // Total CPU time on local host
+    uint32_t m_TotalRemoteCPUTimeMS; // Total CPU time on remote workers
 
     // after the build it complete, accumulate all the stats
     void GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node * node );

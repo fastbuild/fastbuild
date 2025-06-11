@@ -68,14 +68,14 @@ private:
     static void ProcessString( const AString & string, AString & outString );
 
     // Additional Input Data
-    AString             m_ProjectName;
-    AString             m_XCodeOrganizationName;
-    AString             m_XCodeBuildToolPath;
-    AString             m_XCodeBuildToolArgs;
-    AString             m_XCodeBuildWorkingDir;
-    bool                m_XCodeDocumentVersioning = false;
-    Array<AString>      m_XCodeCommandLineArguments;
-    Array<AString>      m_XCodeCommandLineArgumentsDisabled;
+    AString m_ProjectName;
+    AString m_XCodeOrganizationName;
+    AString m_XCodeBuildToolPath;
+    AString m_XCodeBuildToolArgs;
+    AString m_XCodeBuildWorkingDir;
+    bool m_XCodeDocumentVersioning = false;
+    Array<AString> m_XCodeCommandLineArguments;
+    Array<AString> m_XCodeCommandLineArgumentsDisabled;
 };
 
 //------------------------------------------------------------------------------

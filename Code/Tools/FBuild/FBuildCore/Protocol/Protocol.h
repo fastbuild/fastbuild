@@ -93,10 +93,10 @@ namespace Protocol
         IMessage( MessageType msgType, uint8_t msgSize, bool hasPayload );
 
         // properties common to all messages
-        MessageType     m_MsgType;
-        uint8_t         m_MsgSize;
-        bool            m_HasPayload;
-        char            m_Padding1[ 1 ];
+        MessageType m_MsgType;
+        uint8_t m_MsgSize;
+        bool m_HasPayload;
+        char m_Padding1[ 1 ];
     };
     static_assert( sizeof( IMessage ) == 3 + 1 /*padding*/, "Message base class has incorrect size" );
 
@@ -113,12 +113,12 @@ namespace Protocol
         const char *    GetHostName() const { return m_HostName; }
         uint8_t         GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
     private:
-        uint32_t        m_ProtocolVersion;
-        uint32_t        m_NumJobsAvailable;
-        uint8_t         m_Platform;
-        uint8_t         m_ProtocolVersionMinor;
-        uint8_t         m_Padding2[ 2 ];
-        char            m_HostName[ 64 ];
+        uint32_t m_ProtocolVersion;
+        uint32_t m_NumJobsAvailable;
+        uint8_t m_Platform;
+        uint8_t m_ProtocolVersionMinor;
+        uint8_t m_Padding2[ 2 ];
+        char m_HostName[ 64 ];
     };
     static_assert( sizeof( MsgConnection ) == sizeof( IMessage ) + 76, "MsgConnection message has incorrect size" );
 
@@ -133,9 +133,9 @@ namespace Protocol
         uint8_t         GetProtocolVersionMajor() const { return m_ProtocolVersionMajor; }
         uint8_t         GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
     private:
-        uint16_t        m_WorkerVersion;
-        uint8_t         m_ProtocolVersionMajor;
-        uint8_t         m_ProtocolVersionMinor;
+        uint16_t m_WorkerVersion;
+        uint8_t m_ProtocolVersionMajor;
+        uint8_t m_ProtocolVersionMinor;
     };
 
     // MsgStatus
@@ -148,7 +148,7 @@ namespace Protocol
         uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
 
     private:
-        uint32_t        m_NumJobsAvailable;
+        uint32_t m_NumJobsAvailable;
     };
     static_assert( sizeof( MsgStatus ) == sizeof( IMessage ) + 4, "MsgStatus message has incorrect size" );
 
@@ -180,8 +180,8 @@ namespace Protocol
         uint64_t GetToolId() const { return m_ToolId; }
         int16_t         GetResultCompressionLevel() const { return m_ResultCompressionLevel; }
     private:
-        int16_t     m_ResultCompressionLevel;
-        char        m_Padding2[ 2 ];
+        int16_t m_ResultCompressionLevel;
+        char m_Padding2[ 2 ];
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgJob ) == sizeof( IMessage ) + 4 /*alignment*/ + 8, "MsgJob message has incorrect size" );
@@ -214,7 +214,7 @@ namespace Protocol
         uint64_t GetToolId() const { return m_ToolId; }
 
     private:
-        char     m_Padding2[ 4 ];
+        char m_Padding2[ 4 ];
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgRequestManifest ) == sizeof( IMessage ) + 4 /*alignment*/ + 8, "MsgRequestManifest message has incorrect size" );
@@ -229,7 +229,7 @@ namespace Protocol
         uint64_t GetToolId() const { return m_ToolId; }
 
     private:
-        char     m_Padding2[ 4 ];
+        char m_Padding2[ 4 ];
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgManifest ) == sizeof( IMessage ) + 4 /*alignment*/ + 8, "MsgManifest message has incorrect size" );

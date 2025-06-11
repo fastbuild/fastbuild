@@ -34,13 +34,13 @@ private:
     void AddInclude( const char * begin, const char * end );
 
     // temporary data
-    uint32_t            m_LastCRC1;
-    Array<uint32_t>     m_CRCs1;
-    uint32_t            m_LastCRC2;
-    Array<uint32_t>     m_CRCs2;
+    uint32_t m_LastCRC1;
+    Array<uint32_t> m_CRCs1;
+    uint32_t m_LastCRC2;
+    Array<uint32_t> m_CRCs2;
 
     // final data
-    Array<AString> m_Includes;    // list of unique includes
+    Array<AString> m_Includes; // list of unique includes
     #if defined( ASSERTS_ENABLED )
         size_t m_NonUniqueCount = 0; // number of include directives seen
     #endif

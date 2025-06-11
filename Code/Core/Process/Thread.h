@@ -65,7 +65,7 @@ public:
     static void SetThreadName( const char * name );
 
 private:
-    ThreadHandle    m_Handle = INVALID_THREAD_HANDLE;
+    ThreadHandle m_Handle = INVALID_THREAD_HANDLE;
 
     static ThreadId s_MainThreadId;
 };
