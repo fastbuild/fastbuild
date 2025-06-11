@@ -48,7 +48,6 @@ private:
     AString m_CachePathMountPointFromEnvVar;
 
     // Exposed settings
-    // friend class FunctionSettings;
     Array<AString> m_Environment;
     AString m_CachePath;
     AString m_CachePathMountPoint;

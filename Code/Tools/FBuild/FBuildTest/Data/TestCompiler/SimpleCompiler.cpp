@@ -11,7 +11,6 @@ int main( int argc, char ** argv )
         return 1;
     }
 
-    //const char* input = argv[1];
     const char * output = argv[ 2 ];
 
     FILE * f = fopen( output, "wb" );

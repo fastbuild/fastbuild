@@ -4,11 +4,12 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-//#include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
-//#include "Core/FileIO/FileIO.h"
+// Core
 #include "Core/Strings/AStackString.h"
 
 // TestCUDA

@@ -376,7 +376,6 @@ void TestObject::CacheUsingRelativePaths() const
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheWrite = true;
-        //options.m_ForceCleanBuild = true;
         AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
@@ -416,7 +415,6 @@ void TestObject::CacheUsingRelativePaths() const
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheRead = true;
-        //options.m_ForceCleanBuild = true;
         AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/

@@ -19,7 +19,6 @@ extern "C"
 //
 // In:  cachePath- cache path provided from bff config
 // Out: bool     - (return) success.  If false is returned, cache will be disabled
-//typedef bool (STDCALL * CacheInitFunc)( const char * cachePath );
 using CacheInitFunc     = bool( STDCALL * )( const char * cachePath );
 
 // CacheOutputFunc

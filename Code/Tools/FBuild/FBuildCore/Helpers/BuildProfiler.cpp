@@ -78,7 +78,6 @@ void BuildProfiler::RecordRemote( uint32_t workerId,
     MutexHolder mh( m_Mutex );
 
     // Record details of worker the first time we see one
-    //RecordWorkerInfo( workerId, remoteThreadId, workerName );
     if ( workerId >= m_WorkerInfo.GetSize() )
     {
         // Extend the array so it encompasses the new index
