@@ -43,11 +43,11 @@ MultiBuffer::~MultiBuffer()
 //------------------------------------------------------------------------------
 bool MultiBuffer::CreateFromFiles( const Array<AString> & fileNames, size_t * outproblemFileIndex )
 {
-    ASSERT( fileNames.GetSize() <= MAX_FILES );
+    ASSERT( fileNames.GetSize() <= kMaxFiles );
     ASSERT( ( m_ReadStream == nullptr ) && ( m_WriteStream == nullptr ) );
 
-    uint64_t fileSizes[ MAX_FILES ];
-    FileStream fileStreams[ MAX_FILES ];
+    uint64_t fileSizes[ kMaxFiles ];
+    FileStream fileStreams[ kMaxFiles ];
     const size_t numFiles = fileNames.GetSize();
 
     // Open all the files and determine their size

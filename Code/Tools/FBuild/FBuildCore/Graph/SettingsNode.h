@@ -36,7 +36,7 @@ public:
     const ConcurrencyGroup *            GetConcurrencyGroup( const AString & groupName ) const;
     const ConcurrencyGroup &            GetConcurrencyGroup( uint8_t index ) const;
 
-    enum : uint32_t { eMaxConcurrencyGroups = 16 };
+    inline static const uint32_t kMaxConcurrencyGroups = 16;
 
 private:
     void ProcessEnvironment( const Array<AString> & envStrings ) const;
@@ -69,7 +69,7 @@ public:
     uint32_t        GetLimit() const { return m_Limit; }
     uint8_t         GetIndex() const { return m_Index; }
 
-    enum : uint32_t { eUnlimited = 0xFFFFFFFF };
+    inline static const uint32_t eUnlimited = 0xFFFFFFFF;
 
 protected:
     friend SettingsNode;

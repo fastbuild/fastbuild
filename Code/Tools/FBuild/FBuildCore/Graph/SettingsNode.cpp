@@ -205,12 +205,12 @@ bool SettingsNode::InitializeConcurrencyGroups( const BFFToken * iter,
     // Enforce limit on number of groups.
     // Each group adds a small overhead to job processing and too many groups
     // may indicate misuse of the feature.
-    if ( m_ConcurrencyGroups.GetSize() > eMaxConcurrencyGroups )
+    if ( m_ConcurrencyGroups.GetSize() > kMaxConcurrencyGroups )
     {
         Error::Error_1600_TooManyConcurrencyGroups( iter,
                                                     function,
                                                     static_cast<uint32_t>( m_ConcurrencyGroups.GetSize() ),
-                                                    eMaxConcurrencyGroups );
+                                                    kMaxConcurrencyGroups );
         return false;
     }
 

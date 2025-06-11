@@ -228,7 +228,7 @@ Function::~Function() = default;
                 BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();
                 if ( srcParentScope )
                 {
-                    srcVarName[ 0 ] = BFFParser::BFF_DECLARE_VAR_INTERNAL;
+                    srcVarName[ 0 ] = BFFParser::kBFFDeclareVarInternal;
                     srcFrame = BFFStackFrame::GetCurrent()->GetParent();
                 }
 
@@ -256,7 +256,7 @@ Function::~Function() = default;
             // make sure there are no extraneous tokens
             if ( headerArgsIter != headerRange.GetEnd() )
             {
-                Error::Error_1002_MatchingClosingTokenNotFound( headerArgsIter, this, BFFParser::BFF_FUNCTION_ARGS_CLOSE );
+                Error::Error_1002_MatchingClosingTokenNotFound( headerArgsIter, this, BFFParser::kBFFFunctionArgsClose );
                 return false;
             }
         }

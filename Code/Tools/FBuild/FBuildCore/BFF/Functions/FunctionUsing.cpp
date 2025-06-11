@@ -63,7 +63,7 @@ FunctionUsing::FunctionUsing()
     ASSERT( frame );
 
     // find variable name
-    AStackString<BFFParser::MAX_VARIABLE_NAME_LENGTH> varName;
+    AStackString<BFFParser::kMaxVariableNameLength> varName;
     bool parentScope = false;
     if ( BFFParser::ParseVariableName( varToken, varName, parentScope ) == false )
     {

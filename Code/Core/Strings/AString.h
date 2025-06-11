@@ -34,7 +34,7 @@ public:
     ~AString();
 
     [[nodiscard]] uint32_t      GetLength() const   { return m_Length; }
-    [[nodiscard]] uint32_t      GetReserved() const { return ( m_ReservedAndFlags & RESERVED_MASK ); }
+    [[nodiscard]] uint32_t      GetReserved() const { return ( m_ReservedAndFlags & kReservedMask ); }
     [[nodiscard]] bool          IsEmpty() const     { return ( m_Length == 0 ); }
 
     // C-style compatibility
@@ -91,7 +91,7 @@ public:
     [[nodiscard]] bool          operator < ( const AString & other ) const { return ( Compare( other ) < 0 ); }
     [[nodiscard]] bool          operator > ( const AString & other ) const { return ( Compare( other ) > 0 ); }
 
-    [[nodiscard]] bool          MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
+    [[nodiscard]] bool          MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & kMemMustBeFreedFlag ) == kMemMustBeFreedFlag ); }
 
     // Format
     AString &                   Format( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
@@ -194,13 +194,13 @@ public:
     [[nodiscard]]               const char * end() const    { return m_Contents + m_Length; }
 
 protected:
-    enum : uint32_t { MEM_MUST_BE_FREED_FLAG    = 0x00000001 };
-    enum : uint32_t { RESERVED_MASK             = 0xFFFFFFFE };
+    inline static const uint32_t kMemMustBeFreedFlag = 0x00000001;
+    inline static const uint32_t kReservedMask = 0xFFFFFFFE;
 
     void SetReserved( uint32_t reserved, bool mustFreeMemory )
     {
-        ASSERT( ( reserved & MEM_MUST_BE_FREED_FLAG ) == 0 ); // ensure reserved does not use lower bit
-        m_ReservedAndFlags = ( reserved ^ ( mustFreeMemory ? (uint32_t)MEM_MUST_BE_FREED_FLAG : 0 ) );
+        ASSERT( ( reserved & kMemMustBeFreedFlag ) == 0 ); // ensure reserved does not use lower bit
+        m_ReservedAndFlags = ( reserved ^ ( mustFreeMemory ? (uint32_t)kMemMustBeFreedFlag : 0 ) );
     }
     NO_INLINE void Grow( uint32_t newLen );     // Grow capacity, transferring existing string data (for concatenation)
     NO_INLINE void GrowNoCopy( uint32_t newLen ); // Grow capacity, discarding existing string data (for assignment/construction)

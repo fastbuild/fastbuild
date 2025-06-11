@@ -102,7 +102,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
 
     // start a client to emulate the other end
     Server s( numRemoteWorkers );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     // clean up anything left over from previous runs
     Array<AString> files;
@@ -197,7 +197,7 @@ void TestDistributed::RemoteRaceWinRemote()
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     TEST_ASSERT( fBuild.Build( "RemoteRaceWinRemote" ) );
 }
@@ -224,7 +224,7 @@ void TestDistributed::RemoteRaceSystemFailure()
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     // Force a system failure when compiling remotely
     ObjectNode::SetFakeSystemFailureForNextJob();
@@ -274,7 +274,7 @@ void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     // Check that build fails
     TEST_ASSERT( false == fBuild.Build( "ErrorsAreCorrectlyReported-MSVC" ) );
@@ -300,7 +300,7 @@ void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     // Check that build fails
     TEST_ASSERT( false == fBuild.Build( "ErrorsAreCorrectlyReported-Clang" ) );
@@ -326,7 +326,7 @@ void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     // Check that build passes
     TEST_ASSERT( fBuild.Build( "WarningsAreCorrectlyReported-MSVC" ) );
@@ -352,7 +352,7 @@ void TestDistributed::WarningsAreCorrectlyReported_Clang() const
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     // Check that build passes
     TEST_ASSERT( fBuild.Build( "WarningsAreCorrectlyReported-Clang" ) );
@@ -441,7 +441,7 @@ void TestDistributed::TestZiDebugFormat() const
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     TEST_ASSERT( fBuild.Build( "remoteZi" ) );
 }
@@ -460,7 +460,7 @@ void TestDistributed::TestZiDebugFormat_Local() const
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     TEST_ASSERT( fBuild.Build( "remoteZi" ) );
 }
@@ -482,7 +482,7 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     TEST_ASSERT( fBuild.Build( "D8049" ) );
 }
@@ -511,7 +511,7 @@ void TestDistributed::DynamicDeoptimization() const
 
         // Start a server to emulate the other end
         Server s( 1 );
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         TEST_ASSERT( fBuild.Build( "MSVCDynamicDeoptimization" ) );
 

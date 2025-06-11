@@ -538,7 +538,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgConn
 
     // The connection would be dropped and we would not get an ack if the major
     // protocol version is mismatched.
-    ASSERT( msg->GetProtocolVersionMajor() == Protocol::PROTOCOL_VERSION_MAJOR );
+    ASSERT( msg->GetProtocolVersionMajor() == Protocol::kVersionMajor );
 
     // Take note of additional server info
     ss->m_WorkerVersion.Store( msg->GetWorkerVersion() );
@@ -547,7 +547,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgConn
                ss->m_RemoteName.Get(),
                ( ss->m_WorkerVersion.Load() / 100U ),
                ( ss->m_WorkerVersion.Load() % 100U ),
-               Protocol::PROTOCOL_VERSION_MAJOR,
+               Protocol::kVersionMajor,
                ss->m_ProtocolVersionMinor.Load() );
 }
 

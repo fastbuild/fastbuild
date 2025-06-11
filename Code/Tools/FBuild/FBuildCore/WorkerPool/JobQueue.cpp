@@ -447,7 +447,7 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorPr
     Job * job = nullptr;
 
     // Compare capabilities of the worker to our local requirements
-    if ( workerMinorProtocolVersion >= Protocol::PROTOCOL_VERSION_MINOR )
+    if ( workerMinorProtocolVersion >= Protocol::kVersionMinor )
     {
         // Worker is equal or newer and minor protocol changes are backwards
         // compatible so worker can take any job.

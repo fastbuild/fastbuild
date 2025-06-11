@@ -50,7 +50,7 @@ private:
         uint32_t m_CurrentTestAllocationId = 0;
     #endif
 
-    enum : uint32_t { MAX_TESTS = 1024 };
+    inline static const uint32_t kMaxTests = 1024;
     class TestInfo
     {
     public:
@@ -61,7 +61,7 @@ private:
         float m_TimeTaken = 0.0f;
     };
     static uint32_t s_NumTests;
-    static TestInfo s_TestInfos[ MAX_TESTS ];
+    static TestInfo s_TestInfos[ kMaxTests ];
 
     static TestGroup * s_FirstTest;
 };

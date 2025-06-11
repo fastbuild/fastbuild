@@ -35,7 +35,7 @@ public:
     #else
         #error Unknown platform
     #endif
-    enum : uint32_t { kDefaultStackSize = ( 64 * 1024 ) };
+    inline static const uint32_t kDefaultStackSize = ( 64 * 1024 );
 
     Thread();
     ~Thread();

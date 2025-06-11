@@ -114,10 +114,10 @@ public:
         return nullptr;
     }
 protected:
-    enum { MAX_OFFSET = ( 1 << 16 ) };
+    inline static const size_t kMaxOffset = ( 1 << 16 );
 
     uint32_t m_NameCRC;
-    uint16_t m_Offset; // validated by MAX_OFFSET
+    uint16_t m_Offset; // validated by kMaxOffset
     PropertyType m_Type;
     bool m_IsArray;
 

@@ -60,16 +60,16 @@ public:
         m_Identifier[ 0 ] = 'N';
         m_Identifier[ 1 ] = 'G';
         m_Identifier[ 2 ] = 'D';
-        m_Version = NODE_GRAPH_CURRENT_VERSION;
+        m_Version = kCurrentVersion;
         m_Padding = 0;
         m_ContentHash = 0;
     }
     ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 178 };
+    inline static const uint8_t kCurrentVersion = 178;
 
     bool IsValid() const;
-    bool IsCompatibleVersion() const { return m_Version == NODE_GRAPH_CURRENT_VERSION; }
+    bool IsCompatibleVersion() const { return m_Version == kCurrentVersion; }
 
     uint64_t    GetContentHash() const          { return m_ContentHash; }
     void        SetContentHash( uint64_t hash ) { m_ContentHash = hash; }

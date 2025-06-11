@@ -171,7 +171,7 @@ bool SmallBlockAllocator::Free( void * ptr )
     // Even if the buckets have never been initialized, this is safe
     // as it will result in a page index out of bounds since for any valid
     // pointer as no allocation can validly be outside of the user mode address space.
-    const size_t pageIndex = (size_t)( ( (char *)ptr - (char *)s_BucketMemoryStart ) / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
+    const size_t pageIndex = (size_t)( ( (size_t)( (char *)ptr - (char *)s_BucketMemoryStart ) ) / MemPoolBlock::kMemPoolBlockPageSize );
     if ( pageIndex >= BUCKET_MAPPING_TABLE_SIZE )
     {
         return false; // Not a bucket allocation
@@ -215,11 +215,11 @@ bool SmallBlockAllocator::Free( void * ptr )
     }
 
     // Commit the page
-    void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE ) );
+    void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::kMemPoolBlockPageSize ) );
     #if defined( __WINDOWS__ )
-        VERIFY( ::VirtualAlloc( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE ) );
+        VERIFY( ::VirtualAlloc( newPage, MemPoolBlock::kMemPoolBlockPageSize, MEM_COMMIT, PAGE_READWRITE ) );
     #else
-        VERIFY( ::mprotect( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, PROT_READ | PROT_WRITE ) == 0 );
+        VERIFY( ::mprotect( newPage, MemPoolBlock::kMemPoolBlockPageSize, PROT_READ | PROT_WRITE ) == 0 );
     #endif
 
     // Update page to bucket mapping table

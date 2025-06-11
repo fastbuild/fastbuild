@@ -284,7 +284,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     // If we ever break protocol compatibility we can simplify this code.
     // Any replacement packet integrity validation should be not specific to
     // these packets and belongs at a higher level.
-    static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
+    static_assert( Protocol::kVersionMajor == 22, "Remove backwards compat shims" );
 
     // Should not be called more than once
     ASSERT( m_Files.IsEmpty() );
@@ -605,7 +605,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
         // If we ever break protocol compatibility we can simplify this code.
         // Any replacement packet integrity validation should be not specific to
         // these packets and belongs at a higher level.
-        static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
+        static_assert( Protocol::kVersionMajor == 22, "Remove backwards compat shims" );
 
         // When running tests we should be using latest protocols which don't
         // have the bug anymore so this should never happen

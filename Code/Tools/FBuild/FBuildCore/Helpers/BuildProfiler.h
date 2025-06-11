@@ -69,7 +69,7 @@ protected:
         {
         }
 
-        enum : int32_t { LOCAL_MACHINE_ID = -1 };
+        inline static const int32_t kLocalMachineId = -1;
 
         int32_t m_MachineId; // Local or remote machine identifier
         uint32_t m_ThreadId; // Thread identifier

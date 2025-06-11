@@ -59,7 +59,7 @@ void BuildProfiler::RecordLocal( uint32_t threadId,
                                  const char * stepName,
                                  const char * targetName )
 {
-    const int32_t machineId = Event::LOCAL_MACHINE_ID;
+    const int32_t machineId = Event::kLocalMachineId;
 
     MutexHolder mh( m_Mutex );
     m_Events.EmplaceBack( machineId, threadId, startTime, endTime, stepName, targetName );
@@ -211,7 +211,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
                    "WriteProfileJSON",
                    (uint64_t)( (double)saveStart * freqMul ),
                    (uint64_t)( (double)( saveEnd - saveStart ) * freqMul ),
-                   Event::LOCAL_MACHINE_ID,
+                   Event::kLocalMachineId,
                    0u );
     return ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() );
 }

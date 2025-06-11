@@ -17,7 +17,7 @@ public:
     void *  Alloc();
     void    Free( void * ptr );
 
-    enum { MEMPOOLBLOCK_PAGE_SIZE = 64 * 1024 };
+    inline static const size_t kMemPoolBlockPageSize = 64 * 1024;
 
 protected:
     bool    AllocPage();

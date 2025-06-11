@@ -64,7 +64,7 @@ FunctionForEach::FunctionForEach()
             // TODO: Check for . and not ^
 
             // Resolve the name of the local variable
-            AStackString<BFFParser::MAX_VARIABLE_NAME_LENGTH> localName;
+            AStackString<BFFParser::kMaxVariableNameLength> localName;
             bool localParentScope = false; // always false thanks to the previous test
             if ( BFFParser::ParseVariableName( localVarToken, localName, localParentScope ) == false )
             {
@@ -96,7 +96,7 @@ FunctionForEach::FunctionForEach()
                 return false;
             }
 
-            AStackString<BFFParser::MAX_VARIABLE_NAME_LENGTH> arrayVarName;
+            AStackString<BFFParser::kMaxVariableNameLength> arrayVarName;
             bool arrayParentScope = false;
             if ( BFFParser::ParseVariableName( srcVarToken, arrayVarName, arrayParentScope ) == false )
             {

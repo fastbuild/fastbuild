@@ -53,10 +53,10 @@ private:
         bool operator<( const PieItem & other ) const { return m_Value > other.m_Value; }
     };
 
-    enum { DEFAULT_TABLE_WIDTH = 990 };
+    inline static const uint32_t kDefaultTableWidth = 990;
 
     // Helpers
-    void DoTableStart( uint32_t width = DEFAULT_TABLE_WIDTH, const char * id = nullptr, bool hidden = false );
+    void DoTableStart( uint32_t width = kDefaultTableWidth, const char * id = nullptr, bool hidden = false );
     void DoTableStop();
     void DoToggleSection( size_t numMore = 0 );
     void DoSectionTitle( const char * sectionName, const char * sectionId );

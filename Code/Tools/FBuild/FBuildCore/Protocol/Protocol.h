@@ -28,13 +28,13 @@ class TCPConnectionPool;
 //------------------------------------------------------------------------------
 namespace Protocol
 {
-    enum : uint16_t { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
+    inline static const uint16_t kPort = 31264; // Arbitrarily chosen port
 
     // Protocol Version
-    enum : uint32_t { PROTOCOL_VERSION_MAJOR = 22 };    // Changes here make workers incompatible
-    enum : uint8_t  { PROTOCOL_VERSION_MINOR = 5 };     // Changes must be forwards and backwards compatible
+    inline static const uint32_t kVersionMajor = 22; // Changes here make workers incompatible
+    inline static const uint8_t kVersionMinor = 5; // Changes must be forwards and backwards compatible
 
-    enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
+    inline static const uint16_t kTestPort = kPort + 1; // Different port for use by tests
 
     // Identifiers for all unique messages
     //------------------------------------------------------------------------------

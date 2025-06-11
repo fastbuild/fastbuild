@@ -107,10 +107,10 @@ bool Protocol::IMessage::Broadcast( TCPConnectionPool * pool ) const
 //------------------------------------------------------------------------------
 Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )
     : Protocol::IMessage( Protocol::MSG_CONNECTION, sizeof( MsgConnection ), false )
-    , m_ProtocolVersion( PROTOCOL_VERSION_MAJOR )
+    , m_ProtocolVersion( kVersionMajor )
     , m_NumJobsAvailable( numJobsAvailable )
     , m_Platform( Env::GetPlatform() )
-    , m_ProtocolVersionMinor( PROTOCOL_VERSION_MINOR )
+    , m_ProtocolVersionMinor( kVersionMinor )
 {
     memset( m_Padding2, 0, sizeof( m_Padding2 ) );
     memset( m_HostName, 0, sizeof( m_HostName ) );
@@ -125,8 +125,8 @@ Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )
 Protocol::MsgConnectionAck::MsgConnectionAck()
     : Protocol::IMessage( Protocol::MSG_CONNECTION_ACK, sizeof( MsgConnectionAck ), false )
     , m_WorkerVersion( static_cast<uint16_t>( FBUILD_VERSION ) )
-    , m_ProtocolVersionMajor( PROTOCOL_VERSION_MAJOR )
-    , m_ProtocolVersionMinor( PROTOCOL_VERSION_MINOR )
+    , m_ProtocolVersionMajor( kVersionMajor )
+    , m_ProtocolVersionMinor( kVersionMinor )
 {
 }
 

@@ -22,7 +22,7 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestManager::s_NumTests( 0 );
-/*static*/ TestManager::TestInfo TestManager::s_TestInfos[ MAX_TESTS ];
+/*static*/ TestManager::TestInfo TestManager::s_TestInfos[ kMaxTests ];
 /*static*/ TestGroup * TestManager::s_FirstTest = nullptr;
 
 // OnAssert callback
@@ -183,7 +183,7 @@ bool TestManager::RunTests( const char * testGroup )
 void TestManager::TestBegin( TestGroup * testGroup, const char * testName )
 {
     // record info for this test
-    ASSERT( s_NumTests < MAX_TESTS );
+    ASSERT( s_NumTests < kMaxTests );
     TestInfo & info = s_TestInfos[ s_NumTests ];
     info.m_TestGroup = testGroup;
     info.m_TestName = testName;

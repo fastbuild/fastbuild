@@ -617,7 +617,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
 
     enum { IF_NONE = 1, IF_AND = 2, IF_OR = 4, IF_NEGATE = 8 };
     bool ranOnce = false;
-    uint8_t operatorHistory[ BFFParser::MAX_OPERATOR_HISTORY ];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
+    uint8_t operatorHistory[ BFFParser::kMaxOperatorHistory ];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
     uint32_t numOperators = 0;
 
     while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator( "&&" ) || argsIter->IsOperator( "||" ) ) ) )
@@ -702,7 +702,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
             operatorHistory[ numOperators++ ] = r;
 
             // Check for excessive complexity
-            if ( numOperators == BFFParser::MAX_OPERATOR_HISTORY )
+            if ( numOperators == BFFParser::kMaxOperatorHistory )
             {
                 Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
                 return false;
@@ -896,7 +896,7 @@ bool BFFTokenizer::ParseToEndIf( const char *& pos,
         }
 
         // find the next preprocessor directive
-        if ( *pos == BFFParser::BFF_PREPROCESSOR_START )
+        if ( *pos == BFFParser::kBFFPreprocessorStart )
         {
             blockEnd = pos;
             ++pos; // Consume #

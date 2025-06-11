@@ -529,7 +529,7 @@ void TestObject::ClangExplicitLanguageType() const
 
         // start a client to emulate the other end
         Server s( 1 );
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         // Compile
         TEST_ASSERT( fBuild.Build( "ClangExplicitLanguageType" ) );
@@ -573,7 +573,7 @@ void TestObject::ClangDependencyArgs() const
 
         // start a client to emulate the other end
         Server s( 1 );
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         // Compile
         TEST_ASSERT( fBuild.Build( "ClangDependencyArgs" ) );
@@ -632,7 +632,7 @@ void TestObject::CLDependencyArgs() const
 
         // start a client to emulate the other end
         Server s( 1 );
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         // Compile
         TEST_ASSERT( fBuild.Build( "CLDependencyArgs" ) );

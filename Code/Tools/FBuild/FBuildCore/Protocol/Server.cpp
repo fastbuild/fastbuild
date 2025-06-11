@@ -269,7 +269,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
 void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConnection * msg )
 {
     // check for valid/supported protocol version
-    if ( msg->GetProtocolVersion() != Protocol::PROTOCOL_VERSION_MAJOR )
+    if ( msg->GetProtocolVersion() != Protocol::kVersionMajor )
     {
         AStackString remoteAddr;
         TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
@@ -346,7 +346,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
 
         // Take not of client support requirements
         // - Zstd suport can become unconditional if protocol compatibility is broken
-        static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22 );
+        static_assert( Protocol::kVersionMajor == 22 );
         const bool allowZstdUse = ( cs->m_ProtocolVersionMinor >= 4 );
         job->SetResultCompressionLevel( msg->GetResultCompressionLevel(), allowZstdUse );
 
@@ -447,7 +447,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
             //       The bug has been fixed so should not happen with latest code (only
             //       when dealing with backwards compatibility with old workers)
             // If we ever break protocol compatibility, we can remove special handling
-            static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
+            static_assert( Protocol::kVersionMajor == 22, "Remove backwards compat shims" );
 
             // This should not happen with latest code so we want to catch that when
             // debugging
@@ -460,7 +460,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
             FLOG_WARN( "Disconnecting '%s' (%s) due to corrupt MsgManifest (Client protocol %u.%u)\n",
                        remoteAddr.Get(),
                        cs->m_HostName.Get(),
-                       Protocol::PROTOCOL_VERSION_MAJOR,
+                       Protocol::kVersionMajor,
                        cs->m_ProtocolVersionMinor );
             Disconnect( connection );
             return;
@@ -509,7 +509,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
                 //       The bug has been fixed so should not happen with latest code (only
                 //       when dealing with backwards compatibility with old workers)
                 // If we ever break protocol compatibility, we can remove special handling
-                static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
+                static_assert( Protocol::kVersionMajor == 22, "Remove backwards compat shims" );
 
                 // This should not happen with latest code so we want to catch that when
                 // debugging
@@ -522,7 +522,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
                 FLOG_WARN( "Disconnecting '%s' (%s) due to corrupt MsgFile (Client protocol %u.%u)\n",
                            remoteAddr.Get(),
                            cs->m_HostName.Get(),
-                           Protocol::PROTOCOL_VERSION_MAJOR,
+                           Protocol::kVersionMajor,
                            cs->m_ProtocolVersionMinor );
             }
             else

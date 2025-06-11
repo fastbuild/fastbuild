@@ -43,7 +43,7 @@ void TestConcurrencyGroups::TooManyGroups() const
     // error is reported.
     AStackString groups;
     AStackString groupNames;
-    for ( size_t i = 0; ( i < SettingsNode::eMaxConcurrencyGroups + 1 ); ++i )
+    for ( size_t i = 0; ( i < SettingsNode::kMaxConcurrencyGroups + 1 ); ++i )
     {
         groups.AppendFormat( " .GroupName%zu = [ .ConcurrencyGroupName = 'Group%zu' ]", i, i );
         groupNames.AppendFormat( " .GroupName%zu,", i );

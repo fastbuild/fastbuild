@@ -19,7 +19,7 @@ ReflectedProperty::ReflectedProperty( const char * name, uint32_t offset, Proper
 {
     m_NameCRC = xxHash::Calc32( name, AString::StrLen( name ) );
 
-    ASSERT( offset < MAX_OFFSET );
+    ASSERT( offset < kMaxOffset );
     m_Offset = (uint16_t)offset;
     m_Type = type;
 

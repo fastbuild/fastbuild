@@ -298,7 +298,7 @@ void TestCache::ConsistentCacheKeysWithDist() const
         TEST_ASSERT( fBuild.Initialize() );
 
         Server s;
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         TEST_ASSERT( fBuild.Build( "ConsistentCacheKeys" ) );
 
@@ -316,7 +316,7 @@ void TestCache::ConsistentCacheKeysWithDist() const
         TEST_ASSERT( fBuild.Initialize() );
 
         Server s;
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         TEST_ASSERT( fBuild.Build( "ConsistentCacheKeys" ) );
 
@@ -1008,7 +1008,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     TEST_ASSERT( fBuild.Initialize() );
 
     Server s;
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     TEST_ASSERT( fBuild.Build( "Analyze+WarningsOnly" ) );
 
@@ -1055,7 +1055,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
     TEST_ASSERT( fBuild.Initialize() );
 
     Server s;
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     TEST_ASSERT( fBuild.Build( "Analyze+WarningsOnly" ) );
 

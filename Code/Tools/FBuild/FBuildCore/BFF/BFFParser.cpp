@@ -200,8 +200,8 @@ bool BFFParser::Parse( BFFTokenRange & iter )
     const char * pos = iter->GetValueString().Get();
 
     // skip over the declaration symbol
-    ASSERT( ( *pos == BFF_DECLARE_VAR_INTERNAL ) || ( *pos == BFF_DECLARE_VAR_PARENT ) );
-    parentScope = ( *pos == BFF_DECLARE_VAR_PARENT );
+    ASSERT( ( *pos == kBFFDeclareVarInternal ) || ( *pos == kBFFDeclareVarParent ) );
+    parentScope = ( *pos == kBFFDeclareVarParent );
     ++pos;
 
     // Variable name is "normalized" and parentScope bool is used by caller
@@ -222,9 +222,9 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // sanity check it is a sensible length
-        if ( name.GetLength() + 1 > MAX_VARIABLE_NAME_LENGTH ) // +1 for '.' will be added
+        if ( name.GetLength() + 1 > kMaxVariableNameLength ) // +1 for '.' will be added
         {
-            Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)value.GetLength(), (uint32_t)MAX_VARIABLE_NAME_LENGTH );
+            Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)value.GetLength(), (uint32_t)kMaxVariableNameLength );
             return false;
         }
 
@@ -319,17 +319,17 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
     iter++; // Consume operator
 
     // Check this is an operator we support
-    if ( ( opToken->IsOperator( BFF_VARIABLE_ASSIGNMENT ) == false ) &&
-         ( opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) == false ) &&
-         ( opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) == false ) )
+    if ( ( opToken->IsOperator( kBFFVariableAssignment ) == false ) &&
+         ( opToken->IsOperator( kBFFVariableConcatenation) == false ) &&
+         ( opToken->IsOperator( kBFFVariableSubtraction ) == false ) )
     {
         Error::Error_1034_OperationNotSupported( opToken, BFFVariable::VAR_ANY, BFFVariable::VAR_ANY, opToken );
         return false;
     }
 
     // What operator type is this?
-    const bool concat = opToken->IsOperator( BFF_VARIABLE_CONCATENATION );
-    const bool subtract = opToken->IsOperator( BFF_VARIABLE_SUBTRACTION );
+    const bool concat = opToken->IsOperator( kBFFVariableConcatenation );
+    const bool subtract = opToken->IsOperator( kBFFVariableSubtraction );
 
     const BFFToken * rhsToken = iter.GetCurrent();
     if ( rhsToken->IsString() )
@@ -721,7 +721,7 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
             BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();
             if ( srcParentScope )
             {
-                srcVarName[ 0 ] = BFF_DECLARE_VAR_INTERNAL;
+                srcVarName[ 0 ] = kBFFDeclareVarInternal;
                 srcFrame = BFFStackFrame::GetCurrent()->GetParent();
             }
 
@@ -851,8 +851,8 @@ bool BFFParser::StoreVariableString( const AString & name,
                             ( var->IsArrayOfStructs() && var->GetArrayOfStructs().IsEmpty() );
 
     // are we concatenating?
-    if ( opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) ||
-         opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) )
+    if ( opToken->IsOperator( kBFFVariableConcatenation ) ||
+         opToken->IsOperator( kBFFVariableSubtraction ) )
     {
         // variable must exist
         if ( var == nullptr )
@@ -866,7 +866,7 @@ bool BFFParser::StoreVariableString( const AString & name,
         {
             // OK - can concat String to String
             AStackString<1024> finalValue( var->GetString() );
-            if ( opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) )
+            if ( opToken->IsOperator( kBFFVariableConcatenation ) )
             {
                 finalValue += value;
             }
@@ -883,7 +883,7 @@ bool BFFParser::StoreVariableString( const AString & name,
             // OK - can concat String to ArrayOfStrings or to empty array
             StackArray<AString> finalValues;
             finalValues.SetCapacity( var->GetArrayOfStrings().GetSize() + 1 );
-            if ( opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) )
+            if ( opToken->IsOperator( kBFFVariableConcatenation ) )
             {
                 if ( !dstIsEmpty )
                 {
@@ -945,9 +945,9 @@ bool BFFParser::StoreVariableArray( const AString & name,
                                     const BFFToken * opToken,
                                     BFFStackFrame * frame )
 {
-    ASSERT( opToken->IsOperator( BFF_VARIABLE_ASSIGNMENT ) ||
-            opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) ||
-            opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) );
+    ASSERT( opToken->IsOperator( kBFFVariableAssignment ) ||
+            opToken->IsOperator( kBFFVariableConcatenation ) ||
+            opToken->IsOperator( kBFFVariableSubtraction ) );
 
     StackArray<AString> values;
     StackArray<const BFFVariable *> structValues;
@@ -956,8 +956,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
     const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
 
     // are we concatenating?
-    if ( opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) ||
-         opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) )
+    if ( opToken->IsOperator( kBFFVariableConcatenation ) ||
+         opToken->IsOperator( kBFFVariableSubtraction ) )
     {
         // variable must exist
         if ( var == nullptr )
@@ -1023,7 +1023,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             }
 
             // subtraction not supported on arrays
-            if ( opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) )
+            if ( opToken->IsOperator( kBFFVariableSubtraction ) )
             {
                 Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                          varType,
@@ -1058,7 +1058,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();
             if ( srcParentScope )
             {
-                srcVarName[ 0 ] = BFF_DECLARE_VAR_INTERNAL;
+                srcVarName[ 0 ] = kBFFDeclareVarInternal;
                 srcFrame = BFFStackFrame::GetCurrent()->GetParent();
             }
 
@@ -1071,7 +1071,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             }
 
             // subtraction not supported on arrays
-            if ( opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) )
+            if ( opToken->IsOperator( kBFFVariableSubtraction ) )
             {
                 Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                          varType,
@@ -1200,8 +1200,8 @@ bool BFFParser::StoreVariableStruct( const AString & name,
     // are we concatenating?
     ASSERT( operatorToken->IsOperator() );
     const char opChar = operatorToken->GetValueString()[ 0 ];
-    if ( ( opChar == BFF_VARIABLE_CONCATENATION ) ||
-         ( opChar == BFF_VARIABLE_SUBTRACTION ) )
+    if ( ( opChar == kBFFVariableConcatenation ) ||
+         ( opChar == kBFFVariableSubtraction ) )
     {
         // concatenation of structs not supported
         Error::Error_1027_CannotModify( operatorToken, name, BFFVariable::VAR_STRUCT, BFFVariable::VAR_ANY );
@@ -1259,7 +1259,7 @@ bool BFFParser::StoreVariableInt( const AString & name, const BFFToken * token, 
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken * rhsToken, const BFFToken * operatorToken, BFFStackFrame * dstFrame )
 {
-    AStackString<MAX_VARIABLE_NAME_LENGTH> srcName;
+    AStackString<kMaxVariableNameLength> srcName;
 
     bool srcParentScope = false;
     if ( ParseVariableName( rhsToken, srcName, srcParentScope ) == false )
@@ -1288,8 +1288,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
     const BFFVariable * varDst = BFFStackFrame::GetVar( dstName, dstFrame );
 
     const char opChar = operatorToken->GetValueString()[ 0 ];
-    const bool concat = ( opChar == BFF_VARIABLE_CONCATENATION );
-    const bool subtract = ( opChar == BFF_VARIABLE_SUBTRACTION );
+    const bool concat = ( opChar == kBFFVariableConcatenation );
+    const bool subtract = ( opChar == kBFFVariableSubtraction );
 
     // concatenation?
     if ( concat || subtract )
@@ -1614,7 +1614,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
                     Error::Error_1028_MissingVariableSubstitutionEnd( inputToken ); // TODO: Improve error positioning
                     return false;
                 }
-                AStackString<MAX_VARIABLE_NAME_LENGTH> varName( startName, endName );
+                AStackString<kMaxVariableNameLength> varName( startName, endName );
                 const BFFVariable * var = BFFStackFrame::GetVarAny( varName );
                 if ( var == nullptr )
                 {

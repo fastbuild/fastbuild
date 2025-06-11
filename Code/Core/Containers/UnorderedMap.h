@@ -62,9 +62,9 @@ public:
     KeyValue &                  Insert( const KEY & key, const VALUE & value );
 
 protected:
-    enum : uint32_t { kTableSizePower = 16 };
-    enum : uint32_t { kTableSize = ( 1 << kTableSizePower ) };
-    enum : uint32_t { kTableSizeMask = ( kTableSize - 1 ) };
+    inline static const uint32_t kTableSizePower = 16;
+    inline static const uint32_t kTableSize = ( 1 << kTableSizePower );
+    inline static const uint32_t kTableSizeMask = ( kTableSize - 1 );
 
     KeyValue ** m_Buckets = nullptr;
     uint32_t m_Count = 0;

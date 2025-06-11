@@ -157,10 +157,10 @@ uint32_t Worker::WorkThread()
     StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
 
     // start listening
-    StatusMessage( "Listening on port %u\n", Protocol::PROTOCOL_PORT );
-    if ( m_ConnectionPool->Listen( Protocol::PROTOCOL_PORT ) == false )
+    StatusMessage( "Listening on port %u\n", Protocol::kPort );
+    if ( m_ConnectionPool->Listen( Protocol::kPort ) == false )
     {
-        ErrorMessage( "Failed to listen on port %u.  Check port is not in use.", Protocol::PROTOCOL_PORT );
+        ErrorMessage( "Failed to listen on port %u.  Check port is not in use.", Protocol::kPort );
         return (uint32_t)-1;
     }
 

@@ -50,7 +50,7 @@
         #endif
         static const size_t BUCKET_NUM_BUCKETS = ( BUCKET_MAX_ALLOC_SIZE / BUCKET_ALIGNMENT );
         static const size_t BUCKET_ADDRESSSPACE_SIZE = ( 200 * 1024 * 1024 );
-        static const size_t BUCKET_NUM_PAGES = ( BUCKET_ADDRESSSPACE_SIZE / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
+        static const size_t BUCKET_NUM_PAGES = ( BUCKET_ADDRESSSPACE_SIZE / MemPoolBlock::kMemPoolBlockPageSize );
         static const size_t BUCKET_MAPPING_TABLE_SIZE = BUCKET_NUM_PAGES;
 
         class MemBucket : public MemPoolBlock

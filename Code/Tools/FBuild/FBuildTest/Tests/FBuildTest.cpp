@@ -283,7 +283,7 @@ FBuildTestOptions::FBuildTestOptions()
     m_EnableMonitor = true; // Make sure monitor code paths are tested
 
     // Ensure any distributed compilation tests use the test port
-    m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+    m_DistributionPort = Protocol::kTestPort;
 }
 
 // GetRecursiveDependencyCount

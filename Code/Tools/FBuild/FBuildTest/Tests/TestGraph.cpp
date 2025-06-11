@@ -756,9 +756,9 @@ void TestGraph::DBVersionChanged() const
 
     // Since we're poking this, we want to know if the layout ever changes somehow
     TEST_ASSERT( ms.GetFileSize() == 16 );
-    TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[ 3 ] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
+    TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[ 3 ] == NodeGraphHeader::kCurrentVersion );
 
-    ( (uint8_t *)ms.GetDataMutable() )[ 3 ] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
+    ( (uint8_t *)ms.GetDataMutable() )[ 3 ] = ( NodeGraphHeader::kCurrentVersion - 1 );
 
     const char * oldDB = "../tmp/Test/Graph/DBVersionChanged/fbuild.fdb";
     const char * emptyBFF = "../tmp/Test/Graph/DBVersionChanged/fbuild.bff";

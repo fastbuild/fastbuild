@@ -822,7 +822,7 @@ void HTMLReport::DoToggleSection( size_t numMore )
         more.Format( "%u ", (uint32_t)numMore );
     }
     Write( "<a href='javascript:toggleTable(\"%s\");'>%sMore...</a>\n", tableIdStr.Get(), more.Get() );
-    DoTableStart( DEFAULT_TABLE_WIDTH, tableIdStr.Get(), true ); // hide table
+    DoTableStart( kDefaultTableWidth, tableIdStr.Get(), true ); // hide table
 }
 
 //------------------------------------------------------------------------------

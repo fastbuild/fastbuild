@@ -192,7 +192,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1022_MissingFunctionHeaderCloseToken( const BFFToken * iter, const Function * function )
 {
-    FormatError( iter, 1022u, function, "Missing Function header close token '%c'.", BFFParser::BFF_FUNCTION_ARGS_CLOSE );
+    FormatError( iter, 1022u, function, "Missing Function header close token '%c'.", BFFParser::kBFFFunctionArgsClose );
 }
 
 // Error_1023_FunctionRequiresAHeader
@@ -216,7 +216,7 @@
 /*static*/ void Error::Error_1025_MissingScopeCloseToken( const BFFToken * iter,
                                                           const Function * function )
 {
-    FormatError( iter, 1025u, function, "Missing scope close token '%c'.", BFFParser::BFF_SCOPE_CLOSE );
+    FormatError( iter, 1025u, function, "Missing scope close token '%c'.", BFFParser::kBFFScopeClose );
 }
 
 // Error_1026_VariableNotFoundForModification
@@ -409,7 +409,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken * iter )
 {
-    FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %i boolean operators supported.", BFFParser::MAX_OPERATOR_HISTORY );
+    FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %zu boolean operators supported.", BFFParser::kMaxOperatorHistory );
 }
 
 // Error_1050_PropertyMustBeString

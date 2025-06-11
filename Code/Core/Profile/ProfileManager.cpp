@@ -80,11 +80,11 @@ struct ProfileEventBuffer
     ProfileEvent * m_Current;
     ProfileEvent * m_MaxEnd;
 
-    enum { MAX_THREAD_NAME_LEN = 31 };
-    char m_ThreadName[ MAX_THREAD_NAME_LEN + 1 ];
+    inline static const size_t kMaxThreadNameLen = 31;
+    char m_ThreadName[ kMaxThreadNameLen + 1 ];
 
     // when allocating memory to track events, do it in blocks
-    enum{ NUM_EVENTS_PER_BLOCK = 8192 }; // 64KiB pages with 8 bytes events
+    inline static const size_t kNumEventsPerBlock = 8192; // 64KiB pages with 8 byte events
 };
 THREAD_LOCAL ProfileEventBuffer tls_ProfileEventBuffer = { 0, nullptr, nullptr, nullptr, "" };
 
@@ -154,12 +154,12 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     // allocate a fresh block
     MEMTRACKER_DISABLE_THREAD
     {
-        events = FNEW_ARRAY( ProfileEvent[ NUM_EVENTS_PER_BLOCK ] );
+        events = FNEW_ARRAY( ProfileEvent[ kNumEventsPerBlock ] );
     }
     MEMTRACKER_ENABLE_THREAD
     m_Begin = events;
     m_Current = events;
-    m_MaxEnd = events + NUM_EVENTS_PER_BLOCK;
+    m_MaxEnd = events + kNumEventsPerBlock;
 
     return events;
 }
@@ -190,7 +190,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     AString::Copy( threadName,
                    buffer.m_ThreadName,
                    Math::Min<size_t>( AString::StrLen( threadName ),
-                                      ProfileEventBuffer::MAX_THREAD_NAME_LEN ) );
+                                      ProfileEventBuffer::kMaxThreadNameLen ) );
 }
 
 //------------------------------------------------------------------------------
