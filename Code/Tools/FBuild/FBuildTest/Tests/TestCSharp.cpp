@@ -74,13 +74,12 @@ void TestCSharp::TestSingleFile() const
     // Test output file
     EnsureFileExists( "../tmp/Test/CSharp/csharpsingle.dll" );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );  // 1 cs file
-    CheckStatsNode ( 1,     1,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 4,     4 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::FILE_NODE );  // 1 cs file
+    CheckStatsNode( 1, 1, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 4, 4 );
 }
 
 // TestSingleFile_NoRebuild
@@ -97,13 +96,12 @@ void TestCSharp::TestSingleFile_NoRebuild() const
     // Build it
     TEST_ASSERT( fBuild.Build( "CSharp-Single-Target" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE);
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );  // 1 cs file
-    CheckStatsNode ( 1,     0,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 4,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::FILE_NODE );  // 1 cs file
+    CheckStatsNode( 1, 0, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 4, 2 );
 }
 
 // TestSingleFile_NoRebuild_BFFChange
@@ -121,13 +119,12 @@ void TestCSharp::TestSingleFile_NoRebuild_BFFChange() const
     // Build it
     TEST_ASSERT( fBuild.Build( "CSharp-Single-Target" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );  // 1 cs file
-    CheckStatsNode ( 1,     0,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 4,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::FILE_NODE );  // 1 cs file
+    CheckStatsNode( 1, 0, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 4, 2 );
 }
 
 // TestMultipleFiles
@@ -151,14 +148,13 @@ void TestCSharp::TestMultipleFiles() const
     // Test output files
     EnsureFileExists( "../tmp/Test/CSharp/csharpmulti.dll" );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
-    CheckStatsNode ( 1,     1,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 7,     7 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 3, 3, Node::FILE_NODE );  // 3x cs
+    CheckStatsNode( 1, 1, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 7, 7 );
 }
 
 // TestMultipleFiles_NoRebuild
@@ -174,14 +170,13 @@ void TestCSharp::TestMultipleFiles_NoRebuild() const
     // Build it
     TEST_ASSERT( fBuild.Build( "CSharp-Multi-Target" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
-    CheckStatsNode ( 1,     0,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 7,     5 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 3, 3, Node::FILE_NODE );  // 3x cs
+    CheckStatsNode( 1, 0, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 7, 5 );
 }
 
 // TestMultipleFiles_NoRebuild_BFFChange
@@ -199,14 +194,13 @@ void TestCSharp::TestMultipleFiles_NoRebuild_BFFChange() const
     // Build it
     TEST_ASSERT( fBuild.Build( "CSharp-Multi-Target" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
-    CheckStatsNode ( 1,     0,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 7,     5 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 3, 3, Node::FILE_NODE );  // 3x cs
+    CheckStatsNode( 1, 0, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 7, 5 );
 }
 
 // TestMultipleAssemblies
@@ -234,13 +228,12 @@ void TestCSharp::TestMultipleAssemblies() const
     EnsureFileExists( "../tmp/Test/CSharp/csharpassemblyb.dll" );
     EnsureFileExists( "../tmp/Test/CSharp/csharpassemblyc.dll" );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 2x cs
-    CheckStatsNode ( 3,     3,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 8,     8 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 3, 3, Node::FILE_NODE );  // 2x cs
+    CheckStatsNode( 3, 3, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 8, 8 );
 }
 
 // TestMultipleAssemblies_NoRebuild
@@ -256,13 +249,12 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
     // Build it
     TEST_ASSERT( fBuild.Build( "CSharp-AssemblyC" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
-    CheckStatsNode ( 3,     0,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 8,     4 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 3, 3, Node::FILE_NODE );  // 3x cs
+    CheckStatsNode( 3, 0, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 8, 4 );
 }
 
 // TestMultipleAssemblies_NoRebuild_BFFChange
@@ -280,13 +272,12 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild_BFFChange() const
     // Build it
     TEST_ASSERT( fBuild.Build( "CSharp-AssemblyC" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
-    CheckStatsNode ( 3,     0,      Node::CS_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 8,     4 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 3, 3, Node::FILE_NODE );  // 3x cs
+    CheckStatsNode( 3, 0, Node::CS_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 8, 4 );
 }
 
 // TestMixedAssemblyWithCPP

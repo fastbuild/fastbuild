@@ -88,12 +88,11 @@ void TestCopy::TestCopyFunction_FileToFile() const
     // make sure all output is where it is expected
     EnsureFileExists( dst );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 1, 1, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 3, 3 );
 }
 
 // TestCopyFunction_FileToFile_NoRebuild
@@ -108,12 +107,11 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TestCopyFileToFile" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 1,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 1, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 3, 2 );
 }
 
 // TestCopyFunction_FileToFile_NoRebuild_BFFChange
@@ -130,12 +128,11 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild_BFFChange() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TestCopyFileToFile" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 1,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 1, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 3, 2 );
 }
 
 // TestCopyFunction_FileToDir
@@ -158,12 +155,11 @@ void TestCopy::TestCopyFunction_FileToDir() const
 
     EnsureFileExists( dst );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 1, 1, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 3, 3 );
 }
 
 // TestCopyFunction_FileToDir_NoRebuild
@@ -178,12 +174,11 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TestCopyFileToDir" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 1,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 1, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 3, 2 );
 }
 
 // TestCopyFunction_FileToDir_NoRebuild_BFFChange
@@ -200,12 +195,11 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild_BFFChange() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TestCopyFileToDir" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 1,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 1, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 3, 2 );
 }
 
 // TestCopyFunction_MultiFileToDir
@@ -231,12 +225,11 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
     EnsureFileExists( dst1 );
     EnsureFileExists( dst2 );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
-    CheckStatsNode ( 2,     2,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 5,     5 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE );
+    CheckStatsNode( 2, 2, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 5, 5 );
 }
 
 // TestCopyFunction_MultiFileToDir_NoRebuild
@@ -251,12 +244,11 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TestMultiCopyToDir" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
-    CheckStatsNode ( 2,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 5,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE );
+    CheckStatsNode( 2, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 5, 3 );
 }
 
 // TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange
@@ -273,12 +265,11 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TestMultiCopyToDir" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
-    CheckStatsNode ( 2,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 5,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE );
+    CheckStatsNode( 2, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 5, 3 );
 }
 
 // TestCopyFunction_SourceBasePath
@@ -304,12 +295,11 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
     EnsureFileExists( dst1 );
     EnsureFileExists( dst2 );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
-    CheckStatsNode ( 2,     2,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 5,     5 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE );
+    CheckStatsNode( 2, 2, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 5, 5 );
 }
 
 // TestCopyFunction_SourceBasePath_NoRebuild
@@ -325,12 +315,11 @@ void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TestSourceBasePath" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
-    CheckStatsNode ( 2,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 5,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE );
+    CheckStatsNode( 2, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 5, 3 );
 }
 
 // ChainedCopy
@@ -354,12 +343,11 @@ void TestCopy::ChainedCopy() const
     // make sure all output is where it is expected
     EnsureFileExists( dst );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 3,     3,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 5,     5 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 3, 3, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 5, 5 );
 }
 
 // ChainedCopy_NoRebuild
@@ -374,12 +362,11 @@ void TestCopy::ChainedCopy_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "ChainedCopy3" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 3,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 5,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 3, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 5, 2 );
 }
 
 // CopyDir
@@ -406,13 +393,12 @@ void TestCopy::CopyDir() const
     EnsureFileExists( dstA );
     EnsureFileExists( dstB );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
-    CheckStatsNode ( 2,     2,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::COPY_DIR_NODE );
-    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 6,     6 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE );
+    CheckStatsNode( 2, 2, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::COPY_DIR_NODE );
+    CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 6, 6 );
 }
 
 // CopyDir_NoRebuild
@@ -428,13 +414,12 @@ void TestCopy::CopyDir_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
-    CheckStatsNode ( 2,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     0,      Node::COPY_DIR_NODE );
-    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 6,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE );
+    CheckStatsNode( 2, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 0, Node::COPY_DIR_NODE );
+    CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 6, 3 );
 }
 
 // CopyDir_NoRebuild_BFFChange
@@ -451,13 +436,12 @@ void TestCopy::CopyDir_NoRebuild_BFFChange() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
-    CheckStatsNode ( 2,     0,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     0,      Node::COPY_DIR_NODE );
-    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 6,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE );
+    CheckStatsNode( 2, 0, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 0, Node::COPY_DIR_NODE );
+    CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 6, 3 );
 }
 
 // CopyDirDeleteSrc
@@ -496,13 +480,12 @@ void TestCopy::CopyDirDeleteSrc() const
         EnsureFileExists( dstA );
         EnsureFileExists( dstB );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(  2,     2,      Node::FILE_NODE );
-        CheckStatsNode(  2,     2,      Node::COPY_FILE_NODE );
-        CheckStatsNode(  1,     1,      Node::COPY_DIR_NODE );
-        CheckStatsNode(  1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsTotal( 6,     6 );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::FILE_NODE );
+        CheckStatsNode( 2, 2, Node::COPY_FILE_NODE );
+        CheckStatsNode( 1, 1, Node::COPY_DIR_NODE );
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsTotal( 6, 6 );
     }
 
     // Delete one of the source files
@@ -521,13 +504,12 @@ void TestCopy::CopyDirDeleteSrc() const
         // make sure all output is where it is expected
         EnsureFileExists( dstA );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(  1,     1,      Node::FILE_NODE );
-        CheckStatsNode(  1,     0,      Node::COPY_FILE_NODE );
-        CheckStatsNode(  1,     1,      Node::COPY_DIR_NODE );
-        CheckStatsNode(  1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsTotal( 4,     3 );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::FILE_NODE );
+        CheckStatsNode( 1, 0, Node::COPY_FILE_NODE );
+        CheckStatsNode( 1, 1, Node::COPY_DIR_NODE );
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsTotal( 4, 3 );
     }
 }
 
@@ -584,8 +566,7 @@ void TestCopy::ObjectListChaining() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
+        // Check stats: Seen, Built, Type
         CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
         CheckStatsNode( 2, 2, Node::OBJECT_NODE );
         CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
@@ -601,8 +582,7 @@ void TestCopy::ObjectListChaining() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
+        // Check stats: Seen, Built, Type
         CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
         CheckStatsNode( 2, 0, Node::OBJECT_NODE );
         CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
@@ -619,8 +599,7 @@ void TestCopy::ObjectListChaining() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
+        // Check stats: Seen, Built, Type
         CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
         CheckStatsNode( 2, 0, Node::OBJECT_NODE );
         CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
@@ -669,8 +648,7 @@ void TestCopy::ObjectListChaining2() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
+        // Check stats: Seen, Built, Type
         CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
         CheckStatsNode( 1, 1, Node::OBJECT_NODE );
         CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
@@ -703,8 +681,7 @@ void TestCopy::ObjectListChaining2() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
+        // Check stats: Seen, Built, Type
         CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
         CheckStatsNode( 1, 1, Node::OBJECT_NODE );
         CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );

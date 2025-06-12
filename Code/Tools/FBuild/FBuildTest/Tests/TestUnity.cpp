@@ -111,11 +111,10 @@ void TestUnity::TestGenerate() const
     EnsureFileExists( "../tmp/Test/Unity/Unity1.cpp" );
     EnsureFileExists( "../tmp/Test/Unity/Unity2.cpp" );
 
-    // Check stats
-    //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 1, Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2, 2 );
 }
 
 // TestGenerate_NoRebuild
@@ -149,11 +148,10 @@ void TestUnity::TestGenerate_NoRebuild() const
     TEST_ASSERT( dateTime1 == FileIO::GetFileLastWriteTime( unity1 ) );
     TEST_ASSERT( dateTime2 == FileIO::GetFileLastWriteTime( unity2 ) );
 
-    // Check stats
-    //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      1 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2, 1 );
 }
 
 // TestGenerate_NoRebuild_BFFChange
@@ -184,11 +182,10 @@ void TestUnity::TestGenerate_NoRebuild_BFFChange() const
     TEST_ASSERT( dateTime1 == FileIO::GetFileLastWriteTime( unity1 ) );
     TEST_ASSERT( dateTime2 == FileIO::GetFileLastWriteTime( unity2 ) );
 
-    // Check stats
-    //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      1 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2, 1 );
 }
 
 // DetectDeletedUnityFiles
@@ -223,11 +220,10 @@ void TestUnity::DetectDeletedUnityFiles() const
                  GetRecordedOutput().Find( "(Output" ) &&
                  GetRecordedOutput().Find( "missing)" ) );
 
-    // Check stats
-    //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 1, Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2, 2 );
 }
 
 // BuildCompile
@@ -262,20 +258,19 @@ void TestUnity::TestCompile() const
 
     EnsureFileExists( "../tmp/Test/Unity/Unity.lib" );
 
-    // Check stats
-    //                      Seen,   Built,  Type
+    // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsNode ( stats, numF,   4,      Node::FILE_NODE ); // pch + 2x generated unity files built
-    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
-    CheckStatsNode ( stats, 3,      3,      Node::OBJECT_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 12 );
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 1, Node::UNITY_NODE );
+    CheckStatsNode( stats, numF, 4, Node::FILE_NODE ); // pch + 2x generated unity files built
+    CheckStatsNode( stats, 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( stats, 3, 3, Node::OBJECT_NODE );
+    CheckStatsNode( stats, 1, 1, Node::LIBRARY_NODE );
+    CheckStatsNode( stats, 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( stats, 8 + numF, 12 );
 }
 
 // TestCompile_NoRebuild
@@ -284,20 +279,19 @@ void TestUnity::TestCompile_NoRebuild() const
 {
     FBuildStats stats = BuildCompile();
 
-    // Check stats
-    //                      Seen,   Built,  Type
+    // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
-    CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
-    CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 2+numF );
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
+    CheckStatsNode( stats, numF, numF, Node::FILE_NODE );
+    CheckStatsNode( stats, 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( stats, 3, 0, Node::OBJECT_NODE );
+    CheckStatsNode( stats, 1, 0, Node::LIBRARY_NODE );
+    CheckStatsNode( stats, 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( stats, 8 + numF, 2 + numF );
 }
 
 // TestCompile_NoRebuild_BFFChange
@@ -309,20 +303,19 @@ void TestUnity::TestCompile_NoRebuild_BFFChange() const
     const bool forceMigration = true;
     FBuildStats stats = BuildCompile( options, useDB, forceMigration );
 
-    // Check stats
-    //                      Seen,   Built,  Type
+    // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
-    CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
-    CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 2+numF );
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
+    CheckStatsNode( stats, numF, numF, Node::FILE_NODE );
+    CheckStatsNode( stats, 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( stats, 3, 0, Node::OBJECT_NODE );
+    CheckStatsNode( stats, 1, 0, Node::LIBRARY_NODE );
+    CheckStatsNode( stats, 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( stats, 8 + numF, 2 + numF );
 }
 
 // TestGenerateFromExplicitList
@@ -337,10 +330,9 @@ void TestUnity::TestGenerateFromExplicitList() const
 
     TEST_ASSERT( fBuild.Build( "Unity-Explicit-Files" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-    CheckStatsTotal( 4,     4 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::UNITY_NODE );
+    CheckStatsTotal( 4, 4 );
 }
 
 // TestExcludedFiles
@@ -405,11 +397,10 @@ void TestUnity::UnityInputIsolatedFiles() const
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::UNITY_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
 }
 
 // IsolateListFile
@@ -422,11 +413,10 @@ void TestUnity::IsolateListFile() const
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::UNITY_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
 }
 
 // ClangStaticAnalysis
@@ -512,12 +502,11 @@ void TestUnity::LinkMultiple() const
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     3,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 3, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
     #if defined( __OSX__ )
@@ -534,12 +523,11 @@ void TestUnity::LinkMultiple() const
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 1, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
     #if defined( __OSX__ )
@@ -556,12 +544,11 @@ void TestUnity::LinkMultiple() const
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 1, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
     #if defined( __OSX__ )
@@ -582,12 +569,11 @@ void TestUnity::LinkMultiple() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 1, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 }
 
@@ -639,12 +625,11 @@ void TestUnity::LinkMultiple_InputFiles() const
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     3,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 3, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
     #if defined( __OSX__ )
@@ -661,12 +646,11 @@ void TestUnity::LinkMultiple_InputFiles() const
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
     #if defined( __OSX__ )
@@ -683,12 +667,11 @@ void TestUnity::LinkMultiple_InputFiles() const
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
     #if defined( __OSX__ )
@@ -709,12 +692,11 @@ void TestUnity::LinkMultiple_InputFiles() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 }
 
@@ -986,11 +968,10 @@ void TestUnity::NoUnityCommandLineOption() const
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Switch on -nounity
@@ -1007,11 +988,10 @@ void TestUnity::NoUnityCommandLineOption() const
         // Ensure rebuild was caused by specific build reason
         TEST_ASSERT( GetRecordedOutput().Find( "(-nounity was added)" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Remove -nounity
@@ -1027,11 +1007,10 @@ void TestUnity::NoUnityCommandLineOption() const
         // Ensure rebuild was caused by specific build reason
         TEST_ASSERT( GetRecordedOutput().Find( "(-nounity was removed)" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Switch on -nounity again
@@ -1047,11 +1026,10 @@ void TestUnity::NoUnityCommandLineOption() const
         // Ensure rebuild was caused by specific build reason
         TEST_ASSERT( AString( GetRecordedOutput() ).Replace( "(-nounity was added)", "" ) == 2 );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 2,     0,      Node::OBJECT_NODE ); // NOTE: Isolated object files can be re-used
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE ); // NOTE: Isolated object files can be re-used
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Remove -nounity again
@@ -1067,11 +1045,10 @@ void TestUnity::NoUnityCommandLineOption() const
         // Ensure rebuild was caused by specific build reason
         TEST_ASSERT( AString( GetRecordedOutput() ).Replace( "(-nounity was removed)", "" ) == 2 );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 }
 
@@ -1095,10 +1072,9 @@ void TestUnity::NoUnityCache() const
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
 
         // Isolated files should not be written to cache
         TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 0 );
@@ -1113,10 +1089,9 @@ void TestUnity::NoUnityCache() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
 
         // Isolated files should not be cached
         TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 2 );
@@ -1131,10 +1106,9 @@ void TestUnity::NoUnityCache() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
 
         // Isolated files should not be cached
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 2 );

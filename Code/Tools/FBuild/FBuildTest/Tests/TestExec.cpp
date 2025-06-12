@@ -82,12 +82,11 @@ void TestExec::BuildHelperExe() const
     // make sure all output is where it is expected
     EnsureFileExists( exec );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 1, Node::EXE_NODE );
 }
 
 //------------------------------------------------------------------------------
@@ -138,13 +137,12 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     EnsureFileExists( outFile_multiInputA );
     EnsureFileExists( outFile_multiInputB );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
-    CheckStatsNode ( 4,     4,      Node::EXEC_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
+    CheckStatsNode( 4, 4, Node::EXEC_NODE );
 }
 
 //------------------------------------------------------------------------------
@@ -164,14 +162,13 @@ void TestExec::Build_ExecCommand_NoRebuild() const
 
     // We expect only one command to run a second time (the one that always runs)
 
-    // Check stats
-    //               Seen,  Built,  Type
+    // Check stats: Seen, Built, Type
     // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
-    CheckStatsNode ( 4,     1,      Node::EXEC_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
+    CheckStatsNode( 4, 1, Node::EXEC_NODE );
 }
 
 //------------------------------------------------------------------------------
@@ -201,14 +198,13 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
 
     // We expect only one command to run a second time (the one that always runs)
 
-    // Check stats
-    //               Seen,  Built,  Type
+    // Check stats: Seen, Built, Type
     // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXEC_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
+    CheckStatsNode( 1, 1, Node::EXEC_NODE );
 }
 
 //------------------------------------------------------------------------------
@@ -236,14 +232,13 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
 
         // We expect only one command to run a second time (the one that always runs)
 
-        // Check stats
-        //               Seen,  Built,  Type
+        // Check stats: Seen, Built, Type
         // NOTE: Don't test file nodes since test used windows.h
-        CheckStatsNode(1, 0, Node::OBJECT_NODE);
-        CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
-        CheckStatsNode(1, 1, Node::ALIAS_NODE);
-        CheckStatsNode(1, 0, Node::EXE_NODE);
-        CheckStatsNode(1, 1, Node::EXEC_NODE);
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+        CheckStatsNode( 1, 0, Node::EXE_NODE );
+        CheckStatsNode( 1, 1, Node::EXEC_NODE );
     }
 
     // Try second file
@@ -258,14 +253,13 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
 
         // We expect only one command to run a second time (the one that always runs)
 
-        // Check stats
-        //               Seen,  Built,  Type
+        // Check stats: Seen, Built, Type
         // NOTE: Don't test file nodes since test used windows.h
-        CheckStatsNode(1, 0, Node::OBJECT_NODE);
-        CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
-        CheckStatsNode(1, 1, Node::ALIAS_NODE);
-        CheckStatsNode(1, 0, Node::EXE_NODE);
-        CheckStatsNode(1, 1, Node::EXEC_NODE);
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+        CheckStatsNode( 1, 0, Node::EXE_NODE );
+        CheckStatsNode( 1, 1, Node::EXEC_NODE );
     }
 }
 
@@ -328,10 +322,9 @@ void TestExec::Build_ExecEnvCommand() const
     // (the executable checks the expected env var)
     TEST_ASSERT( fBuild.Build( "ExecEnvCommandTest" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXEC_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::EXE_NODE );
+    CheckStatsNode( 1, 1, Node::EXEC_NODE );
 }
 
 // Exclusions

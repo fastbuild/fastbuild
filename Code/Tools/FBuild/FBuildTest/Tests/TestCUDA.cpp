@@ -57,13 +57,12 @@ void TestCUDA::Build() const
         // make sure all output is where it is expected
         EnsureFileExists( obj );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 65,    1,      Node::FILE_NODE ); // many included files
-        CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsTotal( 68,    4 );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 65, 1, Node::FILE_NODE ); // many included files
+        CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsTotal( 68, 4 );
 
         // Test cache was stored to
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -90,13 +89,12 @@ void TestCUDA::Build_NoRebuild() const
         // make sure all output is where it is expected
         EnsureFileExists( obj );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 65,    65,     Node::FILE_NODE ); // many included files
-        CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-        CheckStatsTotal( 68,    65 );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 65, 65, Node::FILE_NODE ); // many included files
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsTotal( 68, 65 );
     #endif
 }
 
@@ -123,13 +121,12 @@ void TestCUDA::Build_CacheHit() const
         // make sure all output is where it is expected
         EnsureFileExists( obj );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 65,    65,     Node::FILE_NODE ); // many included files
-        CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsTotal( 68,    66 );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 65, 65, Node::FILE_NODE ); // many included files
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsTotal( 68, 66 );
 
         // Test we got a cache hit
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );

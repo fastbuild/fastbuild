@@ -495,7 +495,7 @@ void TestGraph::TestDeepGraph() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
         TEST_ASSERT( fBuild.Build( "all" ) );
-        CheckStatsNode ( 1,         0,      Node::OBJECT_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
 
         // make sure walking the graph wasn't slow (should be a good deal less
         // than 100ms, but allow for a lot of slack on the test machine)
@@ -517,11 +517,10 @@ void TestGraph::TestNoStopOnFirstError() const
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "all" ) == false ); // Expect build to fail
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 4,     0,      Node::OBJECT_NODE );
-        CheckStatsNode ( 2,     0,      Node::LIBRARY_NODE );
-        CheckStatsNode ( 1,     0,      Node::ALIAS_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 4, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 0, Node::LIBRARY_NODE );
+        CheckStatsNode( 1, 0, Node::ALIAS_NODE );
 
         // One node should have failed
         const FBuildStats::Stats & nodeStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -535,11 +534,10 @@ void TestGraph::TestNoStopOnFirstError() const
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "all" ) == false ); // Expect build to fail
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 4,     0,      Node::OBJECT_NODE );
-        CheckStatsNode ( 2,     0,      Node::LIBRARY_NODE );
-        CheckStatsNode ( 1,     0,      Node::ALIAS_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 4, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 0, Node::LIBRARY_NODE );
+        CheckStatsNode( 1, 0, Node::ALIAS_NODE );
 
         // Add 4 nodes should have failed
         const FBuildStats::Stats & nodeStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );

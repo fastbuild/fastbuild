@@ -183,13 +183,12 @@ void TestIncludeParser::TestMSVC_P() const
     // make sure all output files are as expected
     EnsureFileExists( file );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsTotal( 4,     4 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+    CheckStatsTotal( 4, 4 );
 }
 
 // TestMSVC_ShowIncludesWithWarnings

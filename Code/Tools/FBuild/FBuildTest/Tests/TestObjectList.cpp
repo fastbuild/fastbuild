@@ -182,11 +182,10 @@ void TestObjectList::ObjectListChaining() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      2,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     4,      4,  Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 4, 4, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText1 );
     }
@@ -197,11 +196,10 @@ void TestObjectList::ObjectListChaining() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     4,      0,  Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 4, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
     }
 
     // Check no-rebuild DB migration
@@ -212,11 +210,10 @@ void TestObjectList::ObjectListChaining() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     4,      0,  Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 4, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText2 );
     }
@@ -260,11 +257,10 @@ void TestObjectList::ObjectListChaining_Bad() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      2,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      2,  Node::OBJECT_NODE );
-        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText1 );
     }
@@ -275,11 +271,10 @@ void TestObjectList::ObjectListChaining_Bad() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
-        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
     }
 
     // Check no-rebuild DB migration
@@ -290,11 +285,10 @@ void TestObjectList::ObjectListChaining_Bad() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
-        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText2 );
     }

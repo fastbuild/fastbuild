@@ -104,10 +104,9 @@ void TestObject::Preprocessor() const
         TEST_ASSERT( fBuild.Build( "CustomPreprocessor" ) );
         fBuild.SaveDependencyGraph( database );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_NODE ); // 1x cpp
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE ); // 1x cpp
     }
 
     // No Rebuild
@@ -121,10 +120,9 @@ void TestObject::Preprocessor() const
         // Compile
         TEST_ASSERT( fBuild.Build( "CustomPreprocessor" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // 1x cpp
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE ); // 1x cpp
     }
 }
 
@@ -175,12 +173,10 @@ void TestObject::TestStaleDynamicDeps() const
         // Save DB
         TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode ( 2,     2,      Node::COMPILER_NODE );
-        CheckStatsNode ( 4,     4,      Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity
-
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 2, 2, Node::COMPILER_NODE );
+        CheckStatsNode( 4, 4, Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity
     }
 
     // Delete one of the generated headers
@@ -202,11 +198,10 @@ void TestObject::TestStaleDynamicDeps() const
         // Compile
         TEST_ASSERT( fBuild.Build( "StaleDynamicDeps" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode ( 2,     0,      Node::COMPILER_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity, rebuild of unity
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity, rebuild of unity
     }
 }
 
@@ -273,12 +268,11 @@ void TestObject::ModTimeChangeBackwards() const
         // Save DB
         TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
 
-        // Check stats
-        //              Seen,   Built,  Type
-        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode( 1,      1,      Node::COMPILER_NODE );
-        CheckStatsNode( 2,      2,      Node::OBJECT_NODE );
-        CheckStatsNode( 1,      1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Change modtime into the past
@@ -306,12 +300,11 @@ void TestObject::ModTimeChangeBackwards() const
         // Save DB
         TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
 
-        // Check stats
-        //              Seen,   Built,  Type
-        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
-        CheckStatsNode( 2,      1,      Node::OBJECT_NODE );    // Note: One object rebuilds
-        CheckStatsNode( 1,      1,      Node::LIBRARY_NODE );   // Note: library rebuilds
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 2, 1, Node::OBJECT_NODE );    // Note: One object rebuilds
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );   // Note: library rebuilds
     }
 
     // Ensure no rebuild
@@ -325,12 +318,11 @@ void TestObject::ModTimeChangeBackwards() const
         // Compile
         TEST_ASSERT( fBuild.Build( "ModTimeChangeBackwards" ) );
 
-        // Check stats
-        //              Seen,   Built,  Type
-        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
-        CheckStatsNode( 2,      0,      Node::OBJECT_NODE );
-        CheckStatsNode( 1,      0,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 0, Node::LIBRARY_NODE );
     }
 }
 

@@ -62,16 +62,15 @@ void TestTest::Build() const
     // make sure all output is where it is expected
     EnsureFileExists( testExe );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp / linker exe
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
-    CheckStatsNode ( 1,     1,      Node::TEST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 8,     8 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE ); // cpp / linker exe
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::EXE_NODE );
+    CheckStatsNode( 1, 1, Node::TEST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 8, 8 );
 }
 
 // Build_NoRebuild
@@ -87,17 +86,15 @@ void TestTest::Build_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp  / linker exe
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
-    CheckStatsNode ( 1,     0,      Node::TEST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 8,     3 );
-
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE ); // cpp  / linker exe
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
+    CheckStatsNode( 1, 0, Node::TEST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 8, 3 );
 }
 
 // Fail_ReturnCode

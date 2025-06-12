@@ -50,11 +50,10 @@ void TestListDependencies::Build() const
     TEST_ASSERT( fBuild.Build( "ListDependencies" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/ListDependencies/fbuild.fdb" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::LIST_DEPENDENCIES_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::LIST_DEPENDENCIES_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
 
     // Check dependencies outputted
     Check_SourceResults( options );
@@ -72,11 +71,10 @@ void TestListDependencies::Build_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "ListDependencies" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     0,      Node::LIST_DEPENDENCIES_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 0, Node::LIST_DEPENDENCIES_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
 
     // Check dependencies outputted
     Check_SourceResults( options );
@@ -96,11 +94,10 @@ void TestListDependencies::Build_NoRebuild_BFFChange() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "ListDependencies" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     0,      Node::LIST_DEPENDENCIES_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 0, Node::LIST_DEPENDENCIES_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
 
     // Check dependencies outputted
     Check_SourceResults( options );

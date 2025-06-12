@@ -287,10 +287,9 @@ void TestLinker::IncrementalLinking_MSVC() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     10,     10, Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 10, 10, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
 
         const AString & output( GetRecordedOutput() );
 
@@ -315,10 +314,9 @@ void TestLinker::IncrementalLinking_MSVC() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     10,     1,  Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 10, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
 
         const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
@@ -343,10 +341,9 @@ void TestLinker::IncrementalLinking_MSVC() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     10,     10, Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 10, 10, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
 
         const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 

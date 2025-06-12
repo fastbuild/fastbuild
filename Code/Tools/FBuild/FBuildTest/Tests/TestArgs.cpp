@@ -72,48 +72,48 @@ void TestArgs::Unused() const
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_Never_Short() const
 {
-    //     Mode                         LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::NEVER, false,      true,       false );
+    //     Mode                         LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::NEVER, false, true, false );
 }
 
 // ResponseFile_Never_Long
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_Never_Long() const
 {
-    //     Mode                         LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::NEVER, true,       false,      false );
+    //     Mode                         LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::NEVER, true, false, false );
 }
 
 // ResponseFile_IfNeeded_Short
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_IfNeeded_Short() const
 {
-    //     Mode                             LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::IF_NEEDED, false,      true,       false );
+    //     Mode                             LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::IF_NEEDED, false, true, false );
 }
 
 // ResponseFile_IfNeeded_Long
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_IfNeeded_Long() const
 {
-    //     Mode                             LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::IF_NEEDED, true,       true,       true );
+    //     Mode                             LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::IF_NEEDED, true, true, true );
 }
 
 // ResponseFile_Always_Short
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_Always_Short() const
 {
-    //     Mode                             LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::ALWAYS,    false,      true,       true );
+    //     Mode                             LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::ALWAYS, false, true, true );
 }
 
 // ResponseFile_Always_Long
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_Always_Long() const
 {
-    //     Mode                             LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::ALWAYS,    true,       true,       true );
+    //     Mode                             LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::ALWAYS, true, true, true );
 }
 
 // ResponseFile_CommandLineQuoting
@@ -208,7 +208,7 @@ void TestArgs::ArgumentParsing() const
     CheckParsing( R"(-aaa -D"ARG")", "-aaa", "-DARG" );
 
     // Escaped quotes
-    CheckParsing( R"(-aaa -D\"ARG\")",   "-aaa", R"(-D"ARG")" );
+    CheckParsing( R"(-aaa -D\"ARG\")", "-aaa", R"(-D"ARG")" );
     CheckParsing( R"(-aaa "-D\"ARG\"")", "-aaa", R"(-D"ARG")" );
 
     // Spaces inside quotes

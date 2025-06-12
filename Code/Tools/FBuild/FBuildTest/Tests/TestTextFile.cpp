@@ -47,11 +47,10 @@ void TestTextFile::Build() const
     TEST_ASSERT( fBuild.Build( "TextFile" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TextFile/fbuild.fdb" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::TEXT_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 2,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::TEXT_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 2, 2 );
 }
 
 // Build_NoRebuild
@@ -66,11 +65,10 @@ void TestTextFile::Build_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TextFile" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::TEXT_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 2,     1 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::TEXT_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 2, 1 );
 }
 
 // Build_NoRebuild_BFFChange
@@ -87,11 +85,10 @@ void TestTextFile::Build_NoRebuild_BFFChange() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "TextFile" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::TEXT_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 2,     1 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::TEXT_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 2, 1 );
 }
 
 //------------------------------------------------------------------------------

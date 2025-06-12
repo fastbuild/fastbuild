@@ -235,13 +235,12 @@ void TestProjectGeneration::TestFunction() const
     EnsureFileExists( solution );
     EnsureFileExists( filters );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::VCXPROJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::SLN_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 4,     4 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::VCXPROJECT_NODE );
+    CheckStatsNode( 1, 1, Node::SLN_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 4, 4 );
 }
 
 // TestFunction_NoRebuild
@@ -283,12 +282,11 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
     TEST_ASSERT( dateTime1 == FileIO::GetFileLastWriteTime( project ) );
     TEST_ASSERT( dateTime2 == FileIO::GetFileLastWriteTime( filters ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::VCXPROJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::VCXPROJECT_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 3, 3 );
 }
 
 // TestFunction_Speed
@@ -1204,11 +1202,10 @@ void TestProjectGeneration::Solution_Empty() const
     //
     EnsureFileExists( solution );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::SLN_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 2,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::SLN_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 2, 2 );
 }
 
 // Solution_SolutionRelativePaths
@@ -1243,12 +1240,11 @@ void TestProjectGeneration::Solution_SolutionRelativePaths() const
     // Ensure the path to the project is relative and not absolute
     TEST_ASSERT( solutionData.Find( "\"proj1\", \"..\\SubDir1\\proj1.vcxproj\"," ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::VCXPROJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::SLN_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     3 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::VCXPROJECT_NODE );
+    CheckStatsNode( 1, 1, Node::SLN_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 3, 3 );
 }
 
 // Solution_BuildAndDeploy_None
@@ -1392,11 +1388,10 @@ void TestProjectGeneration::Solution_Items() const
     //
     EnsureFileExists( solution );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode(  1,     1,      Node::SLN_NODE );
-    CheckStatsNode(  1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 6,     6 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::SLN_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 6, 6 );
 }
 
 // VSExternalProj_ExternalProject
@@ -1421,10 +1416,9 @@ void TestProjectGeneration::VSExternalProj_ExternalProject() const
     //
     EnsureFileExists( solution );
 
-    // Check stats
-    //              Seen,   Built,  Type
-    CheckStatsNode( 1,      1,      Node::SLN_NODE );
-    CheckStatsNode( 1,      1,      Node::ALIAS_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::SLN_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
 
     // because of the external module, peek how many of them were actually processed, depending if using the module is
     // enforced or not in the actual fbuild.bff
@@ -1505,12 +1499,11 @@ void TestProjectGeneration::XCode() const
         TEST_ASSERT( nodes[ 0 ]->GetStamp() != 0 );
     }
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 0,     0,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::XCODEPROJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 2,     2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 0, 0, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::XCODEPROJECT_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 2, 2 );
 }
 
 //------------------------------------------------------------------------------
