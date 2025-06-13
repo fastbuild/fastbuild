@@ -23,9 +23,9 @@
 //------------------------------------------------------------------------------
 FBuildWorkerOptions::FBuildWorkerOptions()
 {
-    #ifdef __LINUX__
-        m_ConsoleMode = true; // Only console mode supported on Linux
-    #endif
+#ifdef __LINUX__
+    m_ConsoleMode = true; // Only console mode supported on Linux
+#endif
 }
 
 // ProcessCommandLine
@@ -39,16 +39,16 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
     // Check each token
     for ( const AString & token : tokens )
     {
-        #if defined( __WINDOWS__ ) || defined( __OSX__ )
-            if ( token == "-console" )
-            {
-                m_ConsoleMode = true;
-                #if defined( __WINDOWS__ )
-                    m_UseSubprocess = false;
-                #endif
-                continue;
-            }
-        #endif
+#if defined( __WINDOWS__ ) || defined( __OSX__ )
+        if ( token == "-console" )
+        {
+            m_ConsoleMode = true;
+    #if defined( __WINDOWS__ )
+            m_UseSubprocess = false;
+    #endif
+            continue;
+        }
+#endif
         if ( token.BeginsWith( "-cpus=" ) )
         {
             const int32_t numCPUs = (int32_t)Env::GetNumProcessors();
@@ -107,32 +107,32 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_PeriodicRestart = true;
             continue;
         }
-        #if defined( __WINDOWS__ )
-            else if ( token.BeginsWith( "-minfreememory=" ) )
+#if defined( __WINDOWS__ )
+        else if ( token.BeginsWith( "-minfreememory=" ) )
+        {
+            uint32_t num( 0 );
+            if ( AString::ScanS( token.Get() + 15, "%u", &num ) == 1 )
             {
-                uint32_t num( 0 );
-                if ( AString::ScanS( token.Get() + 15, "%u", &num ) == 1 )
-                {
-                    m_MinimumFreeMemoryMiB = num;
-                }
-                continue;
+                m_MinimumFreeMemoryMiB = num;
             }
-            else if ( token == "-nosubprocess" )
-            {
-                m_UseSubprocess = false;
-                continue;
-            }
-            else if ( token == "-subprocess" ) // Internal option only!
-            {
-                m_IsSubprocess = true;
-                continue;
-            }
-            else if ( token == "-debug" )
-            {
-                Env::ShowMsgBox( "FBuildWorker", "Please attach debugger and press ok\n\n(-debug command line used)" );
-                continue;
-            }
-        #endif
+            continue;
+        }
+        else if ( token == "-nosubprocess" )
+        {
+            m_UseSubprocess = false;
+            continue;
+        }
+        else if ( token == "-subprocess" ) // Internal option only!
+        {
+            m_IsSubprocess = true;
+            continue;
+        }
+        else if ( token == "-debug" )
+        {
+            Env::ShowMsgBox( "FBuildWorker", "Please attach debugger and press ok\n\n(-debug command line used)" );
+            continue;
+        }
+#endif
 
         ShowUsageError();
         return false;
@@ -172,13 +172,13 @@ void FBuildWorkerOptions::ShowUsageError()
                        "        Worker will restart every 4 hours.\n"
                        "---------------------------------------------------------------------------\n";
 
-    #if defined( __WINDOWS__ )
-        ::MessageBox( nullptr, msg, "FBuildWorker - Bad Command Line", MB_ICONERROR | MB_OK );
-    #else
-        printf( "%s", msg );
-        (void)msg; // TODO:MAC Fix missing MessageBox
-        (void)msg; // TODO:LINUX Fix missing MessageBox
-    #endif
+#if defined( __WINDOWS__ )
+    ::MessageBox( nullptr, msg, "FBuildWorker - Bad Command Line", MB_ICONERROR | MB_OK );
+#else
+    printf( "%s", msg );
+    (void)msg; // TODO:MAC Fix missing MessageBox
+    (void)msg; // TODO:LINUX Fix missing MessageBox
+#endif
 }
 
 //------------------------------------------------------------------------------

@@ -32,13 +32,13 @@
 // Icon
 //------------------------------------------------------------------------------
 #if defined( __OSX__ )
-    const uint8_t gTrayIcon[] =
-    {
-        // Generate with:
-        //  cat Tools/FBuild/Icons/16x16_blue.png | xxd -p | sed 's/\(..\)/0x\1, /g' > Tools/FBuild/Icons/16x16_blue.h
-        #include "Tools/FBuild/Icons/16x16_blue.h"
-    };
-    const size_t gTrayIconSize = sizeof( gTrayIcon );
+const uint8_t gTrayIcon[] =
+{
+    // Generate with:
+    //  cat Tools/FBuild/Icons/16x16_blue.png | xxd -p | sed 's/\(..\)/0x\1, /g' > Tools/FBuild/Icons/16x16_blue.h
+    #include "Tools/FBuild/Icons/16x16_blue.h"
+};
+const size_t gTrayIconSize = sizeof( gTrayIcon );
 #endif
 
 // CONSTRUCTOR
@@ -67,22 +67,22 @@ WorkerWindow::WorkerWindow()
     // Create the tray icon
     AStackString toolTip;
     toolTip.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
-    #if defined( __WINDOWS__ )
-        m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
-    #elif defined( __OSX__ )
-        m_TrayIcon = FNEW( OSTrayIcon( gTrayIcon, gTrayIconSize ) );
-    #endif
+#if defined( __WINDOWS__ )
+    m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
+#elif defined( __OSX__ )
+    m_TrayIcon = FNEW( OSTrayIcon( gTrayIcon, gTrayIconSize ) );
+#endif
 
     // listview
     m_ThreadList = FNEW( OSListView( this ) );
-    #if defined( __WINDOWS__ )
-        // get main window dimensions for positioning/sizing child controls
-        RECT rcClient; // The parent window's client area.
-        GetClientRect( (HWND)GetHandle(), &rcClient );
-        m_ThreadList->Init( 0, 30, (uint32_t)( rcClient.right - rcClient.left ), (uint32_t)( ( rcClient.bottom - rcClient.top ) - 30 ) );
-    #elif defined( __OSX__ )
-        m_ThreadList->Init( 4, 30, w - 8, h - 38 );
-    #endif
+#if defined( __WINDOWS__ )
+    // get main window dimensions for positioning/sizing child controls
+    RECT rcClient; // The parent window's client area.
+    GetClientRect( (HWND)GetHandle(), &rcClient );
+    m_ThreadList->Init( 0, 30, (uint32_t)( rcClient.right - rcClient.left ), (uint32_t)( ( rcClient.bottom - rcClient.top ) - 30 ) );
+#elif defined( __OSX__ )
+    m_ThreadList->Init( 4, 30, w - 8, h - 38 );
+#endif
     m_ThreadList->AddColumn( "CPU", 0, 35 );
     m_ThreadList->AddColumn( "Host", 1, 100 );
     m_ThreadList->AddColumn( "Status", 2, 530 );
@@ -95,11 +95,11 @@ WorkerWindow::WorkerWindow()
         m_ThreadList->AddItem( string.Get() );
     }
 
-    #if defined( __WINDOWS__ )
-        // font
-        m_Font = FNEW( OSFont() );
-        m_Font->Init( 14, "Verdana" );
-    #endif
+#if defined( __WINDOWS__ )
+    // font
+    m_Font = FNEW( OSFont() );
+    m_Font->Init( 14, "Verdana" );
+#endif
 
     // Mode drop down
     m_ModeDropDown = FNEW( OSDropDown( this ) );
@@ -169,20 +169,20 @@ WorkerWindow::WorkerWindow()
     m_Menu->AddItem( "Exit" );
     m_TrayIcon->SetMenu( m_Menu );
 
-    #if defined( __WINDOWS__ )
-        // Display the window and minimize it if needed
-        if ( WorkerSettings::Get().GetStartMinimized() )
-        {
-            UpdateWindow( (HWND)GetHandle() );
-            ToggleMinimized(); // minimize
-        }
-        else
-        {
-            ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE );
-            UpdateWindow( (HWND)GetHandle() );
-            ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE ); // First call can be ignored
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // Display the window and minimize it if needed
+    if ( WorkerSettings::Get().GetStartMinimized() )
+    {
+        UpdateWindow( (HWND)GetHandle() );
+        ToggleMinimized(); // minimize
+    }
+    else
+    {
+        ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE );
+        UpdateWindow( (HWND)GetHandle() );
+        ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE ); // First call can be ignored
+    }
+#endif
 }
 
 // DESTRUCTOR
@@ -240,12 +240,12 @@ void WorkerWindow::Work()
 //------------------------------------------------------------------------------
 /*virtual*/ bool WorkerWindow::OnMinimize()
 {
-    #if defined( __OSX__ )
-        SetMinimized( true );
-    #else
-        // Override minimize
-        ToggleMinimized();
-    #endif
+#if defined( __OSX__ )
+    SetMinimized( true );
+#else
+    // Override minimize
+    ToggleMinimized();
+#endif
     return true; // Stop window minimizing (since we already handled it)
 }
 
@@ -254,11 +254,11 @@ void WorkerWindow::Work()
 /*virtual*/ bool WorkerWindow::OnClose()
 {
     // Override close to minimize
-    #if defined( __OSX__ )
-        SetMinimized( true );
-    #else
-        ToggleMinimized();
-    #endif
+#if defined( __OSX__ )
+    SetMinimized( true );
+#else
+    ToggleMinimized();
+#endif
 
     return true; // Stop window closing (since we already handled it)
 }
@@ -283,13 +283,13 @@ void WorkerWindow::Work()
 //------------------------------------------------------------------------------
 /*virtual*/ bool WorkerWindow::OnTrayIconRightClick()
 {
-    #if defined( __WINDOWS__ )
-        uint32_t index;
-        if ( m_Menu->ShowAndWaitForSelection( index ) )
-        {
-            OnTrayIconMenuItemSelected( index );
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    uint32_t index;
+    if ( m_Menu->ShowAndWaitForSelection( index ) )
+    {
+        OnTrayIconMenuItemSelected( index );
+    }
+#endif
 
     return true; // Handled
 }
@@ -331,29 +331,29 @@ void WorkerWindow::Work()
 void WorkerWindow::ToggleMinimized()
 {
     static bool minimized( false );
-    #if defined( __WINDOWS__ )
-        if ( !minimized )
-        {
-            // hide the main window
-            ShowWindow( (HWND)GetHandle(), SW_HIDE );
-        }
-        else
-        {
-            // show the main window
-            HWND hWnd = (HWND)GetHandle();
-            ShowWindow( hWnd, SW_SHOW );
+#if defined( __WINDOWS__ )
+    if ( !minimized )
+    {
+        // hide the main window
+        ShowWindow( (HWND)GetHandle(), SW_HIDE );
+    }
+    else
+    {
+        // show the main window
+        HWND hWnd = (HWND)GetHandle();
+        ShowWindow( hWnd, SW_SHOW );
 
-            // bring to front
-            SetForegroundWindow( hWnd );
-            SetActiveWindow( hWnd );
-        }
-    #elif defined( __APPLE__ )
-        SetMinimized( minimized );
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement WorkerWindow::Toggle
-    #else
-        #error Unknown Platform
-    #endif
+        // bring to front
+        SetForegroundWindow( hWnd );
+        SetActiveWindow( hWnd );
+    }
+#elif defined( __APPLE__ )
+    SetMinimized( minimized );
+#elif defined( __LINUX__ )
+    // TODO:LINUX Implement WorkerWindow::Toggle
+#else
+    #error Unknown Platform
+#endif
     minimized = !minimized;
 
     WorkerSettings::Get().SetStartMinimized( minimized );

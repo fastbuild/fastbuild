@@ -24,10 +24,10 @@ public:
     bool ProcessCommandLine( const AString & commandLine );
 
     // sub-process control
-    #if defined( __WINDOWS__ )
-        bool m_IsSubprocess = false; // Process is child? (Internal)
-        bool m_UseSubprocess = true; // Should we launch a sub-process?
-    #endif
+#if defined( __WINDOWS__ )
+    bool m_IsSubprocess = false; // Process is child? (Internal)
+    bool m_UseSubprocess = true; // Should we launch a sub-process?
+#endif
 
     // resource usage
     bool m_OverrideCPUAllocation = false;

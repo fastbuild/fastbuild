@@ -36,9 +36,9 @@ private:
 
         uint32_t m_PID;
         uint32_t m_AliveValue;
-        #if defined( __WINDOWS__ )
-            void * m_ProcessHandle;
-        #endif
+#if defined( __WINDOWS__ )
+        void * m_ProcessHandle;
+#endif
         uint64_t m_LastTime;
     };
 
@@ -51,10 +51,10 @@ private:
                                 uint64_t & outKernTime,
                                 uint64_t & outUserTime );
     void UpdateProcessList();
-    #if defined( __LINUX__ )
-        static bool GetProcessInfoString( const char * fileName,
-                                          AStackString<1024> & outProcessInfoString );
-    #endif
+#if defined( __LINUX__ )
+    static bool GetProcessInfoString( const char * fileName,
+                                      AStackString<1024> & outProcessInfoString );
+#endif
 
     Timer m_Timer;
     float m_CPUUsageFASTBuild;
