@@ -46,9 +46,9 @@ private:
     Timer m_Timer;
 
     // Track allocations for tests to catch leaks
-    #ifdef MEMTRACKER_ENABLED
-        uint32_t m_CurrentTestAllocationId = 0;
-    #endif
+#ifdef MEMTRACKER_ENABLED
+    uint32_t m_CurrentTestAllocationId = 0;
+#endif
 
     inline static const uint32_t kMaxTests = 1024;
     class TestInfo

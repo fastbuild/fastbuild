@@ -37,7 +37,7 @@ private:
 
 // Create a no-return helper to improve static analysis
 #if defined( __WINDOWS__ )
-    __declspec( noreturn ) void TestNoReturn();
+__declspec( noreturn ) void TestNoReturn();
     #define TEST_NO_RETURN TestNoReturn();
 #else
     #define TEST_NO_RETURN
@@ -114,18 +114,18 @@ private:
 // Memory snapshots
 //------------------------------------------------------------------------------
 #if defined( MEMTRACKER_ENABLED )
-    class TestMemorySnapshot
+class TestMemorySnapshot
+{
+public:
+    TestMemorySnapshot()
+        : m_AllocationId( MemTracker::GetCurrentAllocationId() )
+        , m_ActiveAllocationCount( MemTracker::GetCurrentAllocationCount() )
     {
-    public:
-        TestMemorySnapshot()
-            : m_AllocationId( MemTracker::GetCurrentAllocationId() )
-            , m_ActiveAllocationCount( MemTracker::GetCurrentAllocationCount() )
-        {
-        }
+    }
 
-        uint32_t m_AllocationId;
-        uint32_t m_ActiveAllocationCount;
-    };
+    uint32_t m_AllocationId;
+    uint32_t m_ActiveAllocationCount;
+};
 
     // Take a snapshot of the memory state
     #define TEST_MEMORY_SNAPSHOT( snapshot )                            \

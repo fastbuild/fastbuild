@@ -29,7 +29,7 @@
 //------------------------------------------------------------------------------
 /*static*/
 #if defined( __WINDOWS__ )
-    __declspec( noreturn )
+__declspec( noreturn )
 #endif
 void OnAssert( const char * /*message*/ )
 {
@@ -43,24 +43,24 @@ TestManager::TestManager()
     // if we're running outside the debugger, we don't want
     // failures to pop up a dialog.  We want them to throw so
     // the test framework can catch the exception
-    #ifdef ASSERTS_ENABLED
-        if ( IsDebuggerAttached() == false )
-        {
-            AssertHandler::SetAssertCallback( OnAssert );
-        }
-    #endif
+#ifdef ASSERTS_ENABLED
+    if ( IsDebuggerAttached() == false )
+    {
+        AssertHandler::SetAssertCallback( OnAssert );
+    }
+#endif
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 TestManager::~TestManager()
 {
-    #ifdef ASSERTS_ENABLED
-        if ( IsDebuggerAttached() == false )
-        {
-            AssertHandler::SetAssertCallback( nullptr );
-        }
-    #endif
+#ifdef ASSERTS_ENABLED
+    if ( IsDebuggerAttached() == false )
+    {
+        AssertHandler::SetAssertCallback( nullptr );
+    }
+#endif
 
     // free all registered tests
     TestGroup * testGroup = s_FirstTest;
@@ -120,9 +120,9 @@ bool TestManager::RunTests( const char * testGroup )
 
         OUTPUT( "------------------------------\n" );
         OUTPUT( "Test Group: %s\n", test->GetName() );
-        #ifdef PROFILING_ENABLED
-            ProfileManager::Start( test->GetName() );
-        #endif
+#ifdef PROFILING_ENABLED
+        ProfileManager::Start( test->GetName() );
+#endif
         try
         {
             test->RunTests();
@@ -132,10 +132,10 @@ bool TestManager::RunTests( const char * testGroup )
             OUTPUT( " - Test '%s' *** FAILED ***\n", s_TestInfos[ s_NumTests - 1 ].m_TestName );
             s_TestInfos[ s_NumTests - 1 ].m_TestGroup->PostTest( false );
         }
-        #ifdef PROFILING_ENABLED
-            ProfileManager::Stop();
-            ProfileManager::Synchronize();
-        #endif
+#ifdef PROFILING_ENABLED
+        ProfileManager::Stop();
+        ProfileManager::Synchronize();
+#endif
         test = test->m_NextTestGroup;
     }
 
@@ -171,9 +171,9 @@ bool TestManager::RunTests( const char * testGroup )
     OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), (double)totalTime );
     OUTPUT( "------------------------------------------------------------\n" );
 
-    #ifdef PROFILING_ENABLED
-        ProfileManager::SynchronizeNoTag();
-    #endif
+#ifdef PROFILING_ENABLED
+    ProfileManager::SynchronizeNoTag();
+#endif
 
     return ( s_NumTests == numPassed );
 }
@@ -194,15 +194,15 @@ void TestManager::TestBegin( TestGroup * testGroup, const char * testName )
     fflush( stdout );
 
     // Note allocation state before test is run
-    #ifdef MEMTRACKER_ENABLED
-        m_CurrentTestAllocationId = MemTracker::GetCurrentAllocationId();
-    #endif
+#ifdef MEMTRACKER_ENABLED
+    m_CurrentTestAllocationId = MemTracker::GetCurrentAllocationId();
+#endif
 
     m_Timer.Start();
 
-    #ifdef PROFILING_ENABLED
-        ProfileManager::Start( testName );
-    #endif
+#ifdef PROFILING_ENABLED
+    ProfileManager::Start( testName );
+#endif
 
     testGroup->PreTest();
 }
@@ -215,39 +215,39 @@ void TestManager::TestEnd()
 
     info.m_TestGroup->PostTest( true );
 
-    #ifdef MEMTRACKER_ENABLED
-        // Get allocation state here (before profiling, which can cause allocations)
-        const uint32_t postAllocationId = MemTracker::GetCurrentAllocationId();
-    #endif
+#ifdef MEMTRACKER_ENABLED
+    // Get allocation state here (before profiling, which can cause allocations)
+    const uint32_t postAllocationId = MemTracker::GetCurrentAllocationId();
+#endif
 
     // Flush profiling info (track time taken as part of test)
-    #ifdef PROFILING_ENABLED
-        ProfileManager::Stop();
-        ProfileManager::Synchronize();
-    #endif
+#ifdef PROFILING_ENABLED
+    ProfileManager::Stop();
+    ProfileManager::Synchronize();
+#endif
 
     const float timeTaken = m_Timer.GetElapsed();
 
     info.m_TimeTaken = timeTaken;
 
-    #ifdef MEMTRACKER_ENABLED
-        const bool hasLeaks = MemTracker::HasAllocationsInRange( m_CurrentTestAllocationId, postAllocationId );
-        if ( hasLeaks && TestGroup::IsMemoryLeakCheckEnabled() )
+#ifdef MEMTRACKER_ENABLED
+    const bool hasLeaks = MemTracker::HasAllocationsInRange( m_CurrentTestAllocationId, postAllocationId );
+    if ( hasLeaks && TestGroup::IsMemoryLeakCheckEnabled() )
+    {
+        info.m_MemoryLeaks = true;
+        OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
+        MemTracker::DumpAllocations( m_CurrentTestAllocationId, postAllocationId );
+        if ( IsDebuggerAttached() )
         {
-            info.m_MemoryLeaks = true;
-            OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
-            MemTracker::DumpAllocations( m_CurrentTestAllocationId, postAllocationId );
-            if ( IsDebuggerAttached() )
-            {
-                TEST_ASSERT( false && "Memory leaks detected" );
-            }
-            return;
+            TEST_ASSERT( false && "Memory leaks detected" );
         }
+        return;
+    }
 
-        // Disabling leak checks is done per-test so we
-        // re-enable it here (each test must re-disable it)
-        TestGroup::SetMemoryLeakCheckEnabled( true );
-    #endif
+    // Disabling leak checks is done per-test so we
+    // re-enable it here (each test must re-disable it)
+    TestGroup::SetMemoryLeakCheckEnabled( true );
+#endif
 
     OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, (double)timeTaken );
     info.m_Passed = true;
