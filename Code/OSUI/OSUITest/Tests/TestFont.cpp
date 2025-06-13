@@ -40,10 +40,10 @@ void TestFont::Empty() const
 //------------------------------------------------------------------------------
 void TestFont::Init() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Initialize and free
     OSWindow window;

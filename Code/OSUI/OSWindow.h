@@ -36,11 +36,11 @@ public:
 
     void * GetHandle() const { return m_Handle; }
 
-    #if defined( __WINDOWS__ )
-        void * GetHInstance() const { return m_HInstance; }
+#if defined( __WINDOWS__ )
+    void * GetHInstance() const { return m_HInstance; }
 
-        OSWidget *      GetChildFromHandle( void * handle );
-    #endif
+    OSWidget * GetChildFromHandle( void * handle );
+#endif
 
     void SetTitle( const char * title );
     void SetMinimized( bool minimized );
@@ -60,14 +60,14 @@ public:
     virtual void OnTrayIconMenuItemSelected( uint32_t index );
 
 protected:
-    #if defined( __WINDOWS__ )
-        void GetWindowClassName( AString & outClassName );
-    #endif
+#if defined( __WINDOWS__ )
+    void GetWindowClassName( AString & outClassName );
+#endif
 
     void * m_Handle = nullptr;
-    #if defined( __WINDOWS__ )
-        void * m_HInstance = nullptr;
-    #endif
+#if defined( __WINDOWS__ )
+    void * m_HInstance = nullptr;
+#endif
     Array<OSWidget *> m_ChildWidgets;
 };
 

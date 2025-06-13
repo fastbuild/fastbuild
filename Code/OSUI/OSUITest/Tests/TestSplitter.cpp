@@ -32,10 +32,10 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestSplitter::Empty() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // base Create/destroy without initialization
     OSWindow window;
@@ -47,10 +47,10 @@ void TestSplitter::Empty() const
 //------------------------------------------------------------------------------
 void TestSplitter::Init() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Initialize and free
     OSWindow window;

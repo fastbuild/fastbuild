@@ -28,10 +28,10 @@ protected:
     void * m_Handle = nullptr;
     bool m_Initialized = false;
 
-    #if defined( __WINDOWS__ )
-        void InitCommonControls(); // Called by Widgets that need commctl
-        static bool s_CommonControlsInitialized;
-    #endif
+#if defined( __WINDOWS__ )
+    void InitCommonControls(); // Called by Widgets that need commctl
+    static bool s_CommonControlsInitialized;
+#endif
 };
 
 //------------------------------------------------------------------------------

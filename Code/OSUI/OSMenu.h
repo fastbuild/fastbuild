@@ -27,9 +27,9 @@ public:
     bool ShowAndWaitForSelection( uint32_t & outIndex );
 
 protected:
-    #if defined( __WINDOWS__ )
-        void * m_Menu = nullptr;
-    #endif
+#if defined( __WINDOWS__ )
+    void * m_Menu = nullptr;
+#endif
 };
 
 //------------------------------------------------------------------------------

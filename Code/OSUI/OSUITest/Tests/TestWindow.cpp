@@ -45,10 +45,10 @@ void TestWindow::Empty() const
 //------------------------------------------------------------------------------
 void TestWindow::Init() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Initialize and free
     OSWindow window;
@@ -58,10 +58,10 @@ void TestWindow::Init() const
 //------------------------------------------------------------------------------
 void TestWindow::SetTitle() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     OSWindow window;
     window.Init( 32, 32, 500, 200 );
@@ -72,16 +72,16 @@ void TestWindow::SetTitle() const
 void TestWindow::SetMinimized() const
 {
     // TODO:B Windows functionality doesn't match OSX
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
 
-        OSWindow window;
-        window.Init( 32, 32, 500, 200 );
+    OSWindow window;
+    window.Init( 32, 32, 500, 200 );
 
-        window.SetMinimized( true );
-        window.SetMinimized( false );
-    #endif
+    window.SetMinimized( true );
+    window.SetMinimized( false );
+#endif
 }
 
 //------------------------------------------------------------------------------

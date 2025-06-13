@@ -35,10 +35,10 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestListView::Empty() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // base Create/destroy without initialization
     OSWindow window;
@@ -50,10 +50,10 @@ void TestListView::Empty() const
 //------------------------------------------------------------------------------
 void TestListView::Init() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Initialize and free
     OSWindow window;
@@ -69,10 +69,10 @@ void TestListView::Init() const
 //------------------------------------------------------------------------------
 void TestListView::Items() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Create dropdown and populate with items
 

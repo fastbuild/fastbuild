@@ -27,34 +27,34 @@ OSFont::OSFont() = default;
 //------------------------------------------------------------------------------
 OSFont::~OSFont()
 {
-    #if defined( __WINDOWS__ )
-        DeleteObject( (HFONT)m_Font );
-    #endif
+#if defined( __WINDOWS__ )
+    DeleteObject( (HFONT)m_Font );
+#endif
 }
 
 // Init
 //------------------------------------------------------------------------------
 void OSFont::Init( uint32_t size, const char * fontFamily )
 {
-    #if defined( __WINDOWS__ )
-        m_Font = CreateFontA( (int32_t)size,
-                              0,
-                              0,
-                              0,
-                              FW_NORMAL,
-                              FALSE,
-                              FALSE,
-                              FALSE,
-                              DEFAULT_CHARSET,
-                              OUT_DEFAULT_PRECIS,
-                              CLIP_DEFAULT_PRECIS,
-                              CLEARTYPE_QUALITY,
-                              DEFAULT_PITCH,
-                              fontFamily );
-    #else
-        (void)size;
-        (void)fontFamily;
-    #endif
+#if defined( __WINDOWS__ )
+    m_Font = CreateFontA( (int32_t)size,
+                          0,
+                          0,
+                          0,
+                          FW_NORMAL,
+                          FALSE,
+                          FALSE,
+                          FALSE,
+                          DEFAULT_CHARSET,
+                          OUT_DEFAULT_PRECIS,
+                          CLIP_DEFAULT_PRECIS,
+                          CLEARTYPE_QUALITY,
+                          DEFAULT_PITCH,
+                          fontFamily );
+#else
+    (void)size;
+    (void)fontFamily;
+#endif
 }
 
 //------------------------------------------------------------------------------
