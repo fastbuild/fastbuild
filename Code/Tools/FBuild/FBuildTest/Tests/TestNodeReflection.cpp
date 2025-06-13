@@ -233,18 +233,18 @@ public:
 
     void CheckFile( const AString & file ) const
     {
-        #if defined( ASSERTS_ENABLED ) // IsCleanPath only available in debug builds
-            TEST_ASSERT( m_NodeGraph.IsCleanPath( file ) );
-        #endif
+#if defined( ASSERTS_ENABLED ) // IsCleanPath only available in debug builds
+        TEST_ASSERT( m_NodeGraph.IsCleanPath( file ) );
+#endif
         TEST_ASSERT( PathUtils::IsFullPath( file ) );
         TEST_ASSERT( PathUtils::IsFolderPath( file ) == false );
     }
 
     void CheckPath( const AString & path ) const
     {
-        #if defined( ASSERTS_ENABLED ) // IsCleanPath only available in debug builds
-            TEST_ASSERT( m_NodeGraph.IsCleanPath( path ) );
-        #endif
+#if defined( ASSERTS_ENABLED ) // IsCleanPath only available in debug builds
+        TEST_ASSERT( m_NodeGraph.IsCleanPath( path ) );
+#endif
         TEST_ASSERT( PathUtils::IsFullPath( path ) );
         TEST_ASSERT( PathUtils::IsFolderPath( path ) );
     }

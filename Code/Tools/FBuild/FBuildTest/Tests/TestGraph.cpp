@@ -130,14 +130,14 @@ void TestGraph::TestNodeTypes() const
     NodeGraph ng;
 
     // Node names differ on Window vs other platforms due to paths etc
-    #if defined( __WINDOWS__ )
-        #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString name( WINDOWS_PATH )
-    #else
-        #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString name( OTHER_PATH )
-    #endif
+#if defined( __WINDOWS__ )
+    #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString name( WINDOWS_PATH )
+#else
+    #define CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ) AStackString name( OTHER_PATH )
+#endif
 
     // Test each node can be created and type mappings are consistent
-    #define TEST_NODE( TYPE, TYPE_ENUM, FRIENDLY_TYPE, WINDOWS_PATH, OTHER_PATH ) \
+#define TEST_NODE( TYPE, TYPE_ENUM, FRIENDLY_TYPE, WINDOWS_PATH, OTHER_PATH ) \
     { \
         CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ); \
         const TYPE * node = ng.CreateNode<TYPE>( name ); \
@@ -162,8 +162,8 @@ void TestGraph::TestNodeTypes() const
     TEST_NODE( TestNode,            TEST_NODE,          "Test",     "c:\\output.txt",   "/path/output.txt" );
     TEST_NODE( RemoveDirNode,       REMOVE_DIR_NODE,    "RemoveDir", "remove",   "remove" );
 
-    #undef TEST_NODE
-    #undef CHOOSE_NAME
+#undef TEST_NODE
+#undef CHOOSE_NAME
 }
 
 // FileNode
@@ -271,29 +271,29 @@ void TestGraph::TestCleanPath() const
 {
     // Change current dir to a known location that exists on all windows machines
     FBuildOptions fo;
-    #if defined( __WINDOWS__ )
-        fo.SetWorkingDir( AStackString( "C:\\Windows\\System32" ) );
-    #else
-        fo.SetWorkingDir( AStackString( "/tmp/subDir" ) );
-    #endif
+#if defined( __WINDOWS__ )
+    fo.SetWorkingDir( AStackString( "C:\\Windows\\System32" ) );
+#else
+    fo.SetWorkingDir( AStackString( "/tmp/subDir" ) );
+#endif
 
     FBuild f( fo );
 
-    #if defined( __WINDOWS__ )
-        #define CHECK( a, b, c ) \
+#if defined( __WINDOWS__ )
+    #define CHECK( a, b, c ) \
         { \
             AStackString cleaned; \
             NodeGraph::CleanPath( AStackString( a ), cleaned ); \
             TEST_ASSERT( cleaned == b ); \
         }
-    #else
-        #define CHECK( a, b, c ) \
+#else
+    #define CHECK( a, b, c ) \
         { \
             AStackString cleaned; \
             NodeGraph::CleanPath( AStackString( a ), cleaned ); \
             TEST_ASSERT( cleaned == c ); \
         }
-    #endif
+#endif
 
     //   "\..\"
     CHECK( "file.dat",              "C:\\Windows\\System32\\file.dat",  "/tmp/subDir/file.dat" )
@@ -326,20 +326,20 @@ void TestGraph::TestCleanPath() const
     CHECK( "folder/.",              "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
 
     //   full path '\'
-    #if defined( __WINDOWS__ )
-        CHECK( "C:\\Windows\\System32\\file.dat",               "C:\\Windows\\System32\\file.dat",  "" )
-        CHECK( "C:\\Windows\\System32\\..\\file.dat",           "C:\\Windows\\file.dat",            "" )
-        CHECK( "C:\\Windows\\System32\\..\\..\\file.dat",       "C:\\file.dat",                     "" )
-        CHECK( "C:\\Windows\\System32\\..\\..\\..\\file.dat",   "C:\\file.dat",                     "" )
-    #endif
+#if defined( __WINDOWS__ )
+    CHECK( "C:\\Windows\\System32\\file.dat",               "C:\\Windows\\System32\\file.dat",  "" )
+    CHECK( "C:\\Windows\\System32\\..\\file.dat",           "C:\\Windows\\file.dat",            "" )
+    CHECK( "C:\\Windows\\System32\\..\\..\\file.dat",       "C:\\file.dat",                     "" )
+    CHECK( "C:\\Windows\\System32\\..\\..\\..\\file.dat",   "C:\\file.dat",                     "" )
+#endif
 
     //   full path '/'
-    #if defined( __WINDOWS__ )
-        CHECK( "C:/Windows/System32/file.dat",              "C:\\Windows\\System32\\file.dat",      "" )
-        CHECK( "C:/Windows/System32/../file.dat",           "C:\\Windows\\file.dat",                "" )
-        CHECK( "C:/Windows/System32/../../file.dat",        "C:\\file.dat",                         "" )
-        CHECK( "C:/Windows/System32/../../../file.dat",     "C:\\file.dat",                         "" )
-    #endif
+#if defined( __WINDOWS__ )
+    CHECK( "C:/Windows/System32/file.dat",              "C:\\Windows\\System32\\file.dat",      "" )
+    CHECK( "C:/Windows/System32/../file.dat",           "C:\\Windows\\file.dat",                "" )
+    CHECK( "C:/Windows/System32/../../file.dat",        "C:\\file.dat",                         "" )
+    CHECK( "C:/Windows/System32/../../../file.dat",     "C:\\file.dat",                         "" )
+#endif
 
     // files with . in them
     CHECK( ".file.dat",     "C:\\Windows\\System32\\.file.dat",     "/tmp/subDir/.file.dat" )
@@ -355,12 +355,12 @@ void TestGraph::TestCleanPath() const
     CHECK( "subdir//..//.file",     "C:\\Windows\\System32\\.file",             "/tmp/subDir/.file" )
 
     // edge cases/regressions
-    #if defined( __WINDOWS__ )
-        // - There was a bug with folders beginning with a slash on Windows
-        CHECK( "\\folder\\file",    "C:\\Windows\\System32\\folder\\file",      "" )
-    #endif
+#if defined( __WINDOWS__ )
+    // - There was a bug with folders beginning with a slash on Windows
+    CHECK( "\\folder\\file",    "C:\\Windows\\System32\\folder\\file",      "" )
+#endif
 
-    #undef CHECK
+#undef CHECK
 }
 
 // TestPartialCleanPath
@@ -369,15 +369,15 @@ void TestGraph::TestCleanPathPartial() const
 {
     // Change current dir to a known location that exists on all windows machines
     FBuildOptions fo;
-    #if defined( __WINDOWS__ )
-        fo.SetWorkingDir( AStackString( "C:\\Windows\\System32" ) );
-    #else
-        fo.SetWorkingDir( AStackString( "/tmp/subDir" ) );
-    #endif
+#if defined( __WINDOWS__ )
+    fo.SetWorkingDir( AStackString( "C:\\Windows\\System32" ) );
+#else
+    fo.SetWorkingDir( AStackString( "/tmp/subDir" ) );
+#endif
 
     FBuild f( fo );
 
-    #define CHECK( input, expectedOutput, makeFullPath ) \
+#define CHECK( input, expectedOutput, makeFullPath ) \
         do \
         { \
             AStackString cleaned; \
@@ -385,17 +385,17 @@ void TestGraph::TestCleanPathPartial() const
             TEST_ASSERT( cleaned == expectedOutput ); \
         } while ( false )
 
-    #if defined( __WINDOWS__ )
-        #define CHECK_RELATIVE( input, expectedWindows, expectedOther ) \
+#if defined( __WINDOWS__ )
+    #define CHECK_RELATIVE( input, expectedWindows, expectedOther ) \
             CHECK( input, expectedWindows, false );
-        #define CHECK_FULLPATH( input, expectedWindows, expectedOther ) \
+    #define CHECK_FULLPATH( input, expectedWindows, expectedOther ) \
             CHECK( input, expectedWindows, true );
-    #else
-        #define CHECK_RELATIVE( input, expectedWindows, expectedOther ) \
+#else
+    #define CHECK_RELATIVE( input, expectedWindows, expectedOther ) \
             CHECK( input, expectedOther, false );
-        #define CHECK_FULLPATH( input, expectedWindows, expectedOther ) \
+    #define CHECK_FULLPATH( input, expectedWindows, expectedOther ) \
             CHECK( input, expectedOther, true );
-    #endif
+#endif
 
     //   "\..\"
     CHECK_RELATIVE( "file.dat", "file.dat", "file.dat" )
@@ -424,20 +424,20 @@ void TestGraph::TestCleanPathPartial() const
     CHECK_RELATIVE( "one\\two\\..\\..\\..\\..\\three\\four\\file.dat", "..\\..\\three\\four\\file.dat", "../../three/four/file.dat" )
 
     //   full path '\'
-    #if defined( __WINDOWS__ )
-        CHECK_RELATIVE( "C:\\Windows\\System32\\file.dat", "C:\\Windows\\System32\\file.dat", "" )
-        CHECK_RELATIVE( "C:\\Windows\\System32\\..\\file.dat", "C:\\Windows\\file.dat", "" )
-        CHECK_RELATIVE( "C:\\Windows\\System32\\..\\..\\file.dat", "C:\\file.dat", "" )
-        CHECK_RELATIVE( "C:\\Windows\\System32\\..\\..\\..\\file.dat", "C:\\file.dat", "" )
-    #endif
+#if defined( __WINDOWS__ )
+    CHECK_RELATIVE( "C:\\Windows\\System32\\file.dat", "C:\\Windows\\System32\\file.dat", "" )
+    CHECK_RELATIVE( "C:\\Windows\\System32\\..\\file.dat", "C:\\Windows\\file.dat", "" )
+    CHECK_RELATIVE( "C:\\Windows\\System32\\..\\..\\file.dat", "C:\\file.dat", "" )
+    CHECK_RELATIVE( "C:\\Windows\\System32\\..\\..\\..\\file.dat", "C:\\file.dat", "" )
+#endif
 
     //   full path '/'
-    #if defined( __WINDOWS__ )
-        CHECK_RELATIVE( "C:/Windows/System32/file.dat", "C:\\Windows\\System32\\file.dat", "" )
-        CHECK_RELATIVE( "C:/Windows/System32/../file.dat", "C:\\Windows\\file.dat", "" )
-        CHECK_RELATIVE( "C:/Windows/System32/../../file.dat", "C:\\file.dat", "" )
-        CHECK_RELATIVE( "C:/Windows/System32/../../../file.dat", "C:\\file.dat", "" )
-    #endif
+#if defined( __WINDOWS__ )
+    CHECK_RELATIVE( "C:/Windows/System32/file.dat", "C:\\Windows\\System32\\file.dat", "" )
+    CHECK_RELATIVE( "C:/Windows/System32/../file.dat", "C:\\Windows\\file.dat", "" )
+    CHECK_RELATIVE( "C:/Windows/System32/../../file.dat", "C:\\file.dat", "" )
+    CHECK_RELATIVE( "C:/Windows/System32/../../../file.dat", "C:\\file.dat", "" )
+#endif
 
     // files with . in them
     CHECK_RELATIVE( ".file.dat", ".file.dat", ".file.dat" )
@@ -453,18 +453,18 @@ void TestGraph::TestCleanPathPartial() const
     CHECK_RELATIVE( "subdir//..//.file", ".file", ".file" )
 
     // edge cases/regressions
-    #if defined( __WINDOWS__ )
+#if defined( __WINDOWS__ )
         // - There was a bug with folders beginning with a slash on Windows
-        CHECK_RELATIVE( "\\folder\\file", "folder\\file", "" )
-    #endif
+    CHECK_RELATIVE( "\\folder\\file", "folder\\file", "" )
+#endif
     // - A bug meant paths terminated with .. were not correctly handled
     CHECK_FULLPATH( "..", "C:\\Windows\\", "/tmp/" )
     CHECK_FULLPATH( ".\\..", "C:\\Windows\\", "/tmp/" )
     CHECK_FULLPATH( "./..", "C:\\Windows\\", "/tmp/" )
 
-    #undef CHECK_FULLPATH
-    #undef CHECK_RELATIVE
-    #undef CHECK
+#undef CHECK_FULLPATH
+#undef CHECK_RELATIVE
+#undef CHECK
 }
 
 // TestDeepGraph
@@ -793,11 +793,11 @@ void TestGraph::DBVersionChanged() const
 void TestGraph::FixupErrorPaths() const
 {
     // Use a known location we can test for
-    #if defined( __WINDOWS__ )
-        const AStackString workingDir( "C:\\Windows\\System32" );
-    #else
-        const AStackString workingDir( "/tmp/subDir" );
-    #endif
+#if defined( __WINDOWS__ )
+    const AStackString workingDir( "C:\\Windows\\System32" );
+#else
+    const AStackString workingDir( "/tmp/subDir" );
+#endif
 
     // FBuild is used during path cleaning to access working dir
     FBuildOptions fo;
@@ -807,7 +807,7 @@ void TestGraph::FixupErrorPaths() const
     // Helper macro
     AStackString fixup;
     AStackString original;
-    #define TEST_FIXUP( path ) \
+#define TEST_FIXUP( path ) \
         original = path; \
         fixup = path; \
         NodeTestHelper::FixupPathForVSIntegration( fixup ); \
@@ -848,7 +848,7 @@ void TestGraph::FixupErrorPaths() const
     // WSL
     TEST_FIXUP( "/mnt/c/p4/depot/Code/Core/Mem/Mem.h:23:1: warning: some warning text" );
 
-    #undef TEST_FIXUP
+#undef TEST_FIXUP
 }
 
 // CyclicDependency

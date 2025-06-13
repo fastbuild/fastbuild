@@ -37,9 +37,9 @@ REGISTER_TESTS_BEGIN( TestLinker )
     REGISTER_TEST( ArgHelpers )                 // Test functions that check for non-MSVC args
     REGISTER_TEST( ArgHelpers_MSVC )            // Test functions that check for MSVC args
     REGISTER_TEST( LibrariesOnCommandLine )     // Discovery of additional libraries on command line
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( IncrementalLinking_MSVC )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( IncrementalLinking_MSVC )
+#endif
     REGISTER_TEST( LinkerType )                 // Test linker detection code
 REGISTER_TESTS_END
 
@@ -142,18 +142,18 @@ void TestLinker::LibrariesOnCommandLine() const
     }
 
     // MSVC: case different to on-disk
-    #if defined( __WINDOWS__ )
-        {
-            const bool isMSVC = true;
-            AStackString args( "/LIBPATH:Tools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine DUMMY1.lib" );
+#if defined( __WINDOWS__ )
+    {
+        const bool isMSVC = true;
+        AStackString args( "/LIBPATH:Tools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine DUMMY1.lib" );
 
-            Dependencies foundLibraries;
-            LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
+        Dependencies foundLibraries;
+        LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
 
-            TEST_ASSERT( foundLibraries.GetSize() == 1 );
-            TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "dummy1.lib" ) ); // dependency is on actual file case
-        }
-    #endif
+        TEST_ASSERT( foundLibraries.GetSize() == 1 );
+        TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "dummy1.lib" ) ); // dependency is on actual file case
+    }
+#endif
 
     // MSVC: libs missing
     {
@@ -358,7 +358,7 @@ void TestLinker::IncrementalLinking_MSVC() const
 //------------------------------------------------------------------------------
 void TestLinker::LinkerType() const
 {
-    #define TEST_LINKERTYPE( exeName, expectedFlag ) \
+#define TEST_LINKERTYPE( exeName, expectedFlag ) \
     do \
     { \
         const uint32_t flags = LinkerNode::DetermineLinkerTypeFlags( AStackString( "auto" ), \
@@ -373,7 +373,7 @@ void TestLinker::LinkerType() const
     TEST_LINKERTYPE( "elxr",        LinkerNode::LINK_FLAG_GREENHILLS_ELXR );
     TEST_LINKERTYPE( "mwldeppc",    LinkerNode::LINK_FLAG_CODEWARRIOR_LD );
 
-    #undef TEST_LINKERTYPE
+#undef TEST_LINKERTYPE
 }
 
 //------------------------------------------------------------------------------

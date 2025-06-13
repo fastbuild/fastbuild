@@ -32,7 +32,7 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestLibrary::LibraryType() const
 {
-    #define TEST_LIBRARYTYPE( exeName, expectedFlag ) \
+#define TEST_LIBRARYTYPE( exeName, expectedFlag ) \
     do \
     { \
         const uint32_t flags = LibraryNode::DetermineFlags( AStackString( "auto" ), \
@@ -47,7 +47,7 @@ void TestLibrary::LibraryType() const
     TEST_LIBRARYTYPE( "orbis-ar",   LibraryNode::LIB_FLAG_ORBIS_AR );
     TEST_LIBRARYTYPE( "\\ax",       LibraryNode::LIB_FLAG_GREENHILLS_AX );
 
-    #undef TEST_LIBRARYTYPE
+#undef TEST_LIBRARYTYPE
 }
 
 //------------------------------------------------------------------------------

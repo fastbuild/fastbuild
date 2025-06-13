@@ -91,9 +91,9 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
     REGISTER_TEST( Solution_Items )
     REGISTER_TEST( VSExternalProj_ExternalProject )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( VSExternalProj_ExternalProjectWrongData )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( VSExternalProj_ExternalProjectWrongData )
+#endif
     REGISTER_TEST( VSExternalProj_ExternalProject_MissingProjectGUID )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
@@ -107,11 +107,11 @@ void TestProjectGeneration::Test() const
     AStackString baseDir;
     TEST_ASSERT( FileIO::GetCurrentDir( baseDir ) );
     TEST_ASSERT( baseDir.FindI( "code" ) );
-    #if defined( __WINDOWS__ )
-        baseDir += "\\Core\\";
-    #else
-        baseDir += "/Core/";
-    #endif
+#if defined( __WINDOWS__ )
+    baseDir += "\\Core\\";
+#else
+    baseDir += "/Core/";
+#endif
     Array<AString> baseDirs;
     baseDirs.Append( baseDir );
 
@@ -267,13 +267,13 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
 
     // NTFS file resolution is 100ns and HFS is 1 second,
     // so sleep long enough to ensure an invalid write would modify the time
-    #if defined( __WINDOWS__ )
-        Thread::Sleep( 1 ); // 1ms
-    #elif defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #elif defined( __LINUX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
-    #endif
+#if defined( __WINDOWS__ )
+    Thread::Sleep( 1 ); // 1ms
+#elif defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#elif defined( __LINUX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
+#endif
 
     // do build
     TEST_ASSERT( fBuild.Build( "TestProj" ) );
@@ -847,21 +847,21 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
     // Files
     // TODO:C This test adds paths that are not normalized, but project nodes
     // should only be passing in normalized paths
-    #if defined( __WINDOWS__ )
-        pg.AddFile( AStackString( "C:\\Code\\File.cpp" ) );
-        pg.AddFile( AStackString( "C:\\Code\\file.cpp" ) );               // Duplicate with case difference
-        pg.AddFile( AStackString( "C:\\Code\\File.cpp" ) );               // Exact duplicate
-        pg.AddFile( AStackString( "C:\\Code\\../Code/File.cpp" ) );       // Duplicate with path difference
-        pg.AddFile( AStackString( "C:\\Code\\../Dir/../Code/File.cpp" ) );// Duplicate with path difference
-        AStackString projectFileName( "C:\\Code\\dummy.vcxproj" );
-    #else
-        pg.AddFile( AStackString( "/Code/File.cpp" ) );
-        pg.AddFile( AStackString( "/Code/file.cpp" ) );                   // Duplicate with case difference
-        pg.AddFile( AStackString( "/Code/File.cpp" ) );                   // Exact duplicate
-        pg.AddFile( AStackString( "/Code/../Code/File.cpp" ) );           // Duplicate with path difference
-        pg.AddFile( AStackString( "/Code/../Dir/../Code/File.cpp" ) );    // Duplicate with path difference
-        AStackString projectFileName( "/Code/dummy.vcxproj" );
-    #endif
+#if defined( __WINDOWS__ )
+    pg.AddFile( AStackString( "C:\\Code\\File.cpp" ) );
+    pg.AddFile( AStackString( "C:\\Code\\file.cpp" ) );               // Duplicate with case difference
+    pg.AddFile( AStackString( "C:\\Code\\File.cpp" ) );               // Exact duplicate
+    pg.AddFile( AStackString( "C:\\Code\\../Code/File.cpp" ) );       // Duplicate with path difference
+    pg.AddFile( AStackString( "C:\\Code\\../Dir/../Code/File.cpp" ) );// Duplicate with path difference
+    AStackString projectFileName( "C:\\Code\\dummy.vcxproj" );
+#else
+    pg.AddFile( AStackString( "/Code/File.cpp" ) );
+    pg.AddFile( AStackString( "/Code/file.cpp" ) );                   // Duplicate with case difference
+    pg.AddFile( AStackString( "/Code/File.cpp" ) );                   // Exact duplicate
+    pg.AddFile( AStackString( "/Code/../Code/File.cpp" ) );           // Duplicate with path difference
+    pg.AddFile( AStackString( "/Code/../Dir/../Code/File.cpp" ) );    // Duplicate with path difference
+    AStackString projectFileName( "/Code/dummy.vcxproj" );
+#endif
 
     // Check vcxproj
     {
@@ -882,39 +882,39 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::VCXProj_Folders() const
 {
-    #if defined( __WINDOWS__ )
-        AStackString basePath( "C:\\" );
+#if defined( __WINDOWS__ )
+    AStackString basePath( "C:\\" );
 
-        // Files in various sub-dirs
-        AStackString file1( "C:\\FolderA\\AFile.cpp" );
-        AStackString file2( "C:\\FolderA\\BFolder\\SubDir\\AFile.cpp" );
-        AStackString file3( "C:\\FolderA\\ZFile.cpp" );
-        AStackString file4( "C:\\FolderA\\ZFolder\\SubDir\\AFile.cpp" );
-        AStackString file5( "C:\\FolderZ\\ZFile.cpp" );
+    // Files in various sub-dirs
+    AStackString file1( "C:\\FolderA\\AFile.cpp" );
+    AStackString file2( "C:\\FolderA\\BFolder\\SubDir\\AFile.cpp" );
+    AStackString file3( "C:\\FolderA\\ZFile.cpp" );
+    AStackString file4( "C:\\FolderA\\ZFolder\\SubDir\\AFile.cpp" );
+    AStackString file5( "C:\\FolderZ\\ZFile.cpp" );
 
-        // Dirs which are substrings of each other but unique
-        AStackString file6( "C:\\Data\\TestPrecompiledHeaders\\CacheUniqueness2\\PrecompiledHeader.cpp" );
-        AStackString file7( "C:\\Data\\TestPrecompiledHeaders\\CacheUniqueness\\PrecompiledHeader.cpp" );
+    // Dirs which are substrings of each other but unique
+    AStackString file6( "C:\\Data\\TestPrecompiledHeaders\\CacheUniqueness2\\PrecompiledHeader.cpp" );
+    AStackString file7( "C:\\Data\\TestPrecompiledHeaders\\CacheUniqueness\\PrecompiledHeader.cpp" );
 
-        // Project name
-        AStackString projectFileName( "C:\\dummy.vcxproj" );
-    #else
-        AStackString basePath( "/" );
+    // Project name
+    AStackString projectFileName( "C:\\dummy.vcxproj" );
+#else
+    AStackString basePath( "/" );
 
-        // Files in various sub-dirs
-        AStackString file1( "/FolderA/AFile.cpp" );
-        AStackString file2( "/FolderA/BFolder/SubDir/AFile.cpp" );
-        AStackString file3( "/FolderA/ZFile.cpp" );
-        AStackString file4( "/FolderA/ZFolder/SubDir/AFile.cpp" );
-        AStackString file5( "/FolderZ/ZFile.cpp" );
+    // Files in various sub-dirs
+    AStackString file1( "/FolderA/AFile.cpp" );
+    AStackString file2( "/FolderA/BFolder/SubDir/AFile.cpp" );
+    AStackString file3( "/FolderA/ZFile.cpp" );
+    AStackString file4( "/FolderA/ZFolder/SubDir/AFile.cpp" );
+    AStackString file5( "/FolderZ/ZFile.cpp" );
 
-        // Dirs which are substrings of each other but unique
-        AStackString file6( "/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp" );
-        AStackString file7( "/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp" );
+    // Dirs which are substrings of each other but unique
+    AStackString file6( "/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp" );
+    AStackString file7( "/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp" );
 
-        // Project name
-        AStackString projectFileName( "/dummy.vcxproj" );
-    #endif
+    // Project name
+    AStackString projectFileName( "/dummy.vcxproj" );
+#endif
 
     FBuild fb; // For CleanPath
 
@@ -988,21 +988,21 @@ void TestProjectGeneration::VCXProj_Folders() const
 void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
 {
     // Overlapping input and output directories, with common substring in dir names
-    #if defined( __WINDOWS__ )
-        AStackString basePath( "C:\\MyProject\\ProjectSourceFiles\\" );
-        AStackString fileA( "C:\\MyProject\\ProjectSourceFiles\\File.cpp" );
-        AStackString fileB( "C:\\MyProject\\ProjectSourceFiles\\SubDir\\File.cpp" );
-        AStackString projectFileName( "C:\\MyProject\\Projects\\MyProject.vcxproj" );
-        //                                              ^     ^
-        //                                              \-----\-- NOTE partial overlap within dir name
-    #else
-        AStackString basePath( "/MyProject/ProjectSourceFiles/" );
-        AStackString fileA( "/MyProject/ProjectSourceFiles/File.cpp" );
-        AStackString fileB( "/MyProject/ProjectSourceFiles/SubDir/File.cpp" );
-        AStackString projectFileName( "/MyProject/Projects/MyProject.vcxproj" );
-        //                                          ^     ^
-        //                                          \-----\-- NOTE partial overlap within dir name
-    #endif
+#if defined( __WINDOWS__ )
+    AStackString basePath( "C:\\MyProject\\ProjectSourceFiles\\" );
+    AStackString fileA( "C:\\MyProject\\ProjectSourceFiles\\File.cpp" );
+    AStackString fileB( "C:\\MyProject\\ProjectSourceFiles\\SubDir\\File.cpp" );
+    AStackString projectFileName( "C:\\MyProject\\Projects\\MyProject.vcxproj" );
+    //                                            ^     ^
+    //                                            \-----\-- NOTE partial overlap within dir name
+#else
+    AStackString basePath( "/MyProject/ProjectSourceFiles/" );
+    AStackString fileA( "/MyProject/ProjectSourceFiles/File.cpp" );
+    AStackString fileB( "/MyProject/ProjectSourceFiles/SubDir/File.cpp" );
+    AStackString projectFileName( "/MyProject/Projects/MyProject.vcxproj" );
+    //                                        ^     ^
+    //                                        \-----\-- NOTE partial overlap within dir name
+#endif
 
     FBuild fb; // For CleanPath
 
@@ -1059,21 +1059,21 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
 {
     // Overlapping input and output directories, with source files in same
     // dir as .vcxproject which is a sub-dir of a basepath
-    #if defined( __WINDOWS__ )
-        AStackString basePath( "C:\\MyProject\\" );
-        AStackString fileA( "C:\\MyProject\\Generated\\GeneratedCpp.cpp" );
-        AStackString fileB( "C:\\MyProject\\Generated\\SubDir\\GeneratedCpp.cpp" );
-        AStackString projectFileName( "C:\\MyProject\\Generated\\MyProject.vcxproj" );
-        //                                            ^       ^
-        //                                            \-------\-- NOTE common dir name
-    #else
-        AStackString basePath( "/MyProject/" );
-        AStackString fileA( "/MyProject/Generated/GeneratedCpp.cpp" );
-        AStackString fileB( "/MyProject/Generated/SubDir/GeneratedCpp.cpp" );
-        AStackString projectFileName( "/MyProject/Generated/MyProject.vcxproj" );
-        //                                        ^       ^
-        //                                        \-------\-- NOTE common dir name
-    #endif
+#if defined( __WINDOWS__ )
+    AStackString basePath( "C:\\MyProject\\" );
+    AStackString fileA( "C:\\MyProject\\Generated\\GeneratedCpp.cpp" );
+    AStackString fileB( "C:\\MyProject\\Generated\\SubDir\\GeneratedCpp.cpp" );
+    AStackString projectFileName( "C:\\MyProject\\Generated\\MyProject.vcxproj" );
+    //                                            ^       ^
+    //                                            \-------\-- NOTE common dir name
+#else
+    AStackString basePath( "/MyProject/" );
+    AStackString fileA( "/MyProject/Generated/GeneratedCpp.cpp" );
+    AStackString fileB( "/MyProject/Generated/SubDir/GeneratedCpp.cpp" );
+    AStackString projectFileName( "/MyProject/Generated/MyProject.vcxproj" );
+    //                                        ^       ^
+    //                                        \-------\-- NOTE common dir name
+#endif
 
     FBuild fb; // For CleanPath
 

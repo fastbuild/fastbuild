@@ -45,12 +45,12 @@ private:
     void TestPCH_DifferentObj_MSVC() const;
 
     // Clang on Windows
-    #if defined( __WINDOWS__ )
-        void TestPCHClangWindows() const;
-        void TestPCHClangWindows_NoRebuild() const;
-        void TestPCHClangWindowsWithCache() const;
-        void TestPCHClangWindowsWithCache_NoRebuild() const;
-    #endif
+#if defined( __WINDOWS__ )
+    void TestPCHClangWindows() const;
+    void TestPCHClangWindows_NoRebuild() const;
+    void TestPCHClangWindowsWithCache() const;
+    void TestPCHClangWindowsWithCache_NoRebuild() const;
+#endif
 };
 
 // Register Tests
@@ -70,15 +70,15 @@ REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( PCHMultipleUses )
     REGISTER_TEST( PCHRedefinitionError )
     REGISTER_TEST( PCHNotDefinedError )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( TestPCH_DifferentObj_MSVC )
-        REGISTER_TEST( PrecompiledHeaderCacheAnalyze_MSVC )
-        REGISTER_TEST( PreventUselessCacheTraffic_MSVC )
-        REGISTER_TEST( TestPCHClangWindows )
-        REGISTER_TEST( TestPCHClangWindows_NoRebuild )
-        REGISTER_TEST( TestPCHClangWindowsWithCache )
-        REGISTER_TEST( TestPCHClangWindowsWithCache_NoRebuild )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( TestPCH_DifferentObj_MSVC )
+    REGISTER_TEST( PrecompiledHeaderCacheAnalyze_MSVC )
+    REGISTER_TEST( PreventUselessCacheTraffic_MSVC )
+    REGISTER_TEST( TestPCHClangWindows )
+    REGISTER_TEST( TestPCHClangWindows_NoRebuild )
+    REGISTER_TEST( TestPCHClangWindowsWithCache )
+    REGISTER_TEST( TestPCHClangWindowsWithCache_NoRebuild )
+#endif
 REGISTER_TESTS_END
 
 // Build
@@ -105,16 +105,16 @@ void TestPrecompiledHeaders::TestPCH() const
     options.m_ForceCleanBuild = true;
     options.m_UseCacheWrite = true;
 
-    #if defined( __WINDOWS__ )
-        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
-        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
-    #elif defined( __LINUX__ )
-        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
-    #elif defined( __OSX__ )
-        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
-    #endif
+#if defined( __WINDOWS__ )
+    AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
+    AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+#elif defined( __LINUX__ )
+    AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+    AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
+#elif defined( __OSX__ )
+    AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+    AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+#endif
     EnsureFileDoesNotExist( obj );
     EnsureFileDoesNotExist( pch );
 
@@ -125,9 +125,9 @@ void TestPrecompiledHeaders::TestPCH() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, numF, 3, Node::FILE_NODE );
     CheckStatsNode( stats, 1, 1, Node::COMPILER_NODE );
     CheckStatsNode( stats, 2, 2, Node::OBJECT_NODE );// obj + pch obj
@@ -178,9 +178,9 @@ void TestPrecompiledHeaders::TestPCH_NoRebuild() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, numF, numF, Node::FILE_NODE );  // cpp + pch cpp + pch .h
     CheckStatsNode( stats, 1, 0, Node::COMPILER_NODE );
     CheckStatsNode( stats, 2, 0, Node::OBJECT_NODE );// obj + pch obj
@@ -201,9 +201,9 @@ void TestPrecompiledHeaders::TestPCH_NoRebuild_BFFChange() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, numF, numF, Node::FILE_NODE );  // cpp + pch cpp + pch .h
     CheckStatsNode( stats, 1, 0, Node::COMPILER_NODE );
     CheckStatsNode( stats, 2, 0, Node::OBJECT_NODE );// obj + pch obj
@@ -222,16 +222,16 @@ void TestPrecompiledHeaders::TestPCHWithCache() const
     options.m_ForceCleanBuild = true;
     options.m_UseCacheRead = true;
 
-    #if defined( __WINDOWS__ )
-        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
-        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
-    #elif defined( __LINUX__ )
-        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
-    #elif defined( __OSX__ )
-        AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
-    #endif
+#if defined( __WINDOWS__ )
+    AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
+    AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+#elif defined( __LINUX__ )
+    AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+    AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
+#elif defined( __OSX__ )
+    AStackString obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+    AStackString pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+#endif
     EnsureFileDoesNotExist( obj );
     EnsureFileDoesNotExist( pch );
 
@@ -242,9 +242,9 @@ void TestPrecompiledHeaders::TestPCHWithCache() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, numF, 3, Node::FILE_NODE );  // cpp + pch
     CheckStatsNode( stats, 1, 1, Node::COMPILER_NODE );
     CheckStatsNode( stats, 2, 0, Node::OBJECT_NODE ); // obj + pch obj
@@ -266,9 +266,9 @@ void TestPrecompiledHeaders::TestPCHWithCache_NoRebuild() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, numF, numF, Node::FILE_NODE );  // cpp + pch cpp + pch .h
     CheckStatsNode( stats, 1, 0, Node::COMPILER_NODE );
     CheckStatsNode( stats, 2, 0, Node::OBJECT_NODE );// obj + pch obj
@@ -283,23 +283,23 @@ void TestPrecompiledHeaders::TestPCHWithCache_NoRebuild() const
 //------------------------------------------------------------------------------
 void TestPrecompiledHeaders::TestPCHWithCache_BFFChange() const
 {
-    #if defined( __OSX__ )
-        // HFS+ has surprisingly poor time resolution (1 second) which makes the
-        // ObjectListNode appear to not need rebuilding, because the tests complete
-        // so quickly. This work-around keeps our state consistent with other platforms
-        // (the actual thing we are primarily tests (the pchuser rebuild) is not impacted
-        // by this)
-        Thread::Sleep( 1100 );
-    #endif
+#if defined( __OSX__ )
+    // HFS+ has surprisingly poor time resolution (1 second) which makes the
+    // ObjectListNode appear to not need rebuilding, because the tests complete
+    // so quickly. This work-around keeps our state consistent with other platforms
+    // (the actual thing we are primarily tests (the pchuser rebuild) is not impacted
+    // by this)
+    Thread::Sleep( 1100 );
+#endif
 
     // Delete the object that uses the PCH, but not the PCH obj itself
     // to ensure the object can be pulled from the cache after db migration
     // With the MSVC compiler, this ensures the PCHCacheKey is not lost
-    #if defined( __WINDOWS__ )
-        const char * target = "../tmp/Test/PrecompiledHeaders/PCHUser.obj";
-    #else
-        const char * target = "../tmp/Test/PrecompiledHeaders/PCHUser.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * target = "../tmp/Test/PrecompiledHeaders/PCHUser.obj";
+#else
+    const char * target = "../tmp/Test/PrecompiledHeaders/PCHUser.o";
+#endif
     EnsureFileExists( target );
     EnsureFileDoesNotExist( target );
 
@@ -311,9 +311,9 @@ void TestPrecompiledHeaders::TestPCHWithCache_BFFChange() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, numF, numF, Node::FILE_NODE );  // cpp + pch cpp + pch .h
     CheckStatsNode( stats, 1, 0, Node::COMPILER_NODE );
     CheckStatsNode( stats, 2, 0, Node::OBJECT_NODE );// obj + pch obj
@@ -371,20 +371,20 @@ void TestPrecompiledHeaders::CacheUniqueness() const
     const char * pchA = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeaderA.h";
     const char * pchB = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeaderB.h";
     const char * dstPCH = "../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.h";
-    #if defined( __WINDOWS__ )
-        // On windows we need a CPP to create the PCH
-        const char * pchCPP = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
-        const char * dstPCHCPP = "../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
-    #endif
+#if defined( __WINDOWS__ )
+    // On windows we need a CPP to create the PCH
+    const char * pchCPP = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
+    const char * dstPCHCPP = "../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
+#endif
     const char * pchUser = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
     const char * dstPCHUser = "../tmp/Test/PrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
 
     // Copy the files to the tmp Dir
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString( "../tmp/Test/PrecompiledHeaders/CacheUniqueness/" ) ) );
     TEST_ASSERT( FileIO::FileCopy( pchA, dstPCH ) );
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( FileIO::FileCopy( pchCPP, dstPCHCPP ) );
-    #endif
+#if defined( __WINDOWS__ )
+    TEST_ASSERT( FileIO::FileCopy( pchCPP, dstPCHCPP ) );
+#endif
     TEST_ASSERT( FileIO::FileCopy( pchUser, dstPCHUser ) );
 
     FBuildTestOptions baseOptions;
@@ -690,124 +690,124 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
 // TestPCHClangWindows
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestPrecompiledHeaders::TestPCHClangWindows() const
-    {
-        FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
-        options.m_ForceCleanBuild = true;
-        options.m_UseCacheWrite = true;
+void TestPrecompiledHeaders::TestPCHClangWindows() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheWrite = true;
 
-        AStackString obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
-        AStackString pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
-        AStackString pchObj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
-        EnsureFileDoesNotExist( obj );
-        EnsureFileDoesNotExist( pch );
-        EnsureFileDoesNotExist( pchObj );
+    AStackString obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
+    AStackString pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
+    AStackString pchObj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
+    EnsureFileDoesNotExist( obj );
+    EnsureFileDoesNotExist( pch );
+    EnsureFileDoesNotExist( pchObj );
 
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( nullptr ) );
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
-        AStackString target( "PCHTestClang-Windows" );
+    AStackString target( "PCHTestClang-Windows" );
 
-        TEST_ASSERT( fBuild.Build( target ) );
-        TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
+    TEST_ASSERT( fBuild.Build( target ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
 
-        // Check stats: Seen, Built, Type
-        CheckStatsNode( 5, 3, Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp + linker
-        CheckStatsNode( 1, 1, Node::COMPILER_NODE );
-        CheckStatsNode( 2, 2, Node::OBJECT_NODE );// obj + pch obj
-        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 5, 3, Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp + linker
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );// obj + pch obj
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
 
-        // check we wrote all objects to the cache
-        TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 ); // can store the pch & the obj using it
-    }
+    // check we wrote all objects to the cache
+    TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 ); // can store the pch & the obj using it
+}
 #endif
 
 // TestPCHClangWindows_NoRebuild
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestPrecompiledHeaders::TestPCHClangWindows_NoRebuild() const
-    {
-        FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
+void TestPrecompiledHeaders::TestPCHClangWindows_NoRebuild() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
 
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( GetPCHDBClangFileName() ) );
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( GetPCHDBClangFileName() ) );
 
-        AStackString target( "PCHTestClang-Windows" );
+    AStackString target( "PCHTestClang-Windows" );
 
-        TEST_ASSERT( fBuild.Build( target ) );
-        TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
+    TEST_ASSERT( fBuild.Build( target ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
 
-        // Check stats: Seen, Built, Type
-        CheckStatsNode( 5, 5, Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp + linker
-        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
-        CheckStatsNode( 2, 0, Node::OBJECT_NODE );// obj + pch obj
-        CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
-    }
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 5, 5, Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp + linker
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_NODE );// obj + pch obj
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+}
 #endif
 
 // TestPCHClangWindowsWithCache
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestPrecompiledHeaders::TestPCHClangWindowsWithCache() const
-    {
-        FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
-        options.m_ForceCleanBuild = true;
-        options.m_UseCacheRead = true;
+void TestPrecompiledHeaders::TestPCHClangWindowsWithCache() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheRead = true;
 
-        AStackString obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
-        AStackString pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
-        AStackString pchObj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
-        EnsureFileDoesNotExist( obj );
-        EnsureFileDoesNotExist( pch );
-        EnsureFileDoesNotExist( pchObj );
+    AStackString obj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PCHUser.obj" );
+    AStackString pch( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch" );
+    AStackString pchObj( "../tmp/Test/PrecompiledHeaders/Clang-Windows/PrecompiledHeader.pch.obj" );
+    EnsureFileDoesNotExist( obj );
+    EnsureFileDoesNotExist( pch );
+    EnsureFileDoesNotExist( pchObj );
 
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( nullptr ) );
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
-        AStackString target( "PCHTestClang-Windows" );
+    AStackString target( "PCHTestClang-Windows" );
 
-        TEST_ASSERT( fBuild.Build( target ) );
-        TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
+    TEST_ASSERT( fBuild.Build( target ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
 
-        EnsureFileExists( obj );
-        EnsureFileExists( pch );
+    EnsureFileExists( obj );
+    EnsureFileExists( pch );
 
-        // Check stats: Seen, Built, Type
-        CheckStatsNode( 5, 3, Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp + linker
-        CheckStatsNode( 1, 1, Node::COMPILER_NODE );
-        CheckStatsNode( 2, 0, Node::OBJECT_NODE );// obj + pch obj
-        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 5, 3, Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp + linker
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_NODE );// obj + pch obj
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
 
-        // check we got both objects from the cache
-        TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 2 ); // pch & the obj using it
-    }
+    // check we got both objects from the cache
+    TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 2 ); // pch & the obj using it
+}
 #endif
 
 // TestPCHClangWindowsWithCache_NoRebuild
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestPrecompiledHeaders::TestPCHClangWindowsWithCache_NoRebuild() const
-    {
-        FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
+void TestPrecompiledHeaders::TestPCHClangWindowsWithCache_NoRebuild() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
 
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( GetPCHDBClangFileName() ) );
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( GetPCHDBClangFileName() ) );
 
-        AStackString target( "PCHTestClang-Windows" );
+    AStackString target( "PCHTestClang-Windows" );
 
-        TEST_ASSERT( fBuild.Build( target ) );
-        TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
+    TEST_ASSERT( fBuild.Build( target ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBClangFileName() ) );
 
-        // Check stats: Seen, Built, Type
-        CheckStatsNode( 5, 5, Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp + linker
-        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
-        CheckStatsNode( 2, 0, Node::OBJECT_NODE );// obj + pch obj
-        CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
-    }
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 5, 5, Node::FILE_NODE );  // pch.cpp + pch.h + slow.h + pchuser.cpp + linker
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_NODE );// obj + pch obj
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+}
 #endif
 
 //------------------------------------------------------------------------------

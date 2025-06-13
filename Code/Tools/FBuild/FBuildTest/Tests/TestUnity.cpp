@@ -134,13 +134,13 @@ void TestUnity::TestGenerate_NoRebuild() const
 
     // NTFS file resolution is 100ns, so sleep long enough to ensure
     // an invalid write would modify the time
-    #if defined( __WINDOWS__ )
-        Thread::Sleep( 1 ); // 1ms
-    #elif defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #elif defined( __LINUX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
-    #endif
+#if defined( __WINDOWS__ )
+    Thread::Sleep( 1 ); // 1ms
+#elif defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#elif defined( __LINUX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
+#endif
 
     FBuildStats stats = BuildGenerate();
 
@@ -260,9 +260,9 @@ void TestUnity::TestCompile() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
     CheckStatsNode( stats, 1, 1, Node::UNITY_NODE );
     CheckStatsNode( stats, numF, 4, Node::FILE_NODE ); // pch + 2x generated unity files built
@@ -281,9 +281,9 @@ void TestUnity::TestCompile_NoRebuild() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
     CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
     CheckStatsNode( stats, numF, numF, Node::FILE_NODE );
@@ -305,9 +305,9 @@ void TestUnity::TestCompile_NoRebuild_BFFChange() const
 
     // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
     CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
     CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
     CheckStatsNode( stats, numF, numF, Node::FILE_NODE );
@@ -509,9 +509,9 @@ void TestUnity::LinkMultiple() const
         CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Isolate one of the files
     {
@@ -530,9 +530,9 @@ void TestUnity::LinkMultiple() const
         CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // De-Isolate one of the files
     {
@@ -551,9 +551,9 @@ void TestUnity::LinkMultiple() const
         CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Force a DB migration and modify state to ensure internal property
     // migration works correctly
@@ -632,9 +632,9 @@ void TestUnity::LinkMultiple_InputFiles() const
         CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Isolate one of the files
     {
@@ -653,9 +653,9 @@ void TestUnity::LinkMultiple_InputFiles() const
         CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // De-Isolate one of the files
     {
@@ -674,9 +674,9 @@ void TestUnity::LinkMultiple_InputFiles() const
         CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Force a DB migration and modify state to ensure internal property
     // migration works correctly
@@ -725,9 +725,9 @@ void TestUnity::SortFiles() const
             // Create dummy FileIO::FileInfo structure
             FileIO::FileInfo * info = FNEW( FileIO::FileInfo );
             info->m_Name = fileName; // Only the name is important
-            #if defined( __WINDOWS__ )
-                info->m_Name.Replace( '/', '\\' ); // Allow test to specify unix style slashes
-            #endif
+#if defined( __WINDOWS__ )
+            info->m_Name.Replace( '/', '\\' ); // Allow test to specify unix style slashes
+#endif
             m_HelperFileInfos.Append( info );
 
             // Add entry
@@ -737,12 +737,12 @@ void TestUnity::SortFiles() const
         void Sort()
         {
             m_HelperFiles.Sort();
-            #if defined( __WINDOWS__ )
-                for ( FileIO::FileInfo * info : m_HelperFileInfos )
-                {
-                    info->m_Name.Replace( '\\', '/' ); // Allow test to specify unix style slashes
-                }
-            #endif
+#if defined( __WINDOWS__ )
+            for ( FileIO::FileInfo * info : m_HelperFileInfos )
+            {
+                info->m_Name.Replace( '\\', '/' ); // Allow test to specify unix style slashes
+            }
+#endif
         }
 
         const AString & operator[] ( size_t index ) const { return m_HelperFiles[ index ].GetName(); }
@@ -752,7 +752,7 @@ void TestUnity::SortFiles() const
     };
 
     // Helper macros to reduce boilerplate code
-    #define SORT( ... )                                                         \
+#define SORT( ... )                                                         \
     do                                                                          \
     {                                                                           \
         const char * const inputs[] = { __VA_ARGS__ };                          \
@@ -763,7 +763,7 @@ void TestUnity::SortFiles() const
         }                                                                       \
         h.Sort()
 
-    #define TEST( ... )                                                         \
+#define TEST( ... )                                                         \
         const char * const outputs[] = { __VA_ARGS__ };                         \
         for ( size_t i = 0; i < ( sizeof( outputs ) / sizeof( const char * ) ); ++i ) \
         {                                                                       \
@@ -846,8 +846,8 @@ void TestUnity::SortFiles() const
           "C:/p4/depot/Code/Tools/FBuild/FBuildCore/Cache/ICache.cpp",
           "C:/p4/depot/Code/Tools/FBuild/FBuildCore/Graph/CopyDirNode.cpp" );
 
-    #undef SORT
-    #undef CHECK
+#undef SORT
+#undef CHECK
 }
 
 // CacheUsingRelativePaths
@@ -866,11 +866,11 @@ void TestUnity::CacheUsingRelativePaths() const
     const char * dstPathB = "../tmp/Test/Unity/CacheUsingRelativePaths/B/Code";
     const char * dstPaths[] = { dstPathA, dstPathB };
 
-    #if defined( __WINDOWS__ )
-        const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.obj";
-    #else
-        const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.obj";
+#else
+    const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.o";
+#endif
 
     // Copy file structure to both destinations
     for ( const char * dstPath : dstPaths )
@@ -922,11 +922,11 @@ void TestUnity::CacheUsingRelativePaths() const
         // Slash direction changed in Clang 18.x.x from forward slash to backslash
         TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) ||
                      buffer.Find( "FILE_MACRO_START_1(.\\Subdir/Header.h)FILE_MACRO_END_1" ) );
-        #if defined( __WINDOWS__ )
-            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(.\\File.cpp)FILE_MACRO_END_2" ) );
-        #else
-            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(./File.cpp)FILE_MACRO_END_2" ) );
-        #endif
+#if defined( __WINDOWS__ )
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(.\\File.cpp)FILE_MACRO_END_2" ) );
+#else
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(./File.cpp)FILE_MACRO_END_2" ) );
+#endif
     }
 
     // Build in path B, reading from the cache

@@ -50,9 +50,9 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( SourceMapping )
     REGISTER_TEST( ClangExplicitLanguageType )
     REGISTER_TEST( ClangDependencyArgs )
-    #if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
-        REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
-    #endif
+#if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
+    REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
+#endif
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -183,9 +183,9 @@ void TestObject::TestStaleDynamicDeps() const
     EnsureFileDoesNotExist( fileB );
 
     // TODO:B Get rid of this (needed to work around poor filetime granularity)
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Build Again
     {
@@ -342,11 +342,11 @@ void TestObject::CacheUsingRelativePaths() const
     const char * dstPathB = "../tmp/Test/Object/CacheUsingRelativePaths/B/Code";
     const char * dstPaths[] = { dstPathA, dstPathB };
 
-    #if defined( __WINDOWS__ )
-        const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.obj";
-    #else
-        const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.obj";
+#else
+    const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.o";
+#endif
 
     // Copy file structure to both destinations
     for ( const char * dstPath : dstPaths )
@@ -435,11 +435,11 @@ void TestObject::SourceMapping() const
     // Dest paths
     const char * dstPath = "../tmp/Test/Object/SourceMapping/Code";
 
-    #if defined( __WINDOWS__ )
-        const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.obj";
-    #else
-        const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.obj";
+#else
+    const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.o";
+#endif
 
     // Copy file structure to destination
     for ( const char * file : files )

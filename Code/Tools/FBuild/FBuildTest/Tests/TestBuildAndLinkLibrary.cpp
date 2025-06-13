@@ -65,15 +65,15 @@ void TestBuildAndLinkLibrary::TestBuildLib() const
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
-    #if defined( __WINDOWS__ )
-        const AStackString obj1( "../tmp/Test/BuildAndLinkLibrary/a.obj" );
-        const AStackString obj2( "../tmp/Test/BuildAndLinkLibrary/b.obj" );
-        const AStackString obj3( "../tmp/Test/BuildAndLinkLibrary/c.obj" );
-    #else
-        const AStackString obj1( "../tmp/Test/BuildAndLinkLibrary/a.o" );
-        const AStackString obj2( "../tmp/Test/BuildAndLinkLibrary/b.o" );
-        const AStackString obj3( "../tmp/Test/BuildAndLinkLibrary/c.o" );
-    #endif
+#if defined( __WINDOWS__ )
+    const AStackString obj1( "../tmp/Test/BuildAndLinkLibrary/a.obj" );
+    const AStackString obj2( "../tmp/Test/BuildAndLinkLibrary/b.obj" );
+    const AStackString obj3( "../tmp/Test/BuildAndLinkLibrary/c.obj" );
+#else
+    const AStackString obj1( "../tmp/Test/BuildAndLinkLibrary/a.o" );
+    const AStackString obj2( "../tmp/Test/BuildAndLinkLibrary/b.o" );
+    const AStackString obj3( "../tmp/Test/BuildAndLinkLibrary/c.o" );
+#endif
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( lib );

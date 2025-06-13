@@ -26,11 +26,11 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestWarnings )
     REGISTER_TEST( WarningsAreShown )
-    #if defined( __WINDOWS__ )
-        // TODDO: B Enable for other platforms (fix two-pass issues)
-        REGISTER_TEST( ClangMacroExpansion )
-        REGISTER_TEST( PragmaMessageWarningsAreShown )
-    #endif
+#if defined( __WINDOWS__ )
+    // TODDO: B Enable for other platforms (fix two-pass issues)
+    REGISTER_TEST( ClangMacroExpansion )
+    REGISTER_TEST( PragmaMessageWarningsAreShown )
+#endif
 REGISTER_TESTS_END
 
 // WarningsAreShown
@@ -46,11 +46,11 @@ void TestWarnings::WarningsAreShown() const
     TEST_ASSERT( fBuild.Build( "Warnings" ) );
 
     // Ensure warning was emitted
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( GetRecordedOutput().Find( "unreferenced local variable" ) );
-    #else
-        TEST_ASSERT( GetRecordedOutput().Find( "-Wunused-variable" ) );
-    #endif
+#if defined( __WINDOWS__ )
+    TEST_ASSERT( GetRecordedOutput().Find( "unreferenced local variable" ) );
+#else
+    TEST_ASSERT( GetRecordedOutput().Find( "-Wunused-variable" ) );
+#endif
 }
 
 // PragmaMessageWarningsAreShown

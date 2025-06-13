@@ -40,11 +40,11 @@ void TestDirectoryList::Build() const
 
     // Generate a valid DirectoryListNode name
     AStackString name;
-    #if defined( __WINDOWS__ )
-        const AStackString testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
-    #else
-        const AStackString testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
-    #endif
+#if defined( __WINDOWS__ )
+    const AStackString testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
+#else
+    const AStackString testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
+#endif
     Array<AString> patterns;
     patterns.EmplaceBack( "library.*" );
     DirectoryListNode::FormatName( testFolder,
@@ -70,13 +70,13 @@ void TestDirectoryList::Build() const
 
     // make sure we got the expected results
     TEST_ASSERT( node->GetFiles().GetSize() == 2 );
-    #if defined( __WINDOWS__ )
-        const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
-        const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
-    #else
-        const char * fileName1 = "Data/TestGraph/library.cpp";
-        const char * fileName2 = "Data/TestGraph/library.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
+    const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
+#else
+    const char * fileName1 = "Data/TestGraph/library.cpp";
+    const char * fileName2 = "Data/TestGraph/library.o";
+#endif
 
     // returned order depends on file system
     if ( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName1 ) )

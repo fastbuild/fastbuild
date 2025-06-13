@@ -54,7 +54,7 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestCompilationDatabase::JSONEscape() const
 {
-    #define CHECK_JSONESCAPE( str, result ) \
+#define CHECK_JSONESCAPE( str, result ) \
     { \
         AStackString string( str ); \
         JSON::Escape( string ); \
@@ -68,7 +68,7 @@ void TestCompilationDatabase::JSONEscape() const
     CHECK_JSONESCAPE( "\b \t \n \f \r \\ \"", "\\b \\t \\n \\f \\r \\\\ \\\"" )
     CHECK_JSONESCAPE( "\x01 \x0B \x14 \x1E", "\\u0001 \\u000B \\u0014 \\u001E" )
 
-    #undef CHECK_JSONESCAPE
+#undef CHECK_JSONESCAPE
 }
 
 // TestObjectListInputFile

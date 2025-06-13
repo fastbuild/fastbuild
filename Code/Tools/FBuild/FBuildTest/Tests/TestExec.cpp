@@ -185,13 +185,13 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     const AStackString inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
-    #if defined( __OSX__ )
-        // OS X FileSystem time granularity is poor, so we need to ensure enough time passes
-        // so file is seen as modified
-        Thread::Sleep( 1000 );
-    #elif defined( __LINUX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
-    #endif
+#if defined( __OSX__ )
+    // OS X FileSystem time granularity is poor, so we need to ensure enough time passes
+    // so file is seen as modified
+    Thread::Sleep( 1000 );
+#elif defined( __LINUX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
+#endif
     CreateInputFile( inFile_oneInput );
 
     TEST_ASSERT( fBuild.Build( "ExecCommandTest_OneInput" ) );

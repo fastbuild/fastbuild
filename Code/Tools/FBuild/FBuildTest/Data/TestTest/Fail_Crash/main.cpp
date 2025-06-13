@@ -8,10 +8,10 @@
 
 int main( int, char ** )
 {
-    #if defined( __WINDOWS__ )
-        // Prevent crash popups on Windows
-        SetErrorMode( SEM_FAILCRITICALERRORS | SEM_NOALIGNMENTFAULTEXCEPT | SEM_NOGPFAULTERRORBOX );
-    #endif
+#if defined( __WINDOWS__ )
+    // Prevent crash popups on Windows
+    SetErrorMode( SEM_FAILCRITICALERRORS | SEM_NOALIGNMENTFAULTEXCEPT | SEM_NOGPFAULTERRORBOX );
+#endif
 
     int * i = nullptr;
     *i = 99; // nullptr deref crash

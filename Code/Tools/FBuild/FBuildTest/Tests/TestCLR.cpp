@@ -216,17 +216,17 @@ void TestCLR::TestParallelBuild_NoBuild() const
 void TestCLR::TestCLRToCPPBridge() const
 {
     // TODO:B FIX this test
-    #if 0
-        FBuildTestOptions options;
-        options.m_ForceCleanBuild = true;
+#if 0
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
 
-        Build( options, true, "BridgeTest-Exe" );
+    Build( options, true, "BridgeTest-Exe" );
 
-        Process p;
-        p.Spawn( "../tmp/Test/CLR/Bridge/Bridge.exe", nullptr, nullptr, nullptr );
-        int ret = p.WaitForExit();
-        TEST_ASSERT( ret == 15613223 ); // verify expected ret code
-    #endif
+    Process p;
+    p.Spawn( "../tmp/Test/CLR/Bridge/Bridge.exe", nullptr, nullptr, nullptr );
+    int ret = p.WaitForExit();
+    TEST_ASSERT( ret == 15613223 ); // verify expected ret code
+#endif
 }
 
 //------------------------------------------------------------------------------

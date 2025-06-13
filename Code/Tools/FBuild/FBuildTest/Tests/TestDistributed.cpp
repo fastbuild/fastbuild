@@ -36,9 +36,9 @@ private:
     void RegressionTest_RemoteCrashOnErrorFormatting();
     void TestLocalRace();
     void RemoteRaceWinRemote();
-    #if defined( DEBUG )
-        void RemoteRaceSystemFailure();
-    #endif
+#if defined( DEBUG )
+    void RemoteRaceSystemFailure();
+#endif
     void AnonymousNamespaces();
     void ErrorsAreCorrectlyReported_MSVC() const;
     void ErrorsAreCorrectlyReported_Clang() const;
@@ -67,22 +67,22 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( RegressionTest_RemoteCrashOnErrorFormatting )
     REGISTER_TEST( TestLocalRace )
     REGISTER_TEST( RemoteRaceWinRemote )
-    #if defined( DEBUG )
-        REGISTER_TEST( RemoteRaceSystemFailure )
-    #endif
+#if defined( DEBUG )
+    REGISTER_TEST( RemoteRaceSystemFailure )
+#endif
     REGISTER_TEST( AnonymousNamespaces )
     REGISTER_TEST( ShutdownMemoryLeak )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( ErrorsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
-        REGISTER_TEST( ErrorsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
-        REGISTER_TEST( WarningsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
-        REGISTER_TEST( WarningsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
-        REGISTER_TEST( TestForceInclude )
-        REGISTER_TEST( TestZiDebugFormat )
-        REGISTER_TEST( TestZiDebugFormat_Local )
-        REGISTER_TEST( D8049_ToolLongDebugRecord )
-        REGISTER_TEST( DynamicDeoptimization )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( ErrorsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
+    REGISTER_TEST( ErrorsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
+    REGISTER_TEST( WarningsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
+    REGISTER_TEST( WarningsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
+    REGISTER_TEST( TestForceInclude )
+    REGISTER_TEST( TestZiDebugFormat )
+    REGISTER_TEST( TestZiDebugFormat_Local )
+    REGISTER_TEST( D8049_ToolLongDebugRecord )
+    REGISTER_TEST( DynamicDeoptimization )
+#endif
     REGISTER_TEST( CleanMessageToPreventMSBuildFailure )
 REGISTER_TESTS_END
 
@@ -390,12 +390,12 @@ void TestDistributed::ShutdownMemoryLeak() const
         {
             // Wait until some distributed jobs are available
             const Timer t;
-            #if __has_feature( thread_sanitizer ) || defined( __SANITIZE_THREAD__ )
-                // Code under ThreadSanitizer runs several time slower than normal, so we need a larger timeout.
-                const float timeout = 30.0f;
-            #else
-                const float timeout = 5.0f;
-            #endif
+#if __has_feature( thread_sanitizer ) || defined( __SANITIZE_THREAD__ )
+            // Code under ThreadSanitizer runs several time slower than normal, so we need a larger timeout.
+            const float timeout = 30.0f;
+#else
+            const float timeout = 5.0f;
+#endif
             while ( t.GetElapsed() < timeout )
             {
                 if ( Job::GetTotalLocalDataMemoryUsage() != 0 )
@@ -491,35 +491,35 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
 //------------------------------------------------------------------------------
 void TestDistributed::DynamicDeoptimization() const
 {
-    #if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
-        FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/MSVCDynamicDeoptimization/fbuild.bff";
-        options.m_AllowDistributed = true;
-        options.m_NumWorkerThreads = 1;
-        options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
-        options.m_AllowLocalRace = false;
-        options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+#if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/MSVCDynamicDeoptimization/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
 
-        TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Initialize() );
 
-        // /dynamicdeopt has an additional file which sits next to the normal one
-        const char * const extraObjFile = "../tmp/Test/Distributed/MSVCDynamicDeoptimization/file.alt.obj";
+    // /dynamicdeopt has an additional file which sits next to the normal one
+    const char * const extraObjFile = "../tmp/Test/Distributed/MSVCDynamicDeoptimization/file.alt.obj";
 
-        // Ensure file doesn't linker from prior test runs
-        EnsureFileDoesNotExist( extraObjFile );
+    // Ensure file doesn't linker from prior test runs
+    EnsureFileDoesNotExist( extraObjFile );
 
-        // Start a server to emulate the other end
-        Server s( 1 );
-        s.Listen( Protocol::kTestPort );
+    // Start a server to emulate the other end
+    Server s( 1 );
+    s.Listen( Protocol::kTestPort );
 
-        TEST_ASSERT( fBuild.Build( "MSVCDynamicDeoptimization" ) );
+    TEST_ASSERT( fBuild.Build( "MSVCDynamicDeoptimization" ) );
 
-        // Ensure extra file was returned by worker
-        EnsureFileExists( extraObjFile );
-    #else
-        OUTPUT( "[SKIP] DynamicDeoptimization - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
-    #endif
+    // Ensure extra file was returned by worker
+    EnsureFileExists( extraObjFile );
+#else
+    OUTPUT( "[SKIP] DynamicDeoptimization - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
+#endif
 }
 
 //------------------------------------------------------------------------------

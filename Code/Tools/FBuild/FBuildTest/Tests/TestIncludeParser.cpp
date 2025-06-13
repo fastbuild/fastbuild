@@ -36,13 +36,13 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestIncludeParser )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( TestMSVCPreprocessedOutput )
-        REGISTER_TEST( TestMSVCPreprocessedOutput_Indent )
-        REGISTER_TEST( TestMSVCShowIncludesOutput )
-        REGISTER_TEST( TestMSVC_P )
-        REGISTER_TEST( TestMSVC_ShowIncludesWithWarnings )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( TestMSVCPreprocessedOutput )
+    REGISTER_TEST( TestMSVCPreprocessedOutput_Indent )
+    REGISTER_TEST( TestMSVCShowIncludesOutput )
+    REGISTER_TEST( TestMSVC_P )
+    REGISTER_TEST( TestMSVC_ShowIncludesWithWarnings )
+#endif
     REGISTER_TEST( TestGCCPreprocessedOutput )
     REGISTER_TEST( TestClangPreprocessedOutput )
     REGISTER_TEST( TestClangMSExtensionsPreprocessedOutput )

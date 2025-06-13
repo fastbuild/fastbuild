@@ -235,9 +235,9 @@ void TestArgs::CheckParsing( const char * commandLine,
     TEST_ASSERT( p.WaitForExit() == 0 );
 
     // Normalize windows line endings
-    #if defined( __WINDOWS__ )
-        out.Replace( "\r\n", "\n" );
-    #endif
+#if defined( __WINDOWS__ )
+    out.Replace( "\r\n", "\n" );
+#endif
 
     // Generate expected results
     AStackString expected;
