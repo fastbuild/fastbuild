@@ -146,7 +146,7 @@ void TestReflection::TestGetSet() const
     TestObject o;
     const ReflectionInfo * info = o.GetReflectionInfoV();
 
-    #define CHECK( name, member, type, value ) \
+#define CHECK( name, member, type, value ) \
     { \
         TEST_ASSERT( info->SetProperty( &o, name, (type)value ) ); \
         TEST_ASSERT( o.member == value ); \
@@ -167,7 +167,7 @@ void TestReflection::TestGetSet() const
     CHECK( "Bool", m_Bool, bool, true )
     CHECK( "AString", m_AString, AString, AString( "hello" ) )
 
-    #undef CHECK
+#undef CHECK
 }
 
 // TestInheritance

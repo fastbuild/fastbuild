@@ -7,15 +7,15 @@
 
 #ifdef PROFILING_ENABLED
 
-#include "Core/FileIO/FileStream.h"
-#include "Core/Math/xxHash.h"
-#include "Core/Mem/Mem.h"
-#include "Core/Process/Mutex.h"
-#include "Core/Process/Thread.h"
-#include "Core/Profile/Profile.h"
-#include "Core/Strings/AStackString.h"
-#include "Core/Time/Timer.h"
-#include "Core/Tracing/Tracing.h"
+    #include "Core/FileIO/FileStream.h"
+    #include "Core/Math/xxHash.h"
+    #include "Core/Mem/Mem.h"
+    #include "Core/Process/Mutex.h"
+    #include "Core/Process/Thread.h"
+    #include "Core/Profile/Profile.h"
+    #include "Core/Strings/AStackString.h"
+    #include "Core/Time/Timer.h"
+    #include "Core/Tracing/Tracing.h"
 
 // Static Data
 //------------------------------------------------------------------------------

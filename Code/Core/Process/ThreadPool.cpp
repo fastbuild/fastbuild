@@ -14,11 +14,11 @@
 //------------------------------------------------------------------------------
 ThreadPool::ThreadPool( uint32_t numThreads )
     : m_NumThreads( numThreads )
-    #if defined( __WINDOWS__ )
-        , m_WakeSemaphore( numThreads ) // On Windows, take advantage of signalling limit
-    #else
-        , m_WakeSemaphore()
-    #endif
+#if defined( __WINDOWS__ )
+    , m_WakeSemaphore( numThreads ) // On Windows, take advantage of signalling limit
+#else
+    , m_WakeSemaphore()
+#endif
 {
     PROFILE_FUNCTION;
 

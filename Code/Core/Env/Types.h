@@ -28,8 +28,8 @@ typedef signed int          int32_t;
         #define PRIX64 "llX"
     #endif
 #else
-    typedef unsigned long int   uint64_t;
-    typedef signed long int     int64_t;
+typedef unsigned long int uint64_t;
+typedef signed long int int64_t;
     #ifndef PRIi64
         #define PRIi64 "li"
     #endif
@@ -73,23 +73,23 @@ typedef signed int          int32_t;
 
 #ifndef intptr_t
     #if defined( __WINDOWS__ )
-        typedef int64_t     intptr_t;
-        typedef uint64_t    uintptr_t;
+typedef int64_t intptr_t;
+typedef uint64_t uintptr_t;
     #endif
 #endif
 #ifndef uintptr_t
     #if defined( __LINUX__ )
-        typedef uint64_t    uintptr_t;
+typedef uint64_t uintptr_t;
     #endif
 #endif
 #ifndef size_t
     #if defined( __WINDOWS__ )
-        typedef uint64_t    size_t;
+typedef uint64_t size_t;
     #endif
 #endif
 
 #ifndef LONGLONG
-    typedef long long LONGLONG;
+typedef long long LONGLONG;
 #endif
 
 #if defined( __GNUC__ ) || defined( __clang__ ) // GCC or Clang

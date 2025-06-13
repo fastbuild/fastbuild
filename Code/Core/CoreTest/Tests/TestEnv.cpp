@@ -45,11 +45,11 @@ void TestEnv::GetExePath() const
 {
     AStackString cmdLine;
     Env::GetExePath( cmdLine );
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( cmdLine.EndsWithI( "CoreTest.exe" ) );
-    #else
-        TEST_ASSERT( cmdLine.EndsWithI( "CoreTest" ) );
-    #endif
+#if defined( __WINDOWS__ )
+    TEST_ASSERT( cmdLine.EndsWithI( "CoreTest.exe" ) );
+#else
+    TEST_ASSERT( cmdLine.EndsWithI( "CoreTest" ) );
+#endif
 }
 
 // GetProcessorInfo

@@ -56,13 +56,13 @@ public:
 //------------------------------------------------------------------------------
 /*static*/ inline Env::Platform Env::GetPlatform()
 {
-    #if defined( __WINDOWS__ )
-        return Env::WINDOWS;
-    #elif defined( __OSX__ )
-        return Env::OSX;
-    #elif defined( __LINUX__ )
-        return Env::LINUX;
-    #endif
+#if defined( __WINDOWS__ )
+    return Env::WINDOWS;
+#elif defined( __OSX__ )
+    return Env::OSX;
+#elif defined( __LINUX__ )
+    return Env::LINUX;
+#endif
 }
 
 // GetPlatformName

@@ -31,7 +31,7 @@ bool IsDebuggerAttached();
 #ifdef ASSERTS_ENABLED
     // Create a no-return helper to improve static analysis
     #if defined( __WINDOWS__ )
-        __declspec( noreturn ) void NoReturn();
+__declspec( noreturn ) void NoReturn();
         #define NO_RETURN NoReturn();
     #else
         #define NO_RETURN
@@ -76,26 +76,26 @@ bool IsDebuggerAttached();
     // assert result of code, but still execute code when asserts are disabled
     #define VERIFY( code ) ASSERT( code )
 
-    class AssertHandler
+class AssertHandler
+{
+public:
+    typedef void AssertCallback( const char * mesage );
+
+    static void SetAssertCallback( AssertCallback * callback )
     {
-    public:
-        typedef void AssertCallback( const char * mesage );
+        s_AssertCallback = callback;
+    }
+    static bool Failure( const char * message,
+                         const char * file,
+                         const int line ) NORETURN_CLANG_ANALYZER;
+    static bool FailureM( const char * message,
+                          const char * file,
+                          const int line,
+                          const char * msgFormat,
+                          ... ) FORMAT_STRING( 4, 5 ) NORETURN_CLANG_ANALYZER;
 
-        static void SetAssertCallback( AssertCallback * callback )
-        {
-            s_AssertCallback = callback;
-        }
-        static bool Failure( const char * message,
-                             const char * file,
-                             const int line ) NORETURN_CLANG_ANALYZER;
-        static bool FailureM( const char * message,
-                              const char * file,
-                              const int line,
-                              const char * msgFormat,
-                              ... ) FORMAT_STRING( 4, 5 ) NORETURN_CLANG_ANALYZER;
-
-        static AssertCallback * s_AssertCallback;
-    };
+    static AssertCallback * s_AssertCallback;
+};
 #else
     #define ASSERT( expression )            \
         do                                  \

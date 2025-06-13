@@ -19,9 +19,9 @@
 class TCPConnectionPool;
 
 #if defined( __WINDOWS__ )
-    typedef uintptr_t TCPSocket;
+typedef uintptr_t TCPSocket;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    typedef int TCPSocket;
+typedef int TCPSocket;
 #endif
 
 // Constants

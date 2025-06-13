@@ -45,13 +45,13 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
     ASSERT( s_BucketMemoryStart == MEM_BUCKETS_NOT_INITIALIZED );
 
     // Reserve the address space for the buckets to manage
-    #if defined( __WINDOWS__ )
-        s_BucketMemoryStart = ::VirtualAlloc( nullptr, BUCKET_ADDRESSSPACE_SIZE, MEM_RESERVE, PAGE_NOACCESS );
-        ASSERT( s_BucketMemoryStart );
-    #else
-        s_BucketMemoryStart = ::mmap( nullptr, BUCKET_ADDRESSSPACE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0 );
-        ASSERT( (size_t)s_BucketMemoryStart != (size_t)-1 );
-    #endif
+#if defined( __WINDOWS__ )
+    s_BucketMemoryStart = ::VirtualAlloc( nullptr, BUCKET_ADDRESSSPACE_SIZE, MEM_RESERVE, PAGE_NOACCESS );
+    ASSERT( s_BucketMemoryStart );
+#else
+    s_BucketMemoryStart = ::mmap( nullptr, BUCKET_ADDRESSSPACE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0 );
+    ASSERT( (size_t)s_BucketMemoryStart != (size_t)-1 );
+#endif
 
     // Construct the bucket structures in the reserved space
     // (Done this way to avoid memory allocations which would be re-entrant)
@@ -67,50 +67,50 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
 // DumpStats
 //------------------------------------------------------------------------------
 #if defined( DEBUG )
-    /*static*/ void SmallBlockAllocator::DumpStats()
+/*static*/ void SmallBlockAllocator::DumpStats()
+{
+    // Keep a stack buffer to avoid allocations during formatting
+    AStackString<5120> buffer;
+    static_assert( BUCKET_NUM_BUCKETS * 70 < 5120, "Not enough space for DumpStats" );
+
+    // Accumulate total stats as we loop
+    uint32_t totalActive = 0;
+    uint32_t totalActiveBytes = 0;
+    uint32_t totalPeak = 0;
+    uint32_t totalPeakBytes = 0;
+    uint32_t totalLifetime = 0;
+    buffer += "         | Active            | Peak              |\n";
+    buffer += "    Size |      Num      Mem |      Num      Mem |   LifeTime\n";
+    buffer += "-------------------------------------------------------------\n";
+
+    // Print info for each bucket
+    for ( uint32_t i = 0; i < BUCKET_NUM_BUCKETS; ++i )
     {
-        // Keep a stack buffer to avoid allocations during formatting
-        AStackString<5120> buffer;
-        static_assert( BUCKET_NUM_BUCKETS * 70 < 5120, "Not enough space for DumpStats" );
-
-        // Accumulate total stats as we loop
-        uint32_t totalActive = 0;
-        uint32_t totalActiveBytes = 0;
-        uint32_t totalPeak = 0;
-        uint32_t totalPeakBytes = 0;
-        uint32_t totalLifetime = 0;
-        buffer += "         | Active            | Peak              |\n";
-        buffer += "    Size |      Num      Mem |      Num      Mem |   LifeTime\n";
-        buffer += "-------------------------------------------------------------\n";
-
-        // Print info for each bucket
-        for ( uint32_t i = 0; i < BUCKET_NUM_BUCKETS; ++i )
-        {
-            const MemBucket & bucket = s_Buckets[ i ];
-            const uint32_t numLive = bucket.m_NumActiveAllocations; //GetNumActiveAllocations();
-            const uint32_t blockSize = bucket.m_BlockSize; //GetBlockSize();
-            const uint32_t numPeak = bucket.m_PeakActiveAllocations;
-            const uint32_t numLifetime = bucket.m_NumLifetimeAllocations;
-            totalActive += numLive;
-            totalActiveBytes += ( numLive * blockSize );
-            totalPeak += numPeak;
-            totalPeakBytes += ( numPeak * blockSize );
-            totalLifetime += numLifetime;
-            buffer.AppendFormat( "%8u | %8u %8u | %8u %8u | %10u\n",
-                                 blockSize,
-                                 numLive,
-                                 ( numLive * blockSize ),
-                                 numPeak,
-                                 ( numPeak * blockSize ),
-                                 numLifetime );
-        }
-
-        // Summary/Totals
-        buffer += "-------------------------------------------------------------\n";
-        buffer.AppendFormat( "         | %8u %8u | %8u %8u | %10u\n", totalActive, totalActiveBytes, totalPeak, totalPeakBytes, totalLifetime );
-
-        OUTPUT( "%s", buffer.Get() );
+        const MemBucket & bucket = s_Buckets[ i ];
+        const uint32_t numLive = bucket.m_NumActiveAllocations; //GetNumActiveAllocations();
+        const uint32_t blockSize = bucket.m_BlockSize; //GetBlockSize();
+        const uint32_t numPeak = bucket.m_PeakActiveAllocations;
+        const uint32_t numLifetime = bucket.m_NumLifetimeAllocations;
+        totalActive += numLive;
+        totalActiveBytes += ( numLive * blockSize );
+        totalPeak += numPeak;
+        totalPeakBytes += ( numPeak * blockSize );
+        totalLifetime += numLifetime;
+        buffer.AppendFormat( "%8u | %8u %8u | %8u %8u | %10u\n",
+                             blockSize,
+                             numLive,
+                             ( numLive * blockSize ),
+                             numPeak,
+                             ( numPeak * blockSize ),
+                             numLifetime );
     }
+
+    // Summary/Totals
+    buffer += "-------------------------------------------------------------\n";
+    buffer.AppendFormat( "         | %8u %8u | %8u %8u | %10u\n", totalActive, totalActiveBytes, totalPeak, totalPeakBytes, totalLifetime );
+
+    OUTPUT( "%s", buffer.Get() );
+}
 #endif
 
 // Alloc
@@ -153,12 +153,12 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
     }
 
     // Debug fill
-    #if defined( MEM_FILL_NEW_ALLOCATIONS )
-        if ( ptr )
-        {
-            MemDebug::FillMem( ptr, bucket.m_BlockSize, MemDebug::MEM_FILL_NEW_ALLOCATION_PATTERN );
-        }
-    #endif
+#if defined( MEM_FILL_NEW_ALLOCATIONS )
+    if ( ptr )
+    {
+        MemDebug::FillMem( ptr, bucket.m_BlockSize, MemDebug::MEM_FILL_NEW_ALLOCATION_PATTERN );
+    }
+#endif
 
     return ptr;
 }
@@ -182,9 +182,9 @@ bool SmallBlockAllocator::Free( void * ptr )
     MemBucket & bucket = s_Buckets[ bucketIndex ];
 
     // Debug fill
-    #if defined( MEM_FILL_FREED_ALLOCATIONS )
-        MemDebug::FillMem( ptr, bucket.m_BlockSize, MemDebug::MEM_FILL_FREED_ALLOCATION_PATTERN );
-    #endif
+#if defined( MEM_FILL_FREED_ALLOCATIONS )
+    MemDebug::FillMem( ptr, bucket.m_BlockSize, MemDebug::MEM_FILL_FREED_ALLOCATION_PATTERN );
+#endif
 
     // Free it
     {
@@ -216,11 +216,11 @@ bool SmallBlockAllocator::Free( void * ptr )
 
     // Commit the page
     void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::kMemPoolBlockPageSize ) );
-    #if defined( __WINDOWS__ )
-        VERIFY( ::VirtualAlloc( newPage, MemPoolBlock::kMemPoolBlockPageSize, MEM_COMMIT, PAGE_READWRITE ) );
-    #else
-        VERIFY( ::mprotect( newPage, MemPoolBlock::kMemPoolBlockPageSize, PROT_READ | PROT_WRITE ) == 0 );
-    #endif
+#if defined( __WINDOWS__ )
+    VERIFY( ::VirtualAlloc( newPage, MemPoolBlock::kMemPoolBlockPageSize, MEM_COMMIT, PAGE_READWRITE ) );
+#else
+    VERIFY( ::mprotect( newPage, MemPoolBlock::kMemPoolBlockPageSize, PROT_READ | PROT_WRITE ) == 0 );
+#endif
 
     // Update page to bucket mapping table
     ASSERT( s_BucketMappingTable[ pageIndex ] == 0 );

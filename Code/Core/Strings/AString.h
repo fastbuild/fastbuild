@@ -14,7 +14,7 @@
 //------------------------------------------------------------------------------
 #ifndef va_list
     #if defined( __WINDOWS__ )
-        typedef char * va_list; // avoid stdlib include
+typedef char * va_list; // avoid stdlib include
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         #include <stdarg.h>
     #endif

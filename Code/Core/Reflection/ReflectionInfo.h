@@ -43,7 +43,7 @@ public:
 
     void SetArraySize( void * array, size_t size ) const;
 
-    #define GETSET_PROPERTY( getValueType, setValueType ) \
+#define GETSET_PROPERTY( getValueType, setValueType ) \
         bool GetProperty( void * object, const char * name, getValueType * value ) const; \
         bool SetProperty( void * object, const char * name, setValueType value ) const;
 
@@ -59,14 +59,14 @@ public:
     GETSET_PROPERTY( bool, bool )
     GETSET_PROPERTY( AString, const AString & )
 
-    #define GETSET_PROPERTY_ARRAY( valueType ) \
+#define GETSET_PROPERTY_ARRAY( valueType ) \
         bool GetProperty( void * object, const char * name, Array<valueType> * value ) const; \
         bool SetProperty( void * object, const char * name, const Array<valueType> & value ) const;
 
     GETSET_PROPERTY_ARRAY( AString )
 
-    #undef GETSET_PROPERTY
-    #undef GETSET_PROPERTY_ARRAY
+#undef GETSET_PROPERTY
+#undef GETSET_PROPERTY_ARRAY
 
     template <class T>
     const T * HasMetaData() const

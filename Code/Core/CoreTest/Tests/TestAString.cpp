@@ -782,7 +782,7 @@ void TestAString::Tokenize() const
 //------------------------------------------------------------------------------
 void TestAString::PatternMatch() const
 {
-    #define CHECK_MATCH( pat, str, match )              \
+#define CHECK_MATCH( pat, str, match )              \
     do                                                  \
     {                                                   \
         AStackString string( str );                     \
@@ -810,14 +810,14 @@ void TestAString::PatternMatch() const
     CHECK_MATCH( "*.cpp",   "File.cpp.notcpp",  false );
     CHECK_MATCH( "*.cpp",   "",                 false );
 
-    #undef CHECK_MATCH
+#undef CHECK_MATCH
 }
 
 // PatternMatchI
 //------------------------------------------------------------------------------
 void TestAString::PatternMatchI() const
 {
-    #define CHECK_MATCH( pat, str, match )              \
+#define CHECK_MATCH( pat, str, match )              \
     do                                                  \
     {                                                   \
         AStackString string( str );                     \
@@ -840,7 +840,7 @@ void TestAString::PatternMatchI() const
     CHECK_MATCH( "*.cpp",   "File.cpp.notcpp",  false );
     CHECK_MATCH( "*.cpp",   "",                 false );
 
-    #undef CHECK_MATCH
+#undef CHECK_MATCH
 }
 
 //------------------------------------------------------------------------------

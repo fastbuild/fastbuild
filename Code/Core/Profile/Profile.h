@@ -24,19 +24,19 @@
 
     #define PROFILE_SYNCHRONIZE ProfileManager::Synchronize();
 
-    // RAII helper to manage Start/Stop of a profile section
-    class ProfileHelper
+// RAII helper to manage Start/Stop of a profile section
+class ProfileHelper
+{
+public:
+    ProfileHelper( const char * id )
     {
-    public:
-        ProfileHelper( const char * id )
-        {
-            ProfileManager::Start( id );
-        }
-        ~ProfileHelper()
-        {
-            ProfileManager::Stop();
-        }
-    };
+        ProfileManager::Start( id );
+    }
+    ~ProfileHelper()
+    {
+        ProfileManager::Stop();
+    }
+};
 #endif // PROFILING_ENABLED
 
 //------------------------------------------------------------------------------

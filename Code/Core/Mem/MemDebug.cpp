@@ -7,9 +7,9 @@
 
 #if defined( MEM_DEBUG_ENABLED )
 
-// Core
-#include "Core/Env/Assert.h"
-#include "Core/Env/Types.h"
+    // Core
+    #include "Core/Env/Assert.h"
+    #include "Core/Env/Types.h"
 
 // FillMem
 //------------------------------------------------------------------------------

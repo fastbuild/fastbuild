@@ -55,9 +55,9 @@ void TestSharedMemory::CreateAccessDestroy() const
     if ( pid == 0 )
     {
         // We don't want the child to interact with the test framework
-        #if defined( ASSERTS_ENABLED )
-            AssertHandler::SetAssertCallback( nullptr );
-        #endif
+    #if defined( ASSERTS_ENABLED )
+        AssertHandler::SetAssertCallback( nullptr );
+    #endif
 
         Timer t;
         t.Start();

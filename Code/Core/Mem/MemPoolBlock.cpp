@@ -45,17 +45,17 @@ void * MemPoolBlock::Alloc()
         ASSERT( m_FreeBlockChain );
     }
 
-    #if defined( ASSERTS_ENABLED )
-        m_NumActiveAllocations++;
-        if ( m_NumLifetimeAllocations < 0xFFFFFFFF )
-        {
-            ++m_NumLifetimeAllocations;
-        }
-        if ( m_NumActiveAllocations > m_PeakActiveAllocations )
-        {
-            m_PeakActiveAllocations = m_NumActiveAllocations;
-        }
-    #endif
+#if defined( ASSERTS_ENABLED )
+    m_NumActiveAllocations++;
+    if ( m_NumLifetimeAllocations < 0xFFFFFFFF )
+    {
+        ++m_NumLifetimeAllocations;
+    }
+    if ( m_NumActiveAllocations > m_PeakActiveAllocations )
+    {
+        m_PeakActiveAllocations = m_NumActiveAllocations;
+    }
+#endif
 
     // Take first block from free chain
     FreeBlock * block = m_FreeBlockChain;
@@ -74,9 +74,9 @@ void MemPoolBlock::Free( void * ptr )
     freeBlock->m_Next = m_FreeBlockChain;
     m_FreeBlockChain = freeBlock;
 
-    #if defined( ASSERTS_ENABLED )
-        --m_NumActiveAllocations;
-    #endif
+#if defined( ASSERTS_ENABLED )
+    --m_NumActiveAllocations;
+#endif
 }
 
 // AllocPage

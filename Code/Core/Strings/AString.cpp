@@ -187,26 +187,26 @@ int32_t AString::Compare( const char * other ) const
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const AString & other ) const
 {
-    #if defined( __WINDOWS__ )
-        return _stricmp( m_Contents, other.Get() );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return strcasecmp( m_Contents, other.Get() );
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return _stricmp( m_Contents, other.Get() );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return strcasecmp( m_Contents, other.Get() );
+#else
+    #error Unknown platform
+#endif
 }
 
 // CompareI
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const char * other ) const
 {
-    #if defined( __WINDOWS__ )
-        return _stricmp( m_Contents, other );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return strcasecmp( m_Contents, other );
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return _stricmp( m_Contents, other );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return strcasecmp( m_Contents, other );
+#else
+    #error Unknown platform
+#endif
 }
 
 // Format
@@ -231,41 +231,41 @@ AString & AString::VFormat( const char * fmtString, va_list args )
     char * buffer = stackBuffer;
     size_t bufferSize = STACK_BUFFER_SIZE;
 
-    #if defined( __WINDOWS__ )
+#if defined( __WINDOWS__ )
 loop:
-        // attempt the formatting
-        const int len = vsnprintf_s( buffer, bufferSize, _TRUNCATE, fmtString, args );
+    // attempt the formatting
+    const int len = vsnprintf_s( buffer, bufferSize, _TRUNCATE, fmtString, args );
 
-        // did it fail to fit?
-        if ( len < 0 )
+    // did it fail to fit?
+    if ( len < 0 )
+    {
+        // free any old buffer allocations
+        if ( buffer != stackBuffer )
         {
-            // free any old buffer allocations
-            if ( buffer != stackBuffer )
-            {
-                FREE( buffer );
-            }
+            FREE( buffer );
+        }
 
-            // double the buffer and try again
-            bufferSize *= 2;
-            buffer = (char *)ALLOC( bufferSize );
-            goto loop;
-        }
-    #else
-        va_list argsCopy;
-        va_copy( argsCopy, args );
-        PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
-        int len = vsnprintf( nullptr, 0, fmtString, argsCopy );
-        PRAGMA_DISABLE_POP_CLANG
-        va_end( argsCopy );
-        if ( len > ( (int)bufferSize - 1 ) )
-        {
-            bufferSize = static_cast<size_t>( len ) + 1;
-            buffer = (char *)ALLOC( bufferSize );
-        }
-        PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
-        VERIFY( vsnprintf( buffer, bufferSize, fmtString, args ) >= 0 );
-        PRAGMA_DISABLE_POP_CLANG
-    #endif
+        // double the buffer and try again
+        bufferSize *= 2;
+        buffer = (char *)ALLOC( bufferSize );
+        goto loop;
+    }
+#else
+    va_list argsCopy;
+    va_copy( argsCopy, args );
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
+    int len = vsnprintf( nullptr, 0, fmtString, argsCopy );
+    PRAGMA_DISABLE_POP_CLANG
+    va_end( argsCopy );
+    if ( len > ( (int)bufferSize - 1 ) )
+    {
+        bufferSize = static_cast<size_t>( len ) + 1;
+        buffer = (char *)ALLOC( bufferSize );
+    }
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
+    VERIFY( vsnprintf( buffer, bufferSize, fmtString, args ) >= 0 );
+    PRAGMA_DISABLE_POP_CLANG
+#endif
 
     // keep the final result
     Assign( buffer, buffer + len );

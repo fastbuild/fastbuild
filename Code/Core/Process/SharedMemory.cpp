@@ -62,14 +62,14 @@ bool PosixMapMemory( const char * name,
 //------------------------------------------------------------------------------
 SharedMemory::SharedMemory()
     : m_Memory( nullptr )
-    #if defined( __WINDOWS__ )
-        , m_MapFile( nullptr )
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        , m_MapFile( -1 )
-        , m_Length( 0 )
-    #else
-        #error Unknown Platform
-    #endif
+#if defined( __WINDOWS__ )
+    , m_MapFile( nullptr )
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    , m_MapFile( -1 )
+    , m_Length( 0 )
+#else
+    #error Unknown Platform
+#endif
 {
 }
 
@@ -78,97 +78,97 @@ SharedMemory::SharedMemory()
 SharedMemory::~SharedMemory()
 {
     Unmap();
-    #if defined( __WINDOWS__ )
-        if ( m_MapFile )
-        {
-            CloseHandle( m_MapFile );
-        }
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        if ( m_MapFile != -1 )
-        {
-            close( m_MapFile );
-            shm_unlink( m_Name.Get() );
-        }
-    #else
-        #error Unknown Platform
-    #endif
+#if defined( __WINDOWS__ )
+    if ( m_MapFile )
+    {
+        CloseHandle( m_MapFile );
+    }
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    if ( m_MapFile != -1 )
+    {
+        close( m_MapFile );
+        shm_unlink( m_Name.Get() );
+    }
+#else
+    #error Unknown Platform
+#endif
 }
 
 // Create
 //------------------------------------------------------------------------------
 void SharedMemory::Create( const char * name, unsigned int size )
 {
-    #if defined( __WINDOWS__ )
-        ASSERT( m_MapFile == nullptr );
-        ASSERT( m_Memory == nullptr );
-        m_MapFile = CreateFileMappingA( INVALID_HANDLE_VALUE,   // use paging file
-                                        nullptr,                // default security
-                                        PAGE_READWRITE,         // read/write access
-                                        0,                      // maximum object size (high-order DWORD)
-                                        size,                   // maximum object size (low-order DWORD)
-                                        name );                 // name of mapping object
-        if ( m_MapFile )
-        {
-            m_Memory = MapViewOfFile( m_MapFile,            // handle to map object
-                                      FILE_MAP_ALL_ACCESS,  // read/write permission
-                                      0,                    // DWORD dwFileOffsetHigh
-                                      0,                    // DWORD dwFileOffsetLow
-                                      size );
-        }
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        PosixMapMemory( name, size, true, &m_MapFile, &m_Memory, m_Name );
-        m_Length = size;
-    #else
-        #error Unknown Platform
-    #endif
+#if defined( __WINDOWS__ )
+    ASSERT( m_MapFile == nullptr );
+    ASSERT( m_Memory == nullptr );
+    m_MapFile = CreateFileMappingA( INVALID_HANDLE_VALUE,   // use paging file
+                                    nullptr,                // default security
+                                    PAGE_READWRITE,         // read/write access
+                                    0,                      // maximum object size (high-order DWORD)
+                                    size,                   // maximum object size (low-order DWORD)
+                                    name );                 // name of mapping object
+    if ( m_MapFile )
+    {
+        m_Memory = MapViewOfFile( m_MapFile,            // handle to map object
+                                  FILE_MAP_ALL_ACCESS,  // read/write permission
+                                  0,                    // DWORD dwFileOffsetHigh
+                                  0,                    // DWORD dwFileOffsetLow
+                                  size );
+    }
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    PosixMapMemory( name, size, true, &m_MapFile, &m_Memory, m_Name );
+    m_Length = size;
+#else
+    #error Unknown Platform
+#endif
 }
 
 // Open
 //------------------------------------------------------------------------------
 bool SharedMemory::Open( const char * name, unsigned int size )
 {
-    #if defined( __WINDOWS__ )
-        m_MapFile = OpenFileMappingA( FILE_MAP_ALL_ACCESS,  // read/write access
-                                      FALSE,                // do not inherit the name
-                                      name );               // name of mapping object
-        if ( m_MapFile )
-        {
-            m_Memory = MapViewOfFile( m_MapFile,            // handle to map object
-                                      FILE_MAP_ALL_ACCESS,  // read/write permission
-                                      0,                    // DWORD dwFileOffsetHigh
-                                      0,                    // DWORD dwFileOffsetLow
-                                      size );
-        }
-        return ( ( m_Memory != nullptr ) && ( m_MapFile != nullptr ) );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        const bool result = PosixMapMemory( name, size, false, &m_MapFile, &m_Memory, m_Name );
-        m_Length = size;
-        return result;
-    #else
-        #error
-    #endif
+#if defined( __WINDOWS__ )
+    m_MapFile = OpenFileMappingA( FILE_MAP_ALL_ACCESS,  // read/write access
+                                  FALSE,                // do not inherit the name
+                                  name );               // name of mapping object
+    if ( m_MapFile )
+    {
+        m_Memory = MapViewOfFile( m_MapFile,            // handle to map object
+                                  FILE_MAP_ALL_ACCESS,  // read/write permission
+                                  0,                    // DWORD dwFileOffsetHigh
+                                  0,                    // DWORD dwFileOffsetLow
+                                  size );
+    }
+    return ( ( m_Memory != nullptr ) && ( m_MapFile != nullptr ) );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    const bool result = PosixMapMemory( name, size, false, &m_MapFile, &m_Memory, m_Name );
+    m_Length = size;
+    return result;
+#else
+    #error
+#endif
 }
 
 // Unmap
 //------------------------------------------------------------------------------
 void SharedMemory::Unmap()
 {
-    #if defined( __WINDOWS__ )
-        if ( m_Memory )
-        {
-            UnmapViewOfFile( m_Memory );
-            m_Memory = nullptr;
-        }
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        if ( m_Memory )
-        {
-            ASSERT( m_Length > 0 );
-            munmap( m_Memory, m_Length );
-            m_Memory = nullptr;
-        }
-    #else
-        #error Unknown Platform
-    #endif
+#if defined( __WINDOWS__ )
+    if ( m_Memory )
+    {
+        UnmapViewOfFile( m_Memory );
+        m_Memory = nullptr;
+    }
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    if ( m_Memory )
+    {
+        ASSERT( m_Length > 0 );
+        munmap( m_Memory, m_Length );
+        m_Memory = nullptr;
+    }
+#else
+    #error Unknown Platform
+#endif
 }
 
 //------------------------------------------------------------------------------

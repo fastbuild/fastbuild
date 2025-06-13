@@ -8,10 +8,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Containers/Array.h"
-#include "Core/Env/Types.h"
-#include "Core/Process/Thread.h"
-#include "Core/Strings/AStackString.h"
+    #include "Core/Containers/Array.h"
+    #include "Core/Env/Types.h"
+    #include "Core/Process/Thread.h"
+    #include "Core/Strings/AStackString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------

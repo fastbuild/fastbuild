@@ -15,11 +15,11 @@
 
 // Handle GCC -ffreestanding environment
 #if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
-    extern "C"
-    {
-        void * malloc( size_t size );
-        void free( void * ptr );
-    }
+extern "C"
+{
+    void * malloc( size_t size );
+    void free( void * ptr );
+}
 #endif
 
 // TestMemPoolBlock
@@ -98,11 +98,11 @@ void TestMemPoolBlock::TestAllocsMultiplePages() const
 //------------------------------------------------------------------------------
 void TestMemPoolBlock::TestSpeed()
 {
-    #if defined( DEBUG )
-        const uint32_t numAllocs( 100 * 1000 );
-    #else
-        const uint32_t numAllocs( 1000 * 1000 );
-    #endif
+#if defined( DEBUG )
+    const uint32_t numAllocs( 100 * 1000 );
+#else
+    const uint32_t numAllocs( 1000 * 1000 );
+#endif
     const uint32_t allocSize( 24 );
 
     float time1( 0.0f );

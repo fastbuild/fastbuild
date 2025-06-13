@@ -24,11 +24,11 @@ public:
 
 private:
     // do this to avoid including windows.h
-    #if defined( __WINDOWS__ )
-        uint64_t m_CriticalSection[ 5 ]; // CRITICAL_SECTION
-    #else
-        pthread_mutex_t m_Mutex;
-    #endif
+#if defined( __WINDOWS__ )
+    uint64_t m_CriticalSection[ 5 ]; // CRITICAL_SECTION
+#else
+    pthread_mutex_t m_Mutex;
+#endif
 };
 
 // MutexHolder

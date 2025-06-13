@@ -18,11 +18,11 @@
 
 // Handle GCC -ffreestanding environment
 #if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
-    extern "C"
-    {
-        void * malloc( size_t size );
-        void free( void * ptr );
-    }
+extern "C"
+{
+    void * malloc( size_t size );
+    void free( void * ptr );
+}
 #endif
 
 // TestSmallBlockAllocator
@@ -64,11 +64,11 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestSmallBlockAllocator::SingleThreaded() const
 {
-    #if defined( DEBUG )
-        const uint32_t numAllocs( 10 * 1000 );
-    #else
-        const uint32_t numAllocs( 100 * 1000 );
-    #endif
+#if defined( DEBUG )
+    const uint32_t numAllocs( 10 * 1000 );
+#else
+    const uint32_t numAllocs( 100 * 1000 );
+#endif
     const uint32_t repeatCount( 10 );
 
     Array<uint32_t> allocSizes;
@@ -86,11 +86,11 @@ void TestSmallBlockAllocator::SingleThreaded() const
 //------------------------------------------------------------------------------
 void TestSmallBlockAllocator::MultiThreaded() const
 {
-    #if defined( DEBUG )
-        const uint32_t numAllocs( 10 * 1000 );
-    #else
-        const uint32_t numAllocs( 100 * 1000 );
-    #endif
+#if defined( DEBUG )
+    const uint32_t numAllocs( 10 * 1000 );
+#else
+    const uint32_t numAllocs( 100 * 1000 );
+#endif
     const uint32_t repeatCount( 10 );
 
     Array<uint32_t> allocSizes;

@@ -39,9 +39,9 @@ private:
     void ReadOnly() const;
     void FileTime() const;
     void LongPaths() const;
-    #if defined( __WINDOWS__ )
-        void NormalizeWindowsPathCasing() const;
-    #endif
+#if defined( __WINDOWS__ )
+    void NormalizeWindowsPathCasing() const;
+#endif
     void CreateOrOpenReadWrite() const;
     void CreateOrOpenReadWritePerf() const;
 
@@ -61,9 +61,9 @@ REGISTER_TESTS_BEGIN( TestFileIO )
     REGISTER_TEST( ReadOnly )
     REGISTER_TEST( FileTime )
     REGISTER_TEST( LongPaths )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( NormalizeWindowsPathCasing )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( NormalizeWindowsPathCasing )
+#endif
     REGISTER_TEST( CreateOrOpenReadWrite )
     REGISTER_TEST( CreateOrOpenReadWritePerf )
 REGISTER_TESTS_END
@@ -176,58 +176,58 @@ void TestFileIO::FileCopy() const
 //------------------------------------------------------------------------------
 void TestFileIO::FileCopySymlink() const
 {
-    #if defined( __WINDOWS__ ) || defined( __APPLE__ )
-        // Not tested on Windows/MacOS as symlinks are directly supported
-        // by the file copy API.  Also on Windows, it would make unit
-        // tests require administrator privileges.
-    #elif defined( __LINUX__ )
-        AStackString symlinkTarget( "symlink" );
+#if defined( __WINDOWS__ ) || defined( __APPLE__ )
+    // Not tested on Windows/MacOS as symlinks are directly supported
+    // by the file copy API.  Also on Windows, it would make unit
+    // tests require administrator privileges.
+#elif defined( __LINUX__ )
+    AStackString symlinkTarget( "symlink" );
 
-        // generate a process unique file path
-        AStackString path;
-        GenerateTempFileName( path );
+    // generate a process unique file path
+    AStackString path;
+    GenerateTempFileName( path );
 
-        // generate copy file name
-        AStackString pathCopy( path );
-        pathCopy += ".copy";
+    // generate copy file name
+    AStackString pathCopy( path );
+    pathCopy += ".copy";
 
-        // make sure nothing is left from previous runs
-        FileIO::FileDelete( path.Get() );
-        FileIO::FileDelete( pathCopy.Get() );
-        TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
-        TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
+    // make sure nothing is left from previous runs
+    FileIO::FileDelete( path.Get() );
+    FileIO::FileDelete( pathCopy.Get() );
+    TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
+    TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
 
-        // create it
-        TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
+    // create it
+    TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
 
-        // copy it
-        TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
-        TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
+    // copy it
+    TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
+    TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
 
-        // validate link
-        AStackString linkPath;
-        ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
-        TEST_ASSERT( length == symlinkTarget.GetLength() );
-        linkPath.SetLength( length );
-        TEST_ASSERT( linkPath == symlinkTarget );
+    // validate link
+    AStackString linkPath;
+    ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
+    TEST_ASSERT( length == symlinkTarget.GetLength() );
+    linkPath.SetLength( length );
+    TEST_ASSERT( linkPath == symlinkTarget );
 
-        // ensure attributes are transferred properly
-        FileIO::FileInfo sourceInfo;
-        TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
-        FileIO::FileInfo destInfo;
-        TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
-        TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
+    // ensure attributes are transferred properly
+    FileIO::FileInfo sourceInfo;
+    TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
+    FileIO::FileInfo destInfo;
+    TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
+    TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
 
-        // copy without overwrite allowed should fail
-        const bool allowOverwrite = false;
-        TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );
+    // copy without overwrite allowed should fail
+    const bool allowOverwrite = false;
+    TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );
 
-        // cleanup
-        VERIFY( FileIO::FileDelete( path.Get() ) );
-        VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
-    #else
-        #error Unknown platform
-    #endif
+    // cleanup
+    VERIFY( FileIO::FileDelete( path.Get() ) );
+    VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
+#else
+    #error Unknown platform
+#endif
 }
 
 // FileMove
@@ -343,14 +343,14 @@ void TestFileIO::LongPaths() const
     // Ensure long paths are correctly handled by various functions
     //
 
-    #if defined( __WINDOWS__ )
-        // On Windows, long path support must be enabled via a registry key
-        // Only if this is enabled can we expect our test to pass
-        if ( FileIO::IsWindowsLongPathSupportEnabled() == false )
-        {
-            return;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // On Windows, long path support must be enabled via a registry key
+    // Only if this is enabled can we expect our test to pass
+    if ( FileIO::IsWindowsLongPathSupportEnabled() == false )
+    {
+        return;
+    }
+#endif
 
     // Constants used to build long paths
     AString a( 255 );
@@ -505,9 +505,9 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
 // NormalizeWindowsPathCasing
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestFileIO::NormalizeWindowsPathCasing() const
-    {
-        #define CHECK_NORMALIZATION( badPath, expectedPath ) \
+void TestFileIO::NormalizeWindowsPathCasing() const
+{
+    #define CHECK_NORMALIZATION( badPath, expectedPath ) \
             do \
             { \
                 AStackString normalizedPath; \
@@ -515,29 +515,29 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
                 TEST_ASSERT( normalizedPath == expectedPath ); \
             } while ( false )
 
-        // Out test needs to rely on some generally available directory.
-        // While technically Windows can be installed on different drives or folders
-        // it's reasonable for our test to not support that.
-        TEST_ASSERT( FileIO::DirectoryExists( AStackString( "C:\\Windows" ) ) );
+    // Out test needs to rely on some generally available directory.
+    // While technically Windows can be installed on different drives or folders
+    // it's reasonable for our test to not support that.
+    TEST_ASSERT( FileIO::DirectoryExists( AStackString( "C:\\Windows" ) ) );
 
-        // Folder parts get the actual case of folders on disk
-        CHECK_NORMALIZATION( "C:\\WINDOWS", "C:\\Windows" );
-        CHECK_NORMALIZATION( "C:\\windows\\sySTem32", "C:\\Windows\\System32" );
+    // Folder parts get the actual case of folders on disk
+    CHECK_NORMALIZATION( "C:\\WINDOWS", "C:\\Windows" );
+    CHECK_NORMALIZATION( "C:\\windows\\sySTem32", "C:\\Windows\\System32" );
 
-        // Drive letters are upper-case
-        CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
-        CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
+    // Drive letters are upper-case
+    CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
+    CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
 
-        // Drive only
-        CHECK_NORMALIZATION( "C:\\", "C:\\" );
-        CHECK_NORMALIZATION( "c:\\", "C:\\" );
+    // Drive only
+    CHECK_NORMALIZATION( "C:\\", "C:\\" );
+    CHECK_NORMALIZATION( "c:\\", "C:\\" );
 
-        // Paths that partially exist have the parts that exist fixed up
-        // but the parts that don't left alone
-        CHECK_NORMALIZATION( "c:\\winDOWs\\FolderThatDoesNotExist", "C:\\Windows\\FolderThatDoesNotExist" );
+    // Paths that partially exist have the parts that exist fixed up
+    // but the parts that don't left alone
+    CHECK_NORMALIZATION( "c:\\winDOWs\\FolderThatDoesNotExist", "C:\\Windows\\FolderThatDoesNotExist" );
 
-        #undef CHECK_NORMALIZATION
-    }
+    #undef CHECK_NORMALIZATION
+}
 #endif
 
 //------------------------------------------------------------------------------

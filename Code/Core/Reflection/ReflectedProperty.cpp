@@ -23,9 +23,9 @@ ReflectedProperty::ReflectedProperty( const char * name, uint32_t offset, Proper
     m_Offset = (uint16_t)offset;
     m_Type = type;
 
-    #if defined( REFLECTION_KEEP_STRING_NAMES )
-        m_Name = name;
-    #endif
+#if defined( REFLECTION_KEEP_STRING_NAMES )
+    m_Name = name;
+#endif
 
     m_IsArray = isArray;
 

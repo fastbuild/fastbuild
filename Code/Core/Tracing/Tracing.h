@@ -28,12 +28,12 @@ class Tracing
 public:
     static void DoNothing() {}
 
-    #ifdef DEBUG
-        static void DebugSpam( const char * message );
-        static void DebugSpamFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 1, 2 );
-        static void Warning( const char * file, uint32_t line, const char * message );
-        static void WarningFormat( MSVC_SAL_PRINTF const char * file, uint32_t line, const char * fmtString, ... ) FORMAT_STRING( 3, 4 );
-    #endif
+#ifdef DEBUG
+    static void DebugSpam( const char * message );
+    static void DebugSpamFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 1, 2 );
+    static void Warning( const char * file, uint32_t line, const char * message );
+    static void WarningFormat( MSVC_SAL_PRINTF const char * file, uint32_t line, const char * fmtString, ... ) FORMAT_STRING( 3, 4 );
+#endif
     static void Output( const char * message );
     static void OutputFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 1, 2 );
     static void FatalError( const char * message );

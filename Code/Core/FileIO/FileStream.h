@@ -38,18 +38,18 @@ public:
     virtual uint64_t GetFileSize() const override;
 
     // file specific
-    #if defined( __WINDOWS__ )
-        // Set on already open file via handle (Windows only)
-        bool SetLastWriteTime( uint64_t lastWriteTime );
-    #endif
+#if defined( __WINDOWS__ )
+    // Set on already open file via handle (Windows only)
+    bool SetLastWriteTime( uint64_t lastWriteTime );
+#endif
     bool Truncate();
 
 private:
-    #if defined( __WINDOWS__ )
-        void * m_Handle;
-    #else
-        int32_t m_Handle;
-    #endif
+#if defined( __WINDOWS__ )
+    void * m_Handle;
+#else
+    int32_t m_Handle;
+#endif
 };
 
 //------------------------------------------------------------------------------

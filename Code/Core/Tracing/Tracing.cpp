@@ -28,72 +28,72 @@
 #ifdef DEBUG
     // DebugSpam
     //------------------------------------------------------------------------------
-    /*static*/ void Tracing::DebugSpam( const char * message )
+/*static*/ void Tracing::DebugSpam( const char * message )
+{
+    PROFILE_FUNCTION;
+
+    const bool messageConsumed = s_Callbacks.DispatchCallbacksDebugSpam( message );
+    if ( messageConsumed )
     {
-        PROFILE_FUNCTION;
-
-        const bool messageConsumed = s_Callbacks.DispatchCallbacksDebugSpam( message );
-        if ( messageConsumed )
-        {
-            return; // Callback swallowed output
-        }
-
-        // normal output that goes to the TTY
-        fputs( message, stdout );
-
-        // emit to the debugger as well if possible
-        #if defined( __WINDOWS__ )
-            OutputDebugStringA( message );
-        #endif
+        return; // Callback swallowed output
     }
+
+    // normal output that goes to the TTY
+    fputs( message, stdout );
+
+    // emit to the debugger as well if possible
+    #if defined( __WINDOWS__ )
+    OutputDebugStringA( message );
+    #endif
+}
 
     // DebugSpamFormat
     //------------------------------------------------------------------------------
-    /*static*/ void Tracing::DebugSpamFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
-    {
-        AStackString<8192> buffer;
+/*static*/ void Tracing::DebugSpamFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
+{
+    AStackString<8192> buffer;
 
-        va_list args;
-        va_start( args, fmtString );
-        buffer.VFormat( fmtString, args );
-        va_end( args );
+    va_list args;
+    va_start( args, fmtString );
+    buffer.VFormat( fmtString, args );
+    va_end( args );
 
-        DebugSpam( buffer.Get() );
-    }
+    DebugSpam( buffer.Get() );
+}
 
     // Warning
     //------------------------------------------------------------------------------
-    /*static*/ void Tracing::Warning( const char * file, uint32_t line, const char * message )
-    {
-        // format a double clickable line
-        AStackString<8192> buffer;
-        buffer.Format( "%s(%u): %s\n", file, line, message );
+/*static*/ void Tracing::Warning( const char * file, uint32_t line, const char * message )
+{
+    // format a double clickable line
+    AStackString<8192> buffer;
+    buffer.Format( "%s(%u): %s\n", file, line, message );
 
-        // normal output that goes to the TTY
-        puts( buffer.Get() );
+    // normal output that goes to the TTY
+    puts( buffer.Get() );
 
-        // emit to the debugger as well if possible
-        #if defined( __WINDOWS__ )
-            OutputDebugStringA( buffer.Get() );
-        #endif
-    }
+    // emit to the debugger as well if possible
+    #if defined( __WINDOWS__ )
+    OutputDebugStringA( buffer.Get() );
+    #endif
+}
 
     // WarningFormat
     //------------------------------------------------------------------------------
-    /*static*/ void Tracing::WarningFormat( MSVC_SAL_PRINTF const char * file,
-                                            uint32_t line,
-                                            const char * fmtString,
-                                            ... )
-    {
-        AStackString buffer;
+/*static*/ void Tracing::WarningFormat( MSVC_SAL_PRINTF const char * file,
+                                        uint32_t line,
+                                        const char * fmtString,
+                                        ... )
+{
+    AStackString buffer;
 
-        va_list args;
-        va_start( args, fmtString );
-        buffer.VFormat( fmtString, args );
-        va_end( args );
+    va_list args;
+    va_start( args, fmtString );
+    buffer.VFormat( fmtString, args );
+    va_end( args );
 
-        Warning( file, line, buffer.Get() );
-    }
+    Warning( file, line, buffer.Get() );
+}
 #endif
 
 // Output
@@ -110,11 +110,11 @@
     fputs( message, stdout );
 
     // emit to the debugger as well if possible
-    #if defined( __WINDOWS__ )
-        #ifdef DEBUG
-            OutputDebugStringA( message );
-        #endif
+#if defined( __WINDOWS__ )
+    #ifdef DEBUG
+    OutputDebugStringA( message );
     #endif
+#endif
 }
 
 // OutputFormat
@@ -139,11 +139,11 @@
     puts( message );
 
     // to the debugger if available
-    #if defined( __WINDOWS__ )
-        #ifdef DEBUG
-            OutputDebugStringA( message );
-        #endif
+#if defined( __WINDOWS__ )
+    #ifdef DEBUG
+    OutputDebugStringA( message );
     #endif
+#endif
 
     // for now, we'll just break
     BREAK_IN_DEBUGGER;

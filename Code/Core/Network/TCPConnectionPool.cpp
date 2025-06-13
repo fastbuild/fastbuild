@@ -52,74 +52,74 @@
 // TCPConnectionPoolProfileHelper
 //------------------------------------------------------------------------------
 #if defined( PROFILING_ENABLED )
-    class TCPConnectionPoolProfileHelper
+class TCPConnectionPoolProfileHelper
+{
+public:
+    enum ThreadType
     {
-    public:
-        enum ThreadType
-        {
-            THREAD_LISTEN,
-            THREAD_CONNECTION
-        };
+        THREAD_LISTEN,
+        THREAD_CONNECTION
+    };
 
-        TCPConnectionPoolProfileHelper( ThreadType threadType )
-        {
-            // Chose which bitmap to use
-            uint64_t & bitmap = ( threadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+    TCPConnectionPoolProfileHelper( ThreadType threadType )
+    {
+        // Chose which bitmap to use
+        uint64_t & bitmap = ( threadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
 
-            // Find free bit
-            uint32_t bit = 0;
+        // Find free bit
+        uint32_t bit = 0;
+        {
+            MutexHolder mh( s_Mutex );
+            for ( ; bit < 64; ++bit )
             {
-                MutexHolder mh( s_Mutex );
-                for ( ; bit < 64; ++bit )
+                // Is this bit clear?
+                if ( ( ( (uint64_t)1 << bit ) & bitmap ) == 0 )
                 {
-                    // Is this bit clear?
-                    if ( ( ( (uint64_t)1 << bit ) & bitmap ) == 0 )
-                    {
-                        // Set bit as we will use this Id
-                        bitmap |= ( (uint64_t)1 << bit );
-                        break;
-                    }
+                    // Set bit as we will use this Id
+                    bitmap |= ( (uint64_t)1 << bit );
+                    break;
                 }
             }
-            m_Bit = bit; // Store the bit for this thread
-            m_ThreadType = threadType;
-
-            // No free bits? (Last bit is never set)
-            if ( bit == 63 )
-            {
-                return; // Can't set thread name
-            }
-
-            // Format and set
-            AStackString threadName;
-            threadName.Format( ( threadType == THREAD_LISTEN ) ? "Listen_%u" : "Connection_%u", bit );
-            PROFILE_SET_THREAD_NAME( threadName.Get() );
         }
-        ~TCPConnectionPoolProfileHelper()
+        m_Bit = bit; // Store the bit for this thread
+        m_ThreadType = threadType;
+
+        // No free bits? (Last bit is never set)
+        if ( bit == 63 )
         {
-            // Clear bit if we reserved one
-            if ( m_Bit < 63 )
-            {
-                // Chose which bitmap to use
-                uint64_t & bitmap = ( m_ThreadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
-
-                // Clear bit
-                MutexHolder mh( s_Mutex );
-                bitmap &= ~( (uint64_t)1 << m_Bit );
-            }
+            return; // Can't set thread name
         }
 
-    protected:
-        ThreadType m_ThreadType;
-        uint32_t m_Bit;
+        // Format and set
+        AStackString threadName;
+        threadName.Format( ( threadType == THREAD_LISTEN ) ? "Listen_%u" : "Connection_%u", bit );
+        PROFILE_SET_THREAD_NAME( threadName.Get() );
+    }
+    ~TCPConnectionPoolProfileHelper()
+    {
+        // Clear bit if we reserved one
+        if ( m_Bit < 63 )
+        {
+            // Chose which bitmap to use
+            uint64_t & bitmap = ( m_ThreadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
 
-        static Mutex s_Mutex;
-        static uint64_t s_IdBitmapListen;
-        static uint64_t s_IdBitmapConnection;
-    };
-    /*static*/ Mutex TCPConnectionPoolProfileHelper::s_Mutex;
-    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapListen = 0;
-    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection = 0;
+            // Clear bit
+            MutexHolder mh( s_Mutex );
+            bitmap &= ~( (uint64_t)1 << m_Bit );
+        }
+    }
+
+protected:
+    ThreadType m_ThreadType;
+    uint32_t m_Bit;
+
+    static Mutex s_Mutex;
+    static uint64_t s_IdBitmapListen;
+    static uint64_t s_IdBitmapConnection;
+};
+/*static*/ Mutex TCPConnectionPoolProfileHelper::s_Mutex;
+/*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapListen = 0;
+/*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection = 0;
 
     #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )   \
         TCPConnectionPoolProfileHelper threadNameHelper( threadType )
@@ -306,11 +306,11 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         if ( !WouldBlock() )
         {
             // connection initiation failed
-            #ifdef TCPCONNECTION_DEBUG
-                AStackString host;
-                GetAddressAsString( hostIP, host );
-                TCPDEBUG( "connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
-            #endif
+#ifdef TCPCONNECTION_DEBUG
+            AStackString host;
+            GetAddressAsString( hostIP, host );
+            TCPDEBUG( "connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+#endif
             CloseSocket( sockfd );
             return nullptr;
         }
@@ -337,11 +337,11 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         if ( selRet == SOCKET_ERROR )
         {
             // connection failed
-            #ifdef TCPCONNECTION_DEBUG
-                AStackString host;
-                GetAddressAsString( hostIP, host );
-                TCPDEBUG( "select() after connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
-            #endif
+#ifdef TCPCONNECTION_DEBUG
+            AStackString host;
+            GetAddressAsString( hostIP, host );
+            TCPDEBUG( "select() after connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+#endif
             CloseSocket( sockfd );
             return nullptr;
         }
@@ -352,11 +352,11 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             // are we shutting down?
             if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
             {
-                #ifdef TCPCONNECTION_DEBUG
-                    AStackString host;
-                    GetAddressAsString( hostIP, host );
-                    TCPDEBUG( "connect() aborted (Shutting Down) (Host: %s, Port: %u)\n", host.Get(), port );
-                #endif
+#ifdef TCPCONNECTION_DEBUG
+                AStackString host;
+                GetAddressAsString( hostIP, host );
+                TCPDEBUG( "connect() aborted (Shutting Down) (Host: %s, Port: %u)\n", host.Get(), port );
+#endif
                 CloseSocket( sockfd );
                 return nullptr;
             }
@@ -364,11 +364,11 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             // have we hit our real connection timeout?
             if ( connectionTimer.GetElapsedMS() >= (float)timeout )
             {
-                #ifdef TCPCONNECTION_DEBUG
-                    AStackString host;
-                    GetAddressAsString( hostIP, host );
-                    TCPDEBUG( "connect() time out %u hit (Host: %s, Port: %u)\n", timeout, host.Get(), port );
-                #endif
+#ifdef TCPCONNECTION_DEBUG
+                AStackString host;
+                GetAddressAsString( hostIP, host );
+                TCPDEBUG( "connect() time out %u hit (Host: %s, Port: %u)\n", timeout, host.Get(), port );
+#endif
                 CloseSocket( sockfd );
                 return nullptr;
             }
@@ -380,55 +380,55 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         if ( FD_ISSET( sockfd, &err ) )
         {
             // connection failed
-            #ifdef TCPCONNECTION_DEBUG
-                AStackString host;
-                GetAddressAsString( hostIP, host );
-                const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
+#ifdef TCPCONNECTION_DEBUG
+            AStackString host;
+            GetAddressAsString( hostIP, host );
+            const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
 
-                int32_t error = 0;
-                socklen_t size = sizeof( error );
-                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, &size ) != SOCKET_ERROR )
-                {
-                    TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i, SO_ERROR %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet, error );
-                }
-                else
-                {
-                    TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet );
-                }
-            #endif
+            int32_t error = 0;
+            socklen_t size = sizeof( error );
+            if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, &size ) != SOCKET_ERROR )
+            {
+                TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i, SO_ERROR %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet, error );
+            }
+            else
+            {
+                TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet );
+            }
+#endif
             CloseSocket( sockfd );
             return nullptr;
         }
 
         if ( FD_ISSET( sockfd, &write ) )
         {
-            #if defined( __APPLE__ ) || defined( __LINUX__ )
-                // On Linux a write flag set by select() doesn't mean that
-                // connect() succeeded, it only means that it is completed.
-                // To get the result we need to query SO_ERROR value via getsockopt().
-                int32_t error = 0;
-                socklen_t size = sizeof( error );
-                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, &size ) == SOCKET_ERROR )
-                {
-                    #ifdef TCPCONNECTION_DEBUG
-                        AStackString host;
-                        GetAddressAsString( hostIP, host );
-                        TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
-                    #endif
-                    CloseSocket( sockfd );
-                    return nullptr;
-                }
-                if ( error != 0 )
-                {
-                    #ifdef TCPCONNECTION_DEBUG
-                        AStackString host;
-                        GetAddressAsString( hostIP, host );
-                        TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
-                    #endif
-                    CloseSocket( sockfd );
-                    return nullptr;
-                }
-            #endif
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+            // On Linux a write flag set by select() doesn't mean that
+            // connect() succeeded, it only means that it is completed.
+            // To get the result we need to query SO_ERROR value via getsockopt().
+            int32_t error = 0;
+            socklen_t size = sizeof( error );
+            if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, &size ) == SOCKET_ERROR )
+            {
+    #ifdef TCPCONNECTION_DEBUG
+                AStackString host;
+                GetAddressAsString( hostIP, host );
+                TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+    #endif
+                CloseSocket( sockfd );
+                return nullptr;
+            }
+            if ( error != 0 )
+            {
+    #ifdef TCPCONNECTION_DEBUG
+                AStackString host;
+                GetAddressAsString( hostIP, host );
+                TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
+    #endif
+                CloseSocket( sockfd );
+                return nullptr;
+            }
+#endif
             break; // connection success!
         }
 
@@ -545,11 +545,11 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     }
 
     ASSERT( numBuffers <= 4 ); // Worst case = size + data + payloadSize + payload
-    #if defined( __WINDOWS__ )
-        WSABUF sendBuffers[ 4 ];
-    #else
-        struct iovec sendBuffers[ 4 ];
-    #endif
+#if defined( __WINDOWS__ )
+    WSABUF sendBuffers[ 4 ];
+#else
+    struct iovec sendBuffers[ 4 ];
+#endif
 
     // Calculate total to send
     uint32_t totalBytes( 0 );
@@ -585,13 +585,13 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
             {
                 // add remaining data for this buffer
                 const uint32_t remainder = ( buffers[ i ].size - overlap );
-                #if defined( __WINDOWS__ )
-                    sendBuffers[ numSendBuffers ].len = remainder;
-                    sendBuffers[ numSendBuffers ].buf = const_cast<CHAR *>( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
-                #else
-                    sendBuffers[ numSendBuffers ].iov_len = remainder;
-                    sendBuffers[ numSendBuffers ].iov_base = const_cast<char *>( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
-                #endif
+#if defined( __WINDOWS__ )
+                sendBuffers[ numSendBuffers ].len = remainder;
+                sendBuffers[ numSendBuffers ].buf = const_cast<CHAR *>( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
+#else
+                sendBuffers[ numSendBuffers ].iov_len = remainder;
+                sendBuffers[ numSendBuffers ].iov_base = const_cast<char *>( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
+#endif
                 ++numSendBuffers;
             }
             offset += buffers[ i ].size;
@@ -600,14 +600,14 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         ASSERT( numSendBuffers > 0 ); // shouldn't be in loop if there was no data to send!
 
         // Try send
-        #if defined( __WINDOWS__ )
-            uint32_t sent( 0 );
-            const int result = WSASend( connection->m_Socket, sendBuffers, numSendBuffers, (LPDWORD)&sent, 0, nullptr, nullptr );
-            if ( result == SOCKET_ERROR )
-        #else
-            ssize_t sent = writev( connection->m_Socket, sendBuffers, static_cast<int32_t>( numSendBuffers ) );
-            if ( sent <= 0 )
-        #endif
+#if defined( __WINDOWS__ )
+        uint32_t sent( 0 );
+        const int result = WSASend( connection->m_Socket, sendBuffers, numSendBuffers, (LPDWORD)&sent, 0, nullptr, nullptr );
+        if ( result == SOCKET_ERROR )
+#else
+        ssize_t sent = writev( connection->m_Socket, sendBuffers, static_cast<int32_t>( numSendBuffers ) );
+        if ( sent <= 0 )
+#endif
         {
             if ( WouldBlock() )
             {
@@ -636,9 +636,9 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         bytesSent += sent;
     }
 
-    #if defined( ASSERTS_ENABLED )
-        connection->m_SendSocketInUseThreadId = INVALID_THREAD_ID;
-    #endif
+#if defined( ASSERTS_ENABLED )
+    connection->m_SendSocketInUseThreadId = INVALID_THREAD_ID;
+#endif
     return sendOK;
 }
 
@@ -682,11 +682,11 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     uint32_t bytesToRead = 4;
     while ( bytesToRead > 0 )
     {
-        #if defined( __WINDOWS__ )
-            const int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, (int32_t)bytesToRead, 0 );
-        #else
-            const int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, static_cast<size_t>( bytesToRead ), 0 );
-        #endif
+#if defined( __WINDOWS__ )
+        const int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, (int32_t)bytesToRead, 0 );
+#else
+        const int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, static_cast<size_t>( bytesToRead ), 0 );
+#endif
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
@@ -716,11 +716,11 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     char * dest = (char *)buffer;
     while ( bytesRemaining > 0 )
     {
-        #if defined( __WINDOWS__ )
-            int numBytes = (int)recv( ci->m_Socket, dest, (int32_t)bytesRemaining, 0 );
-        #else
-            int numBytes = (int)recv( ci->m_Socket, dest, static_cast<size_t>( bytesRemaining ), 0 );
-        #endif
+#if defined( __WINDOWS__ )
+        int numBytes = (int)recv( ci->m_Socket, dest, (int32_t)bytesRemaining, 0 );
+#else
+        int numBytes = (int)recv( ci->m_Socket, dest, static_cast<size_t>( bytesRemaining ), 0 );
+#endif
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
@@ -757,39 +757,39 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
 //------------------------------------------------------------------------------
 int TCPConnectionPool::GetLastNetworkError() const
 {
-    #if defined( __WINDOWS__ )
-        return WSAGetLastError();
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return errno;
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return WSAGetLastError();
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return errno;
+#else
+    #error Unknown platform
+#endif
 }
 
 // WouldBlock
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::WouldBlock() const
 {
-    #if defined( __WINDOWS__ )
-        return ( WSAGetLastError() == WSAEWOULDBLOCK );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return ( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) || ( errno == EINPROGRESS ) );
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return ( WSAGetLastError() == WSAEWOULDBLOCK );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return ( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) || ( errno == EINPROGRESS ) );
+#else
+    #error Unknown platform
+#endif
 }
 
 // CloseSocket
 //------------------------------------------------------------------------------
 int TCPConnectionPool::CloseSocket( TCPSocket a_Socket ) const
 {
-    #if defined( __WINDOWS__ )
-        return closesocket( a_Socket );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return close( a_Socket );
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return closesocket( a_Socket );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return close( a_Socket );
+#else
+    #error Unknown platform
+#endif
 }
 
 // Select
@@ -814,22 +814,22 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
                                      struct sockaddr * address,
                                      int * addressSize ) const
 {
-    #if defined( __WINDOWS__ )
-        // On Windows, the newSocket inherits WSA_FLAG_NO_HANDLE_INHERIT from socket
-        const TCPSocket newSocket = accept( socket, address, addressSize );
+#if defined( __WINDOWS__ )
+    // On Windows, the newSocket inherits WSA_FLAG_NO_HANDLE_INHERIT from socket
+    const TCPSocket newSocket = accept( socket, address, addressSize );
 
-        // TODO: Re-enable
-        //DWORD flags;
-        //ASSERT( GetHandleInformation( (HANDLE)newSocket, &flags ) );
-        //ASSERT( ( flags & HANDLE_FLAG_INHERIT ) == 0 );
-        //(void)flags;
-    #elif defined( __LINUX__ )
-        // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
-        TCPSocket newSocket = accept4( socket, address, (unsigned int *)addressSize, SOCK_CLOEXEC );
-    #elif defined( __APPLE__ )
-        // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
-        TCPSocket newSocket = accept( socket, address, (unsigned int *)addressSize );
-    #endif
+    // TODO: Re-enable
+    //DWORD flags;
+    //ASSERT( GetHandleInformation( (HANDLE)newSocket, &flags ) );
+    //ASSERT( ( flags & HANDLE_FLAG_INHERIT ) == 0 );
+    //(void)flags;
+#elif defined( __LINUX__ )
+    // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
+    TCPSocket newSocket = accept4( socket, address, (unsigned int *)addressSize, SOCK_CLOEXEC );
+#elif defined( __APPLE__ )
+    // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
+    TCPSocket newSocket = accept( socket, address, (unsigned int *)addressSize );
+#endif
 
     if ( newSocket == INVALID_SOCKET )
     {
@@ -837,10 +837,10 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
         return newSocket;
     }
 
-    #if defined( __APPLE__ )
-        // OS X does not support atomic setting of CLOEXEC: see notes in CreateSocket
-        VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
-    #endif
+#if defined( __APPLE__ )
+    // OS X does not support atomic setting of CLOEXEC: see notes in CreateSocket
+    VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
+#endif
 
     return newSocket;
 }
@@ -849,19 +849,19 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
 //------------------------------------------------------------------------------
 TCPSocket TCPConnectionPool::CreateSocket() const
 {
-    #if defined( __LINUX__ )
-        // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
-        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
-    #elif defined( __WINDOWS__ )
-        const TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+#if defined( __LINUX__ )
+    // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
+    TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
+#elif defined( __WINDOWS__ )
+    const TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
 
-        // TODO: Re-enable
-        // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
-        //TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
-    #else
-        // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
-        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
-    #endif
+    // TODO: Re-enable
+    // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
+    //TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
+#else
+    // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
+    TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+#endif
 
     // Failure?
     if ( newSocket == INVALID_SOCKET )
@@ -870,16 +870,16 @@ TCPSocket TCPConnectionPool::CreateSocket() const
         return newSocket;
     }
 
-    #if defined( __APPLE__ )
-        // OS X does not support atomic setting of CLOEXEC, which exposes
-        // us to race conditions if another thread is spawning a process.
-        // The best we can do is reduce the likelyhood of problems by immediately
-        // setting the flag after creation.
-        // In practice, the listen socket is the most problematic one to be
-        // inherited (as it prevents re-use), but thankfully starting listening
-        // while spawning a process is not something we generally do.
-        VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
-    #endif
+#if defined( __APPLE__ )
+    // OS X does not support atomic setting of CLOEXEC, which exposes
+    // us to race conditions if another thread is spawning a process.
+    // The best we can do is reduce the likelyhood of problems by immediately
+    // setting the flag after creation.
+    // In practice, the listen socket is the most problematic one to be
+    // inherited (as it prevents re-use), but thankfully starting listening
+    // while spawning a process is not something we generally do.
+    VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
+#endif
 
     return newSocket;
 }
@@ -982,11 +982,11 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
             break;
         }
 
-        #ifdef TCPCONNECTION_DEBUG
-            AStackString<32> addr;
-            GetAddressAsString( remoteAddrInfo.sin_addr.s_addr, addr );
-            TCPDEBUG( "Connection accepted from %s : %i (%x)\n", addr.Get(), ntohs( remoteAddrInfo.sin_port ), (uint32_t)newSocket );
-        #endif
+#ifdef TCPCONNECTION_DEBUG
+        AStackString<32> addr;
+        GetAddressAsString( remoteAddrInfo.sin_addr.s_addr, addr );
+        TCPDEBUG( "Connection accepted from %s : %i (%x)\n", addr.Get(), ntohs( remoteAddrInfo.sin_port ), (uint32_t)newSocket );
+#endif
 
         // Configure socket
         DisableSigPipe( newSocket );        // Prevent socket inheritence by child processes
@@ -1034,11 +1034,11 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
     ci->m_ThreadQuitNotification.Store( false );
     ci->m_UserData = userData;
 
-    #ifdef TCPCONNECTION_DEBUG
-        AStackString<32> addr;
-        GetAddressAsString( ci->m_RemoteAddress, addr );
-        TCPDEBUG( "Connected to %s : %i (%x)\n", addr.Get(), port, (uint32_t)socket );
-    #endif
+#ifdef TCPCONNECTION_DEBUG
+    AStackString<32> addr;
+    GetAddressAsString( ci->m_RemoteAddress, addr );
+    TCPDEBUG( "Connected to %s : %i (%x)\n", addr.Get(), port, (uint32_t)socket );
+#endif
 
     // Spawn thread to handle socket
     Thread thread;
@@ -1150,14 +1150,14 @@ void TCPConnectionPool::AllowSocketReuse( TCPSocket socket ) const
     {
         TCPDEBUG( "setsockopt(SO_REUSEADDR) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
     }
-    #if defined( __APPLE__ )
-        // OS X changed the behavior or ADDR vs PORT, so we set both
-        const int ret2 = setsockopt( socket, SOL_SOCKET, SO_REUSEPORT, (const char *)&yes, sizeof( yes ) );
-        if ( ret2 != 0 )
-        {
-            TCPDEBUG( "setsockopt(SO_REUSEADDR) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
-        }
-    #endif
+#if defined( __APPLE__ )
+    // OS X changed the behavior or ADDR vs PORT, so we set both
+    const int ret2 = setsockopt( socket, SOL_SOCKET, SO_REUSEPORT, (const char *)&yes, sizeof( yes ) );
+    if ( ret2 != 0 )
+    {
+        TCPDEBUG( "setsockopt(SO_REUSEADDR) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
+    }
+#endif
 }
 
 // DisableNagle
@@ -1181,28 +1181,28 @@ void TCPConnectionPool::DisableSigPipe( TCPSocket socket ) const
     // We don't want the default behaviour of sig pipe errors in any arbitrary
     // kernel function we might call
 
-    #if defined( __WINDOWS__ )
-        // Nothing to do on Windows
-        (void)socket;
-    #elif defined( __LINUX__ )
-        // We disable SIGPIPE system wide in NetworkStartupHelper
-        (void)socket;
-    #elif defined( __APPLE__ )
-        // Must be done on every socket on OSX
-        int nosigpipe = 1;
-        VERIFY( setsockopt( socket, SOL_SOCKET, SO_NOSIGPIPE, (void *)&nosigpipe, sizeof( int ) ) == 0 );
-    #endif
+#if defined( __WINDOWS__ )
+    // Nothing to do on Windows
+    (void)socket;
+#elif defined( __LINUX__ )
+    // We disable SIGPIPE system wide in NetworkStartupHelper
+    (void)socket;
+#elif defined( __APPLE__ )
+    // Must be done on every socket on OSX
+    int nosigpipe = 1;
+    VERIFY( setsockopt( socket, SOL_SOCKET, SO_NOSIGPIPE, (void *)&nosigpipe, sizeof( int ) ) == 0 );
+#endif
 }
 
 // SetLargeBufferSizes
 //------------------------------------------------------------------------------
 void TCPConnectionPool::SetLargeBufferSizes( TCPSocket socket ) const
 {
-    #if defined( __APPLE__ )
-        const uint32_t bufferSize = ( 5 * 1024 * 1024 ); // larger values fail on OS X
-    #else
-        const uint32_t bufferSize = ( 10 * 1024 * 1024 );
-    #endif
+#if defined( __APPLE__ )
+    const uint32_t bufferSize = ( 5 * 1024 * 1024 ); // larger values fail on OS X
+#else
+    const uint32_t bufferSize = ( 10 * 1024 * 1024 );
+#endif
 
     // Receive Buffer
     {
@@ -1228,11 +1228,11 @@ void TCPConnectionPool::SetLargeBufferSizes( TCPSocket socket ) const
 void TCPConnectionPool::SetNonBlocking( TCPSocket socket ) const
 {
     u_long nonBlocking = 1;
-    #if defined( __WINDOWS__ )
-        VERIFY( ioctlsocket( socket, (long)FIONBIO, &nonBlocking ) == 0 );
-    #else
-        VERIFY( ioctl( socket, FIONBIO, &nonBlocking ) == 0 );
-    #endif
+#if defined( __WINDOWS__ )
+    VERIFY( ioctlsocket( socket, (long)FIONBIO, &nonBlocking ) == 0 );
+#else
+    VERIFY( ioctl( socket, FIONBIO, &nonBlocking ) == 0 );
+#endif
 }
 
 //------------------------------------------------------------------------------

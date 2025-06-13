@@ -29,9 +29,9 @@ private:
     static bool s_Started;
     static Mutex s_Mutex;
     static volatile bool * s_MainShutdownFlag;
-    #if defined( __WINDOWS__ )
-        static WSADATA s_WSAData;
-    #endif
+#if defined( __WINDOWS__ )
+    static WSADATA s_WSAData;
+#endif
 };
 
 //------------------------------------------------------------------------------

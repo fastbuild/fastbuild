@@ -50,7 +50,7 @@ public:
 // xxHash3Accumulator
 //------------------------------------------------------------------------------
 #if defined( ASSERTS_ENABLED )
-    PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
+PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
 #endif
 class alignas( 64 ) xxHash3Accumulator
 {
@@ -74,20 +74,20 @@ public:
     uint64_t Finalize64()
     {
         ASSERT( mFinalized == false );
-        #if defined( ASSERTS_ENABLED )
-            mFinalized = true;
-        #endif
+#if defined( ASSERTS_ENABLED )
+        mFinalized = true;
+#endif
         return xxHashLib_XXH3_64bits_digest( reinterpret_cast<xxHashLib_XXH3_state_s *>( m_State ) );
     }
 
 protected:
     uint64_t m_State[ 72 ]; // See XXH3_state_s - note required alignas(64) on class
-    #if defined( ASSERTS_ENABLED )
-        bool mFinalized = false;
-    #endif
+#if defined( ASSERTS_ENABLED )
+    bool mFinalized = false;
+#endif
 };
 #if defined( ASSERTS_ENABLED )
-    PRAGMA_DISABLE_POP_MSVC
+PRAGMA_DISABLE_POP_MSVC
 #endif
 
 // Calc32

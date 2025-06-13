@@ -31,9 +31,9 @@ public:
     uint32_t GetOffset() const { return m_Offset; }
     size_t GetPropertySize() const;
     bool IsArray() const { return m_IsArray; }
-    #if defined( REFLECTION_KEEP_STRING_NAMES )
-        const char * GetName() const { return m_Name; }
-    #endif
+#if defined( REFLECTION_KEEP_STRING_NAMES )
+    const char * GetName() const { return m_Name; }
+#endif
 
     template <class T>
     const T * GetPtrToProperty( const void * base ) const
@@ -71,7 +71,7 @@ public:
         return ptr;
     }
 
-    #define GETSET_PROPERTY( getValueType, setValueType ) \
+#define GETSET_PROPERTY( getValueType, setValueType ) \
         void GetProperty( const void * object, getValueType * value ) const; \
         void SetProperty( void * object, setValueType value ) const;
 
@@ -87,14 +87,14 @@ public:
     GETSET_PROPERTY( bool, bool )
     GETSET_PROPERTY( AString, const AString & )
 
-    #define GETSET_PROPERTY_ARRAY( valueType ) \
+#define GETSET_PROPERTY_ARRAY( valueType ) \
         void GetProperty( const void * object, Array<valueType> * value ) const; \
         void SetProperty( void * object, const Array<valueType> & value ) const;
 
     GETSET_PROPERTY_ARRAY( AString )
 
-    #undef GETSET_PROPERTY
-    #undef GETSET_PROPERTY_ARRAY
+#undef GETSET_PROPERTY
+#undef GETSET_PROPERTY_ARRAY
 
     void AddMetaData( const IMetaData * metaDataChain );
 
@@ -121,9 +121,9 @@ protected:
     PropertyType m_Type;
     bool m_IsArray;
 
-    #if defined( REFLECTION_KEEP_STRING_NAMES )
-        const char * m_Name;
-    #endif
+#if defined( REFLECTION_KEEP_STRING_NAMES )
+    const char * m_Name;
+#endif
 
     const IMetaData * m_MetaDataChain;
 };

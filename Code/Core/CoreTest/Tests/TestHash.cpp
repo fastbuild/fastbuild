@@ -45,11 +45,11 @@ void TestHash::CompareHashTimes_Large() const
     Random r( seed );
 
     // fill a buffer to use for tests
-    #if defined( DEBUG )
-        const size_t dataSize( 32 * 1024 * 1024 );
-    #else
-        const size_t dataSize( 64 * 1024 * 1024 );
-    #endif
+#if defined( DEBUG )
+    const size_t dataSize( 32 * 1024 * 1024 );
+#else
+    const size_t dataSize( 64 * 1024 * 1024 );
+#endif
     UniquePtr<uint64_t, FreeDeletor> data( (uint64_t *)ALLOC( dataSize ) );
     for ( size_t i = 0; i < dataSize / sizeof( uint64_t ); ++i )
     {
@@ -157,11 +157,11 @@ void TestHash::CompareHashTimes_Small() const
     strings.EmplaceBack( "longstring_98274ncoif834JODhiorhmwe8r8wy48on87h8mhwejrijrdIERwurd9j,8chm8hiuorciwriowjri" );
     strings.EmplaceBack( "c:\\files\\subdir\\project\\thing\\stuff.cpp" );
     const size_t numStrings = strings.GetSize();
-    #if defined( DEBUG )
-        const size_t numIterations = 10240;
-    #else
-        const size_t numIterations = 102400;
-    #endif
+#if defined( DEBUG )
+    const size_t numIterations = 10240;
+#else
+    const size_t numIterations = 102400;
+#endif
 
     // calc datasize
     size_t dataSize( 0 );
