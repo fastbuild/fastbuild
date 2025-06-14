@@ -204,7 +204,7 @@ uint32_t Worker::WorkThread()
 
         CheckIfRestartNeeded();
 
-        PROFILE_SYNCHRONIZE
+        PROFILE_SYNCHRONIZE;
 
         // Check if we want to exit
         if ( m_WantToQuit )

@@ -47,7 +47,7 @@ int WINAPI WinMain( HINSTANCE /*hInstance*/,
 {
     AStackString args( lpCmdLine );
     const int32_t result = Main( args );
-    PROFILE_SYNCHRONIZE
+    PROFILE_SYNCHRONIZE;
     return result;
 }
 PRAGMA_DISABLE_POP_MSVC
@@ -64,7 +64,7 @@ int main( int argc, char ** argv )
         args += argv[ i ];
     }
     const int32_t result = Main( args );
-    PROFILE_SYNCHRONIZE
+    PROFILE_SYNCHRONIZE;
     return result;
 }
 #endif

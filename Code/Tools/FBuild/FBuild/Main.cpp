@@ -64,7 +64,7 @@ int main( int argc, char * argv[] )
 {
     // This wrapper is purely for profiling scope
     const int result = Main( argc, argv );
-    PROFILE_SYNCHRONIZE // make sure no tags are active and do one final sync
+    PROFILE_SYNCHRONIZE; // make sure no tags are active and do one final sync
     return result;
 }
 
