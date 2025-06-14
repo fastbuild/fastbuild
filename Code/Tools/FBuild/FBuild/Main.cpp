@@ -100,11 +100,11 @@ int Main( int argc, char * argv[] )
         return WrapperModeForWSL( options );
     }
 
-    #if defined( __WINDOWS__ )
-        // TODO:MAC Implement SetPriorityClass
-        // TODO:LINUX Implement SetPriorityClass
-        VERIFY( SetPriorityClass( GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS ) );
-    #endif
+#if defined( __WINDOWS__ )
+    // TODO:MAC Implement SetPriorityClass
+    // TODO:LINUX Implement SetPriorityClass
+    VERIFY( SetPriorityClass( GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS ) );
+#endif
 
     // don't buffer output
     VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
