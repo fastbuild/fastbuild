@@ -89,7 +89,8 @@ FunctionUsing::FunctionUsing()
 
     if ( v->IsStruct() == false )
     {
-        Error::Error_1008_VariableOfWrongType( varToken, this,
+        Error::Error_1008_VariableOfWrongType( varToken,
+                                               this,
                                                BFFVariable::VAR_STRUCT,
                                                v->GetType() );
         return false;

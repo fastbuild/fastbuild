@@ -669,8 +669,10 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
             // We found the macro, but since it's not an include path, this means
             // it is some complex structure, possibly referencing other macros
             // that we currently don't support.
-            AddError( nullptr, nullptr, "Could not resolve macro '%s'.",
-                                        include.Get() );
+            AddError( nullptr,
+                      nullptr,
+                      "Could not resolve macro '%s'.",
+                      include.Get() );
             return;
         }
 

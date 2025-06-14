@@ -191,8 +191,10 @@ CSNode::~CSNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    if ( p.Spawn( GetCompiler()->GetExecutable().Get(), fullArgs.GetFinalArgs().Get(),
-                  workingDir, environment ) == false )
+    if ( p.Spawn( GetCompiler()->GetExecutable().Get(),
+                  fullArgs.GetFinalArgs().Get(),
+                  workingDir,
+                  environment ) == false )
     {
         if ( p.HasAborted() )
         {

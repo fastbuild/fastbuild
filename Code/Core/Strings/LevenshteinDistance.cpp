@@ -38,8 +38,10 @@ namespace
 // https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C
 //------------------------------------------------------------------------------
 template <size_t CAPACITY, bool CASE_SENSITIVE>
-static uint32_t LevenshteinDistanceImpl( const char * str1, uint32_t len1,
-                                         const char * str2, uint32_t len2 )
+static uint32_t LevenshteinDistanceImpl( const char * str1,
+                                         uint32_t len1,
+                                         const char * str2,
+                                         uint32_t len2 )
 {
     ASSERT( 0 == len1 || nullptr != str1 );
     ASSERT( 0 == len2 || nullptr != str2 );

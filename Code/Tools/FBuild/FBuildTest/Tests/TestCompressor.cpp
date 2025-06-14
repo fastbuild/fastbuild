@@ -199,9 +199,13 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         const double decompressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
         const double ratio = ( (double)dataSize / (double)compressedSize );
 
-        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n", compressionLevel,
-                                                            ( compressTimeTaken / numRepeats ), compressThroughputMBs, (double)ratio,
-                                                            ( decompressTimeTaken / numRepeats ), decompressThroughputMBs );
+        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n",
+                compressionLevel,
+                ( compressTimeTaken / numRepeats ),
+                compressThroughputMBs,
+                (double)ratio,
+                ( decompressTimeTaken / numRepeats ),
+                decompressThroughputMBs );
     }
 
     OUTPUT( "Zstd:\n" );
@@ -258,9 +262,13 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         const double decompressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
         const double ratio = ( (double)dataSize / (double)compressedSize );
 
-        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n", compressionLevel,
-                                                            ( compressTimeTaken / numRepeats ), compressThroughputMBs, (double)ratio,
-                                                            ( decompressTimeTaken / numRepeats ), decompressThroughputMBs );
+        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n",
+                compressionLevel,
+                ( compressTimeTaken / numRepeats ),
+                compressThroughputMBs,
+                (double)ratio,
+                ( decompressTimeTaken / numRepeats ),
+                decompressThroughputMBs );
     }
     OUTPUT( "------------------------------------------------\n" );
 }

@@ -374,14 +374,15 @@ void Cache::GetFullPathForCacheEntry( const AString & cacheId,
                                       AString & outFullPath ) const
 {
     // format example: N:\\fbuild.cache\\AA\\BB\\<ABCD.......>
-    outFullPath.Format( "%s%c%c%c%c%c%c%s", m_CachePath.Get(),
-                                            cacheId[ 0 ],
-                                            cacheId[ 1 ],
-                                            NATIVE_SLASH,
-                                            cacheId[ 2 ],
-                                            cacheId[ 3 ],
-                                            NATIVE_SLASH,
-                                            cacheId.Get() );
+    outFullPath.Format( "%s%c%c%c%c%c%c%s",
+                        m_CachePath.Get(),
+                        cacheId[ 0 ],
+                        cacheId[ 1 ],
+                        NATIVE_SLASH,
+                        cacheId[ 2 ],
+                        cacheId[ 3 ],
+                        NATIVE_SLASH,
+                        cacheId.Get() );
 }
 
 //------------------------------------------------------------------------------

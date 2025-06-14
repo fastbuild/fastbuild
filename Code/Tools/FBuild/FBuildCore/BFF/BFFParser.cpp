@@ -1138,7 +1138,9 @@ bool BFFParser::StoreVariableArray( const AString & name,
             }
             else
             {
-                Error::Error_1050_PropertyMustBeOfType( iter.GetCurrent(), nullptr, name.Get(),
+                Error::Error_1050_PropertyMustBeOfType( iter.GetCurrent(),
+                                                        nullptr,
+                                                        name.Get(),
                                                         varType,
                                                         BFFVariable::VAR_STRING,
                                                         BFFVariable::VAR_STRUCT );

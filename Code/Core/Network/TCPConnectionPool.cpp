@@ -200,10 +200,11 @@ void TCPConnectionPool::ShutdownAllConnections()
 //------------------------------------------------------------------------------
 /*static*/ void TCPConnectionPool::GetAddressAsString( uint32_t addr, AString & address )
 {
-    address.Format( "%u.%u.%u.%u", (unsigned int)( addr & 0x000000FF ) ,
-                                   (unsigned int)( addr & 0x0000FF00 ) >> 8,
-                                   (unsigned int)( addr & 0x00FF0000 ) >> 16,
-                                   (unsigned int)( addr & 0xFF000000 ) >> 24 );
+    address.Format( "%u.%u.%u.%u",
+                    (unsigned int)( addr & 0x000000FF ),
+                    (unsigned int)( addr & 0x0000FF00 ) >> 8,
+                    (unsigned int)( addr & 0x00FF0000 ) >> 16,
+                    (unsigned int)( addr & 0xFF000000 ) >> 24 );
 }
 
 // Listen

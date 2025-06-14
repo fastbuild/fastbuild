@@ -554,7 +554,11 @@ void TestAString::EmbeddedNuls() const
     {
         AString copy( string );
         TEST_ASSERT( copy.GetLength() == originalStringLen );
-        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+        TEST_ASSERT( memcmp( "01234"
+                             "\0"
+                             "6789",
+                             copy.Get(),
+                             originalStringLen ) == 0 );
     }
 
     // Assignment (operator =)
@@ -562,7 +566,11 @@ void TestAString::EmbeddedNuls() const
         AString copy;
         copy = string;
         TEST_ASSERT( copy.GetLength() == originalStringLen );
-        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+        TEST_ASSERT( memcmp( "01234"
+                             "\0"
+                             "6789",
+                             copy.Get(),
+                             originalStringLen ) == 0 );
     }
 
     // Assignment (Assign)
@@ -570,7 +578,11 @@ void TestAString::EmbeddedNuls() const
         AString copy;
         copy.Assign( string );
         TEST_ASSERT( copy.GetLength() == originalStringLen );
-        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+        TEST_ASSERT( memcmp( "01234"
+                             "\0"
+                             "6789",
+                             copy.Get(),
+                             originalStringLen ) == 0 );
     }
 
     // Assignment (Assign with iterators)
@@ -578,7 +590,11 @@ void TestAString::EmbeddedNuls() const
         AString copy;
         copy.Assign( string.Get(), string.GetEnd() );
         TEST_ASSERT( copy.GetLength() == originalStringLen );
-        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+        TEST_ASSERT( memcmp( "01234"
+                             "\0"
+                             "6789",
+                             copy.Get(),
+                             originalStringLen ) == 0 );
     }
 
     // Append (operator +=)
@@ -588,13 +604,23 @@ void TestAString::EmbeddedNuls() const
         copy += string;
         TEST_ASSERT( copy.GetLength() == originalStringLen );
         TEST_ASSERT( AString::StrNCmp( string.Get(), copy.Get(), originalStringLen ) == 0 );
-        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+        TEST_ASSERT( memcmp( "01234"
+                             "\0"
+                             "6789",
+                             copy.Get(),
+                             originalStringLen ) == 0 );
 
         // Append to existing
         AString copy2( string );
         copy2 += string;
         TEST_ASSERT( copy2.GetLength() == ( originalStringLen * 2 ) );
-        TEST_ASSERT( memcmp( "01234" "\0" "678901234" "\0" "6789", copy2.Get(), ( originalStringLen * 2 ) ) == 0 );
+        TEST_ASSERT( memcmp( "01234"
+                             "\0"
+                             "678901234"
+                             "\0"
+                             "6789",
+                             copy2.Get(),
+                             ( originalStringLen * 2 ) ) == 0 );
     }
 
     // Append (Append)
@@ -603,13 +629,23 @@ void TestAString::EmbeddedNuls() const
         AString copy;
         copy.Append( string );
         TEST_ASSERT( copy.GetLength() == originalStringLen );
-        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+        TEST_ASSERT( memcmp( "01234"
+                             "\0"
+                             "6789",
+                             copy.Get(),
+                             originalStringLen ) == 0 );
 
         // Append to existing
         AString copy2( string );
         copy2.Append( string );
         TEST_ASSERT( copy2.GetLength() == ( originalStringLen * 2 ) );
-        TEST_ASSERT( memcmp( "01234" "\0" "678901234" "\0" "6789", copy2.Get(), ( originalStringLen * 2 ) ) == 0 );
+        TEST_ASSERT( memcmp( "01234"
+                             "\0"
+                             "678901234"
+                             "\0"
+                             "6789",
+                             copy2.Get(),
+                             ( originalStringLen * 2 ) ) == 0 );
     }
 }
 

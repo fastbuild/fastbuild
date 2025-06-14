@@ -758,8 +758,10 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
                         " Source B  : %s\n"
                         " ObjectList: %s\n",
                         objFile.Get(),
-                        inputFileName.Get(), m_Name.Get(),
-                        other->GetSourceFile()->GetName().Get(), other->GetOwnerObjectList().Get() );
+                        inputFileName.Get(),
+                        m_Name.Get(),
+                        other->GetSourceFile()->GetName().Get(),
+                        other->GetOwnerObjectList().Get() );
             return false;
         }
     }

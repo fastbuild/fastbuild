@@ -698,9 +698,10 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
             else if ( raceLost ) { resultStr = " (Failure) (Race Lost)"; }
             else                 { resultStr = " (Failure)"; }
         }
-        DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
-                                              node->GetName().Get(),
-                                              resultStr );
+        DIST_INFO( "Got Result: %s - %s%s\n",
+                   ss->m_RemoteName.Get(),
+                   node->GetName().Get(),
+                   resultStr );
     }
 
     if ( FLog::IsMonitorEnabled() )
