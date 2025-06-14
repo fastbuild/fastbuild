@@ -324,10 +324,12 @@ ObjectListNode::ObjectListNode()
     // Currently these are MSVC only
     if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClangCl() )
     {
+        // clang-format off
         ( (FunctionObjectList *)function )->GetExtraOutputPaths( m_CompilerOptions,
                                                                  m_ExtraPDBPath,
                                                                  m_ExtraASMPath,
                                                                  m_ExtraSourceDependenciesPath );
+        // clang-format on
     }
 
     // Store dependencies

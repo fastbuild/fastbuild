@@ -34,7 +34,7 @@ public:
     static uint64_t Calc64( const AString & string ) { return Calc64( string.Get(), string.GetLength() ); }
 
 private:
-    enum { XXHASH_SEED = 0x0 }; // arbitrarily chosen random seed
+    inline static const uint32_t kXXHashSeed = 0;
 };
 
 // xxHash3
@@ -94,14 +94,14 @@ PRAGMA_DISABLE_POP_MSVC
 //------------------------------------------------------------------------------
 /*static*/ inline uint32_t xxHash::Calc32( const void * buffer, size_t len )
 {
-    return XXH32( buffer, len, XXHASH_SEED );
+    return XXH32( buffer, len, kXXHashSeed );
 }
 
 // Calc64
 //------------------------------------------------------------------------------
 /*static*/ inline uint64_t xxHash::Calc64( const void * buffer, size_t len )
 {
-    return XXH64( buffer, len, XXHASH_SEED );
+    return XXH64( buffer, len, kXXHashSeed );
 }
 
 // Calc64 (xxHash3)

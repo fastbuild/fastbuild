@@ -31,7 +31,9 @@
 #if defined( __WINDOWS__ )
 __declspec( noreturn )
 #endif
+// clang-format off
 void OnAssert( const char * /*message*/ )
+// clang-format on
 {
     throw "Assert Failed";
 }

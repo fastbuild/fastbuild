@@ -129,8 +129,10 @@ void TestDependencies::Add() const
         TEST_ASSERT( d.GetCapacity() >= d.GetSize() );
 
         // Test final set is correct
+        // clang-format off
         const Node * const finalNodes[] = { (Node *)0x01, (Node *)0x02, (Node *)0x03,
                                             (Node *)0x04, (Node *)0x05, (Node *)0x06 };
+        // clang-format on
         for ( const Dependency & dep : d )
         {
             const size_t index = d.GetIndexOf( &dep );

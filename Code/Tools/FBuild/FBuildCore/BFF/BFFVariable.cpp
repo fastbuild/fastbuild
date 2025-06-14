@@ -11,6 +11,7 @@
 
 // Static Data
 //------------------------------------------------------------------------------
+// clang-format off
 /*static*/ const char * BFFVariable::s_TypeNames[] =
 {
     "Any",
@@ -21,6 +22,7 @@
     "Struct",
     "ArrayOfStructs"
 };
+// clang-format on
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

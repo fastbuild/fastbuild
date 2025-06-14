@@ -26,6 +26,7 @@
 #ifdef PROTOCOL_DEBUG_ENABLED
 const char * GetProtocolMessageDebugName( Protocol::MessageType msgType )
 {
+    // clang-format off
     const char * const msgNames[] =
     {
         "",
@@ -42,6 +43,7 @@ const char * GetProtocolMessageDebugName( Protocol::MessageType msgType )
         "JobResultCompressed",
         "ConnectionAck",
     };
+    // clang-format on
     static_assert( ( sizeof( msgNames ) / sizeof( const char * ) ) == Protocol::NUM_MESSAGES, "msgNames item count doesn't match NUM_MESSAGES" );
 
     return msgNames[ msgType ];

@@ -60,6 +60,7 @@
 
 // Static Data
 //------------------------------------------------------------------------------
+// clang-format off
 /*static*/ const char * const Node::s_NodeTypeNames[] =
 {
     "Proxy",
@@ -87,6 +88,7 @@
     "TextFile",
     "ListDependencies",
 };
+// clang-format on
 static Mutex g_NodeEnvStringMutex;
 
 //------------------------------------------------------------------------------

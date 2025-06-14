@@ -147,12 +147,14 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     OUTPUT( "LZ4:\n" );
 
     // Compress at various compression levels
+    // clang-format off
     const int32_t compressionLevels[] =
     {
         0,                                          // Disabled
         -256, -128, -64, -32, -16, -8, -4, -2, -1,  // LZ4
         1, 3, 6, 9, 12                              // LZ4 HC
     };
+    // clang-format on
 
     for ( const int32_t compressionLevel : compressionLevels )
     {
@@ -211,11 +213,13 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     OUTPUT( "Zstd:\n" );
 
     // Compress at various compression levels
+    // clang-format off
     const int32_t zStdCompressionLevels[] =
     {
         0,                                          // Disabled
         1, 3, 6, 9, 12, 15, 18, 21                  // Zstd
     };
+    // clang-format on
 
     for ( const int32_t compressionLevel : zStdCompressionLevels )
     {

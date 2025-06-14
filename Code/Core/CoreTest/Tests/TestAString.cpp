@@ -1189,10 +1189,10 @@ void TestAString::CheckTokenize( const char * originalString,
     }
 
     // Check expected count
-    const size_t numExpected = static_cast<size_t>( expectedToken1 ? 1 : 0 )
-                             + static_cast<size_t>( expectedToken2 ? 1 : 0 )
-                             + static_cast<size_t>( expectedToken3 ? 1 : 0 )
-                             + static_cast<size_t>( expectedToken4 ? 1 : 0 );
+    const size_t numExpected = ( expectedToken1 ? 1u : 0u ) +
+                               ( expectedToken2 ? 1u : 0u ) +
+                               ( expectedToken3 ? 1u : 0u ) +
+                               ( expectedToken4 ? 1u : 0u );
     TEST_ASSERT( tokens.GetSize() == numExpected );
 
     // Check tokens contain expected values

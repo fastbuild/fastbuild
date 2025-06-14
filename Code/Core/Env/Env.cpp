@@ -372,11 +372,11 @@ static bool IsStdOutRedirectedInternal()
     PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
     PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'swscanf' is deprecated: This function or variable may be unsafe...
     if ( ( swscanf( p, L"%*llx-pty%*d-to-master%n", &nChars ) == 0 ) && ( nChars > 0 ) ) // TODO:C Consider using swscanf_s
-    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
-    PRAGMA_DISABLE_POP_MSVC // 4996
     {
         return false; // Pipe name matches the pattern, stdout is forwarded to a terminal by Cygwin/MSYS
     }
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
+    PRAGMA_DISABLE_POP_MSVC // 4996
 
     return true;
 #elif defined( __LINUX__ ) || defined( __APPLE__ )

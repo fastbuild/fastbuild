@@ -604,12 +604,14 @@ void TestGraph::DBCorrupt() const
 
     // Test corruption at various places in the file
     static_assert( sizeof( NodeGraphHeader ) == 16, "Update test for DB format change" );
+    // clang-format off
     static const uint32_t corruptionOffsets[] =
     {
         0,      // Header - magic identifier
         8,      // Header - hash of content
         128,    // Arbitrary position in the file
     };
+    // clang-format on
 
     // Corrupt the DB
     for ( const uint32_t corruptionOffset : corruptionOffsets )

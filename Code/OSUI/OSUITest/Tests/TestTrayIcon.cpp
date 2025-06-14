@@ -19,11 +19,13 @@
 namespace
 {
     // Test PNG for OSX
+    // clang-format off
     const uint8_t gIconData[] = { 0x00, 0x00, 0x00, 0x0D, // Length of chunk
                                   0x49, 0x48, 0x44, 0x52, // IHDR chunk
                                   0x00, 0x00, 0x00, 0x01, // Width
                                   0x00, 0x00, 0x00, 0x01, // Height
                                   0x01 };
+    // clang-format on
 }
 #endif
 

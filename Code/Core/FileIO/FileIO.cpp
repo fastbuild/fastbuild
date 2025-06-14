@@ -1152,7 +1152,9 @@ public:
         }
     }
 #if defined( __WINDOWS__ )
+    // clang-format off
     while ( FindNextFile( hFind, &findData ) != 0 );
+    // clang-format on
 #endif
 
 #if defined( __WINDOWS__ )

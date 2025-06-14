@@ -151,13 +151,15 @@ int main( int argc, char ** argv )
     }
 
     // Acquire SystemMutex which test uses to check our lifetimes
+    // clang-format off
     const char * const mutexNames[ 4 ] =
     {
         "FASTBuildFastCancelTest1",
         "FASTBuildFastCancelTest2",
         "FASTBuildFastCancelTest3",
-        "FASTBuildFastCancelTest4"
+        "FASTBuildFastCancelTest4",
     };
+    // clang-format on
     const char * const mutexName = mutexNames[ mutexId - 1 ];
 
     // Try to acquire repeatedly to manage races with the test that

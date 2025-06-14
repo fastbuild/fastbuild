@@ -32,12 +32,14 @@
 // Icon
 //------------------------------------------------------------------------------
 #if defined( __OSX__ )
+// clang-format off
 const uint8_t gTrayIcon[] =
 {
     // Generate with:
     //  cat Tools/FBuild/Icons/16x16_blue.png | xxd -p | sed 's/\(..\)/0x\1, /g' > Tools/FBuild/Icons/16x16_blue.h
     #include "Tools/FBuild/Icons/16x16_blue.h"
 };
+// clang-format on
 const size_t gTrayIconSize = sizeof( gTrayIcon );
 #endif
 

@@ -9,6 +9,7 @@
 
 // CRC polynomial table
 //------------------------------------------------------------------------------
+// clang-format off
 static const uint32_t g_CRC32Table[ 256 ] =
 {
     0x00000000,0x77073096,0xEE0E612C,0x990951BA,0x076DC419,0x706AF48F,0xE963A535,
@@ -49,6 +50,7 @@ static const uint32_t g_CRC32Table[ 256 ] =
     0xCDD70693,0x54DE5729,0x23D967BF,0xB3667A2E,0xC4614AB8,0x5D681B02,0x2A6F2B94,
     0xB40BBE37,0xC30C8EA1,0x5A05DF1B,0x2D02EF8D
 };
+// clang-format on
 
 // Slicing-by-4 and slicing-by-8 algorithms by Michael E. Kounavis and Frank L. Berry from Intel Corp.
 // http://www.intel.com/technology/comms/perfnet/download/CRC_generators.pdf

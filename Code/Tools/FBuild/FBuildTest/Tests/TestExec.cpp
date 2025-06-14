@@ -340,6 +340,7 @@ void TestExec::Exclusions() const
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
     // Check all the exclusion methods worked as expected
+    // clang-format off
     const char * const aliasesToCheck[] =
     {
         "ExcludePath-ForwardSlash",
@@ -350,6 +351,7 @@ void TestExec::Exclusions() const
         "ExcludePattern-ForwardSlash",
         "ExcludePattern-Backslash",
     };
+    // clang-format on
     for ( const char * const aliasToCheck : aliasesToCheck )
     {
         // Get the TestNode (via the Alias)

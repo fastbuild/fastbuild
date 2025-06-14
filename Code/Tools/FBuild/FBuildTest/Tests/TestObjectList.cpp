@@ -61,6 +61,7 @@ void TestObjectList::Exclusions() const
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
     // Check all the exclusion methods worked as expected
+    // clang-format off
     const char * const nodesToCheck[] =
     {
         "ExcludedFiles-FileName",
@@ -72,6 +73,7 @@ void TestObjectList::Exclusions() const
         "ExcludePattern-ForwardSlash",
         "ExcludePattern-Backslash",
     };
+    // clang-format on
     for ( const char * const nodeName : nodesToCheck )
     {
         // Get the ObjectListNode

@@ -377,6 +377,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::GetDefaultAllowedFileExtensions( Array<AString> & extensions )
 {
+    // clang-format off
     static const char * const defaultExtensions[] =
     {
         "*.cpp",
@@ -400,8 +401,9 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         "*.asm",
         "*.s",
         "*.natvis",
-        "*.editorconfig"
+        "*.editorconfig",
     };
+    // clang-format on
     extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
     for ( const char * const ext : defaultExtensions )
     {
