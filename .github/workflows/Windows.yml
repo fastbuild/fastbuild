@@ -19,6 +19,10 @@ jobs:
           - cfg: Analyze
             vs: 2022
             os: windows-2022
+          - cfg: Style
+            vs: 2022
+            os: windows-2022
+            can-fail: true # Temporarily allow failures during rollout
 
     name: Windows (${{ matrix.cfg }}, VS ${{ matrix.vs }})
     runs-on: ${{ matrix.os }}
@@ -71,3 +75,7 @@ jobs:
       - name: Build (NoUnity)
         if: ${{ startsWith(matrix.cfg, 'Build') }}
         run: ${FBUILD_PATH} -nostoponerror -summary -nounity -clean All-x64{,Clang}-Debug
+
+      - name: Style
+        if: ${{ matrix.cfg == 'Style' }}
+        run: python3 ../Scripts/ClangFormat.py 
