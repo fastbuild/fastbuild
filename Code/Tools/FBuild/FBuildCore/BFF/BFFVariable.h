@@ -22,7 +22,7 @@ class BFFToken;
         const Array<const BFFVariable *> *    constified;   \
     };                                                      \
     normal = &input;                                        \
-    return *constified;
+    return *constified
 
 // BFFVariable
 //------------------------------------------------------------------------------
@@ -54,12 +54,12 @@ public:
     const Array<const BFFVariable *> & GetStructMembers() const
     {
         ASSERT( IsStruct() );
-        RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables )
+        RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables );
     }
     const Array<const BFFVariable *> & GetArrayOfStructs() const
     {
         ASSERT( IsArrayOfStructs() );
-        RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables )
+        RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables );
     }
 
     enum VarType : uint8_t
