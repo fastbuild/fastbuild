@@ -19,31 +19,31 @@
 namespace
 {
     static const uint32_t g_ReportNodeColors[] = {
-                                                    0x000000, // PROXY_NODE (never seen)
-                                                    0xFFFFFF, // COPY_FILE_NODE
-                                                    0xAAAAAA, // DIRECTORY_LIST_NODE
-                                                    0x000000, // EXEC_NODE
-                                                    0x888888, // FILE_NODE
-                                                    0x88FF88, // LIBRARY_NODE
-                                                    0xFF8888, // OBJECT_NODE
-                                                    0x228B22, // ALIAS_NODE
-                                                    0xFFFF88, // EXE_NODE
-                                                    0x88AAFF, // UNITY_NODE
-                                                    0x88CCFF, // CS_NODE
-                                                    0xFFAAFF, // TEST_NODE
-                                                    0xDDA0DD, // COMPILER_NODE
-                                                    0xFFCC88, // DLL_NODE
-                                                    0xFFFFFF, // VCXPROJ_NODE
-                                                    0x444444, // OBJECT_LIST_NODE
-                                                    0x000000, // COPY_DIR_NODE (never seen)
-                                                    0xFF3030, // REMOVE_DIR_NODE
-                                                    0x77DDAA, // SLN_NODE
-                                                    0x77DDAA, // XCODEPROJECT_NODE
-                                                    0x000000, // SETTINGS_NODE (never seen)
-                                                    0xFFFFFF, // VSPROJEXTERNAL_NODE
-                                                    0xFFFFFF, // TEXT_FILE_NODE
-                                                    0xEBABCB, // DIRECTORY_LIST_NODE
-                                                 };
+        0x000000, // PROXY_NODE (never seen)
+        0xFFFFFF, // COPY_FILE_NODE
+        0xAAAAAA, // DIRECTORY_LIST_NODE
+        0x000000, // EXEC_NODE
+        0x888888, // FILE_NODE
+        0x88FF88, // LIBRARY_NODE
+        0xFF8888, // OBJECT_NODE
+        0x228B22, // ALIAS_NODE
+        0xFFFF88, // EXE_NODE
+        0x88AAFF, // UNITY_NODE
+        0x88CCFF, // CS_NODE
+        0xFFAAFF, // TEST_NODE
+        0xDDA0DD, // COMPILER_NODE
+        0xFFCC88, // DLL_NODE
+        0xFFFFFF, // VCXPROJ_NODE
+        0x444444, // OBJECT_LIST_NODE
+        0x000000, // COPY_DIR_NODE (never seen)
+        0xFF3030, // REMOVE_DIR_NODE
+        0x77DDAA, // SLN_NODE
+        0x77DDAA, // XCODEPROJECT_NODE
+        0x000000, // SETTINGS_NODE (never seen)
+        0xFFFFFF, // VSPROJEXTERNAL_NODE
+        0xFFFFFF, // TEXT_FILE_NODE
+        0xEBABCB, // DIRECTORY_LIST_NODE
+    };
     // Ensure color vector is in sync
     static_assert( sizeof( g_ReportNodeColors ) / sizeof( uint32_t ) == Node::NUM_NODE_TYPES, "g_ReportNodeColors item count doesn't match NUM_NODE_TYPES" );
 }
@@ -458,7 +458,7 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
     Write( "<tr><th width=80>Type</th><th width=80>Time</th><th width=80>Processed</th><th width=80>Built</th><th width=80>Cache Hits</th></tr>\n" );
     for ( size_t i = 0; i < items.GetSize(); ++i )
     {
-        const Node::Type type = ( Node::Type )(size_t)items[ i ].m_UserData;
+        const Node::Type type = (Node::Type)(size_t)items[ i ].m_UserData;
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
@@ -597,11 +597,11 @@ void HTMLReport::DoCPUTimeByLibrary()
         const char * type = ls->m_Library->GetTypeName();
         switch ( ls->m_Library->GetType() )
         {
-            case Node::LIBRARY_NODE:        type = "Static"; break;
-            case Node::DLL_NODE:            type = "DLL"; break;
-            case Node::CS_NODE:             type = "C# DLL"; break;
-            case Node::OBJECT_LIST_NODE:    type = "ObjectList"; break;
-            default:                        break;
+            case Node::LIBRARY_NODE: type = "Static"; break;
+            case Node::DLL_NODE: type = "DLL"; break;
+            case Node::CS_NODE: type = "C# DLL"; break;
+            case Node::OBJECT_LIST_NODE: type = "ObjectList"; break;
+            default: break;
         }
         const char * name = ls->m_Library->GetName().Get();
         Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%2.3fs</td><td style=\"width:50px;\">%2.1f</td><td style=\"width:70px;\">%u</td><td style=\"width:50px;\">%s</td><td>%s</td></tr>\n"

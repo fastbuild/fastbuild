@@ -26,15 +26,15 @@ public:
     virtual bool IsAFile() const override;
 
     // Access to settings
-    const AString &                     GetCachePath() const;
-    const AString &                     GetCachePathMountPoint() const;
-    const AString &                     GetCachePluginDLL() const;
-    const AString &                     GetCachePluginDLLConfig() const;
-    const Array<AString> &              GetWorkerList() const { return m_Workers; }
-    uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
-    uint32_t                            GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
-    const ConcurrencyGroup *            GetConcurrencyGroup( const AString & groupName ) const;
-    const ConcurrencyGroup &            GetConcurrencyGroup( uint8_t index ) const;
+    const AString & GetCachePath() const;
+    const AString & GetCachePathMountPoint() const;
+    const AString & GetCachePluginDLL() const;
+    const AString & GetCachePluginDLLConfig() const;
+    const Array<AString> & GetWorkerList() const { return m_Workers; }
+    uint32_t GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
+    uint32_t GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
+    const ConcurrencyGroup * GetConcurrencyGroup( const AString & groupName ) const;
+    const ConcurrencyGroup & GetConcurrencyGroup( uint8_t index ) const;
 
     inline static const uint32_t kMaxConcurrencyGroups = 16;
 
@@ -66,8 +66,8 @@ class ConcurrencyGroup
 public:
     // General accessors
     const AString & GetName() const { return m_ConcurrencyGroupName; }
-    uint32_t        GetLimit() const { return m_Limit; }
-    uint8_t         GetIndex() const { return m_Index; }
+    uint32_t GetLimit() const { return m_Limit; }
+    uint8_t GetIndex() const { return m_Index; }
 
     inline static const uint32_t eUnlimited = 0xFFFFFFFF;
 
@@ -75,10 +75,10 @@ protected:
     friend SettingsNode;
 
     // SettingsNode initializes via these methods
-    void            SetIndex( uint8_t index ) { m_Index = index; }
-    void            SetLimit( uint32_t limit ) { m_Limit = limit; }
-    uint32_t        GetJobBasedLimit() const { return m_ConcurrencyLimit; }
-    uint32_t        GetMemoryBasedLimit() const { return m_ConcurrencyPerJobMiB; }
+    void SetIndex( uint8_t index ) { m_Index = index; }
+    void SetLimit( uint32_t limit ) { m_Limit = limit; }
+    uint32_t GetJobBasedLimit() const { return m_ConcurrencyLimit; }
+    uint32_t GetMemoryBasedLimit() const { return m_ConcurrencyPerJobMiB; }
 
     // Exposed
     AString m_ConcurrencyGroupName;

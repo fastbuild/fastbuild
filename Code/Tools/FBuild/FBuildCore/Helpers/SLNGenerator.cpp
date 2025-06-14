@@ -72,12 +72,12 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
     const char * defaultMinimumVersion = "10.0.40219.1"; // Visual Studio Express 2010
 
     const char * version = ( solutionVisualStudioVersion.GetLength() > 0 )
-                         ? solutionVisualStudioVersion.Get()
-                         : defaultVersion;
+                               ? solutionVisualStudioVersion.Get()
+                               : defaultVersion;
 
     const char * minimumVersion = ( solutionMinimumVisualStudioVersion.GetLength() > 0 )
-                                ? solutionMinimumVisualStudioVersion.Get()
-                                : defaultMinimumVersion;
+                                      ? solutionMinimumVisualStudioVersion.Get()
+                                      : defaultMinimumVersion;
 
     const char * shortVersionStart = version;
     const char * shortVersionEnd = version;
@@ -122,8 +122,8 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
         // get project base name only
         const char * lastSlash = projectPath.FindLast( NATIVE_SLASH );
         const char * lastPeriod = projectPath.FindLast( '.' );
-        AStackString projectName( lastSlash  ? lastSlash + 1  : projectPath.Get(),
-                                  lastPeriod ? lastPeriod     : projectPath.GetEnd() );
+        AStackString projectName( lastSlash ? lastSlash + 1 : projectPath.Get(),
+                                  lastPeriod ? lastPeriod : projectPath.GetEnd() );
 
         // make project path relative
         AStackString solutionRelativePath;

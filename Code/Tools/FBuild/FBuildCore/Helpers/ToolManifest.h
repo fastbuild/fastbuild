@@ -35,25 +35,25 @@ public:
         SYNCHRONIZED,
     };
 
-    bool                DoBuild();
-    void                StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
-    void                Migrate( const ToolManifestFile & oldFile );
+    bool DoBuild();
+    void StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
+    void Migrate( const ToolManifestFile & oldFile );
 
-    const void *        GetFileData( size_t & outDataSize ) const;
+    const void * GetFileData( size_t & outDataSize ) const;
 
     // Access state
-    const AString &     GetName() const                     { return m_Name; }
-    uint64_t            GetTimeStamp() const                { return m_TimeStamp; }
-    uint32_t            GetHash() const                     { return m_Hash; }
-    uint32_t            GetUncompressedContentSize() const  { return m_UncompressedContentSize; }
-    SyncState           GetSyncState() const                { return m_SyncState; }
+    const AString & GetName() const { return m_Name; }
+    uint64_t GetTimeStamp() const { return m_TimeStamp; }
+    uint32_t GetHash() const { return m_Hash; }
+    uint32_t GetUncompressedContentSize() const { return m_UncompressedContentSize; }
+    SyncState GetSyncState() const { return m_SyncState; }
 
     // Modify state
-    void                SetSyncState( SyncState state )         { m_SyncState = state; }
-    void                SetFileLock( FileStream * fileLock )    { m_FileLock = fileLock; }
+    void SetSyncState( SyncState state ) { m_SyncState = state; }
+    void SetFileLock( FileStream * fileLock ) { m_FileLock = fileLock; }
 
 protected:
-    bool                LoadFile( void *& uncompressedContent, uint32_t & uncompressedContentSize ) const;
+    bool LoadFile( void *& uncompressedContent, uint32_t & uncompressedContentSize ) const;
 
     // common members
     AString m_Name;
@@ -99,21 +99,25 @@ public:
         return ( m_ToolId == toolId );
     }
 
-    void            SetUserData( void * data )  { m_UserData = data; }
-    void *          GetUserData() const         { return m_UserData; }
+    void SetUserData( void * data ) { m_UserData = data; }
+    void * GetUserData() const { return m_UserData; }
     const Array<ToolManifestFile> & GetFiles() const { return m_Files; }
 
-    void MarkFileAsSynchronizing( size_t fileId ) { ASSERT( m_Files[ fileId ].GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED ); m_Files[ fileId ].SetSyncState( ToolManifestFile::SYNCHRONIZING ); }
+    void MarkFileAsSynchronizing( size_t fileId )
+    {
+        ASSERT( m_Files[ fileId ].GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED );
+        m_Files[ fileId ].SetSyncState( ToolManifestFile::SYNCHRONIZING );
+    }
     void CancelSynchronizingFiles();
 
-    const void *    GetFileData( uint32_t fileId, size_t & dataSize ) const;
-    bool            ReceiveFileData( uint32_t fileId, const void * data, size_t & dataSize, bool & outCorruptData );
+    const void * GetFileData( uint32_t fileId, size_t & dataSize ) const;
+    bool ReceiveFileData( uint32_t fileId, const void * data, size_t & dataSize, bool & outCorruptData );
 
-    void            GetRemotePath( AString & path ) const;
-    void            GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
-    const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
+    void GetRemotePath( AString & path ) const;
+    void GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
+    const char * GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
 
-    static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
+    static void GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
 
 #if defined( __OSX__ ) || defined( __LINUX__ )
     void TouchFiles() const;

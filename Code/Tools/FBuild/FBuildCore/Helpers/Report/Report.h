@@ -36,8 +36,8 @@ protected:
 
     enum : uint32_t
     {
-        eNodeNotSeen    = 0,
-        eNodeSeen       = 1,
+        eNodeNotSeen = 0,
+        eNodeSeen = 1,
     };
 
     class LibraryStats

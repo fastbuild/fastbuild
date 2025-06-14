@@ -90,18 +90,18 @@ public:
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
-    bool                    GatherProject( NodeGraph & nodeGraph,
-                                           const Function * function,
-                                           const BFFToken * iter,
-                                           const char * propertyName,
-                                           const AString & projectName,
-                                           Array<VSProjectBaseNode *> & inOutProjects ) const;
-    bool                    GatherProjects( NodeGraph & nodeGraph,
-                                            const Function * function,
-                                            const BFFToken * iter,
-                                            const char * propertyName,
-                                            const Array<AString> & projectNames,
-                                            Array<VSProjectBaseNode *> & inOutProjects ) const;
+    bool GatherProject( NodeGraph & nodeGraph,
+                        const Function * function,
+                        const BFFToken * iter,
+                        const char * propertyName,
+                        const AString & projectName,
+                        Array<VSProjectBaseNode *> & inOutProjects ) const;
+    bool GatherProjects( NodeGraph & nodeGraph,
+                         const Function * function,
+                         const BFFToken * iter,
+                         const char * propertyName,
+                         const Array<AString> & projectNames,
+                         Array<VSProjectBaseNode *> & inOutProjects ) const;
 
     // Reflected
     Array<AString> m_SolutionProjects;

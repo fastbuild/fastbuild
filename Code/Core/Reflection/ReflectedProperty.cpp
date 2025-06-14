@@ -51,18 +51,18 @@ size_t ReflectedProperty::GetPropertySize() const
 {
     switch ( m_Type )
     {
-        case PT_NONE:       ASSERT( false ); return 0;
-        case PT_FLOAT:      return sizeof( float );
-        case PT_UINT8:      return sizeof( uint8_t );
-        case PT_UINT16:     return sizeof( uint16_t );
-        case PT_UINT32:     return sizeof( uint32_t );
-        case PT_UINT64:     return sizeof( uint64_t );
-        case PT_INT8:       return sizeof( int8_t );
-        case PT_INT16:      return sizeof( int16_t );
-        case PT_INT32:      return sizeof( int32_t );
-        case PT_INT64:      return sizeof( int64_t );
-        case PT_BOOL:       return sizeof( bool );
-        case PT_ASTRING:    return sizeof( AString );
+        case PT_NONE: ASSERT( false ); return 0;
+        case PT_FLOAT: return sizeof( float );
+        case PT_UINT8: return sizeof( uint8_t );
+        case PT_UINT16: return sizeof( uint16_t );
+        case PT_UINT32: return sizeof( uint32_t );
+        case PT_UINT64: return sizeof( uint64_t );
+        case PT_INT8: return sizeof( int8_t );
+        case PT_INT16: return sizeof( int16_t );
+        case PT_INT32: return sizeof( int32_t );
+        case PT_INT64: return sizeof( int64_t );
+        case PT_BOOL: return sizeof( bool );
+        case PT_ASTRING: return sizeof( AString );
         case PT_STRUCT:
         {
             const ReflectedPropertyStruct * rps = static_cast<const ReflectedPropertyStruct *>( this );

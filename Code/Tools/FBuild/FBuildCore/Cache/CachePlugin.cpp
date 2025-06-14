@@ -44,14 +44,14 @@
     // Failure to find a required function will mark us as invalid
     m_Valid = true;
 
-    m_InitFunc      = (CacheInitFunc)       GetFunction( "CacheInit",       "?CacheInit@@YA_NPEBD@Z", true ); // Optional
-    m_InitExFunc    = (CacheInitExFunc)     GetFunction( "CacheInitEx",     nullptr, true ); // Optional
-    m_ShutdownFunc  = (CacheShutdownFunc)   GetFunction( "CacheShutdown",   "?CacheShutdown@@YAXXZ", true ); // Optional
-    m_PublishFunc   = (CachePublishFunc)    GetFunction( "CachePublish",    "?CachePublish@@YA_NPEBDPEBX_K@Z" );
-    m_RetrieveFunc  = (CacheRetrieveFunc)   GetFunction( "CacheRetrieve",   "?CacheRetrieve@@YA_NPEBDAEAPEAXAEA_K@Z" );
-    m_FreeMemoryFunc= (CacheFreeMemoryFunc) GetFunction( "CacheFreeMemory", "?CacheFreeMemory@@YAXPEAX_K@Z" );
-    m_OutputInfoFunc= (CacheOutputInfoFunc) GetFunction( "CacheOutputInfo", "?CacheOutputInfo@@YA_N_N@Z", true ); // Optional
-    m_TrimFunc      = (CacheTrimFunc)       GetFunction( "CacheTrim",       "?CacheTrim@@YA_N_NI@Z", true ); // Optional
+    m_InitFunc = (CacheInitFunc)GetFunction( "CacheInit", "?CacheInit@@YA_NPEBD@Z", true ); // Optional
+    m_InitExFunc = (CacheInitExFunc)GetFunction( "CacheInitEx", nullptr, true ); // Optional
+    m_ShutdownFunc = (CacheShutdownFunc)GetFunction( "CacheShutdown", "?CacheShutdown@@YAXXZ", true ); // Optional
+    m_PublishFunc = (CachePublishFunc)GetFunction( "CachePublish", "?CachePublish@@YA_NPEBDPEBX_K@Z" );
+    m_RetrieveFunc = (CacheRetrieveFunc)GetFunction( "CacheRetrieve", "?CacheRetrieve@@YA_NPEBDAEAPEAXAEA_K@Z" );
+    m_FreeMemoryFunc = (CacheFreeMemoryFunc)GetFunction( "CacheFreeMemory", "?CacheFreeMemory@@YAXPEAX_K@Z" );
+    m_OutputInfoFunc = (CacheOutputInfoFunc)GetFunction( "CacheOutputInfo", "?CacheOutputInfo@@YA_N_N@Z", true ); // Optional
+    m_TrimFunc = (CacheTrimFunc)GetFunction( "CacheTrim", "?CacheTrim@@YA_N_NI@Z", true ); // Optional
 }
 
 // DESTRUCTOR

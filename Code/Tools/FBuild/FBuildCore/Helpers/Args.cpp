@@ -132,17 +132,17 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, Args
                 FLOG_ERROR( "FBuild: Error: Command Line Limit Exceeded (len: %u, limit: %u) '%s'\n", argLen, argLimit, nodeNameForError.Get() );
                 return false;
             }
-            case ArgsResponseFileMode::IF_NEEDED:   break; // Create below
-            case ArgsResponseFileMode::ALWAYS:      break; // Create below
+            case ArgsResponseFileMode::IF_NEEDED: break; // Create below
+            case ArgsResponseFileMode::ALWAYS: break; // Create below
         }
     }
     else
     {
         switch ( responseFileMode )
         {
-            case ArgsResponseFileMode::NEVER:       return true;
-            case ArgsResponseFileMode::IF_NEEDED:   return true;
-            case ArgsResponseFileMode::ALWAYS:      break; // Create below
+            case ArgsResponseFileMode::NEVER: return true;
+            case ArgsResponseFileMode::IF_NEEDED: return true;
+            case ArgsResponseFileMode::ALWAYS: break; // Create below
         }
     }
 

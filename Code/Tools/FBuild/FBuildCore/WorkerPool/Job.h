@@ -39,26 +39,26 @@ public:
     void CancelDueToRemoteRaceWin();
 
     // associate some data with this object, and destroy it when freed
-    void    OwnData( void * data, size_t size, bool compressed = false );
+    void OwnData( void * data, size_t size, bool compressed = false );
 
-    void *   GetData() const     { return m_Data; }
-    size_t   GetDataSize() const { return m_DataSize; }
+    void * GetData() const { return m_Data; }
+    size_t GetDataSize() const { return m_DataSize; }
 
-    void     SetUserData( void * data )  { m_UserData = data; }
-    void *   GetUserData() const         { return m_UserData; }
+    void SetUserData( void * data ) { m_UserData = data; }
+    void * GetUserData() const { return m_UserData; }
 
-    void             SetToolManifest( ToolManifest * manifest )  { m_ToolManifest = manifest; }
-    ToolManifest *   GetToolManifest() const                     { return m_ToolManifest; }
+    void SetToolManifest( ToolManifest * manifest ) { m_ToolManifest = manifest; }
+    ToolManifest * GetToolManifest() const { return m_ToolManifest; }
 
-    bool     IsDataCompressed() const { return m_DataIsCompressed; }
-    bool     IsLocal() const     { return m_IsLocal; }
+    bool IsDataCompressed() const { return m_DataIsCompressed; }
+    bool IsLocal() const { return m_IsLocal; }
 
     const Array<AString> & GetMessages() const { return m_Messages; }
 
     // logging interface
-    void                Error( MSVC_SAL_PRINTF const char * format, ... ) FORMAT_STRING( 2, 3 );
-    void                ErrorPreformatted( const char * message );
-    void                SetMessages( const Array<AString> & messages );
+    void Error( MSVC_SAL_PRINTF const char * format, ... ) FORMAT_STRING( 2, 3 );
+    void ErrorPreformatted( const char * message );
+    void SetMessages( const Array<AString> & messages );
 
     // Flag "system failures" - i.e. not a compilation failure, but some other problem (typically a remote worker misbehaving)
     void OnSystemError() { ++m_SystemErrorCount; }
@@ -68,46 +68,46 @@ public:
     void Serialize( IOStream & stream );
     void Deserialize( IOStream & stream );
 
-    void                GetMessagesForLog( AString & buffer ) const;
-    static void         GetMessagesForLog( const Array<AString> & messages, AString & buffer );
-    void                GetMessagesForMonitorLog( AString & buffer ) const;
-    static void         GetMessagesForMonitorLog( const Array<AString> & messages, AString & outBuffer );
+    void GetMessagesForLog( AString & buffer ) const;
+    static void GetMessagesForLog( const Array<AString> & messages, AString & buffer );
+    void GetMessagesForMonitorLog( AString & buffer ) const;
+    static void GetMessagesForMonitorLog( const Array<AString> & messages, AString & outBuffer );
 
-    void                SetRemoteThreadIndex( uint16_t threadIndex )    { m_RemoteThreadIndex = threadIndex; }
-    uint16_t            GetRemoteThreadIndex() const                    { return m_RemoteThreadIndex; }
+    void SetRemoteThreadIndex( uint16_t threadIndex ) { m_RemoteThreadIndex = threadIndex; }
+    uint16_t GetRemoteThreadIndex() const { return m_RemoteThreadIndex; }
 
-    void                SetResultCompressionLevel( int16_t compressionLevel, bool allowZstdUse )
+    void SetResultCompressionLevel( int16_t compressionLevel, bool allowZstdUse )
     {
         m_ResultCompressionLevel = compressionLevel;
         m_AllowZstdUse = allowZstdUse;
     }
-    int16_t             GetResultCompressionLevel() const   { return m_ResultCompressionLevel; }
-    bool                GetAllowZstdUse() const             { return m_AllowZstdUse; }
+    int16_t GetResultCompressionLevel() const { return m_ResultCompressionLevel; }
+    bool GetAllowZstdUse() const { return m_AllowZstdUse; }
 
     enum DistributionState : uint8_t
     {
-        DIST_NONE                           = 0, // All non-distributable jobs
-        DIST_AVAILABLE                      = 1, // A distributable job, not in progress
+        DIST_NONE = 0, // All non-distributable jobs
+        DIST_AVAILABLE = 1, // A distributable job, not in progress
 
-        DIST_BUILDING_REMOTELY              = 2, // Building remotely only
-        DIST_COMPLETED_REMOTELY             = 3, // Completed remotely, but not finalized (don't start racing)
+        DIST_BUILDING_REMOTELY = 2, // Building remotely only
+        DIST_COMPLETED_REMOTELY = 3, // Completed remotely, but not finalized (don't start racing)
 
-        DIST_BUILDING_LOCALLY               = 4, // Building locally only
-        DIST_COMPLETED_LOCALLY              = 5, // Completed locally, but not finalized
+        DIST_BUILDING_LOCALLY = 4, // Building locally only
+        DIST_COMPLETED_LOCALLY = 5, // Completed locally, but not finalized
 
-        DIST_RACING                         = 6, // Building locally AND remotely
-        DIST_RACE_WON_LOCALLY               = 7, // Completed locally, but still in flight remotely
+        DIST_RACING = 6, // Building locally AND remotely
+        DIST_RACE_WON_LOCALLY = 7, // Completed locally, but still in flight remotely
         DIST_RACE_WON_REMOTELY_CANCEL_LOCAL = 8, // Completed remotely, waiting for local job to cancel
-        DIST_RACE_WON_REMOTELY              = 9, // Completed remotely, local job cancelled successfully
+        DIST_RACE_WON_REMOTELY = 9, // Completed remotely, local job cancelled successfully
     };
     void SetDistributionState( DistributionState state ) { m_DistributionState = state; }
-    DistributionState GetDistributionState() const                    { return m_DistributionState; }
+    DistributionState GetDistributionState() const { return m_DistributionState; }
 
     // Access total memory usage by job data
-    static uint64_t             GetTotalLocalDataMemoryUsage();
+    static uint64_t GetTotalLocalDataMemoryUsage();
 
-    void                    SetBuildProfilerScope( BuildProfilerScope * scope );
-    BuildProfilerScope *    GetBuildProfilerScope() const { return m_BuildProfilerScope; }
+    void SetBuildProfilerScope( BuildProfilerScope * scope );
+    BuildProfilerScope * GetBuildProfilerScope() const { return m_BuildProfilerScope; }
 
 private:
     uint32_t m_JobId = 0;

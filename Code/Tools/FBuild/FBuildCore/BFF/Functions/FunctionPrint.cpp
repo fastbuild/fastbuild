@@ -82,8 +82,8 @@ FunctionPrint::FunctionPrint()
 
         const BFFVariable * var = nullptr;
         const BFFStackFrame * const varFrame = ( parentScope )
-            ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
-            : nullptr;
+                                                   ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
+                                                   : nullptr;
 
         if ( false == parentScope )
         {

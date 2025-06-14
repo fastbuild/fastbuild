@@ -51,9 +51,9 @@ private:
     // worker threads call these
     friend class WorkerThread;
     friend class WorkerThreadRemote;
-    Job *       GetJobToProcess();
+    Job * GetJobToProcess();
     static Node::BuildResult DoBuild( Job * job, bool racingRemoteJob );
-    void        FinishedProcessingJob( Job * job, Node::BuildResult result );
+    void FinishedProcessingJob( Job * job, Node::BuildResult result );
 
     // internal helpers
     static bool ReadResults( Job * job );

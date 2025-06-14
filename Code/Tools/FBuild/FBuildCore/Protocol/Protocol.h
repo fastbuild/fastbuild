@@ -40,26 +40,26 @@ namespace Protocol
     //------------------------------------------------------------------------------
     enum MessageType : uint8_t
     {
-        MSG_CONNECTION          = 1, // Server <- Client : Initial handshake
-        MSG_STATUS              = 2, // Server <- Client : Update status (work available)
+        MSG_CONNECTION = 1, // Server <- Client : Initial handshake
+        MSG_STATUS = 2, // Server <- Client : Update status (work available)
 
-        MSG_REQUEST_JOB         = 3, // Server -> Client : Ask for a job to do
-        MSG_NO_JOB_AVAILABLE    = 4, // Server <- Client : Respond that no jobs are available
-        MSG_JOB                 = 5, // Server <- Client : Respond with a job to do
+        MSG_REQUEST_JOB = 3, // Server -> Client : Ask for a job to do
+        MSG_NO_JOB_AVAILABLE = 4, // Server <- Client : Respond that no jobs are available
+        MSG_JOB = 5, // Server <- Client : Respond with a job to do
 
-        MSG_JOB_RESULT          = 6, // Server -> Client : Return completed job (uncompressed)
+        MSG_JOB_RESULT = 6, // Server -> Client : Return completed job (uncompressed)
 
-        MSG_REQUEST_MANIFEST    = 7, // Server -> Client : Ask client for the manifest of tools required for a job
-        MSG_MANIFEST            = 8, // Server <- Client : Respond with manifest details
+        MSG_REQUEST_MANIFEST = 7, // Server -> Client : Ask client for the manifest of tools required for a job
+        MSG_MANIFEST = 8, // Server <- Client : Respond with manifest details
 
-        MSG_REQUEST_FILE        = 9, // Server -> Client : Ask client for a file
-        MSG_FILE                = 10,// Server <- Client : Send a requested file
+        MSG_REQUEST_FILE = 9, // Server -> Client : Ask client for a file
+        MSG_FILE = 10,// Server <- Client : Send a requested file
 
         // v22.1 or later
-        MSG_JOB_RESULT_COMPRESSED   = 11, // Server -> Client : Return completed job (compressed)
+        MSG_JOB_RESULT_COMPRESSED = 11, // Server -> Client : Return completed job (compressed)
 
         // v22.3 or later
-        MSG_CONNECTION_ACK      = 12,// Server -> Client : Handshake ack
+        MSG_CONNECTION_ACK = 12,// Server -> Client : Handshake ack
 
         // v22.4 or later supports Zstd compression (no packet changes)
 
@@ -85,9 +85,9 @@ namespace Protocol
         bool Send( const ConnectionInfo * connection, const ConstMemoryStream & payload ) const;
         bool Broadcast( TCPConnectionPool * pool ) const;
 
-        MessageType     GetType() const { return m_MsgType; }
-        uint32_t        GetSize() const { return m_MsgSize; }
-        bool            HasPayload() const { return m_HasPayload; }
+        MessageType GetType() const { return m_MsgType; }
+        uint32_t GetSize() const { return m_MsgSize; }
+        bool HasPayload() const { return m_HasPayload; }
 
     protected:
         IMessage( MessageType msgType, uint8_t msgSize, bool hasPayload );
@@ -107,11 +107,12 @@ namespace Protocol
     public:
         explicit MsgConnection( uint32_t numJobsAvailable );
 
-        uint32_t        GetProtocolVersion() const { return m_ProtocolVersion; }
-        uint32_t        GetNumJobsAvailable() const { return m_NumJobsAvailable; }
-        uint8_t         GetPlatform() const { return m_Platform; }
-        const char *    GetHostName() const { return m_HostName; }
-        uint8_t         GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
+        uint32_t GetProtocolVersion() const { return m_ProtocolVersion; }
+        uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
+        uint8_t GetPlatform() const { return m_Platform; }
+        const char * GetHostName() const { return m_HostName; }
+        uint8_t GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
+
     private:
         uint32_t m_ProtocolVersion;
         uint32_t m_NumJobsAvailable;
@@ -129,9 +130,10 @@ namespace Protocol
     public:
         MsgConnectionAck();
 
-        uint16_t        GetWorkerVersion() const        { return m_WorkerVersion; }
-        uint8_t         GetProtocolVersionMajor() const { return m_ProtocolVersionMajor; }
-        uint8_t         GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
+        uint16_t GetWorkerVersion() const { return m_WorkerVersion; }
+        uint8_t GetProtocolVersionMajor() const { return m_ProtocolVersionMajor; }
+        uint8_t GetProtocolVersionMinor() const { return m_ProtocolVersionMinor; }
+
     private:
         uint16_t m_WorkerVersion;
         uint8_t m_ProtocolVersionMajor;
@@ -178,7 +180,8 @@ namespace Protocol
         explicit MsgJob( uint64_t toolId, int16_t resultCompressionLevel );
 
         uint64_t GetToolId() const { return m_ToolId; }
-        int16_t         GetResultCompressionLevel() const { return m_ResultCompressionLevel; }
+        int16_t GetResultCompressionLevel() const { return m_ResultCompressionLevel; }
+
     private:
         int16_t m_ResultCompressionLevel;
         char m_Padding2[ 2 ];

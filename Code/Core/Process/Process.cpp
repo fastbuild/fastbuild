@@ -222,12 +222,30 @@ bool Process::Spawn( const char * executable,
             // Handle failure
             if ( !ok )
             {
-                if ( m_StdOutRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdOutRead ); }
-                if ( m_StdErrRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdErrRead ); }
-                if ( m_StdInWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdInWrite ); }
-                if ( stdOutWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdOutWrite ); }
-                if ( stdErrWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdErrWrite ); }
-                if ( stdInRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdInRead ); }
+                if ( m_StdOutRead != INVALID_HANDLE_VALUE )
+                {
+                    ::CloseHandle( m_StdOutRead );
+                }
+                if ( m_StdErrRead != INVALID_HANDLE_VALUE )
+                {
+                    ::CloseHandle( m_StdErrRead );
+                }
+                if ( m_StdInWrite != INVALID_HANDLE_VALUE )
+                {
+                    ::CloseHandle( m_StdInWrite );
+                }
+                if ( stdOutWrite != INVALID_HANDLE_VALUE )
+                {
+                    ::CloseHandle( stdOutWrite );
+                }
+                if ( stdErrWrite != INVALID_HANDLE_VALUE )
+                {
+                    ::CloseHandle( stdErrWrite );
+                }
+                if ( stdInRead != INVALID_HANDLE_VALUE )
+                {
+                    ::CloseHandle( stdInRead );
+                }
                 return false;
             }
 

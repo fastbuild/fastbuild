@@ -23,7 +23,7 @@ public:
     ~BFFUserFunction();
 
     const Array<const BFFToken *> & GetArgs() const { return m_Args; }
-    const BFFTokenRange &           GetBodyTokenRange() const { return m_BodyTokenRange; }
+    const BFFTokenRange & GetBodyTokenRange() const { return m_BodyTokenRange; }
 
     bool operator==( const AString & name ) const { return ( m_Name == name ); }
 

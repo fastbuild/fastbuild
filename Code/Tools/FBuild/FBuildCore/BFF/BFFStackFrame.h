@@ -85,7 +85,7 @@ public:
     const BFFVariable * GetLocalVar( const AString & name ) const;
 
     static BFFStackFrame * GetCurrent() { return s_StackHead; }
-    static uint32_t        GetDepth() { return s_StackHead ? s_StackHead->m_Depth : 1; }
+    static uint32_t GetDepth() { return s_StackHead ? s_StackHead->m_Depth : 1; }
 
     static BFFStackFrame * GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable );
     static BFFStackFrame * GetParentDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable );
@@ -96,7 +96,7 @@ public:
 
     const AString & GetLastVariableSeen() const { return m_LastVariableSeen; }
     BFFStackFrame * GetLastVariableSeenFrame() const { return m_LastVariableSeenFrame; }
-    void            SetLastVariableSeen( const AString & varName, BFFStackFrame * frame )
+    void SetLastVariableSeen( const AString & varName, BFFStackFrame * frame )
     {
         m_LastVariableSeen = varName;
         m_LastVariableSeenFrame = frame;

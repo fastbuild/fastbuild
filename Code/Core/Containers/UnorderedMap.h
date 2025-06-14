@@ -29,8 +29,8 @@ public:
 
     void Destruct();
 
-    [[nodiscard]] bool          IsEmpty() const { return ( m_Count == 0 ); }
-    [[nodiscard]] size_t        GetSize() const { return m_Count; }
+    [[nodiscard]] bool IsEmpty() const { return ( m_Count == 0 ); }
+    [[nodiscard]] size_t GetSize() const { return m_Count; }
 
     UnorderedMap<KEY, VALUE> & operator=( const UnorderedMap<KEY, VALUE> & other ) = delete;
     UnorderedMap<KEY, VALUE> & operator=( UnorderedMap<KEY, VALUE> && other ) = delete;
@@ -56,10 +56,10 @@ public:
     };
 
     // Check if an item exists in the map
-    [[nodiscard]] KeyValue *    Find( const KEY & key );
+    [[nodiscard]] KeyValue * Find( const KEY & key );
 
     // Add items to the map
-    KeyValue &                  Insert( const KEY & key, const VALUE & value );
+    KeyValue & Insert( const KEY & key, const VALUE & value );
 
 protected:
     inline static const uint32_t kTableSizePower = 16;
@@ -148,7 +148,7 @@ typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Insert( 
     // Handle empty
     if ( m_Buckets == nullptr )
     {
-        m_Buckets = FNEW( KeyValue *[ kTableSize ]() ); // NOTE: zero initialized
+        m_Buckets = FNEW( KeyValue * [kTableSize]() ); // NOTE: zero initialized
     }
 
     // Hash the key

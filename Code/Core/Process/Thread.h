@@ -41,12 +41,12 @@ public:
     ~Thread();
 
     // Lifetime management
-    void        Start( ThreadEntryFunction func,
-                       const char * threadName = nullptr,
-                       void * userData = nullptr,
-                       uint32_t stackSizeBytes = kDefaultStackSize );
-    uint32_t    Join();
-    bool        IsRunning() const;
+    void Start( ThreadEntryFunction func,
+                const char * threadName = nullptr,
+                void * userData = nullptr,
+                uint32_t stackSizeBytes = kDefaultStackSize );
+    uint32_t Join();
+    bool IsRunning() const;
 
     // Thread Identification
     static ThreadId GetCurrentThreadId();
@@ -58,8 +58,8 @@ public:
     static void Sleep( uint32_t ms );
 
     // Legacy Functions - TODO:B Remove these unsafe functions
-    void        Detach(); // TODO:B Remove this unsafe function
-    uint32_t    JoinWithTimeout( uint32_t timeoutMS, bool & outTimedOut ); // TODO:B Remove this unsafe API
+    void Detach(); // TODO:B Remove this unsafe function
+    uint32_t JoinWithTimeout( uint32_t timeoutMS, bool & outTimedOut ); // TODO:B Remove this unsafe API
 
     // Debugging
     static void SetThreadName( const char * name );

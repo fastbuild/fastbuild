@@ -740,31 +740,51 @@ void FBuild::DisplayTargetList( bool showHidden ) const
         bool hidden = node->IsHidden();
         switch ( node->GetType() )
         {
-            case Node::PROXY_NODE:          ASSERT( false ); break;
-            case Node::COPY_FILE_NODE:      break;
+            case Node::PROXY_NODE: ASSERT( false ); break;
+            case Node::COPY_FILE_NODE: break;
             case Node::DIRECTORY_LIST_NODE: break;
-            case Node::EXEC_NODE:           break;
-            case Node::FILE_NODE:           break;
-            case Node::LIBRARY_NODE:        break;
-            case Node::OBJECT_NODE:         break;
-            case Node::ALIAS_NODE:          displayName = true; hidden = node->IsHidden(); break;
-            case Node::EXE_NODE:            break;
-            case Node::CS_NODE:             break;
-            case Node::UNITY_NODE:          displayName = true; hidden = node->IsHidden(); break;
-            case Node::TEST_NODE:           break;
-            case Node::COMPILER_NODE:       break;
-            case Node::DLL_NODE:            break;
-            case Node::VCXPROJECT_NODE:     break;
+            case Node::EXEC_NODE: break;
+            case Node::FILE_NODE: break;
+            case Node::LIBRARY_NODE: break;
+            case Node::OBJECT_NODE: break;
+            case Node::ALIAS_NODE:
+            {
+                displayName = true;
+                hidden = node->IsHidden();
+                break;
+            }
+            case Node::EXE_NODE: break;
+            case Node::CS_NODE: break;
+            case Node::UNITY_NODE:
+            {
+                displayName = true;
+                hidden = node->IsHidden();
+                break;
+            }
+            case Node::TEST_NODE: break;
+            case Node::COMPILER_NODE: break;
+            case Node::DLL_NODE: break;
+            case Node::VCXPROJECT_NODE: break;
             case Node::VSPROJEXTERNAL_NODE: break;
-            case Node::OBJECT_LIST_NODE:    displayName = true; hidden = node->IsHidden(); break;
-            case Node::COPY_DIR_NODE:       break;
-            case Node::SLN_NODE:            break;
-            case Node::REMOVE_DIR_NODE:     break;
-            case Node::XCODEPROJECT_NODE:   break;
-            case Node::SETTINGS_NODE:       break;
-            case Node::TEXT_FILE_NODE:      displayName = true; hidden = node->IsHidden(); break;
+            case Node::OBJECT_LIST_NODE:
+            {
+                displayName = true;
+                hidden = node->IsHidden();
+                break;
+            }
+            case Node::COPY_DIR_NODE: break;
+            case Node::SLN_NODE: break;
+            case Node::REMOVE_DIR_NODE: break;
+            case Node::XCODEPROJECT_NODE: break;
+            case Node::SETTINGS_NODE: break;
+            case Node::TEXT_FILE_NODE:
+            {
+                displayName = true;
+                hidden = node->IsHidden();
+                break;
+            }
             case Node::LIST_DEPENDENCIES_NODE: break;
-            case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
+            case Node::NUM_NODE_TYPES: ASSERT( false ); break;
         }
         if ( displayName && ( !hidden || showHidden ) )
         {
@@ -939,8 +959,8 @@ const char * FBuild::GetFinalStatus( const Node * node )
     // example), recursively examine deps to determine status
     switch ( node->GetState() )
     {
-        case Node::State::UP_TO_DATE:   return "OK";
-        case Node::State::FAILED:       return "Error: BUILD FAILED";
+        case Node::State::UP_TO_DATE: return "OK";
+        case Node::State::FAILED: return "Error: BUILD FAILED";
         default:
         {
             // Search dependencies recursively for failures

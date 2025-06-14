@@ -57,29 +57,29 @@ class Node : public Struct
 public:
     enum Type : uint8_t
     {
-        PROXY_NODE          = 0,
-        COPY_FILE_NODE      = 1,
+        PROXY_NODE = 0,
+        COPY_FILE_NODE = 1,
         DIRECTORY_LIST_NODE = 2,
-        EXEC_NODE           = 3,
-        FILE_NODE           = 4,
-        LIBRARY_NODE        = 5,
-        OBJECT_NODE         = 6,
-        ALIAS_NODE          = 7,
-        EXE_NODE            = 8,
-        UNITY_NODE          = 9,
-        CS_NODE             = 10,
-        TEST_NODE           = 11,
-        COMPILER_NODE       = 12,
-        DLL_NODE            = 13,
-        VCXPROJECT_NODE     = 14,
-        OBJECT_LIST_NODE    = 15,
-        COPY_DIR_NODE       = 16,
-        SLN_NODE            = 17,
-        REMOVE_DIR_NODE     = 18,
-        XCODEPROJECT_NODE   = 19,
-        SETTINGS_NODE       = 20,
+        EXEC_NODE = 3,
+        FILE_NODE = 4,
+        LIBRARY_NODE = 5,
+        OBJECT_NODE = 6,
+        ALIAS_NODE = 7,
+        EXE_NODE = 8,
+        UNITY_NODE = 9,
+        CS_NODE = 10,
+        TEST_NODE = 11,
+        COMPILER_NODE = 12,
+        DLL_NODE = 13,
+        VCXPROJECT_NODE = 14,
+        OBJECT_LIST_NODE = 15,
+        COPY_DIR_NODE = 16,
+        SLN_NODE = 17,
+        REMOVE_DIR_NODE = 18,
+        XCODEPROJECT_NODE = 19,
+        SETTINGS_NODE = 20,
         VSPROJEXTERNAL_NODE = 21,
-        TEXT_FILE_NODE      = 22,
+        TEXT_FILE_NODE = 22,
         LIST_DEPENDENCIES_NODE = 23,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
@@ -87,21 +87,21 @@ public:
 
     enum ControlFlag : uint8_t
     {
-        FLAG_NONE                   = 0x00,
-        FLAG_ALWAYS_BUILD           = 0x01, // DoBuild is always performed (for e.g. directory listings)
+        FLAG_NONE = 0x00,
+        FLAG_ALWAYS_BUILD = 0x01, // DoBuild is always performed (for e.g. directory listings)
     };
 
     enum StatsFlag : uint16_t
     {
-        STATS_PROCESSED     = 0x01, // node was processed during the build
-        STATS_BUILT         = 0x02, // node needed building, and was built
-        STATS_CACHE_HIT     = 0x04, // needed building, was cacheable & was retrieved from the cache
-        STATS_CACHE_MISS    = 0x08, // needed building, was cacheable, but wasn't in cache
-        STATS_CACHE_STORE   = 0x10, // needed building, was cacheable & was stored to the cache
-        STATS_LIGHT_CACHE   = 0x20, // used the LightCache
-        STATS_BUILT_REMOTE  = 0x40, // node was built remotely
-        STATS_FAILED        = 0x80, // node needed building, but failed
-        STATS_FIRST_BUILD   = 0x100,// node has never been built before
+        STATS_PROCESSED = 0x01, // node was processed during the build
+        STATS_BUILT = 0x02, // node needed building, and was built
+        STATS_CACHE_HIT = 0x04, // needed building, was cacheable & was retrieved from the cache
+        STATS_CACHE_MISS = 0x08, // needed building, was cacheable, but wasn't in cache
+        STATS_CACHE_STORE = 0x10, // needed building, was cacheable & was stored to the cache
+        STATS_LIGHT_CACHE = 0x20, // used the LightCache
+        STATS_BUILT_REMOTE = 0x40, // node was built remotely
+        STATS_FAILED = 0x80, // node needed building, but failed
+        STATS_FIRST_BUILD = 0x100,// node has never been built before
     };
 
     enum class BuildResult
@@ -126,7 +126,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
-    uint32_t        GetNameHash() const { return m_NameHash; }
+    uint32_t GetNameHash() const { return m_NameHash; }
     Type GetType() const { return m_Type; }
     const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
     static const char * GetTypeName( Type t ) { return s_NodeTypeNames[ t ]; }
@@ -142,33 +142,33 @@ public:
     void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
 
     uint32_t GetLastBuildTime() const;
-    uint32_t GetProcessingTime() const   { return m_ProcessingTime; }
-    uint32_t GetCachingTime() const      { return m_CachingTime; }
-    uint32_t GetRecursiveCost() const    { return m_RecursiveCost; }
+    uint32_t GetProcessingTime() const { return m_ProcessingTime; }
+    uint32_t GetCachingTime() const { return m_CachingTime; }
+    uint32_t GetRecursiveCost() const { return m_RecursiveCost; }
 
-    uint32_t        GetProgressAccumulator() const { return m_ProgressAccumulator; }
-    void            SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
+    uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
+    void SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
-    static Node *   Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
-    static void     LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
-    static void     Save( IOStream & stream, const Node * node );
-    static void     SaveDependencies( IOStream & stream, const Node * node );
-    virtual void    PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
+    static Node * Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
+    static void LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
+    static void Save( IOStream & stream, const Node * node );
+    static void SaveDependencies( IOStream & stream, const Node * node );
+    virtual void PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
 
-    static Node *   LoadRemote( IOStream & stream );
-    static void     SaveRemote( IOStream & stream, const Node * node );
+    static Node * LoadRemote( IOStream & stream );
+    static void SaveRemote( IOStream & stream, const Node * node );
 
     static bool EnsurePathExistsForFile( const AString & name );
     static bool DoPreBuildFileDeletion( const AString & fileName );
 
-    uint64_t        GetStamp() const { return m_Stamp; }
+    uint64_t GetStamp() const { return m_Stamp; }
 
     static void DumpOutput( Job * job,
                             const AString & output,
                             const Array<AString> * exclusions = nullptr );
 
-    void            SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
-    uint32_t        GetBuildPassTag() const             { return m_BuildPassTag; }
+    void SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
+    uint32_t GetBuildPassTag() const { return m_BuildPassTag; }
 
     const AString & GetName() const { return m_Name; }
 
@@ -219,8 +219,8 @@ protected:
     bool DetermineNeedToBuild( const Dependencies & deps ) const;
 
     void SetLastBuildTime( uint32_t ms );
-    void AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
-    void AddCachingTime( uint32_t ms )     { m_CachingTime += ms; }
+    void AddProcessingTime( uint32_t ms ) { m_ProcessingTime += ms; }
+    void AddCachingTime( uint32_t ms ) { m_CachingTime += ms; }
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
@@ -235,14 +235,14 @@ protected:
 
     virtual void Migrate( const Node & oldNode );
 
-    bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,
-                                                    const BFFToken * iter,
-                                                    const Function * function,
-                                                    const Array<AString> & preBuildDependencyNames );
-    bool            InitializeConcurrencyGroup( NodeGraph & nodeGraph,
-                                                const BFFToken * iter,
-                                                const Function * function,
-                                                const AString & concurrencyGroupName );
+    bool InitializePreBuildDependencies( NodeGraph & nodeGraph,
+                                         const BFFToken * iter,
+                                         const Function * function,
+                                         const Array<AString> & preBuildDependencyNames );
+    bool InitializeConcurrencyGroup( NodeGraph & nodeGraph,
+                                     const BFFToken * iter,
+                                     const Function * function,
+                                     const AString & concurrencyGroupName );
 
     static const char * GetEnvironmentString( const Array<AString> & envVars,
                                               const char *& inoutCachedEnvString );

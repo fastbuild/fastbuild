@@ -60,8 +60,8 @@ public:
     const SettingsNode * GetSettings() const { return m_DependencyGraph->GetSettings(); }
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );
-    const char *    GetEnvironmentString() const            { return m_EnvironmentString; }
-    uint32_t        GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
+    const char * GetEnvironmentString() const { return m_EnvironmentString; }
+    uint32_t GetEnvironmentStringSize() const { return m_EnvironmentStringSize; }
 
     void DisplayTargetList( bool showHidden ) const;
     bool DisplayDependencyDB( const Array<AString> & targets ) const;
@@ -77,8 +77,8 @@ public:
         {
         }
 
-        const AString & GetName() const             { return m_Name; }
-        uint32_t        GetHash() const             { return m_Hash; }
+        const AString & GetName() const { return m_Name; }
+        uint32_t GetHash() const { return m_Hash; }
 
     protected:
         AString m_Name;
@@ -96,14 +96,14 @@ public:
     void GetLibEnvVar( AString & libEnvVar ) const;
 
     // stats - read access
-    const FBuildStats & GetStats() const    { return m_BuildStats; }
+    const FBuildStats & GetStats() const { return m_BuildStats; }
     // stats - write access
-    FBuildStats & GetStatsMutable()         { return m_BuildStats; }
+    FBuildStats & GetStatsMutable() { return m_BuildStats; }
 
     // attempt to cleanly stop the build
-    static        void AbortBuild();
-    static        void OnBuildError();
-    static        bool GetStopBuild();
+    static void AbortBuild();
+    static void OnBuildError();
+    static bool GetStopBuild();
     static volatile bool * GetAbortBuildPointer() { return &s_AbortBuild; }
 
     ICache * GetCache() const { return m_Cache; }
@@ -123,8 +123,8 @@ protected:
     // Retrieve status of targets on build end
     enum : uint32_t
     {
-        eFindFailureNotProcessed    = 0,
-        eFindFailureProcessed       = 1,
+        eFindFailureNotProcessed = 0,
+        eFindFailureProcessed = 1,
     };
     const char * GetFinalStatus( const Node * node );
     bool GetFinalStatusFailure( const Dependencies & deps ) const;

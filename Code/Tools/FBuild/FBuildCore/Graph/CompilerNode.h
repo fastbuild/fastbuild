@@ -43,19 +43,19 @@ public:
 
     enum CompilerFamily : uint8_t
     {
-        CUSTOM          = 0,
-        MSVC            = 1,
-        CLANG           = 2,
-        GCC             = 3,
-        SNC             = 4,
+        CUSTOM = 0,
+        MSVC = 1,
+        CLANG = 2,
+        GCC = 3,
+        SNC = 4,
         CODEWARRIOR_WII = 5,
         GREENHILLS_WIIU = 6,
-        CUDA_NVCC       = 7,
-        QT_RCC          = 8,
-        VBCC            = 9,
-        ORBIS_WAVE_PSSLC= 10,
-        CSHARP          = 11,
-        CLANG_CL        = 12,
+        CUDA_NVCC = 7,
+        QT_RCC = 8,
+        VBCC = 9,
+        ORBIS_WAVE_PSSLC = 10,
+        CSHARP = 11,
+        CLANG_CL = 12,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 

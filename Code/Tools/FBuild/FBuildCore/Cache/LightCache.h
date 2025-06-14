@@ -39,24 +39,24 @@ public:
     static void ClearCachedFiles();
 
 protected:
-    void                    Parse( IncludedFile * file, FileStream & f );
-    bool                    ParseDirective( IncludedFile & file, const char *& pos );
-    bool                    ParseDirective_Include( IncludedFile & file, const char *& pos );
-    bool                    ParseDirective_Define( IncludedFile & file, const char *& pos );
-    bool                    ParseDirective_Import( IncludedFile & file, const char *& pos );
-    void                    SkipCommentBlock( const char *& pos );
-    bool                    ParseIncludeString( const char *& pos, AString & outIncludePath, IncludeType & outIncludeType );
-    bool                    ParseMacroName( const char *& pos, AString & outMacroName );
-    void                    ProcessInclude( const AString & include, IncludeType type );
-    const IncludedFile *    ProcessIncludeFromFullPath( const AString & include, bool & outCyclic );
-    const IncludedFile *    ProcessIncludeFromIncludeStack( const AString & include, bool & outCyclic );
-    const IncludedFile *    ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic );
-    const IncludedFile *    FileExists( const AString & fileName );
+    void Parse( IncludedFile * file, FileStream & f );
+    bool ParseDirective( IncludedFile & file, const char *& pos );
+    bool ParseDirective_Include( IncludedFile & file, const char *& pos );
+    bool ParseDirective_Define( IncludedFile & file, const char *& pos );
+    bool ParseDirective_Import( IncludedFile & file, const char *& pos );
+    void SkipCommentBlock( const char *& pos );
+    bool ParseIncludeString( const char *& pos, AString & outIncludePath, IncludeType & outIncludeType );
+    bool ParseMacroName( const char *& pos, AString & outMacroName );
+    void ProcessInclude( const AString & include, IncludeType type );
+    const IncludedFile * ProcessIncludeFromFullPath( const AString & include, bool & outCyclic );
+    const IncludedFile * ProcessIncludeFromIncludeStack( const AString & include, bool & outCyclic );
+    const IncludedFile * ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic );
+    const IncludedFile * FileExists( const AString & fileName );
 
-    void                    AddError( IncludedFile * file,
-                                      const char * pos,
-                                      MSVC_SAL_PRINTF const char * formatString,
-                                      ... ) FORMAT_STRING( 4, 5 );
+    void AddError( IncludedFile * file,
+                   const char * pos,
+                   MSVC_SAL_PRINTF const char * formatString,
+                   ... ) FORMAT_STRING( 4, 5 );
 
     static void SkipWhitespace( const char *& pos );
     static bool IsAtEndOfLine( const char * pos );

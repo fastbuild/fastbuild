@@ -24,11 +24,31 @@
         if ( c <= 0x1F )
         {
             // escape with backslash if possible
-            if ( c == '\b' ) { temp += "\\b"; continue; }
-            if ( c == '\t' ) { temp += "\\t"; continue; }
-            if ( c == '\n' ) { temp += "\\n"; continue; }
-            if ( c == '\f' ) { temp += "\\f"; continue; }
-            if ( c == '\r' ) { temp += "\\r"; continue; }
+            if ( c == '\b' )
+            {
+                temp += "\\b";
+                continue;
+            }
+            if ( c == '\t' )
+            {
+                temp += "\\t";
+                continue;
+            }
+            if ( c == '\n' )
+            {
+                temp += "\\n";
+                continue;
+            }
+            if ( c == '\f' )
+            {
+                temp += "\\f";
+                continue;
+            }
+            if ( c == '\r' )
+            {
+                temp += "\\r";
+                continue;
+            }
 
             // escape with codepoint
             temp.AppendFormat( "\\u%04X", c );

@@ -11,12 +11,12 @@
 class FunctionTextFile : public Function
 {
 public:
-    explicit        FunctionTextFile();
-    virtual         ~FunctionTextFile() override;
+    explicit FunctionTextFile();
+    virtual ~FunctionTextFile() override;
 
 protected:
-    virtual bool    AcceptsHeader() const override;
-    virtual Node *  CreateNode() const override;
+    virtual bool AcceptsHeader() const override;
+    virtual Node * CreateNode() const override;
 };
 
 //------------------------------------------------------------------------------

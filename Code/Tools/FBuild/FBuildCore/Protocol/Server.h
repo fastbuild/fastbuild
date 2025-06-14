@@ -51,14 +51,14 @@ private:
     void Process( const ConnectionInfo * connection, const Protocol::MsgFile * msg, const void * payload, size_t payloadSize );
 
     static uint32_t ThreadFuncStatic( void * param );
-    void            ThreadFunc();
+    void ThreadFunc();
 
-    void            FindNeedyClients();
-    void            FinalizeCompletedJobs();
-    void            TouchToolchains();
-    void            CheckWaitingJobs( const ToolManifest * manifest );
+    void FindNeedyClients();
+    void FinalizeCompletedJobs();
+    void TouchToolchains();
+    void CheckWaitingJobs( const ToolManifest * manifest );
 
-    void            RequestMissingFiles( const ConnectionInfo * connection, ToolManifest * manifest ) const;
+    void RequestMissingFiles( const ConnectionInfo * connection, ToolManifest * manifest ) const;
 
     struct ClientState
     {

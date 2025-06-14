@@ -71,9 +71,9 @@ public:
 {
     switch ( platform )
     {
-        case Env::WINDOWS:  return "Windows";
-        case Env::OSX:      return "OSX";
-        case Env::LINUX:    return "Linux";
+        case Env::WINDOWS: return "Windows";
+        case Env::OSX: return "OSX";
+        case Env::LINUX: return "Linux";
     }
     ASSERT( false ); // should never get here
     return "Unknown";

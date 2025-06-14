@@ -40,10 +40,10 @@ public:
     static void FatalErrorFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 1, 2 );
 
     typedef bool Callback( const char * mesage );
-    static void AddCallbackDebugSpam( Callback * callback )     { s_Callbacks.AddCallbackDebugSpam( callback ); }
-    static void AddCallbackOutput( Callback * callback )        { s_Callbacks.AddCallbackOutput( callback ); }
-    static void RemoveCallbackDebugSpam( Callback * callback )  { s_Callbacks.RemoveCallbackDebugSpam( callback ); }
-    static void RemoveCallbackOutput( Callback * callback )     { s_Callbacks.RemoveCallbackOutput( callback ); }
+    static void AddCallbackDebugSpam( Callback * callback ) { s_Callbacks.AddCallbackDebugSpam( callback ); }
+    static void AddCallbackOutput( Callback * callback ) { s_Callbacks.AddCallbackOutput( callback ); }
+    static void RemoveCallbackDebugSpam( Callback * callback ) { s_Callbacks.RemoveCallbackDebugSpam( callback ); }
+    static void RemoveCallbackOutput( Callback * callback ) { s_Callbacks.RemoveCallbackOutput( callback ); }
 
 private:
     class Callbacks

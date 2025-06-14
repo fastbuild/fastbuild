@@ -38,8 +38,8 @@ public:
     }
 
     // access the seed value
-    void        SetSeed( uint32_t seed ) { m_Seed = seed; }
-    uint32_t    GetSeed() const { return m_Seed; }
+    void SetSeed( uint32_t seed ) { m_Seed = seed; }
+    uint32_t GetSeed() const { return m_Seed; }
 
 private:
     uint32_t m_Seed;

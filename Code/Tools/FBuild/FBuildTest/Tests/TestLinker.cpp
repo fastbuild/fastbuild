@@ -366,12 +366,12 @@ void TestLinker::LinkerType() const
         TEST_ASSERT( flags & expectedFlag ); \
     } while ( false )
 
-    TEST_LINKERTYPE( "link",        LinkerNode::LINK_FLAG_MSVC );
-    TEST_LINKERTYPE( "gcc",         LinkerNode::LINK_FLAG_GCC );
-    TEST_LINKERTYPE( "ps3ppuld",    LinkerNode::LINK_FLAG_SNC );
-    TEST_LINKERTYPE( "orbis-ld",    LinkerNode::LINK_FLAG_ORBIS_LD );
-    TEST_LINKERTYPE( "elxr",        LinkerNode::LINK_FLAG_GREENHILLS_ELXR );
-    TEST_LINKERTYPE( "mwldeppc",    LinkerNode::LINK_FLAG_CODEWARRIOR_LD );
+    TEST_LINKERTYPE( "link", LinkerNode::LINK_FLAG_MSVC );
+    TEST_LINKERTYPE( "gcc", LinkerNode::LINK_FLAG_GCC );
+    TEST_LINKERTYPE( "ps3ppuld", LinkerNode::LINK_FLAG_SNC );
+    TEST_LINKERTYPE( "orbis-ld", LinkerNode::LINK_FLAG_ORBIS_LD );
+    TEST_LINKERTYPE( "elxr", LinkerNode::LINK_FLAG_GREENHILLS_ELXR );
+    TEST_LINKERTYPE( "mwldeppc", LinkerNode::LINK_FLAG_CODEWARRIOR_LD );
 
 #undef TEST_LINKERTYPE
 }

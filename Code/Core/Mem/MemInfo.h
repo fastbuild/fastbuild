@@ -26,7 +26,7 @@ public:
 
 protected:
     // Internal helpers
-    static uint32_t    ConvertBytesToMiB( uint64_t bytes );
+    static uint32_t ConvertBytesToMiB( uint64_t bytes );
 };
 
 //------------------------------------------------------------------------------

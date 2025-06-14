@@ -32,8 +32,8 @@ public:
     bool TokenizeFromString( const AString & fileName, const AString & fileContents );
 
     // Access results
-    const Array<BFFToken> &     GetTokens() const { return m_Tokens; }
-    const Array<BFFFile *> &    GetUsedFiles() const { return m_Files; }
+    const Array<BFFToken> & GetTokens() const { return m_Tokens; }
+    const Array<BFFFile *> & GetUsedFiles() const { return m_Files; }
 
 protected:
     bool Tokenize( const AString & fileName, const BFFToken * token );

@@ -19,6 +19,7 @@ public:
     ~WorkerBrokerage();
 
     const AString & GetBrokerageRootPaths() const { return m_BrokerageRootPaths; }
+
 protected:
     void InitBrokerage();
 

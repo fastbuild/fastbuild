@@ -178,8 +178,8 @@ void Report::GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Nod
     bool isLibrary = false;
     switch ( type )
     {
-        case Node::DLL_NODE:        isLibrary = true; break;
-        case Node::LIBRARY_NODE:    isLibrary = true; break;
+        case Node::DLL_NODE: isLibrary = true; break;
+        case Node::LIBRARY_NODE: isLibrary = true; break;
         case Node::OBJECT_LIST_NODE: isLibrary = true; break;
         case Node::CS_NODE:
         {

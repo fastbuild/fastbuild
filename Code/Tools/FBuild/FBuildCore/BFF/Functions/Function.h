@@ -39,8 +39,8 @@ public:
 class Function
 {
 public:
-    explicit    Function( const char * functionName );
-    virtual     ~Function();
+    explicit Function( const char * functionName );
+    virtual ~Function();
 
     // info about a function
     const AString & GetName() const { return m_Name; }

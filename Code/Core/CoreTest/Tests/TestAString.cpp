@@ -284,31 +284,82 @@ void TestAString::CharacterHelpers() const
     const AStackString whitespace( " \r\n\t" );
 
     // IsWhitespace
-    for ( const char c : whitespace )   { TEST_ASSERT( AString::IsWhitespace( c ) ); }
-    for ( const char c : numbers )      { TEST_ASSERT( AString::IsWhitespace( c ) == false ); }
-    for ( const char c : letters )      { TEST_ASSERT( AString::IsWhitespace( c ) == false ); }
+    for ( const char c : whitespace )
+    {
+        TEST_ASSERT( AString::IsWhitespace( c ) );
+    }
+    for ( const char c : numbers )
+    {
+        TEST_ASSERT( AString::IsWhitespace( c ) == false );
+    }
+    for ( const char c : letters )
+    {
+        TEST_ASSERT( AString::IsWhitespace( c ) == false );
+    }
 
     // IsUppercaseLetter
-    for ( const char c : upperLetters ) { TEST_ASSERT( AString::IsUppercaseLetter( c ) ); }
-    for ( const char c : lowerLetters ) { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
-    for ( const char c : whitespace )   { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
-    for ( const char c : numbers )      { TEST_ASSERT( AString::IsUppercaseLetter( c ) == false ); }
+    for ( const char c : upperLetters )
+    {
+        TEST_ASSERT( AString::IsUppercaseLetter( c ) );
+    }
+    for ( const char c : lowerLetters )
+    {
+        TEST_ASSERT( AString::IsUppercaseLetter( c ) == false );
+    }
+    for ( const char c : whitespace )
+    {
+        TEST_ASSERT( AString::IsUppercaseLetter( c ) == false );
+    }
+    for ( const char c : numbers )
+    {
+        TEST_ASSERT( AString::IsUppercaseLetter( c ) == false );
+    }
 
     // IsLowercaseLetter
-    for ( const char c : lowerLetters ) { TEST_ASSERT( AString::IsLowercaseLetter( c ) ); }
-    for ( const char c : upperLetters ) { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
-    for ( const char c : whitespace )   { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
-    for ( const char c : numbers )      { TEST_ASSERT( AString::IsLowercaseLetter( c ) == false ); }
+    for ( const char c : lowerLetters )
+    {
+        TEST_ASSERT( AString::IsLowercaseLetter( c ) );
+    }
+    for ( const char c : upperLetters )
+    {
+        TEST_ASSERT( AString::IsLowercaseLetter( c ) == false );
+    }
+    for ( const char c : whitespace )
+    {
+        TEST_ASSERT( AString::IsLowercaseLetter( c ) == false );
+    }
+    for ( const char c : numbers )
+    {
+        TEST_ASSERT( AString::IsLowercaseLetter( c ) == false );
+    }
 
     // IsLetter
-    for ( const char c : letters )      { TEST_ASSERT( AString::IsLetter( c ) ); }
-    for ( const char c : whitespace )   { TEST_ASSERT( AString::IsLetter( c ) == false ); }
-    for ( const char c : numbers )      { TEST_ASSERT( AString::IsLetter( c ) == false ); }
+    for ( const char c : letters )
+    {
+        TEST_ASSERT( AString::IsLetter( c ) );
+    }
+    for ( const char c : whitespace )
+    {
+        TEST_ASSERT( AString::IsLetter( c ) == false );
+    }
+    for ( const char c : numbers )
+    {
+        TEST_ASSERT( AString::IsLetter( c ) == false );
+    }
 
     // IsNumber
-    for ( const char c : numbers )      { TEST_ASSERT( AString::IsNumber( c ) ); }
-    for ( const char c : letters )      { TEST_ASSERT( AString::IsNumber( c ) == false ); }
-    for ( const char c : whitespace )   { TEST_ASSERT( AString::IsNumber( c ) == false ); }
+    for ( const char c : numbers )
+    {
+        TEST_ASSERT( AString::IsNumber( c ) );
+    }
+    for ( const char c : letters )
+    {
+        TEST_ASSERT( AString::IsNumber( c ) == false );
+    }
+    for ( const char c : whitespace )
+    {
+        TEST_ASSERT( AString::IsNumber( c ) == false );
+    }
 }
 
 // Clear
@@ -994,19 +1045,19 @@ void TestAString::MoveConstructorHelper() const
 //------------------------------------------------------------------------------
 void TestAString::MoveConstructor() const
 {
-    //                    Src             Dest            Allocs    SrcCast
-    //------------------------------------------------------------------
+    //                    Src, Dest, Allocs, SrcCast
+    //----------------------------------------------------------------------
     // Moves from heap can be performed
-    MoveConstructorHelper<AString,        AString,        0                >();
-    MoveConstructorHelper<AString,        AStackString<>, 0                >();
+    MoveConstructorHelper<AString, AString, 0>();
+    MoveConstructorHelper<AString, AStackString<>, 0>();
 
     // Moves from stack to stack are copies, but avoid memory allocation
-    MoveConstructorHelper<AStackString<>, AStackString<>, 0                >();
-    MoveConstructorHelper<AStackString<>, AStackString<>, 0,        AString>(); // Src as AString, behave the same
+    MoveConstructorHelper<AStackString<>, AStackString<>, 0>();
+    MoveConstructorHelper<AStackString<>, AStackString<>, 0, AString>(); // Src as AString, behave the same
 
     // Moves from stack to AString need re-allocation and copy
-    MoveConstructorHelper<AStackString<>, AString,        1                >();
-    MoveConstructorHelper<AStackString<>, AString,        1,        AString>(); // Src as AString, behave the same
+    MoveConstructorHelper<AStackString<>, AString, 1>();
+    MoveConstructorHelper<AStackString<>, AString, 1, AString>(); // Src as AString, behave the same
 }
 
 // MoveAssignmentHelper
@@ -1071,16 +1122,16 @@ void TestAString::MoveAssignment() const
     //                   Src             Dest            Allocs SrcCast
     //------------------------------------------------------------------
     // Moves from heap can be performed
-    MoveAssignmentHelper<AString,        AString,        0             >();
-    MoveAssignmentHelper<AString,        AStackString<>, 0             >();
+    MoveAssignmentHelper<AString, AString, 0>();
+    MoveAssignmentHelper<AString, AStackString<>, 0>();
 
     // Moves from stack to stack are copies, but avoid memory allocation
-    MoveAssignmentHelper<AStackString<>, AStackString<>, 0             >();
-    MoveAssignmentHelper<AStackString<>, AStackString<>, 0,     AString>(); // Src as AString, behave the same
+    MoveAssignmentHelper<AStackString<>, AStackString<>, 0>();
+    MoveAssignmentHelper<AStackString<>, AStackString<>, 0, AString>(); // Src as AString, behave the same
 
     // Moves from stack to AString need re-allocation and copy
-    MoveAssignmentHelper<AStackString<>, AString,        1             >();
-    MoveAssignmentHelper<AStackString<>, AString,        1,     AString>(); // Src as AString, behave the same
+    MoveAssignmentHelper<AStackString<>, AString, 1>();
+    MoveAssignmentHelper<AStackString<>, AString, 1, AString>(); // Src as AString, behave the same
 }
 
 // CheckTokenize

@@ -35,8 +35,8 @@ protected:
     // Track visited state for nodes using sweep tag
     enum : uint32_t
     {
-        eSweepTagNotSeen    = 0,
-        eSweepTagSeen       = 1,
+        eSweepTagNotSeen = 0,
+        eSweepTagSeen = 1,
     };
 
     void VisitNodes( const NodeGraph & nodeGraph, const Dependencies & dependencies );

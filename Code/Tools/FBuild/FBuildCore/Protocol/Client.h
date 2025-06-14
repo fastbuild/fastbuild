@@ -58,15 +58,15 @@ private:
     bool WriteFileToDisk( const AString & fileName, const MultiBuffer & multiBuffer, size_t index ) const;
 
     static uint32_t ThreadFuncStatic( void * param );
-    void            ThreadFunc();
+    void ThreadFunc();
 
-    void            LookForWorkers();
-    void            CommunicateJobAvailability();
+    void LookForWorkers();
+    void CommunicateJobAvailability();
 
     // More verbose name to avoid conflict with windows.h SendMessage
-    void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );
-    void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
-    void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const ConstMemoryStream & memoryStream );
+    void SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );
+    void SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
+    void SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const ConstMemoryStream & memoryStream );
 
     Array<AString> m_WorkerList; // workers to connect to
     Atomic<bool> m_ShouldExit; // signal from main thread

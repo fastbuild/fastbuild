@@ -104,18 +104,36 @@ PRAGMA_DISABLE_POP_CLANG
     #endif
 #elif defined( _MSC_VER )
     // MSVC is missing intrinsics for some sizes so we emulate them:
-inline char     XInterlockedIncrement8( volatile char * x )                 { return ( _InterlockedExchangeAdd8( x, 1 ) + 1 ); }
-inline char     XInterlockedDecrement8( volatile char * x )                 { return ( _InterlockedExchangeAdd8( x, -1 ) - 1 ); }
-inline char     XInterlockedAdd8( volatile char * x, char value )           { return ( _InterlockedExchangeAdd8( x, value ) + value ); }
-inline short    XInterlockedAdd16( volatile short * x, short value )        { return ( _InterlockedExchangeAdd16( x, value ) + value ); }
+inline char XInterlockedIncrement8( volatile char * x )
+{
+    return ( _InterlockedExchangeAdd8( x, 1 ) + 1 );
+}
+inline char XInterlockedDecrement8( volatile char * x )
+{
+    return ( _InterlockedExchangeAdd8( x, -1 ) - 1 );
+}
+inline char XInterlockedAdd8( volatile char * x, char value )
+{
+    return ( _InterlockedExchangeAdd8( x, value ) + value );
+}
+inline short XInterlockedAdd16( volatile short * x, short value )
+{
+    return ( _InterlockedExchangeAdd16( x, value ) + value );
+}
 
     // The MSVC compiler crashes if the following intrinsics are used:
     //              _interlockedadd
     //              _interlockedadd64
     // These alternative implementations avoid the crash.
     //       (see: https://developercommunity.visualstudio.com/t/Internal-compiler-error-using-_interlock/10061949)
-inline long     XInterlockedAdd32( volatile long * x, long value )          { return ( _InterlockedExchangeAdd( x, value ) + value ); }
-inline __int64  XInterlockedAdd64( volatile __int64 * x, __int64 value )    { return ( _InterlockedExchangeAdd64( x, value ) + value ); }
+inline long XInterlockedAdd32( volatile long * x, long value )
+{
+    return ( _InterlockedExchangeAdd( x, value ) + value );
+}
+inline __int64 XInterlockedAdd64( volatile __int64 * x, __int64 value )
+{
+    return ( _InterlockedExchangeAdd64( x, value ) + value );
+}
 
     // MSVC has inconsistent function names (suffixes and casing) so the macro below can be used to map
     // a consistent set of function names for each type
@@ -217,16 +235,16 @@ public:
     }
 
     // Store/Load
-    void            Store( T newValue ) { AtomicStoreRelease( &m_Value, newValue ); }
-    [[nodiscard]] T Load() const        { return AtomicLoadAcquire( &m_Value ); }
+    void Store( T newValue ) { AtomicStoreRelease( &m_Value, newValue ); }
+    [[nodiscard]] T Load() const { return AtomicLoadAcquire( &m_Value ); }
 
     // Increment (returns result)
-    T               Increment()         { return AtomicInc( &m_Value ); }
-    T               Decrement()         { return AtomicDec( &m_Value ); }
+    T Increment() { return AtomicInc( &m_Value ); }
+    T Decrement() { return AtomicDec( &m_Value ); }
 
     // Add (returns result)
-    T               Add( T value )      { return AtomicAdd( &m_Value, value ); }
-    T               Sub( T value )      { return AtomicSub( &m_Value, value ); }
+    T Add( T value ) { return AtomicAdd( &m_Value, value ); }
+    T Sub( T value ) { return AtomicSub( &m_Value, value ); }
 
 protected:
     volatile T m_Value;

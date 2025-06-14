@@ -105,8 +105,8 @@ FunctionForEach::FunctionForEach()
 
             const BFFVariable * var = nullptr;
             const BFFStackFrame * const arrayFrame = ( arrayParentScope )
-                ? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent(), var )
-                : nullptr;
+                                                         ? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent(), var )
+                                                         : nullptr;
 
             if ( false == arrayParentScope )
             {

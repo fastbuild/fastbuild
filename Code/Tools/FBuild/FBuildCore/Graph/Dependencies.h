@@ -54,37 +54,37 @@ public:
     ~Dependencies();
 
     // Index based access
-    [[nodiscard]] size_t                GetSize() const { return m_DependencyList ? m_DependencyList->m_Size : 0; }
-    [[nodiscard]] size_t                GetCapacity() const { return m_DependencyList ? m_DependencyList->m_Capacity : 0; }
-    [[nodiscard]] bool                  IsEmpty() const { return ( GetSize() == 0 ); }
-    [[nodiscard]] Dependency &          operator[]( size_t index );
-    [[nodiscard]] const Dependency &    operator[]( size_t index ) const;
-    [[nodiscard]] size_t                GetIndexOf( const Dependency * dep ) const;
+    [[nodiscard]] size_t GetSize() const { return m_DependencyList ? m_DependencyList->m_Size : 0; }
+    [[nodiscard]] size_t GetCapacity() const { return m_DependencyList ? m_DependencyList->m_Capacity : 0; }
+    [[nodiscard]] bool IsEmpty() const { return ( GetSize() == 0 ); }
+    [[nodiscard]] Dependency & operator[]( size_t index );
+    [[nodiscard]] const Dependency & operator[]( size_t index ) const;
+    [[nodiscard]] size_t GetIndexOf( const Dependency * dep ) const;
 
     // Range based access
-    [[nodiscard]] Dependency *          Begin()         { return m_DependencyList ? GetDependencies( m_DependencyList ) : nullptr; }
-    [[nodiscard]] const Dependency *    Begin() const   { return m_DependencyList ? GetDependencies( m_DependencyList ) : nullptr; }
-    [[nodiscard]] Dependency *          begin()         { return m_DependencyList ? GetDependencies( m_DependencyList ) : nullptr; }
-    [[nodiscard]] const Dependency *    begin() const   { return m_DependencyList ? GetDependencies( m_DependencyList ) : nullptr; }
-    [[nodiscard]] Dependency *          End()           { return m_DependencyList ? GetDependencies( m_DependencyList ) + m_DependencyList->m_Size : nullptr; }
-    [[nodiscard]] const Dependency *    End() const     { return m_DependencyList ? GetDependencies( m_DependencyList ) + m_DependencyList->m_Size : nullptr; }
-    [[nodiscard]] Dependency *          end()           { return m_DependencyList ? GetDependencies( m_DependencyList ) + m_DependencyList->m_Size : nullptr; }
-    [[nodiscard]] const Dependency *    end() const     { return m_DependencyList ? GetDependencies( m_DependencyList ) + m_DependencyList->m_Size : nullptr; }
+    [[nodiscard]] Dependency * Begin() { return m_DependencyList ? GetDependencies( m_DependencyList ) : nullptr; }
+    [[nodiscard]] const Dependency * Begin() const { return m_DependencyList ? GetDependencies( m_DependencyList ) : nullptr; }
+    [[nodiscard]] Dependency * begin() { return m_DependencyList ? GetDependencies( m_DependencyList ) : nullptr; }
+    [[nodiscard]] const Dependency * begin() const { return m_DependencyList ? GetDependencies( m_DependencyList ) : nullptr; }
+    [[nodiscard]] Dependency * End() { return m_DependencyList ? GetDependencies( m_DependencyList ) + m_DependencyList->m_Size : nullptr; }
+    [[nodiscard]] const Dependency * End() const { return m_DependencyList ? GetDependencies( m_DependencyList ) + m_DependencyList->m_Size : nullptr; }
+    [[nodiscard]] Dependency * end() { return m_DependencyList ? GetDependencies( m_DependencyList ) + m_DependencyList->m_Size : nullptr; }
+    [[nodiscard]] const Dependency * end() const { return m_DependencyList ? GetDependencies( m_DependencyList ) + m_DependencyList->m_Size : nullptr; }
 
     // Dependency accumulation
-    void                                SetCapacity( size_t capacity ) { GrowCapacity( capacity ); }
-    void                                Clear();
-    void                                Add( Node * node );
-    void                                Add( Node * node, uint64_t stamp, bool isWeak );
-    void                                Add( const Dependencies & deps );
-    Dependencies &                      operator=( const Dependencies & other );
+    void SetCapacity( size_t capacity ) { GrowCapacity( capacity ); }
+    void Clear();
+    void Add( Node * node );
+    void Add( Node * node, uint64_t stamp, bool isWeak );
+    void Add( const Dependencies & deps );
+    Dependencies & operator=( const Dependencies & other );
 
     void Save( IOStream & stream ) const;
     void Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
 
 protected:
     // Extend to explicit capacity, or with amortized expansion if 0
-    void                                GrowCapacity( size_t newCapacity = 0 );
+    void GrowCapacity( size_t newCapacity = 0 );
 
     // The array of dependencies and list management variables are allocated in
     // a contiguous block to save memory vs using a standard Array
@@ -96,8 +96,8 @@ protected:
 
         // Dependencies immediately follow Size & Capacity
     };
-    static Dependency *                 GetDependencies( DependencyList * depList );
-    static const Dependency *           GetDependencies( const DependencyList * depList );
+    static Dependency * GetDependencies( DependencyList * depList );
+    static const Dependency * GetDependencies( const DependencyList * depList );
 
     DependencyList * m_DependencyList = nullptr;
 };

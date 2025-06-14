@@ -41,7 +41,7 @@ public:
         uint64_t m_LastWriteTime;
         uint64_t m_Size;
 
-        bool        IsReadOnly() const;
+        bool IsReadOnly() const;
     };
     static bool GetFilesEx( const AString & path,
                             const Array<AString> * patterns,
@@ -66,12 +66,12 @@ public:
 #endif
 
     static uint64_t GetFileLastWriteTime( const AString & fileName );
-    static bool     SetFileLastWriteTime( const AString & fileName, uint64_t fileTime );
-    static bool     SetFileLastWriteTimeToNow( const AString & fileName );
+    static bool SetFileLastWriteTime( const AString & fileName, uint64_t fileTime );
+    static bool SetFileLastWriteTimeToNow( const AString & fileName );
 
-    static bool     SetReadOnly( const char * fileName, bool readOnly );
-    static bool     GetReadOnly( const char * fileName );
-    static bool     GetReadOnly( const AString & fileName ) { return GetReadOnly( fileName.Get() ); }
+    static bool SetReadOnly( const char * fileName, bool readOnly );
+    static bool GetReadOnly( const char * fileName );
+    static bool GetReadOnly( const AString & fileName ) { return GetReadOnly( fileName.Get() ); }
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     static bool SetExecutable( const char * fileName );
 #endif
@@ -121,13 +121,13 @@ public:
     virtual ~GetFilesHelper();
 
     // Default implementation can be extended or customized
-    [[nodiscard]] virtual bool  OnDirectory( const AString & dirPath );
-    [[nodiscard]] virtual bool  ShouldIncludeFile( const char * fileName );
-    virtual void                OnFile( FileIO::FileInfo && fileInfo );
+    [[nodiscard]] virtual bool OnDirectory( const AString & dirPath );
+    [[nodiscard]] virtual bool ShouldIncludeFile( const char * fileName );
+    virtual void OnFile( FileIO::FileInfo && fileInfo );
 
     // Access results
     const Array<FileIO::FileInfo> & GetFiles() const { return m_Files; }
-    Array<FileIO::FileInfo> &       GetFiles() { return m_Files; }
+    Array<FileIO::FileInfo> & GetFiles() { return m_Files; }
 
 protected:
     bool m_Recurse = true;

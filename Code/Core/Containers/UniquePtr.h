@@ -21,7 +21,10 @@ class DeleteDeletor
 {
 public:
     template <class T>
-    static void Delete( T * ptr ) { FDELETE ptr; }
+    static void Delete( T * ptr )
+    {
+        FDELETE ptr;
+    }
 };
 
 // UniquePtr
@@ -41,19 +44,41 @@ public:
     ~UniquePtr() { DELETOR::Delete( m_Pointer ); }
 
     // access the pointer
-    [[nodiscard]] T *           Get()       { return m_Pointer; }
-    [[nodiscard]] const T *     Get() const { return m_Pointer; }
-    [[nodiscard]] T *           operator->()       { ASSERT( m_Pointer ); return m_Pointer; }
-    [[nodiscard]] const T *     operator->() const { ASSERT( m_Pointer ); return m_Pointer; }
+    [[nodiscard]] T * Get() { return m_Pointer; }
+    [[nodiscard]] const T * Get() const { return m_Pointer; }
+    [[nodiscard]] T * operator->()
+    {
+        ASSERT( m_Pointer );
+        return m_Pointer;
+    }
+    [[nodiscard]] const T * operator->() const
+    {
+        ASSERT( m_Pointer );
+        return m_Pointer;
+    }
 
     // acquire a new pointer
-    void                        operator=( T * newPtr ) { DELETOR::Delete( m_Pointer ); m_Pointer = newPtr; }
+    void operator=( T * newPtr )
+    {
+        DELETOR::Delete( m_Pointer );
+        m_Pointer = newPtr;
+    }
 
     // manually initiate deletion
-    void                        Destroy() { DELETOR::Delete( m_Pointer ); m_Pointer = nullptr; }
+    void Destroy()
+    {
+        DELETOR::Delete( m_Pointer );
+        m_Pointer = nullptr;
+    }
 
     // release ownership of pointer without deleting it
-    [[nodiscard]] T *           ReleaseOwnership() { T * ptr = m_Pointer; m_Pointer = nullptr; return ptr; }
+    [[nodiscard]] T * ReleaseOwnership()
+    {
+        T * ptr = m_Pointer;
+        m_Pointer = nullptr;
+        return ptr;
+    }
+
 private:
     T * m_Pointer;
 };

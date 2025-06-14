@@ -14,13 +14,13 @@ public:
     MemPoolBlock( size_t blockSize, size_t blockAlignment );
     virtual ~MemPoolBlock();
 
-    void *  Alloc();
-    void    Free( void * ptr );
+    void * Alloc();
+    void Free( void * ptr );
 
     inline static const size_t kMemPoolBlockPageSize = 64 * 1024;
 
 protected:
-    bool    AllocPage();
+    bool AllocPage();
 
     virtual void * AllocateMemoryForPage();
 

@@ -104,10 +104,10 @@ public:
     uint32_t m_NumWorkerThreads = 0; // True default detected in constructor
     AString m_ConfigFile;
 
-    uint32_t GetWorkingDirHash() const                  { return m_WorkingDirHash; }
-    const AString & GetMainProcessMutexName() const     { return m_ProcessMutexName; }
-    const AString & GetFinalProcessMutexName( ) const   { return m_FinalProcessMutexName; }
-    const AString & GetSharedMemoryName() const         { return m_SharedMemoryName; }
+    uint32_t GetWorkingDirHash() const { return m_WorkingDirHash; }
+    const AString & GetMainProcessMutexName() const { return m_ProcessMutexName; }
+    const AString & GetFinalProcessMutexName() const { return m_FinalProcessMutexName; }
+    const AString & GetSharedMemoryName() const { return m_SharedMemoryName; }
 
 private:
     void DisplayHelp( const AString & programName ) const;

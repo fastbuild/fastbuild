@@ -31,38 +31,66 @@ class BFFVariable
 public:
     const AString & GetName() const { return m_Name; }
 
-    const AString & GetString() const { ASSERT( IsString() ); return m_StringValue; }
-    const Array<AString> & GetArrayOfStrings() const { ASSERT( IsArrayOfStrings() ); return m_ArrayValues; }
-    int32_t GetInt() const { ASSERT( IsInt() ); return m_IntValue; }
-    bool GetBool() const { ASSERT( IsBool() ); return m_BoolValue; }
-    const Array<const BFFVariable *> & GetStructMembers() const { ASSERT( IsStruct() ); RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables ) }
-    const Array<const BFFVariable *> & GetArrayOfStructs() const { ASSERT( IsArrayOfStructs() ); RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables ) }
+    const AString & GetString() const
+    {
+        ASSERT( IsString() );
+        return m_StringValue;
+    }
+    const Array<AString> & GetArrayOfStrings() const
+    {
+        ASSERT( IsArrayOfStrings() );
+        return m_ArrayValues;
+    }
+    int32_t GetInt() const
+    {
+        ASSERT( IsInt() );
+        return m_IntValue;
+    }
+    bool GetBool() const
+    {
+        ASSERT( IsBool() );
+        return m_BoolValue;
+    }
+    const Array<const BFFVariable *> & GetStructMembers() const
+    {
+        ASSERT( IsStruct() );
+        RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables )
+    }
+    const Array<const BFFVariable *> & GetArrayOfStructs() const
+    {
+        ASSERT( IsArrayOfStructs() );
+        RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables )
+    }
 
     enum VarType : uint8_t
     {
-        VAR_ANY     = 0, // used for searching
-        VAR_STRING  = 1,
-        VAR_BOOL    = 2,
+        VAR_ANY = 0, // used for searching
+        VAR_STRING = 1,
+        VAR_BOOL = 2,
         VAR_ARRAY_OF_STRINGS = 3,
-        VAR_INT     = 4,
-        VAR_STRUCT  = 5,
+        VAR_INT = 4,
+        VAR_STRUCT = 5,
         VAR_ARRAY_OF_STRUCTS = 6,
         MAX_VAR_TYPES    // NOTE: Be sure to update s_TypeNames when adding to here
     };
 
-    VarType GetType() const  { return m_Type; }
+    VarType GetType() const { return m_Type; }
     static const char * GetTypeName( VarType t ) { return s_TypeNames[ (uint32_t)t ]; }
 
-    bool IsString() const    { return m_Type == BFFVariable::VAR_STRING; }
-    bool IsBool() const      { return m_Type == BFFVariable::VAR_BOOL; }
-    bool IsArrayOfStrings() const    { return m_Type == BFFVariable::VAR_ARRAY_OF_STRINGS; }
-    bool IsInt() const       { return m_Type == BFFVariable::VAR_INT; }
-    bool IsStruct() const    { return m_Type == BFFVariable::VAR_STRUCT; }
+    bool IsString() const { return m_Type == BFFVariable::VAR_STRING; }
+    bool IsBool() const { return m_Type == BFFVariable::VAR_BOOL; }
+    bool IsArrayOfStrings() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRINGS; }
+    bool IsInt() const { return m_Type == BFFVariable::VAR_INT; }
+    bool IsStruct() const { return m_Type == BFFVariable::VAR_STRUCT; }
     bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
 
     bool Frozen() const { return m_FreezeCount > 0; }
     void Freeze() const { ++m_FreezeCount; }
-    void Unfreeze() const { ASSERT( m_FreezeCount != 0 ); --m_FreezeCount; }
+    void Unfreeze() const
+    {
+        ASSERT( m_FreezeCount != 0 );
+        --m_FreezeCount;
+    }
 
     BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFToken * operatorIter ) const;
 

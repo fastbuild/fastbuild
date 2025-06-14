@@ -78,10 +78,10 @@ protected:
     void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // Internal helpers
-    void        GetProjectRelativePath_Deprecated( const AString & fileName, AString & shortFileName ) const;
+    void GetProjectRelativePath_Deprecated( const AString & fileName, AString & shortFileName ) const;
     struct Folder;
-    Folder *    GetFolderFor( const AString & path );
-    void        SortFilesAndFolders();
+    Folder * GetFolderFor( const AString & path );
+    void SortFilesAndFolders();
 
     struct File;
     struct Folder

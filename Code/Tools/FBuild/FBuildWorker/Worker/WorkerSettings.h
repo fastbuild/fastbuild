@@ -20,9 +20,9 @@ public:
     // Worker Mode
     enum Mode
     {
-        DISABLED     = 0, // Don't work for anyone
-        WHEN_IDLE    = 1, // Work for others when idle
-        DEDICATED    = 2, // Work for others always
+        DISABLED = 0, // Don't work for anyone
+        WHEN_IDLE = 1, // Work for others when idle
+        DEDICATED = 2, // Work for others always
         PROPORTIONAL = 3 // Work for others proportional to free CPU
     };
     Mode GetMode() const { return m_Mode; }

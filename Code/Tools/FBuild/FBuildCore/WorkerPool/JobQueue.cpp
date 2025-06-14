@@ -874,10 +874,10 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
         MutexHolder m( m_CompletedJobsMutex );
         switch ( result )
         {
-            case Node::BuildResult::eOk:                m_CompletedJobs.Append( job ); break;
-            case Node::BuildResult::eAborted:           m_CompletedJobsAborted.Append( job ); break;
-            case Node::BuildResult::eNeedSecondPass:    ASSERT( false ); break;
-            case Node::BuildResult::eFailed:            m_CompletedJobsFailed.Append( job ); break;
+            case Node::BuildResult::eOk: m_CompletedJobs.Append( job ); break;
+            case Node::BuildResult::eAborted: m_CompletedJobsAborted.Append( job ); break;
+            case Node::BuildResult::eNeedSecondPass: ASSERT( false ); break;
+            case Node::BuildResult::eFailed: m_CompletedJobsFailed.Append( job ); break;
         }
     }
 
@@ -1005,9 +1005,9 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
                 resultString = node->GetStatFlag( Node::STATS_CACHE_HIT ) ? "SUCCESS_CACHED" : "SUCCESS_COMPLETE";
                 break;
             }
-            case Node::BuildResult::eAborted:           resultString = "ABORTED"; break;
-            case Node::BuildResult::eNeedSecondPass:    resultString = "SUCCESS_PREPROCESSED";  break;
-            case Node::BuildResult::eFailed:            resultString = "FAILED";                break;
+            case Node::BuildResult::eAborted: resultString = "ABORTED"; break;
+            case Node::BuildResult::eNeedSecondPass: resultString = "SUCCESS_PREPROCESSED"; break;
+            case Node::BuildResult::eFailed: resultString = "FAILED"; break;
         }
 
         AStackString msgBuffer;

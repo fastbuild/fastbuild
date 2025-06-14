@@ -35,12 +35,12 @@ public:
     void AddFile( const AString & file );
     void AddFiles( const Array<AString> & files );
 
-    void SetRootNamespace( const AString & s )          { m_RootNamespace = s; }
-    void SetProjectGuid( const AString & s )            { m_ProjectGuid = s; }
-    void SetDefaultLanguage( const AString & s )        { m_DefaultLanguage = s; }
+    void SetRootNamespace( const AString & s ) { m_RootNamespace = s; }
+    void SetProjectGuid( const AString & s ) { m_ProjectGuid = s; }
+    void SetDefaultLanguage( const AString & s ) { m_DefaultLanguage = s; }
     void SetApplicationEnvironment( const AString & s ) { m_ApplicationEnvironment = s; }
-    void SetProjectSccEntrySAK( const bool b )          { m_ProjectSccEntrySAK = b; }
-    void SetReferences( const Array<AString> & a )      { m_References = a; }
+    void SetProjectSccEntrySAK( const bool b ) { m_ProjectSccEntrySAK = b; }
+    void SetReferences( const Array<AString> & a ) { m_References = a; }
     void SetProjectReferences( const Array<AString> & a ) { m_ProjectReferences = a; }
 
     const AString & GenerateVCXProj( const AString & projectFile,

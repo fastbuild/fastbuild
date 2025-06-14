@@ -889,10 +889,10 @@ void XCodeProjectGenerator::EscapeArgument( const AString & arg,
         const char c = arg[ i ];
         switch ( c )
         {
-            case '>': outEscapedArgument += "&gt;";     break;
-            case '<': outEscapedArgument += "&lt;";     break;
-            case '"': outEscapedArgument += "&quot;";   break;
-            case '&': outEscapedArgument += "&amp;";    break;
+            case '>': outEscapedArgument += "&gt;"; break;
+            case '<': outEscapedArgument += "&lt;"; break;
+            case '"': outEscapedArgument += "&quot;"; break;
+            case '&': outEscapedArgument += "&amp;"; break;
             default:
             {
                 outEscapedArgument += c;

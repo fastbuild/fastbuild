@@ -46,9 +46,9 @@ private:
     };
 
     // Helper functions
-    static void     GetRandomAllocSizes( const uint32_t numAllocs, Array<uint32_t> & allocSizes );
-    static float    AllocateFromSystemAllocator( const Array<uint32_t> & allocSizes, const uint32_t repeatCount );
-    static float    AllocateFromSmallBlockAllocator( const Array<uint32_t> & allocSizes, const uint32_t repeatCount );
+    static void GetRandomAllocSizes( const uint32_t numAllocs, Array<uint32_t> & allocSizes );
+    static float AllocateFromSystemAllocator( const Array<uint32_t> & allocSizes, const uint32_t repeatCount );
+    static float AllocateFromSmallBlockAllocator( const Array<uint32_t> & allocSizes, const uint32_t repeatCount );
     static uint32_t ThreadFunction_System( void * userData );
     static uint32_t ThreadFunction_SmallBlock( void * userData );
 };

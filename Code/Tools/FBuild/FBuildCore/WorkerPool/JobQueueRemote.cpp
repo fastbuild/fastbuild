@@ -285,10 +285,10 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         MutexHolder m( m_CompletedJobsMutex );
         switch ( result )
         {
-            case Node::BuildResult::eFailed:            m_CompletedJobsFailed.Append( job ); break;
-            case Node::BuildResult::eAborted:           m_CompletedJobsAborted.Append( job );break;
-            case Node::BuildResult::eNeedSecondPass:    ASSERT( false ); break;
-            case Node::BuildResult::eOk:                m_CompletedJobs.Append( job ); break;
+            case Node::BuildResult::eFailed: m_CompletedJobsFailed.Append( job ); break;
+            case Node::BuildResult::eAborted: m_CompletedJobsAborted.Append( job ); break;
+            case Node::BuildResult::eNeedSecondPass: ASSERT( false ); break;
+            case Node::BuildResult::eOk: m_CompletedJobs.Append( job ); break;
         }
     }
 

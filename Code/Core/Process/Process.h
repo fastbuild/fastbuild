@@ -19,28 +19,28 @@ public:
                       const volatile bool * abortFlag = nullptr );
     ~Process();
 
-    [[nodiscard]] bool          Spawn( const char * executable,
-                                       const char * args,
-                                       const char * workingDir,
-                                       const char * environment,
-                                       bool shareHandles = false );
-    [[nodiscard]] bool          IsRunning() const;
-    int32_t                     WaitForExit();
-    void                        Detach();
-    void                        KillProcessTree();
+    [[nodiscard]] bool Spawn( const char * executable,
+                              const char * args,
+                              const char * workingDir,
+                              const char * environment,
+                              bool shareHandles = false );
+    [[nodiscard]] bool IsRunning() const;
+    int32_t WaitForExit();
+    void Detach();
+    void KillProcessTree();
 
     // Read all data from the process until it exits
     // NOTE: Owner must free the returned memory!
-    bool                        ReadAllData( AString & memOut,
-                                             AString & errOut,
-                                             uint32_t timeOutMS = 0 );
+    bool ReadAllData( AString & memOut,
+                      AString & errOut,
+                      uint32_t timeOutMS = 0 );
 
 #if defined( __WINDOWS__ )
     // Prevent handles being redirected
     void DisableHandleRedirection() { m_RedirectHandles = false; }
 #endif
-    [[nodiscard]] bool          HasAborted() const;
-    [[nodiscard]] static uint32_t   GetCurrentId();
+    [[nodiscard]] bool HasAborted() const;
+    [[nodiscard]] static uint32_t GetCurrentId();
 
 private:
 #if defined( __WINDOWS__ )

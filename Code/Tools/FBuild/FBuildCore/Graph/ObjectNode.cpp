@@ -960,19 +960,19 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     const CompilerNode::CompilerFamily compilerFamily = compilerNode->GetCompilerFamily();
     switch ( compilerFamily )
     {
-        case CompilerNode::CompilerFamily::CUSTOM:          break; // Nothing to do
-        case CompilerNode::CompilerFamily::MSVC:            flags.Set( CompilerFlags::FLAG_MSVC );              break;
-        case CompilerNode::CompilerFamily::CLANG:           flags.Set( CompilerFlags::FLAG_CLANG );             break;
-        case CompilerNode::CompilerFamily::CLANG_CL:        flags.Set( CompilerFlags::FLAG_CLANG_CL );          break;
-        case CompilerNode::CompilerFamily::GCC:             flags.Set( CompilerFlags::FLAG_GCC );               break;
-        case CompilerNode::CompilerFamily::SNC:             flags.Set( CompilerFlags::FLAG_SNC );               break;
-        case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags.Set( CompilerFlags::CODEWARRIOR_WII );        break;
-        case CompilerNode::CompilerFamily::GREENHILLS_WIIU: flags.Set( CompilerFlags::GREENHILLS_WIIU );        break;
-        case CompilerNode::CompilerFamily::CUDA_NVCC:       flags.Set( CompilerFlags::FLAG_CUDA_NVCC );         break;
-        case CompilerNode::CompilerFamily::QT_RCC:          flags.Set( CompilerFlags::FLAG_QT_RCC );            break;
-        case CompilerNode::CompilerFamily::VBCC:            flags.Set( CompilerFlags::FLAG_VBCC );              break;
-        case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC:flags.Set( CompilerFlags::FLAG_ORBIS_WAVE_PSSLC );  break;
-        case CompilerNode::CompilerFamily::CSHARP:          ASSERT( false ); break; // Guarded in ObjectListNode::Initialize
+        case CompilerNode::CompilerFamily::CUSTOM: break; // Nothing to do
+        case CompilerNode::CompilerFamily::MSVC: flags.Set( CompilerFlags::FLAG_MSVC ); break;
+        case CompilerNode::CompilerFamily::CLANG: flags.Set( CompilerFlags::FLAG_CLANG ); break;
+        case CompilerNode::CompilerFamily::CLANG_CL: flags.Set( CompilerFlags::FLAG_CLANG_CL ); break;
+        case CompilerNode::CompilerFamily::GCC: flags.Set( CompilerFlags::FLAG_GCC ); break;
+        case CompilerNode::CompilerFamily::SNC: flags.Set( CompilerFlags::FLAG_SNC ); break;
+        case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags.Set( CompilerFlags::CODEWARRIOR_WII ); break;
+        case CompilerNode::CompilerFamily::GREENHILLS_WIIU: flags.Set( CompilerFlags::GREENHILLS_WIIU ); break;
+        case CompilerNode::CompilerFamily::CUDA_NVCC: flags.Set( CompilerFlags::FLAG_CUDA_NVCC ); break;
+        case CompilerNode::CompilerFamily::QT_RCC: flags.Set( CompilerFlags::FLAG_QT_RCC ); break;
+        case CompilerNode::CompilerFamily::VBCC: flags.Set( CompilerFlags::FLAG_VBCC ); break;
+        case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC: flags.Set( CompilerFlags::FLAG_ORBIS_WAVE_PSSLC ); break;
+        case CompilerNode::CompilerFamily::CSHARP: ASSERT( false ); break; // Guarded in ObjectListNode::Initialize
     }
 
     // Source mappings are not currently forwarded so can only compiled locally
@@ -2966,16 +2966,46 @@ void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
                                const AString & remoteSourceRoot,
                                UniquePtr<CompilerDriverBase> & outDriver ) const
 {
-    if      ( flags.IsMSVC() || flags.IsClangCl() ) { outDriver = FNEW( CompilerDriver_CL( flags.IsClangCl() ) ); }
-    else if ( flags.IsClang() || flags.IsGCC() )    { outDriver = FNEW( CompilerDriver_GCCClang( flags.IsClang() ) ); }
-    else if ( flags.IsVBCC() )                      { outDriver = FNEW( CompilerDriver_VBCC() ); }
-    else if ( flags.IsQtRCC() )                     { outDriver = FNEW( CompilerDriver_QtRCC() ); }
-    else if ( flags.IsOrbisWavePSSLC() )            { outDriver = FNEW( CompilerDriver_OrbisWavePSSLC() ); }
-    else if ( flags.IsSNC() )                       { outDriver = FNEW( CompilerDriver_SNC() ); }
-    else if ( flags.IsCUDANVCC() )                  { outDriver = FNEW( CompilerDriver_CUDA() ); }
-    else if ( flags.IsCodeWarriorWii() )            { outDriver = FNEW( CompilerDriver_CodeWarriorWii() ); }
-    else if ( flags.IsGreenHillsWiiU() )            { outDriver = FNEW( CompilerDriver_GreenHillsWiiU() ); }
-    else                                            { outDriver = FNEW( CompilerDriver_Generic() ); }
+    if ( flags.IsMSVC() || flags.IsClangCl() )
+    {
+        outDriver = FNEW( CompilerDriver_CL( flags.IsClangCl() ) );
+    }
+    else if ( flags.IsClang() || flags.IsGCC() )
+    {
+        outDriver = FNEW( CompilerDriver_GCCClang( flags.IsClang() ) );
+    }
+    else if ( flags.IsVBCC() )
+    {
+        outDriver = FNEW( CompilerDriver_VBCC() );
+    }
+    else if ( flags.IsQtRCC() )
+    {
+        outDriver = FNEW( CompilerDriver_QtRCC() );
+    }
+    else if ( flags.IsOrbisWavePSSLC() )
+    {
+        outDriver = FNEW( CompilerDriver_OrbisWavePSSLC() );
+    }
+    else if ( flags.IsSNC() )
+    {
+        outDriver = FNEW( CompilerDriver_SNC() );
+    }
+    else if ( flags.IsCUDANVCC() )
+    {
+        outDriver = FNEW( CompilerDriver_CUDA() );
+    }
+    else if ( flags.IsCodeWarriorWii() )
+    {
+        outDriver = FNEW( CompilerDriver_CodeWarriorWii() );
+    }
+    else if ( flags.IsGreenHillsWiiU() )
+    {
+        outDriver = FNEW( CompilerDriver_GreenHillsWiiU() );
+    }
+    else
+    {
+        outDriver = FNEW( CompilerDriver_Generic() );
+    }
 
     outDriver->Init( this, remoteSourceRoot );
 }

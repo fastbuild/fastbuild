@@ -34,7 +34,7 @@ public:
 
     void SetWantToQuit() { m_WantToQuit = true; }
 
-    Worker & operator=(Worker &) = delete;
+    Worker & operator=( Worker & ) = delete;
 
 private:
     static uint32_t WorkThreadWrapper( void * userData );

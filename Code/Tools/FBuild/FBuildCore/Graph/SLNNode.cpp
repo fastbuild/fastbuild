@@ -283,8 +283,8 @@ SLNNode::~SLNNode() = default;
     {
         const Node * node = dep.GetNode();
         VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
-                                        ? static_cast<VSProjectBaseNode *>( node->CastTo<VCXProjectNode>() )
-                                        : static_cast<VSProjectBaseNode *>( node->CastTo<VSProjectExternalNode>() );
+                                              ? static_cast<VSProjectBaseNode *>( node->CastTo<VCXProjectNode>() )
+                                              : static_cast<VSProjectBaseNode *>( node->CastTo<VSProjectExternalNode>() );
 
         projects.Append( projectNode );
     }
@@ -331,8 +331,8 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
         return false;
     }
     VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
-                                    ? static_cast<VSProjectBaseNode *>( node->CastTo<VCXProjectNode>() )
-                                    : static_cast<VSProjectBaseNode *>( node->CastTo<VSProjectExternalNode>() );
+                                          ? static_cast<VSProjectBaseNode *>( node->CastTo<VCXProjectNode>() )
+                                          : static_cast<VSProjectBaseNode *>( node->CastTo<VSProjectExternalNode>() );
 
     // Add to project list if not already there
     if ( inOutProjects.Find( projectNode ) == nullptr )

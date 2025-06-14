@@ -30,7 +30,11 @@ public:
     const BFFToken * GetEnd() const { return m_End; }
     const BFFToken * GetBegin() const { return m_Begin; }
 
-    void operator++( int ) { ASSERT( m_Pos < m_End ); m_Pos++; }
+    void operator++( int )
+    {
+        ASSERT( m_Pos < m_End );
+        m_Pos++;
+    }
 
     bool IsAtEnd() const { return ( m_Pos == m_End ); }
     bool IsEmpty() const { return ( m_Begin == m_End ); }

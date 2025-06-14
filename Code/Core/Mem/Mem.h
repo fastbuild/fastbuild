@@ -10,10 +10,20 @@
 // Placement new/delete
 //------------------------------------------------------------------------------
 #define INPLACE_NEW new
-inline void * operator new( size_t, void * ptr ) { return ptr; }
-inline void * operator new[]( size_t, void * ptr ) { return ptr; }
-inline void operator delete( void *, void * ) {}
-inline void operator delete[]( void *, void * ) {}
+inline void * operator new( size_t, void * ptr )
+{
+    return ptr;
+}
+inline void * operator new[]( size_t, void * ptr )
+{
+    return ptr;
+}
+inline void operator delete( void *, void * )
+{
+}
+inline void operator delete[]( void *, void * )
+{
+}
 
 // new/delete
 //------------------------------------------------------------------------------

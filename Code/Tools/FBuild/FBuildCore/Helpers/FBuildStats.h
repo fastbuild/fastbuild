@@ -39,11 +39,11 @@ public:
     void OutputSummary() const;
 
     // get the total stats
-    uint32_t GetNodesProcessed() const  { return m_Totals.m_NumProcessed; }
-    uint32_t GetNodesBuilt() const      { return m_Totals.m_NumBuilt; }
-    uint32_t GetCacheHits() const       { return m_Totals.m_NumCacheHits; }
-    uint32_t GetCacheMisses() const     { return m_Totals.m_NumCacheMisses; }
-    uint32_t GetCacheStores() const     { return m_Totals.m_NumCacheStores; }
+    uint32_t GetNodesProcessed() const { return m_Totals.m_NumProcessed; }
+    uint32_t GetNodesBuilt() const { return m_Totals.m_NumBuilt; }
+    uint32_t GetCacheHits() const { return m_Totals.m_NumCacheHits; }
+    uint32_t GetCacheMisses() const { return m_Totals.m_NumCacheMisses; }
+    uint32_t GetCacheStores() const { return m_Totals.m_NumCacheStores; }
     uint32_t GetLightCacheCount() const { return m_Totals.m_NumLightCache; }
 
     // get stats per node type
@@ -77,8 +77,8 @@ public:
 private:
     enum : uint32_t
     {
-        eTagStatsNotProcessed   = 0,
-        eTagStatsProcessed      = 1,
+        eTagStatsNotProcessed = 0,
+        eTagStatsProcessed = 1,
     };
 
     void GatherPostBuildStatisticsRecurse( Node * node );

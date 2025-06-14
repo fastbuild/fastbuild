@@ -20,7 +20,7 @@ public:
     static uint32_t Calc( const void * buffer, size_t len );
     static uint32_t CalcLower( const void * buffer, size_t len );
 
-    static uint32_t Calc( const AString & string )      { return Calc( string.Get(), string.GetLength() ); }
+    static uint32_t Calc( const AString & string ) { return Calc( string.Get(), string.GetLength() ); }
     static uint32_t CalcLower( const AString & string ) { return CalcLower( string.Get(), string.GetLength() ); }
 };
 

@@ -1946,36 +1946,36 @@ void TestArray::MoveConstructor() const
 {
     // POD Data
     {
-        //                    Src                   Dest                    Allocs    SrcCast
-        //------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, SrcCast
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveConstructorHelper<Array<uint32_t>,      Array<uint32_t>,        0                      >();
-        MoveConstructorHelper<Array<uint32_t>,      StackArray<uint32_t>,   0                      >();
+        MoveConstructorHelper<Array<uint32_t>, Array<uint32_t>, 0>();
+        MoveConstructorHelper<Array<uint32_t>, StackArray<uint32_t>, 0>();
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>,   0                      >();
-        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>,   0,      Array<uint32_t>>(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0>();
+        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, Array<uint32_t>>(); // Src as Array, behave the same
 
         // Moves from stack to heap need re-allocation and copy
-        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>,        1                      >();
-        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>,        1,      Array<uint32_t>>(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>, 1>();
+        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>, 1, Array<uint32_t>>(); // Src as Array, behave the same
     }
 
     // Complex Types
     {
-        //                    Src                   Dest                    Allocs    SrcCast
-        //------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, SrcCast
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveConstructorHelper<Array<AString>,       Array<AString>,         0                      >();
-        MoveConstructorHelper<Array<AString>,       StackArray<AString>,    0                      >();
+        MoveConstructorHelper<Array<AString>, Array<AString>, 0>();
+        MoveConstructorHelper<Array<AString>, StackArray<AString>, 0>();
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveConstructorHelper<StackArray<AString>,  StackArray<AString>,    0                      >();
-        MoveConstructorHelper<StackArray<AString>,  StackArray<AString>,    0,      Array<AString> >(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<AString>, StackArray<AString>, 0>();
+        MoveConstructorHelper<StackArray<AString>, StackArray<AString>, 0, Array<AString>>(); // Src as Array, behave the same
 
         // Moves from stack to heap need Array reallocated, but items can be moved
-        MoveConstructorHelper<StackArray<AString>,  Array<AString>,         1                      >();
-        MoveConstructorHelper<StackArray<AString>,  Array<AString>,         1,      Array<AString> >(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<AString>, Array<AString>, 1>();
+        MoveConstructorHelper<StackArray<AString>, Array<AString>, 1, Array<AString>>(); // Src as Array, behave the same
     }
 }
 
@@ -2061,36 +2061,36 @@ void TestArray::MoveAssignment() const
 {
     // POD Data
     {
-        //                  Src                     Dest                    Allocs  Elem        SrcCast
-        //---------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, Elem
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveAssignmentHelper<Array<uint32_t>,       Array<uint32_t>,        0,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<Array<uint32_t>,       StackArray<uint32_t>,   0,      uint32_t                   >( 99 );
+        MoveAssignmentHelper<Array<uint32_t>, Array<uint32_t>, 0, uint32_t>( 99 );
+        MoveAssignmentHelper<Array<uint32_t>, StackArray<uint32_t>, 0, uint32_t>( 99 );
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveAssignmentHelper<StackArray<uint32_t>,  StackArray<uint32_t>,   0,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<StackArray<uint32_t>,  StackArray<uint32_t>,   0,      uint32_t,   Array<uint32_t>>( 99 ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, uint32_t>( 99 );
+        MoveAssignmentHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, uint32_t, Array<uint32_t>>( 99 ); // Src as Array, behave the same
 
         // Moves from stack to heap need re-allocation and copy
-        MoveAssignmentHelper<StackArray<uint32_t>,  Array<uint32_t>,        1,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<StackArray<uint32_t>,  Array<uint32_t>,        1,      uint32_t,   Array<uint32_t>>( 99 ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<uint32_t>, Array<uint32_t>, 1, uint32_t>( 99 );
+        MoveAssignmentHelper<StackArray<uint32_t>, Array<uint32_t>, 1, uint32_t, Array<uint32_t>>( 99 ); // Src as Array, behave the same
     }
 
     // Complex Types
     {
-        //                   Src                    Dest                    Allocs  Elem            SrcCast
-        //-----------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, Elem
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveAssignmentHelper<Array<AString>,        Array<AString>,         0,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<Array<AString>,        StackArray<AString>,    0,      AString                   >( AString( "string" ) );
+        MoveAssignmentHelper<Array<AString>, Array<AString>, 0, AString>( AString( "string" ) );
+        MoveAssignmentHelper<Array<AString>, StackArray<AString>, 0, AString>( AString( "string" ) );
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveAssignmentHelper<StackArray<AString>,   StackArray<AString>,    0,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<StackArray<AString>,   StackArray<AString>,    0,      AString,    Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<AString>, StackArray<AString>, 0, AString>( AString( "string" ) );
+        MoveAssignmentHelper<StackArray<AString>, StackArray<AString>, 0, AString, Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
 
         // Moves from stack to heap need Array reallocated, but items can be moved
-        MoveAssignmentHelper<StackArray<AString>,   Array<AString>,         1,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<StackArray<AString>,   Array<AString>,         1,      AString,    Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<AString>, Array<AString>, 1, AString>( AString( "string" ) );
+        MoveAssignmentHelper<StackArray<AString>, Array<AString>, 1, AString, Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
     }
 }
 

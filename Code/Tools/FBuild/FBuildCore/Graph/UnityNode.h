@@ -27,8 +27,8 @@ public:
     UnityIsolatedFile( const AString & fileName, const DirectoryListNode * dirListOrigin );
     ~UnityIsolatedFile();
 
-    const AString & GetFileName() const             { return m_FileName; }
-    const AString & GetDirListOriginPath() const    { return m_DirListOriginPath; }
+    const AString & GetFileName() const { return m_FileName; }
+    const AString & GetDirListOriginPath() const { return m_DirListOriginPath; }
 
 protected:
     AString m_FileName;
@@ -67,12 +67,12 @@ protected:
         UnityFileAndOrigin();
         UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin );
 
-        const AString &             GetName() const             { return m_Info->m_Name; }
-        bool                        IsReadOnly() const          { return m_Info->IsReadOnly(); }
-        const DirectoryListNode *   GetDirListOrigin() const    { return m_DirListOrigin; }
+        const AString & GetName() const { return m_Info->m_Name; }
+        bool IsReadOnly() const { return m_Info->IsReadOnly(); }
+        const DirectoryListNode * GetDirListOrigin() const { return m_DirListOrigin; }
 
-        bool                        IsIsolated() const          { return m_Isolated; }
-        void                        SetIsolated( bool value )   { m_Isolated = value; }
+        bool IsIsolated() const { return m_Isolated; }
+        void SetIsolated( bool value ) { m_Isolated = value; }
 
         bool operator<( const UnityFileAndOrigin & other ) const;
 

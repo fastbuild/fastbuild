@@ -745,7 +745,7 @@ void TestUnity::SortFiles() const
 #endif
         }
 
-        const AString & operator[] ( size_t index ) const { return m_HelperFiles[ index ].GetName(); }
+        const AString & operator[]( size_t index ) const { return m_HelperFiles[ index ].GetName(); }
 
         Array<UnityNode::UnityFileAndOrigin> m_HelperFiles;
         Array<FileIO::FileInfo *> m_HelperFileInfos;
@@ -805,32 +805,32 @@ void TestUnity::SortFiles() const
     TEST( "a/a.cpp", "B/a.cpp" );
 
     // Subdirs come after dirs
-    SORT( "a/a.cpp",    "z.cpp" );
-    TEST( "z.cpp",      "a/a.cpp" );
+    SORT( "a/a.cpp", "z.cpp" );
+    TEST( "z.cpp", "a/a.cpp" );
 
-    SORT( "A/A.cpp",    "z.cpp" );
-    TEST( "z.cpp",      "A/A.cpp" );
+    SORT( "A/A.cpp", "z.cpp" );
+    TEST( "z.cpp", "A/A.cpp" );
 
-    SORT( "Z/A.cpp",    "a.cpp" );
-    TEST( "a.cpp",      "Z/A.cpp" );
+    SORT( "Z/A.cpp", "a.cpp" );
+    TEST( "a.cpp", "Z/A.cpp" );
 
     SORT( "a.cpp", "bbb/a.cpp", "c.cpp" );
-    TEST( "a.cpp", "c.cpp",     "bbb/a.cpp" );
+    TEST( "a.cpp", "c.cpp", "bbb/a.cpp" );
 
     // subdirs that match filename come after all files
-    SORT( "a.cpp/a.cpp",    "a.cpp",    "b.cpp" );
-    TEST( "a.cpp",          "b.cpp",    "a.cpp/a.cpp" );
+    SORT( "a.cpp/a.cpp", "a.cpp", "b.cpp" );
+    TEST( "a.cpp", "b.cpp", "a.cpp/a.cpp" );
 
-    SORT( "aaa", "aba/a",   "aba" );
-    TEST( "aaa", "aba",     "aba/a" );
+    SORT( "aaa", "aba/a", "aba" );
+    TEST( "aaa", "aba", "aba/a" );
 
     // subdirs that are partial matches
-    SORT( "aa/a",   "a/a" );
-    TEST( "a/a",    "aa/a" );
+    SORT( "aa/a", "a/a" );
+    TEST( "a/a", "aa/a" );
 
     // differing depths
-    SORT( "Folder/SubDir/a.cpp",    "Folder/z.cpp" );
-    TEST( "Folder/z.cpp",           "Folder/SubDir/a.cpp" );
+    SORT( "Folder/SubDir/a.cpp", "Folder/z.cpp" );
+    TEST( "Folder/z.cpp", "Folder/SubDir/a.cpp" );
 
     // same depth but different dirs
     SORT( "Folder/BBB/a.cpp", "Folder/AAA/z.cpp" );

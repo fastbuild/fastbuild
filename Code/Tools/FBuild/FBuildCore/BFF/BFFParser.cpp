@@ -277,8 +277,8 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFTokenRange & iter )
     // check if points to a previous declaration in a parent scope
     const BFFVariable * parentVar = nullptr;
     BFFStackFrame * frame = ( parentScope )
-                          ? BFFStackFrame::GetParentDeclaration( varName, nullptr, parentVar )
-                          : nullptr;
+                                ? BFFStackFrame::GetParentDeclaration( varName, nullptr, parentVar )
+                                : nullptr;
 
     if ( parentScope )
     {
@@ -320,7 +320,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
 
     // Check this is an operator we support
     if ( ( opToken->IsOperator( kBFFVariableAssignment ) == false ) &&
-         ( opToken->IsOperator( kBFFVariableConcatenation) == false ) &&
+         ( opToken->IsOperator( kBFFVariableConcatenation ) == false ) &&
          ( opToken->IsOperator( kBFFVariableSubtraction ) == false ) )
     {
         Error::Error_1034_OperationNotSupported( opToken, BFFVariable::VAR_ANY, BFFVariable::VAR_ANY, opToken );
@@ -761,10 +761,10 @@ bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBraced
     char closeTokenChar;
     switch ( openToken->GetType() )
     {
-        case BFFTokenType::CurlyBracket:    closeTokenChar = '}'; break;
-        case BFFTokenType::RoundBracket:    closeTokenChar = ')'; break;
-        case BFFTokenType::SquareBracket:   closeTokenChar = ']'; break;
-        default:                            ASSERT( false ); return false;
+        case BFFTokenType::CurlyBracket: closeTokenChar = '}'; break;
+        case BFFTokenType::RoundBracket: closeTokenChar = ')'; break;
+        case BFFTokenType::SquareBracket: closeTokenChar = ']'; break;
+        default: ASSERT( false ); return false;
     }
 
     // Take note of range begin
@@ -790,9 +790,9 @@ bool BFFParser::FindBracedRangeRecurse( BFFTokenRange & iter ) const
     char closeTokenChar;
     switch ( openToken->GetType() )
     {
-        case BFFTokenType::CurlyBracket:    closeTokenChar = '}'; break;
-        case BFFTokenType::RoundBracket:    closeTokenChar = ')'; break;
-        case BFFTokenType::SquareBracket:   closeTokenChar = ']'; break;
+        case BFFTokenType::CurlyBracket: closeTokenChar = '}'; break;
+        case BFFTokenType::RoundBracket: closeTokenChar = ')'; break;
+        case BFFTokenType::SquareBracket: closeTokenChar = ']'; break;
         default:
         {
             ASSERT( false );
@@ -1270,8 +1270,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
     // find src var
     const BFFVariable * varSrc = nullptr;
     const BFFStackFrame * const srcFrame = ( srcParentScope )
-        ? BFFStackFrame::GetParentDeclaration( srcName, nullptr, varSrc )
-        : nullptr;
+                                               ? BFFStackFrame::GetParentDeclaration( srcName, nullptr, varSrc )
+                                               : nullptr;
 
     if ( !srcParentScope )
     {
@@ -1336,8 +1336,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
     if ( srcType != dstType )
     {
         const bool dstIsEmpty = ( varDst == nullptr ) ||
-            ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && varDst->GetArrayOfStrings().IsEmpty() ) ||
-            ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varDst->GetArrayOfStructs().IsEmpty() );
+                                ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && varDst->GetArrayOfStrings().IsEmpty() ) ||
+                                ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varDst->GetArrayOfStructs().IsEmpty() );
         const bool srcIsEmpty =
             ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && varSrc->GetArrayOfStrings().IsEmpty() ) ||
             ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varSrc->GetArrayOfStructs().IsEmpty() );

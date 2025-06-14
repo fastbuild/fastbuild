@@ -528,10 +528,10 @@ void TestDistributed::CleanMessageToPreventMSBuildFailure() const
     // Error should be identical except for a single remove colon
     {
         const AStackString in( "C:\\Windows\\TEMP\\.fbuild.tmp\\0x00000000\\"
-                                 "core_1018\\F436D72E\\Module.MergeActors.cpp :"
-                                 " fatal error C1083: Cannot open compiler intermediate"
-                                 " file: 'C:\\Windows\\TEMP\\_CL_7a0408f6in':"
-                                 " No such file or directory" );
+                               "core_1018\\F436D72E\\Module.MergeActors.cpp :"
+                               " fatal error C1083: Cannot open compiler intermediate"
+                               " file: 'C:\\Windows\\TEMP\\_CL_7a0408f6in':"
+                               " No such file or directory" );
         AStackString expectedOut( in );
         TEST_ASSERT( expectedOut.Replace( "fatal error C1083:", "fatal error C1083 " ) == 1 );
         AStackString out;

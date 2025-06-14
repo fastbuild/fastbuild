@@ -604,31 +604,31 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
 
     AStackString target( "PCHTest-CacheAnalyze_MSVC" );
     const char * files[] = {
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch.obj",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pchast",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch.nativecodeanalysis.xml",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch.obj",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pchast",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch.nativecodeanalysis.xml",
 
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch.obj",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pchast",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch.nativecodeanalysis.xml",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch.obj",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pchast",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch.nativecodeanalysis.xml",
 
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/3/With.Period/PrecompiledHeader.pch",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/3/With.Period/PrecompiledHeader.pch.obj",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/3/With.Period/PrecompiledHeader.pchast",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/3/With.Period/PrecompiledHeader.pch.nativecodeanalysis.xml",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/3/With.Period/PrecompiledHeader.pch",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/3/With.Period/PrecompiledHeader.pch.obj",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/3/With.Period/PrecompiledHeader.pchast",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/3/With.Period/PrecompiledHeader.pch.nativecodeanalysis.xml",
 
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/4/PrecompiledHeaderWith.Period.pch",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/4/PrecompiledHeaderWith.Period.pch.obj",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/4/PrecompiledHeaderWith.Period.pchast",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/4/PrecompiledHeaderWith.Period.pch.nativecodeanalysis.xml",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/4/PrecompiledHeaderWith.Period.pch",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/4/PrecompiledHeaderWith.Period.pch.obj",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/4/PrecompiledHeaderWith.Period.pchast",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/4/PrecompiledHeaderWith.Period.pch.nativecodeanalysis.xml",
 
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/5/PrecompiledHeader.otherext",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/5/PrecompiledHeader.otherext.obj",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/5/PrecompiledHeader.otherextast",
-                             "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/5/PrecompiledHeader.otherext.nativecodeanalysis.xml",
-                           };
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/5/PrecompiledHeader.otherext",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/5/PrecompiledHeader.otherext.obj",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/5/PrecompiledHeader.otherextast",
+        "../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/5/PrecompiledHeader.otherext.nativecodeanalysis.xml",
+    };
 
     // Write to cache
     {

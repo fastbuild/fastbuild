@@ -40,13 +40,13 @@ BFFVariable::BFFVariable( const BFFVariable & other )
 {
     switch ( m_Type )
     {
-        case VAR_ANY:               ASSERT( false ); break;
-        case VAR_STRING:            SetValueString( other.GetString() ); break;
-        case VAR_BOOL:              SetValueBool( other.GetBool() ); break;
-        case VAR_ARRAY_OF_STRINGS:  SetValueArrayOfStrings( other.GetArrayOfStrings() ); break;
-        case VAR_INT:               SetValueInt( other.GetInt() ); break;
-        case VAR_STRUCT:            SetValueStruct( other.GetStructMembers() ); break;
-        case VAR_ARRAY_OF_STRUCTS:  SetValueArrayOfStructs( other.GetArrayOfStructs() ); break;
+        case VAR_ANY: ASSERT( false ); break;
+        case VAR_STRING: SetValueString( other.GetString() ); break;
+        case VAR_BOOL: SetValueBool( other.GetBool() ); break;
+        case VAR_ARRAY_OF_STRINGS: SetValueArrayOfStrings( other.GetArrayOfStrings() ); break;
+        case VAR_INT: SetValueInt( other.GetInt() ); break;
+        case VAR_STRUCT: SetValueStruct( other.GetStructMembers() ); break;
+        case VAR_ARRAY_OF_STRUCTS: SetValueArrayOfStructs( other.GetArrayOfStructs() ); break;
         case MAX_VAR_TYPES: ASSERT( false ); break;
     }
 }

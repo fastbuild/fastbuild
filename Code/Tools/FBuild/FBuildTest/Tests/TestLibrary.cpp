@@ -41,11 +41,11 @@ void TestLibrary::LibraryType() const
         TEST_ASSERT( flags & expectedFlag ); \
     } while ( false )
 
-    TEST_LIBRARYTYPE( "link",       LibraryNode::LIB_FLAG_LIB );
-    TEST_LIBRARYTYPE( "lib",        LibraryNode::LIB_FLAG_LIB );
-    TEST_LIBRARYTYPE( "ar",         LibraryNode::LIB_FLAG_AR );
-    TEST_LIBRARYTYPE( "orbis-ar",   LibraryNode::LIB_FLAG_ORBIS_AR );
-    TEST_LIBRARYTYPE( "\\ax",       LibraryNode::LIB_FLAG_GREENHILLS_AX );
+    TEST_LIBRARYTYPE( "link", LibraryNode::LIB_FLAG_LIB );
+    TEST_LIBRARYTYPE( "lib", LibraryNode::LIB_FLAG_LIB );
+    TEST_LIBRARYTYPE( "ar", LibraryNode::LIB_FLAG_AR );
+    TEST_LIBRARYTYPE( "orbis-ar", LibraryNode::LIB_FLAG_ORBIS_AR );
+    TEST_LIBRARYTYPE( "\\ax", LibraryNode::LIB_FLAG_GREENHILLS_AX );
 
 #undef TEST_LIBRARYTYPE
 }

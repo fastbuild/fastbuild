@@ -71,8 +71,9 @@ public:
     bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == kCurrentVersion; }
 
-    uint64_t    GetContentHash() const          { return m_ContentHash; }
-    void        SetContentHash( uint64_t hash ) { m_ContentHash = hash; }
+    uint64_t GetContentHash() const { return m_ContentHash; }
+    void SetContentHash( uint64_t hash ) { m_ContentHash = hash; }
+
 private:
     char m_Identifier[ 3 ];
     uint8_t m_Version;
@@ -117,15 +118,15 @@ public:
     void RegisterNode( Node * n, const BFFToken * sourceToken );
 
     // create new nodes
-    Node *      CreateNode( Node::Type type,
-                            AString && name,
-                            uint32_t nameHash );
-    Node *      CreateNode( Node::Type type,
-                            const AString & name,
-                            const BFFToken * sourceToken = nullptr );
+    Node * CreateNode( Node::Type type,
+                       AString && name,
+                       uint32_t nameHash );
+    Node * CreateNode( Node::Type type,
+                       const AString & name,
+                       const BFFToken * sourceToken = nullptr );
     template <class T>
-    T *         CreateNode( const AString & name,
-                            const BFFToken * sourceToken = nullptr )
+    T * CreateNode( const AString & name,
+                    const BFFToken * sourceToken = nullptr )
     {
         return CreateNode( T::GetTypeS(), name, sourceToken )->template CastTo<T>();
     }

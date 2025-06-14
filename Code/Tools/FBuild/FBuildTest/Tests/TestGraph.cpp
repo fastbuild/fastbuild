@@ -147,20 +147,20 @@ void TestGraph::TestNodeTypes() const
     } while ( false )
 
     // TODO:C - It would be nice to restructure this so that new nodes are automatically tested
-    TEST_NODE( FileNode,            FILE_NODE,          "File",     "file",             "file" );
-    TEST_NODE( CompilerNode,        COMPILER_NODE,      "Compiler", "c:\\cl.exe",       "/usr/bin/gcc" );
-    TEST_NODE( CopyFileNode,        COPY_FILE_NODE,     "CopyFile", "c:\\file",         "/path/file" );
-    TEST_NODE( DirectoryListNode,   DIRECTORY_LIST_NODE, "Directory",  "path\\|*.cpp|false|",     "path/|*.cpp|false|" );
-    TEST_NODE( ExecNode,            EXEC_NODE,          "Exec",     "c:\\exec",         "/path/exec" );
-    TEST_NODE( LibraryNode,         LIBRARY_NODE,       "Library",  "c:\\library.lib",  "/library/library.a" );
-    TEST_NODE( ObjectNode,          OBJECT_NODE,        "Object",   "c:\\object.obj",   "/path/object.a" );
-    TEST_NODE( AliasNode,           ALIAS_NODE,         "Alias",    "alias",            "alias" );
-    TEST_NODE( DLLNode,             DLL_NODE,           "DLL",      "c:\\lib.dll",      "/tmp/lib.so" );
-    TEST_NODE( ExeNode,             EXE_NODE,           "Exe",      "c:\\exe.exe",      "/tmp/exe.exe" );
-    TEST_NODE( UnityNode,           UNITY_NODE,         "Unity",    "unity",            "unity" );
-    TEST_NODE( CSNode,              CS_NODE,            "C#",       "c:\\csharp.dll",   "/path/csharp.dll" );
-    TEST_NODE( TestNode,            TEST_NODE,          "Test",     "c:\\output.txt",   "/path/output.txt" );
-    TEST_NODE( RemoveDirNode,       REMOVE_DIR_NODE,    "RemoveDir", "remove",   "remove" );
+    TEST_NODE( FileNode, FILE_NODE, "File", "file", "file" );
+    TEST_NODE( CompilerNode, COMPILER_NODE, "Compiler", "c:\\cl.exe", "/usr/bin/gcc" );
+    TEST_NODE( CopyFileNode, COPY_FILE_NODE, "CopyFile", "c:\\file", "/path/file" );
+    TEST_NODE( DirectoryListNode, DIRECTORY_LIST_NODE, "Directory", "path\\|*.cpp|false|", "path/|*.cpp|false|" );
+    TEST_NODE( ExecNode, EXEC_NODE, "Exec", "c:\\exec", "/path/exec" );
+    TEST_NODE( LibraryNode, LIBRARY_NODE, "Library", "c:\\library.lib", "/library/library.a" );
+    TEST_NODE( ObjectNode, OBJECT_NODE, "Object", "c:\\object.obj", "/path/object.a" );
+    TEST_NODE( AliasNode, ALIAS_NODE, "Alias", "alias", "alias" );
+    TEST_NODE( DLLNode, DLL_NODE, "DLL", "c:\\lib.dll", "/tmp/lib.so" );
+    TEST_NODE( ExeNode, EXE_NODE, "Exe", "c:\\exe.exe", "/tmp/exe.exe" );
+    TEST_NODE( UnityNode, UNITY_NODE, "Unity", "unity", "unity" );
+    TEST_NODE( CSNode, CS_NODE, "C#", "c:\\csharp.dll", "/path/csharp.dll" );
+    TEST_NODE( TestNode, TEST_NODE, "Test", "c:\\output.txt", "/path/output.txt" );
+    TEST_NODE( RemoveDirNode, REMOVE_DIR_NODE, "RemoveDir", "remove", "remove" );
 
 #undef TEST_NODE
 #undef CHOOSE_NAME
@@ -296,68 +296,68 @@ void TestGraph::TestCleanPath() const
 #endif
 
     //   "\..\"
-    CHECK( "file.dat",              "C:\\Windows\\System32\\file.dat",  "/tmp/subDir/file.dat" )
-    CHECK( "..\\file.dat",          "C:\\Windows\\file.dat",            "/tmp/file.dat" )
-    CHECK( "..\\..\\file.dat",      "C:\\file.dat",                     "/file.dat" )
-    CHECK( "..\\..\\..\\file.dat",  "C:\\file.dat",                     "/file.dat" )
-    CHECK( "folder\\..\\",          "C:\\Windows\\System32\\",          "/tmp/subDir/" )
-    CHECK( "folder\\..",            "C:\\Windows\\System32\\",          "/tmp/subDir/" )
+    CHECK( "file.dat", "C:\\Windows\\System32\\file.dat", "/tmp/subDir/file.dat" )
+    CHECK( "..\\file.dat", "C:\\Windows\\file.dat", "/tmp/file.dat" )
+    CHECK( "..\\..\\file.dat", "C:\\file.dat", "/file.dat" )
+    CHECK( "..\\..\\..\\file.dat", "C:\\file.dat", "/file.dat" )
+    CHECK( "folder\\..\\", "C:\\Windows\\System32\\", "/tmp/subDir/" )
+    CHECK( "folder\\..", "C:\\Windows\\System32\\", "/tmp/subDir/" )
 
     //   "/../"
-    CHECK( "file.dat",              "C:\\Windows\\System32\\file.dat",  "/tmp/subDir/file.dat" )
-    CHECK( "../file.dat",           "C:\\Windows\\file.dat",            "/tmp/file.dat" )
-    CHECK( "../../file.dat",        "C:\\file.dat",                     "/file.dat" )
-    CHECK( "../../../file.dat",     "C:\\file.dat",                     "/file.dat" )
-    CHECK( "folder/../",            "C:\\Windows\\System32\\",          "/tmp/subDir/" )
-    CHECK( "folder/..",             "C:\\Windows\\System32\\",          "/tmp/subDir/" )
+    CHECK( "file.dat", "C:\\Windows\\System32\\file.dat", "/tmp/subDir/file.dat" )
+    CHECK( "../file.dat", "C:\\Windows\\file.dat", "/tmp/file.dat" )
+    CHECK( "../../file.dat", "C:\\file.dat", "/file.dat" )
+    CHECK( "../../../file.dat", "C:\\file.dat", "/file.dat" )
+    CHECK( "folder/../", "C:\\Windows\\System32\\", "/tmp/subDir/" )
+    CHECK( "folder/..", "C:\\Windows\\System32\\", "/tmp/subDir/" )
 
     //   "\.\"
-    CHECK( ".\\file.dat",           "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
-    CHECK( "folder\\.\\file.dat",   "C:\\Windows\\System32\\folder\\file.dat",  "/tmp/subDir/folder/file.dat" )
-    CHECK( ".\\.\\.\\file.dat",     "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
-    CHECK( "folder\\.\\",           "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
-    CHECK( "folder\\.",             "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
+    CHECK( ".\\file.dat", "C:\\Windows\\System32\\file.dat", "/tmp/subDir/file.dat" )
+    CHECK( "folder\\.\\file.dat", "C:\\Windows\\System32\\folder\\file.dat", "/tmp/subDir/folder/file.dat" )
+    CHECK( ".\\.\\.\\file.dat", "C:\\Windows\\System32\\file.dat", "/tmp/subDir/file.dat" )
+    CHECK( "folder\\.\\", "C:\\Windows\\System32\\folder\\", "/tmp/subDir/folder/" )
+    CHECK( "folder\\.", "C:\\Windows\\System32\\folder\\", "/tmp/subDir/folder/" )
 
     //   "/./"
-    CHECK( "./file.dat",            "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
-    CHECK( "folder/./file.dat",     "C:\\Windows\\System32\\folder\\file.dat",  "/tmp/subDir/folder/file.dat" )
-    CHECK( "./././file.dat",        "C:\\Windows\\System32\\file.dat",          "/tmp/subDir/file.dat" )
-    CHECK( "folder/./",             "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
-    CHECK( "folder/.",              "C:\\Windows\\System32\\folder\\",          "/tmp/subDir/folder/" )
+    CHECK( "./file.dat", "C:\\Windows\\System32\\file.dat", "/tmp/subDir/file.dat" )
+    CHECK( "folder/./file.dat", "C:\\Windows\\System32\\folder\\file.dat", "/tmp/subDir/folder/file.dat" )
+    CHECK( "./././file.dat", "C:\\Windows\\System32\\file.dat", "/tmp/subDir/file.dat" )
+    CHECK( "folder/./", "C:\\Windows\\System32\\folder\\", "/tmp/subDir/folder/" )
+    CHECK( "folder/.", "C:\\Windows\\System32\\folder\\", "/tmp/subDir/folder/" )
 
     //   full path '\'
 #if defined( __WINDOWS__ )
-    CHECK( "C:\\Windows\\System32\\file.dat",               "C:\\Windows\\System32\\file.dat",  "" )
-    CHECK( "C:\\Windows\\System32\\..\\file.dat",           "C:\\Windows\\file.dat",            "" )
-    CHECK( "C:\\Windows\\System32\\..\\..\\file.dat",       "C:\\file.dat",                     "" )
-    CHECK( "C:\\Windows\\System32\\..\\..\\..\\file.dat",   "C:\\file.dat",                     "" )
+    CHECK( "C:\\Windows\\System32\\file.dat", "C:\\Windows\\System32\\file.dat", "" )
+    CHECK( "C:\\Windows\\System32\\..\\file.dat", "C:\\Windows\\file.dat", "" )
+    CHECK( "C:\\Windows\\System32\\..\\..\\file.dat", "C:\\file.dat", "" )
+    CHECK( "C:\\Windows\\System32\\..\\..\\..\\file.dat", "C:\\file.dat", "" )
 #endif
 
     //   full path '/'
 #if defined( __WINDOWS__ )
-    CHECK( "C:/Windows/System32/file.dat",              "C:\\Windows\\System32\\file.dat",      "" )
-    CHECK( "C:/Windows/System32/../file.dat",           "C:\\Windows\\file.dat",                "" )
-    CHECK( "C:/Windows/System32/../../file.dat",        "C:\\file.dat",                         "" )
-    CHECK( "C:/Windows/System32/../../../file.dat",     "C:\\file.dat",                         "" )
+    CHECK( "C:/Windows/System32/file.dat", "C:\\Windows\\System32\\file.dat", "" )
+    CHECK( "C:/Windows/System32/../file.dat", "C:\\Windows\\file.dat", "" )
+    CHECK( "C:/Windows/System32/../../file.dat", "C:\\file.dat", "" )
+    CHECK( "C:/Windows/System32/../../../file.dat", "C:\\file.dat", "" )
 #endif
 
     // files with . in them
-    CHECK( ".file.dat",     "C:\\Windows\\System32\\.file.dat",     "/tmp/subDir/.file.dat" )
-    CHECK( ".file",         "C:\\Windows\\System32\\.file",         "/tmp/subDir/.file" )
+    CHECK( ".file.dat", "C:\\Windows\\System32\\.file.dat", "/tmp/subDir/.file.dat" )
+    CHECK( ".file", "C:\\Windows\\System32\\.file", "/tmp/subDir/.file" )
     CHECK( "subdir\\.file", "C:\\Windows\\System32\\subdir\\.file", "/tmp/subDir/subdir/.file" )
 
     // multiple slash removal
-    CHECK( "subdir\\\\.file",       "C:\\Windows\\System32\\subdir\\.file",     "/tmp/subDir/subdir/.file" )
-    CHECK( "subdir//.file",         "C:\\Windows\\System32\\subdir\\.file",     "/tmp/subDir/subdir/.file" )
-    CHECK( "subdir//.//.file",      "C:\\Windows\\System32\\subdir\\.file",     "/tmp/subDir/subdir/.file" )
-    CHECK( "subdir\\\\.\\\\.file",  "C:\\Windows\\System32\\subdir\\.file",     "/tmp/subDir/subdir/.file" )
-    CHECK( "subdir\\\\..\\\\.file", "C:\\Windows\\System32\\.file",             "/tmp/subDir/.file" )
-    CHECK( "subdir//..//.file",     "C:\\Windows\\System32\\.file",             "/tmp/subDir/.file" )
+    CHECK( "subdir\\\\.file", "C:\\Windows\\System32\\subdir\\.file", "/tmp/subDir/subdir/.file" )
+    CHECK( "subdir//.file", "C:\\Windows\\System32\\subdir\\.file", "/tmp/subDir/subdir/.file" )
+    CHECK( "subdir//.//.file", "C:\\Windows\\System32\\subdir\\.file", "/tmp/subDir/subdir/.file" )
+    CHECK( "subdir\\\\.\\\\.file", "C:\\Windows\\System32\\subdir\\.file", "/tmp/subDir/subdir/.file" )
+    CHECK( "subdir\\\\..\\\\.file", "C:\\Windows\\System32\\.file", "/tmp/subDir/.file" )
+    CHECK( "subdir//..//.file", "C:\\Windows\\System32\\.file", "/tmp/subDir/.file" )
 
     // edge cases/regressions
 #if defined( __WINDOWS__ )
     // - There was a bug with folders beginning with a slash on Windows
-    CHECK( "\\folder\\file",    "C:\\Windows\\System32\\folder\\file",      "" )
+    CHECK( "\\folder\\file", "C:\\Windows\\System32\\folder\\file", "" )
 #endif
 
 #undef CHECK

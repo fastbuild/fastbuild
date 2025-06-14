@@ -29,10 +29,10 @@ public:
     void Compress( int32_t compressionLevel, bool allowZstdUse );
     bool Decompress();
 
-    const void *    GetData() const;
-    uint64_t        GetDataSize() const;
+    const void * GetData() const;
+    uint64_t GetDataSize() const;
 
-    void *          Release( size_t & outSize );
+    void * Release( size_t & outSize );
 
 private:
     inline static const uint32_t kMaxFiles = 4;

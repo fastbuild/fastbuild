@@ -242,12 +242,12 @@ void BFFStackFrame::DisconnectStackChain()
 
     switch ( srcVar->GetType() )
     {
-        case BFFVariable::VAR_ANY:              ASSERT( false ); break;
-        case BFFVariable::VAR_STRING:           SetVarString( dstName, token, srcVar->GetString(), frame ); break;
-        case BFFVariable::VAR_BOOL:             SetVarBool( dstName, token, srcVar->GetBool(), frame ); break;
+        case BFFVariable::VAR_ANY: ASSERT( false ); break;
+        case BFFVariable::VAR_STRING: SetVarString( dstName, token, srcVar->GetString(), frame ); break;
+        case BFFVariable::VAR_BOOL: SetVarBool( dstName, token, srcVar->GetBool(), frame ); break;
         case BFFVariable::VAR_ARRAY_OF_STRINGS: SetVarArrayOfStrings( dstName, token, srcVar->GetArrayOfStrings(), frame ); break;
-        case BFFVariable::VAR_INT:              SetVarInt( dstName, token, srcVar->GetInt(), frame ); break;
-        case BFFVariable::VAR_STRUCT:           SetVarStruct( dstName, token, srcVar->GetStructMembers(), frame ); break;
+        case BFFVariable::VAR_INT: SetVarInt( dstName, token, srcVar->GetInt(), frame ); break;
+        case BFFVariable::VAR_STRUCT: SetVarStruct( dstName, token, srcVar->GetStructMembers(), frame ); break;
         case BFFVariable::VAR_ARRAY_OF_STRUCTS: SetVarArrayOfStructs( dstName, token, srcVar->GetArrayOfStructs(), frame ); break;
         case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break;
     }

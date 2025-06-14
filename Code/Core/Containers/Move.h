@@ -2,9 +2,18 @@
 //------------------------------------------------------------------------------
 #pragma once
 
-template <class T> struct RemoveReference        { using type = T; };
-template <class T> struct RemoveReference<T &>   { using type = T; };
-template <class T> struct RemoveReference<T &&>  { using type = T; };
+template <class T> struct RemoveReference
+{
+    using type = T;
+};
+template <class T> struct RemoveReference<T &>
+{
+    using type = T;
+};
+template <class T> struct RemoveReference<T &&>
+{
+    using type = T;
+};
 template <class T> using RemoveReferenceT = typename RemoveReference<T>::type;
 
 // Macro equivalent to above to avoid function overhead in debug builds

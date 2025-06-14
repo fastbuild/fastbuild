@@ -113,6 +113,7 @@ public:
         }
         return nullptr;
     }
+
 protected:
     inline static const size_t kMaxOffset = ( 1 << 16 );
 
@@ -136,13 +137,13 @@ public:
     explicit ReflectedPropertyStruct( const char * name, uint32_t offset, const ReflectionInfo * structInfo, bool isArray = false );
 
     const void * GetStructBase( const void * object ) const;
-    void *       GetStructBase( void * object ) const;
+    void * GetStructBase( void * object ) const;
 
     // arrayOfStruct manipulation
-    size_t      GetArraySize( const void * object ) const;
-    void        ResizeArrayOfStruct( void * object, size_t newSize ) const;
-    Struct *    GetStructInArray( void * object, size_t index ) const;
-    const Struct *  GetStructInArray( const void * object, size_t index ) const;
+    size_t GetArraySize( const void * object ) const;
+    void ResizeArrayOfStruct( void * object, size_t newSize ) const;
+    Struct * GetStructInArray( void * object, size_t index ) const;
+    const Struct * GetStructInArray( const void * object, size_t index ) const;
 
     const ReflectionInfo * GetStructReflectionInfo() const { return m_StructReflectionInfo; }
 

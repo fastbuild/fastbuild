@@ -23,24 +23,72 @@
 //------------------------------------------------------------------------------
 namespace
 {
-    bool IsAtEndOfLine( const char c )      { return ( ( c == '\r' ) || ( c == '\n' ) || ( c == '\000' ) ); }
-    bool IsWhiteSpace( const char c )       { return ( ( c == ' ' ) || ( c == '\r' ) || ( c == '\n' ) || ( c == '\t' ) ); }
-    bool IsUppercaseLetter( const char c )  { return ( ( c >= 'A' ) && ( c <= 'Z' ) ); }
-    bool IsLowercaseLetter( const char c )  { return ( ( c >= 'a' ) && ( c <= 'z' ) ); }
-    bool IsUnderscore( const char c )       { return ( c == '_' ); }
-    bool IsMinus( const char c )            { return ( c == '-' ); }
-    bool IsNumber( const char c )           { return ( ( c >= '0' ) && ( c <= '9' ) ); }
+    bool IsAtEndOfLine( const char c )
+    {
+        return ( ( c == '\r' ) || ( c == '\n' ) || ( c == '\000' ) );
+    }
+    bool IsWhiteSpace( const char c )
+    {
+        return ( ( c == ' ' ) || ( c == '\r' ) || ( c == '\n' ) || ( c == '\t' ) );
+    }
+    bool IsUppercaseLetter( const char c )
+    {
+        return ( ( c >= 'A' ) && ( c <= 'Z' ) );
+    }
+    bool IsLowercaseLetter( const char c )
+    {
+        return ( ( c >= 'a' ) && ( c <= 'z' ) );
+    }
+    bool IsUnderscore( const char c )
+    {
+        return ( c == '_' );
+    }
+    bool IsMinus( const char c )
+    {
+        return ( c == '-' );
+    }
+    bool IsNumber( const char c )
+    {
+        return ( ( c >= '0' ) && ( c <= '9' ) );
+    }
 
-    bool IsIdentifierStart( const char c )  { return ( IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsUnderscore( c ) ); }
-    bool IsIdentifier( const char c )       { return ( IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsUnderscore( c ) || IsNumber( c ) ); }
+    bool IsIdentifierStart( const char c )
+    {
+        return ( IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsUnderscore( c ) );
+    }
+    bool IsIdentifier( const char c )
+    {
+        return ( IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsUnderscore( c ) || IsNumber( c ) );
+    }
 
-    bool IsNumberStart( const char c )      { return ( ( c >= '0' ) && ( c <= '9' ) ) || IsMinus( c ); }
-    bool IsStringStart( const char c )      { return ( ( c == '\'' ) || ( c == '"') ); }
-    bool IsVariableStart( const char c )    { return ( ( c == '.' ) || ( c == '^' ) ); }
-    bool IsVariable( const char c )         { return IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsNumber( c ) || IsUnderscore( c );  }
-    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' )); }
-    bool IsComma( const char c )            { return ( c == ',' ); }
-    bool IsDirective( const char c )        { return ( c == '#' ); }
+    bool IsNumberStart( const char c )
+    {
+        return ( ( c >= '0' ) && ( c <= '9' ) ) || IsMinus( c );
+    }
+    bool IsStringStart( const char c )
+    {
+        return ( ( c == '\'' ) || ( c == '"' ) );
+    }
+    bool IsVariableStart( const char c )
+    {
+        return ( ( c == '.' ) || ( c == '^' ) );
+    }
+    bool IsVariable( const char c )
+    {
+        return IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsNumber( c ) || IsUnderscore( c );
+    }
+    bool IsOperator( const char c )
+    {
+        return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || ( c == '&' ) || ( c == '|' ) );
+    }
+    bool IsComma( const char c )
+    {
+        return ( c == ',' );
+    }
+    bool IsDirective( const char c )
+    {
+        return ( c == '#' );
+    }
     void SkipWhitespace( const char *& pos )
     {
         while ( IsWhiteSpace( *pos ) )
@@ -523,13 +571,41 @@ bool BFFTokenizer::HandleDirective( const char *& pos, const char * end, const B
     {
         const char * directiveName = nullptr;
         bool result = false;
-        if ( directive == "define" )        { directiveName = "define";     result = HandleDirective_Define( file, pos, end, argsRange ); }
-        else if ( directive == "else" )     { directiveName = "else";       result = HandleDirective_Else( file, pos, end, argsRange ); }
-        else if ( directive == "if" )       { directiveName = "if";         result = HandleDirective_If( file, pos, end, argsRange ); }
-        else if ( directive == "import" )   { directiveName = "import";     result = HandleDirective_Import( file, pos, end, argsRange ); }
-        else if ( directive == "include" )  { directiveName = "include";    result = HandleDirective_Include( file, pos, end, argsRange ); }
-        else if ( directive == "once" )     { directiveName = "once";       result = HandleDirective_Once( file, pos, end, argsRange ); }
-        else if ( directive == "undef" )    { directiveName = "undef";      result = HandleDirective_Undef( file, pos, end, argsRange ); }
+        if ( directive == "define" )
+        {
+            directiveName = "define";
+            result = HandleDirective_Define( file, pos, end, argsRange );
+        }
+        else if ( directive == "else" )
+        {
+            directiveName = "else";
+            result = HandleDirective_Else( file, pos, end, argsRange );
+        }
+        else if ( directive == "if" )
+        {
+            directiveName = "if";
+            result = HandleDirective_If( file, pos, end, argsRange );
+        }
+        else if ( directive == "import" )
+        {
+            directiveName = "import";
+            result = HandleDirective_Import( file, pos, end, argsRange );
+        }
+        else if ( directive == "include" )
+        {
+            directiveName = "include";
+            result = HandleDirective_Include( file, pos, end, argsRange );
+        }
+        else if ( directive == "once" )
+        {
+            directiveName = "once";
+            result = HandleDirective_Once( file, pos, end, argsRange );
+        }
+        else if ( directive == "undef" )
+        {
+            directiveName = "undef";
+            result = HandleDirective_Undef( file, pos, end, argsRange );
+        }
 
         // Did we see a recognized directive?
         if ( directiveName )
@@ -615,7 +691,13 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
     ASSERT( argsIter->IsKeyword( "if" ) );
     argsIter++;
 
-    enum { IF_NONE = 1, IF_AND = 2, IF_OR = 4, IF_NEGATE = 8 };
+    enum
+    {
+        IF_NONE = 1,
+        IF_AND = 2,
+        IF_OR = 4,
+        IF_NEGATE = 8
+    };
     bool ranOnce = false;
     uint8_t operatorHistory[ BFFParser::kMaxOperatorHistory ];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
     uint32_t numOperators = 0;

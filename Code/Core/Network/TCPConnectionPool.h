@@ -120,44 +120,44 @@ protected:
 
 private:
     // helper functions
-    bool        HandleRead( ConnectionInfo * ci );
+    bool HandleRead( ConnectionInfo * ci );
 
     // platform specific abstraction
-    int         GetLastNetworkError() const;
-    bool        WouldBlock() const;
-    int         CloseSocket( TCPSocket socket ) const;
-    int         Select( TCPSocket maxSocketPlusOne,
-                        void * readSocketSet, // TODO: Using void * to avoid including header is ugly
-                        void * writeSocketSet,
-                        void * exceptionSocketSet,
-                        struct timeval * timeOut ) const;
-    TCPSocket   Accept( TCPSocket socket,
-                        struct sockaddr * address,
-                        int * addressSize ) const;
-    TCPSocket   CreateSocket() const;
-    void        FDSet( TCPSocket fd, void * set ) const;
+    int GetLastNetworkError() const;
+    bool WouldBlock() const;
+    int CloseSocket( TCPSocket socket ) const;
+    int Select( TCPSocket maxSocketPlusOne,
+                void * readSocketSet, // TODO: Using void * to avoid including header is ugly
+                void * writeSocketSet,
+                void * exceptionSocketSet,
+                struct timeval * timeOut ) const;
+    TCPSocket Accept( TCPSocket socket,
+                      struct sockaddr * address,
+                      int * addressSize ) const;
+    TCPSocket CreateSocket() const;
+    void FDSet( TCPSocket fd, void * set ) const;
 
     struct SendBuffer
     {
         uint32_t size;
         const void * data;
     };
-    bool        SendInternal( const ConnectionInfo * connection, const SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS );
+    bool SendInternal( const ConnectionInfo * connection, const SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS );
 
     // thread management
-    void                CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );
-    static uint32_t     ListenThreadWrapperFunction( void * data );
-    void                ListenThreadFunction( ConnectionInfo * ci );
-    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData = nullptr );
-    static uint32_t     ConnectionThreadWrapperFunction( void * data );
-    void                ConnectionThreadFunction( ConnectionInfo * ci );
+    void CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );
+    static uint32_t ListenThreadWrapperFunction( void * data );
+    void ListenThreadFunction( ConnectionInfo * ci );
+    ConnectionInfo * CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData = nullptr );
+    static uint32_t ConnectionThreadWrapperFunction( void * data );
+    void ConnectionThreadFunction( ConnectionInfo * ci );
 
     // internal helpers
-    void                AllowSocketReuse( TCPSocket socket ) const;
-    void                DisableNagle( TCPSocket socket ) const;
-    void                DisableSigPipe( TCPSocket socket ) const;
-    void                SetLargeBufferSizes( TCPSocket socket ) const;
-    void                SetNonBlocking( TCPSocket socket ) const;
+    void AllowSocketReuse( TCPSocket socket ) const;
+    void DisableNagle( TCPSocket socket ) const;
+    void DisableSigPipe( TCPSocket socket ) const;
+    void SetLargeBufferSizes( TCPSocket socket ) const;
+    void SetNonBlocking( TCPSocket socket ) const;
 
     // listen socket related info
     ConnectionInfo * m_ListenConnection;

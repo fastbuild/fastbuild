@@ -867,36 +867,36 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHas
     Node * node = nullptr;
     switch ( type )
     {
-        case Node::PROXY_NODE:              ASSERT( false ); return nullptr;
-        case Node::COPY_FILE_NODE:          node = FNEW( CopyFileNode() ); break;
-        case Node::DIRECTORY_LIST_NODE:     node = FNEW( DirectoryListNode() ); break;
-        case Node::EXEC_NODE:               node = FNEW( ExecNode() ); break;
+        case Node::PROXY_NODE: ASSERT( false ); return nullptr;
+        case Node::COPY_FILE_NODE: node = FNEW( CopyFileNode() ); break;
+        case Node::DIRECTORY_LIST_NODE: node = FNEW( DirectoryListNode() ); break;
+        case Node::EXEC_NODE: node = FNEW( ExecNode() ); break;
         case Node::FILE_NODE:
         {
             node = FNEW( FileNode() );
             node->m_ControlFlags = Node::FLAG_ALWAYS_BUILD; // TODO:C Eliminate special case
             break;
         }
-        case Node::LIBRARY_NODE:            node = FNEW( LibraryNode() ); break;
-        case Node::OBJECT_NODE:             node = FNEW( ObjectNode() ); break;
-        case Node::ALIAS_NODE:              node = FNEW( AliasNode() ); break;
-        case Node::EXE_NODE:                node = FNEW( ExeNode() ); break;
-        case Node::CS_NODE:                 node = FNEW( CSNode() ); break;
-        case Node::UNITY_NODE:              node = FNEW( UnityNode() ); break;
-        case Node::TEST_NODE:               node = FNEW( TestNode() ); break;
-        case Node::COMPILER_NODE:           node = FNEW( CompilerNode() ); break;
-        case Node::DLL_NODE:                node = FNEW( DLLNode() ); break;
-        case Node::VCXPROJECT_NODE:         node = FNEW( VCXProjectNode() ); break;
-        case Node::VSPROJEXTERNAL_NODE:     node = FNEW( VSProjectExternalNode() ); break;
-        case Node::OBJECT_LIST_NODE:        node = FNEW( ObjectListNode() ); break;
-        case Node::COPY_DIR_NODE:           node = FNEW( CopyDirNode() ); break;
-        case Node::SLN_NODE:                node = FNEW( SLNNode() ); break;
-        case Node::REMOVE_DIR_NODE:         node = FNEW( RemoveDirNode() ); break;
-        case Node::XCODEPROJECT_NODE:       node = FNEW( XCodeProjectNode() ); break;
-        case Node::SETTINGS_NODE:           node = FNEW( SettingsNode() ); break;
-        case Node::TEXT_FILE_NODE:          node = FNEW( TextFileNode() ); break;
-        case Node::LIST_DEPENDENCIES_NODE:  node = FNEW( ListDependenciesNode() ); break;
-        case Node::NUM_NODE_TYPES:          ASSERT( false ); return nullptr;
+        case Node::LIBRARY_NODE: node = FNEW( LibraryNode() ); break;
+        case Node::OBJECT_NODE: node = FNEW( ObjectNode() ); break;
+        case Node::ALIAS_NODE: node = FNEW( AliasNode() ); break;
+        case Node::EXE_NODE: node = FNEW( ExeNode() ); break;
+        case Node::CS_NODE: node = FNEW( CSNode() ); break;
+        case Node::UNITY_NODE: node = FNEW( UnityNode() ); break;
+        case Node::TEST_NODE: node = FNEW( TestNode() ); break;
+        case Node::COMPILER_NODE: node = FNEW( CompilerNode() ); break;
+        case Node::DLL_NODE: node = FNEW( DLLNode() ); break;
+        case Node::VCXPROJECT_NODE: node = FNEW( VCXProjectNode() ); break;
+        case Node::VSPROJEXTERNAL_NODE: node = FNEW( VSProjectExternalNode() ); break;
+        case Node::OBJECT_LIST_NODE: node = FNEW( ObjectListNode() ); break;
+        case Node::COPY_DIR_NODE: node = FNEW( CopyDirNode() ); break;
+        case Node::SLN_NODE: node = FNEW( SLNNode() ); break;
+        case Node::REMOVE_DIR_NODE: node = FNEW( RemoveDirNode() ); break;
+        case Node::XCODEPROJECT_NODE: node = FNEW( XCodeProjectNode() ); break;
+        case Node::SETTINGS_NODE: node = FNEW( SettingsNode() ); break;
+        case Node::TEXT_FILE_NODE: node = FNEW( TextFileNode() ); break;
+        case Node::LIST_DEPENDENCIES_NODE: node = FNEW( ListDependenciesNode() ); break;
+        case Node::NUM_NODE_TYPES: ASSERT( false ); return nullptr;
     }
 
     ASSERT( node ); // All cases handled above means this is impossible

@@ -24,7 +24,7 @@ public:
     void GetStatus( AString & hostName, AString & status, bool & isIdle ) const;
 
     // control remote CPU usage
-    static void     SetNumCPUsToUse( uint32_t c ) { s_NumCPUsToUse = c; }
+    static void SetNumCPUsToUse( uint32_t c ) { s_NumCPUsToUse = c; }
     static uint32_t GetNumCPUsToUse() { return s_NumCPUsToUse; }
 
 private:

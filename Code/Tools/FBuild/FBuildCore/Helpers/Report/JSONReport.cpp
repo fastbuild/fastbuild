@@ -183,7 +183,7 @@ void JSONReport::DoCPUTimeByType( const FBuildStats & stats )
     AStackString buffer;
     for ( size_t i = 0; i < items.GetSize(); ++i )
     {
-        const Node::Type type = ( Node::Type )(size_t)items[ i ].m_UserData;
+        const Node::Type type = (Node::Type)(size_t)items[ i ].m_UserData;
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
@@ -424,11 +424,11 @@ void JSONReport::DoCPUTimeByLibrary()
         const char * type = ls->m_Library->GetTypeName();
         switch ( ls->m_Library->GetType() )
         {
-            case Node::LIBRARY_NODE:        type = "Static"; break;
-            case Node::DLL_NODE:            type = "DLL"; break;
-            case Node::CS_NODE:             type = "C# DLL"; break;
-            case Node::OBJECT_LIST_NODE:    type = "ObjectList"; break;
-            default:                        break;
+            case Node::LIBRARY_NODE: type = "Static"; break;
+            case Node::DLL_NODE: type = "DLL"; break;
+            case Node::CS_NODE: type = "C# DLL"; break;
+            case Node::OBJECT_LIST_NODE: type = "ObjectList"; break;
+            default: break;
         }
         const char * name = ls->m_Library->GetName().Get();
 

@@ -26,16 +26,16 @@
 //------------------------------------------------------------------------------
 enum ReturnCodes
 {
-    FBUILD_OK                               = 0,
-    FBUILD_BUILD_FAILED                     = -1,
-    FBUILD_ERROR_LOADING_BFF                = -2,
-    FBUILD_BAD_ARGS                         = -3,
-    FBUILD_ALREADY_RUNNING                  = -4,
-    FBUILD_FAILED_TO_SPAWN_WRAPPER          = -5,
-    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL    = -6,
-    FBUILD_WRAPPER_CRASHED                  = -7,
-    FBUILD_FAILED_TO_WSL_WRAPPER            = -8,
-    FBUILD_FAILED_TO_WRITE_PROFILE_JSON     = -9,
+    FBUILD_OK = 0,
+    FBUILD_BUILD_FAILED = -1,
+    FBUILD_ERROR_LOADING_BFF = -2,
+    FBUILD_BAD_ARGS = -3,
+    FBUILD_ALREADY_RUNNING = -4,
+    FBUILD_FAILED_TO_SPAWN_WRAPPER = -5,
+    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL = -6,
+    FBUILD_WRAPPER_CRASHED = -7,
+    FBUILD_FAILED_TO_WSL_WRAPPER = -8,
+    FBUILD_FAILED_TO_WRITE_PROFILE_JSON = -9,
 };
 
 // Headers
@@ -85,9 +85,9 @@ int Main( int argc, char * argv[] )
     options.m_ShowProgress = true; // Override default
     switch ( options.ProcessCommandLine( argc, argv ) )
     {
-        case FBuildOptions::OPTIONS_OK:             break;
-        case FBuildOptions::OPTIONS_OK_AND_QUIT:    return FBUILD_OK;
-        case FBuildOptions::OPTIONS_ERROR:          return FBUILD_BAD_ARGS;
+        case FBuildOptions::OPTIONS_OK: break;
+        case FBuildOptions::OPTIONS_OK_AND_QUIT: return FBUILD_OK;
+        case FBuildOptions::OPTIONS_ERROR: return FBUILD_BAD_ARGS;
     }
 
     const FBuildOptions::WrapperMode wrapperMode = options.m_WrapperMode;

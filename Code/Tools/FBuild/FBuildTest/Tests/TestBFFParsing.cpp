@@ -318,7 +318,7 @@ void TestBFFParsing::ImportDirective() const
     TEST_PARSE_FAIL( "#import 'string'",    "Error #1031" );
 
     // Invalid syntax
-    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR", AString("VALUE"));
+    Env::SetEnvVariable( "BFF_TEST_IMPORT_VAR", AString( "VALUE" ) );
     TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
 
     // Ensure special characters are not lost

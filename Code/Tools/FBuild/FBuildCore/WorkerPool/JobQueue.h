@@ -76,24 +76,24 @@ public:
 private:
     // worker threads call these
     friend class WorkerThread;
-    void        WorkerThreadWait( uint32_t maxWaitMS );
-    Job *       GetJobToProcess();
-    Job *       GetDistributableJobToRace();
+    void WorkerThreadWait( uint32_t maxWaitMS );
+    Job * GetJobToProcess();
+    Job * GetDistributableJobToRace();
     static Node::BuildResult DoBuild( Job * job );
-    void        FinishedProcessingJob( Job * job, Node::BuildResult result, bool wasARemoteJob );
+    void FinishedProcessingJob( Job * job, Node::BuildResult result, bool wasARemoteJob );
 
-    void        QueueDistributableJob( Job * job );
+    void QueueDistributableJob( Job * job );
 
     // client side of protocol consumes jobs via this interface
     friend class Client;
-    Job *       GetDistributableJobToProcess( bool remote, uint8_t workerMinorProtocolVersion );
-    Job *       OnReturnRemoteJob( uint32_t jobId,
-                                   bool systemError,
-                                   bool & outRaceLost,
-                                   bool & outRaceWon,
-                                   const Node *& outNode,
-                                   uint32_t & outJobSystemErrorCount );
-    void        ReturnUnfinishedDistributableJob( Job * job );
+    Job * GetDistributableJobToProcess( bool remote, uint8_t workerMinorProtocolVersion );
+    Job * OnReturnRemoteJob( uint32_t jobId,
+                             bool systemError,
+                             bool & outRaceLost,
+                             bool & outRaceWon,
+                             const Node *& outNode,
+                             uint32_t & outJobSystemErrorCount );
+    void ReturnUnfinishedDistributableJob( Job * job );
 
     // Semaphore to manage work
     Semaphore m_WorkerThreadSemaphore;

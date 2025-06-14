@@ -31,26 +31,26 @@ public:
 
     // helper read wrappers
     uint64_t Read( void * b, size_t s ) { return ReadBuffer( b, s ); }
-    bool Read( bool & b )        { return ( ReadBuffer( &b, sizeof( b ) ) == sizeof( b ) ); }
-    bool Read( int8_t & i )      { return ( ReadBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
-    bool Read( int16_t & i )     { return ( ReadBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
-    bool Read( int32_t & i )     { return ( ReadBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
-    bool Read( int64_t & i )     { return ( ReadBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
-    bool Read( uint8_t & u )     { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
-    bool Read( uint16_t & u )    { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
-    bool Read( uint32_t & u )    { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
-    bool Read( uint64_t & u )    { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
+    bool Read( bool & b ) { return ( ReadBuffer( &b, sizeof( b ) ) == sizeof( b ) ); }
+    bool Read( int8_t & i ) { return ( ReadBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
+    bool Read( int16_t & i ) { return ( ReadBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
+    bool Read( int32_t & i ) { return ( ReadBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
+    bool Read( int64_t & i ) { return ( ReadBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
+    bool Read( uint8_t & u ) { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
+    bool Read( uint16_t & u ) { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
+    bool Read( uint32_t & u ) { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
+    bool Read( uint64_t & u ) { return ( ReadBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
     bool Read( AString & string );
     template <class T> bool Read( Array<T> & a );
 
     // helper write wrappers
     uint64_t Write( const void * b, size_t s ) { return WriteBuffer( b, s ); }
-    bool Write( const bool & b )     { return ( WriteBuffer( &b, sizeof( b ) ) == sizeof( b ) ); }
-    bool Write( const int8_t & i )   { return ( WriteBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
-    bool Write( const int16_t & i )  { return ( WriteBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
-    bool Write( const int32_t & i )  { return ( WriteBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
-    bool Write( const int64_t & i )  { return ( WriteBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
-    bool Write( const uint8_t & u )  { return ( WriteBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
+    bool Write( const bool & b ) { return ( WriteBuffer( &b, sizeof( b ) ) == sizeof( b ) ); }
+    bool Write( const int8_t & i ) { return ( WriteBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
+    bool Write( const int16_t & i ) { return ( WriteBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
+    bool Write( const int32_t & i ) { return ( WriteBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
+    bool Write( const int64_t & i ) { return ( WriteBuffer( &i, sizeof( i ) ) == sizeof( i ) ); }
+    bool Write( const uint8_t & u ) { return ( WriteBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
     bool Write( const uint16_t & u ) { return ( WriteBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
     bool Write( const uint32_t & u ) { return ( WriteBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }
     bool Write( const uint64_t & u ) { return ( WriteBuffer( &u, sizeof( u ) ) == sizeof( u ) ); }

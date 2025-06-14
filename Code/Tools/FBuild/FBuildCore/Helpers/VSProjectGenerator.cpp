@@ -253,10 +253,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 }
             }
 
-            WritePGItem( "PlatformToolset",                 config.m_PlatformToolset );
-            WritePGItem( "LocalDebuggerCommandArguments",   config.m_LocalDebuggerCommandArguments );
-            WritePGItem( "LocalDebuggerCommand",            localDebuggerCommand );
-            WritePGItem( "LocalDebuggerEnvironment",        config.m_LocalDebuggerEnvironment );
+            WritePGItem( "PlatformToolset", config.m_PlatformToolset );
+            WritePGItem( "LocalDebuggerCommandArguments", config.m_LocalDebuggerCommandArguments );
+            WritePGItem( "LocalDebuggerCommand", localDebuggerCommand );
+            WritePGItem( "LocalDebuggerEnvironment", config.m_LocalDebuggerEnvironment );
 
             Write( "  </PropertyGroup>\n" );
         }
@@ -292,29 +292,29 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
             if ( config.m_Keyword == "Linux" )
             {
-                WritePGItem( "BuildCommandLine",                config.m_ProjectBuildCommand );
-                WritePGItem( "ReBuildCommandLine",              config.m_ProjectRebuildCommand );
-                WritePGItem( "CleanCommandLine",                config.m_ProjectCleanCommand );
+                WritePGItem( "BuildCommandLine", config.m_ProjectBuildCommand );
+                WritePGItem( "ReBuildCommandLine", config.m_ProjectRebuildCommand );
+                WritePGItem( "CleanCommandLine", config.m_ProjectCleanCommand );
             }
             else
             {
-                WritePGItem( "NMakeBuildCommandLine",           config.m_ProjectBuildCommand );
-                WritePGItem( "NMakeReBuildCommandLine",         config.m_ProjectRebuildCommand );
-                WritePGItem( "NMakeCleanCommandLine",           config.m_ProjectCleanCommand );
+                WritePGItem( "NMakeBuildCommandLine", config.m_ProjectBuildCommand );
+                WritePGItem( "NMakeReBuildCommandLine", config.m_ProjectRebuildCommand );
+                WritePGItem( "NMakeCleanCommandLine", config.m_ProjectCleanCommand );
             }
-            WritePGItem( "AndroidApkLocation",              config.m_AndroidApkLocation );
-            WritePGItem( "AndroidDebugComponent",           config.m_AndroidDebugComponent );
-            WritePGItem( "AndroidDebugTarget",              config.m_AndroidDebugTarget );
-            WritePGItem( "AndroidJdb",                      config.m_AndroidJdb );
-            WritePGItem( "AndroidLldbPostAttachCommands",   config.m_AndroidLldbPostAttachCommands );
-            WritePGItem( "AndroidLldbStartupCommands",      config.m_AndroidLldbStartupCommands );
-            WritePGItem( "AndroidPostApkInstallCommands",   config.m_AndroidPostApkInstallCommands );
-            WritePGItem( "AndroidPreApkInstallCommands",    config.m_AndroidPreApkInstallCommands );
-            WritePGItem( "AndroidSymbolDirectories",        config.m_AndroidSymbolDirectories );
-            WritePGItem( "AndroidWaitForDebugger",          config.m_AndroidWaitForDebugger );
-            WritePGItem( "LaunchFlags",                     config.m_LaunchFlags );
+            WritePGItem( "AndroidApkLocation", config.m_AndroidApkLocation );
+            WritePGItem( "AndroidDebugComponent", config.m_AndroidDebugComponent );
+            WritePGItem( "AndroidDebugTarget", config.m_AndroidDebugTarget );
+            WritePGItem( "AndroidJdb", config.m_AndroidJdb );
+            WritePGItem( "AndroidLldbPostAttachCommands", config.m_AndroidLldbPostAttachCommands );
+            WritePGItem( "AndroidLldbStartupCommands", config.m_AndroidLldbStartupCommands );
+            WritePGItem( "AndroidPostApkInstallCommands", config.m_AndroidPostApkInstallCommands );
+            WritePGItem( "AndroidPreApkInstallCommands", config.m_AndroidPreApkInstallCommands );
+            WritePGItem( "AndroidSymbolDirectories", config.m_AndroidSymbolDirectories );
+            WritePGItem( "AndroidWaitForDebugger", config.m_AndroidWaitForDebugger );
+            WritePGItem( "LaunchFlags", config.m_LaunchFlags );
 
-            WritePGItem( "NMakeOutput",                     config.m_Output );
+            WritePGItem( "NMakeOutput", config.m_Output );
             const ObjectListNode * oln = nullptr;
             if ( config.m_PreprocessorDefinitions.IsEmpty() || config.m_IncludeSearchPath.IsEmpty() )
             {
@@ -323,7 +323,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
             if ( config.m_PreprocessorDefinitions.IsEmpty() == false )
             {
-                WritePGItem( "NMakePreprocessorDefinitions",    config.m_PreprocessorDefinitions );
+                WritePGItem( "NMakePreprocessorDefinitions", config.m_PreprocessorDefinitions );
             }
             else
             {
@@ -344,7 +344,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             }
             if ( config.m_IncludeSearchPath.IsEmpty() == false )
             {
-                WritePGItem( "NMakeIncludeSearchPath",          config.m_IncludeSearchPath );
+                WritePGItem( "NMakeIncludeSearchPath", config.m_IncludeSearchPath );
             }
             else if ( oln )
             {
@@ -361,7 +361,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             }
             if ( config.m_ForcedIncludes.IsEmpty() == false )
             {
-                WritePGItem( "NMakeForcedIncludes",             config.m_ForcedIncludes );
+                WritePGItem( "NMakeForcedIncludes", config.m_ForcedIncludes );
             }
             else if ( oln )
             {
@@ -376,11 +376,11 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 ProjectGeneratorBase::ConcatIntellisenseOptions( forceIncludes, forceIncludePathsStr, nullptr, ";" );
                 WritePGItem( "NMakeForcedIncludes", forceIncludePathsStr );
             }
-            WritePGItem( "NMakeAssemblySearchPath",         config.m_AssemblySearchPath );
-            WritePGItem( "NMakeForcedUsingAssemblies",      config.m_ForcedUsingAssemblies );
+            WritePGItem( "NMakeAssemblySearchPath", config.m_AssemblySearchPath );
+            WritePGItem( "NMakeForcedUsingAssemblies", config.m_ForcedUsingAssemblies );
             if ( config.m_AdditionalOptions.IsEmpty() == false )
             {
-                WritePGItem( "AdditionalOptions",               config.m_AdditionalOptions );
+                WritePGItem( "AdditionalOptions", config.m_AdditionalOptions );
             }
             else
             {
@@ -393,19 +393,19 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                     WritePGItem( "AdditionalOptions", additionalOptionsStr );
                 }
             }
-            WritePGItem( "Xbox360DebuggerCommand",          config.m_Xbox360DebuggerCommand );
-            WritePGItem( "DebuggerFlavor",                  config.m_DebuggerFlavor );
-            WritePGItem( "AumidOverride",                   config.m_AumidOverride );
-            WritePGItem( "LocalDebuggerWorkingDirectory",   config.m_LocalDebuggerWorkingDirectory );
-            WritePGItem( "IntDir",                          config.m_IntermediateDirectory );
-            WritePGItem( "OutDir",                          config.m_OutputDirectory );
-            WritePGItem( "PackagePath",                     config.m_PackagePath );
-            WritePGItem( "AdditionalSymbolSearchPaths",     config.m_AdditionalSymbolSearchPaths );
-            WritePGItem( "LayoutDir",                       config.m_LayoutDir );
-            WritePGItem( "LayoutExtensionFilter",           config.m_LayoutExtensionFilter );
-            WritePGItem( "RemoteDebuggerCommand",           config.m_RemoteDebuggerCommand );
-            WritePGItem( "RemoteDebuggerCommandArguments",  config.m_RemoteDebuggerCommandArguments );
-            WritePGItem( "RemoteDebuggerWorkingDirectory",  config.m_RemoteDebuggerWorkingDirectory );
+            WritePGItem( "Xbox360DebuggerCommand", config.m_Xbox360DebuggerCommand );
+            WritePGItem( "DebuggerFlavor", config.m_DebuggerFlavor );
+            WritePGItem( "AumidOverride", config.m_AumidOverride );
+            WritePGItem( "LocalDebuggerWorkingDirectory", config.m_LocalDebuggerWorkingDirectory );
+            WritePGItem( "IntDir", config.m_IntermediateDirectory );
+            WritePGItem( "OutDir", config.m_OutputDirectory );
+            WritePGItem( "PackagePath", config.m_PackagePath );
+            WritePGItem( "AdditionalSymbolSearchPaths", config.m_AdditionalSymbolSearchPaths );
+            WritePGItem( "LayoutDir", config.m_LayoutDir );
+            WritePGItem( "LayoutExtensionFilter", config.m_LayoutExtensionFilter );
+            WritePGItem( "RemoteDebuggerCommand", config.m_RemoteDebuggerCommand );
+            WritePGItem( "RemoteDebuggerCommandArguments", config.m_RemoteDebuggerCommandArguments );
+            WritePGItem( "RemoteDebuggerWorkingDirectory", config.m_RemoteDebuggerWorkingDirectory );
             Write( "  </PropertyGroup>\n" );
         }
     }
@@ -418,7 +418,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             Write( "    <BuildLog>\n" );
             if ( !config.m_BuildLogFile.IsEmpty() )
             {
-                WritePGItem( "Path",          config.m_BuildLogFile );
+                WritePGItem( "Path", config.m_BuildLogFile );
             }
             else
             {
@@ -428,8 +428,8 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             if ( !config.m_DeploymentType.IsEmpty() || !config.m_DeploymentFiles.IsEmpty() )
             {
                 Write( "    <Deploy>\n" );
-                WritePGItem( "DeploymentType",          config.m_DeploymentType );
-                WritePGItem( "DeploymentFiles",         config.m_DeploymentFiles );
+                WritePGItem( "DeploymentType", config.m_DeploymentType );
+                WritePGItem( "DeploymentFiles", config.m_DeploymentFiles );
                 Write( "    </Deploy>\n" );
             }
             Write( "  </ItemDefinitionGroup>\n" );
@@ -599,10 +599,10 @@ void VSProjectGenerator::WritePGItem( const char * xmlTag, const AString & value
     {
         switch ( c )
         {
-            case '>':   escapedValue += "&gt;";     break;
-            case '<':   escapedValue += "&lt;";     break;
-            case '&':   escapedValue += "&amp;";    break;
-            default:    escapedValue += c;          break;
+            case '>': escapedValue += "&gt;"; break;
+            case '<': escapedValue += "&lt;"; break;
+            case '&': escapedValue += "&amp;"; break;
+            default: escapedValue += c; break;
         }
     }
 
