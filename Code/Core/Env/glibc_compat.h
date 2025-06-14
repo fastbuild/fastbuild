@@ -54,23 +54,23 @@ extern "C"
 {
     #endif
 
-    int __xstat( int ver, const char * path, struct stat * buf );
-    __extern_inline int stat( const char * path, struct stat * buf )
-    {
-        return __xstat( 0 /*_STAT_VER*/, path, buf );
-    }
+int __xstat( int ver, const char * path, struct stat * buf );
+__extern_inline int stat( const char * path, struct stat * buf )
+{
+    return __xstat( 0 /*_STAT_VER*/, path, buf );
+}
 
-    int __lxstat( int ver, const char * path, struct stat * buf );
-    __extern_inline int lstat( const char * path, struct stat * buf )
-    {
-        return __lxstat( 0 /*_STAT_VER*/, path, buf );
-    }
+int __lxstat( int ver, const char * path, struct stat * buf );
+__extern_inline int lstat( const char * path, struct stat * buf )
+{
+    return __lxstat( 0 /*_STAT_VER*/, path, buf );
+}
 
-    int __fxstat( int ver, int fildes, struct stat * buf );
-    __extern_inline int fstat( int fildes, struct stat * buf )
-    {
-        return __fxstat( 0 /*_STAT_VER*/, fildes, buf );
-    }
+int __fxstat( int ver, int fildes, struct stat * buf );
+__extern_inline int fstat( int fildes, struct stat * buf )
+{
+    return __fxstat( 0 /*_STAT_VER*/, fildes, buf );
+}
 
     #ifdef __cplusplus
 }

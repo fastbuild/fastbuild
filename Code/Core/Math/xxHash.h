@@ -10,16 +10,16 @@
 // avoid including xxhash header directly
 extern "C"
 {
-    // xxHash
-    unsigned int XXH32( const void * input, size_t length, unsigned seed );
-    unsigned long long XXH64( const void * input, size_t length, unsigned long long seed );
+// xxHash
+unsigned int XXH32( const void * input, size_t length, unsigned seed );
+unsigned long long XXH64( const void * input, size_t length, unsigned long long seed );
 
-    // xxhash3
-    unsigned long long xxHashLib_XXH3_64bits( const void * input, size_t length );
-    struct xxHashLib_XXH3_state_s;
-    void xxHashLib_XXH3_64bits_reset( xxHashLib_XXH3_state_s * state );
-    void xxHashLib_XXH3_64bits_update( xxHashLib_XXH3_state_s * state, const void * data, size_t dataSize );
-    uint64_t xxHashLib_XXH3_64bits_digest( xxHashLib_XXH3_state_s * state );
+// xxhash3
+unsigned long long xxHashLib_XXH3_64bits( const void * input, size_t length );
+struct xxHashLib_XXH3_state_s;
+void xxHashLib_XXH3_64bits_reset( xxHashLib_XXH3_state_s * state );
+void xxHashLib_XXH3_64bits_update( xxHashLib_XXH3_state_s * state, const void * data, size_t dataSize );
+uint64_t xxHashLib_XXH3_64bits_digest( xxHashLib_XXH3_state_s * state );
 };
 
 // xxHash

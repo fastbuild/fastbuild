@@ -19,7 +19,7 @@ extern "C"
 //
 // In:  cachePath- cache path provided from bff config
 // Out: bool     - (return) success.  If false is returned, cache will be disabled
-using CacheInitFunc     = bool( STDCALL * )( const char * cachePath );
+using CacheInitFunc = bool( STDCALL * )( const char * cachePath );
 
 // CacheOutputFunc
 //------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ using CacheInitFunc     = bool( STDCALL * )( const char * cachePath );
 // output it correctly interleaved with other FASTBuild output. The plugin should
 // not implement this function, but rather should call it if/when needed. The
 // function pointer is provided via CacheInitEx below.
-using CacheOutputFunc   = void( STDCALL * )( const char * message );
+using CacheOutputFunc = void( STDCALL * )( const char * message );
 
 // CacheInitEx (Optional)
 //------------------------------------------------------------------------------

@@ -28,8 +28,8 @@
     #include <linux/limits.h>
 extern "C"
 {
-    char * getenv( const char * name );
-    int32_t setenv( const char * name, const char * value, int32_t overwrite );
+char * getenv( const char * name );
+int32_t setenv( const char * name, const char * value, int32_t overwrite );
 }
 #endif
 
@@ -37,8 +37,8 @@ extern "C"
     #include <mach-o/dyld.h>
 extern "C"
 {
-    int * _NSGetArgc( void );
-    char *** _NSGetArgv( void );
+int * _NSGetArgc( void );
+char *** _NSGetArgv( void );
 };
 #endif
 

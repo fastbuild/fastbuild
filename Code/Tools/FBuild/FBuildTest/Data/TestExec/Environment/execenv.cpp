@@ -5,9 +5,9 @@ extern "C"
 {
     // Avoid include files to speed up test compilation
 #if defined( __WINDOWS__ )
-    unsigned int GetEnvironmentVariableA( const char * name, char * buffer, unsigned int size );
+unsigned int GetEnvironmentVariableA( const char * name, char * buffer, unsigned int size );
 #else
-    char * getenv( const char * name );
+char * getenv( const char * name );
 #endif
 }
 

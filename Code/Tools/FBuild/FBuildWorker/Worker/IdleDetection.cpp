@@ -30,7 +30,7 @@
 #if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
 extern "C"
 {
-    uint64_t strtoul( const char * nptr, char ** endptr, int32_t base );
+uint64_t strtoul( const char * nptr, char ** endptr, int32_t base );
 }
 #endif
 
