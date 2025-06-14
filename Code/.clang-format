@@ -1,0 +1,166 @@
+# General
+#-------------------------------------------------------------------------------
+IndentWidth: 4
+Language: Cpp
+
+# Line wrapping
+#-------------------------------------------------------------------------------
+# If a column limit is set, clang-format often wraps when it doesn't need to
+# and often removes wrapping explicitly placed by the programmer for clarity
+# A zero column limits leaves wrapping as is, trusting the progreammer has
+# chosen appropriately. Note that bugs in clang-format as of v20.1.0 means
+# this isn't always respected :(
+ColumnLimit: 0
+
+# These "penalties" are undocumented as far as I can tell and mostly only have
+# an effect when ColumnLimit is non-zero anyway. The values here were an attempt
+# to have:
+#  - All args on one line, or one arg per-line if splitting is needed
+#  - Never break a condition or variable reference (allow the 'limit' to be weak)
+# It doesn't seem like clang-format is capable of this sort of nuance though, so
+# the column limit is mostly disabled (see ColumnLimit above). Clang21 provides
+# some additional controls but those still don't seem to be enough
+PenaltyBreakAssignment: 999
+PenaltyBreakBeforeFirstCallParameter: 999
+#PenaltyBreakBeforeMemberAccess: 999    # Needs clang-format v21+
+PenaltyBreakOpenParenthesis: 999
+PenaltyBreakString: 999
+PenaltyReturnTypeOnItsOwnLine: 999
+PenaltyExcessCharacter: 1
+
+# Other wrapping controls
+BreakStringLiterals: false
+BreakBeforeTernaryOperators: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowAllArgumentsOnNextLine : false
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackArguments: false
+BinPackParameters: false
+BitFieldColonSpacing: None
+AccessModifierOffset: -4
+
+# Switch/Case
+#-------------------------------------------------------------------------------
+IndentCaseLabels: true
+
+# Braces
+#-------------------------------------------------------------------------------
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterExternBlock: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration : true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse : true
+  BeforeWhile: false
+  SplitEmptyFunction: true
+
+# Enums
+#-------------------------------------------------------------------------------
+# bug: AllowShortEnumsOnASingleLine doesn't work when BraceWrapping.AfterEnum is
+# true (as of v21.1.0)
+#AllowShortEnumsOnASingleLine: true
+
+# Preprocessor Directives
+#-------------------------------------------------------------------------------
+IndentPPDirectives: BeforeHash
+
+# Macros
+#-------------------------------------------------------------------------------
+# Some reflection and test macros should be treated as scope blocks
+MacroBlockBegin: "^REFLECT_NODE_BEGIN|\
+REFLECT_BEGIN|\
+REFLECT_STRUCT_BEGIN|\
+REFLECT_STRUCT_BEGIN_BASE|\
+REGISTER_TESTS_BEGIN|\
+TEST_NODE_BEGIN$"
+
+MacroBlockEnd: "^REFLECT_END|\
+REGISTER_TESTS_END|\
+TEST_NODE_END$"
+
+# Some macros contains spacing that is important for clarity so we don't want
+# clang-format to modify that.
+WhitespaceSensitiveMacros: [CHECK_MATCH,
+DOCHECK,
+REFLECT,
+REFLECT_ARRAY,
+REFLECT_ARRAY_OF_STRUCT,
+REFLECT_STRUCT,
+TEST_PARSE_FAIL,
+TEST_PARSE_OK]
+
+# These don't have trailing ; which confused clang-format, but if we tell
+# clang-format they are statements here, it fixes the problem in most
+# places (it can still get confused, such as when wrapping an if statement
+# condition), but at the time of authoring, the code in those places was
+# modified to work around then clang-format bugs)
+StatementMacros: [PRAGMA_DISABLE_PUSH_CLANG
+PRAGMA_DISABLE_PUSH_MSVC,
+PRAGMA_DISABLE_POP_CLANG,
+PRAGMA_DISABLE_POP_MSVC,
+PRAGMA_DISABLE_PUSH_CLANG_WINDOWS,
+PRAGMA_DISABLE_POP_CLANG_WINDOWS]
+
+# clang-format is confused by these macros if we don't hint them, which is
+# somewhat reasonable since they are a bit of a special case
+Macros:
+- INPLACE_NEW=new
+- FDELETE=delete
+
+# when macros provide snippets of code to be uses together, it
+# doesn't make sense to try and format the incomplete snippets
+# and doing so results in the macros being mangled
+SkipMacroDefinitionBody: true
+
+# Spacing
+#-------------------------------------------------------------------------------
+# Current styling is quite "spaceous" and these were configured to match that.
+# This could be changed in the future if a more compace style is desired.
+PointerAlignment: Middle
+ReferenceAlignment: Middle
+SpacesInParens: Custom
+SpacesInParensOptions:
+  ExceptDoubleParentheses: false
+  InConditionalStatements: true
+  Other: true
+SpacesInAngles: false
+SpacesInSquareBrackets: true
+
+# Comments
+#-------------------------------------------------------------------------------
+# Comments often contain important spacing or layout that is mangled by
+# clang-format if not disabled
+ReflowComments: false
+AlignTrailingComments:
+  Kind: Leave
+  OverEmptyLines: 2
+
+# Initializer lists
+#-------------------------------------------------------------------------------
+# Always one item per-line
+BreakConstructorInitializers: BeforeComma
+PackConstructorInitializers: Never
+
+# Templates
+#-------------------------------------------------------------------------------
+BreakTemplateDeclarations: Leave
+
+# Externs
+#-------------------------------------------------------------------------------
+IndentExternBlock: NoIndent
+
+# Namespaces
+#-------------------------------------------------------------------------------
+#   Don't duplicate "namespace" at end of namespaces
+FixNamespaceComments: false
+#   Namespaces are indented
+NamespaceIndentation: All
