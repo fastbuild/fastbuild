@@ -702,15 +702,15 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                        AString & outRelativeFileName )
 {
     AStackString cleanFileName;
-    #if !defined( __WINDOWS__ )
-        // Normally we keep all paths with native slashes, but in this case we
-        // have windows slashes, so convert to native for the relative check
-        AStackString pathCopy( fileName );
-        pathCopy.Replace( '\\', '/' );
-        NodeGraph::CleanPath( pathCopy, cleanFileName );
-    #else
-        NodeGraph::CleanPath( fileName, cleanFileName );
-    #endif
+#if !defined( __WINDOWS__ )
+    // Normally we keep all paths with native slashes, but in this case we
+    // have windows slashes, so convert to native for the relative check
+    AStackString pathCopy( fileName );
+    pathCopy.Replace( '\\', '/' );
+    NodeGraph::CleanPath( pathCopy, cleanFileName );
+#else
+    NodeGraph::CleanPath( fileName, cleanFileName );
+#endif
 
     PathUtils::GetRelativePath( basePath, cleanFileName, outRelativeFileName );
 }

@@ -61,31 +61,31 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         AStackString thisArg( argv[ i ] );
 
         // Check WSL wrapper
-        #if defined( __WINDOWS__ )
-            if ( ( m_WrapperMode == WRAPPER_MODE_NONE ) && ( thisArg == "-wsl" ) )
+#if defined( __WINDOWS__ )
+        if ( ( m_WrapperMode == WRAPPER_MODE_NONE ) && ( thisArg == "-wsl" ) )
+        {
+            // -wsl must be the first arg
+            if ( i != 1 )
             {
-                // -wsl must be the first arg
-                if ( i != 1 )
-                {
-                    OUTPUT( "FBuild: Error: -wsl must be the first argument\n" );
-                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
-                    return OPTIONS_ERROR;
-                }
-
-                m_WrapperMode = WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX;
-                const int32_t wslExeIndex = ( i + 1 );
-                if ( wslExeIndex >= argc )
-                {
-                    OUTPUT( "FBuild: Error: Missing <wslPath> for '-wsl' argument\n" );
-                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
-                    return OPTIONS_ERROR;
-                }
-                m_WSLPath = argv[ wslExeIndex ];
-                i++; // Skip extra arg we've consumed for the wsl exe
-
-                continue;
+                OUTPUT( "FBuild: Error: -wsl must be the first argument\n" );
+                OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                return OPTIONS_ERROR;
             }
-        #endif
+
+            m_WrapperMode = WRAPPER_MODE_WINDOWS_SUBSYSTEM_FOR_LINUX;
+            const int32_t wslExeIndex = ( i + 1 );
+            if ( wslExeIndex >= argc )
+            {
+                OUTPUT( "FBuild: Error: Missing <wslPath> for '-wsl' argument\n" );
+                OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                return OPTIONS_ERROR;
+            }
+            m_WSLPath = argv[ wslExeIndex ];
+            i++; // Skip extra arg we've consumed for the wsl exe
+
+            continue;
+        }
+#endif
 
         // Store into full arg string
         if ( m_Args.IsEmpty() == false )
@@ -241,13 +241,13 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += '"';
                 continue;
             }
-            #if defined( __WINDOWS__ )
-                else if ( thisArg == "-debug" )
-                {
-                    Env::ShowMsgBox( "FBuild", "Please attach debugger and press ok\n\n(-debug command line used)" );
-                    continue;
-                }
-            #endif
+#if defined( __WINDOWS__ )
+            else if ( thisArg == "-debug" )
+            {
+                Env::ShowMsgBox( "FBuild", "Please attach debugger and press ok\n\n(-debug command line used)" );
+                continue;
+            }
+#endif
             else if ( thisArg == "-dist" )
             {
                 m_AllowDistributed = true;
@@ -299,10 +299,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 m_ShowProgress = false;
                 progressOptionSpecified = true;
-                #if defined( __WINDOWS__ )
-                    m_FixupErrorPaths = true;
-                    m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
-                #endif
+#if defined( __WINDOWS__ )
+                m_FixupErrorPaths = true;
+                m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
+#endif
                 continue;
             }
             else if ( thisArg.BeginsWith( "-j" ) &&
@@ -447,23 +447,23 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowBuildReason = true;
                 continue;
             }
-            #if defined( __WINDOWS__ )
-                else if ( thisArg == "-wrapper" )
-                {
-                    m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
-                    continue;
-                }
-                else if ( thisArg == "-wrapperintermediate" ) // Internal use only
-                {
-                    m_WrapperMode = WRAPPER_MODE_INTERMEDIATE_PROCESS;
-                    continue;
-                }
-                else if ( thisArg == "-wrapperfinal" ) // Internal use only
-                {
-                    m_WrapperMode = WRAPPER_MODE_FINAL_PROCESS;
-                    continue;
-                }
-            #endif
+#if defined( __WINDOWS__ )
+            else if ( thisArg == "-wrapper" )
+            {
+                m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
+                continue;
+            }
+            else if ( thisArg == "-wrapperintermediate" ) // Internal use only
+            {
+                m_WrapperMode = WRAPPER_MODE_INTERMEDIATE_PROCESS;
+                continue;
+            }
+            else if ( thisArg == "-wrapperfinal" ) // Internal use only
+            {
+                m_WrapperMode = WRAPPER_MODE_FINAL_PROCESS;
+                continue;
+            }
+#endif
 
             // can't use FLOG_ERROR as FLog is not initialized
             OUTPUT( "FBuild: Error: Unknown argument '%s'\n", thisArg.Get() );
@@ -543,69 +543,69 @@ void FBuildOptions::SetWorkingDir( const AString & path )
         m_WorkingDir.SetLength( m_WorkingDir.GetLength() - 1 );
     }
 
-    #if defined( __WINDOWS__ )
-        // Canonicalize the working dir so that drive letters
-        // and directory names have correct/consistent paths.
-        // This ensures things that are sensitive to path casing
-        // work as expected:
-        // a) Compilers with path portability warnings (Clang)
-        // b) Caching
-        AStackString normalizedWorkingDir;
-        if ( FileIO::NormalizeWindowsPathCasing( m_WorkingDir, normalizedWorkingDir ) )
-        {
-            m_WorkingDir = normalizedWorkingDir;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // Canonicalize the working dir so that drive letters
+    // and directory names have correct/consistent paths.
+    // This ensures things that are sensitive to path casing
+    // work as expected:
+    // a) Compilers with path portability warnings (Clang)
+    // b) Caching
+    AStackString normalizedWorkingDir;
+    if ( FileIO::NormalizeWindowsPathCasing( m_WorkingDir, normalizedWorkingDir ) )
+    {
+        m_WorkingDir = normalizedWorkingDir;
+    }
+#endif
 
     // Generate Mutex/SharedMemory names
-    #if defined( __WINDOWS__ ) || defined( __OSX__ )
-        #if defined( __WINDOWS__ )
-            // convert subst drive mappings to the read path
-            // (so you can't compile from the real path and the subst path at the
-            // same time which would cause problems)
-            AStackString canonicalPath;
-            if ( ( m_WorkingDir.GetLength() >= 2 ) &&
-                 ( m_WorkingDir[ 1 ] == ':' ) &&
-                 ( m_WorkingDir[ 0 ] >= 'A' ) &&
-                 ( m_WorkingDir[ 0 ] <= 'Z' ) )
-            {
-                // get drive letter without slash
-                AStackString driveLetter( m_WorkingDir.Get(), m_WorkingDir.Get() + 2 );
+#if defined( __WINDOWS__ ) || defined( __OSX__ )
+    #if defined( __WINDOWS__ )
+    // convert subst drive mappings to the read path
+    // (so you can't compile from the real path and the subst path at the
+    // same time which would cause problems)
+    AStackString canonicalPath;
+    if ( ( m_WorkingDir.GetLength() >= 2 ) &&
+         ( m_WorkingDir[ 1 ] == ':' ) &&
+         ( m_WorkingDir[ 0 ] >= 'A' ) &&
+         ( m_WorkingDir[ 0 ] <= 'Z' ) )
+    {
+        // get drive letter without slash
+        AStackString driveLetter( m_WorkingDir.Get(), m_WorkingDir.Get() + 2 );
 
-                // get real path for drive letter (could be the same, or a subst'd path)
-                char actualPath[ MAX_PATH ];
-                actualPath[ 0 ] = '\000';
-                VERIFY( QueryDosDeviceA( driveLetter.Get(), actualPath, MAX_PATH ) );
+        // get real path for drive letter (could be the same, or a subst'd path)
+        char actualPath[ MAX_PATH ];
+        actualPath[ 0 ] = '\000';
+        VERIFY( QueryDosDeviceA( driveLetter.Get(), actualPath, MAX_PATH ) );
 
-                // if returned path is of format "\??\C:\Folder"...
-                if ( AString::StrNCmp( actualPath, "\\??\\", 4 ) == 0 )
-                {
-                    // .. then it means the working dir is a subst folder
-                    // trim the "\\??\\" and use the real path as a base
-                    canonicalPath = &actualPath[ 4 ];
-                    canonicalPath += ( m_WorkingDir.Get() + 2 ); // add everything after the subst drive letter
-                }
-                else
-                {
-                    // The path was already a real path (QueryDosDevice returns the volume only)
-                    canonicalPath = m_WorkingDir;
-                }
-            }
-            else
-            {
-                // a UNC or other funky path - just leave it as is
-                canonicalPath = m_WorkingDir;
-            }
-        #elif defined( __OSX__ )
-            AStackString canonicalPath( m_WorkingDir );
-        #endif
-
-        // case insensitive
-        canonicalPath.ToLower();
-    #elif defined( __LINUX__ )
-        // case sensitive
-        AStackString canonicalPath( m_WorkingDir );
+        // if returned path is of format "\??\C:\Folder"...
+        if ( AString::StrNCmp( actualPath, "\\??\\", 4 ) == 0 )
+        {
+            // .. then it means the working dir is a subst folder
+            // trim the "\\??\\" and use the real path as a base
+            canonicalPath = &actualPath[ 4 ];
+            canonicalPath += ( m_WorkingDir.Get() + 2 ); // add everything after the subst drive letter
+        }
+        else
+        {
+            // The path was already a real path (QueryDosDevice returns the volume only)
+            canonicalPath = m_WorkingDir;
+        }
+    }
+    else
+    {
+        // a UNC or other funky path - just leave it as is
+        canonicalPath = m_WorkingDir;
+    }
+    #elif defined( __OSX__ )
+    AStackString canonicalPath( m_WorkingDir );
     #endif
+
+    // case insensitive
+    canonicalPath.ToLower();
+#elif defined( __LINUX__ )
+    // case sensitive
+    AStackString canonicalPath( m_WorkingDir );
+#endif
 
     m_WorkingDirHash = xxHash::Calc32( canonicalPath );
     m_ProcessMutexName.Format( "Global\\FASTBuild-0x%08x", m_WorkingDirHash );
@@ -694,14 +694,14 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
 //------------------------------------------------------------------------------
 void FBuildOptions::DisplayVersion() const
 {
-    #ifdef DEBUG
-        #define VERSION_CONFIG "(DEBUG) "
-    #else
-        #define VERSION_CONFIG ""
-    #endif
+#ifdef DEBUG
+    #define VERSION_CONFIG "(DEBUG) "
+#else
+    #define VERSION_CONFIG ""
+#endif
     OUTPUT( "FASTBuild " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
             "Copyright 2012-2025 Franta Fulin - https://www.fastbuild.org\n" );
-    #undef VERSION_CONFIG
+#undef VERSION_CONFIG
 }
 
 //------------------------------------------------------------------------------

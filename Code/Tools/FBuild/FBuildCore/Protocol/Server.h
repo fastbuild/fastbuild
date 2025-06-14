@@ -96,9 +96,9 @@ private:
     mutable Mutex m_ToolManifestsMutex;
     Array<ToolManifest *> m_Tools;
 
-    #if defined( __OSX__ ) || defined( __LINUX__ )
-        Timer m_TouchToolchainTimer;
-    #endif
+#if defined( __OSX__ ) || defined( __LINUX__ )
+    Timer m_TouchToolchainTimer;
+#endif
 };
 
 //------------------------------------------------------------------------------

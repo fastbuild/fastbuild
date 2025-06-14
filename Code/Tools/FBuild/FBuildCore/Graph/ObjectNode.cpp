@@ -61,7 +61,7 @@
 // Static Data
 //------------------------------------------------------------------------------
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
-    /*static*/ Atomic<uint32_t> ObjectNode::sFakeSystemFailureState( FakeSystemFailureState::DISABLED );
+/*static*/ Atomic<uint32_t> ObjectNode::sFakeSystemFailureState( FakeSystemFailureState::DISABLED );
 #endif
 
 // Reflection
@@ -653,20 +653,20 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         EmitCompilationMessage( fullArgs, useDeoptimization, stealingRemoteJob, racingRemoteJob, false, isRemote );
     }
 
-    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
-        // If racing while inducing a remote failure, ensure the remote failure
-        // always wins.
-        if ( racingRemoteJob && ( sFakeSystemFailureState.Load() > FakeSystemFailureState::DISABLED ) )
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+    // If racing while inducing a remote failure, ensure the remote failure
+    // always wins.
+    if ( racingRemoteJob && ( sFakeSystemFailureState.Load() > FakeSystemFailureState::DISABLED ) )
+    {
+        // Notify the remote side we're ready for it to fail
+        // and wait for it to be returned
+        sFakeSystemFailureState.Store( RACING );
+        while ( job->GetDistributionState() == Job::DIST_RACING )
         {
-            // Notify the remote side we're ready for it to fail
-            // and wait for it to be returned
-            sFakeSystemFailureState.Store( RACING );
-            while ( job->GetDistributionState() == Job::DIST_RACING )
-            {
-                Thread::Sleep( 1 );
-            }
+            Thread::Sleep( 1 );
         }
-    #endif
+    }
+#endif
 
     const BuildResult result = BuildFinalOutput( job, fullArgs );
 
@@ -1356,11 +1356,11 @@ const char * ObjectNode::GetObjExtension() const
 {
     if ( m_CompilerOutputExtension.IsEmpty() )
     {
-        #if defined( __WINDOWS__ )
-            return ".obj";
-        #else
-            return ".o";
-        #endif
+#if defined( __WINDOWS__ )
+        return ".obj";
+#else
+        return ".o";
+#endif
     }
     return m_CompilerOutputExtension.Get();
 }
@@ -2024,103 +2024,103 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
     size_t newBufferSize = outputBufferSize;
     char * bufferCopy = nullptr;
 
-    #if defined( __WINDOWS__ )
-        // VS 2012 sometimes generates corrupted code when preprocessing an already preprocessed file when it encounters
-        // enum definitions.
-        // Example:
-        //      enum dateorder
-        //      {
-        //          no_order, dmy, mdy, ymd, ydm
-        //      };
-        // Becomes:
-        //      enummdateorder
-        //      {
-        //          no_order, dmy, mdy, ymd, ydm
-        //      };
-        // And then compilation fails.
-        //
-        // Adding a space between the enum keyword and the name avoids the bug.
-        // This bug is fixed in VS2013 or later.
-        bool doVS2012Fixup = false;
-        if ( GetCompiler()->GetType() == Node::COMPILER_NODE )
-        {
-            const CompilerNode * cn = GetCompiler();
-            doVS2012Fixup = cn->IsVS2012EnumBugFixEnabled();
-        }
+#if defined( __WINDOWS__ )
+    // VS 2012 sometimes generates corrupted code when preprocessing an already preprocessed file when it encounters
+    // enum definitions.
+    // Example:
+    //      enum dateorder
+    //      {
+    //          no_order, dmy, mdy, ymd, ydm
+    //      };
+    // Becomes:
+    //      enummdateorder
+    //      {
+    //          no_order, dmy, mdy, ymd, ydm
+    //      };
+    // And then compilation fails.
+    //
+    // Adding a space between the enum keyword and the name avoids the bug.
+    // This bug is fixed in VS2013 or later.
+    bool doVS2012Fixup = false;
+    if ( GetCompiler()->GetType() == Node::COMPILER_NODE )
+    {
+        const CompilerNode * cn = GetCompiler();
+        doVS2012Fixup = cn->IsVS2012EnumBugFixEnabled();
+    }
 
-        if ( doVS2012Fixup )
-        {
-            Array<const char *> enumsFound;
-            enumsFound.SetCapacity( 2048 );
-            const char BUGGY_CODE[] = "enum ";
-            const char * workBuffer = outputBuffer;
-            ASSERT( workBuffer[ outputBufferSize ] == '\0' );
+    if ( doVS2012Fixup )
+    {
+        Array<const char *> enumsFound;
+        enumsFound.SetCapacity( 2048 );
+        const char BUGGY_CODE[] = "enum ";
+        const char * workBuffer = outputBuffer;
+        ASSERT( workBuffer[ outputBufferSize ] == '\0' );
 
-            // First scan the buffer to find all occurrences of the enums.
-            // This will then let us resize the buffer to the appropriate size.
-            // Keeping the found enums let us avoid searching for them twice.
-            uint32_t nbrEnumsFound = 0;
-            const char * buggyEnum = nullptr;
-            for ( ;; )
+        // First scan the buffer to find all occurrences of the enums.
+        // This will then let us resize the buffer to the appropriate size.
+        // Keeping the found enums let us avoid searching for them twice.
+        uint32_t nbrEnumsFound = 0;
+        const char * buggyEnum = nullptr;
+        for ( ;; )
+        {
+            buggyEnum = strstr( workBuffer, BUGGY_CODE );
+            if ( buggyEnum == nullptr )
             {
-                buggyEnum = strstr( workBuffer, BUGGY_CODE );
-                if ( buggyEnum == nullptr )
-                {
-                    break;
-                }
-                ++nbrEnumsFound;
-                enumsFound.Append( buggyEnum );
-                workBuffer = buggyEnum + sizeof( BUGGY_CODE ) - 1;
+                break;
             }
-            ASSERT( enumsFound.GetSize() == nbrEnumsFound );
+            ++nbrEnumsFound;
+            enumsFound.Append( buggyEnum );
+            workBuffer = buggyEnum + sizeof( BUGGY_CODE ) - 1;
+        }
+        ASSERT( enumsFound.GetSize() == nbrEnumsFound );
 
-            // Now allocate the new buffer with enough space to add a space after each enum found
-            newBufferSize = outputBufferSize + nbrEnumsFound;
-            bufferCopy = (char *)ALLOC( newBufferSize + 1 ); // null terminator for include parser
+        // Now allocate the new buffer with enough space to add a space after each enum found
+        newBufferSize = outputBufferSize + nbrEnumsFound;
+        bufferCopy = (char *)ALLOC( newBufferSize + 1 ); // null terminator for include parser
 
-            uint32_t enumIndex = 0;
-            workBuffer = outputBuffer;
-            char * writeDest = bufferCopy;
-            size_t sizeLeftInSourceBuffer = outputBufferSize;
-            buggyEnum = nullptr;
-            for ( ;; )
+        uint32_t enumIndex = 0;
+        workBuffer = outputBuffer;
+        char * writeDest = bufferCopy;
+        size_t sizeLeftInSourceBuffer = outputBufferSize;
+        buggyEnum = nullptr;
+        for ( ;; )
+        {
+            if ( enumIndex < nbrEnumsFound )
             {
-                if ( enumIndex < nbrEnumsFound )
-                {
-                    buggyEnum = enumsFound[ enumIndex ];
-                    ++enumIndex;
-                }
-                else
-                {
-                    buggyEnum = nullptr;
-                }
+                buggyEnum = enumsFound[ enumIndex ];
+                ++enumIndex;
+            }
+            else
+            {
+                buggyEnum = nullptr;
+            }
 
-                if ( buggyEnum == nullptr )
-                {
+            if ( buggyEnum == nullptr )
+            {
                     // Copy the rest of the data.
-                    memcpy( writeDest, workBuffer, sizeLeftInSourceBuffer );
-                    break;
-                }
-
-                // Copy what's before the enum + the enum.
-                size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
-                sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
-                memcpy( writeDest, workBuffer, sizeToCopy );
-                writeDest += sizeToCopy;
-
-                // Add a space
-                *writeDest = ' ';
-                ++writeDest;
-
-                ASSERT( sizeLeftInSourceBuffer >= sizeToCopy );
-                sizeLeftInSourceBuffer -= sizeToCopy;
-                workBuffer += sizeToCopy;
+                memcpy( writeDest, workBuffer, sizeLeftInSourceBuffer );
+                break;
             }
 
-            bufferCopy[ newBufferSize ] = 0; // null terminator for include parser
+            // Copy what's before the enum + the enum.
+            size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
+            sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
+            memcpy( writeDest, workBuffer, sizeToCopy );
+            writeDest += sizeToCopy;
+
+            // Add a space
+            *writeDest = ' ';
+            ++writeDest;
+
+            ASSERT( sizeLeftInSourceBuffer >= sizeToCopy );
+            sizeLeftInSourceBuffer -= sizeToCopy;
+            workBuffer += sizeToCopy;
         }
-        else
-    #endif
+
+        bufferCopy[ newBufferSize ] = 0; // null terminator for include parser
+    }
+    else
+#endif
     {
         bufferCopy = (char *)ALLOC( newBufferSize + 1 ); // null terminator for include parser
         memcpy( bufferCopy, outputBuffer, newBufferSize );
@@ -2238,11 +2238,11 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     if ( compiler && compiler->GetUseDeterministicPaths() )
     {
         VERIFY( FBuild::GetTempDir( tmpDirectory ) );
-        #if defined( __WINDOWS__ )
-            tmpDirectory += ".fbuild.tmp\\";
-        #else
-            tmpDirectory += "_fbuild.tmp/";
-        #endif
+#if defined( __WINDOWS__ )
+        tmpDirectory += ".fbuild.tmp\\";
+#else
+        tmpDirectory += "_fbuild.tmp/";
+#endif
         tmpDirectory.AppendFormat( "%08X-", GetCommandLineKey( job ) );
     }
     else
@@ -2450,26 +2450,26 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out, m_Err );
 
-    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
         // Fake system failure for tests
-        if ( ( job->IsLocal() == false ) && ( sFakeSystemFailureState.Load() > DISABLED ) )
+    if ( ( job->IsLocal() == false ) && ( sFakeSystemFailureState.Load() > DISABLED ) )
+    {
+        // Wait until racing
+        while ( sFakeSystemFailureState.Load() != RACING )
         {
-            // Wait until racing
-            while ( sFakeSystemFailureState.Load() != RACING )
-            {
-                Thread::Sleep( 1 );
-            }
-
-            // Add fake failure
-            ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
-            m_Result = 1;
-            job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
-            job->OnSystemError();
-
-            // Clear failure state
-            sFakeSystemFailureState.Store( DISABLED );
+            Thread::Sleep( 1 );
         }
-    #endif
+
+        // Add fake failure
+        ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
+        m_Result = 1;
+        job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
+        job->OnSystemError();
+
+        // Clear failure state
+        sFakeSystemFailureState.Store( DISABLED );
+    }
+#endif
 
     if ( m_HandleOutput )
     {
@@ -2533,128 +2533,128 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     const ObjectNode * objectNode = job->GetNode()->CastTo<ObjectNode>();
 
     // General process failures
-    #if defined( __WINDOWS__ )
-        // If remote PC is shutdown by user, compiler can be terminated
-        if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
-             ( (uint32_t)result == 0xC000013A ) || // STATUS_CONTROL_C_EXIT - Occurs if remote user forcibly ended the process
-             ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
+#if defined( __WINDOWS__ )
+    // If remote PC is shutdown by user, compiler can be terminated
+    if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
+         ( (uint32_t)result == 0xC000013A ) || // STATUS_CONTROL_C_EXIT - Occurs if remote user forcibly ended the process
+         ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
+    {
+        job->OnSystemError(); // task will be retried on another worker
+        return;
+    }
+
+    // When a process is terminated by a user on Windows, the return code can
+    // be 1. There seems to be no definitive way to differentiate this from
+    // a process exiting with return code 1, so we default to considering it a
+    // system failure, unless we can detect some specific situations.
+    if ( result == 0x1 ) // ERROR_INVALID_FUNCTION
+    {
+        bool treatAsSystemError = true;
+
+        // Some compilers (like Clang) return 1 when there are compile errors
+        // and write those errors to stderr
+        // don't consider this a system failure if there are compile errors
+        if ( stdErr.IsEmpty() == false )
+        {
+            treatAsSystemError = false;
+        }
+
+        if ( treatAsSystemError )
         {
             job->OnSystemError(); // task will be retried on another worker
             return;
         }
+    }
 
-        // When a process is terminated by a user on Windows, the return code can
-        // be 1. There seems to be no definitive way to differentiate this from
-        // a process exiting with return code 1, so we default to considering it a
-        // system failure, unless we can detect some specific situations.
-        if ( result == 0x1 ) // ERROR_INVALID_FUNCTION
-        {
-            bool treatAsSystemError = true;
+    // This error was observed remotely without a clear cause
+    if ( result == 0x4 ) // ERROR_TOO_MANY_OPEN_FILES
+    {
+        job->OnSystemError(); // task will be retried on another worker
+        return;
+    }
 
-            // Some compilers (like Clang) return 1 when there are compile errors
-            // and write those errors to stderr
-            // don't consider this a system failure if there are compile errors
-            if ( stdErr.IsEmpty() == false )
-            {
-                treatAsSystemError = false;
-            }
-
-            if ( treatAsSystemError )
-            {
-                job->OnSystemError(); // task will be retried on another worker
-                return;
-            }
-        }
-
-        // This error was observed remotely without a clear cause
-        if ( result == 0x4 ) // ERROR_TOO_MANY_OPEN_FILES
-        {
-            job->OnSystemError(); // task will be retried on another worker
-            return;
-        }
-
-        // If DLLs are not correctly sync'd, add an extra message to help the user
-        if ( (uint32_t)result == 0xC000007B ) // STATUS_INVALID_IMAGE_FORMAT
-        {
-            job->Error( "Remote failure: STATUS_INVALID_IMAGE_FORMAT (0xC000007B) - Check Compiler() settings!\n" );
-            return;
-        }
-        if ( (uint32_t)result == 0xC0000135 ) // STATUS_DLL_NOT_FOUND
-        {
-            job->Error( "Remote failure: STATUS_DLL_NOT_FOUND (0xC0000135) - Check Compiler() settings!\n" );
-            return;
-        }
-    #endif
+    // If DLLs are not correctly sync'd, add an extra message to help the user
+    if ( (uint32_t)result == 0xC000007B ) // STATUS_INVALID_IMAGE_FORMAT
+    {
+        job->Error( "Remote failure: STATUS_INVALID_IMAGE_FORMAT (0xC000007B) - Check Compiler() settings!\n" );
+        return;
+    }
+    if ( (uint32_t)result == 0xC0000135 ) // STATUS_DLL_NOT_FOUND
+    {
+        job->Error( "Remote failure: STATUS_DLL_NOT_FOUND (0xC0000135) - Check Compiler() settings!\n" );
+        return;
+    }
+#endif
 
     // Compiler specific failures
 
-    #if defined( __WINDOWS__ )
-        // MSVC errors
-        if ( objectNode->IsMSVC() )
+#if defined( __WINDOWS__ )
+    // MSVC errors
+    if ( objectNode->IsMSVC() )
+    {
+        // But we need to determine if it's actually an out of space
+        // (rather than some compile error with missing file(s))
+        // These error codes have been observed in the wild
+        if ( stdOut.Find( "C1082" ) ||
+             stdOut.Find( "C1085" ) ||
+             stdOut.Find( "C1088" ) )
         {
-            // But we need to determine if it's actually an out of space
-            // (rather than some compile error with missing file(s))
-            // These error codes have been observed in the wild
-            if ( stdOut.Find( "C1082" ) ||
-                 stdOut.Find( "C1085" ) ||
-                 stdOut.Find( "C1088" ) )
-            {
-                job->OnSystemError();
-                return;
-            }
+            job->OnSystemError();
+            return;
+        }
 
-            // If the compiler can fail with C1083 on the remote host for at least the following
-            // reasons:
-            //     a) Failed to create a temp file (C1083: Cannot open compiler intermediate file)
-            //          - This was seen when the tmp dir was full (tmp file creation failed)
-            //     b) Failed to write an extra output file (C1083: Cannot open compiler generated file)
-            //          - This was seen when using /sourceDependencies and the output folder didn't exist
-            if ( stdOut.Find( "C1083" ) )
-            {
-                job->OnSystemError();
-                return;
-            }
+        // If the compiler can fail with C1083 on the remote host for at least the following
+        // reasons:
+        //     a) Failed to create a temp file (C1083: Cannot open compiler intermediate file)
+        //          - This was seen when the tmp dir was full (tmp file creation failed)
+        //     b) Failed to write an extra output file (C1083: Cannot open compiler generated file)
+        //          - This was seen when using /sourceDependencies and the output folder didn't exist
+        if ( stdOut.Find( "C1083" ) )
+        {
+            job->OnSystemError();
+            return;
+        }
 
-            // The MSVC compiler can fail with "compiler is out of heap space" even if
-            // using the 64bit toolchain. This failure can be intermittent and not
-            // repeatable with the same code on a different machine, so we don't want it
-            // to fail the build.
-            if ( stdOut.Find( "C1060" ) )
-            {
-                // If either of these are present
-                //  - C1076 : compiler limit : internal heap limit reached; use /Zm to specify a higher limit
-                //  - C3859 : virtual memory range for PCH exceeded; please recompile with a command line option of '-Zmvalue' or greater
-                // then the issue is related to compiler settings.
-                // If they are not present, it's a system error, possibly caused by system resource
-                // exhaustion on the remote machine
-                if ( ( stdOut.Find( "C1076" ) == nullptr ) &&
-                     ( stdOut.Find( "C3859" ) == nullptr ) )
-                {
-                    job->OnSystemError();
-                    return;
-                }
-            }
-
-            // If the compiler crashed (Internal Compiler Error), treat this
-            // as a system error so it will be retried, since it can also be
-            // the result of faulty hardware.
-            if ( stdOut.Find( "C1001" ) )
-            {
-                job->OnSystemError();
-                return;
-            }
-
-            // Error messages above also contains this text
-            // (We check for this message additionally to handle other error codes
-            //  that may not have been observed yet)
-            // TODO:C Should we check for localized msg?
-            if ( stdOut.Find( "No space left on device" ) )
+        // The MSVC compiler can fail with "compiler is out of heap space" even if
+        // using the 64bit toolchain. This failure can be intermittent and not
+        // repeatable with the same code on a different machine, so we don't want it
+        // to fail the build.
+        if ( stdOut.Find( "C1060" ) )
+        {
+            // If either of these are present
+            //  - C1076 : compiler limit : internal heap limit reached; use /Zm to specify a higher limit
+            //  - C3859 : virtual memory range for PCH exceeded; please recompile with a command line option of '-Zmvalue' or greater
+            // then the issue is related to compiler settings.
+            // If they are not present, it's a system error, possibly caused by system resource
+            // exhaustion on the remote machine
+            if ( ( stdOut.Find( "C1076" ) == nullptr ) &&
+                 ( stdOut.Find( "C3859" ) == nullptr ) )
             {
                 job->OnSystemError();
                 return;
             }
         }
-    #endif
+
+        // If the compiler crashed (Internal Compiler Error), treat this
+        // as a system error so it will be retried, since it can also be
+        // the result of faulty hardware.
+        if ( stdOut.Find( "C1001" ) )
+        {
+            job->OnSystemError();
+            return;
+        }
+
+        // Error messages above also contains this text
+        // (We check for this message additionally to handle other error codes
+        //  that may not have been observed yet)
+        // TODO:C Should we check for localized msg?
+        if ( stdOut.Find( "No space left on device" ) )
+        {
+            job->OnSystemError();
+            return;
+        }
+    }
+#endif
 
     // Clang
     if ( objectNode->IsClang() || objectNode->IsClangCl() )
@@ -2680,9 +2680,9 @@ Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
     }
 
-    #if !defined( __WINDOWS__ )
-        (void)stdOut; // No checks use stdOut outside of Windows right now
-    #endif
+#if !defined( __WINDOWS__ )
+    (void)stdOut; // No checks use stdOut outside of Windows right now
+#endif
 }
 
 // ShouldUseDeoptimization
@@ -2782,21 +2782,21 @@ ArgsResponseFileMode ObjectNode::GetResponseFileMode() const
     }
 
     // Detect a compiler that supports response file args?
-    #if defined( __WINDOWS__ )
-        // Generally only windows applications support response files (to overcome Windows command line limits)
-        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
-        // probably want this for other platforms as well though.
-        if ( IsMSVC() ||
-             IsGCC() ||
-             IsSNC() ||
-             IsClang() ||
-             IsClangCl() ||
-             IsCodeWarriorWii() ||
-             IsGreenHillsWiiU() )
-        {
-            return ArgsResponseFileMode::IF_NEEDED;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // Generally only windows applications support response files (to overcome Windows command line limits)
+    // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+    // probably want this for other platforms as well though.
+    if ( IsMSVC() ||
+         IsGCC() ||
+         IsSNC() ||
+         IsClang() ||
+         IsClangCl() ||
+         IsCodeWarriorWii() ||
+         IsGreenHillsWiiU() )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+#endif
 
     // Cannot use response files
     return ArgsResponseFileMode::NEVER;
@@ -2872,10 +2872,10 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     // We'll walk the output and fix it up in-place
 
     AStackString srcFileName( GetSourceFile()->GetName() );
-    #if defined( __WINDOWS__ )
-        // Clang escapes backslashes, so we must do the same
-        srcFileName.Replace( "\\", "\\\\" );
-    #endif
+#if defined( __WINDOWS__ )
+    // Clang escapes backslashes, so we must do the same
+    srcFileName.Replace( "\\", "\\\\" );
+#endif
 
     // Build the string used to find "pop" directives when returning to this file
     AStackString popDirectiveString;
@@ -2894,10 +2894,10 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
 
         AStackString relativeFileName;
         PathUtils::GetRelativePath( basePath, GetSourceFile()->GetName(), relativeFileName );
-        #if defined( __WINDOWS__ )
-            // Clang escapes backslashes, so we must do the same
-            relativeFileName.Replace( "\\", "\\\\" );
-        #endif
+#if defined( __WINDOWS__ )
+        // Clang escapes backslashes, so we must do the same
+        relativeFileName.Replace( "\\", "\\\\" );
+#endif
         pos = strstr( (char *)job->GetData(), relativeFileName.Get() );
 
         // Update pop directive string

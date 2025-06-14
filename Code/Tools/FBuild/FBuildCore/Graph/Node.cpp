@@ -92,7 +92,7 @@ static Mutex g_NodeEnvStringMutex;
 //------------------------------------------------------------------------------
 namespace
 {
-    #pragma pack( push, 1 )
+#pragma pack( push, 1 )
     class SerializedFileNode
     {
     public:
@@ -106,7 +106,7 @@ namespace
         uint64_t m_Stamp;
         uint32_t m_LastBuildTime;
     };
-    #pragma pack( pop )
+#pragma pack( pop )
 }
 
 // Custom MetaData
@@ -1266,21 +1266,21 @@ void Node::RecordStampFromBuiltFile()
     // TODO:B Remove this work-around. A planned change to the dependency db
     // to record times per dependency and see when the differ instead of when
     // they are more recent will fix this.
-    #if defined( __OSX__ )
-        // For now, only apply the work-around to library nodes
-        if ( GetType() == Node::LIBRARY_NODE )
+#if defined( __OSX__ )
+    // For now, only apply the work-around to library nodes
+    if ( GetType() == Node::LIBRARY_NODE )
+    {
+        if ( ( m_Stamp % 1000000000 ) == 0 )
         {
-            if ( ( m_Stamp % 1000000000 ) == 0 )
-            {
-                // Set to current time
-                FileIO::SetFileLastWriteTimeToNow( m_Name );
+            // Set to current time
+            FileIO::SetFileLastWriteTimeToNow( m_Name );
 
-                // Re-query the time from the file
-                m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-                ASSERT( m_Stamp != 0 );
-            }
+            // Re-query the time from the file
+            m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+            ASSERT( m_Stamp != 0 );
         }
-    #endif
+    }
+#endif
 }
 
 //------------------------------------------------------------------------------

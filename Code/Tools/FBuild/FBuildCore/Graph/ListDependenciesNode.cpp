@@ -79,11 +79,11 @@ class DependencyAscendingCompareIDeref
 public:
     bool operator()( const AString * a, const AString * b ) const
     {
-        #if defined( __WINDOWS__ )
-            return ( a->CompareI( *b ) < 0 );
-        #else
-            return ( a->Compare( *b ) < 0 );
-        #endif
+#if defined( __WINDOWS__ )
+        return ( a->CompareI( *b ) < 0 );
+#else
+        return ( a->Compare( *b ) < 0 );
+#endif
     }
 };
 
@@ -170,11 +170,11 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         prevDep = depName;
         fileContents += *depName;
 
-        #if defined( __WINDOWS__ )
-            fileContents += "\r\n";
-        #else
-            fileContents += '\n';
-        #endif
+#if defined( __WINDOWS__ )
+        fileContents += "\r\n";
+#else
+        fileContents += '\n';
+#endif
     }
 
     // Dump to text file

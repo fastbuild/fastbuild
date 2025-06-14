@@ -398,23 +398,23 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     AStackString paths;
     paths.Format( "PATH=%s", basePath.Get() );
 
-    #if defined( __WINDOWS__ )
-        // TMP=
-        AStackString normalTmp;
-        Env::GetEnvVariable( "TMP", normalTmp );
-        AStackString tmp;
-        tmp.Format( "TMP=%s", normalTmp.Get() );
+#if defined( __WINDOWS__ )
+    // TMP=
+    AStackString normalTmp;
+    Env::GetEnvVariable( "TMP", normalTmp );
+    AStackString tmp;
+    tmp.Format( "TMP=%s", normalTmp.Get() );
 
-        // SystemRoot=
-        AStackString sysRoot( "SystemRoot=C:\\Windows" );
-    #endif
+    // SystemRoot=
+    AStackString sysRoot( "SystemRoot=C:\\Windows" );
+#endif
 
     // Calculate the length of the full environment string
     size_t len( paths.GetLength() + 1 );
-    #if defined( __WINDOWS__ )
-        len += ( tmp.GetLength() + 1 );
-        len += ( sysRoot.GetLength() + 1 );
-    #endif
+#if defined( __WINDOWS__ )
+    len += ( tmp.GetLength() + 1 );
+    len += ( sysRoot.GetLength() + 1 );
+#endif
 
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
@@ -438,13 +438,13 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     AString::Copy( paths.Get(), mem, paths.GetLength() + 1 ); // including null
     mem += ( paths.GetLength() + 1 ); // including null
 
-    #if defined( __WINDOWS__ )
-        AString::Copy( tmp.Get(), mem, tmp.GetLength() + 1 ); // including null
-        mem += ( tmp.GetLength() + 1 ); // including null
+#if defined( __WINDOWS__ )
+    AString::Copy( tmp.Get(), mem, tmp.GetLength() + 1 ); // including null
+    mem += ( tmp.GetLength() + 1 ); // including null
 
-        AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
-        mem += ( sysRoot.GetLength() + 1 ); // including null
-    #endif
+    AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
+    mem += ( sysRoot.GetLength() + 1 ); // including null
+#endif
 
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
@@ -641,9 +641,9 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     fs.Close();
 
     // mark executable
-    #if defined( __LINUX__ ) || defined( __OSX__ )
-        FileIO::SetExecutable( fileName.Get() );
-    #endif
+#if defined( __LINUX__ ) || defined( __OSX__ )
+    FileIO::SetExecutable( fileName.Get() );
+#endif
 
     // open read-only
     UniquePtr<FileStream> fileStream( FNEW( FileStream ) );
@@ -691,19 +691,19 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
 // TouchFiles
 //------------------------------------------------------------------------------
 #if defined( __OSX__ ) || defined( __LINUX__ )
-    void ToolManifest::TouchFiles() const
+void ToolManifest::TouchFiles() const
+{
+    const size_t numFiles = m_Files.GetSize();
+    for ( size_t fileId = 0; fileId < numFiles; ++fileId )
     {
-        const size_t numFiles = m_Files.GetSize();
-        for ( size_t fileId = 0; fileId < numFiles; ++fileId )
-        {
-            // Get path to file
-            AStackString fileName;
-            GetRemoteFilePath( static_cast<uint32_t>( fileId ), fileName );
+        // Get path to file
+        AStackString fileName;
+        GetRemoteFilePath( static_cast<uint32_t>( fileId ), fileName );
 
-            // Make modification time now
-            FileIO::SetFileLastWriteTimeToNow( fileName );
-        }
+        // Make modification time now
+        FileIO::SetFileLastWriteTimeToNow( fileName );
     }
+}
 #endif
 
 // GetRemoteFilePath
@@ -726,11 +726,11 @@ void ToolManifest::GetRemotePath( AString & path ) const
 {
     VERIFY( FBuild::GetTempDir( path ) );
     AStackString subDir;
-    #if defined( __WINDOWS__ )
-        subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
-    #else
-        subDir.Format( "_fbuild.tmp/worker/toolchain.%016" PRIx64 "/", m_ToolId );
-    #endif
+#if defined( __WINDOWS__ )
+    subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
+#else
+    subDir.Format( "_fbuild.tmp/worker/toolchain.%016" PRIx64 "/", m_ToolId );
+#endif
     path += subDir;
 }
 

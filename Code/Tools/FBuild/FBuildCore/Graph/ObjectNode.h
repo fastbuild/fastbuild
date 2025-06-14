@@ -155,9 +155,13 @@ public:
     CompilerNode * GetCompiler() const;
     Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
     CompilerNode * GetDedicatedPreprocessor() const;
-    #if defined( __WINDOWS__ )
-        Node * GetPrecompiledHeaderCPPFile() const { ASSERT( m_CompilerFlags.IsCreatingPCH() ); return m_StaticDependencies[ 1 ].GetNode(); }
-    #endif
+#if defined( __WINDOWS__ )
+    Node * GetPrecompiledHeaderCPPFile() const
+    {
+        ASSERT( m_CompilerFlags.IsCreatingPCH() );
+        return m_StaticDependencies[ 1 ].GetNode();
+    }
+#endif
     ObjectNode * GetPrecompiledHeader() const;
 
     void GetPDBName( AString & pdbName ) const;

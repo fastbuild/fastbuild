@@ -1015,20 +1015,20 @@ ArgsResponseFileMode LinkerNode::GetResponseFileMode() const
     }
 
     // Detect a compiler that supports response file args?
-    #if defined( __WINDOWS__ )
-        // Generally only windows applications support response files (to overcome Windows command line limits)
-        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
-        // probably want this for other platforms as well though.
-        if ( GetFlag( LINK_FLAG_MSVC ) ||
-             GetFlag( LINK_FLAG_GCC ) ||
-             GetFlag( LINK_FLAG_SNC ) ||
-             GetFlag( LINK_FLAG_ORBIS_LD ) ||
-             GetFlag( LINK_FLAG_GREENHILLS_ELXR ) ||
-             GetFlag( LINK_FLAG_CODEWARRIOR_LD ) )
-        {
-            return ArgsResponseFileMode::IF_NEEDED;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // Generally only windows applications support response files (to overcome Windows command line limits)
+    // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+    // probably want this for other platforms as well though.
+    if ( GetFlag( LINK_FLAG_MSVC ) ||
+         GetFlag( LINK_FLAG_GCC ) ||
+         GetFlag( LINK_FLAG_SNC ) ||
+         GetFlag( LINK_FLAG_ORBIS_LD ) ||
+         GetFlag( LINK_FLAG_GREENHILLS_ELXR ) ||
+         GetFlag( LINK_FLAG_CODEWARRIOR_LD ) )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+#endif
 
     // Cannot use response files
     return ArgsResponseFileMode::NEVER;

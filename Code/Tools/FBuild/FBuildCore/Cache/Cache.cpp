@@ -63,18 +63,18 @@ public:
     PathUtils::EnsureTrailingSlash( m_CachePath );
 
     // Check cache mount point if option is enabled
-    #if defined( __WINDOWS__ )
-        (void)cachePathMountPoint; // Not supported on Windows
-    #else
-        if ( cachePathMountPoint.IsEmpty() == false )
+#if defined( __WINDOWS__ )
+    (void)cachePathMountPoint; // Not supported on Windows
+#else
+    if ( cachePathMountPoint.IsEmpty() == false )
+    {
+        if ( FileIO::GetDirectoryIsMountPoint( cachePathMountPoint ) == false )
         {
-            if ( FileIO::GetDirectoryIsMountPoint( cachePathMountPoint ) == false )
-            {
-                FLOG_WARN( "Caching disabled because '%s' is not a mount point", cachePathMountPoint.Get() );
-                return false;
-            }
+            FLOG_WARN( "Caching disabled because '%s' is not a mount point", cachePathMountPoint.Get() );
+            return false;
         }
-    #endif
+    }
+#endif
 
     if ( FileIO::EnsurePathExists( m_CachePath ) )
     {
@@ -196,11 +196,11 @@ public:
     {
         // Determine age bucket
         const uint64_t age = currentTime - info.m_LastWriteTime;
-        #if defined( __WINDOWS__ )
-            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
-        #else
-            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)1000000000 );
-        #endif
+#if defined( __WINDOWS__ )
+        const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+#else
+        const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)1000000000 );
+#endif
         uint32_t ageInDays = (uint32_t)( age / oneDay );
         if ( ageInDays >= 30 )
         {

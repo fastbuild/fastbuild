@@ -125,29 +125,29 @@ DirectoryListNode::DirectoryListNode()
 //------------------------------------------------------------------------------
 /*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
-    #if defined( ASSERTS_ENABLED )
-        // ensure name is correctly formatted
-        AStackString expectedName;
-        FormatName( m_Path,
-                    &m_Patterns,
-                    m_Recursive,
-                    m_IncludeReadOnlyStatusInHash,
-                    m_IncludeDirs,
-                    m_ExcludePaths,
-                    m_FilesToExclude,
-                    m_ExcludePatterns,
-                    expectedName );
-        ASSERT( m_Name == expectedName );
+#if defined( ASSERTS_ENABLED )
+    // ensure name is correctly formatted
+    AStackString expectedName;
+    FormatName( m_Path,
+                &m_Patterns,
+                m_Recursive,
+                m_IncludeReadOnlyStatusInHash,
+                m_IncludeDirs,
+                m_ExcludePaths,
+                m_FilesToExclude,
+                m_ExcludePatterns,
+                expectedName );
+    ASSERT( m_Name == expectedName );
 
-        // paths must have trailing slash
-        ASSERT( m_Path.EndsWith( NATIVE_SLASH ) );
+    // paths must have trailing slash
+    ASSERT( m_Path.EndsWith( NATIVE_SLASH ) );
 
-        // make sure exclusion path has trailing slash if provided
-        for ( const AString & excludePath : m_ExcludePaths )
-        {
-            ASSERT( excludePath.EndsWith( NATIVE_SLASH ) );
-        }
-    #endif
+    // make sure exclusion path has trailing slash if provided
+    for ( const AString & excludePath : m_ExcludePaths )
+    {
+        ASSERT( excludePath.EndsWith( NATIVE_SLASH ) );
+    }
+#endif
 
     return true;
 }

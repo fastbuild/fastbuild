@@ -276,11 +276,11 @@ XCodeProjectNode::~XCodeProjectNode() = default;
 
         // Write to disk if missing (not written if different as this could stomp user settings)
         AStackString plist;
-        #if defined( __WINDOWS__ )
-            plist.Format( "%s\\xcuserdata\\%s.xcuserdatad\\xcschemes\\xcschememanagement.plist", folder.Get(), userName.Get() );
-        #else
-            plist.Format( "%s/xcuserdata/%s.xcuserdatad/xcschemes/xcschememanagement.plist", folder.Get(), userName.Get() );
-        #endif
+#if defined( __WINDOWS__ )
+        plist.Format( "%s\\xcuserdata\\%s.xcuserdatad\\xcschemes\\xcschememanagement.plist", folder.Get(), userName.Get() );
+#else
+        plist.Format( "%s/xcuserdata/%s.xcuserdatad/xcschemes/xcschememanagement.plist", folder.Get(), userName.Get() );
+#endif
         if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, plist ) == false )
         {
             return BuildResult::eFailed; // WriteIfMissing will have emitted an error
@@ -297,11 +297,11 @@ XCodeProjectNode::~XCodeProjectNode() = default;
 
         // Write to disk if missing (not written if different as this could stomp user settings)
         AStackString xcscheme;
-        #if defined( __WINDOWS__ )
-            xcscheme.Format( "%s\\xcshareddata\\xcschemes\\%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
-        #else
-            xcscheme.Format( "%s/xcshareddata/xcschemes/%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
-        #endif
+#if defined( __WINDOWS__ )
+        xcscheme.Format( "%s\\xcshareddata\\xcschemes\\%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
+#else
+        xcscheme.Format( "%s/xcshareddata/xcschemes/%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
+#endif
         if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, xcscheme ) == false )
         {
             return BuildResult::eFailed; // WriteIfMissing will have emitted an error

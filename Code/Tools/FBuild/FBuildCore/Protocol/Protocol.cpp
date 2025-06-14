@@ -24,28 +24,28 @@
 //------------------------------------------------------------------------------
 
 #ifdef PROTOCOL_DEBUG_ENABLED
-    const char * GetProtocolMessageDebugName( Protocol::MessageType msgType )
+const char * GetProtocolMessageDebugName( Protocol::MessageType msgType )
+{
+    const char * const msgNames[] =
     {
-        const char * const msgNames[] =
-        {
-            "",
-            "Connection",
-            "Status",
-            "RequestJob",
-            "NoJobAvailable",
-            "Job",
-            "JobResult",
-            "RequestManifest",
-            "Manifest",
-            "RequestFile",
-            "File",
-            "JobResultCompressed",
-            "ConnectionAck",
-        };
-        static_assert( ( sizeof( msgNames ) / sizeof( const char * ) ) == Protocol::NUM_MESSAGES, "msgNames item count doesn't match NUM_MESSAGES" );
+        "",
+        "Connection",
+        "Status",
+        "RequestJob",
+        "NoJobAvailable",
+        "Job",
+        "JobResult",
+        "RequestManifest",
+        "Manifest",
+        "RequestFile",
+        "File",
+        "JobResultCompressed",
+        "ConnectionAck",
+    };
+    static_assert( ( sizeof( msgNames ) / sizeof( const char * ) ) == Protocol::NUM_MESSAGES, "msgNames item count doesn't match NUM_MESSAGES" );
 
-        return msgNames[ msgType ];
-    }
+    return msgNames[ msgType ];
+}
 #endif
 
 // IMessage

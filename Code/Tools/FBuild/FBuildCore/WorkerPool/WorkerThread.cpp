@@ -57,11 +57,11 @@ WorkerThread::~WorkerThread()
 
     AStackString tmpDirPath;
     VERIFY( FBuild::GetTempDir( tmpDirPath ) );
-    #if defined( __WINDOWS__ )
-        tmpDirPath += ".fbuild.tmp\\";
-    #else
-        tmpDirPath += "_fbuild.tmp/";
-    #endif
+#if defined( __WINDOWS__ )
+    tmpDirPath += ".fbuild.tmp\\";
+#else
+    tmpDirPath += "_fbuild.tmp/";
+#endif
 
     // use the working dir hash to uniquify the path
     const uint32_t workingDirHash = remote ? 0 : FBuild::Get().GetOptions().GetWorkingDirHash();

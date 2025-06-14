@@ -81,11 +81,11 @@ TextFileNode::~TextFileNode() = default;
         textFileContents += string;
 
         // It's not always safe to include a \r, such as when generating a shell script
-        #if defined( __WINDOWS__ )
-            textFileContents += "\r\n";
-        #else
-            textFileContents += '\n';
-        #endif
+#if defined( __WINDOWS__ )
+        textFileContents += "\r\n";
+#else
+        textFileContents += '\n';
+#endif
     }
 
     FileStream stream;

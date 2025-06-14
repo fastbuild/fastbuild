@@ -91,10 +91,10 @@ NodeGraph::NodeGraph( unsigned nodeMapHashBits )
     m_NodeMap = FNEW_ARRAY( Node * [m_NodeMapMaxKey + 1] );
     memset( m_NodeMap, 0, sizeof( Node * ) * ( m_NodeMapMaxKey + 1 ) );
 
-    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
-        // Ensure debug flag doesn't linger between test runs
-        ASSERT( ObjectNode::GetFakeSystemFailureForNextJob() == false );
-    #endif
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+    // Ensure debug flag doesn't linger between test runs
+    ASSERT( ObjectNode::GetFakeSystemFailureForNextJob() == false );
+#endif
 }
 
 // DESTRUCTOR
@@ -1031,9 +1031,9 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     cost += nodeToBuild->GetLastBuildTime();
 
     // False positive "Unannotated fallthrough between switch labels" (VS 2019 v14.29.30037)
-    #if defined( _MSC_VER ) && ( _MSC_VER < 1935 )
-        PRAGMA_DISABLE_PUSH_MSVC( 26819 )
-    #endif
+#if defined( _MSC_VER ) && ( _MSC_VER < 1935 )
+    PRAGMA_DISABLE_PUSH_MSVC( 26819 )
+#endif
 
     switch ( nodeToBuild->GetState() )
     {
@@ -1126,9 +1126,9 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     }
 
     // False positive "Unannotated fallthrough between switch labels" (VS 2019 v14.29.30037)
-    #if defined( _MSC_VER ) && ( _MSC_VER < 1935 )
-        PRAGMA_DISABLE_POP_MSVC // 26819
-    #endif
+#if defined( _MSC_VER ) && ( _MSC_VER < 1935 )
+    PRAGMA_DISABLE_POP_MSVC // 26819
+#endif
 }
 
 // CheckDependencies
@@ -1297,22 +1297,22 @@ const BFFToken * NodeGraph::FindNodeSourceToken( const Node * node ) const
 
     // clean slashes
     char lastChar = NATIVE_SLASH; // consider first item to follow a path (so "..\file.dat" works)
-    #if defined( __WINDOWS__ )
-        // strip leading slashes
-        while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) )
-        {
-            ++src;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // strip leading slashes
+    while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) )
+    {
+        ++src;
+    }
+#endif
 
     const char * lowestRemovableChar = cleanPath.Get();
     if ( isFullPath )
     {
-        #if defined( __WINDOWS__ )
-            lowestRemovableChar += 3; // e.g. "c:\"
-        #else
-            lowestRemovableChar += 1; // e.g. "/"
-        #endif
+#if defined( __WINDOWS__ )
+        lowestRemovableChar += 3; // e.g. "c:\"
+#else
+        lowestRemovableChar += 1; // e.g. "/"
+#endif
     }
 
     while ( src < srcEnd )
@@ -1814,12 +1814,12 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
 // IsCleanPath
 //------------------------------------------------------------------------------
 #if defined( ASSERTS_ENABLED )
-    /*static*/ bool NodeGraph::IsCleanPath( const AString & path )
-    {
-        AStackString<1024> clean;
-        CleanPath( path, clean );
-        return ( path == clean );
-    }
+/*static*/ bool NodeGraph::IsCleanPath( const AString & path )
+{
+    AStackString<1024> clean;
+    CleanPath( path, clean );
+    return ( path == clean );
+}
 #endif
 
 // Migrate

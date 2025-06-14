@@ -128,9 +128,9 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
         // make project path relative
         AStackString solutionRelativePath;
         ProjectGeneratorBase::GetRelativePath( solutionBasePath, projectPath, solutionRelativePath );
-        #if !defined( __WINDOWS__ )
-            solutionRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
-        #endif
+#if !defined( __WINDOWS__ )
+        solutionRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
+#endif
 
         // retrieve projectGuid
         AStackString projectGuid( project->GetProjectGuid() );
@@ -272,9 +272,9 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
                         // make item path relative
                         AStackString itemRelativePath;
                         ProjectGeneratorBase::GetRelativePath( solutionBasePath, item, itemRelativePath );
-                        #if !defined( __WINDOWS__ )
-                            itemRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
-                        #endif
+#if !defined( __WINDOWS__ )
+                        itemRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
+#endif
                         Write( "\t\t%s = %s\r\n", itemRelativePath.Get(), itemRelativePath.Get() );
                     }
                     Write( "\tEndProjectSection\r\n" );

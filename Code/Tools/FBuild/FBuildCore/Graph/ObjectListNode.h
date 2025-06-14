@@ -106,9 +106,9 @@ protected:
 
     // Internal State
     AString m_PrecompiledHeaderName;
-    #if defined( __WINDOWS__ )
-        AString m_PrecompiledHeaderCPPFile;
-    #endif
+#if defined( __WINDOWS__ )
+    AString m_PrecompiledHeaderCPPFile;
+#endif
     AString m_ExtraPDBPath;
     AString m_ExtraASMPath;
     AString m_ExtraSourceDependenciesPath;

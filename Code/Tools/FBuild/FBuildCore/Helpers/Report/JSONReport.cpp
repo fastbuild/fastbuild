@@ -79,12 +79,12 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
     // Full command line
     AStackString commandLineBuffer;
     Env::GetCmdLine( commandLineBuffer );
-    #if defined( __WINDOWS__ )
-        const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
-        const char * commandLine = exeExtension ? ( exeExtension + 5 ) : commandLineBuffer.Get(); // skip .exe + closing quote
-    #else
-        const char * commandLine = commandLineBuffer.Get();
-    #endif
+#if defined( __WINDOWS__ )
+    const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
+    const char * commandLine = exeExtension ? ( exeExtension + 5 ) : commandLineBuffer.Get(); // skip .exe + closing quote
+#else
+    const char * commandLine = commandLineBuffer.Get();
+#endif
 
     AStackString programName( commandLine );
     JSON::Escape( programName );

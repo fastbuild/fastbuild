@@ -251,12 +251,12 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
     // Full command line
     AStackString commandLineBuffer;
     Env::GetCmdLine( commandLineBuffer );
-    #if defined( __WINDOWS__ )
-        const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
-        const char * commandLine = exeExtension ? ( exeExtension + 5 ) : commandLineBuffer.Get(); // skip .exe + closing quote
-    #else
-        const char * commandLine = commandLineBuffer.Get();
-    #endif
+#if defined( __WINDOWS__ )
+    const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
+    const char * commandLine = exeExtension ? ( exeExtension + 5 ) : commandLineBuffer.Get(); // skip .exe + closing quote
+#else
+    const char * commandLine = commandLineBuffer.Get();
+#endif
     Write( "<tr><td width=80>Cmd Line Options</td><td>%s</td></tr>", commandLine );
 
     // Target

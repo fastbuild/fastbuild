@@ -25,12 +25,12 @@
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     // TODO:LINUX TODO:MAC Clean up this _itoa_s mess
-    void _itoa_s( int value, char * buffer, int bufferSize, int base )
-    {
-        ASSERT( base == 10 );
-        (void)base;
-        snprintf( buffer, static_cast<size_t>( bufferSize ), "%i", value );
-    }
+void _itoa_s( int value, char * buffer, int bufferSize, int base )
+{
+    ASSERT( base == 10 );
+    (void)base;
+    snprintf( buffer, static_cast<size_t>( bufferSize ), "%i", value );
+}
 #endif
 
 // Static Data
@@ -381,11 +381,11 @@ static FileStream * g_MonitorFileStream = nullptr;
     tmp += message;
 
     // output to debugger if present
-    #ifdef DEBUG
-        #ifdef __WINDOWS__
-            OutputDebugStringA( message );
-        #endif
+#ifdef DEBUG
+    #ifdef __WINDOWS__
+    OutputDebugStringA( message );
     #endif
+#endif
 
     tmp += m_ProgressText;
 

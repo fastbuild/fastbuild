@@ -70,7 +70,7 @@ namespace Protocol
 }
 
 #ifdef PROTOCOL_DEBUG_ENABLED
-    const char * GetProtocolMessageDebugName( Protocol::MessageType msgType );
+const char * GetProtocolMessageDebugName( Protocol::MessageType msgType );
 #endif
 
 namespace Protocol

@@ -139,9 +139,9 @@ public:
 
     static void CleanPath( AString & name, bool makeFullPath = true );
     static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
-    #if defined( ASSERTS_ENABLED )
-        static bool IsCleanPath( const AString & path );
-    #endif
+#if defined( ASSERTS_ENABLED )
+    static bool IsCleanPath( const AString & path );
+#endif
 
     static void UpdateBuildStatus( const Node * node,
                                    uint32_t & nodesBuiltTime,

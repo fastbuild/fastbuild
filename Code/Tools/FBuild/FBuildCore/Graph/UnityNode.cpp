@@ -341,9 +341,9 @@ UnityNode::~UnityNode()
     const float numFilesPerUnity = (float)numFiles / (float)m_NumUnityFilesToCreate;
     float remainingInThisUnity( 0.0 );
 
-    #if defined( ASSERTS_ENABLED )
-        uint32_t numFilesWritten( 0 );
-    #endif
+#if defined( ASSERTS_ENABLED )
+    uint32_t numFilesWritten( 0 );
+#endif
 
     size_t index = 0;
 
@@ -435,9 +435,9 @@ UnityNode::~UnityNode()
 
             // count the file, whether we wrote it or not, to keep unity files stable
             index++;
-            #if defined( ASSERTS_ENABLED )
-                numFilesWritten++;
-            #endif
+#if defined( ASSERTS_ENABLED )
+            numFilesWritten++;
+#endif
         }
 
         // write allocation of includes for this unity file
@@ -478,14 +478,14 @@ UnityNode::~UnityNode()
             // write pragma showing cpp file being compiled to assist resolving compilation errors
             AStackString buffer( m_UseRelativePaths_Experimental ? relativePath : file.GetName() );
             buffer.Replace( BACK_SLASH, FORWARD_SLASH ); // avoid problems with slashes in generated code
-            #if defined( __LINUX__ )
-                output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
-            #else
-                if ( isolateThisFile )
-                {
-                    output += "//";
-                }
-            #endif
+#if defined( __LINUX__ )
+            output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
+#else
+            if ( isolateThisFile )
+            {
+                output += "//";
+            }
+#endif
             output += "#pragma message( \"";
             output += buffer;
             output += "\" )\r\n";
@@ -688,11 +688,11 @@ bool UnityNode::GetFiles( Array<UnityFileAndOrigin> & files )
                 m_FilesInfo.Append( fi ); // keep ptr to delete later
                 fi->m_Name = file;
                 fi->m_LastWriteTime = 0;
-                #if defined( __WINDOWS__ )
-                    fi->m_Attributes = 0xFFFFFFFF; // FILE_ATTRIBUTE_READONLY set
-                #else
-                    fi->m_Attributes = 0; // No writable bits set
-                #endif
+#if defined( __WINDOWS__ )
+                fi->m_Attributes = 0xFFFFFFFF; // FILE_ATTRIBUTE_READONLY set
+#else
+                fi->m_Attributes = 0; // No writable bits set
+#endif
                 fi->m_Size = 0;
                 files.EmplaceBack( fi, nullptr );
             }

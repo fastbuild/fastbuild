@@ -25,21 +25,21 @@
 //------------------------------------------------------------------------------
 /*explicit*/ CachePlugin::CachePlugin( const AString & dllName )
 {
-    #if defined( __WINDOWS__ )
-        m_DLL = ::LoadLibrary( dllName.Get() );
-        if ( !m_DLL )
-        {
-            FLOG_WARN( "Cache plugin load failed. Error: %s Plugin: %s", LAST_ERROR_STR, dllName.Get() );
-            return;
-        }
-    #else
-        m_DLL = dlopen( dllName.Get(), RTLD_NOW );
-        if ( !m_DLL )
-        {
-            FLOG_WARN( "Cache plugin load failed. Error: %s '%s' Plugin: %s", LAST_ERROR_STR, dlerror(), dllName.Get() );
-            return;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    m_DLL = ::LoadLibrary( dllName.Get() );
+    if ( !m_DLL )
+    {
+        FLOG_WARN( "Cache plugin load failed. Error: %s Plugin: %s", LAST_ERROR_STR, dllName.Get() );
+        return;
+    }
+#else
+    m_DLL = dlopen( dllName.Get(), RTLD_NOW );
+    if ( !m_DLL )
+    {
+        FLOG_WARN( "Cache plugin load failed. Error: %s '%s' Plugin: %s", LAST_ERROR_STR, dlerror(), dllName.Get() );
+        return;
+    }
+#endif
 
     // Failure to find a required function will mark us as invalid
     m_Valid = true;
@@ -62,25 +62,25 @@
 //------------------------------------------------------------------------------
 void * CachePlugin::GetFunction( const char * name, const char * mangledName, bool optional )
 {
-    #if defined( __WINDOWS__ )
-        ASSERT( m_DLL );
+#if defined( __WINDOWS__ )
+    ASSERT( m_DLL );
 
-        // Try the unmangled name first
+    // Try the unmangled name first
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wmicrosoft-cast" )
+    void * func = ::GetProcAddress( (HMODULE)m_DLL, name );
+    PRAGMA_DISABLE_POP_CLANG
+
+    // If that fails, check for the mangled name for backwards compat with existing plugins
+    if ( !func && mangledName )
+    {
         PRAGMA_DISABLE_PUSH_CLANG( "-Wmicrosoft-cast" )
-        void * func = ::GetProcAddress( (HMODULE)m_DLL, name );
+        func = ::GetProcAddress( (HMODULE)m_DLL, mangledName );
         PRAGMA_DISABLE_POP_CLANG
-
-        // If that fails, check for the mangled name for backwards compat with existing plugins
-        if ( !func && mangledName )
-        {
-            PRAGMA_DISABLE_PUSH_CLANG( "-Wmicrosoft-cast" )
-            func = ::GetProcAddress( (HMODULE)m_DLL, mangledName );
-            PRAGMA_DISABLE_POP_CLANG
-        }
-    #else
-        (void)mangledName; // Only used on Windows for backwards copatibility
-        void * func = dlsym( m_DLL, name );
-    #endif
+    }
+#else
+    (void)mangledName; // Only used on Windows for backwards copatibility
+    void * func = dlsym( m_DLL, name );
+#endif
 
     if ( !func && !optional )
     {
@@ -122,11 +122,11 @@ void * CachePlugin::GetFunction( const char * name, const char * mangledName, bo
 
     if ( m_DLL )
     {
-        #if defined( __WINDOWS__ )
-            ::FreeLibrary( (HMODULE)m_DLL );
-        #else
-            dlclose( m_DLL );
-        #endif
+#if defined( __WINDOWS__ )
+        ::FreeLibrary( (HMODULE)m_DLL );
+#else
+        dlclose( m_DLL );
+#endif
     }
 }
 

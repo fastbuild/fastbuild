@@ -439,18 +439,18 @@ ArgsResponseFileMode LibraryNode::GetResponseFileMode() const
     }
 
     // Detect a librarian that supports response file args?
-    #if defined( __WINDOWS__ )
-        // Generally only windows applications support response files (to overcome Windows command line limits)
-        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
-        // probably want this for other platforms as well though.
-        if ( GetFlag( LIB_FLAG_LIB ) ||
-             GetFlag( LIB_FLAG_AR ) ||
-             GetFlag( LIB_FLAG_ORBIS_AR ) ||
-             GetFlag( LIB_FLAG_GREENHILLS_AX ) )
-        {
-            return ArgsResponseFileMode::IF_NEEDED;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // Generally only windows applications support response files (to overcome Windows command line limits)
+    // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+    // probably want this for other platforms as well though.
+    if ( GetFlag( LIB_FLAG_LIB ) ||
+         GetFlag( LIB_FLAG_AR ) ||
+         GetFlag( LIB_FLAG_ORBIS_AR ) ||
+         GetFlag( LIB_FLAG_GREENHILLS_AX ) )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+#endif
 
     // Cannot use response files
     return ArgsResponseFileMode::NEVER;

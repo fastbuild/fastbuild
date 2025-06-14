@@ -369,9 +369,9 @@ void CIncludeParser::SwapIncludes( Array<AString> & includes )
 //------------------------------------------------------------------------------
 void CIncludeParser::AddInclude( const char * begin, const char * end )
 {
-    #if defined( ASSERTS_ENABLED )
-        m_NonUniqueCount++;
-    #endif
+#if defined( ASSERTS_ENABLED )
+    m_NonUniqueCount++;
+#endif
 
     // quick check
     const uint32_t crc1 = xxHash::Calc32( begin, (size_t)( end - begin ) );
@@ -390,15 +390,15 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
     AStackString<256> include( begin, end );
     AStackString<256> cleanInclude;
     NodeGraph::CleanPath( include, cleanInclude );
-    #if defined( __WINDOWS__ ) || defined( __OSX__ )
-        // Windows and OSX are case-insensitive
-        AStackString lowerCopy( cleanInclude );
-        lowerCopy.ToLower();
-        const uint32_t crc2 = xxHash::Calc32( lowerCopy );
-    #else
-        // Linux is case-sensitive
-        const uint32_t crc2 = xxHash::Calc32( cleanInclude );
-    #endif
+#if defined( __WINDOWS__ ) || defined( __OSX__ )
+    // Windows and OSX are case-insensitive
+    AStackString lowerCopy( cleanInclude );
+    lowerCopy.ToLower();
+    const uint32_t crc2 = xxHash::Calc32( lowerCopy );
+#else
+    // Linux is case-sensitive
+    const uint32_t crc2 = xxHash::Calc32( cleanInclude );
+#endif
     if ( crc2 == m_LastCRC2 )
     {
         return;

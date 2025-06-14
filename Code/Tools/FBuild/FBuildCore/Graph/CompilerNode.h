@@ -34,9 +34,9 @@ public:
     bool CanBeDistributed() const { return m_AllowDistribution; }
     bool CanUseResponseFile() const { return m_AllowResponseFile; }
     bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
-    #if defined( __WINDOWS__ )
-        bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
-    #endif
+#if defined( __WINDOWS__ )
+    bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
+#endif
     bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
     bool IsClangGCCUpdateXLanguageArgEnabled() const { return m_ClangGCCUpdateXLanguageArg; }
     bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }

@@ -64,9 +64,9 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
 
     // Internal State
     REFLECT( m_PrecompiledHeaderName,               "PrecompiledHeaderName",            MetaHidden() )
-    #if defined( __WINDOWS__ )
-        REFLECT( m_PrecompiledHeaderCPPFile,            "PrecompiledHeaderCPPFile",         MetaHidden() )
-    #endif
+#if defined( __WINDOWS__ )
+    REFLECT( m_PrecompiledHeaderCPPFile,            "PrecompiledHeaderCPPFile",         MetaHidden() )
+#endif
     REFLECT( m_ExtraPDBPath,                        "ExtraPDBPath",                     MetaHidden() )
     REFLECT( m_ExtraASMPath,                        "ExtraASMPath",                     MetaHidden() )
     REFLECT( m_ExtraSourceDependenciesPath,         "ExtraSourceDependenciesPath",      MetaHidden() )
@@ -253,13 +253,13 @@ ObjectListNode::ObjectListNode()
 
         // Cache the CPP file associated with the PCH for MSVC (and Clang in MSVC mode)
         // so that it can be excluded from normal compilation
-        #if defined( __WINDOWS__ )
-            if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) ||
-                 ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CLANG_CL ) )
-            {
-                m_PrecompiledHeaderCPPFile = precompiledHeader->GetPrecompiledHeaderCPPFile()->GetName();
-            }
-        #endif
+#if defined( __WINDOWS__ )
+        if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) ||
+             ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CLANG_CL ) )
+        {
+            m_PrecompiledHeaderCPPFile = precompiledHeader->GetPrecompiledHeaderCPPFile()->GetName();
+        }
+#endif
     }
 
     // .CompilerInputUnity
@@ -391,12 +391,12 @@ ObjectListNode::~ObjectListNode() = default;
 
                 // ignore the precompiled header as a convenience for the user
                 // so they don't have to exclude it explicitly
-                #if defined( __WINDOWS__ )
-                    if ( n->GetName() == m_PrecompiledHeaderCPPFile )
-                    {
-                        continue;
-                    }
-                #endif
+#if defined( __WINDOWS__ )
+                if ( n->GetName() == m_PrecompiledHeaderCPPFile )
+                {
+                    continue;
+                }
+#endif
 
                 // create the object that will compile the above file
                 if ( CreateDynamicObjectNode( nodeGraph, n->GetName(), dln->GetPath() ) == false )
@@ -827,11 +827,11 @@ const char * ObjectListNode::GetObjExtension() const
 {
     if ( m_CompilerOutputExtension.IsEmpty() )
     {
-        #if defined( __WINDOWS__ )
-            return ".obj";
-        #else
-            return ".o";
-        #endif
+#if defined( __WINDOWS__ )
+        return ".obj";
+#else
+        return ".o";
+#endif
     }
     return m_CompilerOutputExtension.Get();
 }

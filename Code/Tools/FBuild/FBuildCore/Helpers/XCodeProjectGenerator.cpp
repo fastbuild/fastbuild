@@ -641,9 +641,9 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                 }
             }
         }
-        #if defined( __WINDOWS__ )
-            debugWorkingDir.Replace( NATIVE_SLASH, OTHER_SLASH ); // Convert to OSX style
-        #endif
+#if defined( __WINDOWS__ )
+        debugWorkingDir.Replace( NATIVE_SLASH, OTHER_SLASH ); // Convert to OSX style
+#endif
 
         Write( "\t\t%s /* %s */ = {\n"
                "\t\t\tisa = XCBuildConfiguration;\n"
@@ -761,9 +761,9 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                     AStackString fullIncludePath;
                     NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path - TODO:C would be better to be project relative
                     include = fullIncludePath;
-                    #if defined( __WINDOWS__ )
-                        include.Replace( '\\', '/' ); // Convert to OSX style slashes
-                    #endif
+#if defined( __WINDOWS__ )
+                    include.Replace( '\\', '/' ); // Convert to OSX style slashes
+#endif
                 }
                 WriteArray( 4, "USER_HEADER_SEARCH_PATHS", includePaths );
             }

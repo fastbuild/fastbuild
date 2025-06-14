@@ -559,9 +559,9 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
 void Server::CheckWaitingJobs( const ToolManifest * manifest )
 {
     // queue for start any jobs that may now be ready
-    #ifdef ASSERTS_ENABLED
-        bool atLeastOneJobStarted = false;
-    #endif
+#ifdef ASSERTS_ENABLED
+    bool atLeastOneJobStarted = false;
+#endif
 
     {
         MutexHolder mhC( m_ClientListMutex );
@@ -582,9 +582,9 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
                     cs->m_WaitingJobs.EraseIndex( (size_t)i );
                     JobQueueRemote::Get().QueueJob( job );
                     PROTOCOL_DEBUG( "Server: Job %x can now be started\n", job );
-                    #ifdef ASSERTS_ENABLED
-                        atLeastOneJobStarted = true;
-                    #endif
+#ifdef ASSERTS_ENABLED
+                    atLeastOneJobStarted = true;
+#endif
                 }
             }
         }
@@ -778,21 +778,21 @@ void Server::FinalizeCompletedJobs()
 //------------------------------------------------------------------------------
 void Server::TouchToolchains()
 {
-    #if defined( __OSX__ ) || defined( __LINUX__ )
-        if ( m_TouchToolchainTimer.GetElapsed() < SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS )
-        {
-            return;
-        }
-        m_TouchToolchainTimer.Start();
+#if defined( __OSX__ ) || defined( __LINUX__ )
+    if ( m_TouchToolchainTimer.GetElapsed() < SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS )
+    {
+        return;
+    }
+    m_TouchToolchainTimer.Start();
 
-        MutexHolder manifestMH( m_ToolManifestsMutex );
-        for ( const ToolManifest * toolManifest : m_Tools )
-        {
-            toolManifest->TouchFiles();
-        }
-    #else
-        // TODO:C we could update Windows timestamps too
-    #endif
+    MutexHolder manifestMH( m_ToolManifestsMutex );
+    for ( const ToolManifest * toolManifest : m_Tools )
+    {
+        toolManifest->TouchFiles();
+    }
+#else
+    // TODO:C we could update Windows timestamps too
+#endif
 }
 
 // RequestMissingFiles

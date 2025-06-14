@@ -67,13 +67,13 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
 {
-    #ifdef DEBUG_CRT_MEMORY_USAGE
-        _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF |
-                        _CRTDBG_CHECK_ALWAYS_DF | //_CRTDBG_CHECK_EVERY_16_DF |
-                        _CRTDBG_CHECK_CRT_DF |
-                        _CRTDBG_DELAY_FREE_MEM_DF |
-                        _CRTDBG_LEAK_CHECK_DF );
-    #endif
+#ifdef DEBUG_CRT_MEMORY_USAGE
+    _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF |
+                    _CRTDBG_CHECK_ALWAYS_DF | //_CRTDBG_CHECK_EVERY_16_DF |
+                    _CRTDBG_CHECK_CRT_DF |
+                    _CRTDBG_DELAY_FREE_MEM_DF |
+                    _CRTDBG_LEAK_CHECK_DF );
+#endif
 
     // store all user provided options
     m_Options = options;
@@ -169,13 +169,13 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             {
                 m_DependencyGraphFile.SetLength( m_DependencyGraphFile.GetLength() - 4 );
             }
-            #if defined( __WINDOWS__ )
-                m_DependencyGraphFile += ".windows.fdb";
-            #elif defined( __OSX__ )
-                m_DependencyGraphFile += ".osx.fdb";
-            #elif defined( __LINUX__ )
-                m_DependencyGraphFile += ".linux.fdb";
-            #endif
+#if defined( __WINDOWS__ )
+            m_DependencyGraphFile += ".windows.fdb";
+#elif defined( __OSX__ )
+            m_DependencyGraphFile += ".osx.fdb";
+#elif defined( __LINUX__ )
+            m_DependencyGraphFile += ".linux.fdb";
+#endif
         }
         else
         {
@@ -860,28 +860,28 @@ bool FBuild::GenerateCompilationDatabase( const Array<AString> & targets ) const
 //------------------------------------------------------------------------------
 /*static*/ bool FBuild::GetTempDir( AString & outTempDir )
 {
-    #if defined( __WINDOWS__ ) || defined( __LINUX__ ) || defined( __APPLE__ )
-        // Check for override environment variable
-        if ( Env::GetEnvVariable( "FASTBUILD_TEMP_PATH", outTempDir ) )
+#if defined( __WINDOWS__ ) || defined( __LINUX__ ) || defined( __APPLE__ )
+    // Check for override environment variable
+    if ( Env::GetEnvVariable( "FASTBUILD_TEMP_PATH", outTempDir ) )
+    {
+        // Ensure env var was slash terminated
+    #if defined( __WINDOWS__ )
+        const bool slashTerminated = ( outTempDir.EndsWith( '/' ) || outTempDir.EndsWith( '\\' ) );
+        if ( !slashTerminated )
         {
-            // Ensure env var was slash terminated
-            #if defined( __WINDOWS__ )
-                const bool slashTerminated = ( outTempDir.EndsWith( '/' ) || outTempDir.EndsWith( '\\' ) );
-                if ( !slashTerminated )
-                {
-                    outTempDir += '\\';
-                }
-            #else
-                const bool slashTerminated = outTempDir.EndsWith( '/' );
-                if ( !slashTerminated )
-                {
-                    outTempDir += '/';
-                }
-            #endif
-
-            return true;
+            outTempDir += '\\';
+        }
+    #else
+        const bool slashTerminated = outTempDir.EndsWith( '/' );
+        if ( !slashTerminated )
+        {
+            outTempDir += '/';
         }
     #endif
+
+        return true;
+    }
+#endif
 
     // Use regular system temp path
     return FileIO::GetTempDir( outTempDir );

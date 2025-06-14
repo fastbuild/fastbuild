@@ -148,11 +148,11 @@ Job * JobSubQueue::RemoveJob()
 //------------------------------------------------------------------------------
 JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool )
     : m_NumLocalJobsActive( 0 )
-    #if defined( __WINDOWS__ )
-        , m_MainThreadSemaphore( 1 ) // On Windows, take advantage of signalling limit
-    #else
-        , m_MainThreadSemaphore()
-    #endif
+#if defined( __WINDOWS__ )
+    , m_MainThreadSemaphore( 1 ) // On Windows, take advantage of signalling limit
+#else
+    , m_MainThreadSemaphore()
+#endif
 {
     PROFILE_FUNCTION;
 
@@ -929,15 +929,16 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
     }
     else
     {
-        #ifdef PROFILING_ENABLED
-            const char * profilingTag = node->GetTypeName();
-            if ( node->GetType() == Node::OBJECT_NODE )
-            {
-                const ObjectNode * on = (ObjectNode *)node;
-                profilingTag = on->IsCreatingPCH() ? "PCH" : on->IsUsingPCH() ? "Obj (+PCH)" : profilingTag;
-            }
-            PROFILE_SECTION( profilingTag );
-        #endif
+#ifdef PROFILING_ENABLED
+        const char * profilingTag = node->GetTypeName();
+        if ( node->GetType() == Node::OBJECT_NODE )
+        {
+            const ObjectNode * on = (ObjectNode *)node;
+            profilingTag = on->IsCreatingPCH() ? "PCH" : on->IsUsingPCH() ? "Obj (+PCH)"
+                                                                          : profilingTag;
+        }
+        PROFILE_SECTION( profilingTag );
+#endif
 
         BuildProfilerScope profileScope( *job, WorkerThread::GetThreadIndex(), node->GetTypeName() );
         result = node->DoBuild( job );

@@ -351,9 +351,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 for ( AString & include : includePaths )
                 {
                     ProjectGeneratorBase::GetRelativePath( projectBasePath, include, include );
-                    #if !defined( __WINDOWS__ )
-                        include.Replace( '/', '\\' ); // Convert to Windows-style slashes
-                    #endif
+#if !defined( __WINDOWS__ )
+                    include.Replace( '/', '\\' ); // Convert to Windows-style slashes
+#endif
                 }
                 AStackString includePathsStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, nullptr, ";" );
@@ -368,9 +368,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 for ( AString & forceInclude : forceIncludes )
                 {
                     ProjectGeneratorBase::GetRelativePath( projectBasePath, forceInclude, forceInclude );
-                    #if !defined( __WINDOWS__ )
-                        forceInclude.Replace( '/', '\\' ); // Convert to Windows-style slashes
-                    #endif
+#if !defined( __WINDOWS__ )
+                    forceInclude.Replace( '/', '\\' ); // Convert to Windows-style slashes
+#endif
                 }
                 AStackString forceIncludePathsStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( forceIncludes, forceIncludePathsStr, nullptr, ";" );
@@ -643,12 +643,12 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
     }
 
     // Base Paths are retained as absolute paths
-    #if !defined( __WINDOWS__ )
-        for ( AString & basePath : m_BasePaths )
-        {
-            basePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
-        }
-    #endif
+#if !defined( __WINDOWS__ )
+    for ( AString & basePath : m_BasePaths )
+    {
+        basePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+    }
+#endif
 
     // Files
     if ( m_Files.IsEmpty() == false )
@@ -659,9 +659,9 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         for ( VSProjectFilePair & filePathPair : m_Files )
         {
             ProjectGeneratorBase::GetRelativePath( projectBasePath, filePathPair.m_AbsolutePath, filePathPair.m_ProjectRelativePath );
-            #if !defined( __WINDOWS__ )
-                filePathPair.m_ProjectRelativePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
-            #endif
+#if !defined( __WINDOWS__ )
+            filePathPair.m_ProjectRelativePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+#endif
             filePointers.Append( &filePathPair );
         }
 

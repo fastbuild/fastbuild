@@ -115,9 +115,9 @@ public:
 
     static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
 
-    #if defined( __OSX__ ) || defined( __LINUX__ )
-        void            TouchFiles() const;
-    #endif
+#if defined( __OSX__ ) || defined( __LINUX__ )
+    void TouchFiles() const;
+#endif
 
 private:
     mutable Mutex m_Mutex;
