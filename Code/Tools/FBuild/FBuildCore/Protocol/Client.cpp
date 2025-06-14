@@ -659,15 +659,33 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         const char * resultStr = "Compile";
         if ( systemError )
         {
-            if ( raceWon )       { resultStr = "(System Failure) (Race Won) Compile"; }
-            else if ( raceLost ) { resultStr = "(System Failure) (Race Lost) Compile"; }
-            else                 { resultStr = "(System Failure) Compile"; }
+            if ( raceWon )
+            {
+                resultStr = "(System Failure) (Race Won) Compile";
+            }
+            else if ( raceLost )
+            {
+                resultStr = "(System Failure) (Race Lost) Compile";
+            }
+            else
+            {
+                resultStr = "(System Failure) Compile";
+            }
         }
         else if ( !result )
         {
-            if ( raceWon )       { resultStr = "(Failure) (Race Won) Compile"; }
-            else if ( raceLost ) { resultStr = "(Failure) (Race Lost) Compile"; }
-            else                 { resultStr = "(Failure) Compile"; }
+            if ( raceWon )
+            {
+                resultStr = "(Failure) (Race Won) Compile";
+            }
+            else if ( raceLost )
+            {
+                resultStr = "(Failure) (Race Lost) Compile";
+            }
+            else
+            {
+                resultStr = "(Failure) Compile";
+            }
         }
 
         // Record information about worker
@@ -688,15 +706,33 @@ void Client::ProcessJobResultCommon( const ConnectionInfo * connection, bool isC
         const char * resultStr = "";
         if ( systemError )
         {
-            if ( raceWon )       { resultStr = " (System Failure) (Race Won)"; }
-            else if ( raceLost ) { resultStr = " (System Failure) (Race Lost)"; }
-            else                 { resultStr = " (System Failure)"; }
+            if ( raceWon )
+            {
+                resultStr = " (System Failure) (Race Won)";
+            }
+            else if ( raceLost )
+            {
+                resultStr = " (System Failure) (Race Lost)";
+            }
+            else
+            {
+                resultStr = " (System Failure)";
+            }
         }
         else if ( !result )
         {
-            if ( raceWon )       { resultStr = " (Failure) (Race Won)"; }
-            else if ( raceLost ) { resultStr = " (Failure) (Race Lost)"; }
-            else                 { resultStr = " (Failure)"; }
+            if ( raceWon )
+            {
+                resultStr = " (Failure) (Race Won)";
+            }
+            else if ( raceLost )
+            {
+                resultStr = " (Failure) (Race Lost)";
+            }
+            else
+            {
+                resultStr = " (Failure)";
+            }
         }
         DIST_INFO( "Got Result: %s - %s%s\n",
                    ss->m_RemoteName.Get(),

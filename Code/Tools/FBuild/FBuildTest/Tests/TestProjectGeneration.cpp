@@ -310,11 +310,21 @@ void TestProjectGeneration::TestFunction_Speed() const
     Array<VSProjectConfig> configs;
     configs.SetCapacity( 6 );
     VSProjectConfig cfg;
-    cfg.m_Platform = "Win32";   cfg.m_Config = "Debug";     configs.Append( cfg );
-    cfg.m_Platform = "Win32";   cfg.m_Config = "Profile";   configs.Append( cfg );
-    cfg.m_Platform = "Win32";   cfg.m_Config = "Release";   configs.Append( cfg );
-    cfg.m_Platform = "x64";     cfg.m_Config = "Profile";   configs.Append( cfg );
-    cfg.m_Platform = "x64";     cfg.m_Config = "Release";   configs.Append( cfg );
+    cfg.m_Platform = "Win32";
+    cfg.m_Config = "Debug";
+    configs.Append( cfg );
+    cfg.m_Platform = "Win32";
+    cfg.m_Config = "Profile";
+    configs.Append( cfg );
+    cfg.m_Platform = "Win32";
+    cfg.m_Config = "Release";
+    configs.Append( cfg );
+    cfg.m_Platform = "x64";
+    cfg.m_Config = "Profile";
+    configs.Append( cfg );
+    cfg.m_Platform = "x64";
+    cfg.m_Config = "Release";
+    configs.Append( cfg );
 
     // Generate a large list of files
     Random r( 1234567 ); // Deterministic seed
@@ -633,22 +643,70 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
         // Defines
         if ( inDefineSection )
         {
-            if ( token.Find( "INTELLISENSE_DEFINE" ) )                      { definesOk[ 0 ] = true; }
-            if ( token.Find( "INTELLISENSE_SPACE_DEFINE" ) )                { definesOk[ 1 ] = true; }
-            if ( token.Find( "INTELLISENSE_SLASH_DEFINE" ) )                { definesOk[ 2 ] = true; }
-            if ( token.Find( "INTELLISENSE_SLASH_SPACE_DEFINE" ) )          { definesOk[ 3 ] = true; }
-            if ( token.Find( "INTELLISENSE_QUOTED_DEFINE" ) )               { definesOk[ 4 ] = true; }
-            if ( token.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE" ) )         { definesOk[ 5 ] = true; }
-            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE" ) )         { definesOk[ 6 ] = true; }
-            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE" ) )   { definesOk[ 7 ] = true; }
-            if ( token.Find( "INTELLISENSE_QUOTED_DEFINE2" ) )              { definesOk[ 8 ] = true; }
-            if ( token.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE2" ) )        { definesOk[ 9 ] = true; }
-            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE2" ) )        { definesOk[ 10 ] = true; }
-            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE2" ) )  { definesOk[ 11 ] = true; }
-            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_DEFINE\"" ) ) { definesOk[ 12 ] = true; }
-            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SPACE_DEFINE\"" ) ) { definesOk[ 13 ] = true; }
-            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SLASH_DEFINE\"" ) ) { definesOk[ 14 ] = true; }
-            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SLASH_SPACE_DEFINE\"" ) ) { definesOk[ 15 ] = true; }
+            if ( token.Find( "INTELLISENSE_DEFINE" ) )
+            {
+                definesOk[ 0 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_SPACE_DEFINE" ) )
+            {
+                definesOk[ 1 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_SLASH_DEFINE" ) )
+            {
+                definesOk[ 2 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_SLASH_SPACE_DEFINE" ) )
+            {
+                definesOk[ 3 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_QUOTED_DEFINE" ) )
+            {
+                definesOk[ 4 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE" ) )
+            {
+                definesOk[ 5 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE" ) )
+            {
+                definesOk[ 6 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE" ) )
+            {
+                definesOk[ 7 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_QUOTED_DEFINE2" ) )
+            {
+                definesOk[ 8 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_QUOTED_SPACE_DEFINE2" ) )
+            {
+                definesOk[ 9 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_DEFINE2" ) )
+            {
+                definesOk[ 10 ] = true;
+            }
+            if ( token.Find( "INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE2" ) )
+            {
+                definesOk[ 11 ] = true;
+            }
+            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_DEFINE\"" ) )
+            {
+                definesOk[ 12 ] = true;
+            }
+            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SPACE_DEFINE\"" ) )
+            {
+                definesOk[ 13 ] = true;
+            }
+            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SLASH_DEFINE\"" ) )
+            {
+                definesOk[ 14 ] = true;
+            }
+            if ( token.Find( "\"INTELLISENSE_\\\"ESCAPED QUOTED WITH SPACES\\\"_SLASH_SPACE_DEFINE\"" ) )
+            {
+                definesOk[ 15 ] = true;
+            }
             continue;
         }
 

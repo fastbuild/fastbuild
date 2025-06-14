@@ -241,8 +241,8 @@ void TestArgs::CheckParsing( const char * commandLine,
 
     // Generate expected results
     AStackString expected;
-    const size_t numArgsExpected = static_cast<size_t>( arg1 ? 1 : 0 )
-                                 + static_cast<size_t>( arg2 ? 1 : 0 );
+    const size_t numArgsExpected = ( arg1 ? 1u : 0u ) +
+                                   ( arg2 ? 1u : 0u );
     expected.Format( "%zu\n", numArgsExpected );
     if ( arg1 )
     {

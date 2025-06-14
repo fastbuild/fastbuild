@@ -85,8 +85,8 @@ bool ResponseFile::CreateInternal( const AString & contents )
     WorkerThread::CreateTempFilePath( "args.rsp", m_ResponseFilePath );
 
     // write file to disk
-    const uint32_t flags = FileStream::WRITE_ONLY       // we only want to write
-                         | FileStream::TEMP;            // avoid flush to disk if possible
+    const uint32_t flags = FileStream::WRITE_ONLY | // we only want to write
+                           FileStream::TEMP; // avoid flush to disk if possible
     if ( !m_File.Open( m_ResponseFilePath.Get(), flags ) )
     {
         FileIO::WorkAroundForWindowsFilePermissionProblem( m_ResponseFilePath, flags, 5 ); // 5s max wait

@@ -1795,7 +1795,8 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     }
     if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
-        output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get() : "";
+        output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get()
+                                                                                                               : "";
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';

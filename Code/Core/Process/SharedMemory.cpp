@@ -18,43 +18,43 @@
 #if defined( __LINUX__ ) || defined( __APPLE__ )
 namespace
 {
-bool PosixMapMemory( const char * name,
-                     size_t length,
-                     bool create,
-                     int * mapFile,
-                     void ** memory,
-                     AString & portableName )
-{
-    ASSERT( *mapFile == -1 );
-    ASSERT( *memory == nullptr );
-
-    // From man shm_open :
-    // For portable use, a shared memory object should be identified by a
-    // name of the form /somename; that is, a null-terminated string of up
-    // to NAME_MAX (i.e., 255) characters consisting  of an initial slash,
-    // followed by one or more characters, none of which are slashes.
-    // For OSX compatibility, name must also be shorter than SHM_NAME_MAX (32)
-    portableName = "/";
-    portableName += name;
-    ASSERT( portableName.FindLast( '/' ) == portableName.Get() );
-    ASSERT( portableName.GetLength() <= 32 ); // from SHM_NAME_MAX on OSX
-
-    *mapFile = shm_open( portableName.Get(),
-                         O_RDWR | ( create ? O_CREAT : 0 ),
-                         S_IWUSR | S_IRUSR );
-    if ( *mapFile == -1 )
+    bool PosixMapMemory( const char * name,
+                         size_t length,
+                         bool create,
+                         int * mapFile,
+                         void ** memory,
+                         AString & portableName )
     {
-        return false;
-    }
+        ASSERT( *mapFile == -1 );
+        ASSERT( *memory == nullptr );
 
-    if ( create )
-    {
-        VERIFY( ftruncate( *mapFile, static_cast<off_t>( length ) ) == 0 );
-    }
+        // From man shm_open :
+        // For portable use, a shared memory object should be identified by a
+        // name of the form /somename; that is, a null-terminated string of up
+        // to NAME_MAX (i.e., 255) characters consisting  of an initial slash,
+        // followed by one or more characters, none of which are slashes.
+        // For OSX compatibility, name must also be shorter than SHM_NAME_MAX (32)
+        portableName = "/";
+        portableName += name;
+        ASSERT( portableName.FindLast( '/' ) == portableName.Get() );
+        ASSERT( portableName.GetLength() <= 32 ); // from SHM_NAME_MAX on OSX
 
-    *memory = mmap( nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, *mapFile, 0 );
-    return ( *memory != MAP_FAILED );
-}
+        *mapFile = shm_open( portableName.Get(),
+                             O_RDWR | ( create ? O_CREAT : 0 ),
+                             S_IWUSR | S_IRUSR );
+        if ( *mapFile == -1 )
+        {
+            return false;
+        }
+
+        if ( create )
+        {
+            VERIFY( ftruncate( *mapFile, static_cast<off_t>( length ) ) == 0 );
+        }
+
+        *memory = mmap( nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, *mapFile, 0 );
+        return ( *memory != MAP_FAILED );
+    }
 }
 #endif
 
