@@ -26,6 +26,7 @@ jobs:
 
     name: Windows (${{ matrix.cfg }}, VS ${{ matrix.vs }})
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.can-fail || false }}
 
     steps:
       - uses: actions/checkout@v4
