@@ -183,7 +183,7 @@ void JSONReport::DoCPUTimeByType( const FBuildStats & stats )
     AStackString buffer;
     for ( size_t i = 0; i < items.GetSize(); ++i )
     {
-        const Node::Type type = (Node::Type)(size_t)items[ i ].m_UserData;
+        const Node::Type type = static_cast<Node::Type>( (size_t)items[ i ].m_UserData );
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
