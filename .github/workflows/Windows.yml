@@ -78,4 +78,5 @@ jobs:
 
       - name: Style
         if: ${{ matrix.cfg == 'Style' }}
-        run: python3 ../Scripts/ClangFormat.py 
+        run: python3 ../Scripts/ClangFormat.py --check
+
