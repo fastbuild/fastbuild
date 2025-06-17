@@ -16,15 +16,9 @@ jobs:
           - cfg: Build & Tests
             vs: 2022
             os: windows-2022
-          - cfg: Build & Tests
-            vs: 2019
-            os: windows-2019
           - cfg: Analyze
             vs: 2022
             os: windows-2022
-          - cfg: Analyze
-            vs: 2019
-            os: windows-2019
 
     name: Windows (${{ matrix.cfg }}, VS ${{ matrix.vs }})
     runs-on: ${{ matrix.os }}
