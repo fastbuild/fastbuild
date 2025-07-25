@@ -110,9 +110,6 @@ void Client::ThreadFunc()
 {
     PROFILE_FUNCTION;
 
-    // ensure first status update will be sent more rapidly
-    m_StatusUpdateTimer.Start();
-
     for ( ;; )
     {
         LookForWorkers();
@@ -195,7 +192,7 @@ void Client::LookForWorkers()
 
         ASSERT( ss.m_Jobs.IsEmpty() );
 
-        if ( ss.m_DelayTimer.GetElapsed() < CONNECTION_REATTEMPT_DELAY_TIME )
+        if ( ss.m_ConnectionDelayTimer.GetElapsed() < CONNECTION_REATTEMPT_DELAY_TIME )
         {
             continue;
         }
@@ -205,7 +202,7 @@ void Client::LookForWorkers()
         if ( ci == nullptr )
         {
             DIST_INFO( " - connection: %s (FAILED)\n", m_WorkerList[ i ].Get() );
-            ss.m_DelayTimer.Start(); // reset connection attempt delay
+            ss.m_ConnectionDelayTimer.Restart();
         }
         else
         {
@@ -280,7 +277,7 @@ void Client::CommunicateJobAvailability()
     // Restart periodic update timer if needed
     if ( timerExpired )
     {
-        m_StatusUpdateTimer.Start();
+        m_StatusUpdateTimer.Restart();
     }
 }
 
@@ -1019,7 +1016,9 @@ Client::ServerState::ServerState()
     , m_Denylisted( false )
 {
     m_Jobs.SetCapacity( 16 );
-    m_DelayTimer.Start( 999.0f );
+
+    // Modify timer so we trigger right away
+    m_ConnectionDelayTimer.SetElapsed( CONNECTION_REATTEMPT_DELAY_TIME );
 }
 
 //------------------------------------------------------------------------------

@@ -29,9 +29,8 @@ static const float sBrokerageIPAddressUpdateTime = ( 5 * 60.0f );
 //------------------------------------------------------------------------------
 WorkerBrokerageServer::WorkerBrokerageServer()
 {
-    m_TimerLastUpdate.Start();
-    m_TimerLastIPUpdate.Start();
-    m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
+    // Modify timer so we trigger right away
+    m_TimerLastCleanBroker.SetElapsed( sBrokerageElapsedTimeBetweenClean );
 }
 
 // DESTRUCTOR
@@ -109,7 +108,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                 }
 
                 // Restart the IP timer
-                m_TimerLastIPUpdate.Start();
+                m_TimerLastIPUpdate.Restart();
             }
 
             if ( createBrokerageFile == false )
@@ -178,7 +177,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
             }
 
             // Restart the timer
-            m_TimerLastUpdate.Start();
+            m_TimerLastUpdate.Restart();
         }
     }
     else if ( m_Available != available )
@@ -187,7 +186,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
         FileIO::FileDelete( m_BrokerageFilePath.Get() );
 
         // Restart the timer
-        m_TimerLastUpdate.Start();
+        m_TimerLastUpdate.Restart();
     }
     m_Available = available;
 
@@ -217,7 +216,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
         }
 
         // Restart the timer
-        m_TimerLastCleanBroker.Start();
+        m_TimerLastCleanBroker.Restart();
     }
 }
 

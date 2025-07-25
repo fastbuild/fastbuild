@@ -87,7 +87,7 @@ private:
 
         Mutex m_Mutex;
         const Protocol::IMessage * m_CurrentMessage;
-        Timer m_DelayTimer;
+        Timer m_ConnectionDelayTimer;
         uint32_t m_NumJobsAvailable; // num jobs we've told this server we have available
         Array<Job *> m_Jobs; // jobs we've sent to this server
 

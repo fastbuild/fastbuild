@@ -60,7 +60,6 @@ void TestSharedMemory::CreateAccessDestroy() const
     #endif
 
         Timer t;
-        t.Start();
 
         SharedMemory shm;
 
@@ -98,7 +97,6 @@ void TestSharedMemory::CreateAccessDestroy() const
     else
     {
         Timer t;
-        t.Start();
 
         // Create shared memory
         SharedMemory shm;

@@ -234,7 +234,7 @@ bool Worker::HasEnoughDiskSpace()
     {
         return ( m_LastDiskSpaceResult != 0 );
     }
-    m_TimerLastDiskSpaceCheck.Start();
+    m_TimerLastDiskSpaceCheck.Restart();
 
     constexpr uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
 
@@ -271,7 +271,7 @@ bool Worker::HasEnoughMemory()
     {
         return ( m_LastMemoryCheckResult != 0 );
     }
-    m_TimerLastMemoryCheck.Start();
+    m_TimerLastMemoryCheck.Restart();
 
     PERFORMANCE_INFORMATION memInfo;
     memInfo.cb = sizeof( memInfo );
@@ -424,7 +424,7 @@ void Worker::UpdateUI()
         }
     }
 
-    m_UIUpdateTimer.Start();
+    m_UIUpdateTimer.Restart();
 }
 
 // CheckIfRestartNeeded

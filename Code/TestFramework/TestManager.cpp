@@ -200,7 +200,7 @@ void TestManager::TestBegin( TestGroup * testGroup, const char * testName )
     m_CurrentTestAllocationId = MemTracker::GetCurrentAllocationId();
 #endif
 
-    m_Timer.Start();
+    m_Timer.Restart();
 
 #ifdef PROFILING_ENABLED
     ProfileManager::Start( testName );

@@ -170,7 +170,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
             m_CPUUsageFASTBuild = totalPerc;
         }
 
-        m_Timer.Start();
+        m_Timer.Restart();
     }
 
     idleCurrent = ( 1.0f - ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) * 0.01f ) );

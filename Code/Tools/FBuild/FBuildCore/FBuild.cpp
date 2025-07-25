@@ -416,7 +416,7 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char * nod
         }
     }
 
-    m_Timer.Start();
+    m_Timer.Restart();
     m_LastProgressOutputTime = 0.0f;
     m_LastProgressCalcTime = 0.0f;
     m_SmoothedProgressCurrent = 0.0f;

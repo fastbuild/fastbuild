@@ -29,8 +29,7 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestTimer::Validate() const
 {
-    Timer t;
-    t.Start();
+    const Timer t;
     const int64_t before = t.GetNow();
 #if defined( __OSX__ ) && defined( __aarch64__ ) // ARM
     // TODO:B Figure out why sleep granularity is so poor on Apple Silicon

@@ -783,7 +783,7 @@ void Server::TouchToolchains()
     {
         return;
     }
-    m_TouchToolchainTimer.Start();
+    m_TouchToolchainTimer.Restart();
 
     MutexHolder manifestMH( m_ToolManifestsMutex );
     for ( const ToolManifest * toolManifest : m_Tools )

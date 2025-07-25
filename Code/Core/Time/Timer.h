@@ -11,11 +11,15 @@
 class Timer
 {
 public:
-    Timer() { Start(); }
+    // Timers auto-start when constructed
+    Timer() { m_StartTime = GetNow(); }
     ~Timer() = default;
 
-    void Start() { m_StartTime = GetNow(); }
-    void Start( float time ) { m_StartTime = GetNow() - (int64_t)( (double)GetFrequency() * (double)time ); }
+    // Restart a a timer
+    void Restart() { m_StartTime = GetNow(); }
+
+    // Make a time as if it was started "time" seconds ago
+    void SetElapsed( float time ) { m_StartTime = GetNow() - (int64_t)( (double)GetFrequency() * (double)time ); }
 
     float GetElapsed() const
     {

@@ -59,8 +59,7 @@ private:
 #define WAIT_UNTIL_WITH_TIMEOUT( cond )             \
     do                                              \
     {                                               \
-        Timer t;                                    \
-        t.Start();                                  \
+        const Timer t;                              \
         while ( ( cond ) == false )                 \
         {                                           \
             Thread::Sleep( 1 );                     \
