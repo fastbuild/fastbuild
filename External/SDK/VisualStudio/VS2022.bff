@@ -43,6 +43,7 @@
                 .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC'
                 .VS2022_Version         = '14.44.35207'
                 .VS2022_MSC_VER         = '1944'
+                #define MSVC_DYNAMIC_DEOPT_AVAILABLE
             #else
                 //
                 // Use Visual Studio 2022 Enterprise installation (used by GitHub Actions)
@@ -52,6 +53,7 @@
                     .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC'
                     .VS2022_Version         = '14.44.35207'
                     .VS2022_MSC_VER         = '1944'
+                    #define MSVC_DYNAMIC_DEOPT_AVAILABLE
                 #else
                     //
                     // Failed
