@@ -483,6 +483,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     {
         job->Error( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
         FLOG_ERROR( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
+        return false;
     }
 
     // Compress result
