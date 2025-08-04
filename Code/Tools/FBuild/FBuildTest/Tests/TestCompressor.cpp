@@ -133,7 +133,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         FileStream fs;
         TEST_ASSERT( fs.Open( fileName ) );
         dataSize = (size_t)fs.GetFileSize();
-        data = (char *)ALLOC( dataSize );
+        data.Replace( (char *)ALLOC( dataSize ) );
         TEST_ASSERT( (uint32_t)fs.Read( data.Get(), dataSize ) == dataSize );
     }
 
@@ -173,7 +173,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Compress
-            c = FNEW( Compressor );
+            c.Replace( FNEW( Compressor ) );
             const Timer t;
             c.Get()->Compress( data.Get(), dataSize, compressionLevel );
             compressedSize = c.Get()->GetResultSize();
@@ -238,7 +238,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Compress
-            c = FNEW( Compressor );
+            c.Replace( FNEW( Compressor ) );
             const Timer t;
             c.Get()->CompressZstd( data.Get(), dataSize, compressionLevel );
             compressedSize = c.Get()->GetResultSize();

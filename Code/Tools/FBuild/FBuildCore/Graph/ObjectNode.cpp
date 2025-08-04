@@ -2969,43 +2969,43 @@ void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
 {
     if ( flags.IsMSVC() || flags.IsClangCl() )
     {
-        outDriver = FNEW( CompilerDriver_CL( flags.IsClangCl() ) );
+        outDriver.Replace( FNEW( CompilerDriver_CL( flags.IsClangCl() ) ) );
     }
     else if ( flags.IsClang() || flags.IsGCC() )
     {
-        outDriver = FNEW( CompilerDriver_GCCClang( flags.IsClang() ) );
+        outDriver.Replace( FNEW( CompilerDriver_GCCClang( flags.IsClang() ) ) );
     }
     else if ( flags.IsVBCC() )
     {
-        outDriver = FNEW( CompilerDriver_VBCC() );
+        outDriver.Replace( FNEW( CompilerDriver_VBCC() ) );
     }
     else if ( flags.IsQtRCC() )
     {
-        outDriver = FNEW( CompilerDriver_QtRCC() );
+        outDriver.Replace( FNEW( CompilerDriver_QtRCC() ) );
     }
     else if ( flags.IsOrbisWavePSSLC() )
     {
-        outDriver = FNEW( CompilerDriver_OrbisWavePSSLC() );
+        outDriver.Replace( FNEW( CompilerDriver_OrbisWavePSSLC() ) );
     }
     else if ( flags.IsSNC() )
     {
-        outDriver = FNEW( CompilerDriver_SNC() );
+        outDriver.Replace( FNEW( CompilerDriver_SNC() ) );
     }
     else if ( flags.IsCUDANVCC() )
     {
-        outDriver = FNEW( CompilerDriver_CUDA() );
+        outDriver.Replace( FNEW( CompilerDriver_CUDA() ) );
     }
     else if ( flags.IsCodeWarriorWii() )
     {
-        outDriver = FNEW( CompilerDriver_CodeWarriorWii() );
+        outDriver.Replace( FNEW( CompilerDriver_CodeWarriorWii() ) );
     }
     else if ( flags.IsGreenHillsWiiU() )
     {
-        outDriver = FNEW( CompilerDriver_GreenHillsWiiU() );
+        outDriver.Replace( FNEW( CompilerDriver_GreenHillsWiiU() ) );
     }
     else
     {
-        outDriver = FNEW( CompilerDriver_Generic() );
+        outDriver.Replace( FNEW( CompilerDriver_Generic() ) );
     }
 
     outDriver->Init( this, remoteSourceRoot );

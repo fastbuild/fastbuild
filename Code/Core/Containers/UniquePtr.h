@@ -33,15 +33,21 @@ template <class T, class DELETOR = DeleteDeletor>
 class UniquePtr
 {
 public:
-    explicit UniquePtr()
-        : m_Pointer( nullptr )
-    {
-    }
+    explicit UniquePtr() = default;
     explicit UniquePtr( T * ptr )
         : m_Pointer( ptr )
     {
     }
+    explicit UniquePtr( UniquePtr<T, DELETOR> && other )
+        : m_Pointer( other.m_Pointer )
+    {
+        other.m_Pointer = nullptr;
+    }
     ~UniquePtr() { DELETOR::Delete( m_Pointer ); }
+
+    // non-copyable
+    explicit UniquePtr( const UniquePtr<T, DELETOR> & other ) = delete;
+    void operator=( const UniquePtr<T, DELETOR> & other ) = delete;
 
     // access the pointer
     [[nodiscard]] T * Get() { return m_Pointer; }
@@ -58,10 +64,16 @@ public:
     }
 
     // acquire a new pointer
-    void operator=( T * newPtr )
+    void Replace( T * newPtr )
     {
         DELETOR::Delete( m_Pointer );
         m_Pointer = newPtr;
+    }
+    void operator=( UniquePtr<T, DELETOR> && other )
+    {
+        DELETOR::Delete( m_Pointer );
+        m_Pointer = other.m_Pointer;
+        other.m_Pointer = nullptr;
     }
 
     // manually initiate deletion
@@ -80,7 +92,7 @@ public:
     }
 
 private:
-    T * m_Pointer;
+    T * m_Pointer = nullptr;
 };
 
 //------------------------------------------------------------------------------

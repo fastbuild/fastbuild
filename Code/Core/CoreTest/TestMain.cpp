@@ -34,6 +34,7 @@ int main( int, char *[] )
     REGISTER_TESTGROUP( TestThread )
     REGISTER_TESTGROUP( TestThreadPool )
     REGISTER_TESTGROUP( TestTimer )
+    REGISTER_TESTGROUP( TestUniquePtr )
     REGISTER_TESTGROUP( TestUnorderedMap )
 
     TestManager utm;

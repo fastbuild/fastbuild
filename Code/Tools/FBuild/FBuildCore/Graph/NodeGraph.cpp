@@ -344,7 +344,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
     AStackString libEnvVar;
     if ( envStringSize > 0 )
     {
-        envString = ( (char *)ALLOC( envStringSize ) );
+        envString.Replace( (char *)ALLOC( envStringSize ) );
         VERIFY( stream.Read( envString.Get(), envStringSize ) );
         VERIFY( stream.Read( libEnvVar ) );
     }
