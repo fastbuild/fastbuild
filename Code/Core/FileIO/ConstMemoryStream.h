@@ -6,6 +6,10 @@
 //------------------------------------------------------------------------------
 #include "IOStream.h"
 
+// Forward Declarations
+//------------------------------------------------------------------------------
+class MemoryStream;
+
 // ConstMemoryStream
 //------------------------------------------------------------------------------
 class ConstMemoryStream : public IOStream
@@ -14,6 +18,15 @@ public:
     ConstMemoryStream();
     explicit ConstMemoryStream( const void * data, size_t size );
     virtual ~ConstMemoryStream() override;
+
+    // movable
+    explicit ConstMemoryStream( MemoryStream && other );
+    explicit ConstMemoryStream( ConstMemoryStream && other );
+    void operator=( ConstMemoryStream && other );
+
+    // non-copyable
+    explicit ConstMemoryStream( const ConstMemoryStream & other ) = delete;
+    void operator=( const ConstMemoryStream & other ) = delete;
 
     // memory stream specific functions
     const void * GetData() const { return m_Buffer; }
@@ -31,10 +44,10 @@ public:
     virtual uint64_t GetFileSize() const override;
 
 private:
-    const void * m_Buffer;
-    size_t m_Size;
-    mutable size_t m_CurrentPos;
-    bool m_OwnsMemory;
+    const void * m_Buffer = nullptr;
+    size_t m_Size = 0;
+    mutable size_t m_CurrentPos = 0;
+    bool m_OwnsMemory = false;
 };
 
 //------------------------------------------------------------------------------
