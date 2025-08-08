@@ -15,6 +15,14 @@ public:
     explicit MemoryStream( size_t initialBufferSize, size_t minGrowth = 4096 );
     virtual ~MemoryStream() override;
 
+    // movable
+    explicit MemoryStream( MemoryStream && other );
+    void operator=( MemoryStream && other );
+
+    // non-copyable
+    explicit MemoryStream( const MemoryStream & other ) = delete;
+    void operator=( const MemoryStream & other ) = delete;
+
     // memory stream specific functions
     const void * GetData() const { return (void *)m_Begin; }
     void * GetDataMutable() { return (void *)m_Begin; }
@@ -38,10 +46,10 @@ public:
 private:
     NO_INLINE void GrowToAccommodate( uint64_t bytesToAccomodate );
 
-    char * m_Begin;
-    char * m_End;
-    char * m_MaxEnd;
-    size_t m_MinGrowth;
+    char * m_Begin = nullptr;
+    char * m_End = nullptr;
+    char * m_MaxEnd = nullptr;
+    size_t m_MinGrowth = 4096;
 };
 
 //------------------------------------------------------------------------------
