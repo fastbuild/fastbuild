@@ -240,7 +240,7 @@ private:
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
     bool ShouldUseDeoptimization() const;
-    friend class Client;
+    friend class ClientToWorkerConnection;
     bool ShouldUseCache() const;
     ArgsResponseFileMode GetResponseFileMode() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;

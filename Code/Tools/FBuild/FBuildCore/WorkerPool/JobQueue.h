@@ -87,7 +87,7 @@ private:
     void QueueDistributableJob( Job * job );
 
     // client side of protocol consumes jobs via this interface
-    friend class Client;
+    friend class ClientToWorkerConnection;
     Job * GetDistributableJobToProcess( bool remote, uint8_t workerMinorProtocolVersion );
     Job * OnReturnRemoteJob( uint32_t jobId,
                              bool systemError,

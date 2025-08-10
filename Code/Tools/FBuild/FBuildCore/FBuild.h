@@ -9,7 +9,6 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFUserFunctions.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerageClient.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
@@ -150,8 +149,6 @@ protected:
     FBuildStats m_BuildStats;
 
     FBuildOptions m_Options;
-
-    WorkerBrokerageClient m_WorkerBrokerage;
 
     AString m_OldWorkingDir;
 

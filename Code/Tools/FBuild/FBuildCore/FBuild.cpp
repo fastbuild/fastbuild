@@ -32,6 +32,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/SmallBlockAllocator.h"
+#include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Process.h"
 #include "Core/Process/SystemMutex.h"
@@ -395,25 +396,10 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char * nod
     if ( m_Options.m_AllowDistributed )
     {
         const SettingsNode * settings = m_DependencyGraph->GetSettings();
-
-        // Worker list from Settings takes priority
-        Array<AString> workers( settings->GetWorkerList() );
-        if ( workers.IsEmpty() )
-        {
-            // check for workers through brokerage or environment
-            m_WorkerBrokerage.FindWorkers( workers );
-        }
-
-        if ( workers.IsEmpty() )
-        {
-            FLOG_WARN( "No workers available - Distributed compilation disabled" );
-            m_Options.m_AllowDistributed = false;
-        }
-        else
-        {
-            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
-            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
-        }
+        m_Client = FNEW( Client( settings->GetWorkerList(),
+                                 m_Options.m_DistributionPort,
+                                 settings->GetWorkerConnectionLimit(),
+                                 m_Options.m_DistVerbose ) );
     }
 
     m_Timer.Restart();
