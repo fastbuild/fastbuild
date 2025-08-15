@@ -169,8 +169,6 @@ public:
     void GetGCNOPath( AString & gcnoFileName ) const;
     void GetAltObjPath( AString & altObjName ) const;
 
-    const char * GetObjExtension() const;
-
     const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
     const AString & GetOwnerObjectList() const { return m_OwnerObjectList; }
 
@@ -289,7 +287,6 @@ private:
     AString m_CompilerOptions;
     AString m_CompilerOptionsDeoptimized;
     AString m_CompilerInputFile;
-    AString m_CompilerOutputExtension;
     AString m_PCHObjectFileName;
     bool m_DeoptimizeWritableFiles = false;
     bool m_DeoptimizeWritableFilesWithToken = false;

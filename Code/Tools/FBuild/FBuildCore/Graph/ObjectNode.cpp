@@ -71,7 +71,6 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
     REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
     REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
-    REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
     REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
     REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
@@ -1348,21 +1347,6 @@ void ObjectNode::GetAltObjPath( AString & altObjName ) const
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
     altObjName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
     altObjName += ".alt.obj";
-}
-
-// GetObjExtension
-//------------------------------------------------------------------------------
-const char * ObjectNode::GetObjExtension() const
-{
-    if ( m_CompilerOutputExtension.IsEmpty() )
-    {
-#if defined( __WINDOWS__ )
-        return ".obj";
-#else
-        return ".o";
-#endif
-    }
-    return m_CompilerOutputExtension.Get();
 }
 
 // GetCacheName
