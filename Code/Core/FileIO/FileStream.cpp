@@ -26,7 +26,9 @@
     #define INVALID_HANDLE_VALUE ( -1 )
 #endif
 #if defined( __WINDOWS__ )
-    #define FILESTREAM_WINDOWS_READWRITE_SIZE ( 16 * MEGABYTE )
+    #define FILESTREAM_READWRITE_SIZE (16 * MEGABYTE)
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    #define FILESTREAM_READWRITE_SIZE (1024 * MEGABYTE) // 1 GB
 #endif
 
 // CONSTRUCTOR
@@ -213,12 +215,14 @@ bool FileStream::IsOpen() const
     ASSERT( IsOpen() );
 
     uint64_t totalBytesRead = 0;
-#if defined( __WINDOWS__ )
     do
     {
         const uint64_t remaining = ( bytesToRead - totalBytesRead );
-        const uint32_t tryToReadNow = ( remaining > FILESTREAM_WINDOWS_READWRITE_SIZE ) ? FILESTREAM_WINDOWS_READWRITE_SIZE : (uint32_t)remaining;
+        const uint32_t tryToReadNow = ( remaining > FILESTREAM_READWRITE_SIZE )
+                                          ? FILESTREAM_READWRITE_SIZE
+                                          : (uint32_t)remaining;
         uint32_t bytesReadNow = 0;
+#if defined( __WINDOWS__ )
         if ( FALSE == ReadFile( (HANDLE)m_Handle,                           // _In_         HANDLE hFile,
                                 (char *)buffer + (size_t)totalBytesRead,    // _Out_        LPVOID lpBuffer,
                                 tryToReadNow,                               // _In_         DWORD nNumberOfBytesToRead,
@@ -227,17 +231,19 @@ bool FileStream::IsOpen() const
         {
             break; // failed
         }
-        if ( bytesReadNow == 0 )
-        {
-            return totalBytesRead; // end of file
-        }
-        totalBytesRead += bytesReadNow;
-    } while ( totalBytesRead < bytesToRead );
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    totalBytesRead += static_cast<uint64_t>( read( m_Handle, buffer, bytesToRead ) );
+        const auto readResult =
+            read( m_Handle, (char *)buffer + totalBytesRead, tryToReadNow );
+        if ( readResult <= 0 )
+        {
+            break;
+        }
+        bytesReadNow = static_cast<uint32_t>( readResult );
 #else
     #error Unknown platform
 #endif
+        totalBytesRead += bytesReadNow;
+    } while ( totalBytesRead < bytesToRead );
 
     return totalBytesRead;
 }
@@ -250,12 +256,14 @@ bool FileStream::IsOpen() const
     ASSERT( IsOpen() );
 
     uint64_t totalBytesWritten = 0;
-#if defined( __WINDOWS__ )
     do
     {
         const uint64_t remaining = ( bytesToWrite - totalBytesWritten );
-        const uint32_t tryToWriteNow = ( remaining > FILESTREAM_WINDOWS_READWRITE_SIZE ) ? FILESTREAM_WINDOWS_READWRITE_SIZE : (uint32_t)remaining;
+        const uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE )
+                                           ? FILESTREAM_READWRITE_SIZE
+                                           : (uint32_t)remaining;
         uint32_t bytesWrittenNow = 0;
+#if defined( __WINDOWS__ )
         if ( FALSE == WriteFile( (HANDLE)m_Handle,                              // _In_         HANDLE hFile,
                                  (const char *)buffer + (size_t)totalBytesWritten,    // _In_         LPCVOID lpBuffer,
                                  tryToWriteNow,                                 // _In_         DWORD nNumberOfBytesToWrite,
@@ -264,13 +272,21 @@ bool FileStream::IsOpen() const
         {
             break; // failed
         }
-        totalBytesWritten += bytesWrittenNow;
-    } while ( totalBytesWritten < bytesToWrite );
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    totalBytesWritten = static_cast<uint64_t>( write( m_Handle, buffer, bytesToWrite ) );
+        const auto writeResult = write(
+            m_Handle,
+            (const char *)buffer + totalBytesWritten,
+            tryToWriteNow );
+        if ( writeResult < 0 )
+        {
+            break;
+        }
+        bytesWrittenNow = static_cast<uint32_t>( writeResult );
 #else
     #error Unknown platform
 #endif
+        totalBytesWritten += bytesWrittenNow;
+    } while ( totalBytesWritten < bytesToWrite );
 
     return totalBytesWritten;
 }
