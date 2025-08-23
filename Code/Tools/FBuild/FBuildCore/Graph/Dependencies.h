@@ -80,7 +80,7 @@ public:
     Dependencies & operator=( const Dependencies & other );
 
     void Save( IOStream & stream ) const;
-    void Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
+    void Load( NodeGraph & nodeGraph, uint32_t numDeps, ConstMemoryStream & stream );
 
 protected:
     // Extend to explicit capacity, or with amortized expansion if 0

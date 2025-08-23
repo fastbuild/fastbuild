@@ -95,18 +95,21 @@ static Mutex g_NodeEnvStringMutex;
 namespace
 {
 #pragma pack( push, 1 )
-    class SerializedFileNode
+    class SerializedNodeBasic
     {
     public:
         uint8_t m_Type;
         uint32_t m_NameHash;
     };
 
-    class SerializedNode : public SerializedFileNode
+    class SerializedNodeExtended
     {
     public:
         uint64_t m_Stamp;
         uint32_t m_LastBuildTime;
+        uint32_t m_NumPreBuildDeps;
+        uint32_t m_NumStaticDeps;
+        uint32_t m_NumDynamicDeps;
     };
 #pragma pack( pop )
 }
@@ -347,63 +350,56 @@ void Node::SetLastBuildTime( uint32_t ms )
     AtomicStoreRelaxed( &m_LastBuildTimeMs, ms );
 }
 
-// Load
 //------------------------------------------------------------------------------
-/*static*/ Node * Node::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
+/*static*/ void Node::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
 {
     // Name of node
-    AString name;
+    AString name; // Will be moved
     VERIFY( stream.Read( name ) );
 
     // Use data directly from memory buffer
     const uint64_t pos = stream.Tell();
     const char * data = static_cast<const char *>( stream.GetData() );
-    const SerializedNode & serializedNode = *reinterpret_cast<const SerializedNode *>( data + pos );
+    const SerializedNodeBasic & info = *reinterpret_cast<const SerializedNodeBasic *>( data + pos );
 
-    // Common attributes
-    const uint8_t nodeType = serializedNode.m_Type;
-    const uint32_t nameHash = serializedNode.m_NameHash;
+    // Consume common attributes
+    VERIFY( stream.Seek( pos + sizeof( SerializedNodeBasic ) ) );
 
     // Create node
-    Node * n = nodeGraph.CreateNode( (Type)nodeType, Move( name ), nameHash );
-    ASSERT( n );
-
-    // Early out for FileNode
-    if ( nodeType == Node::FILE_NODE )
-    {
-        // Consume common attributes
-        VERIFY( stream.Seek( pos + sizeof( SerializedFileNode ) ) );
-        return n;
-    }
-
-    // Consume extended data
-    VERIFY( stream.Seek( pos + sizeof( SerializedNode ) ) );
-
-    // Build time
-    n->SetLastBuildTime( serializedNode.m_LastBuildTime );
-
-    // Deserialize properties
-    Deserialize( stream, n, *n->GetReflectionInfoV() );
-
-    // set stamp
-    n->m_Stamp = serializedNode.m_Stamp;
-    return n;
+    VERIFY( nodeGraph.CreateNode( static_cast<Type>( info.m_Type ),
+                                  Move( name ),
+                                  info.m_NameHash ) );
 }
 
-// LoadDependencies
 //------------------------------------------------------------------------------
-/*static*/ void Node::LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream )
+/*static*/ void Node::LoadExtended( NodeGraph & nodeGraph,
+                                    Node * node,
+                                    ConstMemoryStream & stream )
 {
-    // Early out for FileNode
-    if ( node->GetType() == Node::FILE_NODE )
-    {
-        return;
-    }
+    // Should not be called on FileNode
+    ASSERT( node->GetType() != Node::FILE_NODE );
+
+    // Use data directly from memory buffer
+    const uint64_t pos = stream.Tell();
+    const char * data = static_cast<const char *>( stream.GetData() );
+    const SerializedNodeExtended & info = *reinterpret_cast<const SerializedNodeExtended *>( data + pos );
+
+    // Consume extended data
+    VERIFY( stream.Seek( pos + sizeof( SerializedNodeExtended ) ) );
+
+    // Build time
+    node->SetLastBuildTime( info.m_LastBuildTime );
+
+    // Deserialize properties
+    Deserialize( stream, node, *node->GetReflectionInfoV() );
+
+    // set stamp
+    node->m_Stamp = info.m_Stamp;
 
     // Dependencies
-    node->m_PreBuildDependencies.Load( nodeGraph, stream );
-    node->m_StaticDependencies.Load( nodeGraph, stream );
-    node->m_DynamicDependencies.Load( nodeGraph, stream );
+    node->m_PreBuildDependencies.Load( nodeGraph, info.m_NumPreBuildDeps, stream );
+    node->m_StaticDependencies.Load( nodeGraph, info.m_NumStaticDeps, stream );
+    node->m_DynamicDependencies.Load( nodeGraph, info.m_NumDynamicDeps, stream );
 }
 
 // PostLoad
@@ -412,7 +408,6 @@ void Node::SetLastBuildTime( uint32_t ms )
 {
 }
 
-// Save
 //------------------------------------------------------------------------------
 /*static*/ void Node::Save( IOStream & stream, const Node * node )
 {
@@ -421,43 +416,33 @@ void Node::SetLastBuildTime( uint32_t ms )
     // Save Name
     stream.Write( node->m_Name );
 
-    // Prep common data
-    SerializedNode serializedNode;
-    serializedNode.m_Type = node->GetType();
-    serializedNode.m_NameHash = node->m_NameHash;
+    // Save common attributes
+    SerializedNodeBasic info;
+    info.m_Type = node->GetType();
+    info.m_NameHash = node->m_NameHash;
+    VERIFY( stream.WriteBuffer( &info, sizeof( SerializedNodeBasic ) ) == sizeof( SerializedNodeBasic ) );
+}
 
-    // FileNodes don't need most things serialized:
-    // - their stamp is obtained every build, so doesn't need saving
-    // - they take sub 1ms to check, so don't need their build time saved
-    // - they have no reflected properties
-    if ( node->m_Type == Node::FILE_NODE )
-    {
-        // Save only the SerializedFileNode subset
-        VERIFY( stream.WriteBuffer( &serializedNode, sizeof( SerializedFileNode ) ) == sizeof( SerializedFileNode ) );
-        return;
-    }
+//------------------------------------------------------------------------------
+/*static*/ void Node::SaveExtended( IOStream & stream, const Node * node )
+{
+    // Should not be called on FileNode
+    ASSERT( node->GetType() != Node::FILE_NODE );
 
     // Prep extended data
-    serializedNode.m_Stamp = node->GetStamp();
-    serializedNode.m_LastBuildTime = node->GetLastBuildTime();
+    SerializedNodeExtended info;
+    info.m_Stamp = node->GetStamp();
+    info.m_LastBuildTime = node->GetLastBuildTime();
+    info.m_NumPreBuildDeps = static_cast<uint32_t>( node->m_PreBuildDependencies.GetSize() );
+    info.m_NumStaticDeps = static_cast<uint32_t>( node->m_StaticDependencies.GetSize() );
+    info.m_NumDynamicDeps = static_cast<uint32_t>( node->m_DynamicDependencies.GetSize() );
 
     // Save everything
-    VERIFY( stream.WriteBuffer( &serializedNode, sizeof( SerializedNode ) ) == sizeof( SerializedNode ) );
+    VERIFY( stream.WriteBuffer( &info, sizeof( SerializedNodeExtended ) ) == sizeof( SerializedNodeExtended ) );
 
     // Properties
     const ReflectionInfo * const ri = node->GetReflectionInfoV();
     Serialize( stream, node, *ri );
-}
-
-// SaveDependencies
-//------------------------------------------------------------------------------
-/*static*/ void Node::SaveDependencies( IOStream & stream, const Node * node )
-{
-    // FileNodes have no dependencies
-    if ( node->GetType() == Node::FILE_NODE )
-    {
-        return;
-    }
 
     // Deps
     node->m_PreBuildDependencies.Save( stream );

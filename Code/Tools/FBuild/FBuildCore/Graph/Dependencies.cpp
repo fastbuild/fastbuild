@@ -33,7 +33,6 @@ namespace
 void Dependencies::Save( IOStream & stream ) const
 {
     const size_t numDeps = GetSize();
-    stream.Write( (uint32_t)numDeps );
     if ( numDeps == 0 )
     {
         return;
@@ -58,12 +57,10 @@ void Dependencies::Save( IOStream & stream ) const
 
 // Load
 //------------------------------------------------------------------------------
-void Dependencies::Load( NodeGraph & nodeGraph, ConstMemoryStream & stream )
+void Dependencies::Load( NodeGraph & nodeGraph, uint32_t numDeps, ConstMemoryStream & stream )
 {
     ASSERT( IsEmpty() );
 
-    uint32_t numDeps;
-    VERIFY( stream.Read( numDeps ) );
     if ( numDeps == 0 )
     {
         return;

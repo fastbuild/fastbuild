@@ -414,25 +414,24 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
         bffNeedsReparsing = true;
     }
 
-    ASSERT( m_AllNodes.GetSize() == 0 );
+    ASSERT( m_AllNodes.IsEmpty() );
 
-    // Read nodes
+    // Create nodes
     uint32_t numNodes;
     VERIFY( stream.Read( numNodes ) );
     m_AllNodes.SetCapacity( numNodes );
     for ( uint32_t i = 0; i < numNodes; ++i )
     {
-        // Load each node
-        const Node * const n = Node::Load( *this, stream );
-        ASSERT( m_AllNodes[ i ] == n ); // Array is populated as loaded
-        (void)n;
+        Node::Load( *this, stream ); // Create each node
+        ASSERT( m_AllNodes[ i ] ); // Array is populated as loaded
     }
     for ( Node * node : m_AllNodes )
     {
-        // Load dependencies, but not for FileNodes which have none
+        // Load extended properties and dependencies
+        // (but not for FileNodes which have none)
         if ( node->GetType() != Node::FILE_NODE )
         {
-            Node::LoadDependencies( *this, node, stream );
+            Node::LoadExtended( *this, node, stream );
         }
     }
     for ( Node * node : m_AllNodes )
@@ -536,10 +535,11 @@ void NodeGraph::Save( ChainedMemoryStream & stream, const char * nodeGraphDBFile
     }
     for ( const Node * node : m_AllNodes )
     {
-        // Save dependencies, but not for FileNodes which have none
+        // Save extended properties and dependencies
+        // (but not for FileNodes which have none)
         if ( node->GetType() != Node::FILE_NODE )
         {
-            Node::SaveDependencies( stream, node );
+            Node::SaveExtended( stream, node );
         }
     }
 

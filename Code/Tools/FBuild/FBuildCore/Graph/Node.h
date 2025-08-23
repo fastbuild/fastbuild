@@ -149,10 +149,10 @@ public:
     uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
     void SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
-    static Node * Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
-    static void LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
+    static void Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
+    static void LoadExtended( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
     static void Save( IOStream & stream, const Node * node );
-    static void SaveDependencies( IOStream & stream, const Node * node );
+    static void SaveExtended( IOStream & stream, const Node * node );
     virtual void PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
 
     static Node * LoadRemote( IOStream & stream );
