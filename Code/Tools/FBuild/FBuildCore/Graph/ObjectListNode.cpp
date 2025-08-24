@@ -750,7 +750,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
 
         // Check for conflicts
         const bool conflict = ( inputFileName != other->GetSourceFile()->GetName() ) ||
-                              ( m_Name != other->GetOwnerObjectList() );
+                              ( this != &other->GetOwnerObjectList() );
         if ( conflict )
         {
             FLOG_ERROR( "Conflicting objects found for: %s\n"
@@ -763,7 +763,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
                         inputFileName.Get(),
                         m_Name.Get(),
                         other->GetSourceFile()->GetName().Get(),
-                        other->GetOwnerObjectList().Get() );
+                        other->GetOwnerObjectList().GetName().Get() );
             return false;
         }
     }
@@ -812,7 +812,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_PreprocessorOptions = preprocessorOptions;
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
-    node->m_OwnerObjectList = m_Name;
+    node->m_OwnerObjectList = this;
     node->m_ConcurrencyGroupName = m_ConcurrencyGroupName;
     node->m_ConcurrencyGroupIndex = m_ConcurrencyGroupIndex;
 

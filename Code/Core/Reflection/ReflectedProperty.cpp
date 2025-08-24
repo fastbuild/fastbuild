@@ -70,6 +70,11 @@ size_t ReflectedProperty::GetPropertySize() const
             ASSERT( structSize > 0 );
             return structSize;
         }
+        case PT_CUSTOM_1:
+        {
+            ASSERT( false ); // Invalid to get size on custom properties
+            return 0;
+        }
     }
 
     ASSERT( false ); // Should never get here

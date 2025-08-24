@@ -2088,6 +2088,15 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
             }
             break;
         }
+        case PT_CUSTOM_1:
+        {
+            ASSERT( property.IsArray() == false );
+            const Node * oldNode = *property.GetPtrToPropertyCustom<Node *>( oldBase );
+            Node * newNode = FindNodeInternal( oldNode->GetName(), oldNode->GetNameHash() );
+            Node ** newNodeProperty = property.GetPtrToPropertyCustom<Node *>( newBase );
+            *newNodeProperty = newNode;
+            break;
+        }
         default: ASSERT( false ); // Unhandled
     }
 }
@@ -2241,6 +2250,17 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
                 {
                     return false;
                 }
+            }
+            break;
+        }
+        case PT_CUSTOM_1:
+        {
+            ASSERT( property.IsArray() == false );
+            const Node * nodeA = *property.GetPtrToPropertyCustom<Node *>( baseA );
+            const Node * nodeB = *property.GetPtrToPropertyCustom<Node *>( baseB );
+            if ( nodeA->GetName() != nodeB->GetName() )
+            {
+                return false;
             }
             break;
         }

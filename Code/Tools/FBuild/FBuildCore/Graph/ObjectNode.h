@@ -22,6 +22,7 @@ class Function;
 class MultiBuffer;
 class NodeGraph;
 class NodeProxy;
+class ObjectListNode;
 class ObjectNode;
 enum class ArgsResponseFileMode : uint32_t;
 
@@ -170,7 +171,7 @@ public:
     void GetAltObjPath( AString & altObjName ) const;
 
     const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
-    const AString & GetOwnerObjectList() const { return m_OwnerObjectList; }
+    const ObjectListNode & GetOwnerObjectList() const { return *m_OwnerObjectList; }
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
 
@@ -304,7 +305,7 @@ private:
     CompilerFlags m_PreprocessorFlags;
     uint64_t m_PCHCacheKey = 0;
     uint64_t m_LightCacheKey = 0;
-    AString m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
+    ObjectListNode * m_OwnerObjectList = nullptr;
 
     // Not serialized
     Array<AString> m_Includes;

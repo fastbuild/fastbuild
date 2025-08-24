@@ -107,7 +107,7 @@ ObjectNode::ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
-    ASSERT( m_OwnerObjectList.IsEmpty() == false ); // Must be set before we get here
+    ASSERT( m_OwnerObjectList ); // Must be set before we get here
 
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )

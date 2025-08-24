@@ -24,6 +24,7 @@ class IMetaData;
 class IOStream;
 class Job;
 class NodeGraph;
+class ObjectListNode;
 
 // Defines
 //------------------------------------------------------------------------------
@@ -43,6 +44,11 @@ class NodeGraph;
 
 #define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData ) \
     REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData )
+
+inline constexpr PropertyType GetPropertyType( ObjectListNode * const * )
+{
+    return PT_CUSTOM_1;
+}
 
 // FBuild
 //------------------------------------------------------------------------------
@@ -230,8 +236,14 @@ protected:
 
     static void Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri );
     static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );
-    static void Deserialize( ConstMemoryStream & stream, void * base, const ReflectionInfo & ri );
-    static void Deserialize( ConstMemoryStream & stream, void * base, const ReflectedProperty & property );
+    static void Deserialize( NodeGraph & nodeGraph,
+                             ConstMemoryStream & stream,
+                             void * base,
+                             const ReflectionInfo & ri );
+    static void Deserialize( NodeGraph & nodeGraph,
+                             ConstMemoryStream & stream,
+                             void * base,
+                             const ReflectedProperty & property );
 
     virtual void Migrate( const Node & oldNode );
 

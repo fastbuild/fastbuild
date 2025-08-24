@@ -391,7 +391,7 @@ void Node::SetLastBuildTime( uint32_t ms )
     node->SetLastBuildTime( info.m_LastBuildTime );
 
     // Deserialize properties
-    Deserialize( stream, node, *node->GetReflectionInfoV() );
+    Deserialize( nodeGraph, stream, node, *node->GetReflectionInfoV() );
 
     // set stamp
     node->m_Stamp = info.m_Stamp;
@@ -592,6 +592,13 @@ void Node::SetLastBuildTime( uint32_t ms )
             }
             return;
         }
+        case PT_CUSTOM_1:
+        {
+            const Node * node = *property.GetPtrToPropertyCustom<Node *>( base );
+            const uint32_t nodeIndex = node->GetBuildPassTag();
+            stream.Write( nodeIndex );
+            return;
+        }
         default:
         {
             break; // Fall through to error
@@ -602,7 +609,10 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // Deserialize
 //------------------------------------------------------------------------------
-/*static*/ void Node::Deserialize( ConstMemoryStream & stream, void * base, const ReflectionInfo & ri )
+/*static*/ void Node::Deserialize( NodeGraph & nodeGraph,
+                                   ConstMemoryStream & stream,
+                                   void * base,
+                                   const ReflectionInfo & ri )
 {
     const ReflectionInfo * currentRI = &ri;
     do
@@ -611,7 +621,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         for ( ReflectionIter it = currentRI->Begin(); it != end; ++it )
         {
             const ReflectedProperty & property = *it;
-            Deserialize( stream, base, property );
+            Deserialize( nodeGraph, stream, base, property );
         }
 
         currentRI = currentRI->GetSuperClass();
@@ -631,7 +641,10 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // Deserialize
 //------------------------------------------------------------------------------
-/*static*/ void Node::Deserialize( ConstMemoryStream & stream, void * base, const ReflectedProperty & property )
+/*static*/ void Node::Deserialize( NodeGraph & nodeGraph,
+                                   ConstMemoryStream & stream,
+                                   void * base,
+                                   const ReflectedProperty & property )
 {
     const PropertyType pt = property.GetType();
     switch ( pt )
@@ -700,7 +713,7 @@ void Node::SetLastBuildTime( uint32_t ms )
                 for ( uint32_t i = 0; i < numElements; ++i )
                 {
                     void * structBase = propertyS.GetStructInArray( base, (size_t)i );
-                    Deserialize( stream, structBase, *propertyS.GetStructReflectionInfo() );
+                    Deserialize( nodeGraph, stream, structBase, *propertyS.GetStructReflectionInfo() );
                 }
                 return;
             }
@@ -708,9 +721,19 @@ void Node::SetLastBuildTime( uint32_t ms )
             {
                 const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();
                 void * structBase = propertyS.GetStructBase( base );
-                Deserialize( stream, structBase, *structRI );
+                Deserialize( nodeGraph, stream, structBase, *structRI );
                 return;
             }
+        }
+        case PT_CUSTOM_1:
+        {
+            uint32_t index;
+            VERIFY( stream.Read( index ) );
+            Node * node = nodeGraph.GetNodeByIndex( index );
+            ASSERT( node );
+            Node ** propertyPtr = property.GetPtrToPropertyCustom<Node *>( base );
+            *propertyPtr = node;
+            return;
         }
         default:
         {

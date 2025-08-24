@@ -28,6 +28,8 @@ enum PropertyType : uint8_t
     PT_BOOL = 10,
     PT_ASTRING = 11,
     PT_STRUCT = 16,
+
+    PT_CUSTOM_1 = 128,
 };
 
 inline PropertyType GetPropertyType( const float * )

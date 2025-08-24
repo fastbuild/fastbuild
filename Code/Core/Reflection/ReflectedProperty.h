@@ -54,6 +54,24 @@ public:
     }
 
     template <class T>
+    T const * GetPtrToPropertyCustom( const void * base ) const
+    {
+        ASSERT( IsArray() == false );
+        const T * ptr = (T *)( (size_t)base + m_Offset );
+        ASSERT( GetType() == PT_CUSTOM_1 );
+        return ptr;
+    }
+
+    template <class T>
+    T * GetPtrToPropertyCustom( void * base ) const
+    {
+        ASSERT( IsArray() == false );
+        T * ptr = (T *)( (size_t)base + m_Offset );
+        ASSERT( GetType() == PT_CUSTOM_1 );
+        return ptr;
+    }
+
+    template <class T>
     const Array<T> * GetPtrToArray( const void * base ) const
     {
         ASSERT( IsArray() );
