@@ -147,7 +147,6 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
     }
 
     // Serialize events
-    AStackString nameBuffer;
     const double freqMul = ( static_cast<double>( Timer::GetFrequencyInvFloatMS() ) * 1000.0 );
     for ( const Event & event : m_Events )
     {
@@ -163,9 +162,9 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
         // Optional additional "target name"
         if ( event.m_TargetName )
         {
-            nameBuffer = event.m_TargetName;
-            JSON::Escape( nameBuffer );
-            buffer.AppendFormat( ",\"args\":{\"name\":\"%s\"}", nameBuffer.Get() );
+            buffer += ",\"args\":{\"name\":\"";
+            JSON::AppendEscaped( event.m_TargetName, buffer );
+            buffer += "\"}";
         }
 
         buffer += ( "}," );
@@ -197,7 +196,7 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
 
     // Open output file and write the majority of the profiling info
     FileStream f;
-    if ( ( f.Open( fileName, FileStream::WRITE_ONLY ) == false ) ||
+    if ( ( f.Open( fileName, FileStream::OPEN_OR_CREATE_READ_WRITE ) == false ) ||
          ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) != buffer.GetLength() ) )
     {
         return false;
@@ -213,7 +212,8 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
                    (uint64_t)( (double)( saveEnd - saveStart ) * freqMul ),
                    Event::kLocalMachineId,
                    0u );
-    return ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() );
+    return ( ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() ) &&
+             f.Truncate() );
 }
 
 // MetricsThreadWrapper
