@@ -49,8 +49,16 @@ private:
                                   const uint64_t processCreationTime );
     [[nodiscard]] static uint64_t GetProcessCreationTime( const void * hProc ); // HANDLE
     void Read( void * handle, AString & buffer );
+#elif defined( __APPLE__ )
+    void Read( int32_t stdOutHandle,
+               int32_t stdErrHandle,
+               AString & inoutOutBuffer,
+               AString & inoutErrBuffer );
 #else
     void Read( int handle, AString & buffer );
+#endif
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+    void ReadCommon( int32_t handle, AString & inoutBuffer );
 #endif
 
     void Terminate();

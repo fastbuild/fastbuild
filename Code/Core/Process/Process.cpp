@@ -631,8 +631,12 @@ bool Process::ReadAllData( AString & outMem,
 
         const uint32_t prevOutSize = outMem.GetLength();
         const uint32_t prevErrSize = errMem.GetLength();
+#if defined( __APPLE__ )
+        Read( m_StdOutRead, m_StdErrRead, outMem, errMem );
+#else
         Read( m_StdOutRead, outMem );
         Read( m_StdErrRead, errMem );
+#endif
 
         // did we get some data?
         if ( ( prevOutSize != outMem.GetLength() ) || ( prevErrSize != errMem.GetLength() ) )
@@ -678,10 +682,10 @@ bool Process::ReadAllData( AString & outMem,
 
             // no data available, but process is still going, so wait
     #if defined( __OSX__ )
-            // On OSX there seems to be no way to set the pipe bufffer
-            // size so we must instead wake up frequently to avoid the
-            // writer being blocked.
-            Thread::Sleep( 2 );
+            // On OSX the Sleep is built into the select() we do on both
+            // pipes together.
+
+            // TODO:B Linux should probably use the same logic
     #else
             // TODO:C Investigate waiting on an event when process terminates
             // to reduce overall process spawn time
@@ -745,9 +749,55 @@ void Process::Read( HANDLE handle, AString & buffer )
 }
 #endif
 
+//------------------------------------------------------------------------------
+#if defined( __APPLE__ )
+void Process::Read( int32_t stdOutHandle,
+                    int32_t stdErrHandle,
+                    AString & inoutOutBuffer,
+                    AString & inoutErrBuffer )
+{
+    PROFILE_FUNCTION;
+
+    // Break periodically when there is no data so caller can check timeout
+    timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 16000; // 16ms
+
+    // any data available in either handle?
+    fd_set fdSet;
+    FD_ZERO( &fdSet );
+    FD_SET( stdOutHandle, &fdSet );
+    FD_SET( stdErrHandle, &fdSet );
+    int ret = select( Math::Max( stdOutHandle, stdErrHandle ) + 1,
+                      &fdSet,
+                      nullptr,
+                      nullptr,
+                      &timeout );
+    if ( ret == -1 )
+    {
+        ASSERT( false ); // usage error?
+        return;
+    }
+    if ( ret == 0 )
+    {
+        return; // no data available
+    }
+
+    ASSERT( ( ret == 1 ) || ( ret == 2 ) );
+    if ( FD_ISSET( stdOutHandle, &fdSet ) )
+    {
+        ReadCommon( stdOutHandle, inoutOutBuffer );
+    }
+    if ( FD_ISSET( stdErrHandle, &fdSet ) )
+    {
+        ReadCommon( stdErrHandle, inoutErrBuffer );
+    }
+}
+#endif
+
 // Read
 //------------------------------------------------------------------------------
-#if defined( __LINUX__ ) || defined( __APPLE__ )
+#if defined( __LINUX__ )
 void Process::Read( int handle, AString & buffer )
 {
     // any data available?
@@ -768,6 +818,14 @@ void Process::Read( int handle, AString & buffer )
         return; // no data available
     }
 
+    ReadCommon( handle, buffer );
+}
+#endif
+
+//------------------------------------------------------------------------------
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+void Process::ReadCommon( int32_t handle, AString & buffer )
+{
     // how much space do we have left for reading into?
     uint32_t spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
     if ( spaceInBuffer == 0 )
