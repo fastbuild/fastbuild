@@ -43,6 +43,24 @@ public:
     [[nodiscard]] static uint32_t GetCurrentId();
 
 private:
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+    [[nodiscard]] bool SpawnUsingFork( int32_t stdOutPipeFDs[ 2 ],
+                                       int32_t stdErrPipeFDs[ 2 ],
+                                       const char * executable,
+                                       char * const * argV,
+                                       const char * workingDir,
+                                       char * const * envV );
+#endif
+#if defined( __APPLE__ )
+    [[nodiscard]] bool CanUsePosixSpawn( const char * workingDir ) const;
+    [[nodiscard]] bool SpawnUsingPosixSpawn( int32_t stdOutPipeFDs[ 2 ],
+                                             int32_t stdErrPipeFDs[ 2 ],
+                                             const char * executable,
+                                             char * const * argV,
+                                             const char * workingDir,
+                                             char * const * envV );
+#endif
+
 #if defined( __WINDOWS__ )
     void KillProcessTreeInternal( const void * hProc, // HANDLE
                                   const uint32_t processID,
