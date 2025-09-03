@@ -77,6 +77,7 @@ Compiler( 'Compiler-Clang12' )
     .Platform                       = 'x64OSX'
     .CompilerOptions                + ' -arch x86_64 -mmacosx-version-min=10.7'
     .CompilerOptionsC               + ' -arch x86_64 -mmacosx-version-min=10.7'
+    .PCHOptions                     + ' -arch x86_64 -mmacosx-version-min=10.7'
     .LinkerOptions                  + ' -arch x86_64 -mmacosx-version-min=10.7'
 ]
 
@@ -88,6 +89,7 @@ Compiler( 'Compiler-Clang12' )
     .Platform                       = 'ARMOSX'
     .CompilerOptions                + ' -arch arm64 -mmacosx-version-min=11.0'
     .CompilerOptionsC               + ' -arch arm64 -mmacosx-version-min=11.0'
+    .PCHOptions                     + ' -arch arm64 -mmacosx-version-min=11.0'
     .LinkerOptions                  + ' -arch arm64 -mmacosx-version-min=11.0'
 ]
 
