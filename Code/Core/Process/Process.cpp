@@ -25,6 +25,7 @@
     #include <errno.h>
     #include <fcntl.h>
     #include <signal.h>
+    #include <spawn.h>
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
@@ -370,6 +371,42 @@ bool Process::Spawn( const char * executable,
     }
     envVector.Append( nullptr ); // env must be terminated with a nullptr
 
+    char * const * argV = const_cast<char * const *>( argVector.Begin() );
+    char * const * envV = const_cast<char * const *>( environment ? envVector.Begin() : nullptr );
+
+    // Use posix_spawn when available and safe to improve process spawning
+    // performance.
+    // TODO:B Test on Linux and allow use there
+    #if defined( __APPLE__ )
+    if ( CanUsePosixSpawn( workingDir ) )
+    {
+        return SpawnUsingPosixSpawn( stdOutPipeFDs,
+                                     stdErrPipeFDs,
+                                     executable,
+                                     argV,
+                                     workingDir,
+                                     envV );
+    }
+    #endif
+
+    return SpawnUsingFork( stdOutPipeFDs,
+                           stdErrPipeFDs,
+                           executable,
+                           argV,
+                           workingDir,
+                           envV );
+#endif
+}
+
+//------------------------------------------------------------------------------
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+bool Process::SpawnUsingFork( int32_t stdOutPipeFDs[ 2 ],
+                              int32_t stdErrPipeFDs[ 2 ],
+                              const char * executable,
+                              char * const * argV,
+                              const char * workingDir,
+                              char * const * envV )
+{
     // fork the process
     const pid_t childProcessPid = fork();
     if ( childProcessPid == -1 )
@@ -406,10 +443,8 @@ bool Process::Spawn( const char * executable,
         }
 
         // transfer execution to new executable
-        char * const * argV = (char * const *)argVector.Begin();
-        if ( environment )
+        if ( envV )
         {
-            char * const * envV = (char * const *)envVector.Begin();
             execve( executable, argV, envV );
         }
         else
@@ -435,10 +470,112 @@ bool Process::Spawn( const char * executable,
         m_HasAlreadyWaitTerminated = false;
         return true;
     }
-#else
-    #error Unknown platform
-#endif
 }
+#endif
+
+//------------------------------------------------------------------------------
+#if defined( __APPLE__ )
+// Safe use of posix_spawn requires posix_spawn_file_actions_addchdir_np if
+// the working dir needs to be set
+bool Process::CanUsePosixSpawn( const char * workingDir ) const
+{
+    // OSX
+    #if defined( __aarch64__ )
+    // ARM is OSX 11 or later and has posix_spawn_file_actions_addchdir_np
+    (void)workingDir;
+    return true;
+    #else
+    // If we don't actually need to set the working dir, we don't need the action
+    // TODO: We could dynamically check for the symbol
+    return ( workingDir == nullptr );
+    #endif
+}
+#endif
+
+//------------------------------------------------------------------------------
+#if defined( __APPLE__ )
+bool Process::SpawnUsingPosixSpawn( int32_t stdOutPipeFDs[ 2 ],
+                                    int32_t stdErrPipeFDs[ 2 ],
+                                    const char * executable,
+                                    char * const * argV,
+                                    const char * workingDir,
+                                    char * const * envV )
+{
+    ASSERT( CanUsePosixSpawn( workingDir ) ); // Should not get here if not safe
+
+    // Create spawn actions
+    posix_spawn_file_actions_t spawnFileActions;
+    VERIFY( posix_spawn_file_actions_init( &spawnFileActions ) == 0 );
+
+    // Child will dup2 pipes
+    VERIFY( posix_spawn_file_actions_adddup2( &spawnFileActions, stdOutPipeFDs[ 1 ], STDOUT_FILENO ) == 0 );
+    VERIFY( posix_spawn_file_actions_adddup2( &spawnFileActions, stdErrPipeFDs[ 1 ], STDERR_FILENO ) == 0 );
+
+    // Child will close the original pipes we don't want inherited, but will
+    // keep dup2'd handles
+    VERIFY( posix_spawn_file_actions_addclose( &spawnFileActions, stdOutPipeFDs[ 0 ] ) == 0 );
+    VERIFY( posix_spawn_file_actions_addclose( &spawnFileActions, stdOutPipeFDs[ 1 ] ) == 0 );
+    VERIFY( posix_spawn_file_actions_addclose( &spawnFileActions, stdErrPipeFDs[ 0 ] ) == 0 );
+    VERIFY( posix_spawn_file_actions_addclose( &spawnFileActions, stdErrPipeFDs[ 1 ] ) == 0 );
+
+    // Child will set working dir if needed
+    if ( workingDir )
+    {
+    #if defined( __OSX__ ) && defined( __aarch64__ )
+        // OSX ARM has at least OSX 11.0 which has posix_spawn_file_actions_addchdir_np
+        VERIFY( posix_spawn_file_actions_addchdir_np( &spawnFileActions, workingDir ) == 0 );
+    #else
+        // We should not be calling this function if we want to set a working dir
+        // but can't safely do so using posix_spawn_file_actions_addchdir_np
+        ASSERT( false );
+    #endif
+    }
+
+    // Create spawn attributes
+    posix_spawnattr_t spawnAttributes;
+    VERIFY( posix_spawnattr_init( &spawnAttributes ) == 0 );
+
+    // Child will put itself into its own process group.
+    // This allows us to send signals to the group to implement KillProcessTree.
+    VERIFY( posix_spawnattr_setpgroup( &spawnAttributes, 0 ) == 0 );
+    const int16_t flags = POSIX_SPAWN_SETPGROUP;
+    VERIFY( posix_spawnattr_setflags( &spawnAttributes, flags ) == 0 );
+
+    // Spawn process
+    pid_t childProcessPid = -1;
+    const int32_t result = posix_spawn( &childProcessPid,
+                                        executable,
+                                        &spawnFileActions,
+                                        &spawnAttributes,
+                                        argV,
+                                        envV );
+
+    // Free attributes and actions
+    VERIFY( posix_spawnattr_destroy( &spawnAttributes ) == 0 );
+    VERIFY( posix_spawn_file_actions_destroy( &spawnFileActions ) == 0 );
+
+    // Close write pipes (we never write anything)
+    VERIFY( close( stdOutPipeFDs[ 1 ] ) == 0 );
+    VERIFY( close( stdErrPipeFDs[ 1 ] ) == 0 );
+
+    if ( result != 0 )
+    {
+        // Close read pipes
+        VERIFY( close( stdOutPipeFDs[ 0 ] ) == 0 );
+        VERIFY( close( stdErrPipeFDs[ 0 ] ) == 0 );
+        return false; // Failed to spawn
+    }
+
+    // Keep pipes for reading child process
+    m_StdOutRead = stdOutPipeFDs[ 0 ];
+    m_StdErrRead = stdErrPipeFDs[ 0 ];
+    m_ChildPID = static_cast<int32_t>( childProcessPid );
+
+    m_Started = true;
+    m_HasAlreadyWaitTerminated = false;
+    return true;
+}
+#endif
 
 // IsRunning
 //----------------------------------------------------------
@@ -631,8 +768,12 @@ bool Process::ReadAllData( AString & outMem,
 
         const uint32_t prevOutSize = outMem.GetLength();
         const uint32_t prevErrSize = errMem.GetLength();
+#if defined( __APPLE__ )
+        Read( m_StdOutRead, m_StdErrRead, outMem, errMem );
+#else
         Read( m_StdOutRead, outMem );
         Read( m_StdErrRead, errMem );
+#endif
 
         // did we get some data?
         if ( ( prevOutSize != outMem.GetLength() ) || ( prevErrSize != errMem.GetLength() ) )
@@ -678,10 +819,10 @@ bool Process::ReadAllData( AString & outMem,
 
             // no data available, but process is still going, so wait
     #if defined( __OSX__ )
-            // On OSX there seems to be no way to set the pipe bufffer
-            // size so we must instead wake up frequently to avoid the
-            // writer being blocked.
-            Thread::Sleep( 2 );
+            // On OSX the Sleep is built into the select() we do on both
+            // pipes together.
+
+            // TODO:B Linux should probably use the same logic
     #else
             // TODO:C Investigate waiting on an event when process terminates
             // to reduce overall process spawn time
@@ -745,9 +886,57 @@ void Process::Read( HANDLE handle, AString & buffer )
 }
 #endif
 
+//------------------------------------------------------------------------------
+#if defined( __APPLE__ )
+void Process::Read( int32_t stdOutHandle,
+                    int32_t stdErrHandle,
+                    AString & inoutOutBuffer,
+                    AString & inoutErrBuffer )
+{
+    PROFILE_FUNCTION;
+
+    // Break periodically so caller can:
+    // - check timeouts (if used)
+    // - terminate process if cancelling
+    timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 500 * 1000; // 500ms
+
+    // any data available in either handle?
+    fd_set fdSet;
+    FD_ZERO( &fdSet );
+    FD_SET( stdOutHandle, &fdSet );
+    FD_SET( stdErrHandle, &fdSet );
+    int ret = select( Math::Max( stdOutHandle, stdErrHandle ) + 1,
+                      &fdSet,
+                      nullptr,
+                      nullptr,
+                      &timeout );
+    if ( ret == -1 )
+    {
+        ASSERT( false ); // usage error?
+        return;
+    }
+    if ( ret == 0 )
+    {
+        return; // no data available
+    }
+
+    ASSERT( ( ret == 1 ) || ( ret == 2 ) );
+    if ( FD_ISSET( stdOutHandle, &fdSet ) )
+    {
+        ReadCommon( stdOutHandle, inoutOutBuffer );
+    }
+    if ( FD_ISSET( stdErrHandle, &fdSet ) )
+    {
+        ReadCommon( stdErrHandle, inoutErrBuffer );
+    }
+}
+#endif
+
 // Read
 //------------------------------------------------------------------------------
-#if defined( __LINUX__ ) || defined( __APPLE__ )
+#if defined( __LINUX__ )
 void Process::Read( int handle, AString & buffer )
 {
     // any data available?
@@ -768,6 +957,14 @@ void Process::Read( int handle, AString & buffer )
         return; // no data available
     }
 
+    ReadCommon( handle, buffer );
+}
+#endif
+
+//------------------------------------------------------------------------------
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+void Process::ReadCommon( int32_t handle, AString & buffer )
+{
     // how much space do we have left for reading into?
     uint32_t spaceInBuffer = ( buffer.GetReserved() - buffer.GetLength() );
     if ( spaceInBuffer == 0 )

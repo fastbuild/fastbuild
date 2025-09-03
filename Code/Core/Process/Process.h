@@ -43,14 +43,40 @@ public:
     [[nodiscard]] static uint32_t GetCurrentId();
 
 private:
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+    [[nodiscard]] bool SpawnUsingFork( int32_t stdOutPipeFDs[ 2 ],
+                                       int32_t stdErrPipeFDs[ 2 ],
+                                       const char * executable,
+                                       char * const * argV,
+                                       const char * workingDir,
+                                       char * const * envV );
+#endif
+#if defined( __APPLE__ )
+    [[nodiscard]] bool CanUsePosixSpawn( const char * workingDir ) const;
+    [[nodiscard]] bool SpawnUsingPosixSpawn( int32_t stdOutPipeFDs[ 2 ],
+                                             int32_t stdErrPipeFDs[ 2 ],
+                                             const char * executable,
+                                             char * const * argV,
+                                             const char * workingDir,
+                                             char * const * envV );
+#endif
+
 #if defined( __WINDOWS__ )
     void KillProcessTreeInternal( const void * hProc, // HANDLE
                                   const uint32_t processID,
                                   const uint64_t processCreationTime );
     [[nodiscard]] static uint64_t GetProcessCreationTime( const void * hProc ); // HANDLE
     void Read( void * handle, AString & buffer );
+#elif defined( __APPLE__ )
+    void Read( int32_t stdOutHandle,
+               int32_t stdErrHandle,
+               AString & inoutOutBuffer,
+               AString & inoutErrBuffer );
 #else
     void Read( int handle, AString & buffer );
+#endif
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+    void ReadCommon( int32_t handle, AString & inoutBuffer );
 #endif
 
     void Terminate();
