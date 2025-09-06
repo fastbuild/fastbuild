@@ -282,10 +282,11 @@ void Client::ThreadFunc()
 void Client::FindPotentialWorkers()
 {
     // TODO:B Allow list of workers to be updated after startup
-    if ( m_WorkerPool.IsEmpty() == false )
+    if ( m_WorkerDiscoveryDone == true )
     {
         return;
     }
+    m_WorkerDiscoveryDone = true;
 
     // Worker list from Settings takes priority over discovery
     if ( m_StaticWorkerList.IsEmpty() == false )

@@ -63,6 +63,7 @@ private:
     void CommunicateJobAvailability();
 
     // Worker pool
+    bool m_WorkerDiscoveryDone = false;
     Array<AString> m_StaticWorkerList; // optional explicit list to use (overrides discovery)
     Array<UniquePtr<ClientWorkerInfo>> m_WorkerPool; // workers to potentially connect to
     uint32_t m_NextWorkerIndex = 0; // next worker we will attempt to connect to
