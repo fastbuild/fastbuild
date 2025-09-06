@@ -748,14 +748,6 @@ bool Process::ReadAllData( AString & outMem,
 {
     const Timer t;
 
-#if defined( __LINUX__ )
-    // Start with a short sleep interval to allow rapid termination of
-    // short-lived processes. The timeout increases during periods of
-    // no output and reset when receiving output to balance responsiveness
-    // with overhead.
-    uint32_t sleepIntervalMS = 1;
-#endif
-
     bool processExited = false;
     for ( ;; )
     {
@@ -768,7 +760,7 @@ bool Process::ReadAllData( AString & outMem,
 
         const uint32_t prevOutSize = outMem.GetLength();
         const uint32_t prevErrSize = errMem.GetLength();
-#if defined( __APPLE__ )
+#if defined( __APPLE__ ) || defined( __LINUX__ )
         Read( m_StdOutRead, m_StdErrRead, outMem, errMem );
 #else
         Read( m_StdOutRead, outMem );
@@ -778,10 +770,6 @@ bool Process::ReadAllData( AString & outMem,
         // did we get some data?
         if ( ( prevOutSize != outMem.GetLength() ) || ( prevErrSize != errMem.GetLength() ) )
         {
-#if defined( __LINUX__ )
-            // Reset sleep interval
-            sleepIntervalMS = 1;
-#endif
             continue; // try reading again right away incase there is more
         }
 
@@ -818,19 +806,9 @@ bool Process::ReadAllData( AString & outMem,
             }
 
             // no data available, but process is still going, so wait
-    #if defined( __OSX__ )
-            // On OSX the Sleep is built into the select() we do on both
-            // pipes together.
-
-            // TODO:B Linux should probably use the same logic
-    #else
-            // TODO:C Investigate waiting on an event when process terminates
-            // to reduce overall process spawn time
-            Thread::Sleep( sleepIntervalMS );
-
-            // Increase sleep interval upto limit
-            sleepIntervalMS = Math::Min<uint32_t>( sleepIntervalMS * 2, 8 );
-    #endif
+            // if we got here it's because we woke periodically to check
+            // if the process timed out (but it didn't as checked above)
+            // or if the build was cancelled (after we continue the loop)
             continue;
         }
 #endif
@@ -887,7 +865,7 @@ void Process::Read( HANDLE handle, AString & buffer )
 #endif
 
 //------------------------------------------------------------------------------
-#if defined( __APPLE__ )
+#if defined( __APPLE__ ) || defined( __LINUX__ )
 void Process::Read( int32_t stdOutHandle,
                     int32_t stdErrHandle,
                     AString & inoutOutBuffer,
@@ -931,33 +909,6 @@ void Process::Read( int32_t stdOutHandle,
     {
         ReadCommon( stdErrHandle, inoutErrBuffer );
     }
-}
-#endif
-
-// Read
-//------------------------------------------------------------------------------
-#if defined( __LINUX__ )
-void Process::Read( int handle, AString & buffer )
-{
-    // any data available?
-    timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 0;
-    fd_set fdSet;
-    FD_ZERO( &fdSet );
-    FD_SET( handle, &fdSet );
-    int ret = select( handle + 1, &fdSet, nullptr, nullptr, &timeout );
-    if ( ret == -1 )
-    {
-        ASSERT( false ); // usage error?
-        return;
-    }
-    if ( ret == 0 )
-    {
-        return; // no data available
-    }
-
-    ReadCommon( handle, buffer );
 }
 #endif
 
