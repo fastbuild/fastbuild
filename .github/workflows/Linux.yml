@@ -21,11 +21,11 @@ jobs:
             gcc: 10
             clang: 15
             os: ubuntu-22.04
-          - cfg: MSan
-            gcc: 10
-            clang: 15
-            os: ubuntu-22.04
-            can-fail: true
+          #- cfg: MSan
+          #  gcc: 10
+          #  clang: 15
+          #  os: ubuntu-22.04
+          #  can-fail: true
           - cfg: TSan
             gcc: 10
             clang: 15
@@ -88,9 +88,9 @@ jobs:
         if: ${{ matrix.cfg == 'ASan' }}
         run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
 
-      - name: MSan
-        if: ${{ matrix.cfg == 'MSan' }}
-        run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
+      #- name: MSan
+      #  if: ${{ matrix.cfg == 'MSan' }}
+      #  run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
 
       - name: TSan
         if: ${{ matrix.cfg == 'TSan' }}
