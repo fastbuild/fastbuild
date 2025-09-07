@@ -41,13 +41,7 @@ protected:
     static void InitBuckets();
 
     static const size_t BUCKET_MAX_ALLOC_SIZE = 256;
-#if defined( __clang__ )
-    // Last seen in Apple LLVM version 10.0.0 (clang-1000.11.45.5) but exists in
-    // other versions as well
     static const size_t BUCKET_ALIGNMENT = 16;
-#else
-    static const size_t BUCKET_ALIGNMENT = sizeof( void * );
-#endif
     static const size_t BUCKET_NUM_BUCKETS = ( BUCKET_MAX_ALLOC_SIZE / BUCKET_ALIGNMENT );
     static const size_t BUCKET_ADDRESSSPACE_SIZE = ( 200 * 1024 * 1024 );
     static const size_t BUCKET_NUM_PAGES = ( BUCKET_ADDRESSSPACE_SIZE / MemPoolBlock::kMemPoolBlockPageSize );

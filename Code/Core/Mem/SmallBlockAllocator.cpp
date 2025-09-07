@@ -42,6 +42,10 @@
 //------------------------------------------------------------------------------
 NO_INLINE void SmallBlockAllocator::InitBuckets()
 {
+    // Our small block allocator alignment should satisfy the alignment needs
+    // of new when called without an alignment argument
+    static_assert( BUCKET_ALIGNMENT == __STDCPP_DEFAULT_NEW_ALIGNMENT__ );
+
     ASSERT( s_BucketMemoryStart == MEM_BUCKETS_NOT_INITIALIZED );
 
     // Reserve the address space for the buckets to manage
