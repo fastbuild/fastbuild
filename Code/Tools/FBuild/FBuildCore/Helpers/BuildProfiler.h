@@ -86,8 +86,9 @@ protected:
         int64_t m_Time = 0;
 
         // Memory
-        uint32_t m_TotalMemoryMiB = 0;
         uint32_t m_JobMemoryMiB = 0;
+        uint32_t m_ProcessMiB = 0;
+        uint32_t m_SystemMiB = 0;
 
         // Network
         uint16_t m_NumConnections = 0;

@@ -16,13 +16,10 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Mem/MemInfo.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
-#if defined( __WINDOWS__ )
-    #include "Core/Env/WindowsHeader.h"
-    #include "Psapi.h"
-#endif
 
 // CONSTRUCTOR (BuildProfiler)
 //------------------------------------------------------------------------------
@@ -171,27 +168,34 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
     }
 
     // Serialize metrics
+    Metrics lastValues;
     for ( const Metrics & metrics : m_Metrics )
     {
-        // Total Memory
-        buffer.AppendFormat( "{\"name\":\"Total (MiB)\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
-                             (uint64_t)( (double)metrics.m_Time * freqMul ),
-                             metrics.m_TotalMemoryMiB );
-        // Job Memory
-        if ( metrics.m_JobMemoryMiB > 0 )
-        {
-            buffer.AppendFormat( "{\"name\":\"Job (MiB)\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
-                                 (uint64_t)( (double)metrics.m_Time * freqMul ),
-                                 metrics.m_JobMemoryMiB );
+        const uint64_t currentTimeStamp = static_cast<uint64_t>( static_cast<double>( metrics.m_Time ) * freqMul );
+        const bool isLast = ( &metrics == &m_Metrics.Top() );
+
+        // Macro to output a stat, but only if it changed (to reduce output size)
+#define OUTPUT_STAT( stat, pid, name, unit, type, fmt, div ) \
+        if ( ( lastValues.stat != metrics.stat ) || isLast ) \
+        { \
+            buffer.AppendFormat( "{\"name\":\"" name "\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":" pid ",\"args\":{\"" unit "\":" fmt "}},", \
+                                 currentTimeStamp, \
+                                 static_cast<type>( metrics.stat ) / div ); \
+            lastValues.stat = metrics.stat; \
         }
 
+        // Memory
+        OUTPUT_STAT( m_JobMemoryMiB, "-2", "Process - Job (MiB)", "MiB", uint32_t, "%u", 1u )
+        OUTPUT_STAT( m_ProcessMiB, "-2", "Process - Total (MiB)", "MiB", uint32_t, "%u", 1u )
+        OUTPUT_STAT( m_SystemMiB, "-2", "System - Total (GiB)", "GiB", double, "%2.1f", 1024.0 )
+
         // Network Connections (if using distributed compilation)
-        if ( metrics.m_NumConnections > 0 )
+        if ( options.m_AllowDistributed )
         {
-            buffer.AppendFormat( "{\"name\":\"Connections\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-3,\"args\":{\"Num\":%u}},",
-                                 (uint64_t)( (double)metrics.m_Time * freqMul ),
-                                 metrics.m_NumConnections );
+            OUTPUT_STAT( m_NumConnections, "-3", "Connections", "Num", uint32_t, "%u", 1u )
         }
+
+#undef OUTPUT_STAT
     }
 
     // Open output file and write the majority of the profiling info
@@ -236,18 +240,15 @@ void BuildProfiler::MetricsUpdate()
         metrics.m_Time = Timer::GetNow();
 
         // FASTBuild memory usage (this process)
-#if defined( __WINDOWS__ )
-        PROCESS_MEMORY_COUNTERS_EX counters;
-        VERIFY( GetProcessMemoryInfo( GetCurrentProcess(),
-                                      (PROCESS_MEMORY_COUNTERS *)&counters,
-                                      sizeof( PROCESS_MEMORY_COUNTERS_EX ) ) );
-        metrics.m_TotalMemoryMiB = (uint32_t)( counters.WorkingSetSize / ( 1024 * 1024 ) );
-#else
-        metrics.m_TotalMemoryMiB = 0; // TODO:LINUX TODO:OSX Implement total memory usage stat
-#endif
+        metrics.m_ProcessMiB = MemInfo::GetProcessInfo();
 
         // Memory used by distributed jobs
-        metrics.m_JobMemoryMiB = (uint32_t)( Job::GetTotalLocalDataMemoryUsage() / ( 1024 * 1024 ) );
+        metrics.m_JobMemoryMiB = MemInfo::ConvertBytesToMiB( Job::GetTotalLocalDataMemoryUsage() );
+
+        // System memory
+        SystemMemInfo systemMemInfo;
+        MemInfo::GetSystemInfo( systemMemInfo );
+        metrics.m_SystemMiB = ( systemMemInfo.m_TotalPhysMiB - systemMemInfo.m_AvailPhysMiB );
 
         // Network connections
         metrics.m_NumConnections = (uint16_t)FBuild::Get().GetNumWorkerConnections();
