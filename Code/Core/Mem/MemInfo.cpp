@@ -6,9 +6,11 @@
 
 // Core
 #include "Core/Env/Assert.h"
+#include "Core/FileIO/FileStream.h"
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h" // Must be before Psapi.h
 #endif
+#include "Core/Strings/AString.h"
 
 // System
 #if defined( __WINDOWS__ )
@@ -20,6 +22,16 @@
         #include <sys/sysctl.h>
     #endif
     #include <unistd.h>
+#endif
+
+// Globals
+//------------------------------------------------------------------------------
+#if defined( __OSX__ ) || defined( __LINUX__ )
+namespace
+{
+    static const uint64_t gPageSize = static_cast<uint64_t>( sysconf( _SC_PAGE_SIZE ) );
+    static const uint64_t gPhysTotalPages = static_cast<uint64_t>( sysconf( _SC_PHYS_PAGES ) );
+}
 #endif
 
 // GetMemInfo
@@ -35,9 +47,8 @@
     const uint64_t physTotalPages = info.PhysicalTotal;
     const uint64_t physAvailPages = info.PhysicalAvailable;
 #else
-
-    const uint64_t pageSize = static_cast<uint64_t>( sysconf( _SC_PAGE_SIZE ) );
-    const uint64_t physTotalPages = static_cast<uint64_t>( sysconf( _SC_PHYS_PAGES ) );
+    const uint64_t pageSize = gPageSize;
+    const uint64_t physTotalPages = gPhysTotalPages;
     #if defined( __LINUX__ )
     const uint64_t physAvailPages = static_cast<uint64_t>( sysconf( _SC_AVPHYS_PAGES ) );
     #else
@@ -57,10 +68,42 @@
     #endif
 #endif
     // Physical memory accessible by OS in MiB
-    outInfo.mTotalPhysMiB = ConvertBytesToMiB( physTotalPages * pageSize );
+    outInfo.m_TotalPhysMiB = ConvertBytesToMiB( physTotalPages * pageSize );
 
     // Physical free memory
-    outInfo.mAvailPhysMiB = ConvertBytesToMiB( physAvailPages * pageSize );
+    outInfo.m_AvailPhysMiB = ConvertBytesToMiB( physAvailPages * pageSize );
+}
+
+//------------------------------------------------------------------------------
+/*static*/ uint32_t MemInfo::GetProcessInfo()
+{
+#if defined( __WINDOWS__ )
+    PROCESS_MEMORY_COUNTERS_EX counters;
+    VERIFY( GetProcessMemoryInfo( GetCurrentProcess(),
+                                  (PROCESS_MEMORY_COUNTERS *)&counters,
+                                  sizeof( PROCESS_MEMORY_COUNTERS_EX ) ) );
+    const uint64_t bytes = counters.WorkingSetSize;
+#elif defined( __OSX__ )
+    struct mach_task_basic_info info;
+    mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
+    VERIFY( task_info( mach_task_self(),
+                       MACH_TASK_BASIC_INFO,
+                       (task_info_t)&info,
+                       &infoCount ) == 0 );
+    const uint64_t bytes = info.resident_size;
+#elif defined( __LINUX__ )
+    uint64_t bytes = 0;
+    FileStream f;
+    VERIFY( f.Open( "/proc/self/statm" ) );
+    char buffer[ 1024 ];
+    const uint64_t len = f.ReadBuffer( buffer, ( sizeof( buffer ) - 1 ) );
+    ASSERT( len > 0 );
+    buffer[ len ] = 0;
+    VERIFY( AString::ScanS( buffer, "%*s%" PRIu64, &bytes ) == 1 );
+    bytes *= gPageSize;
+#endif
+
+    return ConvertBytesToMiB( bytes );
 }
 
 //------------------------------------------------------------------------------
