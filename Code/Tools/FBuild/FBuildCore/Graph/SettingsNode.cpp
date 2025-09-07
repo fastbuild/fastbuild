@@ -270,7 +270,7 @@ bool SettingsNode::InitializeConcurrencyGroups( const BFFToken * iter,
         if ( group.GetMemoryBasedLimit() > 0 )
         {
             // Determine system memory based limit, but always allow 1 job
-            memoryLimit = ( sysMeminfo.mTotalPhysMiB / group.GetMemoryBasedLimit() );
+            memoryLimit = ( sysMeminfo.m_TotalPhysMiB / group.GetMemoryBasedLimit() );
             memoryLimit = Math::Max( memoryLimit, 1U );
         }
 
