@@ -53,10 +53,10 @@ void TestMemInfo::GetProcessInfo() const
                                            128 * 1024 * 1024 };
 
     // Allocate some memory to ensure at least that much is reported as used
-    UniquePtr<char> mem;
+    UniquePtr<char, FreeDeletor> mem;
     for ( const size_t sizeInBytes : sizesInBytes )
     {
-        mem.Replace( FNEW( char[ sizeInBytes ] ) );
+        mem.Replace( static_cast<char *>( ALLOC( sizeInBytes ) ) );
         ASSERT( MemInfo::GetProcessInfo() >= MemInfo::ConvertBytesToMiB( sizeInBytes ) );
     }
 }
