@@ -34,7 +34,7 @@
 THREAD_LOCAL uint32_t g_MemTrackerDisabledOnThisThread( 0 );
 
     // Defines
-    #define ALLOCATION_HASH_SHIFT       ( 0x2 )         // shift off lower bits
+    #define ALLOCATION_HASH_SHIFT       ( 0x4 )         // shift off lower bits for 16 byte alignment
     #define ALLOCATION_HASH_SIZE        ( 0x100000 )    // one megabyte
     #define ALLOCATION_HASH_MASK        ( 0x0FFFFF )    // mask off upper bits
 

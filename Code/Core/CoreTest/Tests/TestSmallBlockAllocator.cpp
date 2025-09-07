@@ -6,6 +6,7 @@
 #include "TestFramework/TestGroup.h"
 
 #include "Core/Containers/Array.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Math/Random.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Mem/SmallBlockAllocator.h"
@@ -34,6 +35,7 @@ private:
 
     void SingleThreaded() const;
     void MultiThreaded() const;
+    void MinNewAlignment() const;
 
     // struct for managing threads
     class ThreadInfo
@@ -58,6 +60,7 @@ private:
 REGISTER_TESTS_BEGIN( TestSmallBlockAllocator )
     REGISTER_TEST( SingleThreaded )
     REGISTER_TEST( MultiThreaded )
+    REGISTER_TEST( MinNewAlignment )
 REGISTER_TESTS_END
 
 // SingleThreaded
@@ -245,6 +248,31 @@ void TestSmallBlockAllocator::MultiThreaded() const
     ThreadInfo & info = *( static_cast<ThreadInfo *>( userData ) );
     info.m_TimeTaken = AllocateFromSmallBlockAllocator( *info.m_AllocationSizes, info.m_RepeatCount );
     return 0;
+}
+
+//------------------------------------------------------------------------------
+void TestSmallBlockAllocator::MinNewAlignment() const
+{
+    // All platforms are 64bit and with C++17 or later we expect minimum of 16
+    // byte alignment for new.
+    static_assert( __STDCPP_DEFAULT_NEW_ALIGNMENT__ == 16 );
+
+    // Create a small class we'll allocate with new to ensure minimum alignment
+    class AlignedThing
+    {
+    public:
+        bool m_Bool = true;
+    };
+
+    // Allocate several items to ensure we are not getting an aligned one
+    // purely by luck
+    Array<UniquePtr<AlignedThing>> alignedThings;
+    for ( size_t i = 0; i < 1024; ++i )
+    {
+        alignedThings.EmplaceBack( FNEW( AlignedThing() ) );
+        const AlignedThing * thing = alignedThings.Top().Get();
+        TEST_ASSERT( ( reinterpret_cast<size_t>( thing ) % 16 ) == 0 );
+    }
 }
 
 //------------------------------------------------------------------------------
