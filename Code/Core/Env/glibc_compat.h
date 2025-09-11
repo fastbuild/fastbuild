@@ -18,6 +18,7 @@ __asm__( ".symver dlerror,dlerror@GLIBC_2.2.5" );
 __asm__( ".symver dlopen,dlopen@GLIBC_2.2.5" );
 __asm__( ".symver dlsym,dlsym@GLIBC_2.2.5" );
 __asm__( ".symver memcpy,memcpy@GLIBC_2.2.5" );
+__asm__( ".symver posix_spawn,posix_spawn@GLIBC_2.2.5" );
 __asm__( ".symver pthread_attr_setstacksize,pthread_attr_setstacksize@GLIBC_2.2.5" );
 __asm__( ".symver pthread_create,pthread_create@GLIBC_2.2.5" );
 __asm__( ".symver pthread_detach,pthread_detach@GLIBC_2.2.5" );
