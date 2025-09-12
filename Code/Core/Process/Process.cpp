@@ -165,6 +165,12 @@ void Process::KillProcessTree()
 #endif
 }
 
+// Externs
+//------------------------------------------------------------------------------
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+extern char ** environ;
+#endif
+
 // Spawn
 //------------------------------------------------------------------------------
 bool Process::Spawn( const char * executable,
@@ -372,12 +378,11 @@ bool Process::Spawn( const char * executable,
     envVector.Append( nullptr ); // env must be terminated with a nullptr
 
     char * const * argV = const_cast<char * const *>( argVector.Begin() );
-    char * const * envV = const_cast<char * const *>( environment ? envVector.Begin() : nullptr );
+    char * const * envV = const_cast<char * const *>( environment ? envVector.Begin()
+                                                                  : const_cast<char * const *>( environ ) );
 
     // Use posix_spawn when available and safe to improve process spawning
     // performance.
-    // TODO:B Test on Linux and allow use there
-    #if defined( __APPLE__ )
     if ( CanUsePosixSpawn( workingDir ) )
     {
         return SpawnUsingPosixSpawn( stdOutPipeFDs,
@@ -387,7 +392,6 @@ bool Process::Spawn( const char * executable,
                                      workingDir,
                                      envV );
     }
-    #endif
 
     return SpawnUsingFork( stdOutPipeFDs,
                            stdErrPipeFDs,
@@ -474,13 +478,12 @@ bool Process::SpawnUsingFork( int32_t stdOutPipeFDs[ 2 ],
 #endif
 
 //------------------------------------------------------------------------------
-#if defined( __APPLE__ )
+#if defined( __LINUX__ ) || defined( __APPLE__ )
 // Safe use of posix_spawn requires posix_spawn_file_actions_addchdir_np if
 // the working dir needs to be set
 bool Process::CanUsePosixSpawn( const char * workingDir ) const
 {
-    // OSX
-    #if defined( __aarch64__ )
+    #if defined( __APPLE__ ) && defined( __aarch64__ )
     // ARM is OSX 11 or later and has posix_spawn_file_actions_addchdir_np
     (void)workingDir;
     return true;
@@ -493,7 +496,7 @@ bool Process::CanUsePosixSpawn( const char * workingDir ) const
 #endif
 
 //------------------------------------------------------------------------------
-#if defined( __APPLE__ )
+#if defined( __LINUX__ ) || defined( __APPLE__ )
 bool Process::SpawnUsingPosixSpawn( int32_t stdOutPipeFDs[ 2 ],
                                     int32_t stdErrPipeFDs[ 2 ],
                                     const char * executable,

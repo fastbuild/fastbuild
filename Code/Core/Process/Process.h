@@ -50,8 +50,6 @@ private:
                                        char * const * argV,
                                        const char * workingDir,
                                        char * const * envV );
-#endif
-#if defined( __APPLE__ )
     [[nodiscard]] bool CanUsePosixSpawn( const char * workingDir ) const;
     [[nodiscard]] bool SpawnUsingPosixSpawn( int32_t stdOutPipeFDs[ 2 ],
                                              int32_t stdErrPipeFDs[ 2 ],
