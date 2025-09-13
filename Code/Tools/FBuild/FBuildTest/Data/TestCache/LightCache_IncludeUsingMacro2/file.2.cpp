@@ -1,4 +1,3 @@
-
 // header1 defines a macro
 #include "header1.h"
 

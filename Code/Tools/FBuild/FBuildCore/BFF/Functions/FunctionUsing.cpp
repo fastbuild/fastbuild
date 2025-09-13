@@ -4,15 +4,16 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionUsing.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionUsing::FunctionUsing()
-: Function( "Using" )
+    : Function( "Using" )
 {
 }
 
@@ -62,7 +63,7 @@ FunctionUsing::FunctionUsing()
     ASSERT( frame );
 
     // find variable name
-    AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
+    AStackString<BFFParser::kMaxVariableNameLength> varName;
     bool parentScope = false;
     if ( BFFParser::ParseVariableName( varToken, varName, parentScope ) == false )
     {
@@ -72,8 +73,8 @@ FunctionUsing::FunctionUsing()
     // find variable
     const BFFVariable * v = nullptr;
     const BFFStackFrame * const varFrame = ( parentScope )
-        ? BFFStackFrame::GetParentDeclaration( varName, frame, v )
-        : nullptr;
+                                               ? BFFStackFrame::GetParentDeclaration( varName, frame, v )
+                                               : nullptr;
 
     if ( false == parentScope )
     {
@@ -88,9 +89,10 @@ FunctionUsing::FunctionUsing()
 
     if ( v->IsStruct() == false )
     {
-        Error::Error_1008_VariableOfWrongType( varToken, this,
-                                                BFFVariable::VAR_STRUCT,
-                                                v->GetType() );
+        Error::Error_1008_VariableOfWrongType( varToken,
+                                               this,
+                                               BFFVariable::VAR_STRUCT,
+                                               v->GetType() );
         return false;
     }
 

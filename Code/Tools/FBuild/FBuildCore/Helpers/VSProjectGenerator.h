@@ -18,8 +18,8 @@ class VSProjectImport;
 class VSProjectFilePair
 {
 public:
-    AString m_ProjectRelativePath;  // Paths to files are project-relative
-    AString m_AbsolutePath;         // Folder structure is relative to BasePaths which can be outside of the project folder
+    AString m_ProjectRelativePath; // Paths to files are project-relative
+    AString m_AbsolutePath; // Folder structure is relative to BasePaths which can be outside of the project folder
 };
 
 // VSProjectGenerator
@@ -30,23 +30,23 @@ public:
     VSProjectGenerator();
     ~VSProjectGenerator();
 
-    void SetBasePaths( const Array< AString > & paths );
+    void SetBasePaths( const Array<AString> & paths );
 
     void AddFile( const AString & file );
-    void AddFiles( const Array< AString > & files );
+    void AddFiles( const Array<AString> & files );
 
-    void SetRootNamespace( const AString & s )          { m_RootNamespace = s; }
-    void SetProjectGuid( const AString & s )            { m_ProjectGuid = s; }
-    void SetDefaultLanguage( const AString & s )        { m_DefaultLanguage = s; }
+    void SetRootNamespace( const AString & s ) { m_RootNamespace = s; }
+    void SetProjectGuid( const AString & s ) { m_ProjectGuid = s; }
+    void SetDefaultLanguage( const AString & s ) { m_DefaultLanguage = s; }
     void SetApplicationEnvironment( const AString & s ) { m_ApplicationEnvironment = s; }
-    void SetProjectSccEntrySAK( const bool b )          { m_ProjectSccEntrySAK = b; }
-    void SetReferences( const Array< AString > & a )    { m_References = a; }
-    void SetProjectReferences( const Array< AString > & a ) { m_ProjectReferences = a; }
+    void SetProjectSccEntrySAK( const bool b ) { m_ProjectSccEntrySAK = b; }
+    void SetReferences( const Array<AString> & a ) { m_References = a; }
+    void SetProjectReferences( const Array<AString> & a ) { m_ProjectReferences = a; }
 
     const AString & GenerateVCXProj( const AString & projectFile,
-                                     const Array< VSProjectConfig > & configs,
-                                     const Array< VSProjectFileType > & fileTypes,
-                                     const Array< VSProjectImport > & projectImports );
+                                     const Array<VSProjectConfig> & configs,
+                                     const Array<VSProjectFileType> & fileTypes,
+                                     const Array<VSProjectImport> & projectImports );
 
     const AString & GenerateVCXProjFilters( const AString & projectFile );
 
@@ -64,7 +64,7 @@ private:
     void CanonicalizeFilePaths( const AString & projectBasePath );
 
     // project details
-    Array< AString > m_BasePaths;
+    Array<AString> m_BasePaths;
 
     // Globals
     AString m_RootNamespace;
@@ -72,12 +72,12 @@ private:
     AString m_DefaultLanguage;
     AString m_ApplicationEnvironment;
     bool m_ProjectSccEntrySAK;
-    Array< AString > m_References;
-    Array< AString > m_ProjectReferences;
+    Array<AString> m_References;
+    Array<AString> m_ProjectReferences;
 
     // intermediate data
     bool m_FilePathsCanonicalized;
-    Array< VSProjectFilePair > m_Files;
+    Array<VSProjectFilePair> m_Files;
 
     // working buffer
     AString m_Tmp;

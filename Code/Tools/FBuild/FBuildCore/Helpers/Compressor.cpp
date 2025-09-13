@@ -82,7 +82,7 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
     // allocate worst case output size for LZ4
     const int worstCaseSize = LZ4_compressBound( (int)dataSize );
     ASSERT( worstCaseSize > 0 );
-    UniquePtr< char, FreeDeletor > output( (char *)ALLOC( (size_t)worstCaseSize ) );
+    UniquePtr<char, FreeDeletor> output( (char *)ALLOC( (size_t)worstCaseSize ) );
 
     int32_t compressedSize;
 
@@ -90,13 +90,13 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
     if ( compressionLevel > 0 )
     {
         // Higher compression, using LZ4HC
-        compressedSize = LZ4_compress_HC( (const char*)data, output.Get(), (int)dataSize, worstCaseSize, compressionLevel );
+        compressedSize = LZ4_compress_HC( (const char *)data, output.Get(), (int)dataSize, worstCaseSize, compressionLevel );
     }
     else if ( compressionLevel < 0 )
     {
         // Lower compression, using regular LZ4
         const int32_t acceleration = ( 0 - compressionLevel );
-        compressedSize = LZ4_compress_fast( (const char*)data, output.Get(), (int)dataSize, worstCaseSize, acceleration );
+        compressedSize = LZ4_compress_fast( (const char *)data, output.Get(), (int)dataSize, worstCaseSize, acceleration );
     }
     else
     {
@@ -125,7 +125,7 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
     }
 
     // fill out header
-    Header * header = (Header*)m_Result;
+    Header * header = (Header *)m_Result;
     header->m_CompressionType = compressed ? eLZ4 : eUncompressed;   // compression type
     header->m_UncompressedSize = (uint32_t)dataSize;    // input size
     header->m_CompressedSize = compressed ? (uint32_t)compressedSize : (uint32_t)dataSize;    // output size
@@ -167,7 +167,7 @@ bool Compressor::Decompress( const void * data )
         const int bytesDecompressed = LZ4_decompress_safe( compressedData,
                                                            (char *)m_Result,
                                                            (int)header->m_CompressedSize,
-                                                           (int)uncompressedSize);
+                                                           (int)uncompressedSize );
         if ( bytesDecompressed == (int)uncompressedSize )
         {
             return true;
@@ -199,7 +199,7 @@ bool Compressor::Decompress( const void * data )
 //------------------------------------------------------------------------------
 bool Compressor::CompressZstd( const void * data,
                                size_t dataSize,
-                               int32_t compressionLevel)
+                               int32_t compressionLevel )
 {
     PROFILE_FUNCTION;
 
@@ -219,7 +219,7 @@ bool Compressor::CompressZstd( const void * data,
                                         worstCaseSize,
                                         static_cast<const char *>( data ),
                                         dataSize,
-                                        compressionLevel);
+                                        compressionLevel );
     }
     else
     {
@@ -230,19 +230,19 @@ bool Compressor::CompressZstd( const void * data,
     // did the compression yield any benefit?
     const bool compressed = ( compressedSize < dataSize );
 
-    if (compressed)
+    if ( compressed )
     {
         // trim memory usage to compressed size
-        m_Result = ALLOC( compressedSize + sizeof(Header) );
-        memcpy( (char *)m_Result + sizeof(Header), output.Get(), (size_t)compressedSize );
-        m_ResultSize = compressedSize + sizeof(Header);
+        m_Result = ALLOC( compressedSize + sizeof( Header ) );
+        memcpy( (char *)m_Result + sizeof( Header ), output.Get(), (size_t)compressedSize );
+        m_ResultSize = compressedSize + sizeof( Header );
     }
     else
     {
         // compression failed, so just copy the old data
-        m_Result = ALLOC( dataSize + sizeof(Header) );
-        memcpy( (char *)m_Result + sizeof(Header), data, dataSize );
-        m_ResultSize = dataSize + sizeof(Header);
+        m_Result = ALLOC( dataSize + sizeof( Header ) );
+        memcpy( (char *)m_Result + sizeof( Header ), data, dataSize );
+        m_ResultSize = dataSize + sizeof( Header );
     }
 
     // fill out header

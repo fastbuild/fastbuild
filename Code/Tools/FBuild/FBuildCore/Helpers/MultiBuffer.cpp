@@ -41,18 +41,18 @@ MultiBuffer::~MultiBuffer()
 
 // SerializeFromFiles
 //------------------------------------------------------------------------------
-bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * outproblemFileIndex )
+bool MultiBuffer::CreateFromFiles( const Array<AString> & fileNames, size_t * outproblemFileIndex )
 {
-    ASSERT( fileNames.GetSize() <= MAX_FILES );
+    ASSERT( fileNames.GetSize() <= kMaxFiles );
     ASSERT( ( m_ReadStream == nullptr ) && ( m_WriteStream == nullptr ) );
 
-    uint64_t fileSizes[ MAX_FILES ];
-    FileStream fileStreams[ MAX_FILES ];
+    uint64_t fileSizes[ kMaxFiles ];
+    FileStream fileStreams[ kMaxFiles ];
     const size_t numFiles = fileNames.GetSize();
 
     // Open all the files and determine their size
     uint64_t memSize = sizeof( uint32_t ); // write number of files
-    for ( size_t i = 0; i <numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         FileStream & fs = fileStreams[ i ];
         if ( fs.Open( fileNames[ i ].Get(), FileStream::READ_ONLY ) == false )
@@ -75,13 +75,13 @@ bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * 
     m_WriteStream->Write( (uint32_t)numFiles );
 
     // Write size of each file
-    for ( size_t i = 0; i <numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         m_WriteStream->Write( (uint64_t)fileSizes[ i ] );
     }
 
     // Read data for each file
-    for ( size_t i = 0; i <numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         FileStream & fs = fileStreams[ i ];
         if ( m_WriteStream->WriteBuffer( fs, fileSizes[ i ] ) != fileSizes[ i ] )
@@ -117,7 +117,7 @@ bool MultiBuffer::ExtractFile( size_t index, const AString & fileName ) const
 
     // work out data offset from file sizes
     uint64_t offset = sizeof( uint32_t ) + ( sizeof( uint64_t ) * numFiles );
-    for ( size_t i=0; i<index; ++i )
+    for ( size_t i = 0; i < index; ++i )
     {
         uint64_t fileSize;
         m_ReadStream->Read( fileSize );

@@ -15,7 +15,7 @@
 /*static*/ Mutex NetworkStartupHelper::s_Mutex;
 /*static*/ volatile bool * NetworkStartupHelper::s_MainShutdownFlag = nullptr;
 #if defined( __WINDOWS__ )
-    /*static*/ WSADATA NetworkStartupHelper::s_WSAData;
+/*static*/ WSADATA NetworkStartupHelper::s_WSAData;
 #elif defined( __LINUX__ ) || defined( __OSX__ )
     #include <signal.h>
 #endif
@@ -31,15 +31,15 @@ NetworkStartupHelper::NetworkStartupHelper()
     }
 
     // start up
-    #if defined( __WINDOWS__ )
-        VERIFY( WSAStartup( MAKEWORD( 2, 2 ), &s_WSAData ) == 0 );
-    #endif
+#if defined( __WINDOWS__ )
+    VERIFY( WSAStartup( MAKEWORD( 2, 2 ), &s_WSAData ) == 0 );
+#endif
 
-    #if defined( __LINUX__ ) || defined( __OSX__ )
-        // Disable SIGPIPE signals - we want to handle errors in the calling code
-        // On OS X, this doesn't actually work, so we must also disable per socket
-        signal( SIGPIPE, SIG_IGN );
-    #endif
+#if defined( __LINUX__ ) || defined( __OSX__ )
+    // Disable SIGPIPE signals - we want to handle errors in the calling code
+    // On OS X, this doesn't actually work, so we must also disable per socket
+    signal( SIGPIPE, SIG_IGN );
+#endif
 
     s_Started = true;
 }

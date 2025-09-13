@@ -6,8 +6,8 @@
 #include "BFFFile.h"
 
 // FBuildCore
-#include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Error.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"

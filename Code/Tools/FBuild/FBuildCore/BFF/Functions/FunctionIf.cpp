@@ -12,7 +12,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionIf::FunctionIf()
-: Function( "If" )
+    : Function( "If" )
 {
 }
 

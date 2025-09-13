@@ -15,17 +15,17 @@
 //  Visual Studio project Type GUID Extractor
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
-    PRAGMA_DISABLE_PUSH_CLANG( "-Wunknown-warning-option" )
-    PRAGMA_DISABLE_PUSH_CLANG( "-Wreserved-identifier" ) // identifier '%s' is reserved because it starts with '_' followed by a capital letter
-    PRAGMA_DISABLE_PUSH_CLANG( "-Wcast-function-type" ) // cast from '%s' (aka '%s') to '%s' (aka '%s') converts to incompatible function type
-    PRAGMA_DISABLE_PUSH_MSVC( 4191 ) // C4191: 'reinterpret_cast': unsafe conversion from 'FARPROC' to 'Type_CleanUp'
-    PRAGMA_DISABLE_PUSH_MSVC( 4530 ) // C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+PRAGMA_DISABLE_PUSH_CLANG( "-Wunknown-warning-option" )
+PRAGMA_DISABLE_PUSH_CLANG( "-Wreserved-identifier" ) // identifier '%s' is reserved because it starts with '_' followed by a capital letter
+PRAGMA_DISABLE_PUSH_CLANG( "-Wcast-function-type" ) // cast from '%s' (aka '%s') to '%s' (aka '%s') converts to incompatible function type
+PRAGMA_DISABLE_PUSH_MSVC( 4191 ) // C4191: 'reinterpret_cast': unsafe conversion from 'FARPROC' to 'Type_CleanUp'
+PRAGMA_DISABLE_PUSH_MSVC( 4530 ) // C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
     #include <VSProjLoaderInterface.h>
-    PRAGMA_DISABLE_POP_MSVC // 4530
-    PRAGMA_DISABLE_POP_MSVC // 4191
-    PRAGMA_DISABLE_POP_CLANG // -Wcast-function-type
-    PRAGMA_DISABLE_POP_CLANG // -Wreserved-identifier
-    PRAGMA_DISABLE_POP_CLANG // -Wunknown-warning-option
+PRAGMA_DISABLE_POP_MSVC // 4530
+PRAGMA_DISABLE_POP_MSVC // 4191
+PRAGMA_DISABLE_POP_CLANG // -Wcast-function-type
+PRAGMA_DISABLE_POP_CLANG // -Wreserved-identifier
+PRAGMA_DISABLE_POP_CLANG // -Wunknown-warning-option
 #endif
 
 // Reflection
@@ -121,7 +121,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
                 // some projects do not contain enclosing curled braces around the project GUID
                 if ( !m_ProjectGuid.BeginsWith( '{' ) )
                 {
-                    AStackString<> tmp( "{" );
+                    AStackString tmp( "{" );
                     tmp += m_ProjectGuid;
                     m_ProjectGuid = tmp;
                 }
@@ -132,51 +132,51 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
             }
 
             // get ProjectTypeGUID from external Visual Studio project Type GUID Extractor module 'VSProjectExternal'
-            #if defined( __WINDOWS__ )
-                if ( m_ProjectTypeGuid.IsEmpty() || m_ProjectConfigs.IsEmpty() )
+#if defined( __WINDOWS__ )
+            if ( m_ProjectTypeGuid.IsEmpty() || m_ProjectConfigs.IsEmpty() )
+            {
+                // the wrapper singleton will load the DLL only at the first invocation of the constructor
+                if ( VspteModuleWrapper::Instance()->IsLoaded() )
                 {
-                    // the wrapper singleton will load the DLL only at the first invocation of the constructor
-                    if ( VspteModuleWrapper::Instance()->IsLoaded() )
+                    ExtractedProjData projData;
+                    if ( VspteModuleWrapper::Instance()->Vspte_GetProjData( m_Name.Get(), &projData ) )
                     {
-                        ExtractedProjData projData;
-                        if ( VspteModuleWrapper::Instance()->Vspte_GetProjData( m_Name.Get(), &projData ))
+                        // copy project type Guid
+                        if ( m_ProjectTypeGuid.IsEmpty() )
                         {
-                            // copy project type Guid
-                            if ( m_ProjectTypeGuid.IsEmpty() )
-                            {
-                                m_ProjectTypeGuid = projData._TypeGuid;
-                            }
-
-                            // copy config / platform tuples
-                            if ( m_ProjectConfigs.IsEmpty() && projData._numCfgPlatforms )
-                            {
-                                VSExternalProjectConfig ExtPlatCfgTuple;
-                                m_ProjectConfigs.SetCapacity( projData._numCfgPlatforms );
-                                for ( uint32_t i = 0; i < projData._numCfgPlatforms; i++ )
-                                {
-                                    ExtPlatCfgTuple.m_Config = projData._pConfigsPlatforms[ i ]._config;
-                                    ExtPlatCfgTuple.m_Platform = projData._pConfigsPlatforms[ i ]._platform;
-                                    m_ProjectConfigs.Append( ExtPlatCfgTuple );
-                                }
-                            }
-
-                            //
-                            VspteModuleWrapper::Instance()->Vspte_DeallocateProjDataCfgArray( &projData );
+                            m_ProjectTypeGuid = projData._TypeGuid;
                         }
-                        else
+
+                        // copy config / platform tuples
+                        if ( m_ProjectConfigs.IsEmpty() && projData._numCfgPlatforms )
                         {
-                            VspteModuleWrapper::Instance()->Vspte_DeallocateProjDataCfgArray( &projData );
-                            FLOG_ERROR( "VSProjectExternalNode - Failed retrieving type Guid and / or config|platform pairs for external project '%s', please check the output or the log of the 'VSProjectExternal' module! Explicitly providing project data may be required.", m_Name.Get() );
-                            return BuildResult::eFailed;
+                            VSExternalProjectConfig ExtPlatCfgTuple;
+                            m_ProjectConfigs.SetCapacity( projData._numCfgPlatforms );
+                            for ( uint32_t i = 0; i < projData._numCfgPlatforms; i++ )
+                            {
+                                ExtPlatCfgTuple.m_Config = projData._pConfigsPlatforms[ i ]._config;
+                                ExtPlatCfgTuple.m_Platform = projData._pConfigsPlatforms[ i ]._platform;
+                                m_ProjectConfigs.Append( ExtPlatCfgTuple );
+                            }
                         }
+
+                        //
+                        VspteModuleWrapper::Instance()->Vspte_DeallocateProjDataCfgArray( &projData );
                     }
                     else
                     {
-                        FLOG_ERROR( "VSProjectExternalNode - Failed to load the external VSProjTypeExtractor module, please consult the 'VSProjectExternal' documentation! Explicitly providing project data may be required." );
+                        VspteModuleWrapper::Instance()->Vspte_DeallocateProjDataCfgArray( &projData );
+                        FLOG_ERROR( "VSProjectExternalNode - Failed retrieving type Guid and / or config|platform pairs for external project '%s', please check the output or the log of the 'VSProjectExternal' module! Explicitly providing project data may be required.", m_Name.Get() );
                         return BuildResult::eFailed;
                     }
                 }
-            #endif
+                else
+                {
+                    FLOG_ERROR( "VSProjectExternalNode - Failed to load the external VSProjTypeExtractor module, please consult the 'VSProjectExternal' documentation! Explicitly providing project data may be required." );
+                    return BuildResult::eFailed;
+                }
+            }
+#endif
 
             // handle configs
             CopyConfigs();

@@ -127,13 +127,13 @@ void TestCompressor::CompressObjFile() const
 void TestCompressor::CompressHelper( const char * fileName ) const
 {
     // read some test data into a file
-    UniquePtr< void, FreeDeletor > data;
+    UniquePtr<void, FreeDeletor> data;
     size_t dataSize;
     {
         FileStream fs;
         TEST_ASSERT( fs.Open( fileName ) );
         dataSize = (size_t)fs.GetFileSize();
-        data = (char *)ALLOC( dataSize );
+        data.Replace( (char *)ALLOC( dataSize ) );
         TEST_ASSERT( (uint32_t)fs.Read( data.Get(), dataSize ) == dataSize );
     }
 
@@ -147,12 +147,14 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     OUTPUT( "LZ4:\n" );
 
     // Compress at various compression levels
+    // clang-format off
     const int32_t compressionLevels[] =
     {
         0,                                          // Disabled
         -256, -128, -64, -32, -16, -8, -4, -2, -1,  // LZ4
         1, 3, 6, 9, 12                              // LZ4 HC
     };
+    // clang-format on
 
     for ( const int32_t compressionLevel : compressionLevels )
     {
@@ -171,7 +173,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Compress
-            c = FNEW( Compressor );
+            c.Replace( FNEW( Compressor ) );
             const Timer t;
             c.Get()->Compress( data.Get(), dataSize, compressionLevel );
             compressedSize = c.Get()->GetResultSize();
@@ -195,23 +197,29 @@ void TestCompressor::CompressHelper( const char * fileName ) const
             }
         }
 
-        const double compressThroughputMBs    = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
-        const double decompressThroughputMBs  = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double compressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double decompressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
         const double ratio = ( (double)dataSize / (double)compressedSize );
 
-        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n", compressionLevel,
-                                                            ( compressTimeTaken / numRepeats ), compressThroughputMBs, (double)ratio,
-                                                            ( decompressTimeTaken / numRepeats ), decompressThroughputMBs );
+        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n",
+                compressionLevel,
+                ( compressTimeTaken / numRepeats ),
+                compressThroughputMBs,
+                (double)ratio,
+                ( decompressTimeTaken / numRepeats ),
+                decompressThroughputMBs );
     }
 
     OUTPUT( "Zstd:\n" );
 
     // Compress at various compression levels
+    // clang-format off
     const int32_t zStdCompressionLevels[] =
     {
         0,                                          // Disabled
         1, 3, 6, 9, 12, 15, 18, 21                  // Zstd
     };
+    // clang-format on
 
     for ( const int32_t compressionLevel : zStdCompressionLevels )
     {
@@ -230,7 +238,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Compress
-            c = FNEW( Compressor );
+            c.Replace( FNEW( Compressor ) );
             const Timer t;
             c.Get()->CompressZstd( data.Get(), dataSize, compressionLevel );
             compressedSize = c.Get()->GetResultSize();
@@ -254,13 +262,17 @@ void TestCompressor::CompressHelper( const char * fileName ) const
             }
         }
 
-        const double compressThroughputMBs    = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
-        const double decompressThroughputMBs  = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double compressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double decompressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
         const double ratio = ( (double)dataSize / (double)compressedSize );
 
-        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n", compressionLevel,
-                                                            ( compressTimeTaken / numRepeats ), compressThroughputMBs, (double)ratio,
-                                                            ( decompressTimeTaken / numRepeats ), decompressThroughputMBs );
+        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n",
+                compressionLevel,
+                ( compressTimeTaken / numRepeats ),
+                compressThroughputMBs,
+                (double)ratio,
+                ( decompressTimeTaken / numRepeats ),
+                decompressThroughputMBs );
     }
     OUTPUT( "------------------------------------------------\n" );
 }
@@ -269,7 +281,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 //------------------------------------------------------------------------------
 void TestCompressor::TestHeaderValidity() const
 {
-    UniquePtr< uint32_t, FreeDeletor > buffer( (uint32_t *)ALLOC( 1024 ) );
+    UniquePtr<uint32_t, FreeDeletor> buffer( (uint32_t *)ALLOC( 1024 ) );
     memset( buffer.Get(), 0, 1024 );
     Compressor c;
     uint32_t * data = (uint32_t *)buffer.Get();

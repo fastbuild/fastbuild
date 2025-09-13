@@ -25,6 +25,7 @@ public:
     const AString & GetResponseFilePath() const { return m_ResponseFilePath; }
 
     void SetEscapeSlashes() { m_EscapeSlashes = true; }
+
 private:
     bool CreateInternal( const AString & contents );
 

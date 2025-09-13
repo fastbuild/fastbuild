@@ -25,192 +25,193 @@
 // OSX Functions
 //------------------------------------------------------------------------------
 #if defined( __OSX__ )
-    void * WindowOSX_Create( OSWindow * owner, int32_t x, int32_t y, uint32_t w, uint32_t h );
-    void WindowOSX_Destroy( OSWindow * owner );
-    uint32_t WindowOSX_GetPrimaryScreenWidth();
-    void WindowOSX_MessageLoop();
-    void WindowOSX_SetTitle( OSWindow * owner, const char * title );
-    void WindowOSX_SetMinimized( bool minimized );
-    void WindowOSX_StopMessageLoop();
+void * WindowOSX_Create( OSWindow * owner, int32_t x, int32_t y, uint32_t w, uint32_t h );
+void WindowOSX_Destroy( OSWindow * owner );
+uint32_t WindowOSX_GetPrimaryScreenWidth();
+void WindowOSX_MessageLoop();
+void WindowOSX_SetTitle( OSWindow * owner, const char * title );
+void WindowOSX_SetMinimized( bool minimized );
+void WindowOSX_StopMessageLoop();
 #endif
 
 // WindowWndProc
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    LRESULT CALLBACK WindowWndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
-    {
-        OSWindow * window = reinterpret_cast< OSWindow * >( GetWindowLongPtr( hwnd, GWLP_USERDATA ) );
+LRESULT CALLBACK WindowWndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+    OSWindow * window = reinterpret_cast<OSWindow *>( GetWindowLongPtr( hwnd, GWLP_USERDATA ) );
 
-        switch( msg )
+    switch ( msg )
+    {
+        case WM_SYSCOMMAND:
         {
-            case WM_SYSCOMMAND:
+            switch ( wParam & 0xfff0 )
             {
-                switch( wParam & 0xfff0 )
+                case SC_MINIMIZE:
                 {
-                    case SC_MINIMIZE:
+                    if ( window->OnMinimize() )
                     {
-                        if ( window->OnMinimize() )
-                        {
-                            return 0; // Handled
-                        }
-                        break;
+                        return 0; // Handled
                     }
-                    case SC_CLOSE:
-                    {
-                        if ( window->OnClose() )
-                        {
-                            return 0; // Handled
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        break; // Ignore
-                    }
+                    break;
                 }
-                break;
+                case SC_CLOSE:
+                {
+                    if ( window->OnClose() )
+                    {
+                        return 0; // Handled
+                    }
+                    break;
+                }
+                default:
+                {
+                    break; // Ignore
+                }
             }
-            case OSUI_WM_TRAYICON:
+            break;
+        }
+        case OSUI_WM_TRAYICON:
+        {
+            if ( lParam == WM_LBUTTONUP )
             {
-                if ( lParam == WM_LBUTTONUP )
+                if ( window->OnTrayIconLeftClick() )
                 {
-                    if ( window->OnTrayIconLeftClick() )
-                    {
-                        return 0;
-                    }
-                }
-                else if ( lParam == WM_RBUTTONDOWN )
-                {
-                    if ( window->OnTrayIconRightClick() )
-                    {
-                        return 0;
-                    }
-                }
-                break;
-            }
-            case WM_COMMAND:
-            {
-                if ( HIWORD(wParam) == CBN_SELCHANGE )
-                {
-                    OSDropDown * dropDown = (OSDropDown *)window->GetChildFromHandle((void *)lParam);
-                    window->OnDropDownSelectionChanged( dropDown );
                     return 0;
                 }
-                break;
             }
-            case WM_QUIT:
+            else if ( lParam == WM_RBUTTONDOWN )
             {
-                if ( window->OnQuit() )
+                if ( window->OnTrayIconRightClick() )
                 {
-                    return 0; // Handled
+                    return 0;
                 }
-                break;
             }
-            default:
-            {
-                // nothing...  fall through
-                break;
-            }
+            break;
         }
-
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        case WM_COMMAND:
+        {
+            if ( HIWORD( wParam ) == CBN_SELCHANGE )
+            {
+                OSDropDown * dropDown = (OSDropDown *)window->GetChildFromHandle( (void *)lParam );
+                window->OnDropDownSelectionChanged( dropDown );
+                return 0;
+            }
+            break;
+        }
+        case WM_QUIT:
+        {
+            if ( window->OnQuit() )
+            {
+                return 0; // Handled
+            }
+            break;
+        }
+        default:
+        {
+            // nothing...  fall through
+            break;
+        }
     }
+
+    return DefWindowProc( hwnd, msg, wParam, lParam );
+}
 #endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 OSWindow::OSWindow( void * hInstance )
-    : m_Handle( nullptr )
-    #if defined( __WINDOWS__ )
-        , m_HInstance( hInstance )
-    #endif
+#if defined( __WINDOWS__ )
+    : m_HInstance( hInstance )
+#endif
 {
-    #if defined( __WINDOWS__ )
-        // Obtain the executable HINSTANCE if not explicitly provided
-        if ( m_HInstance == nullptr )
-        {
-            m_HInstance = GetModuleHandle( nullptr );
-            ASSERT( m_HInstance );
-        }
-    #else
-        (void)hInstance;
-    #endif
+#if defined( __WINDOWS__ )
+    // Obtain the executable HINSTANCE if not explicitly provided
+    if ( m_HInstance == nullptr )
+    {
+        m_HInstance = GetModuleHandle( nullptr );
+        ASSERT( m_HInstance );
+    }
+#else
+    (void)hInstance;
+#endif
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 OSWindow::~OSWindow()
 {
-    #if defined( __WINDOWS__ )
-        if ( m_Handle )
-        {
-            // Free Window
-            DestroyWindow( (HWND)m_Handle );
+#if defined( __WINDOWS__ )
+    if ( m_Handle )
+    {
+        // Free Window
+        DestroyWindow( (HWND)m_Handle );
 
-            // Unregister Window class
-            AStackString<> uniqueWindowClass;
-            GetWindowClassName( uniqueWindowClass );
-            VERIFY( UnregisterClassA( uniqueWindowClass.Get(), static_cast<HINSTANCE>( m_HInstance ) ) );
-        }
-    #elif defined( __OSX__ )
-        if ( m_Handle )
-        {
-            WindowOSX_Destroy( this );
-        }
-    #endif
+        // Unregister Window class
+        AStackString uniqueWindowClass;
+        GetWindowClassName( uniqueWindowClass );
+        VERIFY( UnregisterClassA( uniqueWindowClass.Get(), static_cast<HINSTANCE>( m_HInstance ) ) );
+    }
+#elif defined( __OSX__ )
+    if ( m_Handle )
+    {
+        WindowOSX_Destroy( this );
+    }
+#endif
 }
 
 // Init
 //------------------------------------------------------------------------------
 void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
 {
-    #if defined( __WINDOWS__ )
-        ASSERT( m_Handle == nullptr );
+#if defined( __WINDOWS__ )
+    ASSERT( m_Handle == nullptr );
 
-        // Register Window class
-        AStackString<> uniqueWindowClass;
-        GetWindowClassName( uniqueWindowClass );
+    // Register Window class
+    AStackString uniqueWindowClass;
+    GetWindowClassName( uniqueWindowClass );
 
-        WNDCLASSEX wc;
-        wc.cbSize           = sizeof(WNDCLASSEX);
-        wc.style            = 0;
-        wc.lpfnWndProc      = WindowWndProc;
-        wc.cbClsExtra       = 0;
-        wc.cbWndExtra       = sizeof(void *); // For GWLP_USERDATA
-        wc.hInstance        = (HINSTANCE)m_HInstance;
-        wc.hIcon            = (HICON)LoadIcon( (HINSTANCE)m_HInstance, MAKEINTRESOURCE( IDI_MAIN_ICON ) );
-        wc.hCursor          = LoadCursor( nullptr, IDC_ARROW );
-        wc.hbrBackground    = (HBRUSH)( COLOR_WINDOW );
-        wc.lpszMenuName     = nullptr;
-        wc.lpszClassName    = uniqueWindowClass.Get();
-        wc.hIconSm          = wc.hIcon;
-        VERIFY( RegisterClassEx( &wc ) );
+    WNDCLASSEX wc;
+    wc.cbSize = sizeof( WNDCLASSEX );
+    wc.style = 0;
+    wc.lpfnWndProc = WindowWndProc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = sizeof( void * ); // For GWLP_USERDATA
+    wc.hInstance = (HINSTANCE)m_HInstance;
+    wc.hIcon = (HICON)LoadIcon( (HINSTANCE)m_HInstance, MAKEINTRESOURCE( IDI_MAIN_ICON ) );
+    wc.hCursor = LoadCursor( nullptr, IDC_ARROW );
+    wc.hbrBackground = (HBRUSH)( COLOR_WINDOW );
+    wc.lpszMenuName = nullptr;
+    wc.lpszClassName = uniqueWindowClass.Get();
+    wc.hIconSm = wc.hIcon;
+    VERIFY( RegisterClassEx( &wc ) );
 
         // Create Window
-        m_Handle = CreateWindow( uniqueWindowClass.Get(),   // LPCTSTR lpClassName,
-                                 nullptr,                   // LPCTSTR lpWindowName,
-                                 WS_CAPTION | WS_SYSMENU,   // DWORD dwStyle,
-                                 x, y,                      // int x, int y,
-                                 (int32_t)w, (int32_t)h,    // int nWidth, int nHeight,
-                                 nullptr,                   // HWND hWndParent,
-                                 nullptr,                   // HMENU hMenu,
-                                 nullptr,                   // HINSTANCE hInstance,
-                                 nullptr );                 // LPVOID lpParam
-        ASSERT( m_Handle );
+    m_Handle = CreateWindow( uniqueWindowClass.Get(),   // LPCTSTR lpClassName,
+                             nullptr,                   // LPCTSTR lpWindowName,
+                             WS_CAPTION | WS_SYSMENU,   // DWORD dwStyle,
+                             x,                         // int x,
+                             y,                         // int y,
+                             (int32_t)w,                // int nWidth
+                             (int32_t)h,                // int nHeight,
+                             nullptr,                   // HWND hWndParent,
+                             nullptr,                   // HMENU hMenu,
+                             nullptr,                   // HINSTANCE hInstance,
+                             nullptr );                 // LPVOID lpParam
+    ASSERT( m_Handle );
 
-        // Set user data
-        SetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA, (LONG_PTR)this );
-        // User data doesn't take effect until you call SetWindowPos
-        VERIFY( SetWindowPos( (HWND)m_Handle, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE ) );
-        ASSERT( this == (void *)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
-    #elif defined( __OSX__ )
-        m_Handle = WindowOSX_Create( this, x, y, w, h );
-    #else
-        (void)x;
-        (void)y;
-        (void)w;
-        (void)h;
-    #endif
+    // Set user data
+    SetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA, (LONG_PTR)this );
+    // User data doesn't take effect until you call SetWindowPos
+    VERIFY( SetWindowPos( (HWND)m_Handle, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE ) );
+    ASSERT( this == (void *)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
+#elif defined( __OSX__ )
+    m_Handle = WindowOSX_Create( this, x, y, w, h );
+#else
+    (void)x;
+    (void)y;
+    (void)w;
+    (void)h;
+#endif
 }
 
 // AddChild
@@ -225,75 +226,76 @@ void OSWindow::AddChild( OSWidget * childWidget )
 //------------------------------------------------------------------------------
 void OSWindow::SetTitle( const char * title )
 {
-    #if defined( __WINDOWS__ )
-        VERIFY( SetWindowText( (HWND)m_Handle, title ) );
-    #elif defined( __APPLE__ )
-        WindowOSX_SetTitle( this, title );
-    #elif defined( __LINUX__ )
-        (void)title; // TODO:LINUX SetWindowText equivalent
-    #else
-        #error Unknown Platform
-    #endif
+#if defined( __WINDOWS__ )
+    VERIFY( SetWindowText( (HWND)m_Handle, title ) );
+#elif defined( __APPLE__ )
+    WindowOSX_SetTitle( this, title );
+#elif defined( __LINUX__ )
+    (void)title; // TODO:LINUX SetWindowText equivalent
+#else
+    #error Unknown Platform
+#endif
 }
 
 // SetMinimized
 //------------------------------------------------------------------------------
 void OSWindow::SetMinimized( bool minimized )
 {
-    #if defined( __WINDOWS__ )
-        ASSERT( false ); // TODO:B Unify with Windows functionality
-        (void)minimized;
-    #elif defined( __OSX__ )
-        WindowOSX_SetMinimized( minimized );
-    #else
-        (void)minimized;
-    #endif
+#if defined( __WINDOWS__ )
+    ASSERT( false ); // TODO:B Unify with Windows functionality
+    (void)minimized;
+#elif defined( __OSX__ )
+    WindowOSX_SetMinimized( minimized );
+#else
+    (void)minimized;
+#endif
 }
 
 // GetPrimaryScreenWidth
 //------------------------------------------------------------------------------
 /*static*/ uint32_t OSWindow::GetPrimaryScreenWidth()
 {
-    #if defined( __WINDOWS__ )
-        return (uint32_t)GetSystemMetrics( SM_CXSCREEN );
-    #elif defined( __OSX__ )
-        return WindowOSX_GetPrimaryScreenWidth();
-    #else
-        return 1920; // TODO:LINUX Implement
-    #endif
+#if defined( __WINDOWS__ )
+    return (uint32_t)GetSystemMetrics( SM_CXSCREEN );
+#elif defined( __OSX__ )
+    return WindowOSX_GetPrimaryScreenWidth();
+#else
+    return 1920; // TODO:LINUX Implement
+#endif
 }
 
 // StartMessagePump
 //------------------------------------------------------------------------------
 void OSWindow::StartMessagePump()
 {
-    #if defined( __WINDOWS__ )
-        for ( ;; )
+#if defined( __WINDOWS__ )
+    for ( ;; )
+    {
+        // Wait for a message
+        MSG msg;
+        const BOOL bRet = GetMessage( &msg, nullptr, 0, 0 );
+
+        // According to MSDN, this "boolean" can contain -1 on error. It seems
+        // an error could only occur due to a program bug (like passing an invalid
+        // handle) and not during any normal operation.
+        // See: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessage
+        ASSERT( bRet != -1 );
+        (void)bRet;
+
+        // Check for our custom "Stop" message
+        if ( msg.message == OSUI_WM_STOPMSGPUMP )
         {
-            // Wait for a message
-            MSG msg;
-            const BOOL bRet = GetMessage( &msg, nullptr, 0, 0 );
-
-            // According to MSDN, this "boolean" can contain -1 on error. It seems
-            // an error could only occur due to a program bug (like passing an invalid
-            // handle) and not during any normal operation.
-            // See: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessage
-            ASSERT( bRet != -1 ); (void)bRet;
-
-            // Check for our custom "Stop" message
-            if ( msg.message == OSUI_WM_STOPMSGPUMP )
-            {
-                break;
-            }
-
-            // Allow our message pump to do the work, whether it's WM_QUIT (0 bRet) or not (non-zero bRet)
-            TranslateMessage( &msg );
-            DispatchMessage( &msg );
+            break;
         }
-    #elif defined( __OSX__ )
-        // This call blocks until messaged by StopMessagePump
-        WindowOSX_MessageLoop();
-    #endif
+
+        // Allow our message pump to do the work, whether it's WM_QUIT (0 bRet) or not (non-zero bRet)
+        TranslateMessage( &msg );
+        DispatchMessage( &msg );
+    }
+#elif defined( __OSX__ )
+    // This call blocks until messaged by StopMessagePump
+    WindowOSX_MessageLoop();
+#endif
 }
 
 // StopMessagePump
@@ -301,11 +303,11 @@ void OSWindow::StartMessagePump()
 void OSWindow::StopMessagePump()
 {
     // Signal to StartMessagePump that is should exit
-    #if defined( __WINDOWS__ )
-        PostMessage( (HWND)m_Handle, OSUI_WM_STOPMSGPUMP, 0, 0 );
-    #elif defined( __OSX__ )
-        WindowOSX_StopMessageLoop();
-    #endif
+#if defined( __WINDOWS__ )
+    PostMessage( (HWND)m_Handle, OSUI_WM_STOPMSGPUMP, 0, 0 );
+#elif defined( __OSX__ )
+    WindowOSX_StopMessageLoop();
+#endif
 }
 
 // OnMinimize
@@ -360,27 +362,27 @@ void OSWindow::StopMessagePump()
 // GetChildFromHandle
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    OSWidget * OSWindow::GetChildFromHandle( void * handle )
+OSWidget * OSWindow::GetChildFromHandle( void * handle )
+{
+    for ( OSWidget * child : m_ChildWidgets )
     {
-        for ( OSWidget * child : m_ChildWidgets )
+        if ( child->GetHandle() == handle )
         {
-            if ( child->GetHandle() == handle )
-            {
-                return child;
-            }
+            return child;
         }
-        return nullptr;
     }
+    return nullptr;
+}
 #endif
 
 // GetWindowClassName
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void OSWindow::GetWindowClassName( AString & outClassName )
-    {
-        const void * const uniquifier = this;
-        outClassName.Format( "windowClass_%p", uniquifier );
-    }
+void OSWindow::GetWindowClassName( AString & outClassName )
+{
+    const void * const uniquifier = this;
+    outClassName.Format( "windowClass_%p", uniquifier );
+}
 #endif
 
 //------------------------------------------------------------------------------

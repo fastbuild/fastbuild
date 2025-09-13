@@ -48,24 +48,23 @@ void TestSharedMemory::CreateAccessDestroy() const
 #if defined( __WINDOWS__ )
     // TODO:WINDOWS Test SharedMemory (without fork, so).
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
-    AStackString<> sharedMemoryName;
+    AStackString sharedMemoryName;
     sharedMemoryName.Format( "FBuild_SHM_Test_%u", (uint32_t)Process::GetCurrentId() );
 
     int pid = fork();
     if ( pid == 0 )
     {
         // We don't want the child to interact with the test framework
-        #if defined( ASSERTS_ENABLED )
-            AssertHandler::SetAssertCallback( nullptr );
-        #endif
+    #if defined( ASSERTS_ENABLED )
+        AssertHandler::SetAssertCallback( nullptr );
+    #endif
 
         Timer t;
-        t.Start();
 
         SharedMemory shm;
 
         // Wait for parent to create shared memory and open it
-        while ( shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) ) == false )
+        while ( shm.Open( sharedMemoryName.Get(), sizeof( uint32_t ) ) == false )
         {
             if ( t.GetElapsed() >= 10.0f ) // Sanity check timeout
             {
@@ -98,11 +97,10 @@ void TestSharedMemory::CreateAccessDestroy() const
     else
     {
         Timer t;
-        t.Start();
 
         // Create shared memory
         SharedMemory shm;
-        shm.Create( sharedMemoryName.Get(), sizeof(uint32_t) );
+        shm.Create( sharedMemoryName.Get(), sizeof( uint32_t ) );
         volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
         TEST_ASSERT( magic );
 

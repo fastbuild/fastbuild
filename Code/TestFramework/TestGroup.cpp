@@ -12,12 +12,14 @@
 // TestNoReturn
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestNoReturn()
+void TestNoReturn()
+{
+    #if defined( __clang__ )
+    for ( ;; )
     {
-        #if defined( __clang__ )
-            for (;;) {}
-        #endif
     }
+    #endif
+}
 #endif
 
 //------------------------------------------------------------------------------

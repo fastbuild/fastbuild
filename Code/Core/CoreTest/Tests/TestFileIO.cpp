@@ -39,9 +39,9 @@ private:
     void ReadOnly() const;
     void FileTime() const;
     void LongPaths() const;
-    #if defined( __WINDOWS__ )
-        void NormalizeWindowsPathCasing() const;
-    #endif
+#if defined( __WINDOWS__ )
+    void NormalizeWindowsPathCasing() const;
+#endif
     void CreateOrOpenReadWrite() const;
     void CreateOrOpenReadWritePerf() const;
 
@@ -61,9 +61,9 @@ REGISTER_TESTS_BEGIN( TestFileIO )
     REGISTER_TEST( ReadOnly )
     REGISTER_TEST( FileTime )
     REGISTER_TEST( LongPaths )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( NormalizeWindowsPathCasing )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( NormalizeWindowsPathCasing )
+#endif
     REGISTER_TEST( CreateOrOpenReadWrite )
     REGISTER_TEST( CreateOrOpenReadWritePerf )
 REGISTER_TESTS_END
@@ -73,7 +73,7 @@ REGISTER_TESTS_END
 void TestFileIO::FileExists() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // File
@@ -98,7 +98,7 @@ void TestFileIO::FileExists() const
     // Folder
     {
         // Create a directory
-        AStackString<> dirPath( path );
+        AStackString dirPath( path );
         dirPath += "_dir";
         FileIO::DirectoryCreate( dirPath );
         TEST_ASSERT( FileIO::DirectoryExists( dirPath ) );
@@ -113,7 +113,7 @@ void TestFileIO::FileExists() const
 void TestFileIO::FileDelete() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // create it
@@ -134,11 +134,11 @@ void TestFileIO::FileDelete() const
 void TestFileIO::FileCopy() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // generate copy file name
-    AStackString<> pathCopy( path );
+    AStackString pathCopy( path );
     pathCopy += ".copy";
 
     // make sure nothing is left from previous runs
@@ -176,58 +176,58 @@ void TestFileIO::FileCopy() const
 //------------------------------------------------------------------------------
 void TestFileIO::FileCopySymlink() const
 {
-    #if defined( __WINDOWS__ ) || defined ( __APPLE__ )
-        // Not tested on Windows/MacOS as symlinks are directly supported
-        // by the file copy API.  Also on Windows, it would make unit
-        // tests require administrator privileges.
-    #elif defined ( __LINUX__ )
-        AStackString<> symlinkTarget( "symlink" );
+#if defined( __WINDOWS__ ) || defined( __APPLE__ )
+    // Not tested on Windows/MacOS as symlinks are directly supported
+    // by the file copy API.  Also on Windows, it would make unit
+    // tests require administrator privileges.
+#elif defined( __LINUX__ )
+    AStackString symlinkTarget( "symlink" );
 
-        // generate a process unique file path
-        AStackString<> path;
-        GenerateTempFileName( path );
+    // generate a process unique file path
+    AStackString path;
+    GenerateTempFileName( path );
 
-        // generate copy file name
-        AStackString<> pathCopy( path );
-        pathCopy += ".copy";
+    // generate copy file name
+    AStackString pathCopy( path );
+    pathCopy += ".copy";
 
-        // make sure nothing is left from previous runs
-        FileIO::FileDelete( path.Get() );
-        FileIO::FileDelete( pathCopy.Get() );
-        TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
-        TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
+    // make sure nothing is left from previous runs
+    FileIO::FileDelete( path.Get() );
+    FileIO::FileDelete( pathCopy.Get() );
+    TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
+    TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
 
-        // create it
-        TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
+    // create it
+    TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
 
-        // copy it
-        TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
-        TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
+    // copy it
+    TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
+    TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
 
-        // validate link
-        AStackString<> linkPath;
-        ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
-        TEST_ASSERT( length == symlinkTarget.GetLength() );
-        linkPath.SetLength( length );
-        TEST_ASSERT( linkPath == symlinkTarget );
+    // validate link
+    AStackString linkPath;
+    ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
+    TEST_ASSERT( length == symlinkTarget.GetLength() );
+    linkPath.SetLength( length );
+    TEST_ASSERT( linkPath == symlinkTarget );
 
-        // ensure attributes are transferred properly
-        FileIO::FileInfo sourceInfo;
-        TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
-        FileIO::FileInfo destInfo;
-        TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
-        TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
+    // ensure attributes are transferred properly
+    FileIO::FileInfo sourceInfo;
+    TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
+    FileIO::FileInfo destInfo;
+    TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
+    TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
 
-        // copy without overwrite allowed should fail
-        const bool allowOverwrite = false;
-        TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );
+    // copy without overwrite allowed should fail
+    const bool allowOverwrite = false;
+    TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );
 
-        // cleanup
-        VERIFY( FileIO::FileDelete( path.Get() ) );
-        VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
-    #else
-        #error Unknown platform
-    #endif
+    // cleanup
+    VERIFY( FileIO::FileDelete( path.Get() ) );
+    VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
+#else
+    #error Unknown platform
+#endif
 }
 
 // FileMove
@@ -235,11 +235,11 @@ void TestFileIO::FileCopySymlink() const
 void TestFileIO::FileMove() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // generate copy file name
-    AStackString<> pathCopy( path );
+    AStackString pathCopy( path );
     pathCopy += ".copy";
 
     // make sure nothing is left from previous runs
@@ -265,7 +265,7 @@ void TestFileIO::FileMove() const
 void TestFileIO::ReadOnly() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // create it
@@ -296,7 +296,7 @@ void TestFileIO::ReadOnly() const
 void TestFileIO::FileTime() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // create it
@@ -343,14 +343,14 @@ void TestFileIO::LongPaths() const
     // Ensure long paths are correctly handled by various functions
     //
 
-    #if defined( __WINDOWS__ )
-        // On Windows, long path support must be enabled via a registry key
-        // Only if this is enabled can we expect our test to pass
-        if ( FileIO::IsWindowsLongPathSupportEnabled() == false )
-        {
-            return;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // On Windows, long path support must be enabled via a registry key
+    // Only if this is enabled can we expect our test to pass
+    if ( FileIO::IsWindowsLongPathSupportEnabled() == false )
+    {
+        return;
+    }
+#endif
 
     // Constants used to build long paths
     AString a( 255 );
@@ -362,8 +362,8 @@ void TestFileIO::LongPaths() const
     }
 
     // We'll operate in the tmp dir under a long sub folder (256 chars long)
-    AStackString<> tmpPath1;
-    AStackString<> tmpPath2;
+    AStackString tmpPath1;
+    AStackString tmpPath2;
     {
         VERIFY( FileIO::GetTempDir( tmpPath1 ) );
         tmpPath1 += "CoreTest_TestFileIO";
@@ -372,11 +372,11 @@ void TestFileIO::LongPaths() const
     }
 
     // Create some file paths to work with
-    AStackString<> filePathA;
-    AStackString<> filePathB;
-    AStackString<> subDir1;
-    AStackString<> subDir2;
-    AStackString<> filePathC;
+    AStackString filePathA;
+    AStackString filePathB;
+    AStackString subDir1;
+    AStackString subDir2;
+    AStackString filePathC;
     {
         // long file name A
         filePathA.Format( "%s/%s", tmpPath2.Get(), b.Get() );
@@ -463,7 +463,7 @@ void TestFileIO::LongPaths() const
     // GetFiles
     {
         StackArray<AString> files;
-        TEST_ASSERT( FileIO::GetFiles( tmpPath1, AStackString<>( "*" ), true, &files ) );
+        TEST_ASSERT( FileIO::GetFiles( tmpPath1, AStackString( "*" ), true, &files ) );
         TEST_ASSERT( files.GetSize() == 2 );
         files.Sort();
         TEST_ASSERT( files[ 0 ].EndsWith( filePathB.FindLast( '/' ) + 1 ) );
@@ -472,7 +472,7 @@ void TestFileIO::LongPaths() const
 
     // Get/SetCurrentDir
     {
-        AStackString<> original;
+        AStackString original;
         TEST_ASSERT( FileIO::GetCurrentDir( original ) );
         TEST_ASSERT( FileIO::SetCurrentDir( tmpPath2 ) );
         TEST_ASSERT( FileIO::SetCurrentDir( original ) );
@@ -497,7 +497,7 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
     VERIFY( FileIO::GetTempDir( tmpFileName ) );
 
     // add process unique identifier
-    AStackString<> buffer;
+    AStackString buffer;
     buffer.Format( "TestFileIO.%u.%u", Process::GetCurrentId(), m_Random.GetRand() );
     tmpFileName += buffer;
 }
@@ -505,45 +505,46 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
 // NormalizeWindowsPathCasing
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestFileIO::NormalizeWindowsPathCasing() const
-    {
-        #define CHECK_NORMALIZATION( badPath, expectedPath ) \
-            do { \
-                AStackString<> normalizedPath; \
-                TEST_ASSERT( FileIO::NormalizeWindowsPathCasing( AStackString<>( badPath ), normalizedPath ) ); \
+void TestFileIO::NormalizeWindowsPathCasing() const
+{
+    #define CHECK_NORMALIZATION( badPath, expectedPath ) \
+            do \
+            { \
+                AStackString normalizedPath; \
+                TEST_ASSERT( FileIO::NormalizeWindowsPathCasing( AStackString( badPath ), normalizedPath ) ); \
                 TEST_ASSERT( normalizedPath == expectedPath ); \
-            } while( false )
+            } while ( false )
 
-        // Out test needs to rely on some generally available directory.
-        // While technically Windows can be installed on different drives or folders
-        // it's reasonable for our test to not support that.
-        TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( "C:\\Windows" ) ) );
+    // Out test needs to rely on some generally available directory.
+    // While technically Windows can be installed on different drives or folders
+    // it's reasonable for our test to not support that.
+    TEST_ASSERT( FileIO::DirectoryExists( AStackString( "C:\\Windows" ) ) );
 
-        // Folder parts get the actual case of folders on disk
-        CHECK_NORMALIZATION( "C:\\WINDOWS", "C:\\Windows" );
-        CHECK_NORMALIZATION( "C:\\windows\\sySTem32", "C:\\Windows\\System32" );
+    // Folder parts get the actual case of folders on disk
+    CHECK_NORMALIZATION( "C:\\WINDOWS", "C:\\Windows" );
+    CHECK_NORMALIZATION( "C:\\windows\\sySTem32", "C:\\Windows\\System32" );
 
-        // Drive letters are upper-case
-        CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
-        CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
+    // Drive letters are upper-case
+    CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
+    CHECK_NORMALIZATION( "c:\\Windows", "C:\\Windows" );
 
-        // Drive only
-        CHECK_NORMALIZATION( "C:\\", "C:\\" );
-        CHECK_NORMALIZATION( "c:\\", "C:\\" );
+    // Drive only
+    CHECK_NORMALIZATION( "C:\\", "C:\\" );
+    CHECK_NORMALIZATION( "c:\\", "C:\\" );
 
-        // Paths that partially exist have the parts that exist fixed up
-        // but the parts that don't left alone
-        CHECK_NORMALIZATION( "c:\\winDOWs\\FolderThatDoesNotExist", "C:\\Windows\\FolderThatDoesNotExist" );
+    // Paths that partially exist have the parts that exist fixed up
+    // but the parts that don't left alone
+    CHECK_NORMALIZATION( "c:\\winDOWs\\FolderThatDoesNotExist", "C:\\Windows\\FolderThatDoesNotExist" );
 
-        #undef CHECK_NORMALIZATION
-    }
+    #undef CHECK_NORMALIZATION
+}
 #endif
 
 //------------------------------------------------------------------------------
 void TestFileIO::CreateOrOpenReadWrite() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // Make sure file does not exist (handle potential previous failed runs)
@@ -563,7 +564,7 @@ void TestFileIO::CreateOrOpenReadWrite() const
         TEST_ASSERT( fileSize == f.Tell() );
 
         // Read it back
-        AStackString<> pathCopy;
+        AStackString pathCopy;
         TEST_ASSERT( f.Seek( 0 ) );
         TEST_ASSERT( f.Read( pathCopy ) );
         TEST_ASSERT( path == pathCopy );
@@ -581,7 +582,7 @@ void TestFileIO::CreateOrOpenReadWrite() const
         TEST_ASSERT( f.Tell() == 0 );
 
         // Read content
-        AStackString<> pathCopy;
+        AStackString pathCopy;
         TEST_ASSERT( f.Read( pathCopy ) );
         TEST_ASSERT( path == pathCopy );
 
@@ -618,13 +619,13 @@ void TestFileIO::CreateOrOpenReadWrite() const
 void TestFileIO::CreateOrOpenReadWritePerf() const
 {
     // generate a process unique file path
-    AStackString<> path;
+    AStackString path;
     GenerateTempFileName( path );
 
     // Allocate a buffer. Each iteration will write a different subset of this
     // causing the file to be truncated or grow on each iteration
     const uint32_t maxDataLen = ( 16 * 1024 * 1024 );
-    UniquePtr<uint8_t, FreeDeletor> data( static_cast<uint8_t*>( ALLOC( maxDataLen ) ) );
+    UniquePtr<uint8_t, FreeDeletor> data( static_cast<uint8_t *>( ALLOC( maxDataLen ) ) );
     memset( data.Get(), 0, maxDataLen );
 
     // Repeat operation several times to get performance info
@@ -665,8 +666,8 @@ void TestFileIO::CreateOrOpenReadWritePerf() const
 
     FileIO::FileDelete( path.Get() );
 
-    OUTPUT(" Truncate on Open : %2.5f s\n", static_cast<double>( t1 ) );
-    OUTPUT(" Truncate on Close: %2.5f s\n", static_cast<double>( t2 ) );
+    OUTPUT( " Truncate on Open : %2.5f s\n", static_cast<double>( t1 ) );
+    OUTPUT( " Truncate on Close: %2.5f s\n", static_cast<double>( t2 ) );
 }
 
 //------------------------------------------------------------------------------

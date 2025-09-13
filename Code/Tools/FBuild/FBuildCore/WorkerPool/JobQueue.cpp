@@ -7,6 +7,7 @@
 #include "Job.h"
 #include "WorkerThread.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
@@ -14,18 +15,19 @@
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 
-#include "Core/Time/Timer.h"
+// Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Time/Timer.h"
 
 // JobCostSorter
 //------------------------------------------------------------------------------
 class JobCostSorter
 {
 public:
-    inline bool operator () ( const Job * job1, const Job * job2 ) const
+    bool operator()( const Job * job1, const Job * job2 ) const
     {
         return ( job1->GetNode()->GetRecursiveCost() < job2->GetNode()->GetRecursiveCost() );
     }
@@ -55,12 +57,12 @@ uint32_t JobSubQueue::GetCount() const
 
 // JobSubQueue:QueueJobs
 //------------------------------------------------------------------------------
-void JobSubQueue::QueueJobs( Array< Node * > & nodes )
+void JobSubQueue::QueueJobs( Array<Node *> & nodes )
 {
     PROFILE_FUNCTION;
 
     // Create wrapper Jobs around Nodes
-    Array< Job * > jobs;
+    Array<Job *> jobs;
     jobs.SetCapacity( nodes.GetSize() );
     for ( Node * node : nodes )
     {
@@ -85,7 +87,7 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     }
 
     // Merge lists
-    Array< Job * > mergedList;
+    Array<Job *> mergedList;
     mergedList.SetSize( m_Jobs.GetSize() + jobs.GetSize() );
     Job ** dst = mergedList.Begin();
     Job ** src1 = m_Jobs.Begin();
@@ -134,7 +136,7 @@ Job * JobSubQueue::RemoveJob()
         return nullptr;
     }
 
-    VERIFY( AtomicDec( &m_Count ) != static_cast< uint32_t >( -1 ) );
+    VERIFY( AtomicDec( &m_Count ) != static_cast<uint32_t>( -1 ) );
 
     Job * job = m_Jobs.Top();
     m_Jobs.Pop();
@@ -146,11 +148,11 @@ Job * JobSubQueue::RemoveJob()
 //------------------------------------------------------------------------------
 JobQueue::JobQueue( uint32_t numWorkerThreads, ThreadPool * threadPool )
     : m_NumLocalJobsActive( 0 )
-    #if defined( __WINDOWS__ )
-        , m_MainThreadSemaphore( 1 ) // On Windows, take advantage of signalling limit
-    #else
-        , m_MainThreadSemaphore()
-    #endif
+#if defined( __WINDOWS__ )
+    , m_MainThreadSemaphore( 1 ) // On Windows, take advantage of signalling limit
+#else
+    , m_MainThreadSemaphore()
+#endif
 {
     PROFILE_FUNCTION;
 
@@ -198,7 +200,7 @@ JobQueue::~JobQueue()
 
     // wait for workers to finish - ok if they stopped before this
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         m_Workers[ i ]->WaitForStop();
         FDELETE m_Workers[ i ];
@@ -210,7 +212,7 @@ JobQueue::~JobQueue()
         // we may have some distributable jobs that could not be built,
         // so delete them here before checking mem usage below
         const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
-        for ( size_t i=0; i<numJobsAvailable; ++i )
+        for ( size_t i = 0; i < numJobsAvailable; ++i )
         {
             FDELETE m_DistributableJobs_Available[ i ];
         }
@@ -227,7 +229,7 @@ JobQueue::~JobQueue()
 void JobQueue::SignalStopWorkers()
 {
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         m_Workers[ i ]->Stop();
     }
@@ -242,7 +244,7 @@ void JobQueue::SignalStopWorkers()
 bool JobQueue::HaveWorkersStopped() const
 {
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         if ( m_Workers[ i ]->HasExited() == false )
         {
@@ -272,9 +274,9 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
     // If ConcurrencyGroups are in use, sum up the number of delayed
     // jobs to include in the total "numJobs"
     uint32_t numPendingJobs = 0;
-    for (const ConcurrencyGroupState & groupState : m_ConcurrencyGroupsState)
+    for ( const ConcurrencyGroupState & groupState : m_ConcurrencyGroupsState )
     {
-        numPendingJobs += static_cast<uint32_t>(groupState.m_LocalJobs_Staging.GetSize());
+        numPendingJobs += static_cast<uint32_t>( groupState.m_LocalJobs_Staging.GetSize() );
     }
 
     MutexHolder m( m_DistributedJobsMutex );
@@ -445,7 +447,7 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorPr
     Job * job = nullptr;
 
     // Compare capabilities of the worker to our local requirements
-    if ( workerMinorProtocolVersion >= Protocol::PROTOCOL_VERSION_MINOR )
+    if ( workerMinorProtocolVersion >= Protocol::kVersionMinor )
     {
         // Worker is equal or newer and minor protocol changes are backwards
         // compatible so worker can take any job.
@@ -468,7 +470,7 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorPr
             // TODO:B: Migrate this logic to the CompilerDriver
 
             // MSVC /dynamicdeopt require minor protocol 5 or later
-            const ObjectNode * on = potentialJob->GetNode()->CastTo< ObjectNode >();
+            const ObjectNode * on = potentialJob->GetNode()->CastTo<ObjectNode>();
             if ( on->IsMSVC() &&
                  on->IsUsingDynamicDeopt() &&
                  ( workerMinorProtocolVersion < 5 ) )
@@ -531,11 +533,11 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId,
                                    bool systemError,
                                    bool & outRaceLost,
                                    bool & outRaceWon,
-                                   const Node * & outNode,
+                                   const Node *& outNode,
                                    uint32_t & outJobSystemErrorCount )
 {
     MutexHolder m( m_DistributedJobsMutex );
-    Job * * jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
+    Job ** jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
     if ( jobIt )
     {
         Job * job = *jobIt;
@@ -684,10 +686,10 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
     }
 
     // Process results
-    Array< Job * > * jobArrays[] = { &m_CompletedJobs2,
-                                     &m_CompletedJobsAborted2,
-                                     &m_CompletedJobsFailed2 };
-    for ( Array< Job * > * jobArray : jobArrays )
+    Array<Job *> * jobArrays[] = { &m_CompletedJobs2,
+                                   &m_CompletedJobsAborted2,
+                                   &m_CompletedJobsFailed2 };
+    for ( Array<Job *> * jobArray : jobArrays )
     {
         const bool completedJob = ( jobArray == &m_CompletedJobs2 );
         const bool failedJob = ( jobArray == &m_CompletedJobsFailed2 );
@@ -825,7 +827,7 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
         // Cancelling?
         if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
         {
-            ASSERT( *(job->GetAbortFlagPointer()) == true );
+            ASSERT( *( job->GetAbortFlagPointer() ) == true );
 
             // Did local job actually get cancelled?
             if ( result != Node::BuildResult::eOk )
@@ -840,7 +842,6 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
             // never happened
             m_DistributableJobs_InProgress.Erase( it );
             job->SetDistributionState( Job::DIST_COMPLETED_LOCALLY ); // Cancellation has failed
-
         }
         else if ( ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
                   ( distState == Job::DIST_RACE_WON_REMOTELY ) )
@@ -873,10 +874,10 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
         MutexHolder m( m_CompletedJobsMutex );
         switch ( result )
         {
-            case Node::BuildResult::eOk:                m_CompletedJobs.Append( job ); break;
-            case Node::BuildResult::eAborted:           m_CompletedJobsAborted.Append( job ); break;
-            case Node::BuildResult::eNeedSecondPass:    ASSERT( false ); break;
-            case Node::BuildResult::eFailed:            m_CompletedJobsFailed.Append( job ); break;
+            case Node::BuildResult::eOk: m_CompletedJobs.Append( job ); break;
+            case Node::BuildResult::eAborted: m_CompletedJobsAborted.Append( job ); break;
+            case Node::BuildResult::eNeedSecondPass: ASSERT( false ); break;
+            case Node::BuildResult::eFailed: m_CompletedJobsFailed.Append( job ); break;
         }
     }
 
@@ -928,15 +929,16 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
     }
     else
     {
-        #ifdef PROFILING_ENABLED
-            const char * profilingTag = node->GetTypeName();
-            if ( node->GetType() == Node::OBJECT_NODE )
-            {
-                const ObjectNode * on = (ObjectNode *)node;
-                profilingTag = on->IsCreatingPCH() ? "PCH" : on->IsUsingPCH() ? "Obj (+PCH)" : profilingTag;
-            }
-            PROFILE_SECTION( profilingTag );
-        #endif
+#ifdef PROFILING_ENABLED
+        const char * profilingTag = node->GetTypeName();
+        if ( node->GetType() == Node::OBJECT_NODE )
+        {
+            const ObjectNode * on = (ObjectNode *)node;
+            profilingTag = on->IsCreatingPCH() ? "PCH" : on->IsUsingPCH() ? "Obj (+PCH)"
+                                                                          : profilingTag;
+        }
+        PROFILE_SECTION( profilingTag );
+#endif
 
         BuildProfilerScope profileScope( *job, WorkerThread::GetThreadIndex(), node->GetTypeName() );
         result = node->DoBuild( job );
@@ -1003,12 +1005,12 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
                 resultString = node->GetStatFlag( Node::STATS_CACHE_HIT ) ? "SUCCESS_CACHED" : "SUCCESS_COMPLETE";
                 break;
             }
-            case Node::BuildResult::eAborted:           resultString = "ABORTED"; break;
-            case Node::BuildResult::eNeedSecondPass:    resultString = "SUCCESS_PREPROCESSED";  break;
-            case Node::BuildResult::eFailed:            resultString = "FAILED";                break;
+            case Node::BuildResult::eAborted: resultString = "ABORTED"; break;
+            case Node::BuildResult::eNeedSecondPass: resultString = "SUCCESS_PREPROCESSED"; break;
+            case Node::BuildResult::eFailed: resultString = "FAILED"; break;
         }
 
-        AStackString<> msgBuffer;
+        AStackString msgBuffer;
         job->GetMessagesForMonitorLog( msgBuffer );
 
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",

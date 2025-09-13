@@ -23,7 +23,7 @@ ChainedMemoryStream::~ChainedMemoryStream()
 {
     for ( char * page : m_Pages )
     {
-        FDELETE [] page;
+        FDELETE[] page;
     }
 }
 
@@ -71,7 +71,7 @@ uint64_t ChainedMemoryStream::ReadBuffer( void * /*buffer*/, uint64_t /*bytesToR
 
         // Write as much as will fit in the current page
         ASSERT( bytesAvailableInPage > 0 );
-        const uint64_t bytesToWriteToPage = Math::Min<uint64_t>( bytesAvailableInPage , bytesToWrite );
+        const uint64_t bytesToWriteToPage = Math::Min<uint64_t>( bytesAvailableInPage, bytesToWrite );
         char * dst = m_Pages[ m_CurrentPageIndex ] + m_PosInPage;
         memcpy( dst, src, bytesToWriteToPage );
         src += bytesToWriteToPage;

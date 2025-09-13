@@ -14,6 +14,7 @@ class AString;
 class JSON
 {
 public:
+    static void AppendEscaped( const char * string, AString & outEscapedString );
     static void Escape( AString & string );
 };
 

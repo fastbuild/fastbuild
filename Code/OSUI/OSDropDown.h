@@ -31,8 +31,7 @@ public:
     void SetEnabled( bool enabled );
 
 protected:
-    OSFont *    m_Font;
+    OSFont * m_Font = nullptr;
 };
 
 //------------------------------------------------------------------------------
-

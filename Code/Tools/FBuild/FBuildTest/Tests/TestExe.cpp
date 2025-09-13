@@ -42,7 +42,7 @@ void TestExe::Build() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> exe( "../tmp/Test/Exe/exe.exe" );
+    const AStackString exe( "../tmp/Test/Exe/exe.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( exe );
@@ -54,15 +54,14 @@ void TestExe::Build() const
     // make sure all output is where it is expected
     EnsureFileExists( exe );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp + linker exe
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 7,     7 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE ); // cpp + linker exe
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::EXE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 7, 7 );
 }
 
 // CheckValidExe
@@ -87,16 +86,14 @@ void TestExe::Build_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "Exe" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp + linker exe
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 7,     3 );
-
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE ); // cpp + linker exe
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 7, 3 );
 }
 
 //------------------------------------------------------------------------------

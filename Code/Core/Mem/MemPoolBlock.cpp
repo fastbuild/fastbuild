@@ -9,19 +9,13 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 MemPoolBlock::MemPoolBlock( size_t blockSize, size_t blockAlignment )
-    : m_FreeBlockChain( nullptr )
-    #ifdef DEBUG
-        , m_NumActiveAllocations( 0 )
-        , m_NumLifetimeAllocations( 0 )
-        , m_PeakActiveAllocations( 0 )
-    #endif
-    , m_BlockSize( (uint32_t)blockSize )
+    : m_BlockSize( (uint32_t)blockSize )
     , m_BlockAlignment( (uint32_t)blockAlignment )
 {
     ASSERT( blockSize >= sizeof( FreeBlock ) );
-    ASSERT( blockSize <= MEMPOOLBLOCK_PAGE_SIZE );
+    ASSERT( blockSize <= kMemPoolBlockPageSize );
     ASSERT( blockAlignment >= 4 );
-    ASSERT( blockAlignment <= MEMPOOLBLOCK_PAGE_SIZE );
+    ASSERT( blockAlignment <= kMemPoolBlockPageSize );
 }
 
 // DESTRUCTOR
@@ -29,9 +23,7 @@ MemPoolBlock::MemPoolBlock( size_t blockSize, size_t blockAlignment )
 MemPoolBlock::~MemPoolBlock()
 {
     // Ensure no memory leaks
-    #ifdef DEBUG
-        ASSERT( m_NumActiveAllocations == 0 );
-    #endif
+    ASSERT( m_NumActiveAllocations == 0 );
 
     // free pages
     for ( void * page : m_Pages )
@@ -53,17 +45,17 @@ void * MemPoolBlock::Alloc()
         ASSERT( m_FreeBlockChain );
     }
 
-    #ifdef DEBUG
-        m_NumActiveAllocations++;
-        if ( m_NumLifetimeAllocations < 0xFFFFFFFF )
-        {
-            ++m_NumLifetimeAllocations;
-        }
-        if ( m_NumActiveAllocations > m_PeakActiveAllocations )
-        {
-            m_PeakActiveAllocations = m_NumActiveAllocations;
-        }
-    #endif
+#if defined( ASSERTS_ENABLED )
+    m_NumActiveAllocations++;
+    if ( m_NumLifetimeAllocations < 0xFFFFFFFF )
+    {
+        ++m_NumLifetimeAllocations;
+    }
+    if ( m_NumActiveAllocations > m_PeakActiveAllocations )
+    {
+        m_PeakActiveAllocations = m_NumActiveAllocations;
+    }
+#endif
 
     // Take first block from free chain
     FreeBlock * block = m_FreeBlockChain;
@@ -75,18 +67,16 @@ void * MemPoolBlock::Alloc()
 //------------------------------------------------------------------------------
 void MemPoolBlock::Free( void * ptr )
 {
-    #ifdef DEBUG
-        ASSERT( m_NumActiveAllocations > 0 );
-    #endif
+    ASSERT( m_NumActiveAllocations > 0 );
 
     // Insert free block into head of chain
-    FreeBlock * freeBlock = static_cast< FreeBlock * >( ptr );
+    FreeBlock * freeBlock = static_cast<FreeBlock *>( ptr );
     freeBlock->m_Next = m_FreeBlockChain;
     m_FreeBlockChain = freeBlock;
 
-    #ifdef DEBUG
-        --m_NumActiveAllocations;
-    #endif
+#if defined( ASSERTS_ENABLED )
+    --m_NumActiveAllocations;
+#endif
 }
 
 // AllocPage
@@ -105,14 +95,14 @@ NO_INLINE bool MemPoolBlock::AllocPage()
 
     // divide page into blocks
     const size_t alignedSize( Math::RoundUp( (size_t)m_BlockSize, (size_t)m_BlockAlignment ) );
-    const size_t numBlocksInPage( MEMPOOLBLOCK_PAGE_SIZE / alignedSize );
+    const size_t numBlocksInPage( kMemPoolBlockPageSize / alignedSize );
 
     // build chain into new blocks
-    FreeBlock * block = reinterpret_cast< FreeBlock * >( (size_t)newPage );
+    FreeBlock * block = reinterpret_cast<FreeBlock *>( (size_t)newPage );
     FreeBlock * const firstBlock = block;
     for ( size_t i = 0; i < ( numBlocksInPage - 1 ); ++i )
     {
-        FreeBlock * next = reinterpret_cast< FreeBlock * >( (size_t)block + alignedSize );
+        FreeBlock * next = reinterpret_cast<FreeBlock *>( (size_t)block + alignedSize );
         block->m_Next = next;
         block = next;
     }
@@ -128,7 +118,7 @@ NO_INLINE bool MemPoolBlock::AllocPage()
 //------------------------------------------------------------------------------
 /*virtual*/ void * MemPoolBlock::AllocateMemoryForPage()
 {
-    void * newPage = ALLOC( MEMPOOLBLOCK_PAGE_SIZE );
+    void * newPage = ALLOC( kMemPoolBlockPageSize );
 
     // track new page
     m_Pages.Append( newPage );

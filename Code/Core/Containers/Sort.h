@@ -11,8 +11,8 @@
 class AscendingCompare
 {
 public:
-    template < class T >
-    inline bool operator () ( const T & a, const T & b ) const
+    template <class T>
+    bool operator()( const T & a, const T & b ) const
     {
         return ( a < b );
     }
@@ -23,8 +23,8 @@ public:
 class AscendingCompareDeref
 {
 public:
-    template < class T >
-    inline bool operator () ( const T & a, const T & b ) const
+    template <class T>
+    bool operator()( const T & a, const T & b ) const
     {
         return ( ( *a ) < ( *b ) );
     }
@@ -32,7 +32,7 @@ public:
 
 // ShellSort
 //------------------------------------------------------------------------------
-template < class T, class COMPARE >
+template <class T, class COMPARE>
 void ShellSort( T * begin, T * end, const COMPARE & compare )
 {
     // Ciura, Marcin (2001). "Best Increments for the Average Case of Shellsort".

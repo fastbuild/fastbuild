@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FileNode.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+
+// Core
 #include "Core/Containers/Array.h"
 
 // Forward Declarations
@@ -24,18 +27,18 @@ public:
 
     enum Flag
     {
-        LINK_FLAG_MSVC      = 0x01,
-        LINK_FLAG_DLL       = 0x02,
-        LINK_FLAG_GCC       = 0x08,
-        LINK_FLAG_SNC       = 0x10,
-        LINK_FLAG_ORBIS_LD  = 0x20,
+        LINK_FLAG_MSVC = 0x01,
+        LINK_FLAG_DLL = 0x02,
+        LINK_FLAG_GCC = 0x08,
+        LINK_FLAG_SNC = 0x10,
+        LINK_FLAG_ORBIS_LD = 0x20,
         LINK_FLAG_INCREMENTAL = 0x40,
         LINK_FLAG_GREENHILLS_ELXR = 0x80,
-        LINK_FLAG_CODEWARRIOR_LD=0x100,
+        LINK_FLAG_CODEWARRIOR_LD = 0x100,
         LINK_FLAG_WARNINGS_AS_ERRORS_MSVC = 0x200,
     };
 
-    inline bool IsADLL() const { return GetFlag( LINK_FLAG_DLL ); }
+    bool IsADLL() const { return GetFlag( LINK_FLAG_DLL ); }
 
     static uint32_t DetermineLinkerTypeFlags( const AString & linkerType, const AString & linkerName );
     static uint32_t DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args );
@@ -60,9 +63,9 @@ protected:
     void EmitCompilationMessage( const Args & fullArgs ) const;
     void EmitStampMessage() const;
 
-    inline bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
+    bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
 
-    inline const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
+    const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
 
     ArgsResponseFileMode GetResponseFileMode() const;
 
@@ -70,16 +73,16 @@ protected:
 
     static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found );
-    static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const Array< AString > & paths, const AString & lib );
+    static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const Array<AString> & paths, const AString & lib );
     static bool GetOtherLibsArg( const char * arg,
                                  AString & value,
-                                 const AString * & it,
+                                 const AString *& it,
                                  const AString * const & end,
                                  bool canonicalizePath,
                                  bool isMSVC );
     static bool GetOtherLibsArg( const char * arg,
-                                 Array< AString > & list,
-                                 const AString * & it,
+                                 Array<AString> & list,
+                                 const AString *& it,
                                  const AString * const & end,
                                  bool canonicalizePath,
                                  bool isMSVC );
@@ -95,28 +98,28 @@ protected:
                               Dependencies & nodes );
 
     // Reflected
-    AString             m_Linker;
-    AString             m_LinkerOptions;
-    AString             m_LinkerType;
-    Array< AString >    m_Libraries;
-    Array< AString >    m_Libraries2;
-    Array< AString >    m_LinkerAssemblyResources;
-    bool                m_LinkerLinkObjects             = false;
-    bool                m_LinkerAllowResponseFile;
-    bool                m_LinkerForceResponseFile;
-    AString             m_LinkerStampExe;
-    AString             m_LinkerStampExeArgs;
-    Array< AString >    m_PreBuildDependencyNames;
-    Array< AString >    m_Environment;
-    AString             m_ConcurrencyGroupName;
+    AString m_Linker;
+    AString m_LinkerOptions;
+    AString m_LinkerType;
+    Array<AString> m_Libraries;
+    Array<AString> m_Libraries2;
+    Array<AString> m_LinkerAssemblyResources;
+    bool m_LinkerLinkObjects = false;
+    bool m_LinkerAllowResponseFile;
+    bool m_LinkerForceResponseFile;
+    AString m_LinkerStampExe;
+    AString m_LinkerStampExeArgs;
+    Array<AString> m_PreBuildDependencyNames;
+    Array<AString> m_Environment;
+    AString m_ConcurrencyGroupName;
 
     // Internal State
-    uint32_t            m_Libraries2StartIndex          = 0;
-    uint32_t            m_Flags                         = 0;
-    uint32_t            m_AssemblyResourcesStartIndex   = 0;
-    uint32_t            m_AssemblyResourcesNum          = 0;
-    AString             m_ImportLibName;
-    mutable const char * m_EnvironmentString            = nullptr;
+    uint32_t m_Libraries2StartIndex = 0;
+    uint32_t m_Flags = 0;
+    uint32_t m_AssemblyResourcesStartIndex = 0;
+    uint32_t m_AssemblyResourcesNum = 0;
+    AString m_ImportLibName;
+    mutable const char * m_EnvironmentString = nullptr;
 };
 
 //------------------------------------------------------------------------------

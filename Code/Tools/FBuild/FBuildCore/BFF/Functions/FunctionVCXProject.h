@@ -14,8 +14,8 @@
 class FunctionVCXProject : public Function
 {
 public:
-    explicit        FunctionVCXProject();
-    inline virtual ~FunctionVCXProject() override = default;
+    explicit FunctionVCXProject();
+    virtual ~FunctionVCXProject() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

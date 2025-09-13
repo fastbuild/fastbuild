@@ -8,48 +8,71 @@
 // Core
 #include "Core/Strings/AStackString.h"
 
-// NEscape
 //------------------------------------------------------------------------------
-/*static*/ void JSON::Escape( AString & string )
+/*static*/ void JSON::AppendEscaped( const char * string,
+                                     AString & outString )
 {
-    // Build result in a temporary buffer
-    AStackString< 8192 > temp;
-
-    const char * const end = string.GetEnd();
-    for ( const char * pos = string.Get(); pos != end; ++pos )
+    const char * pos = string;
+    while ( const char c = *pos++ )
     {
-        const char c = *pos;
-
         // control character?
         if ( c <= 0x1F )
         {
             // escape with backslash if possible
-            if ( c == '\b' ) { temp += "\\b"; continue; }
-            if ( c == '\t' ) { temp += "\\t"; continue; }
-            if ( c == '\n' ) { temp += "\\n"; continue; }
-            if ( c == '\f' ) { temp += "\\f"; continue; }
-            if ( c == '\r' ) { temp += "\\r"; continue; }
+            if ( c == '\b' )
+            {
+                outString += "\\b";
+                continue;
+            }
+            if ( c == '\t' )
+            {
+                outString += "\\t";
+                continue;
+            }
+            if ( c == '\n' )
+            {
+                outString += "\\n";
+                continue;
+            }
+            if ( c == '\f' )
+            {
+                outString += "\\f";
+                continue;
+            }
+            if ( c == '\r' )
+            {
+                outString += "\\r";
+                continue;
+            }
 
             // escape with codepoint
-            temp.AppendFormat( "\\u%04X", c );
+            outString.AppendFormat( "\\u%04X", c );
             continue;
         }
         else if ( c == '\"' )
         {
             // escape quotes
-            temp += "\\\"";
+            outString += "\\\"";
             continue;
         }
         else if ( c == '\\' )
         {
             // escape backslashes
-            temp += "\\\\";
+            outString += "\\\\";
             continue;
         }
 
         // char does not need escaping
-        temp += c;
+        outString += c;
     }
+}
+
+//------------------------------------------------------------------------------
+/*static*/ void JSON::Escape( AString & string )
+{
+    // Build result in a temporary buffer
+    AStackString<8192> temp;
+    AppendEscaped( string.Get(), temp );
 
     // store final result
     string = temp;

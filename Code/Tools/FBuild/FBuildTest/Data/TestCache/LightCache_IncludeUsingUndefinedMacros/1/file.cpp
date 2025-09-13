@@ -1,4 +1,3 @@
-
 #ifdef MACRO_WHICH_IS_NOT_DEFINED
     #include MACRO_WHICH_IS_NOT_DEFINED
 #endif

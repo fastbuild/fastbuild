@@ -5,13 +5,13 @@
 //------------------------------------------------------------------------------
 #include "FBuild.h"
 
-#include "FLog.h"
 #include "BFF/BFFParser.h"
 #include "BFF/Functions/Function.h"
-#include "Cache/ICache.h"
 #include "Cache/Cache.h"
 #include "Cache/CachePlugin.h"
+#include "Cache/ICache.h"
 #include "Cache/LightCache.h"
+#include "FLog.h"
 #include "Graph/Node.h"
 #include "Graph/NodeGraph.h"
 #include "Graph/NodeProxy.h"
@@ -32,13 +32,14 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/SmallBlockAllocator.h"
+#include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Process/Process.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
-#include "Core/Process/Process.h"
 
 #include <stdio.h>
 #include <time.h>
@@ -67,13 +68,13 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
 {
-    #ifdef DEBUG_CRT_MEMORY_USAGE
-        _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF |
-                        _CRTDBG_CHECK_ALWAYS_DF | //_CRTDBG_CHECK_EVERY_16_DF |
-                        _CRTDBG_CHECK_CRT_DF |
-                        _CRTDBG_DELAY_FREE_MEM_DF |
-                        _CRTDBG_LEAK_CHECK_DF );
-    #endif
+#ifdef DEBUG_CRT_MEMORY_USAGE
+    _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF |
+                    _CRTDBG_CHECK_ALWAYS_DF | //_CRTDBG_CHECK_EVERY_16_DF |
+                    _CRTDBG_CHECK_CRT_DF |
+                    _CRTDBG_DELAY_FREE_MEM_DF |
+                    _CRTDBG_LEAK_CHECK_DF );
+#endif
 
     // store all user provided options
     m_Options = options;
@@ -169,13 +170,13 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             {
                 m_DependencyGraphFile.SetLength( m_DependencyGraphFile.GetLength() - 4 );
             }
-            #if defined( __WINDOWS__ )
-                m_DependencyGraphFile += ".windows.fdb";
-            #elif defined( __OSX__ )
-                m_DependencyGraphFile += ".osx.fdb";
-            #elif defined( __LINUX__ )
-                m_DependencyGraphFile += ".linux.fdb";
-            #endif
+#if defined( __WINDOWS__ )
+            m_DependencyGraphFile += ".windows.fdb";
+#elif defined( __OSX__ )
+            m_DependencyGraphFile += ".osx.fdb";
+#elif defined( __LINUX__ )
+            m_DependencyGraphFile += ".linux.fdb";
+#endif
         }
         else
         {
@@ -224,9 +225,9 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
 // Build
 //------------------------------------------------------------------------------
-bool FBuild::Build( const char* target )
+bool FBuild::Build( const char * target )
 {
-    return Build( AStackString<>( target ) );
+    return Build( AStackString( target ) );
 }
 
 // Build
@@ -235,20 +236,20 @@ bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );
 
-    StackArray< AString > targets;
+    StackArray<AString> targets;
     targets.Append( target );
     return Build( targets );
 }
 
 // GetTargets
 //------------------------------------------------------------------------------
-bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const
+bool FBuild::GetTargets( const Array<AString> & targets, Dependencies & outDeps ) const
 {
     ASSERT( !targets.IsEmpty() );
 
     // Get the nodes for all the targets
     const size_t numTargets = targets.GetSize();
-    for ( size_t i=0; i<numTargets; ++i )
+    for ( size_t i = 0; i < numTargets; ++i )
     {
         const AString & target = targets[ i ];
 
@@ -265,16 +266,16 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
             FLOG_ERROR( "Unknown build target '%s'", target.Get() );
 
             // Gets the 5 targets with minimal distance to user input
-            StackArray< NodeGraph::NodeWithDistance > nearestNodes;
+            StackArray<NodeGraph::NodeWithDistance> nearestNodes;
             m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
 
             if ( false == nearestNodes.IsEmpty() )
             {
                 FLOG_WARN( "Did you mean one of these ?" );
                 const size_t count = nearestNodes.GetSize();
-                for ( size_t j = 0 ; j < count ; ++j )
+                for ( size_t j = 0; j < count; ++j )
                 {
-                    FLOG_WARN( "    %s", nearestNodes[j].m_Node->GetName().Get() );
+                    FLOG_WARN( "    %s", nearestNodes[ j ].m_Node->GetName().Get() );
                 }
             }
 
@@ -288,10 +289,10 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
 
 // Build
 //------------------------------------------------------------------------------
-bool FBuild::Build( const Array< AString > & targets )
+bool FBuild::Build( const Array<AString> & targets )
 {
     // create a temporary node, not hooked into the DB
-    NodeProxy proxy( AStackString< 32 >( "*proxy*" ) );
+    NodeProxy proxy( AStackString<32>( "*proxy*" ) );
     Dependencies deps( targets.GetSize() );
     if ( !GetTargets( targets, deps ) )
     {
@@ -303,7 +304,7 @@ bool FBuild::Build( const Array< AString > & targets )
     const bool result = Build( &proxy );
 
     // output per-target results
-    for ( size_t i=0; i<targets.GetSize(); ++i )
+    for ( size_t i = 0; i < targets.GetSize(); ++i )
     {
         const char * const nodeStatus = GetFinalStatus( deps[ i ].GetNode() );
         OUTPUT( "FBuild: %s: %s\n", nodeStatus, targets[ i ].Get() );
@@ -330,12 +331,12 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
     m_DependencyGraph->Save( memoryStream, nodeGraphDBFile );
 
     // Ensure output dir exists where we'll save the DB
-    AStackString<> fileName( nodeGraphDBFile );
+    AStackString fileName( nodeGraphDBFile );
     const char * lastSlash = fileName.FindLast( '/' );
     lastSlash = lastSlash ? lastSlash : fileName.FindLast( '\\' );
     if ( lastSlash )
     {
-        AStackString<> pathOnly( fileName.Get(), lastSlash );
+        AStackString pathOnly( fileName.Get(), lastSlash );
         if ( FileIO::EnsurePathExists( pathOnly ) == false )
         {
             FLOG_ERROR( "Failed to create directory for DepGraph saving '%s'", pathOnly.Get() );
@@ -373,7 +374,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
 // SaveDependencyGraph
 //------------------------------------------------------------------------------
-void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char* nodeGraphDBFile ) const
+void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char * nodeGraphDBFile ) const
 {
     m_DependencyGraph->Save( stream, nodeGraphDBFile );
 }
@@ -395,28 +396,13 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char* node
     if ( m_Options.m_AllowDistributed )
     {
         const SettingsNode * settings = m_DependencyGraph->GetSettings();
-
-        // Worker list from Settings takes priority
-        Array< AString > workers( settings->GetWorkerList() );
-        if ( workers.IsEmpty() )
-        {
-            // check for workers through brokerage or environment
-            m_WorkerBrokerage.FindWorkers( workers );
-        }
-
-        if ( workers.IsEmpty() )
-        {
-            FLOG_WARN( "No workers available - Distributed compilation disabled" );
-            m_Options.m_AllowDistributed = false;
-        }
-        else
-        {
-            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
-            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
-        }
+        m_Client = FNEW( Client( settings->GetWorkerList(),
+                                 m_Options.m_DistributionPort,
+                                 settings->GetWorkerConnectionLimit(),
+                                 m_Options.m_DistVerbose ) );
     }
 
-    m_Timer.Start();
+    m_Timer.Restart();
     m_LastProgressOutputTime = 0.0f;
     m_LastProgressCalcTime = 0.0f;
     m_SmoothedProgressCurrent = 0.0f;
@@ -477,7 +463,7 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char* node
                     stopping = true;
                     if ( m_Options.m_FastCancel )
                     {
-                    // Notify the system that the main process has been killed and that it can kill its process.
+                        // Notify the system that the main process has been killed and that it can kill its process.
                         AtomicStoreRelaxed( &s_AbortBuild, true );
                     }
                 }
@@ -583,7 +569,8 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
             if ( envVar.GetHash() != hash )
             {
                 FLOG_ERROR( "Overwriting imported environment variable '%s' with a different value = '%s'",
-                            name, value.Get() );
+                            name,
+                            value.Get() );
                 return false;
             }
 
@@ -691,10 +678,10 @@ void FBuild::UpdateBuildStatus( const Node * node )
         const float doneRatio = (float)( (double)bs.m_NodeTimeProgressms / (double)bs.m_NodeTimeTotalms );
 
         // don't allow it to reach 100% (handles rounding inaccuracies)
-        const float donePerc = Math::Min< float >( doneRatio * 100.0f, 99.9f );
+        const float donePerc = Math::Min<float>( doneRatio * 100.0f, 99.9f );
 
         // don't allow progress to go backwards
-        m_SmoothedProgressTarget = Math::Max< float >( donePerc, m_SmoothedProgressTarget );
+        m_SmoothedProgressTarget = Math::Max<float>( donePerc, m_SmoothedProgressTarget );
     }
 
     m_SmoothedProgressCurrent = ( 0.5f * m_SmoothedProgressCurrent ) + ( m_SmoothedProgressTarget * 0.5f );
@@ -739,31 +726,51 @@ void FBuild::DisplayTargetList( bool showHidden ) const
         bool hidden = node->IsHidden();
         switch ( node->GetType() )
         {
-            case Node::PROXY_NODE:          ASSERT( false ); break;
-            case Node::COPY_FILE_NODE:      break;
+            case Node::PROXY_NODE: ASSERT( false ); break;
+            case Node::COPY_FILE_NODE: break;
             case Node::DIRECTORY_LIST_NODE: break;
-            case Node::EXEC_NODE:           break;
-            case Node::FILE_NODE:           break;
-            case Node::LIBRARY_NODE:        break;
-            case Node::OBJECT_NODE:         break;
-            case Node::ALIAS_NODE:          displayName = true; hidden = node->IsHidden(); break;
-            case Node::EXE_NODE:            break;
-            case Node::CS_NODE:             break;
-            case Node::UNITY_NODE:          displayName = true; hidden = node->IsHidden(); break;
-            case Node::TEST_NODE:           break;
-            case Node::COMPILER_NODE:       break;
-            case Node::DLL_NODE:            break;
-            case Node::VCXPROJECT_NODE:     break;
+            case Node::EXEC_NODE: break;
+            case Node::FILE_NODE: break;
+            case Node::LIBRARY_NODE: break;
+            case Node::OBJECT_NODE: break;
+            case Node::ALIAS_NODE:
+            {
+                displayName = true;
+                hidden = node->IsHidden();
+                break;
+            }
+            case Node::EXE_NODE: break;
+            case Node::CS_NODE: break;
+            case Node::UNITY_NODE:
+            {
+                displayName = true;
+                hidden = node->IsHidden();
+                break;
+            }
+            case Node::TEST_NODE: break;
+            case Node::COMPILER_NODE: break;
+            case Node::DLL_NODE: break;
+            case Node::VCXPROJECT_NODE: break;
             case Node::VSPROJEXTERNAL_NODE: break;
-            case Node::OBJECT_LIST_NODE:    displayName = true; hidden = node->IsHidden(); break;
-            case Node::COPY_DIR_NODE:       break;
-            case Node::SLN_NODE:            break;
-            case Node::REMOVE_DIR_NODE:     break;
-            case Node::XCODEPROJECT_NODE:   break;
-            case Node::SETTINGS_NODE:       break;
-            case Node::TEXT_FILE_NODE:      displayName = true; hidden = node->IsHidden(); break;
+            case Node::OBJECT_LIST_NODE:
+            {
+                displayName = true;
+                hidden = node->IsHidden();
+                break;
+            }
+            case Node::COPY_DIR_NODE: break;
+            case Node::SLN_NODE: break;
+            case Node::REMOVE_DIR_NODE: break;
+            case Node::XCODEPROJECT_NODE: break;
+            case Node::SETTINGS_NODE: break;
+            case Node::TEXT_FILE_NODE:
+            {
+                displayName = true;
+                hidden = node->IsHidden();
+                break;
+            }
             case Node::LIST_DEPENDENCIES_NODE: break;
-            case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
+            case Node::NUM_NODE_TYPES: ASSERT( false ); break;
         }
         if ( displayName && ( !hidden || showHidden ) )
         {
@@ -774,7 +781,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
 
 // DisplayDependencyDB
 //------------------------------------------------------------------------------
-bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
+bool FBuild::DisplayDependencyDB( const Array<AString> & targets ) const
 {
     AString buffer( 10 * 1024 * 1024 );
 
@@ -796,7 +803,7 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
 
 // GenerateDotGraph
 //------------------------------------------------------------------------------
-bool FBuild::GenerateDotGraph( const Array< AString > & targets, const bool fullGraph ) const
+bool FBuild::GenerateDotGraph( const Array<AString> & targets, const bool fullGraph ) const
 {
     // Get the nodes for the targets, or leave empty to get everything
     Dependencies deps;
@@ -828,7 +835,7 @@ bool FBuild::GenerateDotGraph( const Array< AString > & targets, const bool full
 
 // GenerateCompilationDatabase
 //------------------------------------------------------------------------------
-bool FBuild::GenerateCompilationDatabase( const Array< AString > & targets ) const
+bool FBuild::GenerateCompilationDatabase( const Array<AString> & targets ) const
 {
     Dependencies deps;
     if ( !GetTargets( targets, deps ) )
@@ -859,28 +866,28 @@ bool FBuild::GenerateCompilationDatabase( const Array< AString > & targets ) con
 //------------------------------------------------------------------------------
 /*static*/ bool FBuild::GetTempDir( AString & outTempDir )
 {
-    #if defined( __WINDOWS__ ) || defined( __LINUX__ ) || defined( __APPLE__ )
-        // Check for override environment variable
-        if ( Env::GetEnvVariable( "FASTBUILD_TEMP_PATH", outTempDir ) )
+#if defined( __WINDOWS__ ) || defined( __LINUX__ ) || defined( __APPLE__ )
+    // Check for override environment variable
+    if ( Env::GetEnvVariable( "FASTBUILD_TEMP_PATH", outTempDir ) )
+    {
+        // Ensure env var was slash terminated
+    #if defined( __WINDOWS__ )
+        const bool slashTerminated = ( outTempDir.EndsWith( '/' ) || outTempDir.EndsWith( '\\' ) );
+        if ( !slashTerminated )
         {
-            // Ensure env var was slash terminated
-            #if defined( __WINDOWS__ )
-                const bool slashTerminated = ( outTempDir.EndsWith( '/' ) || outTempDir.EndsWith( '\\' ) );
-                if ( !slashTerminated )
-                {
-                    outTempDir += '\\';
-                }
-            #else
-                const bool slashTerminated = outTempDir.EndsWith( '/' );
-                if ( !slashTerminated )
-                {
-                    outTempDir += '/';
-                }
-            #endif
-
-            return true;
+            outTempDir += '\\';
+        }
+    #else
+        const bool slashTerminated = outTempDir.EndsWith( '/' );
+        if ( !slashTerminated )
+        {
+            outTempDir += '/';
         }
     #endif
+
+        return true;
+    }
+#endif
 
     // Use regular system temp path
     return FileIO::GetTempDir( outTempDir );
@@ -938,8 +945,8 @@ const char * FBuild::GetFinalStatus( const Node * node )
     // example), recursively examine deps to determine status
     switch ( node->GetState() )
     {
-        case Node::State::UP_TO_DATE:   return "OK";
-        case Node::State::FAILED:       return "Error: BUILD FAILED";
+        case Node::State::UP_TO_DATE: return "OK";
+        case Node::State::FAILED: return "Error: BUILD FAILED";
         default:
         {
             // Search dependencies recursively for failures

@@ -183,12 +183,12 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
     if ( ( m_SourceMapping.IsEmpty() == false ) && isLocal )
     {
         const AString & workingDir = FBuild::Get().GetOptions().GetWorkingDir();
-        AStackString<> tmp;
+        AStackString tmp;
         // Using -ffile-prefix-map would be better since that would change not only the file paths in
         // the DWARF debugging information but also in the __FILE__ and related predefined macros, but
         // -ffile-prefix-map is only supported starting with GCC 8 and Clang 10. The -fdebug-prefix-map
         // option is available starting with Clang 3.8 and all modern GCC versions.
-        tmp.Format(" \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), m_SourceMapping.Get());
+        tmp.Format( " \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), m_SourceMapping.Get() );
         outFullArgs += tmp;
     }
 }

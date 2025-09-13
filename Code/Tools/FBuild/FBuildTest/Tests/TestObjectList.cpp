@@ -28,9 +28,9 @@ private:
     void ExtraOutputFolders_PathExtraction() const;
     void ObjectListChaining() const;
     void ObjectListChaining_Bad() const;
-    #if defined( __WINDOWS__ )
-        void ExtraOutputFolders_Build() const;
-    #endif
+#if defined( __WINDOWS__ )
+    void ExtraOutputFolders_Build() const;
+#endif
 };
 
 // Register Tests
@@ -43,9 +43,9 @@ REGISTER_TESTS_BEGIN( TestObjectList )
     REGISTER_TEST( ExtraOutputFolders_PathExtraction )
     REGISTER_TEST( ObjectListChaining )
     REGISTER_TEST( ObjectListChaining_Bad )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( ExtraOutputFolders_Build )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( ExtraOutputFolders_Build )
+#endif
 REGISTER_TESTS_END
 
 // Exclusions
@@ -61,7 +61,8 @@ void TestObjectList::Exclusions() const
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
     // Check all the exclusion methods worked as expected
-    const char* const nodesToCheck[] =
+    // clang-format off
+    const char * const nodesToCheck[] =
     {
         "ExcludedFiles-FileName",
         "ExcludedFiles-FileNameWithPath-ForwardSlash",
@@ -72,7 +73,8 @@ void TestObjectList::Exclusions() const
         "ExcludePattern-ForwardSlash",
         "ExcludePattern-Backslash",
     };
-    for (const char* const nodeName : nodesToCheck)
+    // clang-format on
+    for ( const char * const nodeName : nodesToCheck )
     {
         // Get the ObjectListNode
         const Node * objectListNode = fBuild.GetNode( nodeName );
@@ -81,11 +83,11 @@ void TestObjectList::Exclusions() const
 
         // Check that it has one dynamic dependency, and that it's the 'B' file
         TEST_ASSERT( objectListNode->GetDynamicDependencies().GetSize() == 1 );
-        #if defined( __WINDOWS__ )
-            TEST_ASSERT( objectListNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "ok.obj" ) );
-        #else
-            TEST_ASSERT( objectListNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "ok.o" ) );
-        #endif
+#if defined( __WINDOWS__ )
+        TEST_ASSERT( objectListNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "ok.obj" ) );
+#else
+        TEST_ASSERT( objectListNode->GetDynamicDependencies()[ 0 ].GetNode()->GetName().EndsWithI( "ok.o" ) );
+#endif
     }
 }
 
@@ -141,12 +143,14 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
     // - mixed slashes
     // - ../
     // - double //
-    AStackString<> args( " /FdTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//pdb/file.pdb"
-                         " /FaTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//asm/file.asm"
-                         " /sourceDependencies Tools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//srcDeps/file.json");
+    AStackString args( " /FdTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//pdb/file.pdb"
+                       " /FaTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//asm/file.asm"
+                       " /sourceDependencies Tools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//srcDeps/file.json" );
 
     // Get the paths
-    AStackString<> pdbPath, asmPath, sourceDependenciesPath;
+    AStackString pdbPath;
+    AStackString asmPath;
+    AStackString sourceDependenciesPath;
     FunctionObjectList::GetExtraOutputPaths( args, pdbPath, asmPath, sourceDependenciesPath );
 
     // Check that the entire span is correctly captured
@@ -180,11 +184,10 @@ void TestObjectList::ObjectListChaining() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      2,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     4,      4,  Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 4, 4, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText1 );
     }
@@ -195,11 +198,10 @@ void TestObjectList::ObjectListChaining() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     4,      0,  Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 4, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
     }
 
     // Check no-rebuild DB migration
@@ -210,11 +212,10 @@ void TestObjectList::ObjectListChaining() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     4,      0,  Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 4, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText2 );
     }
@@ -258,11 +259,10 @@ void TestObjectList::ObjectListChaining_Bad() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      2,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      2,  Node::OBJECT_NODE );
-        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText1 );
     }
@@ -273,11 +273,10 @@ void TestObjectList::ObjectListChaining_Bad() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
-        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
     }
 
     // Check no-rebuild DB migration
@@ -288,11 +287,10 @@ void TestObjectList::ObjectListChaining_Bad() const
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
-        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
-        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
 
         fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText2 );
     }
@@ -304,50 +302,50 @@ void TestObjectList::ObjectListChaining_Bad() const
 // ExtraOutputFolders_Build
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestObjectList::ExtraOutputFolders_Build() const
+void TestObjectList::ExtraOutputFolders_Build() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ExtraOutputPaths/fbuild.bff";
+
+    const char * objectListASMFile = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/file.asm";
+    const char * objectListASMDir = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/";
+    const char * objectListPDBFile = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/file.pdb";
+    const char * objectListPDBDir = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/";
+    const char * libraryASMFile = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/file.asm";
+    const char * libraryASMDir = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/";
+    const char * libraryPDBFile = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/file.pdb";
+    const char * libraryPDBDir = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/";
+
+    // Cleanup from previous runs to ensure we're really testing folder creation
+    EnsureFileDoesNotExist( objectListASMFile );
+    EnsureDirDoesNotExist( objectListASMDir );
+    EnsureFileDoesNotExist( objectListPDBFile );
+    EnsureDirDoesNotExist( objectListPDBDir );
+    EnsureFileDoesNotExist( libraryASMFile );
+    EnsureDirDoesNotExist( libraryASMDir );
+    EnsureFileDoesNotExist( libraryPDBFile );
+    EnsureDirDoesNotExist( libraryPDBDir );
+
+    // ObjectList
     {
-        FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ExtraOutputPaths/fbuild.bff";
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
-        const char * objectListASMFile  = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/file.asm";
-        const char * objectListASMDir   = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/";
-        const char * objectListPDBFile  = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/file.pdb";
-        const char * objectListPDBDir   = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/";
-        const char * libraryASMFile     = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/file.asm";
-        const char * libraryASMDir      = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/";
-        const char * libraryPDBFile     = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/file.pdb";
-        const char * libraryPDBDir      = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/";
-
-        // Cleanup from previous runs to ensure we're really testing folder creation
-        EnsureFileDoesNotExist( objectListASMFile );
-        EnsureDirDoesNotExist( objectListASMDir );
-        EnsureFileDoesNotExist( objectListPDBFile );
-        EnsureDirDoesNotExist( objectListPDBDir );
-        EnsureFileDoesNotExist( libraryASMFile );
-        EnsureDirDoesNotExist( libraryASMDir );
-        EnsureFileDoesNotExist( libraryPDBFile );
-        EnsureDirDoesNotExist( libraryPDBDir );
-
-        // ObjectList
-        {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
-            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
-
-            EnsureFileExists( objectListASMFile );
-            EnsureFileExists( objectListPDBFile );
-        }
-
-        // Library
-        {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
-            TEST_ASSERT( fBuild.Build( "Library" ) );
-
-            EnsureFileExists( libraryASMFile );
-            EnsureFileExists( libraryPDBFile );
-        }
+        EnsureFileExists( objectListASMFile );
+        EnsureFileExists( objectListPDBFile );
     }
+
+    // Library
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "Library" ) );
+
+        EnsureFileExists( libraryASMFile );
+        EnsureFileExists( libraryPDBFile );
+    }
+}
 #endif
 
 //------------------------------------------------------------------------------

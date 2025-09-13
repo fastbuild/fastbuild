@@ -51,8 +51,8 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( UsageError_UnsupportedOperation )
 REGISTER_TESTS_END
 
-#define TEST_EXP_TRUE( vars, exp )        TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Success')\n}", "Success") )
-#define TEST_EXP_FALSE( vars, exp )       TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Failure')\n}", nullptr, "Failure") )
+#define TEST_EXP_TRUE( vars, exp )        TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Success')\n}", "Success" ) )
+#define TEST_EXP_FALSE( vars, exp )       TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Failure')\n}", nullptr, "Failure" ) )
 #define TEST_EXP_FAIL( vars, exp, error ) TEST_ASSERT( ParseFromString( false, vars "\nIf ( " exp " )\n{\n}", error ) )
 
 // IfFunctionTrue
@@ -150,7 +150,7 @@ void TestIf::IfFunctionBool() const
     TEST_EXP_TRUE( ".True = true\n .False = false", "true && .True && true || !false || .False" );
 
     // Non-existent variables
-    TEST_EXP_FAIL( "", ".A == 'String'", "Unknown variable '.A'");
+    TEST_EXP_FAIL( "", ".A == 'String'", "Unknown variable '.A'" );
     TEST_EXP_FAIL( ".Bool = true", ".Bool == .A", "Unknown variable '.A'" );
 
     // Incorrect RHS operand type

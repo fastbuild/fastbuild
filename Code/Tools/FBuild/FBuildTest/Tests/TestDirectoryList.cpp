@@ -39,22 +39,22 @@ void TestDirectoryList::Build() const
     NodeGraph ng;
 
     // Generate a valid DirectoryListNode name
-    AStackString<> name;
-    #if defined( __WINDOWS__ )
-        const AStackString<> testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
-    #else
-        const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
-    #endif
-    Array< AString > patterns;
+    AStackString name;
+#if defined( __WINDOWS__ )
+    const AStackString testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
+#else
+    const AStackString testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
+#endif
+    Array<AString> patterns;
     patterns.EmplaceBack( "library.*" );
     DirectoryListNode::FormatName( testFolder,
                                    &patterns,
                                    true, // recursive
                                    false, // Don't include read-only status in hash
                                    false, // Don't include directories
-                                   Array< AString >(), // excludePaths,
-                                   Array< AString >(), // excludeFiles,
-                                   Array< AString >(), // excludePatterns,
+                                   Array<AString>(), // excludePaths,
+                                   Array<AString>(), // excludeFiles,
+                                   Array<AString>(), // excludePatterns,
                                    name );
 
     // create the node, and make sure we can access it by name
@@ -70,13 +70,13 @@ void TestDirectoryList::Build() const
 
     // make sure we got the expected results
     TEST_ASSERT( node->GetFiles().GetSize() == 2 );
-    #if defined( __WINDOWS__ )
-        const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
-        const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
-    #else
-        const char * fileName1 = "Data/TestGraph/library.cpp";
-        const char * fileName2 = "Data/TestGraph/library.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
+    const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
+#else
+    const char * fileName1 = "Data/TestGraph/library.cpp";
+    const char * fileName2 = "Data/TestGraph/library.o";
+#endif
 
     // returned order depends on file system
     if ( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName1 ) )
@@ -98,7 +98,7 @@ void TestDirectoryList::Names() const
     // given differing search params
 
     // Use the same path in each case
-    AStackString<> path( "Tools/FBuild/FBuildTest/Data/TestDirectoryList/" );
+    AStackString path( "Tools/FBuild/FBuildTest/Data/TestDirectoryList/" );
     PathUtils::FixupFolderPath( path );
 
     // Build a list of node names we can verify for uniqueness later

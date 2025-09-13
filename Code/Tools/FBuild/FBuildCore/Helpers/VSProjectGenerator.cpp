@@ -26,7 +26,7 @@
 class FileAscendingCompareIDeref
 {
 public:
-    inline bool operator () ( const VSProjectFilePair * a, const VSProjectFilePair * b ) const
+    bool operator()( const VSProjectFilePair * a, const VSProjectFilePair * b ) const
     {
         return ( a->m_ProjectRelativePath.CompareI( b->m_ProjectRelativePath ) < 0 );
     }
@@ -49,7 +49,7 @@ VSProjectGenerator::~VSProjectGenerator() = default;
 
 // SetBasePaths
 //------------------------------------------------------------------------------
-void VSProjectGenerator::SetBasePaths( const Array< AString > & paths )
+void VSProjectGenerator::SetBasePaths( const Array<AString> & paths )
 {
     ASSERT( m_FilePathsCanonicalized == false );
     m_BasePaths = paths;
@@ -60,7 +60,7 @@ void VSProjectGenerator::SetBasePaths( const Array< AString > & paths )
 void VSProjectGenerator::AddFile( const AString & file )
 {
     // ensure slash consistency which we rely on later
-    AStackString<> fileCopy( file );
+    AStackString fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
     m_Files.EmplaceBack();
     m_Files.Top().m_AbsolutePath = fileCopy;
@@ -68,7 +68,7 @@ void VSProjectGenerator::AddFile( const AString & file )
 
 // AddFiles
 //------------------------------------------------------------------------------
-void VSProjectGenerator::AddFiles( const Array< AString > & files )
+void VSProjectGenerator::AddFiles( const Array<AString> & files )
 {
     for ( const AString & file : files )
     {
@@ -81,7 +81,7 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
 /*static*/ void VSProjectGenerator::FormatDeterministicProjectGUID( AString & guid, const AString & projectName )
 {
     // Replace native slash with Windows-style slash for GUID generation to keep GUIDs consistent across platforms
-    AStackString<> projectNameNormalized( projectName );
+    AStackString projectNameNormalized( projectName );
     projectNameNormalized.Replace( NATIVE_SLASH, BACK_SLASH );
     guid.Format( "{%08x-6c94-4f93-bc2a-7f5284b7d434}", CRC32::Calc( projectNameNormalized ) );
 }
@@ -89,9 +89,9 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
 // GenerateVCXProj
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile,
-                                                     const Array< VSProjectConfig > & configs,
-                                                     const Array< VSProjectFileType > & fileTypes,
-                                                     const Array< VSProjectImport > & projectImports )
+                                                     const Array<VSProjectConfig> & configs,
+                                                     const Array<VSProjectFileType> & fileTypes,
+                                                     const Array<VSProjectImport> & projectImports )
 {
     ASSERT( !m_ProjectGuid.IsEmpty() );
 
@@ -99,7 +99,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // determine folder for project
     const char * lastSlash = projectFile.FindLast( NATIVE_SLASH );
-    AStackString<> projectBasePath( projectFile.Get(), lastSlash ? lastSlash + 1 : projectFile.Get() );
+    AStackString projectBasePath( projectFile.Get(), lastSlash ? lastSlash + 1 : projectFile.Get() );
 
     // Canonicalize and de-duplicate files
     CanonicalizeFilePaths( projectBasePath );
@@ -113,9 +113,11 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         Write( "  <ItemGroup Label=\"ProjectConfigurations\">\n" );
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF("    <ProjectConfiguration Include=\"%s|%s\">\n", config.m_Config.Get(), config.m_Platform.Get() );
-            WriteF("      <Configuration>%s</Configuration>\n", config.m_Config.Get() );
-            WriteF("      <Platform>%s</Platform>\n", config.m_Platform.Get() );
+            WriteF( "    <ProjectConfiguration Include=\"%s|%s\">\n",
+                    config.m_Config.Get(),
+                    config.m_Platform.Get() );
+            WriteF( "      <Configuration>%s</Configuration>\n", config.m_Config.Get() );
+            WriteF( "      <Platform>%s</Platform>\n", config.m_Platform.Get() );
             Write( "    </ProjectConfiguration>\n" );
         }
         Write( "  </ItemGroup>\n" );
@@ -123,7 +125,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // files
     {
-        Write("  <ItemGroup>\n" );
+        Write( "  <ItemGroup>\n" );
         for ( const VSProjectFilePair & filePathPair : m_Files )
         {
             const AString & fileName = filePathPair.m_ProjectRelativePath;
@@ -148,24 +150,24 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WriteF( "    <CustomBuild Include=\"%s\" />\n", fileName.Get() );
             }
         }
-        Write("  </ItemGroup>\n" );
+        Write( "  </ItemGroup>\n" );
     }
 
     // References
     {
-        Write("  <ItemGroup>\n" );
+        Write( "  <ItemGroup>\n" );
         {
             // Project References
             for ( const AString & projectReference : m_ProjectReferences )
             {
-                AStackString<> proj( projectReference );
+                AStackString proj( projectReference );
                 const char * pipe = proj.Find( '|' );
                 if ( pipe )
                 {
                     proj.SetLength( (uint32_t)( pipe - proj.Get() ) );
-                    AStackString<> guid( pipe + 1 );
-                    WriteF("    <ProjectReference Include=\"%s\">\n", proj.Get() );
-                    WriteF("      <Project>%s</Project>\n", guid.Get() );
+                    AStackString guid( pipe + 1 );
+                    WriteF( "    <ProjectReference Include=\"%s\">\n", proj.Get() );
+                    WriteF( "      <Project>%s</Project>\n", guid.Get() );
                     Write( "    </ProjectReference>\n" );
                 }
                 else
@@ -181,7 +183,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WriteF( "    <Reference Include=\"%s\" />\n", reference.Get() );
             }
         }
-        Write("  </ItemGroup>\n" );
+        Write( "  </ItemGroup>\n" );
     }
 
     // Globals
@@ -189,10 +191,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     WritePGItem( "RootNamespace", m_RootNamespace );
     WritePGItem( "ProjectGuid", m_ProjectGuid );
     WritePGItem( "DefaultLanguage", m_DefaultLanguage );
-    WritePGItem( "Keyword", AStackString<>( "MakeFileProj" ) );
+    WritePGItem( "Keyword", AStackString( "MakeFileProj" ) );
     if ( m_ProjectSccEntrySAK )
     {
-        const AStackString<> sakString( "SAK" );
+        const AStackString sakString( "SAK" );
         WritePGItem( "SccProjectName", sakString );
         WritePGItem( "SccAuxPath", sakString );
         WritePGItem( "SccLocalPath", sakString );
@@ -212,7 +214,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                                  ( config.m_LinuxProjectType.IsEmpty() == false );
         if ( needSection )
         {
-            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Globals\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Globals\">\n",
+                    config.m_Config.Get(),
+                    config.m_Platform.Get() );
             WritePGItem( "Keyword", config.m_Keyword );
             WritePGItem( "RootNamespace", config.m_RootNamespace );
             WritePGItem( "ApplicationType", config.m_ApplicationType );
@@ -230,13 +234,15 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     {
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n",
+                    config.m_Config.Get(),
+                    config.m_Platform.Get() );
             Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
             Write( "    <UseDebugLibraries>false</UseDebugLibraries>\n" );
 
             // If a specific executable is specified, use that, otherwise try to auto-derive
             // the executable from the .Target
-            AStackString<> localDebuggerCommand( config.m_LocalDebuggerCommand );
+            AStackString localDebuggerCommand( config.m_LocalDebuggerCommand );
             if ( localDebuggerCommand.IsEmpty() )
             {
                 // Get the executable path and make it project-relative
@@ -247,10 +253,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 }
             }
 
-            WritePGItem( "PlatformToolset",                 config.m_PlatformToolset );
-            WritePGItem( "LocalDebuggerCommandArguments",   config.m_LocalDebuggerCommandArguments );
-            WritePGItem( "LocalDebuggerCommand",            localDebuggerCommand );
-            WritePGItem( "LocalDebuggerEnvironment",        config.m_LocalDebuggerEnvironment );
+            WritePGItem( "PlatformToolset", config.m_PlatformToolset );
+            WritePGItem( "LocalDebuggerCommandArguments", config.m_LocalDebuggerCommandArguments );
+            WritePGItem( "LocalDebuggerCommand", localDebuggerCommand );
+            WritePGItem( "LocalDebuggerEnvironment", config.m_LocalDebuggerEnvironment );
 
             Write( "  </PropertyGroup>\n" );
         }
@@ -267,7 +273,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     {
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF("  <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
             Write( "    <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />\n" );
             Write( "  </ImportGroup>\n" );
         }
@@ -280,33 +286,35 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     {
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n",
+                    config.m_Config.Get(),
+                    config.m_Platform.Get() );
 
             if ( config.m_Keyword == "Linux" )
             {
-                WritePGItem( "BuildCommandLine",                config.m_ProjectBuildCommand );
-                WritePGItem( "ReBuildCommandLine",              config.m_ProjectRebuildCommand );
-                WritePGItem( "CleanCommandLine",                config.m_ProjectCleanCommand );
+                WritePGItem( "BuildCommandLine", config.m_ProjectBuildCommand );
+                WritePGItem( "ReBuildCommandLine", config.m_ProjectRebuildCommand );
+                WritePGItem( "CleanCommandLine", config.m_ProjectCleanCommand );
             }
             else
             {
-                WritePGItem( "NMakeBuildCommandLine",           config.m_ProjectBuildCommand );
-                WritePGItem( "NMakeReBuildCommandLine",         config.m_ProjectRebuildCommand );
-                WritePGItem( "NMakeCleanCommandLine",           config.m_ProjectCleanCommand );
+                WritePGItem( "NMakeBuildCommandLine", config.m_ProjectBuildCommand );
+                WritePGItem( "NMakeReBuildCommandLine", config.m_ProjectRebuildCommand );
+                WritePGItem( "NMakeCleanCommandLine", config.m_ProjectCleanCommand );
             }
-            WritePGItem( "AndroidApkLocation",              config.m_AndroidApkLocation );
-            WritePGItem( "AndroidDebugComponent",           config.m_AndroidDebugComponent );
-            WritePGItem( "AndroidDebugTarget",              config.m_AndroidDebugTarget );
-            WritePGItem( "AndroidJdb",                      config.m_AndroidJdb );
-            WritePGItem( "AndroidLldbPostAttachCommands",   config.m_AndroidLldbPostAttachCommands );
-            WritePGItem( "AndroidLldbStartupCommands",      config.m_AndroidLldbStartupCommands );
-            WritePGItem( "AndroidPostApkInstallCommands",   config.m_AndroidPostApkInstallCommands );
-            WritePGItem( "AndroidPreApkInstallCommands",    config.m_AndroidPreApkInstallCommands );
-            WritePGItem( "AndroidSymbolDirectories",        config.m_AndroidSymbolDirectories );
-            WritePGItem( "AndroidWaitForDebugger",          config.m_AndroidWaitForDebugger );
-            WritePGItem( "LaunchFlags",                     config.m_LaunchFlags );
+            WritePGItem( "AndroidApkLocation", config.m_AndroidApkLocation );
+            WritePGItem( "AndroidDebugComponent", config.m_AndroidDebugComponent );
+            WritePGItem( "AndroidDebugTarget", config.m_AndroidDebugTarget );
+            WritePGItem( "AndroidJdb", config.m_AndroidJdb );
+            WritePGItem( "AndroidLldbPostAttachCommands", config.m_AndroidLldbPostAttachCommands );
+            WritePGItem( "AndroidLldbStartupCommands", config.m_AndroidLldbStartupCommands );
+            WritePGItem( "AndroidPostApkInstallCommands", config.m_AndroidPostApkInstallCommands );
+            WritePGItem( "AndroidPreApkInstallCommands", config.m_AndroidPreApkInstallCommands );
+            WritePGItem( "AndroidSymbolDirectories", config.m_AndroidSymbolDirectories );
+            WritePGItem( "AndroidWaitForDebugger", config.m_AndroidWaitForDebugger );
+            WritePGItem( "LaunchFlags", config.m_LaunchFlags );
 
-            WritePGItem( "NMakeOutput",                     config.m_Output );
+            WritePGItem( "NMakeOutput", config.m_Output );
             const ObjectListNode * oln = nullptr;
             if ( config.m_PreprocessorDefinitions.IsEmpty() || config.m_IncludeSearchPath.IsEmpty() )
             {
@@ -315,7 +323,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
             if ( config.m_PreprocessorDefinitions.IsEmpty() == false )
             {
-                WritePGItem( "NMakePreprocessorDefinitions",    config.m_PreprocessorDefinitions );
+                WritePGItem( "NMakePreprocessorDefinitions", config.m_PreprocessorDefinitions );
             }
             else
             {
@@ -323,7 +331,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 {
                     StackArray<AString, 64> defines;
                     ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, false );
-                    AStackString<> definesStr;
+                    AStackString definesStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, nullptr, ";" );
                     WritePGItem( "NMakePreprocessorDefinitions", definesStr );
                 }
@@ -336,43 +344,43 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             }
             if ( config.m_IncludeSearchPath.IsEmpty() == false )
             {
-                WritePGItem( "NMakeIncludeSearchPath",          config.m_IncludeSearchPath );
+                WritePGItem( "NMakeIncludeSearchPath", config.m_IncludeSearchPath );
             }
             else if ( oln )
             {
                 for ( AString & include : includePaths )
                 {
                     ProjectGeneratorBase::GetRelativePath( projectBasePath, include, include );
-                    #if !defined( __WINDOWS__ )
-                        include.Replace( '/', '\\' ); // Convert to Windows-style slashes
-                    #endif
+#if !defined( __WINDOWS__ )
+                    include.Replace( '/', '\\' ); // Convert to Windows-style slashes
+#endif
                 }
-                AStackString<> includePathsStr;
+                AStackString includePathsStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, nullptr, ";" );
                 WritePGItem( "NMakeIncludeSearchPath", includePathsStr );
             }
             if ( config.m_ForcedIncludes.IsEmpty() == false )
             {
-                WritePGItem( "NMakeForcedIncludes",             config.m_ForcedIncludes );
+                WritePGItem( "NMakeForcedIncludes", config.m_ForcedIncludes );
             }
             else if ( oln )
             {
                 for ( AString & forceInclude : forceIncludes )
                 {
                     ProjectGeneratorBase::GetRelativePath( projectBasePath, forceInclude, forceInclude );
-                    #if !defined( __WINDOWS__ )
-                        forceInclude.Replace( '/', '\\' ); // Convert to Windows-style slashes
-                    #endif
+#if !defined( __WINDOWS__ )
+                    forceInclude.Replace( '/', '\\' ); // Convert to Windows-style slashes
+#endif
                 }
-                AStackString<> forceIncludePathsStr;
+                AStackString forceIncludePathsStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( forceIncludes, forceIncludePathsStr, nullptr, ";" );
                 WritePGItem( "NMakeForcedIncludes", forceIncludePathsStr );
             }
-            WritePGItem( "NMakeAssemblySearchPath",         config.m_AssemblySearchPath );
-            WritePGItem( "NMakeForcedUsingAssemblies",      config.m_ForcedUsingAssemblies );
+            WritePGItem( "NMakeAssemblySearchPath", config.m_AssemblySearchPath );
+            WritePGItem( "NMakeForcedUsingAssemblies", config.m_ForcedUsingAssemblies );
             if ( config.m_AdditionalOptions.IsEmpty() == false )
             {
-                WritePGItem( "AdditionalOptions",               config.m_AdditionalOptions );
+                WritePGItem( "AdditionalOptions", config.m_AdditionalOptions );
             }
             else
             {
@@ -380,24 +388,24 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 {
                     StackArray<AString, 64> additionalOptions;
                     ProjectGeneratorBase::ExtractAdditionalOptions( oln->GetCompilerOptions(), additionalOptions );
-                    AStackString<> additionalOptionsStr;
+                    AStackString additionalOptionsStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( additionalOptions, additionalOptionsStr, nullptr, " " );
                     WritePGItem( "AdditionalOptions", additionalOptionsStr );
                 }
             }
-            WritePGItem( "Xbox360DebuggerCommand",          config.m_Xbox360DebuggerCommand );
-            WritePGItem( "DebuggerFlavor",                  config.m_DebuggerFlavor );
-            WritePGItem( "AumidOverride",                   config.m_AumidOverride );
-            WritePGItem( "LocalDebuggerWorkingDirectory",   config.m_LocalDebuggerWorkingDirectory );
-            WritePGItem( "IntDir",                          config.m_IntermediateDirectory );
-            WritePGItem( "OutDir",                          config.m_OutputDirectory );
-            WritePGItem( "PackagePath",                     config.m_PackagePath );
-            WritePGItem( "AdditionalSymbolSearchPaths",     config.m_AdditionalSymbolSearchPaths );
-            WritePGItem( "LayoutDir",                       config.m_LayoutDir );
-            WritePGItem( "LayoutExtensionFilter",           config.m_LayoutExtensionFilter );
-            WritePGItem( "RemoteDebuggerCommand",           config.m_RemoteDebuggerCommand );
-            WritePGItem( "RemoteDebuggerCommandArguments",  config.m_RemoteDebuggerCommandArguments );
-            WritePGItem( "RemoteDebuggerWorkingDirectory",  config.m_RemoteDebuggerWorkingDirectory );
+            WritePGItem( "Xbox360DebuggerCommand", config.m_Xbox360DebuggerCommand );
+            WritePGItem( "DebuggerFlavor", config.m_DebuggerFlavor );
+            WritePGItem( "AumidOverride", config.m_AumidOverride );
+            WritePGItem( "LocalDebuggerWorkingDirectory", config.m_LocalDebuggerWorkingDirectory );
+            WritePGItem( "IntDir", config.m_IntermediateDirectory );
+            WritePGItem( "OutDir", config.m_OutputDirectory );
+            WritePGItem( "PackagePath", config.m_PackagePath );
+            WritePGItem( "AdditionalSymbolSearchPaths", config.m_AdditionalSymbolSearchPaths );
+            WritePGItem( "LayoutDir", config.m_LayoutDir );
+            WritePGItem( "LayoutExtensionFilter", config.m_LayoutExtensionFilter );
+            WritePGItem( "RemoteDebuggerCommand", config.m_RemoteDebuggerCommand );
+            WritePGItem( "RemoteDebuggerCommandArguments", config.m_RemoteDebuggerCommandArguments );
+            WritePGItem( "RemoteDebuggerWorkingDirectory", config.m_RemoteDebuggerWorkingDirectory );
             Write( "  </PropertyGroup>\n" );
         }
     }
@@ -406,11 +414,11 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     {
         for ( const VSProjectConfig & config : configs )
         {
-            WriteF("  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WriteF( "  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
             Write( "    <BuildLog>\n" );
             if ( !config.m_BuildLogFile.IsEmpty() )
             {
-                WritePGItem( "Path",          config.m_BuildLogFile );
+                WritePGItem( "Path", config.m_BuildLogFile );
             }
             else
             {
@@ -420,8 +428,8 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             if ( !config.m_DeploymentType.IsEmpty() || !config.m_DeploymentFiles.IsEmpty() )
             {
                 Write( "    <Deploy>\n" );
-                WritePGItem( "DeploymentType",          config.m_DeploymentType );
-                WritePGItem( "DeploymentFiles",         config.m_DeploymentFiles );
+                WritePGItem( "DeploymentType", config.m_DeploymentType );
+                WritePGItem( "DeploymentFiles", config.m_DeploymentFiles );
                 Write( "    </Deploy>\n" );
             }
             Write( "  </ItemDefinitionGroup>\n" );
@@ -429,9 +437,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     }
 
     // footer
-    Write("  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />\n" );
-    Write("  <ImportGroup Label=\"ExtensionTargets\">\n" );
-    Write("  </ImportGroup>\n" );
+    Write( "  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />\n" );
+    Write( "  <ImportGroup Label=\"ExtensionTargets\">\n" );
+    Write( "  </ImportGroup>\n" );
     for ( const VSProjectImport & import : projectImports )
     {
         WriteF( "  <Import Condition=\"%s\" Project=\"%s\" />\n", import.m_Condition.Get(), import.m_Project.Get() );
@@ -450,7 +458,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
     // determine folder for project
     const char * lastProjSlash = projectFile.FindLast( NATIVE_SLASH );
-    AStackString<> projectBasePath( projectFile.Get(), lastProjSlash ? lastProjSlash + 1 : projectFile.Get() );
+    AStackString projectBasePath( projectFile.Get(), lastProjSlash ? lastProjSlash + 1 : projectFile.Get() );
 
     // Must already be canonicalized/de-duplicated
     ASSERT( m_FilePathsCanonicalized == true );
@@ -460,14 +468,14 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     Write( "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
 
     // list of all folders
-    Array< AString > folders;
+    Array<AString> folders;
     folders.SetCapacity( 1024 );
-    Array< uint32_t > folderHashes;
+    Array<uint32_t> folderHashes;
     folderHashes.SetCapacity( 1024 );
 
     // files
     {
-        AStackString<> lastFolder;
+        AStackString lastFolder;
         Write( "  <ItemGroup>\n" );
         for ( const VSProjectFilePair & filePathPair : m_Files )
         {
@@ -476,7 +484,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
             // get folder part, relative to base dir(s)
             const AString & fileName = filePathPair.m_AbsolutePath;
-            AStackString<> folder;
+            AStackString folder;
             GetFolderPath( fileName, folder );
 
             if ( !folder.IsEmpty() )
@@ -492,7 +500,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
                 // Each unique path must be added, so FolderA/FolderB/FolderC
                 // will result in 3 entries, FolderA, FolderA/FolderB and FolderA/FolderB/FolderC
-                for (;;)
+                for ( ;; )
                 {
                     // add this folder if not already added
                     const uint32_t folderHash = xxHash::Calc32( folder );
@@ -521,7 +529,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     // folders
     {
         const size_t numFolders = folders.GetSize();
-        for ( size_t i=0; i<numFolders; ++i )
+        for ( size_t i = 0; i < numFolders; ++i )
         {
             const AString & folder = folders[ i ];
             const uint32_t folderHash = folderHashes[ i ];
@@ -560,10 +568,10 @@ void VSProjectGenerator::Write( const char * string )
 //------------------------------------------------------------------------------
 void VSProjectGenerator::WriteF( const char * fmtString, ... )
 {
-    AStackString< 1024 > tmp;
+    AStackString<1024> tmp;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     tmp.VFormat( fmtString, args );
     va_end( args );
 
@@ -586,15 +594,15 @@ void VSProjectGenerator::WritePGItem( const char * xmlTag, const AString & value
     }
 
     // Escape value
-    AStackString<> escapedValue;
+    AStackString escapedValue;
     for ( const char c : value )
     {
         switch ( c )
         {
-            case '>':   escapedValue += "&gt;";     break;
-            case '<':   escapedValue += "&lt;";     break;
-            case '&':   escapedValue += "&amp;";    break;
-            default:    escapedValue += c;          break;
+            case '>': escapedValue += "&gt;"; break;
+            case '<': escapedValue += "&lt;"; break;
+            case '&': escapedValue += "&amp;"; break;
+            default: escapedValue += c; break;
         }
     }
 
@@ -635,25 +643,25 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
     }
 
     // Base Paths are retained as absolute paths
-    #if !defined( __WINDOWS__ )
-        for ( AString & basePath : m_BasePaths )
-        {
-            basePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
-        }
-    #endif
+#if !defined( __WINDOWS__ )
+    for ( AString & basePath : m_BasePaths )
+    {
+        basePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+    }
+#endif
 
     // Files
     if ( m_Files.IsEmpty() == false )
     {
         // Canonicalize and make all paths relative to project
-        StackArray< const VSProjectFilePair * > filePointers;
+        StackArray<const VSProjectFilePair *> filePointers;
         filePointers.SetCapacity( m_Files.GetSize() );
         for ( VSProjectFilePair & filePathPair : m_Files )
         {
             ProjectGeneratorBase::GetRelativePath( projectBasePath, filePathPair.m_AbsolutePath, filePathPair.m_ProjectRelativePath );
-            #if !defined( __WINDOWS__ )
-                filePathPair.m_ProjectRelativePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
-            #endif
+#if !defined( __WINDOWS__ )
+            filePathPair.m_ProjectRelativePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+#endif
             filePointers.Append( &filePathPair );
         }
 
@@ -662,12 +670,12 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         filePointers.Sort( sorter );
 
         // Find unique files
-        Array< VSProjectFilePair > uniqueFiles;
+        Array<VSProjectFilePair> uniqueFiles;
         uniqueFiles.SetCapacity( m_Files.GetSize() );
         const VSProjectFilePair * prev = filePointers[ 0 ];
         uniqueFiles.Append( *filePointers[ 0 ] );
         const size_t numFiles = m_Files.GetSize();
-        for ( size_t i=1; i<numFiles; ++i )
+        for ( size_t i = 1; i < numFiles; ++i )
         {
             const VSProjectFilePair * current = filePointers[ i ];
             if ( current->m_ProjectRelativePath.EqualsI( prev->m_ProjectRelativePath ) )

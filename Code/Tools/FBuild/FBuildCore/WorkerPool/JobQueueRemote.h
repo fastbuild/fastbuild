@@ -4,10 +4,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
-
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 
@@ -20,7 +22,7 @@ class WorkerThread;
 
 // JobQueueRemote
 //------------------------------------------------------------------------------
-class JobQueueRemote : public Singleton< JobQueueRemote >
+class JobQueueRemote : public Singleton<JobQueueRemote>
 {
 public:
     explicit JobQueueRemote( uint32_t numWorkerThreads );
@@ -35,8 +37,8 @@ public:
     void SignalStopWorkers();
     bool HaveWorkersStopped() const;
 
-    inline size_t GetNumWorkers() const { return m_Workers.GetSize(); }
-    void          GetWorkerStatus( size_t index, AString & hostName, AString & status, bool & isIdle ) const;
+    size_t GetNumWorkers() const { return m_Workers.GetSize(); }
+    void GetWorkerStatus( size_t index, AString & hostName, AString & status, bool & isIdle ) const;
 
     void MainThreadWait( uint32_t timeoutMS );
     void WakeMainThread();
@@ -49,28 +51,28 @@ private:
     // worker threads call these
     friend class WorkerThread;
     friend class WorkerThreadRemote;
-    Job *       GetJobToProcess();
+    Job * GetJobToProcess();
     static Node::BuildResult DoBuild( Job * job, bool racingRemoteJob );
-    void        FinishedProcessingJob( Job * job, Node::BuildResult result );
+    void FinishedProcessingJob( Job * job, Node::BuildResult result );
 
     // internal helpers
     static bool ReadResults( Job * job );
 
-    mutable Mutex       m_PendingJobsMutex;
-    Array< Job * >      m_PendingJobs;
-    mutable Mutex       m_InFlightJobsMutex;
-    Array< Job * >      m_InFlightJobs;
-    Mutex               m_CompletedJobsMutex;
-    Array< Job * >      m_CompletedJobs;
-    Array< Job * >      m_CompletedJobsFailed;
-    Array< Job * >      m_CompletedJobsAborted;
+    mutable Mutex m_PendingJobsMutex;
+    Array<Job *> m_PendingJobs;
+    mutable Mutex m_InFlightJobsMutex;
+    Array<Job *> m_InFlightJobs;
+    Mutex m_CompletedJobsMutex;
+    Array<Job *> m_CompletedJobs;
+    Array<Job *> m_CompletedJobsFailed;
+    Array<Job *> m_CompletedJobsAborted;
 
-    Semaphore           m_MainThreadSemaphore;
-    Semaphore           m_WorkerThreadSemaphore;
-    Semaphore           m_WorkerThreadSleepSemaphore;
+    Semaphore m_MainThreadSemaphore;
+    Semaphore m_WorkerThreadSemaphore;
+    Semaphore m_WorkerThreadSleepSemaphore;
 
-    ThreadPool *        m_ThreadPool;
-    Array< WorkerThread * > m_Workers;
+    ThreadPool * m_ThreadPool;
+    Array<WorkerThread *> m_Workers;
 };
 
 //------------------------------------------------------------------------------

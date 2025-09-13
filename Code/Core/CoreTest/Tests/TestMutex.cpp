@@ -36,15 +36,15 @@ private:
     };
     static uint32_t TestExclusivityThreadEntryFunction( void * userData );
 
-    #if defined( __WINDOWS__ )
-        struct PaddingStruct
-        {
-            Mutex   m_Mutex1;
-            uint8_t m_Padding;
-            Mutex   m_Mutex2;
-        };
-        void TestAlignment() const;
-    #endif
+#if defined( __WINDOWS__ )
+    struct PaddingStruct
+    {
+        Mutex m_Mutex1;
+        uint8_t m_Padding;
+        Mutex m_Mutex2;
+    };
+    void TestAlignment() const;
+#endif
 };
 
 // Register Tests
@@ -58,9 +58,9 @@ REGISTER_TESTS_BEGIN( TestMutex )
     REGISTER_TEST( TryLockMixed )
     REGISTER_TEST( TryLockFail )
     REGISTER_TEST( TestExclusivity )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( TestAlignment )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( TestAlignment )
+#endif
 REGISTER_TESTS_END
 
 // TestConstruct
@@ -183,7 +183,9 @@ void TestMutex::TestExclusivity() const
 
     // arrive at barrier and wait
     AtomicInc( &data.m_BarrierCounter );
-    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
+    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 )
+    {
+    }
 
     // increment
     for ( size_t i = 0; i < 1000000; ++i )
@@ -203,11 +205,13 @@ void TestMutex::TestExclusivity() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestMutex::TestExclusivityThreadEntryFunction( void * userData )
 {
-    TestExclusivityUserData & data = *( static_cast< TestExclusivityUserData * >( userData ) );
+    TestExclusivityUserData & data = *( static_cast<TestExclusivityUserData *>( userData ) );
 
     // arrive at barrier and wait
     AtomicInc( &data.m_BarrierCounter );
-    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}
+    while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 )
+    {
+    }
 
     // increment
     for ( size_t i = 0; i < 1000000; ++i )
@@ -222,20 +226,20 @@ void TestMutex::TestExclusivity() const
 // TestAlignment
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestMutex::TestAlignment() const
-    {
-        // Check that alignment on stack and heap is correct
-        PaddingStruct ps1;
-        PaddingStruct * ps2 = FNEW( PaddingStruct );
+void TestMutex::TestAlignment() const
+{
+    // Check that alignment on stack and heap is correct
+    PaddingStruct ps1;
+    PaddingStruct * ps2 = FNEW( PaddingStruct );
 
-        TEST_ASSERT( ( (size_t)&ps1.m_Mutex1 % sizeof( void * ) ) == 0 );
-        TEST_ASSERT( ( (size_t)&ps1.m_Mutex2 % sizeof( void * ) ) == 0 );
+    TEST_ASSERT( ( (size_t)&ps1.m_Mutex1 % sizeof( void * ) ) == 0 );
+    TEST_ASSERT( ( (size_t)&ps1.m_Mutex2 % sizeof( void * ) ) == 0 );
 
-        TEST_ASSERT( ( (size_t)&ps2->m_Mutex1 % sizeof( void * ) ) == 0 );
-        TEST_ASSERT( ( (size_t)&ps2->m_Mutex2 % sizeof( void * ) ) == 0 );
+    TEST_ASSERT( ( (size_t)&ps2->m_Mutex1 % sizeof( void * ) ) == 0 );
+    TEST_ASSERT( ( (size_t)&ps2->m_Mutex2 % sizeof( void * ) ) == 0 );
 
-        delete ps2;
-    }
+    delete ps2;
+}
 #endif
 
 //------------------------------------------------------------------------------

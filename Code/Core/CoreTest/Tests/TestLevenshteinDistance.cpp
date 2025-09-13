@@ -50,11 +50,11 @@ void TestLevenshteinDistance::Distance() const
     }
     {
         AString nil;
-        AStackString< 16 > test( "test" );
-        AStackString< 16 > TEST( "TEST" );
-        AStackString< 16 > TOAST( "TOAST" );
-        AStackString< 16 > TEST123( "TEST123" );
-        AStackString< 16 > _123TEST( "123TEST" );
+        AStackString<16> test( "test" );
+        AStackString<16> TEST( "TEST" );
+        AStackString<16> TOAST( "TOAST" );
+        AStackString<16> TEST123( "TEST123" );
+        AStackString<16> _123TEST( "123TEST" );
         TEST_ASSERT( 0 == LevenshteinDistance::Distance( nil, nil ) );
         TEST_ASSERT( 4 == LevenshteinDistance::Distance( nil, test ) );
         TEST_ASSERT( 4 == LevenshteinDistance::Distance( test, nil ) );
@@ -96,11 +96,11 @@ void TestLevenshteinDistance::DistanceI() const
     }
     {
         AString nil;
-        AStackString< 16 > test( "test" );
-        AStackString< 16 > TEST( "TEST" );
-        AStackString< 16 > TOAST( "TOAST" );
-        AStackString< 16 > TEST123( "TEST123" );
-        AStackString< 16 > _123TEST( "123TEST" );
+        AStackString<16> test( "test" );
+        AStackString<16> TEST( "TEST" );
+        AStackString<16> TOAST( "TOAST" );
+        AStackString<16> TEST123( "TEST123" );
+        AStackString<16> _123TEST( "123TEST" );
         TEST_ASSERT( 0 == LevenshteinDistance::DistanceI( nil, nil ) );
         TEST_ASSERT( 4 == LevenshteinDistance::DistanceI( nil, test ) );
         TEST_ASSERT( 4 == LevenshteinDistance::DistanceI( test, nil ) );

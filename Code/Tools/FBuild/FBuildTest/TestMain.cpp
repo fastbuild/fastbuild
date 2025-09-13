@@ -50,13 +50,13 @@ int main( int, char *[] )
     REGISTER_TESTGROUP( TestWarnings )
 
     // Windows-specific tests
-    #if defined( __WINDOWS__ )
-        REGISTER_TESTGROUP( TestCLR )
-        REGISTER_TESTGROUP( TestCSharp )
-        REGISTER_TESTGROUP( TestCUDA )
-        REGISTER_TESTGROUP( TestResources )
-        REGISTER_TESTGROUP( TestZW )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TESTGROUP( TestCLR )
+    REGISTER_TESTGROUP( TestCSharp )
+    REGISTER_TESTGROUP( TestCUDA )
+    REGISTER_TESTGROUP( TestResources )
+    REGISTER_TESTGROUP( TestZW )
+#endif
 
     TestManager utm;
 

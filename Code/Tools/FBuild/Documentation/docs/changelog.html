@@ -26,6 +26,51 @@
 
 <h1>Changelog</h1>
 
+
+<div class='newsitemheader'>
+    v1.16&nbsp;<font color='#bbbbbb'>(13th-Sep-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version changed</li>
+        <li>-dist will no longer be auto disabled if there are no workers at startup</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Fixed distributed compilation failure due to deadlocks under heavy network load</li>
+            <li>Remote file read failures are correctly handled (Thanks to Justin Webb)</li>
+        </ul>
+        <li>[OSX][Linux] Fix failure reading .fdb file > 2GiB in size (Thanks to Eduard Voronkin)</li>
+        <li>[OSX][Linux] Fix failures reading/writing build outputs > 2GiB in size (Thanks to Eduard Voronkin)</li>
+        <li>[OSX][Linux] Fix missing process memory in -profile output json</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Move worker discovery to Client thread, reducing startup time</li>
+            <li>Parallelize connecting to workers</li>
+        </ul>
+        <li>Greatly improve directory listing performance for large result sets</li>
+        <li>Improve performance of DB load/save</li>
+        <li>Reduce job processing overhead slightly</li>
+        <li>Improve performance in -quiet mode by avoiding unnecessary work</li>
+        <li>Reduce startup time slightly by deferring some LightCache setup work</li>
+        <li>Improve fbd load/save performance reducing build overhead</li>
+        <li>Improve fdb load/save performance</li>
+        <li>Improve fdb efficiency</li>
+        <li>[OSX] Significantly reduce process management overhead</li>
+        <li>[Linux] Reduce process spawning overhead</li>
+        <li>Reduce time taken to write -profile output</li>
+        <li>-profile emits total system memory usage</li>
+        <li>[Linux] Reduce process spawning cost using posix_spawn if possible</li>
+    </ul>
+</div>
+
 <div class='newsitemheader'>
     v1.15&nbsp;<font color='#bbbbbb'>(1st-May-2025)</font>
 </div>

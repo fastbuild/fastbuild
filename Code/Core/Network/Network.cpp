@@ -53,22 +53,22 @@
 
     const NetworkStartupHelper nsh; // ensure network is up if not already
 
-    #if defined( __WINDOWS__ )
-        TCHAR buffer[ 256 ];
-        DWORD bufferSize = sizeof( buffer );
-        if ( GetComputerNameEx( ComputerNameDnsDomain, buffer, &bufferSize ) )
-        {
-            domainName = buffer;
-            return;
-        }
-    #else
-        char buffer[ 256 ];
-        if ( ::getdomainname( buffer, 256 ) == 0 )
-        {
-            domainName = buffer;
-            return;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    TCHAR buffer[ 256 ];
+    DWORD bufferSize = sizeof( buffer );
+    if ( GetComputerNameEx( ComputerNameDnsDomain, buffer, &bufferSize ) )
+    {
+        domainName = buffer;
+        return;
+    }
+#else
+    char buffer[ 256 ];
+    if ( ::getdomainname( buffer, 256 ) == 0 )
+    {
+        domainName = buffer;
+        return;
+    }
+#endif
 
     ASSERT( false && "GetDomainName should never fail" );
     domainName = "Unknown";
@@ -80,65 +80,65 @@
 {
     PROFILE_FUNCTION;
 
-    #if defined( __WINDOWS__ )
-        // Find out how big the buffer needs to be (depends on number of adaptors)
-        ULONG adapterInfoSize = 0;
-        VERIFY( GetAdaptersInfo( nullptr, &adapterInfoSize ) == ERROR_BUFFER_OVERFLOW );
+#if defined( __WINDOWS__ )
+    // Find out how big the buffer needs to be (depends on number of adaptors)
+    ULONG adapterInfoSize = 0;
+    VERIFY( GetAdaptersInfo( nullptr, &adapterInfoSize ) == ERROR_BUFFER_OVERFLOW );
 
-        // Allocate the buffer
-        UniquePtr<IP_ADAPTER_INFO, FreeDeletor> buffer( static_cast<IP_ADAPTER_INFO *>( ALLOC( adapterInfoSize ) ) );
+    // Allocate the buffer
+    UniquePtr<IP_ADAPTER_INFO, FreeDeletor> buffer( static_cast<IP_ADAPTER_INFO *>( ALLOC( adapterInfoSize ) ) );
 
-        // Fill the buffer
-        VERIFY( GetAdaptersInfo( buffer.Get(), &adapterInfoSize ) == ERROR_SUCCESS );
+    // Fill the buffer
+    VERIFY( GetAdaptersInfo( buffer.Get(), &adapterInfoSize ) == ERROR_SUCCESS );
 
-        // Loop through all the adapters
-        PIP_ADAPTER_INFO adapter = buffer.Get();
-        while ( adapter )
-        {
-            // Add all IPv4 addresses associated with this adapter
-            IP_ADDR_STRING * info = &adapter->IpAddressList;
-            while ( info )
-            {
-                AString ipAddrString( info->IpAddress.String );
-
-                // Filter out disconnected adapters
-                if ( ipAddrString != "0.0.0.0" )
-                {
-                    outAddresses.EmplaceBack( Move( ipAddrString ) );
-                }
-
-                info = info->Next;
-            }
-
-            adapter = adapter->Next;
-        }
-    #else
-        struct ifaddrs * addresses = nullptr;
-        VERIFY( ::getifaddrs( &addresses ) == 0 );
-
-        // Walk linked list
-        struct ifaddrs * info = addresses;
+    // Loop through all the adapters
+    PIP_ADAPTER_INFO adapter = buffer.Get();
+    while ( adapter )
+    {
+        // Add all IPv4 addresses associated with this adapter
+        IP_ADDR_STRING * info = &adapter->IpAddressList;
         while ( info )
         {
-            // Filter out disconnected adapters and non-IPv4 addresses
-            if ( info->ifa_addr && ( info->ifa_addr->sa_family == AF_INET ) )
+            AString ipAddrString( info->IpAddress.String );
+
+            // Filter out disconnected adapters
+            if ( ipAddrString != "0.0.0.0" )
             {
-                char host[ NI_MAXHOST ];
-                VERIFY( getnameinfo( info->ifa_addr,
-                                     sizeof(struct sockaddr_in),
-                                     host,
-                                     NI_MAXHOST,
-                                     nullptr,
-                                     0,
-                                     NI_NUMERICHOST ) == 0 );
-                outAddresses.EmplaceBack( host );
+                outAddresses.EmplaceBack( Move( ipAddrString ) );
             }
 
-            info = info->ifa_next;
+            info = info->Next;
         }
 
-        freeifaddrs( addresses );
-    #endif
+        adapter = adapter->Next;
+    }
+#else
+    struct ifaddrs * addresses = nullptr;
+    VERIFY( ::getifaddrs( &addresses ) == 0 );
+
+    // Walk linked list
+    struct ifaddrs * info = addresses;
+    while ( info )
+    {
+        // Filter out disconnected adapters and non-IPv4 addresses
+        if ( info->ifa_addr && ( info->ifa_addr->sa_family == AF_INET ) )
+        {
+            char host[ NI_MAXHOST ];
+            VERIFY( getnameinfo( info->ifa_addr,
+                                 sizeof( struct sockaddr_in ),
+                                 host,
+                                 NI_MAXHOST,
+                                 nullptr,
+                                 0,
+                                 NI_NUMERICHOST ) == 0 );
+            outAddresses.EmplaceBack( host );
+        }
+
+        info = info->ifa_next;
+    }
+
+    freeifaddrs( addresses );
+#endif
 }
 
 // GetHostIPFromName
@@ -239,7 +239,7 @@
 
         const NetworkStartupHelper helper;
 
-        AStackString<> hostName;
+        AStackString hostName;
 
         {
             // take a copy of the HostName
@@ -257,7 +257,7 @@
 
             // We want IPv4
             struct addrinfo hints;
-            memset( &hints, 0, sizeof(hints) );
+            memset( &hints, 0, sizeof( hints ) );
             hints.ai_family = AF_INET;
 
             // Try to resolve

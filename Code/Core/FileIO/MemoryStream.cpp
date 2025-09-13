@@ -12,13 +12,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-MemoryStream::MemoryStream()
-    : m_Begin( nullptr )
-    , m_End( nullptr )
-    , m_MaxEnd( nullptr )
-    , m_MinGrowth( 4096 )
-{
-}
+MemoryStream::MemoryStream() = default;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -35,6 +29,33 @@ MemoryStream::MemoryStream( size_t initialBufferSize, size_t minGrowthFactor )
 MemoryStream::~MemoryStream()
 {
     FREE( m_Begin );
+}
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+MemoryStream::MemoryStream( MemoryStream && other )
+    : m_Begin( other.m_Begin )
+    , m_End( other.m_End )
+    , m_MaxEnd( other.m_MaxEnd )
+    , m_MinGrowth( other.m_MinGrowth )
+{
+    other.m_Begin = nullptr;
+    other.m_End = nullptr;
+    other.m_MaxEnd = nullptr;
+}
+
+// oeprator=
+//------------------------------------------------------------------------------
+void MemoryStream::operator=( MemoryStream && other )
+{
+    FREE( m_Begin );
+    m_Begin = other.m_Begin;
+    m_End = other.m_End;
+    m_MaxEnd = other.m_MaxEnd;
+    m_MinGrowth = other.m_MinGrowth;
+    other.m_Begin = nullptr;
+    other.m_End = nullptr;
+    other.m_MaxEnd = nullptr;
 }
 
 // Reset
@@ -63,7 +84,7 @@ void MemoryStream::Replace( void * memory, size_t size )
     FREE( m_Begin );
 
     // Own new memory
-    m_Begin = static_cast<char *>(memory);
+    m_Begin = static_cast<char *>( memory );
     m_End = m_Begin + size;
     m_MaxEnd = m_End;
 }
@@ -119,8 +140,7 @@ void MemoryStream::Flush()
 //------------------------------------------------------------------------------
 uint64_t MemoryStream::Tell() const
 {
-    ASSERT( false ); // Not implemented - implement if required
-    return 0;
+    return GetSize(); // Write position is always at end
 }
 
 // Seek

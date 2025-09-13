@@ -36,13 +36,13 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestIncludeParser )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( TestMSVCPreprocessedOutput )
-        REGISTER_TEST( TestMSVCPreprocessedOutput_Indent )
-        REGISTER_TEST( TestMSVCShowIncludesOutput )
-        REGISTER_TEST( TestMSVC_P )
-        REGISTER_TEST( TestMSVC_ShowIncludesWithWarnings )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( TestMSVCPreprocessedOutput )
+    REGISTER_TEST( TestMSVCPreprocessedOutput_Indent )
+    REGISTER_TEST( TestMSVCShowIncludesOutput )
+    REGISTER_TEST( TestMSVC_P )
+    REGISTER_TEST( TestMSVC_ShowIncludesWithWarnings )
+#endif
     REGISTER_TEST( TestGCCPreprocessedOutput )
     REGISTER_TEST( TestClangPreprocessedOutput )
     REGISTER_TEST( TestClangMSExtensionsPreprocessedOutput )
@@ -85,11 +85,9 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
             TEST_ASSERT( parser.ParseMSCL_Preprocessed( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 284 );
-            #ifdef DEBUG
-                TEST_ASSERT( parser.GetNonUniqueCount() == 381 );
-            #endif
+            ASSERT( parser.GetNonUniqueCount() == 381 );
         }
     }
 
@@ -114,11 +112,9 @@ void TestIncludeParser::TestMSVCPreprocessedOutput_Indent() const
     TEST_ASSERT( parser.ParseMSCL_Preprocessed( testData, testDataSize ) );
 
     // check number of includes found to prevent future regressions
-    const Array< AString > & includes = parser.GetIncludes();
+    const Array<AString> & includes = parser.GetIncludes();
     TEST_ASSERT( includes.GetSize() == 6 );
-    #ifdef DEBUG
-        TEST_ASSERT( parser.GetNonUniqueCount() == 6 );
-    #endif
+    ASSERT( parser.GetNonUniqueCount() == 6 );
 }
 
 // TestMSVCShowIncludesOutput
@@ -156,11 +152,9 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
             TEST_ASSERT( parser.ParseMSCL_Output( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 189 );
-            #ifdef DEBUG
-                TEST_ASSERT( parser.GetNonUniqueCount() == 258 );
-            #endif
+            ASSERT( parser.GetNonUniqueCount() == 258 );
         }
     }
 
@@ -178,7 +172,7 @@ void TestIncludeParser::TestMSVC_P() const
     FBuild fBuild( options );
     fBuild.Initialize();
 
-    const AStackString<> file( "../tmp/Test/IncludeParser/MSVC-P/test.i" );
+    const AStackString file( "../tmp/Test/IncludeParser/MSVC-P/test.i" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( file );
@@ -189,13 +183,12 @@ void TestIncludeParser::TestMSVC_P() const
     // make sure all output files are as expected
     EnsureFileExists( file );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsTotal( 4,     4 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::FILE_NODE );
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+    CheckStatsTotal( 4, 4 );
 }
 
 // TestMSVC_ShowIncludesWithWarnings
@@ -230,11 +223,9 @@ void TestIncludeParser::TestMSVC_ShowIncludesWithWarnings() const
         TEST_ASSERT( parser.ParseMSCL_Output( buffer->Get(), buffer->GetLength() ) );
 
         // check number of includes found to prevent future regressions
-        const Array< AString > & includes = parser.GetIncludes();
+        const Array<AString> & includes = parser.GetIncludes();
         TEST_ASSERT( includes.GetSize() == 0 );
-        #ifdef DEBUG
-            TEST_ASSERT( parser.GetNonUniqueCount() == 0 );
-        #endif
+        ASSERT( parser.GetNonUniqueCount() == 0 );
     }
 }
 
@@ -275,11 +266,9 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
             TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 221 );
-            #ifdef DEBUG
-                TEST_ASSERT( parser.GetNonUniqueCount() == 308 );
-            #endif
+            ASSERT( parser.GetNonUniqueCount() == 308 );
         }
     }
 
@@ -325,11 +314,9 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
             TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 279 );
-            #ifdef DEBUG
-                TEST_ASSERT( parser.GetNonUniqueCount() == 427 );
-            #endif
+            ASSERT( parser.GetNonUniqueCount() == 427 );
         }
     }
 
@@ -374,11 +361,9 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
             TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
-            const Array< AString > & includes = parser.GetIncludes();
+            const Array<AString> & includes = parser.GetIncludes();
             TEST_ASSERT( includes.GetSize() == 285 );
-            #ifdef DEBUG
-                TEST_ASSERT( parser.GetNonUniqueCount() == 4758 );
-            #endif
+            ASSERT( parser.GetNonUniqueCount() == 4758 );
         }
     }
 
@@ -394,48 +379,40 @@ void TestIncludeParser::TestEdgeCases() const
 
     // include on last line
     {
-        AStackString<> data( "#line 1 \"hello\"" );
+        AStackString data( "#line 1 \"hello\"" );
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseMSCL_Preprocessed( data.Get(), data.GetLength() ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 1 );
-        #ifdef DEBUG
-            TEST_ASSERT( parser.GetNonUniqueCount() == 1 );
-        #endif
+        ASSERT( parser.GetNonUniqueCount() == 1 );
     }
 
     // empty
     {
-        AStackString<> data( "" );
+        AStackString data( "" );
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseMSCL_Preprocessed( data.Get(), data.GetLength() ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 0 );
-        #ifdef DEBUG
-            TEST_ASSERT( parser.GetNonUniqueCount() == 0 );
-        #endif
+        ASSERT( parser.GetNonUniqueCount() == 0 );
     }
 
     // #pragma or #   pragma should be ignored
     {
-        AStackString<> data( "#pragma message\"hello\"\n#   pragma message\"hello\"\n" );
+        AStackString data( "#pragma message\"hello\"\n#   pragma message\"hello\"\n" );
         const uint32_t dataLen = data.GetLength();
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseGCC_Preprocessed( data.Get(), dataLen ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 0 );
-        #ifdef DEBUG
-            TEST_ASSERT( parser.GetNonUniqueCount() == 0 );
-        #endif
+        ASSERT( parser.GetNonUniqueCount() == 0 );
     }
 
     // "#line..." should both be found for clang (-fms-compat)
     {
-        AStackString<> data( "#line 15 \"hello\"\n#line 2 \"hello\"" );
+        AStackString data( "#line 15 \"hello\"\n#line 2 \"hello\"" );
         const uint32_t dataLen = data.GetLength();
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseGCC_Preprocessed( data.Get(), dataLen ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 1 );
-        #ifdef DEBUG
-            TEST_ASSERT( parser.GetNonUniqueCount() == 2 );
-        #endif
+        ASSERT( parser.GetNonUniqueCount() == 2 );
     }
 }
 
@@ -446,14 +423,14 @@ void TestIncludeParser::ClangLineEndings() const
     // Depending on the line endings of the source file and files being included
     // it's possible to end up with a variety of line ending types in the preprocessed
     // output when using Clang
-    const char* preprocessedData    = "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\"\n"
-                                      "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r\n"   // Note: CR LF
-                                      "# 1 \"./Empty1.cpp\" 1\r\n"                      // Note: CR LF
-                                      "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n"     // Note: LF
-                                      "# 1 \"./Empty2.cpp\" 1\n"                        // Note: LF
-                                      "# 2 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r"     // Note: CR
-                                      "# 1 \"./Empty3.cpp\" 1\r"                        // Note: CR
-                                      "# 3 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n";
+    const char * preprocessedData = "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\"\n"
+                                    "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r\n"   // Note: CR LF
+                                    "# 1 \"./Empty1.cpp\" 1\r\n"                      // Note: CR LF
+                                    "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n"     // Note: LF
+                                    "# 1 \"./Empty2.cpp\" 1\n"                        // Note: LF
+                                    "# 2 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r"     // Note: CR
+                                    "# 1 \"./Empty3.cpp\" 1\r"                        // Note: CR
+                                    "# 3 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n";
 
     FBuild fb; // needed for CleanPath
 
@@ -461,11 +438,9 @@ void TestIncludeParser::ClangLineEndings() const
     TEST_ASSERT( parser.ParseGCC_Preprocessed( preprocessedData, AString::StrLen( preprocessedData ) ) );
 
     // check number of includes found to prevent future regressions
-    const Array< AString > & includes = parser.GetIncludes();
+    const Array<AString> & includes = parser.GetIncludes();
     TEST_ASSERT( includes.GetSize() == 3 );
-    #ifdef DEBUG
-        TEST_ASSERT( parser.GetNonUniqueCount() == 3 );
-    #endif
+    ASSERT( parser.GetNonUniqueCount() == 3 );
 }
 
 //------------------------------------------------------------------------------

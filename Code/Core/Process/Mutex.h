@@ -18,17 +18,17 @@ public:
     Mutex();
     ~Mutex();
 
-    void                Lock();
-    [[nodiscard]] bool  TryLock();
-    void                Unlock();
+    void Lock();
+    [[nodiscard]] bool TryLock();
+    void Unlock();
 
 private:
     // do this to avoid including windows.h
-    #if defined( __WINDOWS__ )
-        uint64_t m_CriticalSection[ 5 ]; // CRITICAL_SECTION
-    #else
-        pthread_mutex_t m_Mutex;
-    #endif
+#if defined( __WINDOWS__ )
+    uint64_t m_CriticalSection[ 5 ]; // CRITICAL_SECTION
+#else
+    pthread_mutex_t m_Mutex;
+#endif
 };
 
 // MutexHolder
@@ -36,7 +36,8 @@ private:
 class MutexHolder
 {
 public:
-    explicit MutexHolder( Mutex & mutex ) : m_Mutex( mutex )
+    explicit MutexHolder( Mutex & mutex )
+        : m_Mutex( mutex )
     {
         mutex.Lock();
     }
@@ -47,7 +48,7 @@ public:
 
 private:
     MutexHolder( const MutexHolder & other ) = delete;
-    void operator = ( MutexHolder & ) = delete;
+    void operator=( MutexHolder & ) = delete;
 
     Mutex & m_Mutex;
 };
@@ -74,10 +75,10 @@ public:
 
 private:
     TryMutexHolder( const TryMutexHolder & other ) = delete;
-    void operator = ( TryMutexHolder & other ) = delete;
+    void operator=( TryMutexHolder & other ) = delete;
 
-    Mutex &     m_Mutex;
-    const bool  m_Locked;
+    Mutex & m_Mutex;
+    const bool m_Locked;
 };
 
 //------------------------------------------------------------------------------

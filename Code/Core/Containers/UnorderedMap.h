@@ -19,21 +19,21 @@ namespace UnorderedMapKeyHashingFunctions
 
 // UnorderedMap
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
+template <class KEY, class VALUE>
 class UnorderedMap
 {
 public:
     UnorderedMap();
-    UnorderedMap( UnorderedMap< KEY, VALUE > && other ) = delete;
+    UnorderedMap( UnorderedMap<KEY, VALUE> && other ) = delete;
     ~UnorderedMap();
 
     void Destruct();
 
-    [[nodiscard]] bool          IsEmpty() const { return ( m_Count == 0 ); }
-    [[nodiscard]] size_t        GetSize() const { return m_Count; }
+    [[nodiscard]] bool IsEmpty() const { return ( m_Count == 0 ); }
+    [[nodiscard]] size_t GetSize() const { return m_Count; }
 
-    UnorderedMap< KEY, VALUE > & operator = ( const UnorderedMap< KEY, VALUE > & other ) = delete;
-    UnorderedMap< KEY, VALUE > & operator = ( UnorderedMap< KEY, VALUE > && other ) = delete;
+    UnorderedMap<KEY, VALUE> & operator=( const UnorderedMap<KEY, VALUE> & other ) = delete;
+    UnorderedMap<KEY, VALUE> & operator=( UnorderedMap<KEY, VALUE> && other ) = delete;
 
     class KeyValue
     {
@@ -42,28 +42,29 @@ public:
             : m_Key( key )
             , m_Value( value )
             , m_Next( next )
-        {}
+        {
+        }
 
-        KeyValue & operator = ( const KeyValue & other ) = delete;
+        KeyValue & operator=( const KeyValue & other ) = delete;
 
-        const KEY   m_Key;
-        VALUE       m_Value;
+        const KEY m_Key;
+        VALUE m_Value;
 
     protected:
-        friend class UnorderedMap< KEY, VALUE >;
-        KeyValue    * m_Next; // In-place linked list for each bucket
+        friend class UnorderedMap<KEY, VALUE>;
+        KeyValue * m_Next; // In-place linked list for each bucket
     };
 
     // Check if an item exists in the map
-    [[nodiscard]] KeyValue *    Find( const KEY & key );
+    [[nodiscard]] KeyValue * Find( const KEY & key );
 
     // Add items to the map
-    KeyValue &                  Insert( const KEY & key, const VALUE & value );
+    KeyValue & Insert( const KEY & key, const VALUE & value );
 
 protected:
-    enum : uint32_t { kTableSizePower = 16 };
-    enum : uint32_t { kTableSize = ( 1 << kTableSizePower ) };
-    enum : uint32_t { kTableSizeMask = ( kTableSize - 1 ) };
+    inline static const uint32_t kTableSizePower = 16;
+    inline static const uint32_t kTableSize = ( 1 << kTableSizePower );
+    inline static const uint32_t kTableSizeMask = ( kTableSize - 1 );
 
     KeyValue ** m_Buckets = nullptr;
     uint32_t m_Count = 0;
@@ -71,25 +72,25 @@ protected:
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-UnorderedMap< KEY, VALUE >::UnorderedMap() = default;
+template <class KEY, class VALUE>
+UnorderedMap<KEY, VALUE>::UnorderedMap() = default;
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-UnorderedMap< KEY, VALUE >::~UnorderedMap()
+template <class KEY, class VALUE>
+UnorderedMap<KEY, VALUE>::~UnorderedMap()
 {
     Destruct();
 }
 
 // Destruct
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-void UnorderedMap< KEY, VALUE >::Destruct()
+template <class KEY, class VALUE>
+void UnorderedMap<KEY, VALUE>::Destruct()
 {
     if ( m_Buckets )
     {
-        for ( uint32_t i = 0 ; i < kTableSize ; ++i )
+        for ( uint32_t i = 0; i < kTableSize; ++i )
         {
             KeyValue * existingKeyValue = m_Buckets[ i ];
             while ( existingKeyValue )
@@ -100,7 +101,7 @@ void UnorderedMap< KEY, VALUE >::Destruct()
             }
         }
 
-        FDELETE [] m_Buckets;
+        FDELETE[] m_Buckets;
         m_Buckets = nullptr;
     }
     m_Count = 0;
@@ -108,8 +109,8 @@ void UnorderedMap< KEY, VALUE >::Destruct()
 
 // Find
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-typename UnorderedMap< KEY, VALUE >::KeyValue * UnorderedMap< KEY, VALUE >::Find( const KEY & key )
+template <class KEY, class VALUE>
+typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Find( const KEY & key )
 {
     // Handle empty
     if ( m_Buckets == nullptr )
@@ -141,13 +142,13 @@ typename UnorderedMap< KEY, VALUE >::KeyValue * UnorderedMap< KEY, VALUE >::Find
 
 // Insert
 //------------------------------------------------------------------------------
-template< class KEY, class VALUE >
-typename UnorderedMap< KEY, VALUE >::KeyValue & UnorderedMap< KEY, VALUE >::Insert( const KEY & key, const VALUE & value )
+template <class KEY, class VALUE>
+typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Insert( const KEY & key, const VALUE & value )
 {
     // Handle empty
     if ( m_Buckets == nullptr )
     {
-        m_Buckets = FNEW( KeyValue *[ kTableSize ]() ); // NOTE: zero initialized
+        m_Buckets = FNEW( KeyValue * [kTableSize]() ); // NOTE: zero initialized
     }
 
     // Hash the key

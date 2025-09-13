@@ -91,7 +91,7 @@ void BFFStackFrame::DisconnectStackChain()
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarArrayOfStrings( const AString & name,
                                                      const BFFToken & token,
-                                                     const Array< AString > & values,
+                                                     const Array<AString> & values,
                                                      BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
@@ -157,7 +157,7 @@ void BFFStackFrame::DisconnectStackChain()
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarStruct( const AString & name,
                                              const BFFToken & token,
-                                             const Array< const BFFVariable * > & members,
+                                             const Array<const BFFVariable *> & members,
                                              BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
@@ -185,7 +185,7 @@ void BFFStackFrame::DisconnectStackChain()
     frame = frame ? frame : s_StackHead;
     ASSERT( frame );
 
-    BFFVariable* var = frame->GetVarMutableNoRecurse( name );
+    BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
         var->SetValueStruct( Move( members ) );
@@ -193,16 +193,15 @@ void BFFStackFrame::DisconnectStackChain()
     }
 
     // variable not found at this level, so create it
-    BFFVariable* v = FNEW( BFFVariable( name, token, Move( members ) ) );
+    BFFVariable * v = FNEW( BFFVariable( name, token, Move( members ) ) );
     frame->m_Variables.Append( v );
 }
-
 
 // SetVarArrayOfStructs
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarArrayOfStructs( const AString & name,
                                                      const BFFToken & token,
-                                                     const Array< const BFFVariable * > & structs,
+                                                     const Array<const BFFVariable *> & structs,
                                                      BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
@@ -219,7 +218,6 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * v = FNEW( BFFVariable( name, token, structs, BFFVariable::VAR_ARRAY_OF_STRUCTS ) );
     frame->m_Variables.Append( v );
 }
-
 
 // SetVar
 //------------------------------------------------------------------------------
@@ -244,12 +242,12 @@ void BFFStackFrame::DisconnectStackChain()
 
     switch ( srcVar->GetType() )
     {
-        case BFFVariable::VAR_ANY:              ASSERT( false ); break;
-        case BFFVariable::VAR_STRING:           SetVarString( dstName, token, srcVar->GetString(), frame ); break;
-        case BFFVariable::VAR_BOOL:             SetVarBool( dstName, token, srcVar->GetBool(), frame ); break;
+        case BFFVariable::VAR_ANY: ASSERT( false ); break;
+        case BFFVariable::VAR_STRING: SetVarString( dstName, token, srcVar->GetString(), frame ); break;
+        case BFFVariable::VAR_BOOL: SetVarBool( dstName, token, srcVar->GetBool(), frame ); break;
         case BFFVariable::VAR_ARRAY_OF_STRINGS: SetVarArrayOfStrings( dstName, token, srcVar->GetArrayOfStrings(), frame ); break;
-        case BFFVariable::VAR_INT:              SetVarInt( dstName, token, srcVar->GetInt(), frame ); break;
-        case BFFVariable::VAR_STRUCT:           SetVarStruct( dstName, token, srcVar->GetStructMembers(), frame ); break;
+        case BFFVariable::VAR_INT: SetVarInt( dstName, token, srcVar->GetInt(), frame ); break;
+        case BFFVariable::VAR_STRUCT: SetVarStruct( dstName, token, srcVar->GetStructMembers(), frame ); break;
         case BFFVariable::VAR_ARRAY_OF_STRUCTS: SetVarArrayOfStructs( dstName, token, srcVar->GetArrayOfStructs(), frame ); break;
         case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break;
     }
@@ -269,7 +267,7 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
     ASSERT( lhs );
     ASSERT( rhs );
 
-    BFFVariable *const newVar = lhs->ConcatVarsRecurse( name, *rhs, operatorIter );
+    BFFVariable * const newVar = lhs->ConcatVarsRecurse( name, *rhs, operatorIter );
     if ( newVar == nullptr )
     {
         return nullptr; // ConcatVarsRecurse will have emitted an error
@@ -283,7 +281,7 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
 //------------------------------------------------------------------------------
 /*static*/ const BFFVariable * BFFStackFrame::GetVar( const char * name, BFFStackFrame * frame )
 {
-    AStackString<> strName( name );
+    AStackString strName( name );
     return GetVar( strName, frame );
 }
 
@@ -341,7 +339,7 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 //------------------------------------------------------------------------------
 /*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable )
 {
-    AStackString<> strName( name );
+    AStackString strName( name );
     return GetParentDeclaration( strName, frame, variable );
 }
 
@@ -385,7 +383,7 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 // GetVariableRecurse
 //------------------------------------------------------------------------------
 const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
-                                                 BFFVariable::VarType type ) const
+                                                       BFFVariable::VarType type ) const
 {
     ASSERT( nameOnly.BeginsWith( '.' ) == false ); // Should not include . : TODO:C Resolve the inconsistency
 
@@ -462,9 +460,9 @@ void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable * var )
     ASSERT( var );
 
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    Array<BFFVariable *>::Iter i = m_Variables.Begin();
+    Array<BFFVariable *>::Iter end = m_Variables.End();
+    for ( ; i < end; ++i )
     {
         if ( ( *i )->GetName() == var->GetName() )
         {

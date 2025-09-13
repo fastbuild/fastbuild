@@ -22,6 +22,7 @@ class Function;
 class MultiBuffer;
 class NodeGraph;
 class NodeProxy;
+class ObjectListNode;
 class ObjectNode;
 enum class ArgsResponseFileMode : uint32_t;
 
@@ -47,70 +48,70 @@ public:
                          uint32_t flags );
     virtual ~ObjectNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
+    static Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 
     class CompilerFlags
     {
     public:
-        bool IsCacheable() const                    { return ( ( m_Flags & FLAG_CAN_BE_CACHED ) != 0 ); }
-        bool IsDistributable() const                { return ( ( m_Flags & FLAG_CAN_BE_DISTRIBUTED ) != 0 ); }
-        bool IsUsingPCH() const                     { return ( ( m_Flags & FLAG_USING_PCH ) != 0 ); }
-        bool IsGCC() const                          { return ( ( m_Flags & FLAG_GCC ) != 0 ); }
-        bool IsMSVC() const                         { return ( ( m_Flags & FLAG_MSVC ) != 0 ); }
-        bool IsCreatingPCH() const                  { return ( ( m_Flags & FLAG_CREATING_PCH ) != 0 ); }
-        bool IsSNC() const                          { return ( ( m_Flags & FLAG_SNC ) != 0 ); }
-        bool IsUsingCLR() const                     { return ( ( m_Flags & FLAG_USING_CLR ) != 0 ); }
-        bool IsClang() const                        { return ( ( m_Flags & FLAG_CLANG ) != 0 ); }
-        bool IsUnity() const                        { return ( ( m_Flags & FLAG_UNITY ) != 0 ); }
-        bool IsIsolatedFromUnity() const            { return ( ( m_Flags & FLAG_ISOLATED_FROM_UNITY ) != 0 ); }
-        bool IsUsingPDB() const                     { return ( ( m_Flags & FLAG_USING_PDB ) != 0 ); }
-        bool IsCodeWarriorWii() const               { return ( ( m_Flags & CODEWARRIOR_WII ) != 0 ); }
-        bool IsGreenHillsWiiU() const               { return ( ( m_Flags & GREENHILLS_WIIU ) != 0 ); }
-        bool IsCUDANVCC() const                     { return ( ( m_Flags & FLAG_CUDA_NVCC ) != 0 ); }
-        bool IsIncludesInStdErr() const             { return ( ( m_Flags & FLAG_INCLUDES_IN_STDERR ) != 0 ); }
-        bool IsQtRCC() const                        { return ( ( m_Flags & FLAG_QT_RCC ) != 0 ); }
-        bool IsWarningsAsErrorsMSVC() const         { return ( ( m_Flags & FLAG_WARNINGS_AS_ERRORS_MSVC ) != 0 ); }
-        bool IsVBCC() const                         { return ( ( m_Flags & FLAG_VBCC ) != 0 ); }
-        bool IsUsingStaticAnalysisMSVC() const      { return ( ( m_Flags & FLAG_STATIC_ANALYSIS_MSVC ) != 0 ); }
-        bool IsOrbisWavePSSLC() const               { return ( ( m_Flags & FLAG_ORBIS_WAVE_PSSLC ) != 0 ); }
-        bool IsDiagnosticsColorAuto() const         { return ( ( m_Flags & FLAG_DIAGNOSTICS_COLOR_AUTO ) != 0 ); }
-        bool IsWarningsAsErrorsClangGCC() const     { return ( ( m_Flags & FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) != 0 ); }
-        bool IsClangCl() const                      { return ( ( m_Flags & FLAG_CLANG_CL ) != 0 ); }
-        bool IsUsingGcovCoverage() const            { return ( ( m_Flags & FLAG_GCOV_COVERAGE ) != 0 ); }
-        bool IsUsingDynamicDeopt() const            { return ( ( m_Flags & FLAG_DYNAMIC_DEOPT ) != 0 ); }
+        bool IsCacheable() const { return ( ( m_Flags & FLAG_CAN_BE_CACHED ) != 0 ); }
+        bool IsDistributable() const { return ( ( m_Flags & FLAG_CAN_BE_DISTRIBUTED ) != 0 ); }
+        bool IsUsingPCH() const { return ( ( m_Flags & FLAG_USING_PCH ) != 0 ); }
+        bool IsGCC() const { return ( ( m_Flags & FLAG_GCC ) != 0 ); }
+        bool IsMSVC() const { return ( ( m_Flags & FLAG_MSVC ) != 0 ); }
+        bool IsCreatingPCH() const { return ( ( m_Flags & FLAG_CREATING_PCH ) != 0 ); }
+        bool IsSNC() const { return ( ( m_Flags & FLAG_SNC ) != 0 ); }
+        bool IsUsingCLR() const { return ( ( m_Flags & FLAG_USING_CLR ) != 0 ); }
+        bool IsClang() const { return ( ( m_Flags & FLAG_CLANG ) != 0 ); }
+        bool IsUnity() const { return ( ( m_Flags & FLAG_UNITY ) != 0 ); }
+        bool IsIsolatedFromUnity() const { return ( ( m_Flags & FLAG_ISOLATED_FROM_UNITY ) != 0 ); }
+        bool IsUsingPDB() const { return ( ( m_Flags & FLAG_USING_PDB ) != 0 ); }
+        bool IsCodeWarriorWii() const { return ( ( m_Flags & CODEWARRIOR_WII ) != 0 ); }
+        bool IsGreenHillsWiiU() const { return ( ( m_Flags & GREENHILLS_WIIU ) != 0 ); }
+        bool IsCUDANVCC() const { return ( ( m_Flags & FLAG_CUDA_NVCC ) != 0 ); }
+        bool IsIncludesInStdErr() const { return ( ( m_Flags & FLAG_INCLUDES_IN_STDERR ) != 0 ); }
+        bool IsQtRCC() const { return ( ( m_Flags & FLAG_QT_RCC ) != 0 ); }
+        bool IsWarningsAsErrorsMSVC() const { return ( ( m_Flags & FLAG_WARNINGS_AS_ERRORS_MSVC ) != 0 ); }
+        bool IsVBCC() const { return ( ( m_Flags & FLAG_VBCC ) != 0 ); }
+        bool IsUsingStaticAnalysisMSVC() const { return ( ( m_Flags & FLAG_STATIC_ANALYSIS_MSVC ) != 0 ); }
+        bool IsOrbisWavePSSLC() const { return ( ( m_Flags & FLAG_ORBIS_WAVE_PSSLC ) != 0 ); }
+        bool IsDiagnosticsColorAuto() const { return ( ( m_Flags & FLAG_DIAGNOSTICS_COLOR_AUTO ) != 0 ); }
+        bool IsWarningsAsErrorsClangGCC() const { return ( ( m_Flags & FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) != 0 ); }
+        bool IsClangCl() const { return ( ( m_Flags & FLAG_CLANG_CL ) != 0 ); }
+        bool IsUsingGcovCoverage() const { return ( ( m_Flags & FLAG_GCOV_COVERAGE ) != 0 ); }
+        bool IsUsingDynamicDeopt() const { return ( ( m_Flags & FLAG_DYNAMIC_DEOPT ) != 0 ); }
 
         enum Flag : uint32_t
         {
-            FLAG_CAN_BE_CACHED                  = 0x01,
-            FLAG_CAN_BE_DISTRIBUTED             = 0x02,
-            FLAG_USING_PCH                      = 0x04,
-            FLAG_GCC                            = 0x10,
-            FLAG_MSVC                           = 0x20,
-            FLAG_CREATING_PCH                   = 0x40,
-            FLAG_SNC                            = 0x80,
-            FLAG_USING_CLR                      = 0x100,
-            FLAG_CLANG                          = 0x200,
-            FLAG_UNITY                          = 0x400,
-            FLAG_ISOLATED_FROM_UNITY            = 0x800,
-            FLAG_USING_PDB                      = 0x1000,
-            CODEWARRIOR_WII                     = 0x2000,
-            GREENHILLS_WIIU                     = 0x4000,
-            FLAG_CUDA_NVCC                      = 0x10000,
-            FLAG_INCLUDES_IN_STDERR             = 0x20000,
-            FLAG_QT_RCC                         = 0x40000,
-            FLAG_WARNINGS_AS_ERRORS_MSVC        = 0x80000,
-            FLAG_VBCC                           = 0x100000,
-            FLAG_STATIC_ANALYSIS_MSVC           = 0x200000,
-            FLAG_ORBIS_WAVE_PSSLC               = 0x400000,
-            FLAG_DIAGNOSTICS_COLOR_AUTO         = 0x800000,
-            FLAG_WARNINGS_AS_ERRORS_CLANGGCC    = 0x1000000,
-            FLAG_CLANG_CL                       = 0x2000000,
-            FLAG_GCOV_COVERAGE                  = 0x4000000,
-            FLAG_DYNAMIC_DEOPT                  = 0x8000000,
+            FLAG_CAN_BE_CACHED = 0x01,
+            FLAG_CAN_BE_DISTRIBUTED = 0x02,
+            FLAG_USING_PCH = 0x04,
+            FLAG_GCC = 0x10,
+            FLAG_MSVC = 0x20,
+            FLAG_CREATING_PCH = 0x40,
+            FLAG_SNC = 0x80,
+            FLAG_USING_CLR = 0x100,
+            FLAG_CLANG = 0x200,
+            FLAG_UNITY = 0x400,
+            FLAG_ISOLATED_FROM_UNITY = 0x800,
+            FLAG_USING_PDB = 0x1000,
+            CODEWARRIOR_WII = 0x2000,
+            GREENHILLS_WIIU = 0x4000,
+            FLAG_CUDA_NVCC = 0x10000,
+            FLAG_INCLUDES_IN_STDERR = 0x20000,
+            FLAG_QT_RCC = 0x40000,
+            FLAG_WARNINGS_AS_ERRORS_MSVC = 0x80000,
+            FLAG_VBCC = 0x100000,
+            FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
+            FLAG_ORBIS_WAVE_PSSLC = 0x400000,
+            FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
+            FLAG_WARNINGS_AS_ERRORS_CLANGGCC = 0x1000000,
+            FLAG_CLANG_CL = 0x2000000,
+            FLAG_GCOV_COVERAGE = 0x4000000,
+            FLAG_DYNAMIC_DEOPT = 0x8000000,
         };
 
-        void Set( Flag flag )       { m_Flags |= flag; }
-        void Clear( Flag flag )     { m_Flags &= ( ~flag ); }
+        void Set( Flag flag ) { m_Flags |= flag; }
+        void Clear( Flag flag ) { m_Flags &= ( ~flag ); }
 
         uint32_t m_Flags = 0;
     };
@@ -123,41 +124,45 @@ public:
     static bool IsCompilerArg_MSVC( const AString & token, const char * arg );
     static bool IsStartOfCompilerArg_MSVC( const AString & token, const char * arg );
 
-    bool IsCacheable() const                { return m_CompilerFlags.IsCacheable(); }
-    bool IsDistributable() const            { return m_CompilerFlags.IsDistributable(); }
-    bool IsUsingPCH() const                 { return m_CompilerFlags.IsUsingPCH(); }
-    bool IsCreatingPCH() const              { return m_CompilerFlags.IsCreatingPCH(); }
-    bool IsClang() const                    { return m_CompilerFlags.IsClang(); }
-    bool IsUnity() const                    { return m_CompilerFlags.IsUnity(); }
-    bool IsIsolatedFromUnity() const        { return m_CompilerFlags.IsIsolatedFromUnity(); }
-    bool IsGCC() const                      { return m_CompilerFlags.IsGCC(); }
-    bool IsMSVC() const                     { return m_CompilerFlags.IsMSVC(); }
-    bool IsSNC() const                      { return m_CompilerFlags.IsSNC(); }
-    bool IsUsingCLR() const                 { return m_CompilerFlags.IsUsingCLR(); }
-    bool IsClangCl() const                  { return m_CompilerFlags.IsClangCl(); }
-    bool IsUsingPDB() const                 { return m_CompilerFlags.IsUsingPDB(); }
-    bool IsCodeWarriorWii() const           { return m_CompilerFlags.IsCodeWarriorWii(); }
-    bool IsGreenHillsWiiU() const           { return m_CompilerFlags.IsGreenHillsWiiU(); }
-    bool IsCUDANVCC() const                 { return m_CompilerFlags.IsCUDANVCC(); }
-    bool IsIncludesInStdErr() const         { return m_CompilerFlags.IsIncludesInStdErr(); }
-    bool IsQtRCC() const                    { return m_CompilerFlags.IsQtRCC(); }
-    bool IsWarningsAsErrorsMSVC() const     { return m_CompilerFlags.IsWarningsAsErrorsMSVC(); }
-    bool IsVBCC() const                     { return m_CompilerFlags.IsVBCC(); }
-    bool IsUsingStaticAnalysisMSVC() const  { return m_CompilerFlags.IsUsingStaticAnalysisMSVC(); }
-    bool IsOrbisWavePSSLC() const           { return m_CompilerFlags.IsOrbisWavePSSLC(); }
+    bool IsCacheable() const { return m_CompilerFlags.IsCacheable(); }
+    bool IsDistributable() const { return m_CompilerFlags.IsDistributable(); }
+    bool IsUsingPCH() const { return m_CompilerFlags.IsUsingPCH(); }
+    bool IsCreatingPCH() const { return m_CompilerFlags.IsCreatingPCH(); }
+    bool IsClang() const { return m_CompilerFlags.IsClang(); }
+    bool IsUnity() const { return m_CompilerFlags.IsUnity(); }
+    bool IsIsolatedFromUnity() const { return m_CompilerFlags.IsIsolatedFromUnity(); }
+    bool IsGCC() const { return m_CompilerFlags.IsGCC(); }
+    bool IsMSVC() const { return m_CompilerFlags.IsMSVC(); }
+    bool IsSNC() const { return m_CompilerFlags.IsSNC(); }
+    bool IsUsingCLR() const { return m_CompilerFlags.IsUsingCLR(); }
+    bool IsClangCl() const { return m_CompilerFlags.IsClangCl(); }
+    bool IsUsingPDB() const { return m_CompilerFlags.IsUsingPDB(); }
+    bool IsCodeWarriorWii() const { return m_CompilerFlags.IsCodeWarriorWii(); }
+    bool IsGreenHillsWiiU() const { return m_CompilerFlags.IsGreenHillsWiiU(); }
+    bool IsCUDANVCC() const { return m_CompilerFlags.IsCUDANVCC(); }
+    bool IsIncludesInStdErr() const { return m_CompilerFlags.IsIncludesInStdErr(); }
+    bool IsQtRCC() const { return m_CompilerFlags.IsQtRCC(); }
+    bool IsWarningsAsErrorsMSVC() const { return m_CompilerFlags.IsWarningsAsErrorsMSVC(); }
+    bool IsVBCC() const { return m_CompilerFlags.IsVBCC(); }
+    bool IsUsingStaticAnalysisMSVC() const { return m_CompilerFlags.IsUsingStaticAnalysisMSVC(); }
+    bool IsOrbisWavePSSLC() const { return m_CompilerFlags.IsOrbisWavePSSLC(); }
     bool IsWarningsAsErrorsClangGCC() const { return m_CompilerFlags.IsWarningsAsErrorsClangGCC(); }
-    bool IsUsingGcovCoverage() const        { return m_CompilerFlags.IsUsingGcovCoverage(); }
-    bool IsUsingDynamicDeopt() const        { return m_CompilerFlags.IsUsingDynamicDeopt(); }
+    bool IsUsingGcovCoverage() const { return m_CompilerFlags.IsUsingGcovCoverage(); }
+    bool IsUsingDynamicDeopt() const { return m_CompilerFlags.IsUsingDynamicDeopt(); }
 
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
 
     CompilerNode * GetCompiler() const;
-    inline Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
+    Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
     CompilerNode * GetDedicatedPreprocessor() const;
-    #if defined( __WINDOWS__ )
-        inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( m_CompilerFlags.IsCreatingPCH() ); return m_StaticDependencies[ 1 ].GetNode(); }
-    #endif
+#if defined( __WINDOWS__ )
+    Node * GetPrecompiledHeaderCPPFile() const
+    {
+        ASSERT( m_CompilerFlags.IsCreatingPCH() );
+        return m_StaticDependencies[ 1 ].GetNode();
+    }
+#endif
     ObjectNode * GetPrecompiledHeader() const;
 
     void GetPDBName( AString & pdbName ) const;
@@ -165,10 +170,8 @@ public:
     void GetGCNOPath( AString & gcnoFileName ) const;
     void GetAltObjPath( AString & altObjName ) const;
 
-    const char * GetObjExtension() const;
-
     const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
-    const AString & GetOwnerObjectList() const { return m_OwnerObjectList; }
+    const ObjectListNode & GetOwnerObjectList() const { return *m_OwnerObjectList; }
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
 
@@ -215,7 +218,7 @@ private:
                                           const void * compressedData,
                                           uint64_t compressedDataSize,
                                           uint32_t compressionTimeMS );
-    void GetExtraCacheFilePaths( const Job * job, Array< AString > & outFileNames ) const;
+    void GetExtraCacheFilePaths( const Job * job, Array<AString> & outFileNames ) const;
 
     void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
 
@@ -236,7 +239,7 @@ private:
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
     bool ShouldUseDeoptimization() const;
-    friend class Client;
+    friend class ClientToWorkerConnection;
     bool ShouldUseCache() const;
     ArgsResponseFileMode GetResponseFileMode() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
@@ -264,50 +267,49 @@ private:
                                          const char * workingDir = nullptr );
 
         // determine overall result
-        inline int                      GetResult() const { return m_Result; }
+        int GetResult() const { return m_Result; }
 
         // access output/error
-        inline const AString &          GetOut() const { return m_Out; }
-        inline const AString &          GetErr() const { return m_Err; }
-        inline bool                     HasAborted() const { return m_Process.HasAborted(); }
+        const AString & GetOut() const { return m_Out; }
+        const AString & GetErr() const { return m_Err; }
+        bool HasAborted() const { return m_Process.HasAborted(); }
 
     private:
-        bool            m_HandleOutput;
-        Process         m_Process;
-        AString         m_Out;
-        AString         m_Err;
-        int             m_Result;
+        bool m_HandleOutput;
+        Process m_Process;
+        AString m_Out;
+        AString m_Err;
+        int m_Result;
     };
 
     // Exposed Properties
     friend class ObjectListNode;
-    AString             m_Compiler;
-    AString             m_CompilerOptions;
-    AString             m_CompilerOptionsDeoptimized;
-    AString             m_CompilerInputFile;
-    AString             m_CompilerOutputExtension;
-    AString             m_PCHObjectFileName;
-    bool                m_DeoptimizeWritableFiles           = false;
-    bool                m_DeoptimizeWritableFilesWithToken  = false;
-    bool                m_AllowDistribution                 = true;
-    bool                m_AllowCaching                      = true;
-    Array< AString >    m_CompilerForceUsing;
-    AString             m_Preprocessor;
-    AString             m_PreprocessorOptions;
-    Array< AString >    m_PreBuildDependencyNames;
-    AString             m_ConcurrencyGroupName;
+    AString m_Compiler;
+    AString m_CompilerOptions;
+    AString m_CompilerOptionsDeoptimized;
+    AString m_CompilerInputFile;
+    AString m_PCHObjectFileName;
+    bool m_DeoptimizeWritableFiles = false;
+    bool m_DeoptimizeWritableFilesWithToken = false;
+    bool m_AllowDistribution = true;
+    bool m_AllowCaching = true;
+    Array<AString> m_CompilerForceUsing;
+    AString m_Preprocessor;
+    AString m_PreprocessorOptions;
+    Array<AString> m_PreBuildDependencyNames;
+    AString m_ConcurrencyGroupName;
 
     // Internal State
-    AString             m_PrecompiledHeader;
-    CompilerFlags       m_CompilerFlags;
-    CompilerFlags       m_PreprocessorFlags;
-    uint64_t            m_PCHCacheKey                       = 0;
-    uint64_t            m_LightCacheKey                     = 0;
-    AString             m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
+    AString m_PrecompiledHeader;
+    CompilerFlags m_CompilerFlags;
+    CompilerFlags m_PreprocessorFlags;
+    uint64_t m_PCHCacheKey = 0;
+    uint64_t m_LightCacheKey = 0;
+    ObjectListNode * m_OwnerObjectList = nullptr;
 
     // Not serialized
-    Array< AString >    m_Includes;
-    bool                m_Remote                            = false;
+    Array<AString> m_Includes;
+    bool m_Remote = false;
 
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
     // Fake system failure for tests

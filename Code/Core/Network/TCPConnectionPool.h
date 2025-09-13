@@ -19,17 +19,17 @@
 class TCPConnectionPool;
 
 #if defined( __WINDOWS__ )
-    typedef uintptr_t TCPSocket;
+typedef uintptr_t TCPSocket;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    typedef int TCPSocket;
+typedef int TCPSocket;
 #endif
 
 // Constants
 //------------------------------------------------------------------------------
 namespace
 {
-    static const uint32_t kDefaultConnectionTimeoutMS   = ( 2 * 1000 );
-    static const uint32_t kDefaultSendTimeoutMS         = ( 10 * 60 * 1000 );
+    static const uint32_t kDefaultConnectionTimeoutMS = ( 2 * 1000 );
+    static const uint32_t kDefaultSendTimeoutMS = ( 10 * 60 * 1000 );
 }
 
 // ConnectionInfo - one connection in the pool
@@ -45,20 +45,21 @@ public:
 
     // access to info about this connection
     TCPConnectionPool & GetTCPConnectionPool() const { return *m_TCPConnectionPool; }
-    inline uint32_t GetRemoteAddress() const { return m_RemoteAddress; }
+    uint32_t GetRemoteAddress() const { return m_RemoteAddress; }
 
 private:
     friend class TCPConnectionPool;
 
-    TCPSocket               m_Socket;
-    uint32_t                m_RemoteAddress;
-    uint16_t                m_RemotePort;
-    mutable Atomic<bool>    m_ThreadQuitNotification;
-    TCPConnectionPool *     m_TCPConnectionPool; // back pointer to parent pool
-    mutable void *          m_UserData;
+    TCPSocket m_Socket;
+    uint32_t m_RemoteAddress;
+    uint16_t m_RemotePort;
+    mutable Atomic<bool> m_ThreadQuitNotification;
+    TCPConnectionPool * m_TCPConnectionPool; // back pointer to parent pool
+    mutable void * m_UserData;
 
-#ifdef DEBUG
-    mutable Thread::ThreadId m_SendSocketInUseThreadId; // sanity check we aren't sending from multiple threads unsafely
+#if defined( ASSERTS_ENABLED )
+    // sanity check we aren't sending from multiple threads unsafely
+    mutable Thread::ThreadId m_SendSocketInUseThreadId = INVALID_THREAD_ID;
 #endif
 };
 
@@ -107,7 +108,9 @@ public:
 
 protected:
     // network events - NOTE: these happen in another thread! (but never at the same time)
-    virtual void OnReceive( const ConnectionInfo *, void * /*data*/, uint32_t /*size*/, bool & /*keepMemory*/ ) {}
+    virtual void OnReceive( const ConnectionInfo *, void * /*data*/, uint32_t /*size*/, bool & /*keepMemory*/ )
+    {
+    }
     virtual void OnConnected( const ConnectionInfo * ) {}
     virtual void OnDisconnected( const ConnectionInfo * ) {}
 
@@ -117,54 +120,54 @@ protected:
 
 private:
     // helper functions
-    bool        HandleRead( ConnectionInfo * ci );
+    bool HandleRead( ConnectionInfo * ci );
 
     // platform specific abstraction
-    int         GetLastNetworkError() const;
-    bool        WouldBlock() const;
-    int         CloseSocket( TCPSocket socket ) const;
-    int         Select( TCPSocket maxSocketPlusOne,
-                        void * readSocketSet, // TODO: Using void * to avoid including header is ugly
-                        void * writeSocketSet,
-                        void * exceptionSocketSet,
-                        struct timeval * timeOut ) const;
-    TCPSocket   Accept( TCPSocket socket,
-                        struct sockaddr * address,
-                        int * addressSize ) const;
-    TCPSocket   CreateSocket() const;
-    void        FDSet( TCPSocket fd, void * set ) const;
+    int GetLastNetworkError() const;
+    bool WouldBlock() const;
+    int CloseSocket( TCPSocket socket ) const;
+    int Select( TCPSocket maxSocketPlusOne,
+                void * readSocketSet, // TODO: Using void * to avoid including header is ugly
+                void * writeSocketSet,
+                void * exceptionSocketSet,
+                struct timeval * timeOut ) const;
+    TCPSocket Accept( TCPSocket socket,
+                      struct sockaddr * address,
+                      int * addressSize ) const;
+    TCPSocket CreateSocket() const;
+    void FDSet( TCPSocket fd, void * set ) const;
 
     struct SendBuffer
     {
-        uint32_t        size;
-        const void *    data;
+        uint32_t size;
+        const void * data;
     };
-    bool        SendInternal( const ConnectionInfo * connection, const SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS );
+    bool SendInternal( const ConnectionInfo * connection, const SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS );
 
     // thread management
-    void                CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );
-    static uint32_t     ListenThreadWrapperFunction( void * data );
-    void                ListenThreadFunction( ConnectionInfo * ci );
-    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData = nullptr );
-    static uint32_t     ConnectionThreadWrapperFunction( void * data );
-    void                ConnectionThreadFunction( ConnectionInfo * ci );
+    void CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );
+    static uint32_t ListenThreadWrapperFunction( void * data );
+    void ListenThreadFunction( ConnectionInfo * ci );
+    ConnectionInfo * CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData = nullptr );
+    static uint32_t ConnectionThreadWrapperFunction( void * data );
+    void ConnectionThreadFunction( ConnectionInfo * ci );
 
     // internal helpers
-    void                AllowSocketReuse( TCPSocket socket ) const;
-    void                DisableNagle( TCPSocket socket ) const;
-    void                DisableSigPipe( TCPSocket socket ) const;
-    void                SetLargeBufferSizes( TCPSocket socket ) const;
-    void                SetNonBlocking( TCPSocket socket ) const;
+    void AllowSocketReuse( TCPSocket socket ) const;
+    void DisableNagle( TCPSocket socket ) const;
+    void DisableSigPipe( TCPSocket socket ) const;
+    void SetLargeBufferSizes( TCPSocket socket ) const;
+    void SetNonBlocking( TCPSocket socket ) const;
 
     // listen socket related info
-    ConnectionInfo *            m_ListenConnection;
+    ConnectionInfo * m_ListenConnection;
 
     // remote connection related info
-    mutable Mutex               m_ConnectionsMutex;
-    Array< ConnectionInfo * >   m_Connections;
+    mutable Mutex m_ConnectionsMutex;
+    Array<ConnectionInfo *> m_Connections;
 
-    bool                        m_ShuttingDown;
-    Semaphore                   m_ShutdownSemaphore;
+    bool m_ShuttingDown;
+    Semaphore m_ShutdownSemaphore;
 
     // object to manage network subsystem lifetime
 protected:

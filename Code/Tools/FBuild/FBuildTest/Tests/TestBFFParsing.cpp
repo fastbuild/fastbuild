@@ -264,10 +264,10 @@ void TestBFFParsing::Directives() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::DefineDirective() const
 {
-    TEST_PARSE_OK( "#define X");
-    TEST_PARSE_OK( "#define X123");
-    TEST_PARSE_OK( "#define X_");
-    TEST_PARSE_OK( "#define _X_");
+    TEST_PARSE_OK( "#define X" );
+    TEST_PARSE_OK( "#define X123" );
+    TEST_PARSE_OK( "#define X_" );
+    TEST_PARSE_OK( "#define _X_" );
 
     TEST_PARSE_FAIL( "#define X Y",     "Error #1045 - Extraneous token(s)" );
 }
@@ -318,11 +318,11 @@ void TestBFFParsing::ImportDirective() const
     TEST_PARSE_FAIL( "#import 'string'",    "Error #1031" );
 
     // Invalid syntax
-    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR", AString("VALUE"));
+    Env::SetEnvVariable( "BFF_TEST_IMPORT_VAR", AString( "VALUE" ) );
     TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
 
     // Ensure special characters are not lost
-    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR2", AString("Special^And$Special"));
+    Env::SetEnvVariable( "BFF_TEST_IMPORT_VAR2", AString( "Special^And$Special" ) );
     TEST_PARSE_OK( "#import BFF_TEST_IMPORT_VAR2\n"
                    ".Expected = 'Special^^And^$Special'\n"
                    "If( .BFF_TEST_IMPORT_VAR2 == .Expected )\n"
@@ -434,8 +434,8 @@ void TestBFFParsing::IfDirective() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::IfExistsDirective() const
 {
-    Env::SetEnvVariable("BFF_TEST_ENV_VAR1", AString("1"));
-    Env::SetEnvVariable("BFF_TEST_ENV_VAR2", AString("2"));
+    Env::SetEnvVariable( "BFF_TEST_ENV_VAR1", AString( "1" ) );
+    Env::SetEnvVariable( "BFF_TEST_ENV_VAR2", AString( "2" ) );
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_exists_directive.bff" );
 }
 
@@ -453,14 +453,14 @@ void TestBFFParsing::IfFileExistsDirective() const
 
     // Check changes are detected (or not) between builds
     {
-        const char * rootBFF    = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
-        const char * fileName   = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
-        const char * db         = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
+        const char * rootBFF = "../tmp/Test/BFFParsing/FileExistsDirective/if_file_exists_directive.dat";
+        const char * fileName = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
+        const char * db = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
 
         // Copy root bff to temp dir
         FileIO::SetReadOnly( rootBFF, false );
         EnsureFileDoesNotExist( rootBFF );
-        EnsureDirExists("../tmp/Test/BFFParsing/FileExistsDirective/");
+        EnsureDirExists( "../tmp/Test/BFFParsing/FileExistsDirective/" );
         FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_file_exists_directive.bff", rootBFF );
 
         // Delete extra file from previous test run
@@ -490,13 +490,13 @@ void TestBFFParsing::IfFileExistsDirective() const
             fBuild.SaveDependencyGraph( db );
 
             // Should not re-parse
-            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
             TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
         }
 
         // Create file
         {
-            FileIO::EnsurePathExistsForFile( AStackString<>( fileName ) );
+            FileIO::EnsurePathExistsForFile( AStackString( fileName ) );
             FileStream f;
             TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
         }
@@ -509,7 +509,7 @@ void TestBFFParsing::IfFileExistsDirective() const
             TEST_ASSERT( fBuild.Initialize( db ) );
             fBuild.SaveDependencyGraph( db );
 
-            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
             // Check re-parse was triggered
             TEST_ASSERT( output.Find( "File used in file_exists was added" ) );
@@ -528,7 +528,7 @@ void TestBFFParsing::IfFileExistsDirective() const
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize( db ) );
 
-            const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
             // Check re-parse was triggered
             TEST_ASSERT( output.Find( "File used in file_exists was removed" ) );
@@ -547,16 +547,16 @@ void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
     // (paths are relative to the bff)
 
     FBuildTestOptions options;
-    options.m_ConfigFile    = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Check for expected output
     const AString & output( GetRecordedOutput() );
-    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ));
-    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ));
-    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ));
+    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ) );
+    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ) );
+    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ) );
     TEST_ASSERT( output.Find( "OK-4" ) );
 }
 
@@ -575,7 +575,7 @@ void TestBFFParsing::IfBooleanOperators() const
                      "#endif",              "#1045 - Extraneous token(s) following 'if' directive." );
 
     // Expression too complex
-    AStackString<> complex( "#if " );
+    AStackString complex( "#if " );
     for ( size_t i = 0; i < 256; ++i )
     {
         complex.AppendFormat( "A%u &&", (uint32_t)i );
@@ -952,9 +952,9 @@ void TestBFFParsing::Variables() const
     // Invalid dynamic variables (rhs)
     TEST_PARSE_FAIL( ".A = .'$B$'",         "Error #1009 - Unknown variable" );
     TEST_PARSE_FAIL( ".A = 'B'\n"
-                     ".X = .'$A$'",         "Error #1009 - Unknown variable"  );
+                     ".X = .'$A$'",         "Error #1009 - Unknown variable" );
     TEST_PARSE_FAIL( ".A = 'B'\n"
-                     ".X = { .'$A$' }",     "Error #1009 - Unknown variable"  );
+                     ".X = { .'$A$' }",     "Error #1009 - Unknown variable" );
 }
 
 // Functions

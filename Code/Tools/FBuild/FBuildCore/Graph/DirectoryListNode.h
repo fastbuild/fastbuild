@@ -20,23 +20,23 @@ public:
     virtual ~DirectoryListNode() override;
 
     const AString & GetPath() const { return m_Path; }
-    const Array< FileIO::FileInfo > & GetFiles() const { return m_Files; }
+    const Array<FileIO::FileInfo> & GetFiles() const { return m_Files; }
     const Array<AString> & GetDirectories() const { return m_Directories; }
 
-    static inline Node::Type GetTypeS() { return Node::DIRECTORY_LIST_NODE; }
+    static Node::Type GetTypeS() { return Node::DIRECTORY_LIST_NODE; }
 
     virtual bool IsAFile() const override { return false; }
 
     virtual const AString & GetPrettyName() const override { return m_PrettyName.IsEmpty() ? m_Name : m_PrettyName; }
 
     static void FormatName( const AString & path,
-                            const Array< AString > * patterns,
+                            const Array<AString> * patterns,
                             bool recursive,
                             bool includeReadOnlyStatusInHash,
                             bool includeDirs,
-                            const Array< AString > & excludePaths,
-                            const Array< AString > & excludeFiles,
-                            const Array< AString > & excludePatterns,
+                            const Array<AString> & excludePaths,
+                            const Array<AString> & excludeFiles,
+                            const Array<AString> & excludePatterns,
                             AString & result );
 
 private:
@@ -50,16 +50,16 @@ private:
     friend class Function; // TODO:C Remove
     friend class TestDirectoryList; // TODO:C Remove
     AString m_Path;
-    Array< AString > m_Patterns;
-    Array< AString > m_ExcludePaths;
-    Array< AString > m_FilesToExclude;
-    Array< AString > m_ExcludePatterns;
+    Array<AString> m_Patterns;
+    Array<AString> m_ExcludePaths;
+    Array<AString> m_FilesToExclude;
+    Array<AString> m_ExcludePatterns;
     bool m_Recursive = true;
     bool m_IncludeReadOnlyStatusInHash = false;
     bool m_IncludeDirs = false;
 
     // Internal State
-    Array< FileIO::FileInfo > m_Files;
+    Array<FileIO::FileInfo> m_Files;
     Array<AString> m_Directories;
     AString m_PrettyName;
 };

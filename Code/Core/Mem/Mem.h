@@ -10,10 +10,20 @@
 // Placement new/delete
 //------------------------------------------------------------------------------
 #define INPLACE_NEW new
-inline void * operator new( size_t, void * ptr ) { return ptr; }
-inline void * operator new[]( size_t, void * ptr ) { return ptr; }
-inline void operator delete( void *, void * ) {}
-inline void operator delete[]( void *, void * ) {}
+inline void * operator new( size_t, void * ptr )
+{
+    return ptr;
+}
+inline void * operator new[]( size_t, void * ptr )
+{
+    return ptr;
+}
+inline void operator delete( void *, void * )
+{
+}
+inline void operator delete[]( void *, void * )
+{
+}
 
 // new/delete
 //------------------------------------------------------------------------------
@@ -39,21 +49,21 @@ inline void operator delete[]( void *, void * ) {}
 //------------------------------------------------------------------------------
 #if !defined( MEMTRACKER_ENABLED )
     // Functions are private when MemTracker is enabled
-    void * Alloc( size_t size );
-    void * Alloc( size_t size, size_t alignment );
+void * Alloc( size_t size );
+void * Alloc( size_t size, size_t alignment );
 #else
-    void * AllocFileLine( size_t size, const char * file, int line );
-    void * AllocFileLine( size_t size, size_t alignment, const char * file, int line );
+void * AllocFileLine( size_t size, const char * file, int line );
+void * AllocFileLine( size_t size, size_t alignment, const char * file, int line );
 #endif
 void Free( void * ptr );
 
 // global new/delete
 //------------------------------------------------------------------------------
 #if defined( MEMTRACKER_ENABLED )
-    void * operator new( size_t size, const char * file, int line );
-    void * operator new[]( size_t size, const char * file, int line );
-    void operator delete( void * ptr, const char *, int );
-    void operator delete[]( void * ptr, const char *, int );
+void * operator new( size_t size, const char * file, int line );
+void * operator new[]( size_t size, const char * file, int line );
+void operator delete( void * ptr, const char *, int );
+void operator delete[]( void * ptr, const char *, int );
 #endif
 #if !defined( __has_feature )
     #define __has_feature( ... ) 0

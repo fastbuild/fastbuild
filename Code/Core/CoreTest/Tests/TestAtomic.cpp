@@ -10,7 +10,7 @@
 
 // Macros
 //------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 class AtomicTestHelper
 {
 public:
@@ -21,8 +21,8 @@ public:
     AtomicTestHelper()
     {
         const T initialValue = 99;
-        PRAGMA_DISABLE_PUSH_MSVC(4307) // integral constant overflow
-        PRAGMA_DISABLE_PUSH_MSVC(4309) // truncation of constant value
+        PRAGMA_DISABLE_PUSH_MSVC( 4307 ) // integral constant overflow
+        PRAGMA_DISABLE_PUSH_MSVC( 4309 ) // truncation of constant value
         const T expectedResult = static_cast<T>( initialValue + ( 2 * loopCount * ( addValue - subValue ) ) );
         PRAGMA_DISABLE_POP_MSVC
         PRAGMA_DISABLE_POP_MSVC
@@ -92,8 +92,8 @@ protected:
     }
 
     // Test values to operator on
-    volatile T          m_Count;    // Direct access
-    Atomic<T>           m_Count2;   // Via Atomic<> helper
+    volatile T m_Count; // Direct access
+    Atomic<T> m_Count2; // Via Atomic<> helper
 };
 
 // TestAtomic
@@ -104,7 +104,7 @@ private:
     DECLARE_TESTS
 
     // Basic types
-    template<typename T>
+    template <typename T>
     void DoAtomicTestsForType()
     {
         const AtomicTestHelper<T> helper;

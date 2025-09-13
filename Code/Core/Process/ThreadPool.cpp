@@ -14,11 +14,11 @@
 //------------------------------------------------------------------------------
 ThreadPool::ThreadPool( uint32_t numThreads )
     : m_NumThreads( numThreads )
-    #if defined( __WINDOWS__ )
-        , m_WakeSemaphore( numThreads ) // On Windows, take advantage of signalling limit
-    #else
-        , m_WakeSemaphore()
-    #endif
+#if defined( __WINDOWS__ )
+    , m_WakeSemaphore( numThreads ) // On Windows, take advantage of signalling limit
+#else
+    , m_WakeSemaphore()
+#endif
 {
     PROFILE_FUNCTION;
 
@@ -97,7 +97,7 @@ void ThreadPool::ThreadFunc()
         if ( job.m_Function )
         {
             // Execute job
-            (job.m_Function)( job.m_UserData );
+            ( job.m_Function )( job.m_UserData );
 
             // Immediately get another job. Ensure all jobs are consumed
             // before shutting down.
@@ -122,7 +122,7 @@ ThreadPool::ThreadPoolThread::ThreadPoolThread( uint32_t threadId,
     , m_OwnerPool( ownerPool )
 {
     // Start thread
-    AStackString<> threadName;
+    AStackString threadName;
     threadName.Format( "ThreadPool_%02u", threadId );
     m_Thread.Start( ThreadFuncWrapper, threadName.Get(), this, MEGABYTE );
 }
@@ -142,7 +142,7 @@ void ThreadPool::ThreadPoolThread::ThreadFunc()
     // First thread creates other threads
     if ( ( m_ThreadId == 1 ) && ( m_OwnerPool.GetNumThreads() > 1 ) )
     {
-        PROFILE_SECTION("CreateAdditionalThreads");
+        PROFILE_SECTION( "CreateAdditionalThreads" );
         ThreadPoolThread * thread = this;
         for ( uint32_t i = 2; i <= m_OwnerPool.GetNumThreads(); ++i )
         {
@@ -157,7 +157,7 @@ void ThreadPool::ThreadPoolThread::ThreadFunc()
     // First thread joins additional threads
     if ( ( m_ThreadId == 1 ) && ( m_OwnerPool.GetNumThreads() > 1 ) )
     {
-        PROFILE_SECTION("DestroyAdditionalThreads");
+        PROFILE_SECTION( "DestroyAdditionalThreads" );
 
         // Join
         ThreadPoolThread * thread = m_Next;

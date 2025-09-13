@@ -13,7 +13,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionError::FunctionError()
-: Function( "Error" )
+    : Function( "Error" )
 {
 }
 
@@ -56,7 +56,7 @@ FunctionError::FunctionError()
     }
 
     // perform variable substitutions
-    AStackString< 1024 > message;
+    AStackString<1024> message;
     if ( BFFParser::PerformVariableSubstitutions( iter.GetCurrent(), message ) == false )
     {
         return false; // substitution will have emitted an error

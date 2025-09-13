@@ -18,7 +18,8 @@ CacheOutputFunc gOutputFunction = nullptr;
 
 // CacheInit
 //------------------------------------------------------------------------------
-extern "C" {
+extern "C"
+{
 
 bool STDCALL CacheInitEx( const char * /*cachePath*/,
                           bool /*cacheRead*/,
@@ -28,14 +29,14 @@ bool STDCALL CacheInitEx( const char * /*cachePath*/,
                           CacheOutputFunc outputFunc )
 {
     // DLL Export for Windows
-    #if defined( __WINDOWS__ )
-        #pragma comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)
-    #endif
+#if defined( __WINDOWS__ )
+    #pragma comment( linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__ )
+#endif
 
     // Store output function
     gOutputFunction = outputFunc;
 
-    (*gOutputFunction)( "CacheInitEx Called" );
+    ( *gOutputFunction )( "CacheInitEx Called" );
     return true;
 }
 
@@ -44,11 +45,11 @@ bool STDCALL CacheInitEx( const char * /*cachePath*/,
 void STDCALL CacheShutdown()
 {
     // DLL Export for Windows
-    #if defined( __WINDOWS__ )
-        #pragma comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)
-    #endif
+#if defined( __WINDOWS__ )
+    #pragma comment( linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__ )
+#endif
 
-    (*gOutputFunction)( "CacheShutdown Called" );
+    ( *gOutputFunction )( "CacheShutdown Called" );
 }
 
 // CachePublish
@@ -56,25 +57,25 @@ void STDCALL CacheShutdown()
 bool STDCALL CachePublish( const char * /*cacheId*/, const void * /*data*/, unsigned long long /*dataSize*/ )
 {
     // DLL Export for Windows
-    #if defined( __WINDOWS__ )
-        #pragma comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)
-    #endif
+#if defined( __WINDOWS__ )
+    #pragma comment( linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__ )
+#endif
 
-    (*gOutputFunction)( "CachePublish Called" );
+    ( *gOutputFunction )( "CachePublish Called" );
 
     return true;
 }
 
 // CacheRetrieve
 //------------------------------------------------------------------------------
-bool STDCALL CacheRetrieve( const char * /*cacheId*/, void * & /*data*/, unsigned long long & /*dataSize*/ )
+bool STDCALL CacheRetrieve( const char * /*cacheId*/, void *& /*data*/, unsigned long long & /*dataSize*/ )
 {
     // DLL Export for Windows
-    #if defined( __WINDOWS__ )
-        #pragma comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)
-    #endif
+#if defined( __WINDOWS__ )
+    #pragma comment( linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__ )
+#endif
 
-    (*gOutputFunction)( "CacheRetrieve Called" );
+    ( *gOutputFunction )( "CacheRetrieve Called" );
 
     return false;
 }
@@ -84,11 +85,11 @@ bool STDCALL CacheRetrieve( const char * /*cacheId*/, void * & /*data*/, unsigne
 void STDCALL CacheFreeMemory( void * /*data*/, unsigned long long /*dataSize*/ )
 {
     // DLL Export for Windows
-    #if defined( __WINDOWS__ )
-        #pragma comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)
-    #endif
+#if defined( __WINDOWS__ )
+    #pragma comment( linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__ )
+#endif
 
-    (*gOutputFunction)( "CacheFreeMemory Called" );
+    ( *gOutputFunction )( "CacheFreeMemory Called" );
 }
 
 // CacheOutputInfo
@@ -96,11 +97,11 @@ void STDCALL CacheFreeMemory( void * /*data*/, unsigned long long /*dataSize*/ )
 bool STDCALL CacheOutputInfo( bool /*showProgress*/ )
 {
     // DLL Export for Windows
-    #if defined( __WINDOWS__ )
-        #pragma comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)
-    #endif
+#if defined( __WINDOWS__ )
+    #pragma comment( linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__ )
+#endif
 
-    (*gOutputFunction)( "CacheOutputInfo Called" );
+    ( *gOutputFunction )( "CacheOutputInfo Called" );
     return true; // Success
 }
 
@@ -109,14 +110,14 @@ bool STDCALL CacheOutputInfo( bool /*showProgress*/ )
 bool STDCALL CacheTrim( bool /*showProgress*/, unsigned int /*sizeMiB*/ )
 {
     // DLL Export for Windows
-    #if defined( __WINDOWS__ )
-        #pragma comment(linker, "/EXPORT:" __FUNCTION__"=" __FUNCDNAME__)
-    #endif
+#if defined( __WINDOWS__ )
+    #pragma comment( linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__ )
+#endif
 
-    (*gOutputFunction)( "CacheTrim Called" );
+    ( *gOutputFunction )( "CacheTrim Called" );
     return true; // Success
 }
 
 //------------------------------------------------------------------------------
 
-}// extern "C"
+} // extern "C"

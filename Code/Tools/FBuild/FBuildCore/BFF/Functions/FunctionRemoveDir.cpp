@@ -14,7 +14,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionRemoveDir::FunctionRemoveDir()
-: Function( "RemoveDir" )
+    : Function( "RemoveDir" )
 {
 }
 

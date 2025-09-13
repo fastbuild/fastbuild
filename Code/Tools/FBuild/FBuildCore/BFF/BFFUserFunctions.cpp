@@ -8,7 +8,7 @@
 // CONSTRUCTOR (BFFUserFunction)
 //------------------------------------------------------------------------------
 BFFUserFunction::BFFUserFunction( const AString & name,
-                                  const Array< const BFFToken * > & args,
+                                  const Array<const BFFToken *> & args,
                                   const BFFTokenRange & bodyTokenRange )
     : m_Name( name )
     , m_Args( args )
@@ -37,7 +37,7 @@ BFFUserFunctions::~BFFUserFunctions()
 // AddFunction
 //------------------------------------------------------------------------------
 void BFFUserFunctions::AddFunction( const AString & name,
-                                    const Array< const BFFToken * > & args,
+                                    const Array<const BFFToken *> & args,
                                     const BFFTokenRange & tokenRange )
 {
     BFFUserFunction * newFunction = FNEW( BFFUserFunction( name, args, tokenRange ) );
@@ -48,7 +48,7 @@ void BFFUserFunctions::AddFunction( const AString & name,
 //------------------------------------------------------------------------------
 BFFUserFunction * BFFUserFunctions::FindFunction( const AString & name ) const
 {
-    BFFUserFunction * * found = m_Functions.FindDeref( name );
+    BFFUserFunction ** found = m_Functions.FindDeref( name );
     return found ? *found : nullptr;
 }
 

@@ -4,17 +4,19 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionPrint.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionPrint::FunctionPrint()
-: Function( "Print" )
+    : Function( "Print" )
 {
 }
 
@@ -56,7 +58,7 @@ FunctionPrint::FunctionPrint()
     if ( varToken->IsString() )
     {
         // perform variable substitutions
-        AStackString< 1024 > tmp;
+        AStackString<1024> tmp;
         if ( BFFParser::PerformVariableSubstitutions( varToken, tmp ) == false )
         {
             return false; // substitution will have emitted an error
@@ -71,7 +73,7 @@ FunctionPrint::FunctionPrint()
     else if ( varToken->IsVariable() )
     {
         // find variable name
-        AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
+        AStackString<BFFParser::kMaxVariableNameLength> varName;
         bool parentScope = false;
         if ( BFFParser::ParseVariableName( varToken, varName, parentScope ) == false )
         {
@@ -80,8 +82,8 @@ FunctionPrint::FunctionPrint()
 
         const BFFVariable * var = nullptr;
         const BFFStackFrame * const varFrame = ( parentScope )
-            ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
-            : nullptr;
+                                                   ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
+                                                   : nullptr;
 
         if ( false == parentScope )
         {
@@ -118,8 +120,8 @@ FunctionPrint::FunctionPrint()
 //------------------------------------------------------------------------------
 /*static*/ void FunctionPrint::PrintVarRecurse( const BFFVariable & var, uint32_t indent )
 {
-    AStackString<> indentStr;
-    for ( uint32_t i=0; i<indent; ++i )
+    AStackString indentStr;
+    for ( uint32_t i = 0; i < indent; ++i )
     {
         indentStr += "    ";
     }
@@ -128,10 +130,14 @@ FunctionPrint::FunctionPrint()
 
     switch ( var.GetType() )
     {
-        case BFFVariable::VAR_ANY: ASSERT( false ); break; // Something is terribly wrong
+        case BFFVariable::VAR_ANY:
+        {
+            ASSERT( false );
+            break; // Something is terribly wrong
+        }
         case BFFVariable::VAR_STRING:
         {
-            AStackString<> value( var.GetString() );
+            AStackString value( var.GetString() );
             value.Replace( "'", "^'" ); // escape single quotes
             FLOG_OUTPUT( "%s = '%s'\n", var.GetName().Get(), value.Get() );
             break;
@@ -147,7 +153,7 @@ FunctionPrint::FunctionPrint()
             FLOG_OUTPUT( "%s = // ArrayOfStrings, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)strings.GetSize(), indentStr.Get() );
             for ( const AString & string : strings )
             {
-                AStackString<> value( string );
+                AStackString value( string );
                 value.Replace( "'", "^'" ); // escape single quotes
                 FLOG_OUTPUT( "%s    '%s'\n", indentStr.Get(), value.Get() );
             }
@@ -180,7 +186,11 @@ FunctionPrint::FunctionPrint()
             FLOG_OUTPUT( "%s}\n", indentStr.Get() );
             break;
         }
-        case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break; // Something is terribly wrong
+        case BFFVariable::MAX_VAR_TYPES:
+        {
+            ASSERT( false );
+            break; // Something is terribly wrong
+        }
     }
 }
 

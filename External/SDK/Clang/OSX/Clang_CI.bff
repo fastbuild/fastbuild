@@ -29,7 +29,6 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -g'             // Generate debug info
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
-                                    + ' -mmacosx-version-min=10.7'
 
                                     // Include paths
                                     + ' -I./'
@@ -42,7 +41,6 @@ Compiler( 'Compiler-Clang12' )
                                     + ' -Wno-#pragma-messages'
                                     + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
                                     + ' -Wno-implicit-exception-spec-mismatch' // Fires on our new/delete operator (Clang bug?)
-
 
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -fno-rtti'      // No RTTI
@@ -60,7 +58,6 @@ Compiler( 'Compiler-Clang12' )
     .LinkerOptions                  = '"%1" -o "%2" -g'
                                     + ' -Wl,-fatal_warnings'
                                     + ' -Wl,-dead_strip'
-                                    + ' -mmacosx-version-min=10.7'
 
     // File Extensions
     .LibExtension                   = '.a'
@@ -76,9 +73,10 @@ Compiler( 'Compiler-Clang12' )
 
     // Intel 64-bit
     .Platform                       = 'x64OSX'
-    .CompilerOptions                + ' -arch x86_64'
-    .CompilerOptionsC               + ' -arch x86_64'
-    .LinkerOptions                  + ' -arch x86_64'
+    .CompilerOptions                + ' -arch x86_64 -mmacosx-version-min=10.7'
+    .CompilerOptionsC               + ' -arch x86_64 -mmacosx-version-min=10.7'
+    .PCHOptions                     + ' -arch x86_64 -mmacosx-version-min=10.7'
+    .LinkerOptions                  + ' -arch x86_64 -mmacosx-version-min=10.7'
 ]
 
 .ToolChain_Clang_ARMOSX =
@@ -87,9 +85,10 @@ Compiler( 'Compiler-Clang12' )
 
     // Apple ARM Silicon
     .Platform                       = 'ARMOSX'
-    .CompilerOptions                + ' -arch arm64'
-    .CompilerOptionsC               + ' -arch arm64'
-    .LinkerOptions                  + ' -arch arm64'
+    .CompilerOptions                + ' -arch arm64 -mmacosx-version-min=11.0'
+    .CompilerOptionsC               + ' -arch arm64 -mmacosx-version-min=11.0'
+    .PCHOptions                     + ' -arch arm64 -mmacosx-version-min=11.0'
+    .LinkerOptions                  + ' -arch arm64 -mmacosx-version-min=11.0'
 ]
 
 //------------------------------------------------------------------------------

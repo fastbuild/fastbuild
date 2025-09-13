@@ -19,13 +19,13 @@ ReflectedProperty::ReflectedProperty( const char * name, uint32_t offset, Proper
 {
     m_NameCRC = xxHash::Calc32( name, AString::StrLen( name ) );
 
-    ASSERT( offset < MAX_OFFSET );
+    ASSERT( offset < kMaxOffset );
     m_Offset = (uint16_t)offset;
     m_Type = type;
 
-    #if defined( REFLECTION_KEEP_STRING_NAMES )
-        m_Name = name;
-    #endif
+#if defined( REFLECTION_KEEP_STRING_NAMES )
+    m_Name = name;
+#endif
 
     m_IsArray = isArray;
 
@@ -49,26 +49,31 @@ ReflectedProperty::~ReflectedProperty()
 //------------------------------------------------------------------------------
 size_t ReflectedProperty::GetPropertySize() const
 {
-    switch( m_Type )
+    switch ( m_Type )
     {
-        case PT_NONE:       ASSERT( false ); return 0;
-        case PT_FLOAT:      return sizeof( float );
-        case PT_UINT8:      return sizeof( uint8_t );
-        case PT_UINT16:     return sizeof( uint16_t );
-        case PT_UINT32:     return sizeof( uint32_t );
-        case PT_UINT64:     return sizeof( uint64_t );
-        case PT_INT8:       return sizeof( int8_t );
-        case PT_INT16:      return sizeof( int16_t );
-        case PT_INT32:      return sizeof( int32_t );
-        case PT_INT64:      return sizeof( int64_t );
-        case PT_BOOL:       return sizeof( bool );
-        case PT_ASTRING:    return sizeof( AString );
+        case PT_NONE: ASSERT( false ); return 0;
+        case PT_FLOAT: return sizeof( float );
+        case PT_UINT8: return sizeof( uint8_t );
+        case PT_UINT16: return sizeof( uint16_t );
+        case PT_UINT32: return sizeof( uint32_t );
+        case PT_UINT64: return sizeof( uint64_t );
+        case PT_INT8: return sizeof( int8_t );
+        case PT_INT16: return sizeof( int16_t );
+        case PT_INT32: return sizeof( int32_t );
+        case PT_INT64: return sizeof( int64_t );
+        case PT_BOOL: return sizeof( bool );
+        case PT_ASTRING: return sizeof( AString );
         case PT_STRUCT:
         {
-            const ReflectedPropertyStruct * rps = static_cast< const ReflectedPropertyStruct * >( this );
+            const ReflectedPropertyStruct * rps = static_cast<const ReflectedPropertyStruct *>( this );
             const size_t structSize = rps->GetStructReflectionInfo()->GetStructSize();
             ASSERT( structSize > 0 );
             return structSize;
+        }
+        case PT_CUSTOM_1:
+        {
+            ASSERT( false ); // Invalid to get size on custom properties
+            return 0;
         }
     }
 
@@ -105,17 +110,17 @@ GETSET_PROPERTY( bool, bool )
 GETSET_PROPERTY( AString, const AString & )
 
 #define GETSET_PROPERTY_ARRAY( valueType ) \
-    void ReflectedProperty::GetProperty( const void * object, Array< valueType > * value ) const \
+    void ReflectedProperty::GetProperty( const void * object, Array<valueType> * value ) const \
     { \
-        ASSERT( (PropertyType)m_Type == GetPropertyType( ( valueType *)nullptr ) ); \
+        ASSERT( (PropertyType)m_Type == GetPropertyType( (valueType *)nullptr ) ); \
         ASSERT( m_IsArray ); \
-        ( *value ) = *(const Array< valueType > *)( (size_t)object + m_Offset ); \
+        ( *value ) = *(const Array<valueType> *)( (size_t)object + m_Offset ); \
     } \
-    void ReflectedProperty::SetProperty( void * object, const Array< valueType > & value ) const \
+    void ReflectedProperty::SetProperty( void * object, const Array<valueType> & value ) const \
     { \
-        ASSERT( (PropertyType)m_Type == GetPropertyType( ( valueType *)nullptr ) ); \
+        ASSERT( (PropertyType)m_Type == GetPropertyType( (valueType *)nullptr ) ); \
         ASSERT( m_IsArray ); \
-        *( (Array< valueType > *)( (size_t)object + m_Offset ) ) = value; \
+        *( (Array<valueType> *)( (size_t)object + m_Offset ) ) = value; \
     }
 
 GETSET_PROPERTY_ARRAY( AString )
@@ -164,7 +169,7 @@ size_t ReflectedPropertyStruct::GetArraySize( const void * object ) const
 
     // get the array
     const void * arrayBase = (const void *)( (size_t)object + m_Offset );
-    const Array< char > * array = static_cast< const Array< char > * >( arrayBase );
+    const Array<char> * array = static_cast<const Array<char> *>( arrayBase );
 
     // NOTE: This assumes Array stores the size explicitly (and does not calculate it
     //       based on the element size)
@@ -194,11 +199,11 @@ Struct * ReflectedPropertyStruct::GetStructInArray( void * object, size_t index 
     // get the array
     const size_t elementSize = GetPropertySize();
     const void * arrayBase = (const void *)( (size_t)object + m_Offset );
-    const Array< char > * array = static_cast< const Array< char > * >( arrayBase );
+    const Array<char> * array = static_cast<const Array<char> *>( arrayBase );
 
     // calculate the element offset
     const size_t offset = ( index * elementSize );
-    return reinterpret_cast< Struct * >( array->Begin() + offset );
+    return reinterpret_cast<Struct *>( array->Begin() + offset );
 }
 
 //------------------------------------------------------------------------------
@@ -212,11 +217,11 @@ const Struct * ReflectedPropertyStruct::GetStructInArray( const void * object, s
     // get the array
     const size_t elementSize = GetPropertySize();
     const void * arrayBase = (const void *)( (size_t)object + m_Offset );
-    const Array< char > * array = static_cast< const Array< char > * >( arrayBase );
+    const Array<char> * array = static_cast<const Array<char> *>( arrayBase );
 
     // calculate the element offset
     const size_t offset = ( index * elementSize );
-    return reinterpret_cast< Struct * >( array->Begin() + offset );
+    return reinterpret_cast<Struct *>( array->Begin() + offset );
 }
 
 //------------------------------------------------------------------------------

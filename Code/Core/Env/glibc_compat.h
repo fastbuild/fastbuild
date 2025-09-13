@@ -18,6 +18,7 @@ __asm__( ".symver dlerror,dlerror@GLIBC_2.2.5" );
 __asm__( ".symver dlopen,dlopen@GLIBC_2.2.5" );
 __asm__( ".symver dlsym,dlsym@GLIBC_2.2.5" );
 __asm__( ".symver memcpy,memcpy@GLIBC_2.2.5" );
+__asm__( ".symver posix_spawn,posix_spawn@GLIBC_2.2.5" );
 __asm__( ".symver pthread_attr_setstacksize,pthread_attr_setstacksize@GLIBC_2.2.5" );
 __asm__( ".symver pthread_create,pthread_create@GLIBC_2.2.5" );
 __asm__( ".symver pthread_detach,pthread_detach@GLIBC_2.2.5" );
@@ -50,29 +51,30 @@ __asm__( ".symver __isoc99_vsscanf,vsscanf@GLIBC_2.2.5" );
 #if defined( __GLIBC__ ) && ( __GLIBC__ * 1000 + __GLIBC_MINOR__ ) >= 2033
 
     #ifdef __cplusplus
-        extern "C" {
+extern "C"
+{
     #endif
 
-    int __xstat( int ver, const char * path, struct stat * buf );
-    __extern_inline int stat( const char * path, struct stat * buf )
-    {
-        return __xstat( 0 /*_STAT_VER*/, path, buf );
-    }
+int __xstat( int ver, const char * path, struct stat * buf );
+__extern_inline int stat( const char * path, struct stat * buf )
+{
+    return __xstat( 0 /*_STAT_VER*/, path, buf );
+}
 
-    int __lxstat( int ver, const char * path, struct stat * buf );
-    __extern_inline int lstat( const char * path, struct stat * buf )
-    {
-        return __lxstat( 0 /*_STAT_VER*/, path, buf );
-    }
+int __lxstat( int ver, const char * path, struct stat * buf );
+__extern_inline int lstat( const char * path, struct stat * buf )
+{
+    return __lxstat( 0 /*_STAT_VER*/, path, buf );
+}
 
-    int __fxstat( int ver, int fildes, struct stat * buf );
-    __extern_inline int fstat( int fildes, struct stat * buf )
-    {
-        return __fxstat( 0 /*_STAT_VER*/, fildes, buf );
-    }
+int __fxstat( int ver, int fildes, struct stat * buf );
+__extern_inline int fstat( int fildes, struct stat * buf )
+{
+    return __fxstat( 0 /*_STAT_VER*/, fildes, buf );
+}
 
     #ifdef __cplusplus
-        }
+}
     #endif
 
 #endif

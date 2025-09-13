@@ -24,7 +24,7 @@
 
     // Forward Declarations
     //------------------------------------------------------------------------------
-    class MemPoolBlock;
+class MemPoolBlock;
 
     // Macros
     //------------------------------------------------------------------------------
@@ -36,45 +36,46 @@
 
     // MemTracker
     //------------------------------------------------------------------------------
-    class MemTracker
+class MemTracker
+{
+public:
+    static void Alloc( void * ptr, size_t size, const char * file, int line );
+    static void Free( void * ptr );
+
+    static void DisableOnThread();
+    static void EnableOnThread();
+
+    static bool HasAllocationsInRange( uint32_t startingId, uint32_t endingId );
+    static void DumpAllocations( uint32_t startingId, uint32_t endingId );
+
+    static uint32_t GetCurrentAllocationCount() { return s_AllocationCount; }
+    static uint32_t GetCurrentAllocationId() { return s_Id; }
+
+    struct Allocation
     {
-    public:
-        static void Alloc( void * ptr, size_t size, const char * file, int line );
-        static void Free( void * ptr );
-
-        static void DisableOnThread();
-        static void EnableOnThread();
-
-        static bool HasAllocationsInRange( uint32_t startingId, uint32_t endingId );
-        static void DumpAllocations( uint32_t startingId, uint32_t endingId );
-
-        static inline uint32_t GetCurrentAllocationCount() { return s_AllocationCount; }
-        static inline uint32_t GetCurrentAllocationId() { return s_Id; }
-
-        struct Allocation
-        {
-            void *          m_Ptr;
-            size_t          m_Size;
-            Allocation *    m_Next;
-            const char *    m_File;
-            uint32_t        m_Line;
-            uint32_t        m_Id;
-        };
-    private:
-        static void Init();
-        static void DumpLeaksAtExit();
-
-        static Mutex & GetMutex() { return reinterpret_cast< Mutex & >( s_Mutex ); }
-
-        static uint32_t         s_Id;
-        static bool             s_Enabled;
-        static volatile bool    s_Initialized;
-        static uint32_t         s_AllocationCount;
-        static Allocation *     s_LastAllocation;
-        static uint64_t         s_Mutex[ sizeof( Mutex ) / sizeof( uint64_t ) ];
-        static Allocation **    s_AllocationHashTable;
-        static MemPoolBlock *   s_Allocations;
+        void * m_Ptr;
+        size_t m_Size;
+        Allocation * m_Next;
+        const char * m_File;
+        uint32_t m_Line;
+        uint32_t m_Id;
     };
+
+private:
+    static void Init();
+    static void DumpLeaksAtExit();
+
+    static Mutex & GetMutex() { return reinterpret_cast<Mutex &>( s_Mutex ); }
+
+    static uint32_t s_Id;
+    static bool s_Enabled;
+    static volatile bool s_Initialized;
+    static uint32_t s_AllocationCount;
+    static Allocation * s_LastAllocation;
+    static uint64_t s_Mutex[ sizeof( Mutex ) / sizeof( uint64_t ) ];
+    static Allocation ** s_AllocationHashTable;
+    static MemPoolBlock * s_Allocations;
+};
 
 #endif // MEMTRACKER_ENABLED
 

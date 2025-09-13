@@ -20,8 +20,7 @@ public:
 
     void GetImportLibName( AString & importLibName ) const;
 
-    static inline Node::Type GetTypeS() { return Node::DLL_NODE; }
-
+    static Node::Type GetTypeS() { return Node::DLL_NODE; }
 };
 
 //------------------------------------------------------------------------------

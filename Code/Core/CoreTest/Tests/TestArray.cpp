@@ -757,7 +757,7 @@ void TestArray::SortBig() const
             }
         }
 
-        TEST_MEMORY_SNAPSHOT(s1);
+        TEST_MEMORY_SNAPSHOT( s1 );
 
         // Sort
         const Timer t;
@@ -778,7 +778,6 @@ void TestArray::SortBig() const
         }
     }
 }
-
 
 // Find
 //------------------------------------------------------------------------------
@@ -934,7 +933,7 @@ void TestArray::FindDerefAndErase() const
     // POD
     {
         // Empty
-        Array<uint32_t*> array;
+        Array<uint32_t *> array;
         TEST_ASSERT( array.FindDerefAndErase( (uint32_t)1 ) == false );
         CheckConsistency( array );
     }
@@ -943,7 +942,7 @@ void TestArray::FindDerefAndErase() const
         const uint32_t u32_1 = 1;
         const uint32_t u32_2 = 2;
         const uint32_t u32_3 = 3;
-        Array<const uint32_t*> array;
+        Array<const uint32_t *> array;
         array.Append( &u32_1 );
         array.Append( &u32_2 );
         array.Append( &u32_3 );
@@ -960,7 +959,7 @@ void TestArray::FindDerefAndErase() const
     // Complex type
     {
         // Empty
-        Array<AString*> array;
+        Array<AString *> array;
         TEST_ASSERT( array.FindDerefAndErase( "string1" ) == false );
         CheckConsistency( array );
     }
@@ -969,7 +968,7 @@ void TestArray::FindDerefAndErase() const
         const AString string1( "string1" );
         const AString string2( "string2" );
         const AString string3( "string3" );
-        Array<const AString*> array;
+        Array<const AString *> array;
         array.Append( &string1 );
         array.Append( &string2 );
         array.Append( &string3 );
@@ -1491,7 +1490,7 @@ void TestArray::AssignmentOperator_OtherArray() const
         CheckConsistency( array1 );
         CheckConsistency( array2 );
         TEST_ASSERT( array2.GetSize() == array1.GetSize() );
-        TEST_ASSERT( array1.IsEmpty() == false);
+        TEST_ASSERT( array1.IsEmpty() == false );
         TEST_ASSERT( array2.IsEmpty() == false );
         TEST_ASSERT( array2[ 0 ] == 1 );
         TEST_ASSERT( array2[ 0 ] == array1[ 0 ] );
@@ -1933,7 +1932,7 @@ void TestArray::MoveConstructorHelper() const
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
     // Source string should be empty
-    PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+    PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
     TEST_ASSERT( arrayA.IsEmpty() );
     PRAGMA_DISABLE_POP_MSVC
 
@@ -1947,36 +1946,36 @@ void TestArray::MoveConstructor() const
 {
     // POD Data
     {
-        //                    Src                   Dest                    Allocs    SrcCast
-        //------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, SrcCast
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveConstructorHelper<Array<uint32_t>,      Array<uint32_t>,        0                      >();
-        MoveConstructorHelper<Array<uint32_t>,      StackArray<uint32_t>,   0                      >();
+        MoveConstructorHelper<Array<uint32_t>, Array<uint32_t>, 0>();
+        MoveConstructorHelper<Array<uint32_t>, StackArray<uint32_t>, 0>();
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>,   0                      >();
-        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>,   0,      Array<uint32_t>>(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0>();
+        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, Array<uint32_t>>(); // Src as Array, behave the same
 
         // Moves from stack to heap need re-allocation and copy
-        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>,        1                      >();
-        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>,        1,      Array<uint32_t>>(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>, 1>();
+        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>, 1, Array<uint32_t>>(); // Src as Array, behave the same
     }
 
     // Complex Types
     {
-        //                    Src                   Dest                    Allocs    SrcCast
-        //------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, SrcCast
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveConstructorHelper<Array<AString>,       Array<AString>,         0                      >();
-        MoveConstructorHelper<Array<AString>,       StackArray<AString>,    0                      >();
+        MoveConstructorHelper<Array<AString>, Array<AString>, 0>();
+        MoveConstructorHelper<Array<AString>, StackArray<AString>, 0>();
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveConstructorHelper<StackArray<AString>,  StackArray<AString>,    0                      >();
-        MoveConstructorHelper<StackArray<AString>,  StackArray<AString>,    0,      Array<AString> >(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<AString>, StackArray<AString>, 0>();
+        MoveConstructorHelper<StackArray<AString>, StackArray<AString>, 0, Array<AString>>(); // Src as Array, behave the same
 
         // Moves from stack to heap need Array reallocated, but items can be moved
-        MoveConstructorHelper<StackArray<AString>,  Array<AString>,         1                      >();
-        MoveConstructorHelper<StackArray<AString>,  Array<AString>,         1,      Array<AString> >(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<AString>, Array<AString>, 1>();
+        MoveConstructorHelper<StackArray<AString>, Array<AString>, 1, Array<AString>>(); // Src as Array, behave the same
     }
 }
 
@@ -2009,7 +2008,7 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
         // Source string should be empty
-        PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+        PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
         TEST_ASSERT( arrayA.IsEmpty() );
         PRAGMA_DISABLE_POP_MSVC
 
@@ -2043,7 +2042,7 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
             arrayB = Move( (SRC_CAST &)( arrayA ) );
 
             // Source string should be empty
-            PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+            PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
             TEST_ASSERT( arrayA.IsEmpty() );
             PRAGMA_DISABLE_POP_MSVC
 
@@ -2056,43 +2055,42 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
     }
 }
 
-
 // MoveAssignment
 //------------------------------------------------------------------------------
 void TestArray::MoveAssignment() const
 {
     // POD Data
     {
-        //                  Src                     Dest                    Allocs  Elem        SrcCast
-        //---------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, Elem
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveAssignmentHelper<Array<uint32_t>,       Array<uint32_t>,        0,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<Array<uint32_t>,       StackArray<uint32_t>,   0,      uint32_t                   >( 99 );
+        MoveAssignmentHelper<Array<uint32_t>, Array<uint32_t>, 0, uint32_t>( 99 );
+        MoveAssignmentHelper<Array<uint32_t>, StackArray<uint32_t>, 0, uint32_t>( 99 );
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveAssignmentHelper<StackArray<uint32_t>,  StackArray<uint32_t>,   0,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<StackArray<uint32_t>,  StackArray<uint32_t>,   0,      uint32_t,   Array<uint32_t>>( 99 ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, uint32_t>( 99 );
+        MoveAssignmentHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, uint32_t, Array<uint32_t>>( 99 ); // Src as Array, behave the same
 
         // Moves from stack to heap need re-allocation and copy
-        MoveAssignmentHelper<StackArray<uint32_t>,  Array<uint32_t>,        1,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<StackArray<uint32_t>,  Array<uint32_t>,        1,      uint32_t,   Array<uint32_t>>( 99 ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<uint32_t>, Array<uint32_t>, 1, uint32_t>( 99 );
+        MoveAssignmentHelper<StackArray<uint32_t>, Array<uint32_t>, 1, uint32_t, Array<uint32_t>>( 99 ); // Src as Array, behave the same
     }
 
     // Complex Types
     {
-        //                   Src                    Dest                    Allocs  Elem            SrcCast
-        //-----------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, Elem
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveAssignmentHelper<Array<AString>,        Array<AString>,         0,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<Array<AString>,        StackArray<AString>,    0,      AString                   >( AString( "string" ) );
+        MoveAssignmentHelper<Array<AString>, Array<AString>, 0, AString>( AString( "string" ) );
+        MoveAssignmentHelper<Array<AString>, StackArray<AString>, 0, AString>( AString( "string" ) );
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveAssignmentHelper<StackArray<AString>,   StackArray<AString>,    0,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<StackArray<AString>,   StackArray<AString>,    0,      AString,    Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<AString>, StackArray<AString>, 0, AString>( AString( "string" ) );
+        MoveAssignmentHelper<StackArray<AString>, StackArray<AString>, 0, AString, Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
 
         // Moves from stack to heap need Array reallocated, but items can be moved
-        MoveAssignmentHelper<StackArray<AString>,   Array<AString>,         1,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<StackArray<AString>,   Array<AString>,         1,      AString,    Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<AString>, Array<AString>, 1, AString>( AString( "string" ) );
+        MoveAssignmentHelper<StackArray<AString>, Array<AString>, 1, AString, Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
     }
 }
 
@@ -2188,7 +2186,7 @@ void TestArray::MoveErase() const
 {
     // Create array with something in it
     Array<AString> array;
-    array.SetCapacity(2);
+    array.SetCapacity( 2 );
     array.EmplaceBack( "string1" );
     array.EmplaceBack( "string2string2" ); // Larger than string 1
 

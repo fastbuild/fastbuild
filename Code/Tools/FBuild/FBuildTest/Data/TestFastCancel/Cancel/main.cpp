@@ -23,30 +23,30 @@ bool LockSystemMutex( const char * name )
     //       (the process will be terminated anyway)
 
     // Acquire system mutex which should be uncontested
-    #if defined( __WINDOWS__ )
-        CreateMutex( nullptr, TRUE, name );
-        if ( GetLastError() == ERROR_ALREADY_EXISTS )
-        {
-            return false; // Test fails
-        }
-        return true;
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        char tempFileName[256];
-        snprintf( tempFileName, sizeof(tempFileName), "/tmp/%s.lock", name );
-        int handle = open( tempFileName, O_CREAT | O_RDWR, 0666 );
-        if ( handle < 0 )
-        {
-            return false; // Test fails
-        }
-        int rc = flock( handle, LOCK_EX | LOCK_NB );
-        if ( rc )
-        {
-            return false; // Test fails
-        }
-        return true;
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    CreateMutex( nullptr, TRUE, name );
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+    {
+        return false; // Test fails
+    }
+    return true;
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    char tempFileName[ 256 ];
+    snprintf( tempFileName, sizeof( tempFileName ), "/tmp/%s.lock", name );
+    int handle = open( tempFileName, O_CREAT | O_RDWR, 0666 );
+    if ( handle < 0 )
+    {
+        return false; // Test fails
+    }
+    int rc = flock( handle, LOCK_EX | LOCK_NB );
+    if ( rc )
+    {
+        return false; // Test fails
+    }
+    return true;
+#else
+    #error Unknown platform
+#endif
 }
 
 // Spawn
@@ -56,57 +56,57 @@ bool Spawn( const char * exe, const char * mutexId )
     // NOTE: This function doesn't cleanup failures to simplify the test
     //       (the process will be terminated anyway)
 
-    #if defined( __WINDOWS__ )
-        // Set up the start up info struct.
-        STARTUPINFO si;
-        ZeroMemory( &si, sizeof(STARTUPINFO) );
-        si.cb = sizeof( STARTUPINFO );
-        si.dwFlags |= STARTF_USESHOWWINDOW;
-        si.wShowWindow = SW_HIDE;
+#if defined( __WINDOWS__ )
+    // Set up the start up info struct.
+    STARTUPINFO si;
+    ZeroMemory( &si, sizeof( STARTUPINFO ) );
+    si.cb = sizeof( STARTUPINFO );
+    si.dwFlags |= STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
 
-        // Prepare args
-        char fullArgs[256];
-        sprintf_s( fullArgs, "\"%s\" %s", exe, mutexId );
+    // Prepare args
+    char fullArgs[ 256 ];
+    sprintf_s( fullArgs, "\"%s\" %s", exe, mutexId );
 
-        // create the child
-        LPPROCESS_INFORMATION processInfo;
-        if ( !CreateProcess( nullptr,
-                             fullArgs,
-                             nullptr,
-                             nullptr,
-                             false, // inherit handles
-                             0,
-                             nullptr,
-                             nullptr,
-                             &si,
-                             (LPPROCESS_INFORMATION)&processInfo ) )
-        {
-            return false;
-        }
+    // create the child
+    LPPROCESS_INFORMATION processInfo;
+    if ( !CreateProcess( nullptr,
+                         fullArgs,
+                         nullptr,
+                         nullptr,
+                         false, // inherit handles
+                         0,
+                         nullptr,
+                         nullptr,
+                         &si,
+                         (LPPROCESS_INFORMATION)&processInfo ) )
+    {
+        return false;
+    }
+    return true;
+#else
+    // prepare args
+    const char * args[ 3 ] = { exe, mutexId, nullptr };
+
+    // fork the process
+    const pid_t childProcessPid = fork();
+    if ( childProcessPid == -1 )
+    {
+        return false;
+    }
+
+    const bool isChild = ( childProcessPid == 0 );
+    if ( isChild )
+    {
+        // transfer execution to new executable
+        execv( const_cast<char *>( exe ), const_cast<char **>( args ) );
+        exit( -1 ); // only get here if execv fails
+    }
+    else
+    {
         return true;
-    #else
-        // prepare args
-        const char * args[ 3 ] = { exe, mutexId, nullptr };
-
-        // fork the process
-        const pid_t childProcessPid = fork();
-        if ( childProcessPid == -1 )
-        {
-            return false;
-        }
-
-        const bool isChild = ( childProcessPid == 0 );
-        if ( isChild )
-        {
-            // transfer execution to new executable
-            execv( const_cast<char *>( exe ), const_cast<char **>( args ) );
-            exit( -1 ); // only get here if execv fails
-        }
-        else
-        {
-            return true;
-        }
-    #endif
+    }
+#endif
 }
 
 // Sleep
@@ -141,7 +141,7 @@ int main( int argc, char ** argv )
     // Spawn child if we're not the last one
     if ( mutexId < 4 )
     {
-        char mutexIdString[2] = { ' ', 0 };
+        char mutexIdString[ 2 ] = { ' ', 0 };
         mutexIdString[ 0 ] = (char)( '0' + mutexId + 1 );
         if ( !Spawn( argv[ 0 ], mutexIdString ) )
         {
@@ -151,13 +151,15 @@ int main( int argc, char ** argv )
     }
 
     // Acquire SystemMutex which test uses to check our lifetimes
-    const char * const mutexNames[4] =
+    // clang-format off
+    const char * const mutexNames[ 4 ] =
     {
         "FASTBuildFastCancelTest1",
         "FASTBuildFastCancelTest2",
         "FASTBuildFastCancelTest3",
-        "FASTBuildFastCancelTest4"
+        "FASTBuildFastCancelTest4",
     };
+    // clang-format on
     const char * const mutexName = mutexNames[ mutexId - 1 ];
 
     // Try to acquire repeatedly to manage races with the test that
@@ -176,7 +178,7 @@ int main( int argc, char ** argv )
 
     // Spin forever - test will terminate
     int count = 0;
-    for (;;)
+    for ( ;; )
     {
         ::Sleep( 1000 );
 

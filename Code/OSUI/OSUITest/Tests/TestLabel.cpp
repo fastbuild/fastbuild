@@ -33,10 +33,10 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestLabel::Empty() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // base Create/destroy without initialization
     OSWindow window;
@@ -48,10 +48,10 @@ void TestLabel::Empty() const
 //------------------------------------------------------------------------------
 void TestLabel::Init() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Initialize and free
     OSWindow window;

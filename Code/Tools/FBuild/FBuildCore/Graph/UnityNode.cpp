@@ -6,12 +6,13 @@
 #include "UnityNode.h"
 #include "DirectoryListNode.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h" // TODO:C Remove this
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
@@ -63,7 +64,7 @@ UnityIsolatedFile::UnityIsolatedFile() = default;
 //------------------------------------------------------------------------------
 UnityIsolatedFile::UnityIsolatedFile( const AString & fileName, const DirectoryListNode * dirListOrigin )
     : m_FileName( fileName )
-    , m_DirListOriginPath( dirListOrigin ? dirListOrigin->GetPath() : AString:: GetEmpty() )
+    , m_DirListOriginPath( dirListOrigin ? dirListOrigin->GetPath() : AString::GetEmpty() )
 {
 }
 
@@ -85,13 +86,13 @@ UnityNode::UnityFileAndOrigin::UnityFileAndOrigin( FileIO::FileInfo * info, Dire
     const char * lastSlash = info->m_Name.FindLast( NATIVE_SLASH );
     if ( lastSlash )
     {
-        m_LastSlashIndex = (uint32_t)(lastSlash - info->m_Name.Get());
+        m_LastSlashIndex = (uint32_t)( lastSlash - info->m_Name.Get() );
     }
 }
 
 // operator < (UnityFileAndOrigin)
 //------------------------------------------------------------------------------
-bool UnityNode::UnityFileAndOrigin::operator < ( const UnityFileAndOrigin & other ) const
+bool UnityNode::UnityFileAndOrigin::operator<( const UnityFileAndOrigin & other ) const
 {
     // Sort files before directories and compare case insensitively
 
@@ -218,7 +219,7 @@ UnityNode::UnityNode()
         if ( !Function::GetFileNode( nodeGraph,
                                      iter,
                                      function,
-                                      m_IsolateListFile,
+                                     m_IsolateListFile,
                                      "UnityInputIsolateListFile",
                                      isolateFileListNodes ) )
         {
@@ -247,7 +248,6 @@ UnityNode::~UnityNode()
         FDELETE info;
     }
 }
-
 
 // DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
@@ -279,8 +279,8 @@ UnityNode::~UnityNode()
 
     // Check if nounity has been toggled
     const bool noUnity = FBuild::Get().GetOptions().m_NoUnity;
-    const bool wasNoUnity = ((m_Stamp & 1) == 1); // LSB contains nounity flag status
-    if (noUnity != wasNoUnity)
+    const bool wasNoUnity = ( ( m_Stamp & 1 ) == 1 ); // LSB contains nounity flag status
+    if ( noUnity != wasNoUnity )
     {
         FLOG_BUILD_REASON( "Need to build '%s' (-nounity was %s)\n", GetName().Get(), noUnity ? "added" : "removed" );
         return true;
@@ -296,7 +296,7 @@ UnityNode::~UnityNode()
     // Emit build summary message
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        AStackString< 512 > buffer( "Uni: " );
+        AStackString<512> buffer( "Uni: " );
         buffer += GetName();
         buffer += '\n';
         FLOG_OUTPUT( buffer );
@@ -319,7 +319,7 @@ UnityNode::~UnityNode()
     m_UnityFileNames.SetCapacity( m_NumUnityFilesToCreate );
 
     // get the files
-    Array< UnityFileAndOrigin > files;
+    Array<UnityFileAndOrigin> files;
     files.SetCapacity( 4096 );
 
     if ( !GetFiles( files ) )
@@ -330,7 +330,7 @@ UnityNode::~UnityNode()
     FilterForceIsolated( files, m_IsolatedFiles );
 
     // get isolated files from list
-    StackArray< AString > isolatedFilesFromList;
+    StackArray<AString> isolatedFilesFromList;
     if ( !GetIsolatedFilesFromList( isolatedFilesFromList ) )
     {
         return BuildResult::eFailed; // GetFiles will have emitted an error
@@ -341,9 +341,9 @@ UnityNode::~UnityNode()
     const float numFilesPerUnity = (float)numFiles / (float)m_NumUnityFilesToCreate;
     float remainingInThisUnity( 0.0 );
 
-    #if defined(ASSERTS_ENABLED)
-        uint32_t numFilesWritten( 0 );
-    #endif
+#if defined( ASSERTS_ENABLED )
+    uint32_t numFilesWritten( 0 );
+#endif
 
     size_t index = 0;
 
@@ -352,11 +352,11 @@ UnityNode::~UnityNode()
     AString output;
     output.SetReserved( 32 * 1024 );
 
-    StackArray< uint64_t > stamps;
+    StackArray<uint64_t> stamps;
     stamps.SetCapacity( m_NumUnityFilesToCreate );
 
     // Includes will be relative to root
-    AStackString<> includeBasePath;
+    AStackString includeBasePath;
     if ( m_UseRelativePaths_Experimental )
     {
         includeBasePath = FBuild::Get().GetOptions().GetWorkingDir();
@@ -364,7 +364,7 @@ UnityNode::~UnityNode()
     }
 
     // create each unity file
-    for ( size_t i=0; i<m_NumUnityFilesToCreate; ++i )
+    for ( size_t i = 0; i < m_NumUnityFilesToCreate; ++i )
     {
         // add allocation to this unity
         remainingInThisUnity += numFilesPerUnity;
@@ -378,7 +378,7 @@ UnityNode::~UnityNode()
             output += "#include \"";
             if ( m_UseRelativePaths_Experimental )
             {
-                AStackString<> relativePath;
+                AStackString relativePath;
                 PathUtils::GetRelativePath( includeBasePath, m_PrecompiledHeader, relativePath );
                 output += relativePath;
             }
@@ -393,7 +393,7 @@ UnityNode::~UnityNode()
         // for floating point imprecision
 
         // determine allocation of includes for this unity file
-        StackArray< UnityFileAndOrigin > filesInThisUnity;
+        StackArray<UnityFileAndOrigin> filesInThisUnity;
         uint32_t numIsolated( 0 );
         const bool lastUnity = ( i == ( m_NumUnityFilesToCreate - 1 ) );
         while ( ( remainingInThisUnity > 0.0f ) || lastUnity )
@@ -406,7 +406,7 @@ UnityNode::~UnityNode()
                 break;
             }
 
-            filesInThisUnity.Append( files[index ] );
+            filesInThisUnity.Append( files[ index ] );
 
             // files which are modified (writable) can optionally be excluded from the unity
             bool isolate = false;
@@ -435,9 +435,9 @@ UnityNode::~UnityNode()
 
             // count the file, whether we wrote it or not, to keep unity files stable
             index++;
-            #if defined(ASSERTS_ENABLED)
-                numFilesWritten++;
-            #endif
+#if defined( ASSERTS_ENABLED )
+            numFilesWritten++;
+#endif
         }
 
         // write allocation of includes for this unity file
@@ -469,23 +469,23 @@ UnityNode::~UnityNode()
             }
 
             // Get relative file path
-            AStackString<> relativePath;
+            AStackString relativePath;
             if ( m_UseRelativePaths_Experimental )
             {
                 PathUtils::GetRelativePath( includeBasePath, file.GetName(), relativePath );
             }
 
             // write pragma showing cpp file being compiled to assist resolving compilation errors
-            AStackString<> buffer( m_UseRelativePaths_Experimental ? relativePath : file.GetName() );
+            AStackString buffer( m_UseRelativePaths_Experimental ? relativePath : file.GetName() );
             buffer.Replace( BACK_SLASH, FORWARD_SLASH ); // avoid problems with slashes in generated code
-            #if defined( __LINUX__ )
-                output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
-            #else
-                if ( isolateThisFile )
-                {
-                    output += "//";
-                }
-            #endif
+#if defined( __LINUX__ )
+            output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
+#else
+            if ( isolateThisFile )
+            {
+                output += "//";
+            }
+#endif
             output += "#pragma message( \"";
             output += buffer;
             output += "\" )\r\n";
@@ -509,18 +509,18 @@ UnityNode::~UnityNode()
         output += "\r\n";
 
         // generate the destination unity file name
-        AStackString<> unityName( m_OutputPath );
+        AStackString unityName( m_OutputPath );
         unityName += m_OutputPattern;
         {
-            AStackString<> tmp;
+            AStackString tmp;
             tmp.Format( "%u", (uint32_t)i + 1 ); // number from 1
             unityName.Replace( "*", tmp.Get() );
         }
 
         // only keep track of non-empty unity files (to avoid link errors with empty objects)
         // additionally, if -nounity is in use we also don't want to link these objects
-        if (( filesInThisUnity.GetSize() != numFilesActuallyIsolatedInThisUnity ) &&
-            ( noUnity == false ))
+        if ( ( filesInThisUnity.GetSize() != numFilesActuallyIsolatedInThisUnity ) &&
+             ( noUnity == false ) )
         {
             m_UnityFileNames.Append( unityName );
         }
@@ -547,7 +547,7 @@ UnityNode::~UnityNode()
                 else
                 {
                     // files the same size - are the contents the same?
-                    UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( fileSize ) );
+                    UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( fileSize ) );
                     if ( f.Read( mem.Get(), fileSize ) != fileSize )
                     {
                         // problem reading file - try to write it again
@@ -598,13 +598,13 @@ UnityNode::~UnityNode()
     m_Stamp = xxHash3::Calc64( &stamps[ 0 ], stamps.GetSize() * sizeof( uint64_t ) );
 
     // Track "nounity" status in the lest significant bit
-    if (noUnity)
+    if ( noUnity )
     {
         m_Stamp = ( m_Stamp | 1 ); // Set LSB
     }
     else
     {
-        m_Stamp = ( m_Stamp & ~uint64_t(1) ); // Clear LSB
+        m_Stamp = ( m_Stamp & ~uint64_t( 1 ) ); // Clear LSB
     }
 
     // cleanup extra FileInfo structures
@@ -625,19 +625,19 @@ UnityNode::~UnityNode()
     Node::Migrate( oldNode );
 
     // Migrate lazily evaluated properties
-    const UnityNode * oldUnityNode = oldNode.CastTo< UnityNode >();
+    const UnityNode * oldUnityNode = oldNode.CastTo<UnityNode>();
     m_IsolatedFiles = oldUnityNode->m_IsolatedFiles;
     m_UnityFileNames = oldUnityNode->m_UnityFileNames;
 }
 
 // GetFiles
 //------------------------------------------------------------------------------
-bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
+bool UnityNode::GetFiles( Array<UnityFileAndOrigin> & files )
 {
     bool ok = true;
 
     // automatically exclude the associated CPP file for a PCH (if there is one)
-    AStackString<> pchCPP;
+    AStackString pchCPP;
     if ( m_PrecompiledHeader.IsEmpty() == false )
     {
         if ( m_PrecompiledHeader.EndsWithI( ".h" ) )
@@ -649,11 +649,11 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
 
     for ( const Dependency & dep : m_StaticDependencies )
     {
-        const Node* node = dep.GetNode();
+        const Node * node = dep.GetNode();
 
         if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            DirectoryListNode * dirNode = node->CastTo< DirectoryListNode >();
+            DirectoryListNode * dirNode = node->CastTo<DirectoryListNode>();
             const FileIO::FileInfo * const filesEnd = dirNode->GetFiles().End();
 
             // filter files in the dir list
@@ -677,10 +677,10 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
         }
         else if ( node->GetType() == Node::OBJECT_LIST_NODE )
         {
-            const ObjectListNode * objListNode = node->CastTo< ObjectListNode >();
+            const ObjectListNode * objListNode = node->CastTo<ObjectListNode>();
 
             // iterate all the files in the object list
-            Array< AString > objListFiles;
+            Array<AString> objListFiles;
             objListNode->GetInputFiles( objListFiles );
             for ( const AString & file : objListFiles )
             {
@@ -688,11 +688,11 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
                 m_FilesInfo.Append( fi ); // keep ptr to delete later
                 fi->m_Name = file;
                 fi->m_LastWriteTime = 0;
-                #if defined( __WINDOWS__ )
-                    fi->m_Attributes = 0xFFFFFFFF; // FILE_ATTRIBUTE_READONLY set
-                #else
-                    fi->m_Attributes = 0; // No writable bits set
-                #endif
+#if defined( __WINDOWS__ )
+                fi->m_Attributes = 0xFFFFFFFF; // FILE_ATTRIBUTE_READONLY set
+#else
+                fi->m_Attributes = 0; // No writable bits set
+#endif
                 fi->m_Size = 0;
                 files.EmplaceBack( fi, nullptr );
             }
@@ -731,7 +731,7 @@ bool UnityNode::GetFiles( Array< UnityFileAndOrigin > & files )
 
 // FilterForceIsolated
 //------------------------------------------------------------------------------
-void UnityNode::FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array< UnityIsolatedFile > & isolatedFiles )
+void UnityNode::FilterForceIsolated( Array<UnityFileAndOrigin> & files, Array<UnityIsolatedFile> & isolatedFiles )
 {
     if ( m_FilesToIsolate.IsEmpty() )
     {
@@ -777,10 +777,9 @@ void UnityNode::FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array<
     files.SetSize( files.GetIndexOf( writeIt ) );
 }
 
-
 // EnumerateInputFiles
 //------------------------------------------------------------------------------
-void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
+void UnityNode::EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
 {
     for ( const Dependency & dep : m_StaticDependencies )
     {
@@ -788,9 +787,9 @@ void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile
 
         if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+            const DirectoryListNode * dln = node->CastTo<DirectoryListNode>();
 
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            const Array<FileIO::FileInfo> & files = dln->GetFiles();
             for ( const FileIO::FileInfo & fi : files )
             {
                 callback( fi.m_Name, dln->GetPath(), userData );
@@ -798,7 +797,7 @@ void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile
         }
         else if ( node->GetType() == Node::OBJECT_LIST_NODE )
         {
-            const ObjectListNode * oln = node->CastTo< ObjectListNode >();
+            const ObjectListNode * oln = node->CastTo<ObjectListNode>();
 
             oln->EnumerateInputFiles( callback, userData );
         }
@@ -815,7 +814,7 @@ void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile
 
 // GetIsolatedFiles
 //------------------------------------------------------------------------------
-bool UnityNode::GetIsolatedFilesFromList( Array< AString > & files ) const
+bool UnityNode::GetIsolatedFilesFromList( Array<AString> & files ) const
 {
     if ( m_IsolateListFile.IsEmpty() )
     {
@@ -831,7 +830,7 @@ bool UnityNode::GetIsolatedFilesFromList( Array< AString > & files ) const
     }
 
     // Read file into memory
-    AStackString<> buffer;
+    AStackString buffer;
     buffer.SetLength( (uint32_t)input.GetFileSize() );
     if ( input.ReadBuffer( buffer.Get(), buffer.GetLength() ) != buffer.GetLength() )
     {

@@ -4,11 +4,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
@@ -53,29 +55,30 @@ class XCodeProjectNode;
 class NodeGraphHeader
 {
 public:
-    inline explicit NodeGraphHeader()
+    explicit NodeGraphHeader()
     {
         m_Identifier[ 0 ] = 'N';
         m_Identifier[ 1 ] = 'G';
         m_Identifier[ 2 ] = 'D';
-        m_Version = NODE_GRAPH_CURRENT_VERSION;
+        m_Version = kCurrentVersion;
         m_Padding = 0;
         m_ContentHash = 0;
     }
-    inline ~NodeGraphHeader() = default;
+    ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 177 };
+    inline static const uint8_t kCurrentVersion = 181;
 
     bool IsValid() const;
-    bool IsCompatibleVersion() const { return m_Version == NODE_GRAPH_CURRENT_VERSION; }
+    bool IsCompatibleVersion() const { return m_Version == kCurrentVersion; }
 
-    uint64_t    GetContentHash() const          { return m_ContentHash; }
-    void        SetContentHash( uint64_t hash ) { m_ContentHash = hash; }
+    uint64_t GetContentHash() const { return m_ContentHash; }
+    void SetContentHash( uint64_t hash ) { m_ContentHash = hash; }
+
 private:
-    char        m_Identifier[ 3 ];
-    uint8_t     m_Version;
-    uint32_t    m_Padding;          // Unused
-    uint64_t    m_ContentHash;      // Hash of data excluding this header
+    char m_Identifier[ 3 ];
+    uint8_t m_Version;
+    uint32_t m_Padding; // Unused
+    uint64_t m_ContentHash; // Hash of data excluding this header
 };
 
 // NodeGraph
@@ -115,15 +118,15 @@ public:
     void RegisterNode( Node * n, const BFFToken * sourceToken );
 
     // create new nodes
-    Node *      CreateNode( Node::Type type,
-                            AString && name,
-                            uint32_t nameHash );
-    Node *      CreateNode( Node::Type type,
-                            const AString & name,
-                            const BFFToken * sourceToken = nullptr );
-    template<class T>
-    T *         CreateNode( const AString & name,
-                            const BFFToken * sourceToken = nullptr )
+    Node * CreateNode( Node::Type type,
+                       AString && name,
+                       uint32_t nameHash );
+    Node * CreateNode( Node::Type type,
+                       const AString & name,
+                       const BFFToken * sourceToken = nullptr );
+    template <class T>
+    T * CreateNode( const AString & name,
+                    const BFFToken * sourceToken = nullptr )
     {
         return CreateNode( T::GetTypeS(), name, sourceToken )->template CastTo<T>();
     }
@@ -137,13 +140,14 @@ public:
 
     static void CleanPath( AString & name, bool makeFullPath = true );
     static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
-    #if defined( ASSERTS_ENABLED )
-        static bool IsCleanPath( const AString & path );
-    #endif
+#if defined( ASSERTS_ENABLED )
+    static bool IsCleanPath( const AString & path );
+#endif
 
     static void UpdateBuildStatus( const Node * node,
                                    uint32_t & nodesBuiltTime,
                                    uint32_t & totalNodeTime );
+
 private:
     friend class FBuild;
 
@@ -161,25 +165,30 @@ private:
                                           uint32_t & totalNodeTime );
 
     static bool CheckForCyclicDependencies( const Node * node );
-    static bool CheckForCyclicDependenciesRecurse( const Node * node, Array< const Node * > & dependencyStack );
+    static bool CheckForCyclicDependenciesRecurse( const Node * node, Array<const Node *> & dependencyStack );
     static bool CheckForCyclicDependenciesRecurse( const Dependencies & dependencies,
-                                                   Array< const Node * > & dependencyStack );
+                                                   Array<const Node *> & dependencyStack );
 
     Node * FindNodeInternal( const AString & name, uint32_t nameHashHint ) const;
 
     struct NodeWithDistance
     {
-        inline NodeWithDistance() = default;
-        NodeWithDistance( Node * n, uint32_t dist ) : m_Node( n ), m_Distance( dist ) {}
-        Node *      m_Node;
-        uint32_t    m_Distance;
+        NodeWithDistance() = default;
+        NodeWithDistance( Node * n, uint32_t dist )
+            : m_Node( n )
+            , m_Distance( dist )
+        {
+        }
+
+        Node * m_Node;
+        uint32_t m_Distance;
     };
-    void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
+    void FindNearestNodesInternal( const AString & fullPath, Array<NodeWithDistance> & nodes, const uint32_t maxDistance = 5 ) const;
 
     struct UsedFile;
     bool ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream,
-                                 const char* nodeGraphDBFile,
-                                 Array< UsedFile > & files,
+                                 const char * nodeGraphDBFile,
+                                 Array<UsedFile> & files,
                                  bool & compatibleDB,
                                  bool & movedDB ) const;
     uint32_t GetLibEnvVarHash() const;
@@ -211,23 +220,29 @@ private:
     static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property );
     static bool DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB );
 
-    Node **         m_NodeMap;
-    uint32_t        m_NodeMapMaxKey; // Always equals to some power of 2 minus 1, can be used as mask.
-    Array< Node * > m_AllNodes;
+    Node ** m_NodeMap;
+    uint32_t m_NodeMapMaxKey; // Always equals to some power of 2 minus 1, can be used as mask.
+    Array<Node *> m_AllNodes;
 
     Timer m_Timer;
 
     // each file used in the generation of the node graph is tracked
     struct UsedFile
     {
-        explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash ) : m_FileName( fileName ), m_TimeStamp( timeStamp ), m_DataHash( dataHash ) {}
-        AString     m_FileName;
-        uint64_t    m_TimeStamp;
-        uint64_t    m_DataHash;
-    };
-    Array< UsedFile > m_UsedFiles;
+        explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash )
+            : m_FileName( fileName )
+            , m_TimeStamp( timeStamp )
+            , m_DataHash( dataHash )
+        {
+        }
 
-    Array< const BFFToken * > m_NodeSourceTokens;
+        AString m_FileName;
+        uint64_t m_TimeStamp;
+        uint64_t m_DataHash;
+    };
+    Array<UsedFile> m_UsedFiles;
+
+    Array<const BFFToken *> m_NodeSourceTokens;
 
     const SettingsNode * m_Settings;
 

@@ -29,14 +29,14 @@ protected:
         CompilationDatabase * m_DB;
         ObjectListNode * m_ObjectListNode;
         AString m_CompilerEscaped;
-        Array< AString > m_ArgumentsEscaped;
+        Array<AString> m_ArgumentsEscaped;
     };
 
     // Track visited state for nodes using sweep tag
     enum : uint32_t
     {
-        eSweepTagNotSeen    = 0,
-        eSweepTagSeen       = 1,
+        eSweepTagNotSeen = 0,
+        eSweepTagSeen = 1,
     };
 
     void VisitNodes( const NodeGraph & nodeGraph, const Dependencies & dependencies );

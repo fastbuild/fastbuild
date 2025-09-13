@@ -20,7 +20,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) override;
     virtual ~ListDependenciesNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::LIST_DEPENDENCIES_NODE; }
+    static Node::Type GetTypeS() { return Node::LIST_DEPENDENCIES_NODE; }
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;
@@ -28,10 +28,10 @@ private:
     void EmitOutputMessage() const;
 
     friend class FunctionListDependencies;
-    AString             m_Source;
-    AString             m_Dest;
-    Array< AString >    m_Patterns;
-    Array< AString >    m_PreBuildDependencyNames;
+    AString m_Source;
+    AString m_Dest;
+    Array<AString> m_Patterns;
+    Array<AString> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

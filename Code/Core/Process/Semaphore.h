@@ -18,9 +18,9 @@ class Semaphore
 {
 public:
     // Windows supports a max count, but OSX and Linux does not
-    #if defined( __WINDOWS__ )
-        explicit Semaphore( uint32_t maxCount );
-    #endif
+#if defined( __WINDOWS__ )
+    explicit Semaphore( uint32_t maxCount );
+#endif
 
     Semaphore();
     ~Semaphore();
@@ -32,14 +32,14 @@ public:
     bool Wait( uint32_t timeoutMS );// Wait until signalled or timeout. Returns true if signalled
 
 private:
-    #if defined( __WINDOWS__ )
-        void * m_Semaphore;
-        bool m_HasMaxCount;
-    #elif defined( __APPLE__ )
-        dispatch_semaphore_t m_Semaphore;
-    #elif defined( __LINUX__ )
-        sem_t m_Semaphore;
-    #endif
+#if defined( __WINDOWS__ )
+    void * m_Semaphore;
+    bool m_HasMaxCount;
+#elif defined( __APPLE__ )
+    dispatch_semaphore_t m_Semaphore;
+#elif defined( __LINUX__ )
+    sem_t m_Semaphore;
+#endif
 };
 
 //------------------------------------------------------------------------------

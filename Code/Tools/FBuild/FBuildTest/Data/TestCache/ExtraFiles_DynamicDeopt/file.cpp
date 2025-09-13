@@ -1,1 +1,3 @@
-void Func() {}
+void Func()
+{
+}

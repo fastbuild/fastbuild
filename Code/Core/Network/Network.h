@@ -27,8 +27,8 @@ private:
 
     struct NameResolutionData
     {
-        AStackString<>  hostName;
-        bool            safeToFree;
+        AStackString<> hostName;
+        bool safeToFree;
     };
 };
 

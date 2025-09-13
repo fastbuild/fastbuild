@@ -4,10 +4,12 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionCopy.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -18,7 +20,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionCopy::FunctionCopy()
-: Function( "Copy" )
+    : Function( "Copy" )
 {
 }
 
@@ -34,7 +36,7 @@ FunctionCopy::FunctionCopy()
 /*virtual*/ bool FunctionCopy::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
     // make sure all required variables are defined
-    StackArray< AString > sources;
+    StackArray<AString> sources;
     const BFFVariable * dstFileV;
     if ( !GetStrings( funcStartIter, sources, ".Source", true ) ||
          !GetString( funcStartIter, dstFileV, ".Dest", true ) )
@@ -43,7 +45,7 @@ FunctionCopy::FunctionCopy()
     }
 
     // Optional
-    AStackString<> sourceBasePath;
+    AStackString sourceBasePath;
     if ( !GetString( funcStartIter, sourceBasePath, ".SourceBasePath", false ) )
     {
         return false; // GetString will have emitted errors
@@ -52,7 +54,7 @@ FunctionCopy::FunctionCopy()
     // Canonicalize the SourceBasePath
     if ( !sourceBasePath.IsEmpty() )
     {
-        AStackString<> cleanValue;
+        AStackString cleanValue;
         NodeGraph::CleanPath( sourceBasePath, cleanValue );
         PathUtils::EnsureTrailingSlash( cleanValue );
         sourceBasePath = cleanValue;
@@ -75,7 +77,7 @@ FunctionCopy::FunctionCopy()
     {
         return false; // GetNodeList will have emitted an error
     }
-    Array< AString > preBuildDependencyNames;
+    Array<AString> preBuildDependencyNames;
     preBuildDependencyNames.SetCapacity( preBuildDependencies.GetSize() );
     for ( const Dependency & dep : preBuildDependencies )
     {
@@ -83,7 +85,7 @@ FunctionCopy::FunctionCopy()
     }
 
     // get source node
-    Array< Node * > srcNodes;
+    Array<Node *> srcNodes;
     {
         for ( const AString & source : sources )
         {
@@ -104,7 +106,7 @@ FunctionCopy::FunctionCopy()
         }
     }
 
-    AStackString<> dstFile;
+    AStackString dstFile;
     NodeGraph::CleanPath( dstFileV->GetString(), dstFile );
     const bool dstIsFolderPath = PathUtils::IsFolderPath( dstFile );
 
@@ -119,7 +121,7 @@ FunctionCopy::FunctionCopy()
     Dependencies copyNodes( srcNodes.GetSize() );
     for ( const Node * srcNode : srcNodes )
     {
-        AStackString<> dst( dstFile );
+        AStackString dst( dstFile );
 
         // dest can be a file OR a path.  If it's a path, use the source filename part
         if ( dstIsFolderPath )
@@ -137,8 +139,8 @@ FunctionCopy::FunctionCopy()
             {
                 // Use just the file name
                 const char * lastSlash = srcName.FindLast( NATIVE_SLASH );
-                dst += lastSlash ? ( lastSlash + 1 )    // append filename part if found
-                                     : srcName.Get();   // otherwise append whole thing
+                dst += lastSlash ? ( lastSlash + 1 ) // append filename part if found
+                                 : srcName.Get(); // otherwise append whole thing
             }
         }
 
@@ -168,12 +170,12 @@ FunctionCopy::FunctionCopy()
 
 // GetSourceNodes
 //------------------------------------------------------------------------------
-bool FunctionCopy::GetSourceNodes( const BFFToken * iter, Node * node, Array< Node * > & nodes ) const
+bool FunctionCopy::GetSourceNodes( const BFFToken * iter, Node * node, Array<Node *> & nodes ) const
 {
     if ( node->GetType() == Node::ALIAS_NODE )
     {
         // resolve aliases to real nodes
-        const AliasNode * aliasNode = node->CastTo< AliasNode >();
+        const AliasNode * aliasNode = node->CastTo<AliasNode>();
         for ( const Dependency & dep : aliasNode->GetAliasedNodes() )
         {
             if ( !GetSourceNodes( iter, dep.GetNode(), nodes ) )

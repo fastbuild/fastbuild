@@ -43,9 +43,9 @@ private:
     void LightCache_ResponseFile() const;
 
     // MSVC Static Analysis tests
-    const char* const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
-    const char* const mAnalyzeMSVCXMLFile1 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file1.nativecodeanalysis.xml";
-    const char* const mAnalyzeMSVCXMLFile2 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file2.nativecodeanalysis.xml";
+    const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
+    const char * const mAnalyzeMSVCXMLFile1 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file1.nativecodeanalysis.xml";
+    const char * const mAnalyzeMSVCXMLFile2 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file2.nativecodeanalysis.xml";
     void Analyze_MSVC_WarningsOnly_Write() const;
     void Analyze_MSVC_WarningsOnly_Read() const;
     void Analyze_MSVC_WarningsOnly_WriteFromDist() const;
@@ -63,7 +63,7 @@ private:
                                                  bool expectedLightCacheUsage,
                                                  const char * lightCacheError ) const;
 
-    TestCache & operator = ( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
+    TestCache & operator=( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
 };
 
 // Register Tests
@@ -74,28 +74,28 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( ReadWrite )
     REGISTER_TEST( ConsistentCacheKeysWithDist )
     REGISTER_TEST( ExtraFiles_GCNO )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( ExtraFiles_DynamicDeopt )
-        REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
-        REGISTER_TEST( LightCache_IncludeUsingMacro )
-        REGISTER_TEST( LightCache_IncludeUsingMacro2 )
-        REGISTER_TEST( LightCache_IncludeUsingMacro3 )
-        REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros1 )
-        REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros2 )
-        REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros3 )
-        REGISTER_TEST( LightCache_IncludeHierarchy )
-        REGISTER_TEST( LightCache_CyclicInclude )
-        REGISTER_TEST( LightCache_ImportDirective )
-        REGISTER_TEST( LightCache_ForceInclude )
-        REGISTER_TEST( LightCache_SourceDependencies )
-        REGISTER_TEST( LightCache_ResponseFile )
-        REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
-        REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( ExtraFiles_DynamicDeopt )
+    REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
+    REGISTER_TEST( LightCache_IncludeUsingMacro )
+    REGISTER_TEST( LightCache_IncludeUsingMacro2 )
+    REGISTER_TEST( LightCache_IncludeUsingMacro3 )
+    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros1 )
+    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros2 )
+    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros3 )
+    REGISTER_TEST( LightCache_IncludeHierarchy )
+    REGISTER_TEST( LightCache_CyclicInclude )
+    REGISTER_TEST( LightCache_ImportDirective )
+    REGISTER_TEST( LightCache_ForceInclude )
+    REGISTER_TEST( LightCache_SourceDependencies )
+    REGISTER_TEST( LightCache_ResponseFile )
+    REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
+    REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
 
-        // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
-        //REGISTER_TEST( Analyze_MSVC_WarningsOnly_WriteFromDist )
-        //REGISTER_TEST( Analyze_MSVC_WarningsOnly_ReadFromDist )
-    #endif
+    // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
+    //REGISTER_TEST( Analyze_MSVC_WarningsOnly_WriteFromDist )
+    //REGISTER_TEST( Analyze_MSVC_WarningsOnly_ReadFromDist )
+#endif
 REGISTER_TESTS_END
 
 // Write
@@ -129,32 +129,32 @@ void TestCache::Write() const
     }
 
     // Light cache
-    #if defined( __WINDOWS__ )
-        size_t numDepsB = 0;
-        {
-            PROFILE_SECTION( "Light" );
+#if defined( __WINDOWS__ )
+    size_t numDepsB = 0;
+    {
+        PROFILE_SECTION( "Light" );
 
-            options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
-            FBuildForTest fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
-            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
-            // Ensure cache was written to
-            const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-            TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumProcessed );
-            TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed );
+        // Ensure cache was written to
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed );
 
-            // Ensure LightCache was used
-            TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        // Ensure LightCache was used
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
 
-            numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
-            TEST_ASSERT( numDepsB > 0 );
-        }
+        numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
+        TEST_ASSERT( numDepsB > 0 );
+    }
 
-        TEST_ASSERT( numDepsB >= numDepsA );
-    #endif
+    TEST_ASSERT( numDepsB >= numDepsA );
+#endif
 }
 
 // Read
@@ -188,32 +188,32 @@ void TestCache::Read() const
     }
 
     // Light cache
-    #if defined( __WINDOWS__ )
-        size_t numDepsB = 0;
-        {
-            PROFILE_SECTION( "Light" );
+#if defined( __WINDOWS__ )
+    size_t numDepsB = 0;
+    {
+        PROFILE_SECTION( "Light" );
 
-            options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
-            FBuildForTest fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
-            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
-            // Ensure cache was written to
-            const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-            TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
-            TEST_ASSERT( objStats.m_NumBuilt == 0 );
+        // Ensure cache was written to
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == 0 );
 
-            // Ensure LightCache was used
-            TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        // Ensure LightCache was used
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
 
-            numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
-            TEST_ASSERT( numDepsB > 0 );
-        }
+        numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
+        TEST_ASSERT( numDepsB > 0 );
+    }
 
-        TEST_ASSERT( numDepsB >= numDepsA );
-    #endif
+    TEST_ASSERT( numDepsB >= numDepsA );
+#endif
 }
 
 // ReadWrite
@@ -247,32 +247,32 @@ void TestCache::ReadWrite() const
     }
 
     // Light cache
-    #if defined( __WINDOWS__ )
-        size_t numDepsB = 0;
-        {
-            PROFILE_SECTION( "Light" );
+#if defined( __WINDOWS__ )
+    size_t numDepsB = 0;
+    {
+        PROFILE_SECTION( "Light" );
 
-            options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
-            FBuildForTest fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
-            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
-            // Ensure cache was written to
-            const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-            TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
-            TEST_ASSERT( objStats.m_NumBuilt == 0 );
+        // Ensure cache was written to
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == 0 );
 
-            // Ensure LightCache was used
-            TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        // Ensure LightCache was used
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
 
-            numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
-            TEST_ASSERT( numDepsB > 0 );
-        }
+        numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
+        TEST_ASSERT( numDepsB > 0 );
+    }
 
-        TEST_ASSERT( numDepsB >= numDepsA );
-    #endif
+    TEST_ASSERT( numDepsB >= numDepsA );
+#endif
 }
 
 // ConsistentCacheKeysWithDist
@@ -298,7 +298,7 @@ void TestCache::ConsistentCacheKeysWithDist() const
         TEST_ASSERT( fBuild.Initialize() );
 
         Server s;
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         TEST_ASSERT( fBuild.Build( "ConsistentCacheKeys" ) );
 
@@ -316,7 +316,7 @@ void TestCache::ConsistentCacheKeysWithDist() const
         TEST_ASSERT( fBuild.Initialize() );
 
         Server s;
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         TEST_ASSERT( fBuild.Build( "ConsistentCacheKeys" ) );
 
@@ -335,8 +335,8 @@ void TestCache::ConsistentCacheKeysWithDist() const
     const char * storeQuote2 = output.Find( '\'', storeQuote1 + 1 );
     const char * hitQuote2 = output.Find( '\'', hitQuote1 + 1 );
     TEST_ASSERT( storeQuote2 && hitQuote2 );
-    AStackString<> storeKey( storeQuote1 + 1, storeQuote2 );
-    AStackString<> hitKey( hitQuote1 + 1, hitQuote2 );
+    AStackString storeKey( storeQuote1 + 1, storeQuote2 );
+    AStackString hitKey( hitQuote1 + 1, hitQuote2 );
     TEST_ASSERT( storeKey.IsEmpty() == false );
     TEST_ASSERT( storeKey == hitKey );
 }
@@ -912,7 +912,7 @@ void TestCache::LightCache_ResponseFile() const
     TEST_ASSERT( nodes.GetSize() == 1 );
     const Dependencies & deps = nodes[ 0 ]->GetDynamicDependencies();
     TEST_ASSERT( deps.GetSize() == 2 ); // main cpp plus include
-    TEST_ASSERT( deps[ 1 ].GetNode()->GetName().EndsWith( "include.h") );
+    TEST_ASSERT( deps[ 1 ].GetNode()->GetName().EndsWith( "include.h" ) );
 }
 
 // Analyze_MSVC_WarningsOnly_Write
@@ -1008,7 +1008,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     TEST_ASSERT( fBuild.Initialize() );
 
     Server s;
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     TEST_ASSERT( fBuild.Build( "Analyze+WarningsOnly" ) );
 
@@ -1055,7 +1055,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
     TEST_ASSERT( fBuild.Initialize() );
 
     Server s;
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+    s.Listen( Protocol::kTestPort );
 
     TEST_ASSERT( fBuild.Build( "Analyze+WarningsOnly" ) );
 
@@ -1125,12 +1125,12 @@ void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) c
 //------------------------------------------------------------------------------
 void TestCache::ExtraFiles_DynamicDeopt() const
 {
-    #if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
-        ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_DynamicDeopt/fbuild.bff",
-                    "../tmp/Test/Cache/ExtraFiles_DynamicDeopt/file.alt.obj" );
-    #else
-        OUTPUT( "[SKIP] ExtraFiles_DynamicDeopt - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
-    #endif
+#if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
+    ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_DynamicDeopt/fbuild.bff",
+                "../tmp/Test/Cache/ExtraFiles_DynamicDeopt/file.alt.obj" );
+#else
+    OUTPUT( "[SKIP] ExtraFiles_DynamicDeopt - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
+#endif
 }
 
 // ExtraFiles_NativeCodeAnalysisXML
@@ -1153,14 +1153,14 @@ void TestCache::ExtraFiles_GCNO() const
 //------------------------------------------------------------------------------
 void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char * const files[], size_t numFiles ) const
 {
-    Array< const Node * > nodes;
+    Array<const Node *> nodes;
     fBuild.GetNodesOfType( Node::FILE_NODE, nodes );
     for ( size_t i = 0; i < numFiles; ++i )
     {
-        AStackString<> file( files[ i ] );
-        #if defined( __WINDOWS__ )
-            file.Replace( '/', '\\' ); // Allow calling code to not have to care about the platform
-        #endif
+        AStackString file( files[ i ] );
+#if defined( __WINDOWS__ )
+        file.Replace( '/', '\\' ); // Allow calling code to not have to care about the platform
+#endif
         bool found = false;
         for ( const Node * node : nodes )
         {

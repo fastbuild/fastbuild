@@ -19,8 +19,8 @@ class Node;
 class FunctionExecutable : public Function
 {
 public:
-    explicit        FunctionExecutable();
-    inline virtual ~FunctionExecutable() override = default;
+    explicit FunctionExecutable();
+    virtual ~FunctionExecutable() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

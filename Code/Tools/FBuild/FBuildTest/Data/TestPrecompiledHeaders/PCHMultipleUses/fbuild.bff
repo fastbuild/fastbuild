@@ -1,4 +1,3 @@
-
 #include "..\..\testcommon.bff"
 
 // Settings & default ToolChain
@@ -15,7 +14,6 @@ Settings {} // use Standard Environment
 #if __OSX__
     .PCHOutputFile      = "$Out$/Test/PrecompiledHeaders/PCHMultipleUses/PrecompiledHeader.pch"
 #endif
-
 
 // One ObjectList creates the PCH
 ObjectList( 'CreatePCH' )

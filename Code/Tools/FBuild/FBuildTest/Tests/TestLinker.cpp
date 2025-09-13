@@ -37,9 +37,9 @@ REGISTER_TESTS_BEGIN( TestLinker )
     REGISTER_TEST( ArgHelpers )                 // Test functions that check for non-MSVC args
     REGISTER_TEST( ArgHelpers_MSVC )            // Test functions that check for MSVC args
     REGISTER_TEST( LibrariesOnCommandLine )     // Discovery of additional libraries on command line
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( IncrementalLinking_MSVC )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( IncrementalLinking_MSVC )
+#endif
     REGISTER_TEST( LinkerType )                 // Test linker detection code
 REGISTER_TESTS_END
 
@@ -49,19 +49,19 @@ void TestLinker::ArgHelpers() const
 {
     // Exact match
     {
-        AStackString<> token( "-L" );
+        AStackString token( "-L" );
         TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) );
     }
 
     // Starts with
     {
-        AStackString<> token( "-Lthing" );
+        AStackString token( "-Lthing" );
         TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) );
     }
 
     // Check case sensitive is respected
     {
-        AStackString<> token( "-l" );
+        AStackString token( "-l" );
         TEST_ASSERT( LinkerNode::IsStartOfLinkerArg( token, "L" ) == false );
     }
 }
@@ -72,49 +72,49 @@ void TestLinker::ArgHelpers_MSVC() const
 {
     // Exact match args, using /
     {
-        AStackString<> token( "/DLL" );
+        AStackString token( "/DLL" );
         TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) );
     }
 
     // Exact match args, using -
     {
-        AStackString<> token( "-DLL" );
+        AStackString token( "-DLL" );
         TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) );
     }
 
     // Exact match args, lower-case, using /
     {
-        AStackString<> token( "/dll" );
+        AStackString token( "/dll" );
         TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) );
     }
 
     // Exact match args, lower-case, using -
     {
-        AStackString<> token( "-dll" );
+        AStackString token( "-dll" );
         TEST_ASSERT( LinkerNode::IsLinkerArg_MSVC( token, "DLL" ) );
     }
 
     // Starts with args, using /
     {
-        AStackString<> token( "/ORDER:@orderfile.txt" );
+        AStackString token( "/ORDER:@orderfile.txt" );
         TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) );
     }
 
     // Starts with args, using -
     {
-        AStackString<> token( "-ORDER:@orderfile.txt" );
+        AStackString token( "-ORDER:@orderfile.txt" );
         TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) );
     }
 
     // Starts with args, lower-case, using /
     {
-        AStackString<> token( "/order:@orderfile.txt" );
+        AStackString token( "/order:@orderfile.txt" );
         TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) );
     }
 
     // Starts with args, lower-case, using -
     {
-        AStackString<> token( "-order:@orderfile.txt" );
+        AStackString token( "-order:@orderfile.txt" );
         TEST_ASSERT( LinkerNode::IsStartOfLinkerArg_MSVC( token, "ORDER:" ) );
     }
 }
@@ -131,7 +131,7 @@ void TestLinker::LibrariesOnCommandLine() const
     // MSVC: 2 libraries
     {
         const bool isMSVC = true;
-        AStackString<> args( "/LIBPATH:Tools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine dummy1.lib dummy2.lib" );
+        AStackString args( "/LIBPATH:Tools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine dummy1.lib dummy2.lib" );
 
         Dependencies foundLibraries;
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
@@ -142,23 +142,23 @@ void TestLinker::LibrariesOnCommandLine() const
     }
 
     // MSVC: case different to on-disk
-    #if defined( __WINDOWS__ )
-        {
-            const bool isMSVC = true;
-            AStackString<> args( "/LIBPATH:Tools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine DUMMY1.lib" );
+#if defined( __WINDOWS__ )
+    {
+        const bool isMSVC = true;
+        AStackString args( "/LIBPATH:Tools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine DUMMY1.lib" );
 
-            Dependencies foundLibraries;
-            LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
+        Dependencies foundLibraries;
+        LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
 
-            TEST_ASSERT( foundLibraries.GetSize() == 1 );
-            TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "dummy1.lib" ) ); // dependency is on actual file case
-        }
-    #endif
+        TEST_ASSERT( foundLibraries.GetSize() == 1 );
+        TEST_ASSERT( foundLibraries[ 0 ].GetNode()->GetName().EndsWith( "dummy1.lib" ) ); // dependency is on actual file case
+    }
+#endif
 
     // MSVC: libs missing
     {
         const bool isMSVC = true;
-        AStackString<> args( "doesnotexist.lib" );
+        AStackString args( "doesnotexist.lib" );
 
         Dependencies foundLibraries;
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
@@ -169,7 +169,7 @@ void TestLinker::LibrariesOnCommandLine() const
     // Other: 2 libraries
     {
         const bool isMSVC = false;
-        AStackString<> args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine libdummy1.a libdummy2.a" );
+        AStackString args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine libdummy1.a libdummy2.a" );
 
         Dependencies foundLibraries;
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
@@ -182,7 +182,7 @@ void TestLinker::LibrariesOnCommandLine() const
     // Other: -l style
     {
         const bool isMSVC = false;
-        AStackString<> args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -ldummy1" );
+        AStackString args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -ldummy1" );
 
         Dependencies foundLibraries;
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
@@ -194,7 +194,7 @@ void TestLinker::LibrariesOnCommandLine() const
     // Other: -l style with -Bstatic and -Ddynamic
     {
         const bool isMSVC = false;
-        AStackString<> args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -Wl,-Bstatic -ldummy1 -Wl,-Bdynamic -ldummy2" );
+        AStackString args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -Wl,-Bstatic -ldummy1 -Wl,-Bdynamic -ldummy2" );
 
         Dependencies foundLibraries;
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
@@ -211,7 +211,7 @@ void TestLinker::LibrariesOnCommandLine() const
     //        over dynamic library in the directory that comes later in the search path.
     {
         const bool isMSVC = false;
-        AStackString<> args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine/StaticOnly -LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -Wl,-Bdynamic -ldummy1" );
+        AStackString args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine/StaticOnly -LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -Wl,-Bdynamic -ldummy1" );
 
         Dependencies foundLibraries;
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
@@ -224,7 +224,7 @@ void TestLinker::LibrariesOnCommandLine() const
     // Other: -l: style
     {
         const bool isMSVC = false;
-        AStackString<> args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -l:dummy2.lib" );
+        AStackString args( "-LTools/FBuild/FBuildTest/Data/TestLinker/LibrariesOnCommandLine -l:dummy2.lib" );
 
         Dependencies foundLibraries;
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
@@ -236,7 +236,7 @@ void TestLinker::LibrariesOnCommandLine() const
     // Other - libs missing
     {
         const bool isMSVC = false;
-        AStackString<> args( "doesnotexist.a" );
+        AStackString args( "doesnotexist.a" );
 
         Dependencies foundLibraries;
         LinkerNode::GetOtherLibraries( nodeGraph, iter, nullptr, args, foundLibraries, isMSVC );
@@ -254,16 +254,16 @@ void TestLinker::IncrementalLinking_MSVC() const
     options.m_ShowCommandOutput = true; // Show linker output so we can check analyze /VERBOSE output
 
     // Files
-    const char * dbFile     = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/fbuild.fdb";
-    const char * cppFileB   = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/FileB.cpp";
+    const char * dbFile = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/fbuild.fdb";
+    const char * cppFileB = "../tmp/Test/TestLinker/IncrementalLinking_MSVC/FileB.cpp";
 
     // Create temp output directory
-    TEST_ASSERT( FileIO::EnsurePathExistsForFile( AStackString<>( cppFileB ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExistsForFile( AStackString( cppFileB ) ) );
 
     // Create 10 source files
     for ( uint32_t i = 0; i < 10; ++i )
     {
-        AStackString<> fileContents;
+        AStackString fileContents;
         if ( i == 0 )
         {
             fileContents += "int main(int, char **) { return 0; }\n";
@@ -271,7 +271,7 @@ void TestLinker::IncrementalLinking_MSVC() const
         const char c = ( 'A' + (char)i );
         fileContents.AppendFormat( "const char * Function%c() { return \"String%c\"; }\n", c, c );
 
-        AStackString<> dst;
+        AStackString dst;
         dst.Format( "../tmp/Test/TestLinker/IncrementalLinking_MSVC/File%c.cpp", c );
         FileStream f;
         TEST_ASSERT( f.Open( dst.Get(), FileStream::WRITE_ONLY ) );
@@ -287,10 +287,9 @@ void TestLinker::IncrementalLinking_MSVC() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     10,     10, Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 10, 10, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
 
         const AString & output( GetRecordedOutput() );
 
@@ -301,7 +300,7 @@ void TestLinker::IncrementalLinking_MSVC() const
     }
 
     // Modify one of the files
-    FileIO::SetFileLastWriteTimeToNow( AStackString<>( cppFileB ) );
+    FileIO::SetFileLastWriteTimeToNow( AStackString( cppFileB ) );
 
     // Take note of output size (so we can check only stuff after)
     uint32_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
@@ -315,12 +314,11 @@ void TestLinker::IncrementalLinking_MSVC() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     10,     1,  Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 10, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
 
-        const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+        const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
         // Should see incremental linking messages..
         TEST_ASSERT( output.Find( "modules have changed since prior linking" ) );
@@ -343,12 +341,11 @@ void TestLinker::IncrementalLinking_MSVC() const
         // Save DB for reloading below
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode(     10,     10, Node::OBJECT_NODE );
-        CheckStatsNode(     1,      1,  Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 10, 10, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
 
-        const AStackString<> output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+        const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
         // Should see no incremental linking messages (FASTBuild should have deleted the
         // old files because of -clean)
@@ -361,21 +358,22 @@ void TestLinker::IncrementalLinking_MSVC() const
 //------------------------------------------------------------------------------
 void TestLinker::LinkerType() const
 {
-    #define TEST_LINKERTYPE( exeName, expectedFlag ) \
-    do { \
-        const uint32_t flags = LinkerNode::DetermineLinkerTypeFlags( AStackString<>( "auto" ), \
-                                                                     AStackString<>( exeName ) ); \
+#define TEST_LINKERTYPE( exeName, expectedFlag ) \
+    do \
+    { \
+        const uint32_t flags = LinkerNode::DetermineLinkerTypeFlags( AStackString( "auto" ), \
+                                                                     AStackString( exeName ) ); \
         TEST_ASSERT( flags & expectedFlag ); \
-    } while( false )
+    } while ( false )
 
-    TEST_LINKERTYPE( "link",        LinkerNode::LINK_FLAG_MSVC );
-    TEST_LINKERTYPE( "gcc",         LinkerNode::LINK_FLAG_GCC );
-    TEST_LINKERTYPE( "ps3ppuld",    LinkerNode::LINK_FLAG_SNC );
-    TEST_LINKERTYPE( "orbis-ld",    LinkerNode::LINK_FLAG_ORBIS_LD );
-    TEST_LINKERTYPE( "elxr",        LinkerNode::LINK_FLAG_GREENHILLS_ELXR );
-    TEST_LINKERTYPE( "mwldeppc",    LinkerNode::LINK_FLAG_CODEWARRIOR_LD );
+    TEST_LINKERTYPE( "link", LinkerNode::LINK_FLAG_MSVC );
+    TEST_LINKERTYPE( "gcc", LinkerNode::LINK_FLAG_GCC );
+    TEST_LINKERTYPE( "ps3ppuld", LinkerNode::LINK_FLAG_SNC );
+    TEST_LINKERTYPE( "orbis-ld", LinkerNode::LINK_FLAG_ORBIS_LD );
+    TEST_LINKERTYPE( "elxr", LinkerNode::LINK_FLAG_GREENHILLS_ELXR );
+    TEST_LINKERTYPE( "mwldeppc", LinkerNode::LINK_FLAG_CODEWARRIOR_LD );
 
-    #undef TEST_LINKERTYPE
+#undef TEST_LINKERTYPE
 }
 
 //------------------------------------------------------------------------------

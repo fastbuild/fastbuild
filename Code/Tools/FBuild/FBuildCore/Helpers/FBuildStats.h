@@ -25,13 +25,13 @@ public:
     // statistics updated from the main thread
 
     // time estimation/progress
-    uint32_t    m_NodeTimeTotalms;
-    uint32_t    m_NodeTimeProgressms;
+    uint32_t m_NodeTimeTotalms;
+    uint32_t m_NodeTimeProgressms;
 
     // total time spent
-    float       m_TotalBuildTime;       // Total time taken
-    uint32_t    m_TotalLocalCPUTimeMS;  // Total CPU time on local host
-    uint32_t    m_TotalRemoteCPUTimeMS; // Total CPU time on remote workers
+    float m_TotalBuildTime; // Total time taken
+    uint32_t m_TotalLocalCPUTimeMS; // Total CPU time on local host
+    uint32_t m_TotalRemoteCPUTimeMS; // Total CPU time on remote workers
 
     // after the build it complete, accumulate all the stats
     void GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node * node );
@@ -39,11 +39,11 @@ public:
     void OutputSummary() const;
 
     // get the total stats
-    uint32_t GetNodesProcessed() const  { return m_Totals.m_NumProcessed; }
-    uint32_t GetNodesBuilt() const      { return m_Totals.m_NumBuilt; }
-    uint32_t GetCacheHits() const       { return m_Totals.m_NumCacheHits; }
-    uint32_t GetCacheMisses() const     { return m_Totals.m_NumCacheMisses; }
-    uint32_t GetCacheStores() const     { return m_Totals.m_NumCacheStores; }
+    uint32_t GetNodesProcessed() const { return m_Totals.m_NumProcessed; }
+    uint32_t GetNodesBuilt() const { return m_Totals.m_NumBuilt; }
+    uint32_t GetCacheHits() const { return m_Totals.m_NumCacheHits; }
+    uint32_t GetCacheMisses() const { return m_Totals.m_NumCacheMisses; }
+    uint32_t GetCacheStores() const { return m_Totals.m_NumCacheStores; }
     uint32_t GetLightCacheCount() const { return m_Totals.m_NumLightCache; }
 
     // get stats per node type
@@ -70,21 +70,22 @@ public:
     static void FormatTime( float timeInSeconds, AString & outBuffer );
 
     const Node * GetRootNode() const { return m_RootNode; }
-    const Array< const Node * > & GetNodesByTime() const { return m_NodesByTime; }
+    const Array<const Node *> & GetNodesByTime() const { return m_NodesByTime; }
 
-    static inline void SetIgnoreCompilerNodeDeps( bool b ) { s_IgnoreCompilerNodeDeps = b; }
+    static void SetIgnoreCompilerNodeDeps( bool b ) { s_IgnoreCompilerNodeDeps = b; }
+
 private:
     enum : uint32_t
     {
-        eTagStatsNotProcessed   = 0,
-        eTagStatsProcessed      = 1,
+        eTagStatsNotProcessed = 0,
+        eTagStatsProcessed = 1,
     };
 
     void GatherPostBuildStatisticsRecurse( Node * node );
     void GatherPostBuildStatisticsRecurse( const Dependencies & dependencies );
 
     Node * m_RootNode;
-    Array< const Node * > m_NodesByTime;
+    Array<const Node *> m_NodesByTime;
 
     Stats m_PerTypeStats[ Node::NUM_NODE_TYPES ];
     Stats m_Totals;

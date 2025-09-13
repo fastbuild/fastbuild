@@ -4,10 +4,12 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionObjectList.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
@@ -21,7 +23,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionObjectList::FunctionObjectList()
-: Function( "ObjectList" )
+    : Function( "ObjectList" )
 {
 }
 
@@ -58,8 +60,8 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AStr
     compilerOptions.Tokenize( tokenRanges );
     for ( const AString::TokenRange & tokenRange : tokenRanges )
     {
-        const AStackString<> token( ( compilerOptions.Get() + tokenRange.m_StartIndex ),
-                                    ( compilerOptions.Get() + tokenRange.m_EndIndex ) );
+        const AStackString token( ( compilerOptions.Get() + tokenRange.m_StartIndex ),
+                                  ( compilerOptions.Get() + tokenRange.m_EndIndex ) );
 
         if ( token.Find( "%1" ) )
         {
@@ -139,7 +141,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Create( const BFFToken * iter,
     bool foundFpInPCHOptions = false;
 
     // Find /Fo option to obtain pch object file name
-    StackArray< AString > pchTokens;
+    StackArray<AString> pchTokens;
     pchOptions.Tokenize( pchTokens );
     for ( const AString & token : pchTokens )
     {
@@ -189,7 +191,6 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Create( const BFFToken * iter,
     return true;
 }
 
-
 // CheckMSVCPCHFlags_Use
 //------------------------------------------------------------------------------
 bool FunctionObjectList::CheckMSVCPCHFlags_Use( const BFFToken * iter,
@@ -199,7 +200,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags_Use( const BFFToken * iter,
     // Check Compiler Options
     bool foundYuInCompilerOptions = false;
     bool foundFpInCompilerOptions = false;
-    StackArray< AString > compilerTokens;
+    StackArray<AString> compilerTokens;
     compilerOptions.Tokenize( compilerTokens );
     for ( const AString & token : compilerTokens )
     {
@@ -244,7 +245,7 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args,
                                               AString & outSourceDependenciesPath )
 {
     // split to individual tokens
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     args.Tokenize( tokens );
 
     const AString * const end = tokens.End();
@@ -305,7 +306,7 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args,
 
         // truncate to just the path
         const char * lastSlash = path.FindLast( NATIVE_SLASH );
-        lastSlash  = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
+        lastSlash = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
         path.SetLength( uint32_t( lastSlash - path.Get() ) );
     }
 }

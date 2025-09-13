@@ -25,7 +25,6 @@ ObjectList( 'clr-netcore' )
     .CompilerOutputPath = "$Out$/Test/TestCLR/CLRDetection/clr-netcore/"
 }
 
-
 // Alias for use by test
 Alias( 'all' )
 {

@@ -13,8 +13,8 @@
     #include "Core/Env/WindowsHeader.h"
 #endif
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Process/Thread.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Time.h"
@@ -54,27 +54,27 @@
     // retain compatibility with older versions of OS X. To do this, we get the
     // utimensat symbol dynamically from the C runtime.
     //
-    class OSXHelper_utimensat
+class OSXHelper_utimensat
+{
+public:
+    typedef int ( *FuncPtr )( int dirfd, const char * pathname, const struct timespec times[ 2 ], int flags );
+
+    OSXHelper_utimensat()
     {
-    public:
-        typedef int (*FuncPtr)( int dirfd, const char * pathname, const struct timespec times[ 2 ], int flags );
+        // Open the c runtime library
+        m_LibCHandle = dlopen( "libc.dylib", RTLD_LAZY );
+        ASSERT( m_LibCHandle ); // This should never fail
 
-        OSXHelper_utimensat()
-        {
-            // Open the c runtime library
-            m_LibCHandle = dlopen( "libc.dylib", RTLD_LAZY );
-            ASSERT( m_LibCHandle ); // This should never fail
-
-            // See if utimensat exists
-            m_FuncPtr = (FuncPtr)dlsym( m_LibCHandle, "utimensat" );
-        }
-        ~OSXHelper_utimensat()
-        {
-            VERIFY( dlclose( m_LibCHandle ) == 0 );
-        }
-        void *          m_LibCHandle    = nullptr;
-        FuncPtr         m_FuncPtr       = nullptr;
-    } gOSXHelper_utimensat;
+        // See if utimensat exists
+        m_FuncPtr = (FuncPtr)dlsym( m_LibCHandle, "utimensat" );
+    }
+    ~OSXHelper_utimensat()
+    {
+        VERIFY( dlclose( m_LibCHandle ) == 0 );
+    }
+    void * m_LibCHandle = nullptr;
+    FuncPtr m_FuncPtr = nullptr;
+} gOSXHelper_utimensat;
 #endif
 
 // Exists
@@ -179,7 +179,7 @@
             }
 
             // try to remove read-only flag on dst file
-            dwAttrs = ( dwAttrs & (uint32_t)(~FILE_ATTRIBUTE_READONLY) );
+            dwAttrs = ( dwAttrs & (uint32_t)( ~FILE_ATTRIBUTE_READONLY ) );
             if ( FALSE == SetFileAttributes( dstFileName, dwAttrs ) )
             {
                 return false; // failed to remove read-only flag
@@ -337,7 +337,7 @@
 /*static*/ bool FileIO::GetFiles( const AString & path,
                                   const AString & wildCard,
                                   bool recurse,
-                                  Array< AString > * results )
+                                  Array<AString> * results )
 {
     ASSERT( results );
 
@@ -345,7 +345,7 @@
     if ( recurse )
     {
         // make a copy of the path as it will be modified during recursion
-        AStackString< 256 > pathCopy( path );
+        AStackString<256> pathCopy( path );
         PathUtils::EnsureTrailingSlash( pathCopy );
         GetFilesRecurse( pathCopy, wildCard, results );
     }
@@ -363,7 +363,7 @@
                                   GetFilesHelper & helper )
 {
     // make a copy of the path as it will be modified during recursion
-    AStackString<> pathCopy( path );
+    AStackString pathCopy( path );
     PathUtils::EnsureTrailingSlash( pathCopy );
     GetFilesRecurse( pathCopy, helper );
 }
@@ -371,9 +371,9 @@
 // GetFilesEx
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFilesEx( const AString & path,
-                                    const Array< AString > * patterns,
+                                    const Array<AString> * patterns,
                                     bool recurse,
-                                    Array< FileInfo > * results )
+                                    Array<FileInfo> * results )
 {
     ASSERT( results );
 
@@ -381,7 +381,7 @@
     if ( recurse )
     {
         // make a copy of the path as it will be modified during recursion
-        AStackString< 256 > pathCopy( path );
+        AStackString<256> pathCopy( path );
         PathUtils::EnsureTrailingSlash( pathCopy );
         GetFilesRecurseEx( pathCopy, patterns, results );
     }
@@ -397,31 +397,31 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFileInfo( const AString & fileName, FileIO::FileInfo & info )
 {
-    #if defined( __WINDOWS__ )
-        WIN32_FILE_ATTRIBUTE_DATA fileAttribs;
-        if ( GetFileAttributesEx( fileName.Get(), GetFileExInfoStandard, &fileAttribs ) )
-        {
-            info.m_Name = fileName;
-            info.m_Attributes = fileAttribs.dwFileAttributes;
-            info.m_LastWriteTime = (uint64_t)fileAttribs.ftLastWriteTime.dwLowDateTime | ( (uint64_t)fileAttribs.ftLastWriteTime.dwHighDateTime << 32 );
-            info.m_Size = (uint64_t)fileAttribs.nFileSizeLow | ( (uint64_t)fileAttribs.nFileSizeHigh << 32 );
-            return true;
-        }
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        struct stat s;
-        if ( lstat( fileName.Get(), &s ) == 0 )
-        {
-            info.m_Name = fileName;
-            info.m_Attributes = s.st_mode;
-            #if defined( __APPLE__ )
-                info.m_LastWriteTime = ( ( (uint64_t)s.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)s.st_mtimespec.tv_nsec );
-            #else
-                info.m_LastWriteTime = ( ( (uint64_t)s.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)s.st_mtim.tv_nsec );
-            #endif
-            info.m_Size = static_cast<uint64_t>( s.st_size );
-            return true;
-        }
+#if defined( __WINDOWS__ )
+    WIN32_FILE_ATTRIBUTE_DATA fileAttribs;
+    if ( GetFileAttributesEx( fileName.Get(), GetFileExInfoStandard, &fileAttribs ) )
+    {
+        info.m_Name = fileName;
+        info.m_Attributes = fileAttribs.dwFileAttributes;
+        info.m_LastWriteTime = (uint64_t)fileAttribs.ftLastWriteTime.dwLowDateTime | ( (uint64_t)fileAttribs.ftLastWriteTime.dwHighDateTime << 32 );
+        info.m_Size = (uint64_t)fileAttribs.nFileSizeLow | ( (uint64_t)fileAttribs.nFileSizeHigh << 32 );
+        return true;
+    }
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    struct stat s;
+    if ( lstat( fileName.Get(), &s ) == 0 )
+    {
+        info.m_Name = fileName;
+        info.m_Attributes = s.st_mode;
+    #if defined( __APPLE__ )
+        info.m_LastWriteTime = ( ( (uint64_t)s.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)s.st_mtimespec.tv_nsec );
+    #else
+        info.m_LastWriteTime = ( ( (uint64_t)s.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)s.st_mtim.tv_nsec );
     #endif
+        info.m_Size = static_cast<uint64_t>( s.st_size );
+        return true;
+    }
+#endif
     return false;
 }
 
@@ -429,25 +429,25 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetCurrentDir( AString & output )
 {
-    #if defined( __WINDOWS__ )
-        char buffer[ MAX_PATH ];
-        const DWORD len = GetCurrentDirectory( MAX_PATH, buffer );
-        if ( len != 0 )
-        {
-            output = buffer;
-            return true;
-        }
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        const size_t bufferSize( PATH_MAX );
-        char buffer[ bufferSize ];
-        if ( getcwd( buffer, bufferSize ) )
-        {
-            output = buffer;
-            return true;
-        }
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    char buffer[ MAX_PATH ];
+    const DWORD len = GetCurrentDirectory( MAX_PATH, buffer );
+    if ( len != 0 )
+    {
+        output = buffer;
+        return true;
+    }
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    const size_t bufferSize( PATH_MAX );
+    char buffer[ bufferSize ];
+    if ( getcwd( buffer, bufferSize ) )
+    {
+        output = buffer;
+        return true;
+    }
+#else
+    #error Unknown platform
+#endif
     return false;
 }
 
@@ -455,49 +455,49 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::SetCurrentDir( const AString & dir )
 {
-    #if defined( __WINDOWS__ )
-        // Windows can have upper or lower case letters in the path for the drive
-        // letter.  The case may be important for the user, but setting the current
-        // dir with only a change in case is ignored.
-        // To ensure we have the requested case, we have to change dir to another
-        // location, and then the location we want.
+#if defined( __WINDOWS__ )
+    // Windows can have upper or lower case letters in the path for the drive
+    // letter.  The case may be important for the user, but setting the current
+    // dir with only a change in case is ignored.
+    // To ensure we have the requested case, we have to change dir to another
+    // location, and then the location we want.
 
-        // get another valid location to set as the dir
-        // (we'll use the windows directory)
-        char otherFolder[ 512 ];
-        otherFolder[ 0 ] = 0;
-        const UINT len = ::GetWindowsDirectory( otherFolder, 512 );
-        if ( ( len == 0 ) || ( len > 511 ) )
-        {
-            return false;
-        }
+    // get another valid location to set as the dir
+    // (we'll use the windows directory)
+    char otherFolder[ 512 ];
+    otherFolder[ 0 ] = 0;
+    const UINT len = ::GetWindowsDirectory( otherFolder, 512 );
+    if ( ( len == 0 ) || ( len > 511 ) )
+    {
+        return false;
+    }
 
-        // handle the case where the user actually wants the windows dir
-        if ( _stricmp( otherFolder, dir.Get() ) == 0 )
-        {
-            // use the root of the drive containing the windows dir
-            otherFolder[ 3 ] = 0;
-        }
+    // handle the case where the user actually wants the windows dir
+    if ( _stricmp( otherFolder, dir.Get() ) == 0 )
+    {
+        // use the root of the drive containing the windows dir
+        otherFolder[ 3 ] = 0;
+    }
 
-        // set "other" dir
-        if ( ::SetCurrentDirectory( otherFolder ) == FALSE )
-        {
-            return false;
-        }
+    // set "other" dir
+    if ( ::SetCurrentDirectory( otherFolder ) == FALSE )
+    {
+        return false;
+    }
 
-        // set the actual directory we want
-        if ( ::SetCurrentDirectory( dir.Get() ) == TRUE )
-        {
-            return true;
-        }
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        if ( chdir( dir.Get() ) == 0 )
-        {
-            return true;
-        }
-    #else
-        #error Unknown platform
-    #endif
+    // set the actual directory we want
+    if ( ::SetCurrentDirectory( dir.Get() ) == TRUE )
+    {
+        return true;
+    }
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    if ( chdir( dir.Get() ) == 0 )
+    {
+        return true;
+    }
+#else
+    #error Unknown platform
+#endif
     return false;
 }
 
@@ -505,62 +505,62 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetTempDir( AString & output )
 {
-    #if defined( __WINDOWS__ )
-        char buffer[ MAX_PATH ];
-        const DWORD len = GetTempPath( MAX_PATH, buffer );
-        if ( len != 0 )
+#if defined( __WINDOWS__ )
+    char buffer[ MAX_PATH ];
+    const DWORD len = GetTempPath( MAX_PATH, buffer );
+    if ( len != 0 )
+    {
+        output = buffer;
+
+        // Ensure slash terminated
+        const bool slashTerminated = ( output.EndsWith( '/' ) || output.EndsWith( '\\' ) );
+        if ( !slashTerminated )
         {
-            output = buffer;
-
-            // Ensure slash terminated
-            const bool slashTerminated = ( output.EndsWith( '/' ) || output.EndsWith( '\\' ) );
-            if ( !slashTerminated )
-            {
-                output += '\\';
-            }
-
-            return true;
+            output += '\\';
         }
-        return false;
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        output = "/tmp/";
+
         return true;
-    #else
-        #error Unknown platform
-    #endif
+    }
+    return false;
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    output = "/tmp/";
+    return true;
+#else
+    #error Unknown platform
+#endif
 }
 
 // DirectoryCreate
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::DirectoryCreate( const AString & path )
 {
-    #if defined( __WINDOWS__ )
-        if ( CreateDirectory( path.Get(), nullptr ) )
-        {
-            return true;
-        }
+#if defined( __WINDOWS__ )
+    if ( CreateDirectory( path.Get(), nullptr ) )
+    {
+        return true;
+    }
 
-        // it failed - is it because it exists already?
-        if ( GetLastError() == ERROR_ALREADY_EXISTS )
-        {
-            return true;
-        }
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        umask( 0 ); // disable default creation mask // TODO:LINUX TODO:MAC Changes global program state; needs investigation
-        mode_t mode = ( S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH );
-        if ( mkdir( path.Get(), mode ) == 0 )
-        {
-            return true; // created ok
-        }
+    // it failed - is it because it exists already?
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+    {
+        return true;
+    }
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    umask( 0 ); // disable default creation mask // TODO:LINUX TODO:MAC Changes global program state; needs investigation
+    mode_t mode = ( S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH );
+    if ( mkdir( path.Get(), mode ) == 0 )
+    {
+        return true; // created ok
+    }
 
-        // failed to create - already exists?
-        if ( errno == EEXIST )
-        {
-            return true;
-        }
-    #else
-        #error Unknown platform
-    #endif
+    // failed to create - already exists?
+    if ( errno == EEXIST )
+    {
+        return true;
+    }
+#else
+    #error Unknown platform
+#endif
 
     // failed, probably missing intermediate folders or an invalid name
     return false;
@@ -570,25 +570,25 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::DirectoryExists( const AString & path )
 {
-    #if defined( __WINDOWS__ )
-        const DWORD res = GetFileAttributes( path.Get() );
-        if ( ( res != INVALID_FILE_ATTRIBUTES ) &&
-            ( ( res & FILE_ATTRIBUTE_DIRECTORY ) != 0 ) )
+#if defined( __WINDOWS__ )
+    const DWORD res = GetFileAttributes( path.Get() );
+    if ( ( res != INVALID_FILE_ATTRIBUTES ) &&
+         ( ( res & FILE_ATTRIBUTE_DIRECTORY ) != 0 ) )
+    {
+        return true; // exists and is a folder
+    }
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    struct stat st;
+    if ( lstat( path.Get(), &st ) == 0 )
+    {
+        if ( ( st.st_mode & S_IFDIR ) != 0 )
         {
-            return true; // exists and is a folder
+            return true; // exists and is folder
         }
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        struct stat st;
-        if ( lstat( path.Get(), &st ) == 0 )
-        {
-            if ( ( st.st_mode & S_IFDIR ) != 0 )
-            {
-                return true; // exists and is folder
-            }
-        }
-    #else
-        #error Unknown platform
-    #endif
+    }
+#else
+    #error Unknown platform
+#endif
     return false; // doesn't exist, isn't a folder or some other problem
 }
 
@@ -602,27 +602,35 @@
     }
 
     // take a copy to locally manipulate
-    AStackString<> pathCopy( path );
+    AStackString pathCopy( path );
     PathUtils::FixupFolderPath( pathCopy ); // ensure correct slash type and termination
 
     // handle UNC paths by skipping leading slashes and machine name
     char * slash = pathCopy.Get();
-    #if defined( __WINDOWS__ )
-        if ( *slash == NATIVE_SLASH )
-        {
-            while ( *slash == NATIVE_SLASH ) { ++slash; } // skip leading double slash
-            while ( *slash != NATIVE_SLASH ) { ++slash; } // skip machine name
-            ++slash; // move into first dir name, so next search will find dir name slash
-        }
-    #endif
-
-    #if defined( __LINUX__ ) || defined( __APPLE__ )
-        // for full paths, ignore the first slash
-        if ( *slash == NATIVE_SLASH )
+#if defined( __WINDOWS__ )
+    if ( *slash == NATIVE_SLASH )
+    {
+        // skip leading double slash
+        while ( *slash == NATIVE_SLASH )
         {
             ++slash;
         }
-    #endif
+        // skip machine name
+        while ( *slash != NATIVE_SLASH )
+        {
+            ++slash;
+        }
+        ++slash; // move into first dir name, so next search will find dir name slash
+    }
+#endif
+
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+    // for full paths, ignore the first slash
+    if ( *slash == NATIVE_SLASH )
+    {
+        ++slash;
+    }
+#endif
 
     slash = pathCopy.Find( NATIVE_SLASH, slash );
     if ( !slash )
@@ -643,8 +651,7 @@
         }
         *slash = NATIVE_SLASH; // put back the slash
         slash = pathCopy.Find( NATIVE_SLASH, slash + 1 );
-    }
-    while ( slash );
+    } while ( slash );
     return true;
 }
 
@@ -656,164 +663,164 @@
     const char * lastSlashB = name.FindLast( OTHER_SLASH );
     const char * lastSlash = lastSlashA > lastSlashB ? lastSlashA : lastSlashB;
     ASSERT( lastSlash ); // Caller must pass something valid
-    AStackString<> pathOnly( name.Get(), lastSlash );
+    AStackString pathOnly( name.Get(), lastSlash );
     return EnsurePathExists( pathOnly );
 }
 
 // NormalizeWindowsPathCasing
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    /*static*/ bool FileIO::NormalizeWindowsPathCasing( const AString & path, AString & outNormalizedPath )
+/*static*/ bool FileIO::NormalizeWindowsPathCasing( const AString & path, AString & outNormalizedPath )
+{
+    // Take a full Windows path and fix the casing so that:
+    // a) the drive letter is always upper-case
+    // b) the components of the path are in the actual case of the parts
+    //    in the file system
+    //
+    // NOTE: We don't want this to resolve substs because some uses
+    //       of subst are specifically to normalize paths between machines
+    //
+    // Only full windows paths in the simple X:\blah format are supported
+    if ( ( path.GetLength() < 3 ) ||
+         !IsValidDriveLetter( path[ 0 ] ) ||
+         ( path[ 1 ] != ':' ) ||
+         ( path[ 2 ] != '\\' ) )
     {
-        // Take a full Windows path and fix the casing so that:
-        // a) the drive letter is always upper-case
-        // b) the components of the path are in the actual case of the parts
-        //    in the file system
-        //
-        // NOTE: We don't want this to resolve substs because some uses
-        //       of subst are specifically to normalize paths between machines
-        //
-        // Only full windows paths in the simple X:\blah format are supported
-        if ( ( path.GetLength() < 3 ) ||
-             !IsValidDriveLetter( path[ 0 ] ) ||
-             ( path[ 1 ] != ':' ) ||
-             ( path[ 2 ] != '\\' ) )
-        {
-            return false;
-        }
-
-        // Keep drive letter and colon but normalize to uppercase
-        outNormalizedPath.Append( path.Get(), 3 );
-        outNormalizedPath.ToUpper(); // Drive letter
-
-        // Process the remaining directories
-        const char * pos = path.Get() + 3;
-        while ( pos < path.GetEnd() )
-        {
-            // Find end of current segment (next slash in either direction or end of path)
-            const char* nextSlash = path.Find( '\\', pos );
-            nextSlash = nextSlash ? nextSlash : path.Find( '/', pos );
-
-            // Get the actual name for this part of the path
-            AStackString<> pathSoFar( outNormalizedPath );
-            if ( nextSlash )
-            {
-                pathSoFar.Append( pos, static_cast<uint32_t>( nextSlash - pos ) );
-            }
-            else
-            {
-                pathSoFar += pos;
-            }
-
-            // Get a directory listing of the path so far to get the canonical name
-            WIN32_FIND_DATAA fileFileData;
-            HANDLE findHandle = FindFirstFileA( pathSoFar.Get(), &fileFileData );
-            if ( findHandle != INVALID_HANDLE_VALUE )
-            {
-                FindClose( findHandle );
-
-                // Path exists, so use canonical name
-                outNormalizedPath += fileFileData.cFileName;
-                pos = nextSlash ? nextSlash : path.GetEnd();
-
-                // Add slash between components
-                if ( pos < path.GetEnd() )
-                {
-                    outNormalizedPath += '\\';
-                    ++pos; // Skip over component
-                }
-                continue; // Keep processing path
-            }
-
-            // Path doesn't exist so keep rest of path as-is
-            outNormalizedPath += pos;
-            break;
-        }
-
-        return true;
+        return false;
     }
+
+    // Keep drive letter and colon but normalize to uppercase
+    outNormalizedPath.Append( path.Get(), 3 );
+    outNormalizedPath.ToUpper(); // Drive letter
+
+    // Process the remaining directories
+    const char * pos = path.Get() + 3;
+    while ( pos < path.GetEnd() )
+    {
+        // Find end of current segment (next slash in either direction or end of path)
+        const char * nextSlash = path.Find( '\\', pos );
+        nextSlash = nextSlash ? nextSlash : path.Find( '/', pos );
+
+        // Get the actual name for this part of the path
+        AStackString pathSoFar( outNormalizedPath );
+        if ( nextSlash )
+        {
+            pathSoFar.Append( pos, static_cast<uint32_t>( nextSlash - pos ) );
+        }
+        else
+        {
+            pathSoFar += pos;
+        }
+
+        // Get a directory listing of the path so far to get the canonical name
+        WIN32_FIND_DATAA fileFileData;
+        HANDLE findHandle = FindFirstFileA( pathSoFar.Get(), &fileFileData );
+        if ( findHandle != INVALID_HANDLE_VALUE )
+        {
+            FindClose( findHandle );
+
+            // Path exists, so use canonical name
+            outNormalizedPath += fileFileData.cFileName;
+            pos = nextSlash ? nextSlash : path.GetEnd();
+
+            // Add slash between components
+            if ( pos < path.GetEnd() )
+            {
+                outNormalizedPath += '\\';
+                ++pos; // Skip over component
+            }
+            continue; // Keep processing path
+        }
+
+        // Path doesn't exist so keep rest of path as-is
+        outNormalizedPath += pos;
+        break;
+    }
+
+    return true;
+}
 #endif
 
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    /*static*/ bool FileIO::IsValidDriveLetter( char c )
-    {
-        return ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
-               ( ( c >= 'a' ) && ( c <= 'z' ) );
-    }
+/*static*/ bool FileIO::IsValidDriveLetter( char c )
+{
+    return ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
+           ( ( c >= 'a' ) && ( c <= 'z' ) );
+}
 #endif
 
 // GetDirectoryIsMountPoint
 //------------------------------------------------------------------------------
 #if !defined( __WINDOWS__ )
-    /*static*/ bool FileIO::GetDirectoryIsMountPoint( const AString & path )
+/*static*/ bool FileIO::GetDirectoryIsMountPoint( const AString & path )
+{
+    // stat the path
+    struct stat pathStat;
+    if ( stat( path.Get(), &pathStat ) != 0 )
     {
-        // stat the path
-        struct stat pathStat;
-        if ( stat( path.Get(), &pathStat ) != 0 )
-        {
-            return false; // Can't stat the path  (probably doesn't exist)
-        }
-
-        // Is it a dir?
-        if ( ( pathStat.st_mode & S_IFDIR ) == 0 )
-        {
-            return false; // Not a directory, so can't be a mount point
-        }
-
-        // stat parent dir
-        AStackString<> pathCopy( path ); // dirname modifies string, so we need a copy
-        const char * parentName = dirname( pathCopy.Get() );
-        struct stat parentStat;
-        if ( stat( parentName, &parentStat ) != 0 )
-        {
-            return false; // Can't stat parent dir, then something is wrong
-        }
-
-        // Compare device ids
-        if ( pathStat.st_dev != parentStat.st_dev )
-        {
-            return true; // On a different device, so must be a mount point
-        }
-
-        // If path and parent are the same, it's a root node (and therefore also a mount point)
-        if ( ( pathStat.st_dev == parentStat.st_dev ) &&
-             ( pathStat.st_ino == parentStat.st_ino ) )
-        {
-             return true;
-        }
-
-        return false; // Not a mount point
+        return false; // Can't stat the path  (probably doesn't exist)
     }
+
+    // Is it a dir?
+    if ( ( pathStat.st_mode & S_IFDIR ) == 0 )
+    {
+        return false; // Not a directory, so can't be a mount point
+    }
+
+    // stat parent dir
+    AStackString pathCopy( path ); // dirname modifies string, so we need a copy
+    const char * parentName = dirname( pathCopy.Get() );
+    struct stat parentStat;
+    if ( stat( parentName, &parentStat ) != 0 )
+    {
+        return false; // Can't stat parent dir, then something is wrong
+    }
+
+    // Compare device ids
+    if ( pathStat.st_dev != parentStat.st_dev )
+    {
+        return true; // On a different device, so must be a mount point
+    }
+
+    // If path and parent are the same, it's a root node (and therefore also a mount point)
+    if ( ( pathStat.st_dev == parentStat.st_dev ) &&
+         ( pathStat.st_ino == parentStat.st_ino ) )
+    {
+        return true;
+    }
+
+    return false; // Not a mount point
+}
 #endif
 
 // GetFileLastWriteTime
 //------------------------------------------------------------------------------
 /*static*/ uint64_t FileIO::GetFileLastWriteTime( const AString & fileName )
 {
-    #if defined( __WINDOWS__ )
-        WIN32_FILE_ATTRIBUTE_DATA fileAttribs;
-        if ( GetFileAttributesEx( fileName.Get(), GetFileExInfoStandard, &fileAttribs ) )
-        {
-            const FILETIME ftWrite = fileAttribs.ftLastWriteTime;
-            const uint64_t lastWriteTime = (uint64_t)ftWrite.dwLowDateTime | ( (uint64_t)ftWrite.dwHighDateTime << 32 );
-            return lastWriteTime;
-        }
-    #elif defined( __APPLE__ )
-        struct stat st;
-        if ( lstat( fileName.Get(), &st ) == 0 )
-        {
-            return ( ( (uint64_t)st.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)st.st_mtimespec.tv_nsec );
-        }
-    #elif defined( __LINUX__ )
-        struct stat st;
-        if ( lstat( fileName.Get(), &st ) == 0 )
-        {
-            return ( ( (uint64_t)st.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)st.st_mtim.tv_nsec );
-        }
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    WIN32_FILE_ATTRIBUTE_DATA fileAttribs;
+    if ( GetFileAttributesEx( fileName.Get(), GetFileExInfoStandard, &fileAttribs ) )
+    {
+        const FILETIME ftWrite = fileAttribs.ftLastWriteTime;
+        const uint64_t lastWriteTime = (uint64_t)ftWrite.dwLowDateTime | ( (uint64_t)ftWrite.dwHighDateTime << 32 );
+        return lastWriteTime;
+    }
+#elif defined( __APPLE__ )
+    struct stat st;
+    if ( lstat( fileName.Get(), &st ) == 0 )
+    {
+        return ( ( (uint64_t)st.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)st.st_mtimespec.tv_nsec );
+    }
+#elif defined( __LINUX__ )
+    struct stat st;
+    if ( lstat( fileName.Get(), &st ) == 0 )
+    {
+        return ( ( (uint64_t)st.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)st.st_mtim.tv_nsec );
+    }
+#else
+    #error Unknown platform
+#endif
     return 0;
 }
 
@@ -821,194 +828,194 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::SetFileLastWriteTime( const AString & fileName, uint64_t fileTime )
 {
-    #if defined( __WINDOWS__ )
-        // open the file
-        HANDLE hFile = CreateFile( fileName.Get(),
-                                   FILE_WRITE_ATTRIBUTES,
-                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                   nullptr,
-                                   OPEN_EXISTING,
-                                   0,
-                                   nullptr);
-        if ( hFile == INVALID_HANDLE_VALUE )
-        {
-            return false;
-        }
+#if defined( __WINDOWS__ )
+    // open the file
+    HANDLE hFile = CreateFile( fileName.Get(),
+                               FILE_WRITE_ATTRIBUTES,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE,
+                               nullptr,
+                               OPEN_EXISTING,
+                               0,
+                               nullptr );
+    if ( hFile == INVALID_HANDLE_VALUE )
+    {
+        return false;
+    }
 
-        // get the file time
-        FILETIME ftWrite;
-        ftWrite.dwLowDateTime = (uint32_t)( fileTime & 0x00000000FFFFFFFF );
-        ftWrite.dwHighDateTime = (uint32_t)( ( fileTime & 0xFFFFFFFF00000000 ) >> 32 );
-        if ( !SetFileTime( hFile, nullptr, nullptr, &ftWrite) ) // create, access, write
-        {
-            CloseHandle( hFile );
-            return false;
-        }
-
-        // close the file
+    // get the file time
+    FILETIME ftWrite;
+    ftWrite.dwLowDateTime = (uint32_t)( fileTime & 0x00000000FFFFFFFF );
+    ftWrite.dwHighDateTime = (uint32_t)( ( fileTime & 0xFFFFFFFF00000000 ) >> 32 );
+    if ( !SetFileTime( hFile, nullptr, nullptr, &ftWrite ) ) // create, access, write
+    {
         CloseHandle( hFile );
+        return false;
+    }
 
-        return true;
-    #elif defined( __APPLE__ )
-        // Use higher precision function if available
-        if ( gOSXHelper_utimensat.m_FuncPtr )
-        {
-            struct timespec t[ 2 ];
-            t[ 0 ].tv_sec = fileTime / 1000000000ULL;
-            t[ 0 ].tv_nsec = ( fileTime % 1000000000ULL );
-            t[ 1 ] = t[ 0 ];
-            return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), t, 0 ) == 0 );
-        }
+    // close the file
+    CloseHandle( hFile );
 
-        // Fallback to regular low-resolution filetime setting
-        struct timeval t[ 2 ];
-        t[ 0 ].tv_sec = fileTime / 1000000000ULL;
-        t[ 0 ].tv_usec = ( fileTime % 1000000000ULL ) / 1000;
-        t[ 1 ] = t[ 0 ];
-        return ( utimes( fileName.Get(), t ) == 0 );
-    #elif defined( __LINUX__ )
+    return true;
+#elif defined( __APPLE__ )
+    // Use higher precision function if available
+    if ( gOSXHelper_utimensat.m_FuncPtr )
+    {
         struct timespec t[ 2 ];
         t[ 0 ].tv_sec = fileTime / 1000000000ULL;
         t[ 0 ].tv_nsec = ( fileTime % 1000000000ULL );
         t[ 1 ] = t[ 0 ];
-        return ( utimensat( 0, fileName.Get(), t, 0 ) == 0 );
-    #else
-        #error Unknown platform
-    #endif
+        return ( ( gOSXHelper_utimensat.m_FuncPtr )( 0, fileName.Get(), t, 0 ) == 0 );
+    }
+
+        // Fallback to regular low-resolution filetime setting
+    struct timeval t[ 2 ];
+    t[ 0 ].tv_sec = fileTime / 1000000000ULL;
+    t[ 0 ].tv_usec = ( fileTime % 1000000000ULL ) / 1000;
+    t[ 1 ] = t[ 0 ];
+    return ( utimes( fileName.Get(), t ) == 0 );
+#elif defined( __LINUX__ )
+    struct timespec t[ 2 ];
+    t[ 0 ].tv_sec = fileTime / 1000000000ULL;
+    t[ 0 ].tv_nsec = ( fileTime % 1000000000ULL );
+    t[ 1 ] = t[ 0 ];
+    return ( utimensat( 0, fileName.Get(), t, 0 ) == 0 );
+#else
+    #error Unknown platform
+#endif
 }
 
 // SetFileLastWriteTimeToNow
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::SetFileLastWriteTimeToNow( const AString & fileName )
 {
-    #if defined( __WINDOWS__ )
-        const uint64_t fileTimeNow = Time::GetCurrentFileTime();
-        return SetFileLastWriteTime( fileName, fileTimeNow );
-    #elif defined( __APPLE__ )
-        // Use higher precision function if available
-        if ( gOSXHelper_utimensat.m_FuncPtr )
-        {
-            return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), nullptr, 0 ) == 0 );
-        }
+#if defined( __WINDOWS__ )
+    const uint64_t fileTimeNow = Time::GetCurrentFileTime();
+    return SetFileLastWriteTime( fileName, fileTimeNow );
+#elif defined( __APPLE__ )
+    // Use higher precision function if available
+    if ( gOSXHelper_utimensat.m_FuncPtr )
+    {
+        return ( ( gOSXHelper_utimensat.m_FuncPtr )( 0, fileName.Get(), nullptr, 0 ) == 0 );
+    }
 
-        // Fallback to regular low-resolution filetime setting
-        return ( utimes( fileName.Get(), nullptr ) == 0 );
-    #elif defined( __LINUX__ )
-        return ( utimensat( 0, fileName.Get(), nullptr, 0 ) == 0 );
-    #else
-        #error Unknown platform
-    #endif
+    // Fallback to regular low-resolution filetime setting
+    return ( utimes( fileName.Get(), nullptr ) == 0 );
+#elif defined( __LINUX__ )
+    return ( utimensat( 0, fileName.Get(), nullptr, 0 ) == 0 );
+#else
+    #error Unknown platform
+#endif
 }
 
 // SetReadOnly
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::SetReadOnly( const char * fileName, bool readOnly )
 {
-    #if defined( __WINDOWS__ )
-        // see if dst file is read-only
-        const DWORD dwAttrs = GetFileAttributes( fileName );
-        if ( dwAttrs == INVALID_FILE_ATTRIBUTES )
-        {
-            return false; // can't even get the attributes, nothing more we can do
-        }
+#if defined( __WINDOWS__ )
+    // see if dst file is read-only
+    const DWORD dwAttrs = GetFileAttributes( fileName );
+    if ( dwAttrs == INVALID_FILE_ATTRIBUTES )
+    {
+        return false; // can't even get the attributes, nothing more we can do
+    }
 
-        // determine the new attributes
-        const DWORD dwNewAttrs = ( readOnly ) ? ( dwAttrs | FILE_ATTRIBUTE_READONLY )
-                                              : ( dwAttrs & (uint32_t)(~FILE_ATTRIBUTE_READONLY) );
+    // determine the new attributes
+    const DWORD dwNewAttrs = ( readOnly ) ? ( dwAttrs | FILE_ATTRIBUTE_READONLY )
+                                          : ( dwAttrs & (uint32_t)( ~FILE_ATTRIBUTE_READONLY ) );
 
-        // nothing to do if they are the same
-        if ( dwNewAttrs == dwAttrs )
-        {
-            return true;
-        }
-
-        // try to set change
-        if ( FALSE == SetFileAttributes( fileName, dwNewAttrs ) )
-        {
-            return false; // failed
-        }
-
+    // nothing to do if they are the same
+    if ( dwNewAttrs == dwAttrs )
+    {
         return true;
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        struct stat s;
-        if ( lstat( fileName, &s ) != 0 )
-        {
-            return true; // can't even get the attributes, treat as not read only
-        }
-        const uint32_t anyWriteBits = S_IWUSR | S_IWGRP | S_IWOTH;
-        const bool currentlyReadOnly = ( ( s.st_mode & anyWriteBits ) == 0 );
-        if ( readOnly == currentlyReadOnly )
-        {
-            return true; // already in desired state
-        }
+    }
 
-        // update writable flag
-        if ( readOnly )
-        {
-            // remove writable flag for everyone
-            s.st_mode &= ~static_cast<uint32_t>( S_IWUSR | S_IWGRP | S_IWOTH );
-        }
-        else
-        {
-            // add writable flag for just the user
-            s.st_mode |= S_IWUSR;
-        }
+    // try to set change
+    if ( FALSE == SetFileAttributes( fileName, dwNewAttrs ) )
+    {
+        return false; // failed
+    }
 
-        if ( chmod( fileName, s.st_mode ) == 0 )
-        {
-            return true;
-        }
-        return false; // failed to chmod
-    #else
-        #error Unknown platform
-    #endif
+    return true;
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    struct stat s;
+    if ( lstat( fileName, &s ) != 0 )
+    {
+        return true; // can't even get the attributes, treat as not read only
+    }
+    const uint32_t anyWriteBits = S_IWUSR | S_IWGRP | S_IWOTH;
+    const bool currentlyReadOnly = ( ( s.st_mode & anyWriteBits ) == 0 );
+    if ( readOnly == currentlyReadOnly )
+    {
+        return true; // already in desired state
+    }
+
+    // update writable flag
+    if ( readOnly )
+    {
+        // remove writable flag for everyone
+        s.st_mode &= ~static_cast<uint32_t>( S_IWUSR | S_IWGRP | S_IWOTH );
+    }
+    else
+    {
+        // add writable flag for just the user
+        s.st_mode |= S_IWUSR;
+    }
+
+    if ( chmod( fileName, s.st_mode ) == 0 )
+    {
+        return true;
+    }
+    return false; // failed to chmod
+#else
+    #error Unknown platform
+#endif
 }
 
 // GetReadOnly
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetReadOnly( const char * fileName )
 {
-    #if defined( __WINDOWS__ )
-        // see if dst file is read-only
-        const DWORD dwAttrs = GetFileAttributes( fileName );
-        if ( dwAttrs == INVALID_FILE_ATTRIBUTES )
-        {
-            return false; // can't even get the attributes, treat as not read only
-        }
+#if defined( __WINDOWS__ )
+    // see if dst file is read-only
+    const DWORD dwAttrs = GetFileAttributes( fileName );
+    if ( dwAttrs == INVALID_FILE_ATTRIBUTES )
+    {
+        return false; // can't even get the attributes, treat as not read only
+    }
 
-        // determine the new attributes
-        const bool readOnly = ( dwAttrs & FILE_ATTRIBUTE_READONLY );
-        return readOnly;
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        struct stat s;
-        if ( lstat( fileName, &s ) != 0 )
-        {
-            return false; // can't even get the attributes, treat as not read only
-        }
-        return ( ( s.st_mode & S_IWUSR ) == 0 );// TODO:LINUX Is this the correct behaviour?
-    #else
-        #error Unknown platform
-    #endif
+    // determine the new attributes
+    const bool readOnly = ( dwAttrs & FILE_ATTRIBUTE_READONLY );
+    return readOnly;
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    struct stat s;
+    if ( lstat( fileName, &s ) != 0 )
+    {
+        return false; // can't even get the attributes, treat as not read only
+    }
+    return ( ( s.st_mode & S_IWUSR ) == 0 ); // TODO:LINUX Is this the correct behaviour?
+#else
+    #error Unknown platform
+#endif
 }
 
 // SetExecutable
 //------------------------------------------------------------------------------
 #if defined( __LINUX__ ) || defined( __APPLE__ )
-    /*static*/ bool FileIO::SetExecutable( const char * fileName )
+/*static*/ bool FileIO::SetExecutable( const char * fileName )
+{
+    struct stat s;
+    if ( lstat( fileName, &s ) != 0 )
     {
-        struct stat s;
-        if ( lstat( fileName, &s ) != 0 )
-        {
-            return false; // failed to stat
-        }
-
-        s.st_mode |= S_IXUSR | S_IXGRP | S_IXOTH;
-        if ( chmod( fileName, s.st_mode ) == 0 )
-        {
-            return true;
-        }
-        return false; // failed to chmod
+        return false; // failed to stat
     }
+
+    s.st_mode |= S_IXUSR | S_IXGRP | S_IXOTH;
+    if ( chmod( fileName, s.st_mode ) == 0 )
+    {
+        return true;
+    }
+    return false; // failed to chmod
+}
 #endif
 
 //------------------------------------------------------------------------------
@@ -1017,80 +1024,80 @@
     const uint32_t baseLength = pathCopy.GetLength();
 
     // Windows requires the path contain a wildcard
-    #if defined( __WINDOWS__ )
-        pathCopy += '*'; // retrieve all files/folders
-    #endif
+#if defined( __WINDOWS__ )
+    pathCopy += '*'; // retrieve all files/folders
+#endif
 
     // Don't traverse into symlinks - TODO:B Why is this OSX/Linux only?
-    #if defined( __LINUX__ ) || defined( __APPLE__ )
-        // Special case symlinks
-        struct stat stat_source;
-        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
-        {
-            return;
-        }
-        if ( S_ISLNK( stat_source.st_mode ) )
-        {
-            return;
-        }
-    #endif
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+    // Special case symlinks
+    struct stat stat_source;
+    if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+    {
+        return;
+    }
+    if ( S_ISLNK( stat_source.st_mode ) )
+    {
+        return;
+    }
+#endif
 
     // Start dir list operation
-    #if defined( __WINDOWS__ )
-        WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
-        {
-            return;
-        }
-    #else
-        DIR * dir = opendir( pathCopy.Get() );
-        if ( dir == nullptr )
-        {
-            return;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    WIN32_FIND_DATA findData;
+    HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
+    if ( hFind == INVALID_HANDLE_VALUE )
+    {
+        return;
+    }
+#else
+    DIR * dir = opendir( pathCopy.Get() );
+    if ( dir == nullptr )
+    {
+        return;
+    }
+#endif
 
     // Iterate entries
-    #if defined( __LINUX__ ) || defined( __APPLE__ )
-        for ( ;; )
-    #else
-        do
-    #endif
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+    for ( ;; )
+#else
+    do
+#endif
     {
-        #if defined( __LINUX__ ) || defined( __APPLE__ )
-            dirent * entry = readdir( dir );
-            if ( entry == nullptr )
-            {
-                break; // no more entries
-            }
-        #endif
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+        dirent * entry = readdir( dir );
+        if ( entry == nullptr )
+        {
+            break; // no more entries
+        }
+#endif
 
         // Name of this entry
-        #if defined( __WINDOWS__ )
-            const char * const entryName = findData.cFileName;
-        #else
-            const char * const entryName = entry->d_name;
-        #endif
+#if defined( __WINDOWS__ )
+        const char * const entryName = findData.cFileName;
+#else
+        const char * const entryName = entry->d_name;
+#endif
 
         // Determine if entry is a directory
-        #if defined( __WINDOWS__ )
-            const bool isDir = ( ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) == FILE_ATTRIBUTE_DIRECTORY );
-        #else
-            bool isDir = ( entry->d_type == DT_DIR );
+#if defined( __WINDOWS__ )
+        const bool isDir = ( ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) == FILE_ATTRIBUTE_DIRECTORY );
+#else
+        bool isDir = ( entry->d_type == DT_DIR );
 
-            // Not all filesystems have support for returning the file type in
-            // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if ( entry->d_type == DT_UNKNOWN )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
+        // Not all filesystems have support for returning the file type in
+        // d_type and applications must properly handle a return of DT_UNKNOWN.
+        if ( entry->d_type == DT_UNKNOWN )
+        {
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
 
-                struct stat info;
-                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR( info.st_mode );
-            }
-        #endif
+            struct stat info;
+            VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
+            isDir = S_ISDIR( info.st_mode );
+        }
+#endif
 
         // Directory?
         if ( isDir )
@@ -1122,663 +1129,672 @@
         {
             FileInfo fileInfo;
             const uint32_t fileNameLen = static_cast<uint32_t>( AString::StrLen( entryName ) );
-            const uint32_t fullPathLen = pathCopy.GetLength()  + fileNameLen;
+            const uint32_t fullPathLen = pathCopy.GetLength() + fileNameLen;
             fileInfo.m_Name.SetReserved( fullPathLen );
             fileInfo.m_Name.Assign( pathCopy );
-            fileInfo.m_Name.Append(entryName, fileNameLen );
-            #if defined( __WINDOWS__ )
-                fileInfo.m_Attributes = findData.dwFileAttributes;
-                fileInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
-                fileInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
-            #else
-                struct stat info;
-                VERIFY( lstat( fileInfo.m_Name.Get(), &info ) == 0 );
-                fileInfo.m_Attributes = info.st_mode;
-                #if defined( __APPLE__ )
-                    fileInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
-                #else
-                    fileInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
-                #endif
-                fileInfo.m_Size = static_cast<uint64_t>( info.st_size );
-            #endif
+            fileInfo.m_Name.Append( entryName, fileNameLen );
+#if defined( __WINDOWS__ )
+            fileInfo.m_Attributes = findData.dwFileAttributes;
+            fileInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
+            fileInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
+#else
+            struct stat info;
+            VERIFY( lstat( fileInfo.m_Name.Get(), &info ) == 0 );
+            fileInfo.m_Attributes = info.st_mode;
+    #if defined( __APPLE__ )
+            fileInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
+    #else
+            fileInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
+    #endif
+            fileInfo.m_Size = static_cast<uint64_t>( info.st_size );
+#endif
             helper.OnFile( Move( fileInfo ) );
         }
     }
-    #if defined( __WINDOWS__ )
-        while ( FindNextFile( hFind, &findData ) != 0 );
-    #endif
+#if defined( __WINDOWS__ )
+    // clang-format off
+    while ( FindNextFile( hFind, &findData ) != 0 );
+    // clang-format on
+#endif
 
-    #if defined( __WINDOWS__ )
-        FindClose( hFind );
-    #else
-        closedir( dir );
-    #endif
+#if defined( __WINDOWS__ )
+    FindClose( hFind );
+#else
+    closedir( dir );
+#endif
 }
 
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurse( AString & pathCopy,
                                          const AString & wildCard,
-                                         Array< AString > * results )
+                                         Array<AString> * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
 
-    #if defined( __WINDOWS__ )
-        pathCopy += '*'; // don't want to use wildcard to filter folders
+#if defined( __WINDOWS__ )
+    pathCopy += '*'; // don't want to use wildcard to filter folders
 
-        // recurse into directories
-        WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchLimitToDirectories, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+    // recurse into directories
+    WIN32_FIND_DATA findData;
+    HANDLE hFind = FindFirstFileEx( pathCopy.Get(),
+                                    FindExInfoBasic,
+                                    &findData,
+                                    FindExSearchLimitToDirectories,
+                                    nullptr,
+                                    0 );
+    if ( hFind == INVALID_HANDLE_VALUE )
+    {
+        return;
+    }
+
+    do
+    {
+        if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
         {
-            return;
+            // ignore magic '.' and '..' folders
+            // (don't need to check length of name, as all names are at least 1 char
+            // which means index 0 and 1 are valid to access)
+            if ( findData.cFileName[ 0 ] == '.' &&
+                 ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+            {
+                continue;
+            }
+
+            pathCopy.SetLength( baseLength );
+            pathCopy += findData.cFileName;
+            pathCopy += NATIVE_SLASH;
+            GetFilesRecurse( pathCopy, wildCard, results );
+        }
+    } while ( FindNextFile( hFind, &findData ) != 0 );
+    FindClose( hFind );
+
+    // do files in this directory
+    pathCopy.SetLength( baseLength );
+    pathCopy += '*';
+    hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
+    if ( hFind == INVALID_HANDLE_VALUE )
+    {
+        return;
+    }
+
+    do
+    {
+        if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+        {
+            continue;
         }
 
-        do
+        if ( PathUtils::IsWildcardMatch( wildCard.Get(), findData.cFileName ) )
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            pathCopy.SetLength( baseLength );
+            pathCopy += findData.cFileName;
+            results->Append( pathCopy );
+        }
+    } while ( FindNextFile( hFind, &findData ) != 0 );
+
+    FindClose( hFind );
+
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    // Special case symlinks.
+    struct stat stat_source;
+    if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+    {
+        return;
+    }
+    if ( S_ISLNK( stat_source.st_mode ) )
+    {
+        return;
+    }
+
+    DIR * dir = opendir( pathCopy.Get() );
+    if ( dir == nullptr )
+    {
+        return;
+    }
+    for ( ;; )
+    {
+        dirent * entry = readdir( dir );
+        if ( entry == nullptr )
+        {
+            break; // no more entries
+        }
+
+        bool isDir = ( entry->d_type == DT_DIR );
+
+        // Not all filesystems have support for returning the file type in
+        // d_type and applications must properly handle a return of DT_UNKNOWN.
+        if ( entry->d_type == DT_UNKNOWN )
+        {
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+
+            struct stat info;
+            VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
+            isDir = S_ISDIR( info.st_mode );
+        }
+
+        // dir?
+        if ( isDir )
+        {
+            // ignore . and ..
+            if ( entry->d_name[ 0 ] == '.' )
             {
-                // ignore magic '.' and '..' folders
-                // (don't need to check length of name, as all names are at least 1 char
-                // which means index 0 and 1 are valid to access)
-                if ( findData.cFileName[ 0 ] == '.' &&
-                     ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+                if ( ( entry->d_name[ 1 ] == 0 ) ||
+                     ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
                 {
                     continue;
                 }
-
-                pathCopy.SetLength( baseLength );
-                pathCopy += findData.cFileName;
-                pathCopy += NATIVE_SLASH;
-                GetFilesRecurse( pathCopy, wildCard, results );
             }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
-        FindClose( hFind );
 
-        // do files in this directory
-        pathCopy.SetLength( baseLength );
-        pathCopy += '*';
-        hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+            // regular dir
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+            pathCopy += NATIVE_SLASH;
+            GetFilesRecurse( pathCopy, wildCard, results );
+            continue;
+        }
+
+        // file - does it match wildcard?
+        if ( PathUtils::IsWildcardMatch( wildCard.Get(), entry->d_name ) )
         {
-            return;
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+            results->Append( pathCopy );
         }
-
-        do
-        {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-            {
-                continue;
-            }
-
-            if ( PathUtils::IsWildcardMatch( wildCard.Get(), findData.cFileName ) )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += findData.cFileName;
-                results->Append( pathCopy );
-            }
-        }
-        while ( FindNextFile( hFind, &findData ) != 0 );
-
-        FindClose( hFind );
-
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        // Special case symlinks.
-        struct stat stat_source;
-        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
-        {
-            return;
-        }
-        if ( S_ISLNK( stat_source.st_mode ) )
-        {
-            return;
-        }
-
-        DIR * dir = opendir( pathCopy.Get() );
-        if ( dir == nullptr )
-        {
-            return;
-        }
-        for ( ;; )
-        {
-            dirent * entry = readdir( dir );
-            if ( entry == nullptr )
-            {
-                break; // no more entries
-            }
-
-            bool isDir = ( entry->d_type == DT_DIR );
-
-            // Not all filesystems have support for returning the file type in
-            // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if ( entry->d_type == DT_UNKNOWN )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-
-                struct stat info;
-                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR( info.st_mode );
-            }
-
-            // dir?
-            if ( isDir )
-            {
-                // ignore . and ..
-                if ( entry->d_name[ 0 ] == '.' )
-                {
-                    if ( ( entry->d_name[ 1 ] == 0 ) ||
-                         ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
-                    {
-                        continue;
-                    }
-                }
-
-                // regular dir
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-                pathCopy += NATIVE_SLASH;
-                GetFilesRecurse( pathCopy, wildCard, results );
-                continue;
-            }
-
-            // file - does it match wildcard?
-            if ( PathUtils::IsWildcardMatch( wildCard.Get(), entry->d_name ) )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-                results->Append( pathCopy );
-            }
-        }
-        closedir( dir );
-    #else
-        #error Unknown platform
-    #endif
+    }
+    closedir( dir );
+#else
+    #error Unknown platform
+#endif
 }
 
 // GetFilesNoRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurse( const char * path,
                                            const char * wildCard,
-                                           Array< AString > * results )
+                                           Array<AString> * results )
 {
-    AStackString< 256 > pathCopy( path );
+    AStackString<256> pathCopy( path );
     PathUtils::EnsureTrailingSlash( pathCopy );
     const uint32_t baseLength = pathCopy.GetLength();
 
-    #if defined( __WINDOWS__ )
-        pathCopy += '*';
+#if defined( __WINDOWS__ )
+    pathCopy += '*';
 
-        WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+    WIN32_FIND_DATA findData;
+    HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
+    if ( hFind == INVALID_HANDLE_VALUE )
+    {
+        return;
+    }
+
+    do
+    {
+        if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
         {
-            return;
+            continue;
         }
 
-        do
+        if ( PathUtils::IsWildcardMatch( wildCard, findData.cFileName ) )
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-            {
-                continue;
-            }
-
-            if ( PathUtils::IsWildcardMatch( wildCard, findData.cFileName ) )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += findData.cFileName;
-                results->Append( pathCopy );
-            }
+            pathCopy.SetLength( baseLength );
+            pathCopy += findData.cFileName;
+            results->Append( pathCopy );
         }
-        while ( FindNextFile( hFind, &findData ) != 0 );
+    } while ( FindNextFile( hFind, &findData ) != 0 );
 
-        FindClose( hFind );
+    FindClose( hFind );
 
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        // Special case symlinks.
-        struct stat stat_source;
-        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    // Special case symlinks.
+    struct stat stat_source;
+    if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+    {
+        return;
+    }
+    if ( S_ISLNK( stat_source.st_mode ) )
+    {
+        return;
+    }
+
+    DIR * dir = opendir( pathCopy.Get() );
+    if ( dir == nullptr )
+    {
+        return;
+    }
+    for ( ;; )
+    {
+        dirent * entry = readdir( dir );
+        if ( entry == nullptr )
         {
-            return;
+            break; // no more entries
         }
-        if ( S_ISLNK( stat_source.st_mode ) )
+
+        bool isDir = ( entry->d_type == DT_DIR );
+
+        // Not all filesystems have support for returning the file type in
+        // d_type and applications must properly handle a return of DT_UNKNOWN.
+        if ( entry->d_type == DT_UNKNOWN )
         {
-            return;
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+
+            struct stat info;
+            VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
+            isDir = S_ISDIR( info.st_mode );
         }
 
-        DIR * dir = opendir( pathCopy.Get() );
-        if ( dir == nullptr )
+        // dir?
+        if ( isDir )
         {
-            return;
+            // ignore dirs
+            continue;
         }
-        for ( ;; )
+
+        // file - does it match wildcard?
+        if ( PathUtils::IsWildcardMatch( wildCard, entry->d_name ) )
         {
-            dirent * entry = readdir( dir );
-            if ( entry == nullptr )
-            {
-                break; // no more entries
-            }
-
-            bool isDir = ( entry->d_type == DT_DIR );
-
-            // Not all filesystems have support for returning the file type in
-            // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if ( entry->d_type == DT_UNKNOWN )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-
-                struct stat info;
-                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR( info.st_mode );
-            }
-
-            // dir?
-            if ( isDir )
-            {
-                // ignore dirs
-                continue;
-            }
-
-            // file - does it match wildcard?
-            if ( PathUtils::IsWildcardMatch( wildCard, entry->d_name ) )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-                results->Append( pathCopy );
-            }
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+            results->Append( pathCopy );
         }
-        closedir( dir );
-    #else
-        #error Unknown platform
-    #endif
+    }
+    closedir( dir );
+#else
+    #error Unknown platform
+#endif
 }
 
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurseEx( AString & pathCopy,
-                                           const Array< AString > * patterns,
-                                           Array< FileInfo > * results )
+                                           const Array<AString> * patterns,
+                                           Array<FileInfo> * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
 
-    #if defined( __WINDOWS__ )
-        pathCopy += '*'; // don't want to use wildcard to filter folders
+#if defined( __WINDOWS__ )
+    pathCopy += '*'; // don't want to use wildcard to filter folders
 
-        // recurse into directories
-        WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+    // recurse into directories
+    WIN32_FIND_DATA findData;
+    HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
+    if ( hFind == INVALID_HANDLE_VALUE )
+    {
+        return;
+    }
+
+    do
+    {
+        if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
         {
-            return;
+            // ignore magic '.' and '..' folders
+            // (don't need to check length of name, as all names are at least 1 char
+            // which means index 0 and 1 are valid to access)
+            if ( findData.cFileName[ 0 ] == '.' &&
+                 ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+            {
+                continue;
+            }
+
+            pathCopy.SetLength( baseLength );
+            pathCopy += findData.cFileName;
+            pathCopy += NATIVE_SLASH;
+            GetFilesRecurseEx( pathCopy, patterns, results );
+            continue;
         }
 
-        do
+        if ( IsMatch( patterns, findData.cFileName ) )
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            pathCopy.SetLength( baseLength );
+            pathCopy += findData.cFileName;
+            if ( results->GetSize() == results->GetCapacity() )
             {
-                // ignore magic '.' and '..' folders
-                // (don't need to check length of name, as all names are at least 1 char
-                // which means index 0 and 1 are valid to access)
-                if ( findData.cFileName[ 0 ] == '.' &&
-                    ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+                results->SetCapacity( results->GetSize() * 2 );
+            }
+            results->SetSize( results->GetSize() + 1 );
+            FileInfo & newInfo = results->Top();
+            newInfo.m_Name = pathCopy;
+            newInfo.m_Attributes = findData.dwFileAttributes;
+            newInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
+            newInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
+        }
+    } while ( FindNextFile( hFind, &findData ) != 0 );
+
+    FindClose( hFind );
+
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    // Special case symlinks.
+    struct stat stat_source;
+    if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+    {
+        return;
+    }
+    if ( S_ISLNK( stat_source.st_mode ) )
+    {
+        return;
+    }
+
+    DIR * dir = opendir( pathCopy.Get() );
+    if ( dir == nullptr )
+    {
+        return;
+    }
+    for ( ;; )
+    {
+        dirent * entry = readdir( dir );
+        if ( entry == nullptr )
+        {
+            break; // no more entries
+        }
+
+        bool isDir = ( entry->d_type == DT_DIR );
+
+        // Not all filesystems have support for returning the file type in
+        // d_type and applications must properly handle a return of DT_UNKNOWN.
+        if ( entry->d_type == DT_UNKNOWN )
+        {
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+
+            struct stat info;
+            VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
+            isDir = S_ISDIR( info.st_mode );
+        }
+
+        // dir?
+        if ( isDir )
+        {
+            // ignore . and ..
+            if ( entry->d_name[ 0 ] == '.' )
+            {
+                if ( ( entry->d_name[ 1 ] == 0 ) ||
+                     ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
                 {
                     continue;
                 }
-
-                pathCopy.SetLength( baseLength );
-                pathCopy += findData.cFileName;
-                pathCopy += NATIVE_SLASH;
-                GetFilesRecurseEx( pathCopy, patterns, results );
-                continue;
             }
 
-            if ( IsMatch( patterns, findData.cFileName ) )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += findData.cFileName;
-                if ( results->GetSize() == results->GetCapacity() )
-                {
-                    results->SetCapacity( results->GetSize() * 2 );
-                }
-                results->SetSize( results->GetSize() + 1 );
-                FileInfo & newInfo = results->Top();
-                newInfo.m_Name = pathCopy;
-                newInfo.m_Attributes = findData.dwFileAttributes;
-                newInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
-                newInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
-            }
+            // regular dir
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+            pathCopy += NATIVE_SLASH;
+            GetFilesRecurseEx( pathCopy, patterns, results );
+            continue;
         }
-        while ( FindNextFile( hFind, &findData ) != 0 );
 
-        FindClose( hFind );
-
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        // Special case symlinks.
-        struct stat stat_source;
-        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        // file - does it match wildcard?
+        if ( IsMatch( patterns, entry->d_name ) )
         {
-            return;
-        }
-        if ( S_ISLNK( stat_source.st_mode ) )
-        {
-            return;
-        }
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
 
-        DIR * dir = opendir( pathCopy.Get() );
-        if ( dir == nullptr )
-        {
-            return;
-        }
-        for ( ;; )
-        {
-            dirent * entry = readdir( dir );
-            if ( entry == nullptr )
+            if ( results->GetSize() == results->GetCapacity() )
             {
-                break; // no more entries
+                results->SetCapacity( results->GetSize() * 2 );
             }
+            results->SetSize( results->GetSize() + 1 );
+            FileInfo & newInfo = results->Top();
+            newInfo.m_Name = pathCopy;
 
-            bool isDir = ( entry->d_type == DT_DIR );
-
-            // Not all filesystems have support for returning the file type in
-            // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if ( entry->d_type == DT_UNKNOWN )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-
-                struct stat info;
-                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR( info.st_mode );
-            }
-
-            // dir?
-            if ( isDir )
-            {
-                // ignore . and ..
-                if ( entry->d_name[ 0 ] == '.' )
-                {
-                    if ( ( entry->d_name[ 1 ] == 0 ) ||
-                         ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
-                    {
-                        continue;
-                    }
-                }
-
-                // regular dir
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-                pathCopy += NATIVE_SLASH;
-                GetFilesRecurseEx( pathCopy, patterns, results );
-                continue;
-            }
-
-            // file - does it match wildcard?
-            if ( IsMatch( patterns, entry->d_name ) )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-
-                if ( results->GetSize() == results->GetCapacity() )
-                {
-                    results->SetCapacity( results->GetSize() * 2 );
-                }
-                results->SetSize( results->GetSize() + 1 );
-                FileInfo & newInfo = results->Top();
-                newInfo.m_Name = pathCopy;
-
-                // get additional info
-                struct stat info;
-                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
-                newInfo.m_Attributes = info.st_mode;
-                #if defined( __APPLE__ )
-                    newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
-                #else
-                    newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
-                #endif
-                newInfo.m_Size = static_cast<uint64_t>( info.st_size );
-            }
-        }
-        closedir( dir );
+            // get additional info
+            struct stat info;
+            VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
+            newInfo.m_Attributes = info.st_mode;
+    #if defined( __APPLE__ )
+            newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
     #else
-        #error Unknown platform
+            newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
     #endif
+            newInfo.m_Size = static_cast<uint64_t>( info.st_size );
+        }
+    }
+    closedir( dir );
+#else
+    #error Unknown platform
+#endif
 }
 
 // GetFilesNoRecurseEx
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurseEx( const char * path,
-                                             const Array< AString > * patterns,
-                                             Array< FileInfo > * results )
+                                             const Array<AString> * patterns,
+                                             Array<FileInfo> * results )
 {
-    AStackString< 256 > pathCopy( path );
+    AStackString<256> pathCopy( path );
     PathUtils::EnsureTrailingSlash( pathCopy );
     const uint32_t baseLength = pathCopy.GetLength();
 
-    #if defined( __WINDOWS__ )
-        pathCopy += '*';
+#if defined( __WINDOWS__ )
+    pathCopy += '*';
 
-        WIN32_FIND_DATA findData;
-        HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
-        if ( hFind == INVALID_HANDLE_VALUE)
+    WIN32_FIND_DATA findData;
+    HANDLE hFind = FindFirstFileEx( pathCopy.Get(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0 );
+    if ( hFind == INVALID_HANDLE_VALUE )
+    {
+        return;
+    }
+
+    do
+    {
+        if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
         {
-            return;
+            continue;
         }
 
-        do
+        if ( IsMatch( patterns, findData.cFileName ) )
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-            {
-                continue;
-            }
+            pathCopy.SetLength( baseLength );
+            pathCopy += findData.cFileName;
 
-            if ( IsMatch( patterns, findData.cFileName ) )
+            if ( results->GetSize() == results->GetCapacity() )
             {
-                pathCopy.SetLength( baseLength );
-                pathCopy += findData.cFileName;
-
-                if ( results->GetSize() == results->GetCapacity() )
-                {
-                    results->SetCapacity( results->GetSize() * 2 );
-                }
-                results->SetSize( results->GetSize() + 1 );
-                FileInfo & newInfo = results->Top();
-                newInfo.m_Name = pathCopy;
-                newInfo.m_Attributes = findData.dwFileAttributes;
-                newInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
-                newInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
+                results->SetCapacity( results->GetSize() * 2 );
             }
+            results->SetSize( results->GetSize() + 1 );
+            FileInfo & newInfo = results->Top();
+            newInfo.m_Name = pathCopy;
+            newInfo.m_Attributes = findData.dwFileAttributes;
+            newInfo.m_LastWriteTime = (uint64_t)findData.ftLastWriteTime.dwLowDateTime | ( (uint64_t)findData.ftLastWriteTime.dwHighDateTime << 32 );
+            newInfo.m_Size = (uint64_t)findData.nFileSizeLow | ( (uint64_t)findData.nFileSizeHigh << 32 );
         }
-        while ( FindNextFile( hFind, &findData ) != 0 );
+    } while ( FindNextFile( hFind, &findData ) != 0 );
 
-        FindClose( hFind );
+    FindClose( hFind );
 
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        // Special case symlinks.
-        struct stat stat_source;
-        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    // Special case symlinks.
+    struct stat stat_source;
+    if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+    {
+        return;
+    }
+    if ( S_ISLNK( stat_source.st_mode ) )
+    {
+        return;
+    }
+
+    DIR * dir = opendir( pathCopy.Get() );
+    if ( dir == nullptr )
+    {
+        return;
+    }
+    for ( ;; )
+    {
+        dirent * entry = readdir( dir );
+        if ( entry == nullptr )
         {
-            return;
+            break; // no more entries
         }
-        if ( S_ISLNK( stat_source.st_mode ) )
+
+        bool isDir = ( entry->d_type == DT_DIR );
+
+        // Not all filesystems have support for returning the file type in
+        // d_type and applications must properly handle a return of DT_UNKNOWN.
+        if ( entry->d_type == DT_UNKNOWN )
         {
-            return;
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+
+            struct stat info;
+            VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
+            isDir = S_ISDIR( info.st_mode );
         }
 
-        DIR * dir = opendir( pathCopy.Get() );
-        if ( dir == nullptr )
+        // dir?
+        if ( isDir )
         {
-            return;
+            // ingnore dirs
+            continue;
         }
-        for ( ;; )
+
+        // file - does it match wildcard?
+        if ( IsMatch( patterns, entry->d_name ) )
         {
-            dirent * entry = readdir( dir );
-            if ( entry == nullptr )
+            pathCopy.SetLength( baseLength );
+            pathCopy += entry->d_name;
+
+            if ( results->GetSize() == results->GetCapacity() )
             {
-                break; // no more entries
+                results->SetCapacity( results->GetSize() * 2 );
             }
+            results->SetSize( results->GetSize() + 1 );
+            FileInfo & newInfo = results->Top();
+            newInfo.m_Name = pathCopy;
 
-            bool isDir = ( entry->d_type == DT_DIR );
-
-            // Not all filesystems have support for returning the file type in
-            // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if ( entry->d_type == DT_UNKNOWN )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-
-                struct stat info;
-                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR( info.st_mode );
-            }
-
-            // dir?
-            if ( isDir )
-            {
-                // ingnore dirs
-                continue;
-            }
-
-            // file - does it match wildcard?
-            if ( IsMatch( patterns, entry->d_name ) )
-            {
-                pathCopy.SetLength( baseLength );
-                pathCopy += entry->d_name;
-
-                if ( results->GetSize() == results->GetCapacity() )
-                {
-                    results->SetCapacity( results->GetSize() * 2 );
-                }
-                results->SetSize( results->GetSize() + 1 );
-                FileInfo & newInfo = results->Top();
-                newInfo.m_Name = pathCopy;
-
-                // get additional info
-                struct stat info;
-                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
-                newInfo.m_Attributes = info.st_mode;
-                #if defined( __APPLE__ )
-                    newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
-                #else
-                    newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
-                #endif
-                newInfo.m_Size = static_cast<uint64_t>( info.st_size );
-            }
-        }
-        closedir( dir );
+            // get additional info
+            struct stat info;
+            VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
+            newInfo.m_Attributes = info.st_mode;
+    #if defined( __APPLE__ )
+            newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
     #else
-        #error Unknown platform
+            newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
     #endif
+            newInfo.m_Size = static_cast<uint64_t>( info.st_size );
+        }
+    }
+    closedir( dir );
+#else
+    #error Unknown platform
+#endif
 }
 
 // WorkAroundForWindowsFilePermissionProblem
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    /*static*/ void FileIO::WorkAroundForWindowsFilePermissionProblem( const AString & fileName,
-                                                                       const uint32_t openMode,
-                                                                       const uint32_t timeoutSeconds )
+/*static*/ void FileIO::WorkAroundForWindowsFilePermissionProblem( const AString & fileName,
+                                                                   const uint32_t openMode,
+                                                                   const uint32_t timeoutSeconds )
+{
+    // Sometimes after closing a file, subsequent operations on that file will
+    // fail.  For example, trying to set the file time, or even another process
+    // opening the file.
+    //
+    // This seems to be a known issue in windows, with multiple potential causes
+    // like Virus scanners and possibly the behaviour of the kernel itself.
+    //
+    // A work-around for this problem is to attempt to open a file we just closed.
+    // This will sometimes fail, but if we retry until it succeeds, we avoid the
+    // problem on the subsequent operation.
+    FileStream f;
+    const Timer timer;
+    while ( f.Open( fileName.Get(), openMode ) == false )
     {
-        // Sometimes after closing a file, subsequent operations on that file will
-        // fail.  For example, trying to set the file time, or even another process
-        // opening the file.
-        //
-        // This seems to be a known issue in windows, with multiple potential causes
-        // like Virus scanners and possibly the behaviour of the kernel itself.
-        //
-        // A work-around for this problem is to attempt to open a file we just closed.
-        // This will sometimes fail, but if we retry until it succeeds, we avoid the
-        // problem on the subsequent operation.
-        FileStream f;
-        const Timer timer;
-        while ( f.Open( fileName.Get(), openMode ) == false )
-        {
-            Thread::Sleep( 1 );
+        Thread::Sleep( 1 );
 
-            // timeout so we don't get stuck in here forever
-            if ( timer.GetElapsed() > (float)timeoutSeconds )
-            {
-                ASSERTM( false, "WorkAroundForWindowsFilePermissionProblem Failed\n"
-                                "File   : %s\n"
-                                "Error  : %s\n"
-                                "Timeout: %u s",
-                                fileName.Get(), LAST_ERROR_STR, timeoutSeconds );
-                return;
-            }
+        // timeout so we don't get stuck in here forever
+        if ( timer.GetElapsed() > (float)timeoutSeconds )
+        {
+            ASSERTM( false,
+                     "WorkAroundForWindowsFilePermissionProblem Failed\n"
+                     "File   : %s\n"
+                     "Error  : %s\n"
+                     "Timeout: %u s",
+                     fileName.Get(),
+                     LAST_ERROR_STR,
+                     timeoutSeconds );
+            return;
         }
     }
+}
 #endif
 
 // IsWindowsLongPathSupportEnabled
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    /*static*/ bool FileIO::IsWindowsLongPathSupportEnabled()
-    {
-        // Return the cached value which is valid for the lifetime of the application
-        static bool cachedValue = IsWindowsLongPathSupportEnabledInternal();
-        return cachedValue;
-    }
+/*static*/ bool FileIO::IsWindowsLongPathSupportEnabled()
+{
+    // Return the cached value which is valid for the lifetime of the application
+    static bool cachedValue = IsWindowsLongPathSupportEnabledInternal();
+    return cachedValue;
+}
 #endif
 
 // IsWindowsLongPathSupportEnabledInternal
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    /*static*/ bool FileIO::IsWindowsLongPathSupportEnabledInternal()
+/*static*/ bool FileIO::IsWindowsLongPathSupportEnabledInternal()
+{
+    // Long Paths are available on Windows if:
+    //   a) A registry key is set
+    // AND
+    //   b) The application's manifest opts in to long paths
+    //
+    // When both requirements are met, existing Windows functions can seamlessly
+    // support longer paths.
+    //
+    // See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#enable-long-paths-in-windows-10-version-1607-and-later
+    //
+    // Out applications embed the manifest, so we can query the registry key
+    // to see if support is available.
+    //
+
+    // Open Registry Entry
+    HKEY key;
+    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                       "SYSTEM\\CurrentControlSet\\Control\\FileSystem",
+                       0,
+                       KEY_READ,
+                       &key ) != ERROR_SUCCESS )
     {
-        // Long Paths are available on Windows if:
-        //   a) A registry key is set
-        // AND
-        //   b) The application's manifest opts in to long paths
-        //
-        // When both requirements are met, existing Windows functions can seamlessly
-        // support longer paths.
-        //
-        // See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#enable-long-paths-in-windows-10-version-1607-and-later
-        //
-        // Out applications embed the manifest, so we can query the registry key
-        // to see if support is available.
-        //
-
-        // Open Registry Entry
-        HKEY key;
-        if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\FileSystem", 0, KEY_READ, &key ) != ERROR_SUCCESS )
-        {
-            return false; // Entry doesn't exit
-        }
-
-        // Read Value
-        DWORD value = 0;
-        DWORD valueSize = sizeof(DWORD);
-        const LONG result = ::RegQueryValueEx( key,
-                                                "LongPathsEnabled",
-                                                nullptr,
-                                                nullptr,
-                                                reinterpret_cast<LPBYTE>( &value ),
-                                                &valueSize );
-
-        VERIFY( RegCloseKey( key ) == ERROR_SUCCESS );
-
-        // Was key found and set to 1 (enabled)?
-        return ( ( result == ERROR_SUCCESS ) && ( value == 1 ) );
+        return false; // Entry doesn't exit
     }
+
+    // Read Value
+    DWORD value = 0;
+    DWORD valueSize = sizeof( DWORD );
+    const LONG result = ::RegQueryValueEx( key,
+                                           "LongPathsEnabled",
+                                           nullptr,
+                                           nullptr,
+                                           reinterpret_cast<LPBYTE>( &value ),
+                                           &valueSize );
+
+    VERIFY( RegCloseKey( key ) == ERROR_SUCCESS );
+
+    // Was key found and set to 1 (enabled)?
+    return ( ( result == ERROR_SUCCESS ) && ( value == 1 ) );
+}
 #endif
 
 // FileInfo::IsReadOnly
 //------------------------------------------------------------------------------
 bool FileIO::FileInfo::IsReadOnly() const
 {
-    #if defined( __WINDOWS__ )
-        return ( ( m_Attributes & FILE_ATTRIBUTE_READONLY ) == FILE_ATTRIBUTE_READONLY );
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        return ( ( m_Attributes & S_IWUSR ) == 0 );// TODO:LINUX TODO:MAC Is this the correct behaviour?
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return ( ( m_Attributes & FILE_ATTRIBUTE_READONLY ) == FILE_ATTRIBUTE_READONLY );
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    return ( ( m_Attributes & S_IWUSR ) == 0 ); // TODO:LINUX TODO:MAC Is this the correct behaviour?
+#else
+    #error Unknown platform
+#endif
 }
 
 // IsMatch
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::IsMatch( const Array< AString > * patterns, const char * fileName )
+/*static*/ bool FileIO::IsMatch( const Array<AString> * patterns, const char * fileName )
 {
     // no wildcards means match all files (equivalent to *)
     if ( ( patterns == nullptr ) || ( patterns->IsEmpty() ) )

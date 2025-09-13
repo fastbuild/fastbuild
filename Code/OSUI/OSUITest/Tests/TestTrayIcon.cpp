@@ -19,11 +19,13 @@
 namespace
 {
     // Test PNG for OSX
+    // clang-format off
     const uint8_t gIconData[] = { 0x00, 0x00, 0x00, 0x0D, // Length of chunk
                                   0x49, 0x48, 0x44, 0x52, // IHDR chunk
                                   0x00, 0x00, 0x00, 0x01, // Width
                                   0x00, 0x00, 0x00, 0x01, // Height
                                   0x01 };
+    // clang-format on
 }
 #endif
 
@@ -50,26 +52,26 @@ REGISTER_TESTS_END
 void TestTrayIcon::Init() const
 {
     // TODO:B Fix hard coded assumptions about resource name on Windows
-    #if defined( __WINDOWS__ )
-        if (( true ))
-        {
-            return;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    if ( ( true ) )
+    {
+        return;
+    }
+#endif
 
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Create with image data
-    #if defined( __WINDOWS__ )
-        OSWindow window;
-        window.Init( 32, 32, 500, 200 );
-        OSTrayIcon trayIcon( &window, AStackString<>( "Tooltip" ) );
-    #else
-        OSTrayIcon trayIcon( gIconData, sizeof( gIconData ) );
-    #endif
+#if defined( __WINDOWS__ )
+    OSWindow window;
+    window.Init( 32, 32, 500, 200 );
+    OSTrayIcon trayIcon( &window, AStackString( "Tooltip" ) );
+#else
+    OSTrayIcon trayIcon( gIconData, sizeof( gIconData ) );
+#endif
 }
 
 // SetMenu
@@ -77,26 +79,26 @@ void TestTrayIcon::Init() const
 void TestTrayIcon::SetMenu() const
 {
     // TODO:B Fix hard coded assumptions about resource name on Windows
-    #if defined( __WINDOWS__ )
-        if (( true ))
-        {
-            return;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    if ( ( true ) )
+    {
+        return;
+    }
+#endif
 
-    #if defined( __OSX__ )
+#if defined( __OSX__ )
         // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Create
     OSWindow window;
     window.Init( 32, 32, 500, 200 );
-    #if defined( __WINDOWS__ )
-        OSTrayIcon trayIcon( &window, AStackString<>( "Tooltip" ) );
-    #else
-        OSTrayIcon trayIcon( gIconData, sizeof( gIconData ) );
-    #endif
+#if defined( __WINDOWS__ )
+    OSTrayIcon trayIcon( &window, AStackString( "Tooltip" ) );
+#else
+    OSTrayIcon trayIcon( gIconData, sizeof( gIconData ) );
+#endif
 
     // Create menu
     OSMenu menu( &window );

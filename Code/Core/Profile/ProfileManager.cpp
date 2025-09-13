@@ -7,19 +7,19 @@
 
 #ifdef PROFILING_ENABLED
 
-#include "Core/FileIO/FileStream.h"
-#include "Core/Math/xxHash.h"
-#include "Core/Mem/Mem.h"
-#include "Core/Process/Mutex.h"
-#include "Core/Process/Thread.h"
-#include "Core/Profile/Profile.h"
-#include "Core/Strings/AStackString.h"
-#include "Core/Time/Timer.h"
-#include "Core/Tracing/Tracing.h"
+    #include "Core/FileIO/FileStream.h"
+    #include "Core/Math/xxHash.h"
+    #include "Core/Mem/Mem.h"
+    #include "Core/Process/Mutex.h"
+    #include "Core/Process/Thread.h"
+    #include "Core/Profile/Profile.h"
+    #include "Core/Strings/AStackString.h"
+    #include "Core/Time/Timer.h"
+    #include "Core/Tracing/Tracing.h"
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ Array< ProfileManager::ProfileEventInfo > ProfileManager::s_ProfileEventInfo;
+/*static*/ Array<ProfileManager::ProfileEventInfo> ProfileManager::s_ProfileEventInfo;
 
 // Global Data
 //------------------------------------------------------------------------------
@@ -30,8 +30,8 @@ FileStream g_ProfileEventLog;
 //------------------------------------------------------------------------------
 struct ProfileEvent
 {
-    const char *    m_Id;
-    int64_t         m_TimeStamp;
+    const char * m_Id;
+    int64_t m_TimeStamp;
 };
 
 // FormatU64
@@ -67,24 +67,24 @@ void FormatU64( uint64_t value, char * outBuffer )
 //------------------------------------------------------------------------------
 struct ProfileEventBuffer
 {
-    inline void Start( const char * profileId );
-    inline void Stop();
-    inline void SetThreadName( const char * threadName );
+    void Start( const char * profileId );
+    void Stop();
+    void SetThreadName( const char * threadName );
 
     NO_INLINE ProfileEvent * AllocateEventStorage();
 
-    size_t          m_CurrentDepth;
+    size_t m_CurrentDepth;
 
     // keep an expanding buffer of events
-    ProfileEvent *  m_Begin;
-    ProfileEvent *  m_Current;
-    ProfileEvent *  m_MaxEnd;
+    ProfileEvent * m_Begin;
+    ProfileEvent * m_Current;
+    ProfileEvent * m_MaxEnd;
 
-    enum { MAX_THREAD_NAME_LEN = 31 };
-    char                m_ThreadName[ MAX_THREAD_NAME_LEN + 1 ];
+    inline static const size_t kMaxThreadNameLen = 31;
+    char m_ThreadName[ kMaxThreadNameLen + 1 ];
 
     // when allocating memory to track events, do it in blocks
-    enum{ NUM_EVENTS_PER_BLOCK = 8192 }; // 64KiB pages with 8 bytes events
+    inline static const size_t kNumEventsPerBlock = 8192; // 64KiB pages with 8 byte events
 };
 THREAD_LOCAL ProfileEventBuffer tls_ProfileEventBuffer = { 0, nullptr, nullptr, nullptr, "" };
 
@@ -102,7 +102,7 @@ void ProfileEventBuffer::Start( const char * id )
     m_CurrentDepth++;
 
     e->m_Id = id;
-    e->m_TimeStamp =  Timer::GetNow();
+    e->m_TimeStamp = Timer::GetNow();
 
     ++e;
     m_Current = e;
@@ -154,12 +154,12 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     // allocate a fresh block
     MEMTRACKER_DISABLE_THREAD
     {
-        events = FNEW_ARRAY( ProfileEvent[ NUM_EVENTS_PER_BLOCK ] );
+        events = FNEW_ARRAY( ProfileEvent[ kNumEventsPerBlock ] );
     }
     MEMTRACKER_ENABLE_THREAD
     m_Begin = events;
     m_Current = events;
-    m_MaxEnd = events + NUM_EVENTS_PER_BLOCK;
+    m_MaxEnd = events + kNumEventsPerBlock;
 
     return events;
 }
@@ -187,7 +187,10 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     ProfileEventBuffer & buffer = tls_ProfileEventBuffer;
 
     // Take a copy of the name
-    AString::Copy( threadName, buffer.m_ThreadName, Math::Min< size_t >( AString::StrLen( threadName ), ProfileEventBuffer::MAX_THREAD_NAME_LEN ) );
+    AString::Copy( threadName,
+                   buffer.m_ThreadName,
+                   Math::Min<size_t>( AString::StrLen( threadName ),
+                                      ProfileEventBuffer::kMaxThreadNameLen ) );
 }
 
 //------------------------------------------------------------------------------
@@ -224,7 +227,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 //------------------------------------------------------------------------------
 /*static*/ void ProfileManager::SynchronizeNoTag()
 {
-    Array< ProfileEventInfo > infos;
+    Array<ProfileEventInfo> infos;
     {
         MutexHolder mh( g_ProfileManagerMutex );
         infos.Swap( s_ProfileEventInfo );
@@ -240,7 +243,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     }
 
     // write all the events we have
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
     const double freqMul = ( (double)Timer::GetFrequencyInvFloatMS() * 1000.0 );
     if ( g_ProfileEventLog.IsOpen() )
     {

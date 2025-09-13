@@ -40,11 +40,11 @@ private:
         {
         }
 
-        const char *    m_Label;
-        float           m_Value;
-        void *          m_UserData;
+        const char * m_Label;
+        float m_Value;
+        void * m_UserData;
 
-        bool operator < ( const TimingStats & other ) const { return m_Value > other.m_Value; }
+        bool operator<( const TimingStats & other ) const { return m_Value > other.m_Value; }
     };
 };
 

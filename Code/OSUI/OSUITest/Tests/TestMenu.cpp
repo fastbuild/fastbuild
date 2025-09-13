@@ -34,10 +34,10 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestMenu::Empty() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // base Create/destroy without initialization
     OSWindow window;
@@ -49,10 +49,10 @@ void TestMenu::Empty() const
 //------------------------------------------------------------------------------
 void TestMenu::Init() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Initialize and free
     OSWindow window;
@@ -65,10 +65,10 @@ void TestMenu::Init() const
 //------------------------------------------------------------------------------
 void TestMenu::Items() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Create dropdown and populate with items
 

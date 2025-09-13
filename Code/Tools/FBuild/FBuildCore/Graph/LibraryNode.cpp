@@ -7,8 +7,9 @@
 #include "DirectoryListNode.h"
 #include "UnityNode.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
@@ -44,10 +45,10 @@ REFLECT_END( LibraryNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LibraryNode::LibraryNode()
-: ObjectListNode()
-, m_LibrarianType( "auto" )
-, m_LibrarianAllowResponseFile( false )
-, m_LibrarianForceResponseFile( false )
+    : ObjectListNode()
+    , m_LibrarianType( "auto" )
+    , m_LibrarianAllowResponseFile( false )
+    , m_LibrarianForceResponseFile( false )
 {
     m_Type = LIBRARY_NODE;
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
@@ -133,7 +134,7 @@ LibraryNode::~LibraryNode()
     //  handle expanding them into the command line like everything else)
     const size_t startIndex = m_StaticDependencies.GetSize() - m_NumLibrarianAdditionalInputs;
     const size_t endIndex = m_StaticDependencies.GetSize();
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         m_DynamicDependencies.Add( m_StaticDependencies[ i ].GetNode() );
     }
@@ -237,7 +238,7 @@ LibraryNode::~LibraryNode()
 //------------------------------------------------------------------------------
 bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     m_LibrarianOptions.Tokenize( tokens );
 
     // When merging libs for non-MSVC toolchains, merge the source
@@ -249,7 +250,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
-            AStackString<> pre;
+            AStackString pre;
             if ( token.GetLength() > 2 )
             {
                 pre.Assign( token.Get(), token.GetEnd() - 2 );
@@ -258,7 +259,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             // concatenate files, unquoted
             StackArray<AString> inputs;
             GetInputFiles( objectsInsteadOfLibs, inputs );
-            for ( const AString & input: inputs )
+            for ( const AString & input : inputs )
             {
                 fullArgs += pre;
                 fullArgs += input;
@@ -268,13 +269,13 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
-            AStackString<> post( "\"" );
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString post( "\"" );
 
             // concatenate files, quoted
             StackArray<AString> inputs;
             GetInputFiles( objectsInsteadOfLibs, inputs );
-            for ( const AString & input: inputs )
+            for ( const AString & input : inputs )
             {
                 fullArgs += pre;
                 fullArgs += input;
@@ -287,14 +288,14 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             // handle /Option:%2 -> /Option:A
             if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>( token.Get(), token.GetEnd() - 2 );
+                fullArgs += AStackString( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += m_Name;
         }
         else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += m_Name;
             fullArgs += '"'; // post
@@ -383,8 +384,8 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         args.Tokenize( tokenRanges );
         for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            const AStackString<> token( ( args.Get() + tokenRange.m_StartIndex ),
-                                        ( args.Get() + tokenRange.m_EndIndex ) );
+            const AStackString token( ( args.Get() + tokenRange.m_StartIndex ),
+                                      ( args.Get() + tokenRange.m_EndIndex ) );
 
             if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
             {
@@ -401,7 +402,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 //------------------------------------------------------------------------------
 void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Lib: ";
@@ -415,7 +416,10 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // GetResponseFileMode
@@ -435,18 +439,18 @@ ArgsResponseFileMode LibraryNode::GetResponseFileMode() const
     }
 
     // Detect a librarian that supports response file args?
-    #if defined( __WINDOWS__ )
-        // Generally only windows applications support response files (to overcome Windows command line limits)
-        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
-        // probably want this for other platforms as well though.
-        if ( GetFlag( LIB_FLAG_LIB ) ||
-             GetFlag( LIB_FLAG_AR ) ||
-             GetFlag( LIB_FLAG_ORBIS_AR ) ||
-             GetFlag( LIB_FLAG_GREENHILLS_AX ) )
-        {
-            return ArgsResponseFileMode::IF_NEEDED;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // Generally only windows applications support response files (to overcome Windows command line limits)
+    // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+    // probably want this for other platforms as well though.
+    if ( GetFlag( LIB_FLAG_LIB ) ||
+         GetFlag( LIB_FLAG_AR ) ||
+         GetFlag( LIB_FLAG_ORBIS_AR ) ||
+         GetFlag( LIB_FLAG_GREENHILLS_AX ) )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+#endif
 
     // Cannot use response files
     return ArgsResponseFileMode::NEVER;

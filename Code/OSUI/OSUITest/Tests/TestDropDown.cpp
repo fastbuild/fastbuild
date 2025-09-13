@@ -37,10 +37,10 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestDropDown::Empty() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // base Create/destroy without initialization
     OSWindow window;
@@ -52,10 +52,10 @@ void TestDropDown::Empty() const
 //------------------------------------------------------------------------------
 void TestDropDown::Init() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Initialize and free
     OSWindow window;
@@ -71,15 +71,15 @@ void TestDropDown::Init() const
 //------------------------------------------------------------------------------
 void TestDropDown::Items() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
 
-        if (( true ))
-        {
-            return; // TODO:B fix faulty test for OSX
-        }
-    #endif
+    if ( ( true ) )
+    {
+        return; // TODO:B fix faulty test for OSX
+    }
+#endif
 
     // Create dropdown and populate with items
 
@@ -116,10 +116,10 @@ void TestDropDown::Items() const
 //------------------------------------------------------------------------------
 void TestDropDown::EnableDisable() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Check enabling/disabling
 

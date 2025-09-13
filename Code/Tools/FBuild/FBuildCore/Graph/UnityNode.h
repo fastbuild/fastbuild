@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FileNode.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/FileIO/FileIO.h"
 
@@ -24,8 +27,8 @@ public:
     UnityIsolatedFile( const AString & fileName, const DirectoryListNode * dirListOrigin );
     ~UnityIsolatedFile();
 
-    inline const AString &      GetFileName() const             { return m_FileName; }
-    inline const AString &      GetDirListOriginPath() const    { return m_DirListOriginPath; }
+    const AString & GetFileName() const { return m_FileName; }
+    const AString & GetDirListOriginPath() const { return m_DirListOriginPath; }
 
 protected:
     AString m_FileName;
@@ -44,12 +47,12 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~UnityNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }
+    static Node::Type GetTypeS() { return Node::UNITY_NODE; }
 
-    inline const Array< AString > & GetUnityFileNames() const { return m_UnityFileNames; }
-    inline const Array< UnityIsolatedFile > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
+    const Array<AString> & GetUnityFileNames() const { return m_UnityFileNames; }
+    const Array<UnityIsolatedFile> & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
-    void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
+    void EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
 protected:
     virtual bool DetermineNeedToBuildStatic() const override;
@@ -64,52 +67,52 @@ protected:
         UnityFileAndOrigin();
         UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin );
 
-        inline const AString &              GetName() const             { return m_Info->m_Name; }
-        inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
-        inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
+        const AString & GetName() const { return m_Info->m_Name; }
+        bool IsReadOnly() const { return m_Info->IsReadOnly(); }
+        const DirectoryListNode * GetDirListOrigin() const { return m_DirListOrigin; }
 
-        inline bool                         IsIsolated() const          { return m_Isolated; }
-        inline void                         SetIsolated( bool value )   { m_Isolated = value; }
+        bool IsIsolated() const { return m_Isolated; }
+        void SetIsolated( bool value ) { m_Isolated = value; }
 
-        bool operator < ( const UnityFileAndOrigin & other ) const;
+        bool operator<( const UnityFileAndOrigin & other ) const;
 
     protected:
-        FileIO::FileInfo *      m_Info              = nullptr;
-        DirectoryListNode *     m_DirListOrigin     = nullptr;
-        uint32_t                m_LastSlashIndex    = 0;
-        bool                    m_Isolated          = false;
+        FileIO::FileInfo * m_Info = nullptr;
+        DirectoryListNode * m_DirListOrigin = nullptr;
+        uint32_t m_LastSlashIndex = 0;
+        bool m_Isolated = false;
     };
 
-    bool GetFiles( Array< UnityFileAndOrigin > & files );
-    bool GetIsolatedFilesFromList( Array< AString > & files ) const;
-    void FilterForceIsolated( Array< UnityFileAndOrigin > & files, Array< UnityIsolatedFile > & isolatedFiles );
+    bool GetFiles( Array<UnityFileAndOrigin> & files );
+    bool GetIsolatedFilesFromList( Array<AString> & files ) const;
+    void FilterForceIsolated( Array<UnityFileAndOrigin> & files, Array<UnityIsolatedFile> & isolatedFiles );
 
     // Exposed properties
-    Array< AString > m_InputPaths;
+    Array<AString> m_InputPaths;
     bool m_InputPathRecurse;
-    Array< AString > m_InputPattern;
-    Array< AString > m_Files;
-    Array< AString > m_ObjectLists;
+    Array<AString> m_InputPattern;
+    Array<AString> m_Files;
+    Array<AString> m_ObjectLists;
     AString m_OutputPath;
     AString m_OutputPattern;
     uint32_t m_NumUnityFilesToCreate;
     AString m_PrecompiledHeader;
-    Array< AString > m_PathsToExclude;
-    Array< AString > m_FilesToExclude;
-    Array< AString > m_FilesToIsolate;
+    Array<AString> m_PathsToExclude;
+    Array<AString> m_FilesToExclude;
+    Array<AString> m_FilesToIsolate;
     bool m_IsolateWritableFiles;
     uint32_t m_MaxIsolatedFiles;
     AString m_IsolateListFile;
-    Array< AString > m_ExcludePatterns;
-    Array< AString > m_PreBuildDependencyNames;
+    Array<AString> m_ExcludePatterns;
+    Array<AString> m_PreBuildDependencyNames;
     bool m_UseRelativePaths_Experimental;
 
     // Temporary data
-    Array< FileIO::FileInfo* > m_FilesInfo;
+    Array<FileIO::FileInfo *> m_FilesInfo;
 
     // Internal data persisted between builds
-    Array< UnityIsolatedFile > m_IsolatedFiles;
-    Array< AString > m_UnityFileNames;
+    Array<UnityIsolatedFile> m_IsolatedFiles;
+    Array<AString> m_UnityFileNames;
 };
 
 //------------------------------------------------------------------------------

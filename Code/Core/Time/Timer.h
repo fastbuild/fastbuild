@@ -11,11 +11,15 @@
 class Timer
 {
 public:
-    Timer() { Start(); }
-    inline ~Timer() = default;
+    // Timers auto-start when constructed
+    Timer() { m_StartTime = GetNow(); }
+    ~Timer() = default;
 
-    inline void Start() { m_StartTime = GetNow(); }
-    inline void Start( float time ) { m_StartTime = GetNow() - (int64_t)( (double)GetFrequency() * (double)time ); }
+    // Restart a a timer
+    void Restart() { m_StartTime = GetNow(); }
+
+    // Make a time as if it was started "time" seconds ago
+    void SetElapsed( float time ) { m_StartTime = GetNow() - (int64_t)( (double)GetFrequency() * (double)time ); }
 
     float GetElapsed() const
     {
@@ -30,9 +34,9 @@ public:
     }
 
     static int64_t GetNow();
-    static inline int64_t GetFrequency() { return s_Frequency; }
-    static inline float GetFrequencyInvFloat() { return s_FrequencyInvFloat; }
-    static inline float GetFrequencyInvFloatMS() { return s_FrequencyInvFloatMS; }
+    static int64_t GetFrequency() { return s_Frequency; }
+    static float GetFrequencyInvFloat() { return s_FrequencyInvFloat; }
+    static float GetFrequencyInvFloatMS() { return s_FrequencyInvFloatMS; }
 
 private:
     int64_t m_StartTime;

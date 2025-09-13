@@ -4,8 +4,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// FBuild
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerageClient.h"
+
+// Core
 #include "Core/Containers/Array.h"
-#include "Core/Network/TCPConnectionPool.h"
+#include "Core/Containers/UniquePtr.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AString.h"
@@ -13,7 +17,8 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class ConstMemoryStream;
+class ClientToWorkerConnection;
+class ClientWorkerInfo;
 class Job;
 class MemoryStream;
 class MultiBuffer;
@@ -32,71 +37,52 @@ class ToolManifest;
 
 // Client
 //------------------------------------------------------------------------------
-class Client : public TCPConnectionPool
+class Client
 {
 public:
-    Client( const Array< AString > & workerList,
+    Client( const Array<AString> & explicitWorkerList,
             uint16_t port,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
-    virtual ~Client() override;
+    ~Client();
+
+    uint16_t GetPort() const { return m_Port; }
+
+    uint32_t GetNumConnections() const;
 
 private:
-    virtual void OnDisconnected( const ConnectionInfo * connection ) override;
-    virtual void OnReceive( const ConnectionInfo * connection, void * data, uint32_t size, bool & keepMemory ) override;
-
-    void Process( const ConnectionInfo * connection, const Protocol::MsgRequestJob * msg );
-    void Process( const ConnectionInfo * connection, const Protocol::MsgJobResult *, const void * payload, size_t payloadSize );
-    void Process( const ConnectionInfo * connection, const Protocol::MsgJobResultCompressed * msg, const void * payload, size_t payloadSize );
-    void Process( const ConnectionInfo * connection, const Protocol::MsgRequestManifest * msg );
-    void Process( const ConnectionInfo * connection, const Protocol::MsgRequestFile * msg );
-    void Process( const ConnectionInfo * connection, const Protocol::MsgConnectionAck * msg );
-
-    void ProcessJobResultCommon( const ConnectionInfo * connection, bool isCompressed, const void * payload, size_t payloadSize );
-
-    const ToolManifest * FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const;
-    bool WriteFileToDisk( const AString & fileName, const MultiBuffer & multiBuffer, size_t index ) const;
+    Client & operator=( const Client & other ) = delete;
 
     static uint32_t ThreadFuncStatic( void * param );
-    void            ThreadFunc();
+    void ThreadFunc();
 
-    void            LookForWorkers();
-    void            CommunicateJobAvailability();
+    void FindPotentialWorkers();
+    void RegisterFoundWorkers( const Array<AString> & workerList,
+                               const AString * brokeragePaths );
+    void ConnectToWorkers();
+    void CommunicateJobAvailability();
 
-    // More verbose name to avoid conflict with windows.h SendMessage
-    void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );
-    void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
-    void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const ConstMemoryStream & memoryStream );
+    // Worker pool
+    bool m_WorkerDiscoveryDone = false;
+    Array<AString> m_StaticWorkerList; // optional explicit list to use (overrides discovery)
+    Array<UniquePtr<ClientWorkerInfo>> m_WorkerPool; // workers to potentially connect to
+    uint32_t m_NextWorkerIndex = 0; // next worker we will attempt to connect to
+    WorkerBrokerageClient m_WorkerBrokerage; // Helper for access to brokerage
 
-    Array< AString >    m_WorkerList;   // workers to connect to
-    Atomic<bool>        m_ShouldExit;   // signal from main thread
-    bool                m_DetailedLogging;
-    Thread              m_Thread;       // the thread to find and manage workers
+    // Primary "Client" thread
+    Atomic<bool> m_ShouldExit{ false }; // signal from main thread
+    Thread m_Thread; // the thread to find and manage workers
 
     // state
-    Timer               m_StatusUpdateTimer;
+    Timer m_StatusUpdateTimer;
 
-    struct ServerState
-    {
-        explicit ServerState();
+    // Workers we are connected to (or establishing/cleaning up a connection to)
+    Array<UniquePtr<ClientToWorkerConnection>> m_ActiveConnections;
 
-        const ConnectionInfo *  m_Connection;
-        AString                 m_RemoteName;
-        Atomic<uint16_t>        m_WorkerVersion;
-        Atomic<uint8_t>         m_ProtocolVersionMinor;
-
-        Mutex                   m_Mutex;
-        const Protocol::IMessage * m_CurrentMessage;
-        Timer                   m_DelayTimer;
-        uint32_t                m_NumJobsAvailable;     // num jobs we've told this server we have available
-        Array< Job * >          m_Jobs;                 // jobs we've sent to this server
-
-        bool                    m_Denylisted;
-    };
-    Mutex                   m_ServerListMutex;
-    Array< ServerState >    m_ServerList;
-    uint32_t                m_WorkerConnectionLimit;
-    uint16_t                m_Port;
+    // State that remains constant throughout the build
+    const bool m_DetailedLogging;
+    const uint32_t m_WorkerConnectionLimit;
+    const uint16_t m_Port;
 };
 
 //------------------------------------------------------------------------------

@@ -4,8 +4,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
 // Core
 #include "Core/Env/MSVCStaticAnalysis.h"
@@ -24,23 +24,23 @@ public:
     //
     // 1000 - 1049 : General parsing errors
     //------------------------------------------------------------------------------
-    static void Error_1001_MissingStringStartToken( const BFFToken  * iter,
-                                                 const Function * function );
-    static void Error_1002_MatchingClosingTokenNotFound( const BFFToken  * iter,
+    static void Error_1001_MissingStringStartToken( const BFFToken * iter,
+                                                    const Function * function );
+    static void Error_1002_MatchingClosingTokenNotFound( const BFFToken * iter,
                                                          const Function * function,
                                                          char expectedChar );
     static void Error_1003_EmptyStringNotAllowedInHeader( const BFFToken * iter,
-                                                       const Function * function );
+                                                          const Function * function );
     static void Error_1004_EmptyStringPropertyNotAllowed( const BFFToken * iter,
-                                                       const Function * function,
-                                                       const char * propertyName );
+                                                          const Function * function,
+                                                          const char * propertyName );
     static void Error_1005_UnsupportedNodeType( const BFFToken * iter,
-                                             const Function * function,
-                                             const char * propertyName,
-                                             const AString & nodeName,
-                                             Node::Type nodeType );
+                                                const Function * function,
+                                                const char * propertyName,
+                                                const AString & nodeName,
+                                                Node::Type nodeType );
     static void Error_1006_NothingToBuild( const BFFToken * iter,
-                                        const Function * function );
+                                           const Function * function );
     static void Error_1007_ExpectedVariable( const BFFToken * iter,
                                              const Function * function );
     static void Error_1008_VariableOfWrongType( const BFFToken * iter,
@@ -54,36 +54,36 @@ public:
     static void Error_1011_UnnamedModificationMustFollowAssignment( const BFFToken * iter );
     static void Error_1012_UnexpectedEndOfFile( const BFFToken * iter );
     static void Error_1013_UnexpectedCharInVariableName( const BFFToken * iter,
-                                                       const Function * function );
+                                                         const Function * function );
     static void Error_1014_VariableNameIsTooLong( const BFFToken * iter,
-                                                uint32_t length,
-                                                uint32_t maxLength );
+                                                  uint32_t length,
+                                                  uint32_t maxLength );
     static void Error_1015_UnknownFunction( const BFFToken * iter );
     static void Error_1016_UnexpectedCharFollowingVariableName( const BFFToken * iter );
     static void Error_1017_UnexpectedCharInVariableValue( const BFFToken * iter );
     static void Error_1018_IntegerValueCouldNotBeParsed( const BFFToken * iter );
     static void Error_1020_FunctionCanOnlyBeInvokedOnce( const BFFToken * iter,
-                                                       const Function * function );
+                                                         const Function * function );
     static void Error_1021_UnexpectedHeaderForFunction( const BFFToken * iter,
-                                                      const Function * function );
+                                                        const Function * function );
     static void Error_1022_MissingFunctionHeaderCloseToken( const BFFToken * iter,
-                                                          const Function * function );
+                                                            const Function * function );
     static void Error_1023_FunctionRequiresAHeader( const BFFToken * iter,
-                                                  const Function * function );
+                                                    const Function * function );
     static void Error_1024_FunctionRequiresABody( const BFFToken * iter,
-                                                const Function * function );
+                                                  const Function * function );
     static void Error_1025_MissingScopeCloseToken( const BFFToken * iter,
                                                    const Function * function );
     static void Error_1026_VariableNotFoundForModification( const BFFToken * iter,
-                                                           const AString & variableName );
+                                                            const AString & variableName );
     static void Error_1027_CannotModify( const BFFToken * iter,
-                                            const AString & variableName,
-                                            BFFVariable::VarType dstType,
-                                            BFFVariable::VarType srcType );
+                                         const AString & variableName,
+                                         BFFVariable::VarType dstType,
+                                         BFFVariable::VarType srcType );
     static void Error_1028_MissingVariableSubstitutionEnd( const BFFToken * iter );
     static void Error_1029_VariableForSubstitutionIsNotAString( const BFFToken * iter,
-                                                              const AString & variableName,
-                                                              BFFVariable::VarType varType );
+                                                                const AString & variableName,
+                                                                BFFVariable::VarType varType );
     static void Error_1030_UnknownDirective( const BFFToken * iter,
                                              const AString & directiveName );
     static void Error_1031_UnexpectedCharFollowingDirectiveName( const BFFToken * iter,
@@ -97,7 +97,7 @@ public:
     static void Error_1034_OperationNotSupported( const BFFToken * rhsIter,
                                                   BFFVariable::VarType lhs,
                                                   BFFVariable::VarType rhs,
-                                                  const  BFFToken * operatorIter );
+                                                  const BFFToken * operatorIter );
     static void Error_1035_ExcessiveDepthComplexity( const BFFToken * iter );
     //static void Error_1036_UnknownTokenInIfDirective( const BFFToken * iter );
     static void Error_1037_EndIfWithoutIf( const BFFToken * iter );
@@ -105,26 +105,27 @@ public:
     static void Error_1039_UnknownTokenInUndef( const BFFToken * iter );
     static void Error_1040_UndefOfBuiltInTokenNotAllowed( const BFFToken * iter );
     static void Error_1041_ElseWithoutIf( const BFFToken * iter );
-    static void Error_1042_UnknownOperator(const BFFToken * iter, const AString & operatorName );
+    static void Error_1042_UnknownOperator( const BFFToken * iter, const AString & operatorName );
     static void Error_1043_CyclicDependencyDetected( const BFFToken * iter, const AString & nodeName );
     static void Error_1044_OperatorExpected( const BFFToken * iter );
-    static void Error_1045_ExtraneousTokenFollowingDirective( const BFFToken * iter, const char * directiveName );
-    static void Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken* iter );
-    static void Error_1047_IfExpressionTooComplex( const BFFToken* iter );
+    static void Error_1045_ExtraneousTokenFollowingDirective( const BFFToken * iter,
+                                                              const char * directiveName );
+    static void Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter );
+    static void Error_1047_IfExpressionTooComplex( const BFFToken * iter );
 
     // 1050 - 1099 : Variable type errors
     //------------------------------------------------------------------------------
     static void Error_1050_PropertyMustBeOfType( const BFFToken * iter,
-                                               const Function * function,
-                                               const char * propertyName,
-                                               BFFVariable::VarType foundType,
-                                               BFFVariable::VarType requiredType,
-                                               BFFVariable::VarType alternateRequiredType = BFFVariable::VAR_ANY );
+                                                 const Function * function,
+                                                 const char * propertyName,
+                                                 BFFVariable::VarType foundType,
+                                                 BFFVariable::VarType requiredType,
+                                                 BFFVariable::VarType alternateRequiredType = BFFVariable::VAR_ANY );
     static void Error_1054_IntegerOutOfRange( const BFFToken * iter,
-                                            const Function * function,
-                                            const char * propertyName,
-                                            int rangeMin,
-                                            int rangeMax );
+                                              const Function * function,
+                                              const char * propertyName,
+                                              int rangeMin,
+                                              int rangeMax );
     static void Error_1060_CantModifyFrozenVar( const BFFToken * iter,
                                                 const Function * function,
                                                 const BFFVariable * var );
@@ -137,27 +138,27 @@ public:
     // 1100 - 1199 : General function definition errors
     //------------------------------------------------------------------------------
     static void Error_1100_AlreadyDefined( const BFFToken * iter,
-                                          const Function * function,
-                                          const AString & name,
-                                          const BFFToken * previousDeclarationToken = nullptr );
-    static void Error_1101_MissingProperty( const BFFToken * iter,
                                            const Function * function,
-                                           const AString & name );
-    static void Error_1102_UnexpectedType( const BFFToken * iter,
-                                          const Function * function,
-                                          const char * propertyName,
-                                          const AString & name,
-                                          Node::Type foundType,
-                                          Node::Type expectedType );
-    static void Error_1103_NotAFile( const BFFToken * iter,
-                                    const Function * function,
-                                    const char * propertyName,
-                                    const AString & name,
-                                    Node::Type foundType );
-    static void Error_1104_TargetNotDefined( const BFFToken * iter,
+                                           const AString & name,
+                                           const BFFToken * previousDeclarationToken = nullptr );
+    static void Error_1101_MissingProperty( const BFFToken * iter,
                                             const Function * function,
-                                            const char * propertyName,
                                             const AString & name );
+    static void Error_1102_UnexpectedType( const BFFToken * iter,
+                                           const Function * function,
+                                           const char * propertyName,
+                                           const AString & name,
+                                           Node::Type foundType,
+                                           Node::Type expectedType );
+    static void Error_1103_NotAFile( const BFFToken * iter,
+                                     const Function * function,
+                                     const char * propertyName,
+                                     const AString & name,
+                                     Node::Type foundType );
+    static void Error_1104_TargetNotDefined( const BFFToken * iter,
+                                             const Function * function,
+                                             const char * propertyName,
+                                             const AString & name );
     static void Error_1105_PathNotAllowed( const BFFToken * iter,
                                            const Function * function,
                                            const char * propertyName,
@@ -178,26 +179,25 @@ public:
     // 1200 - 1299 : ForEach specific errors
     //------------------------------------------------------------------------------
     static void Error_1200_ExpectedVar( const BFFToken * iter,
-                                       const Function * function );
+                                        const Function * function );
     static void Error_1201_MissingIn( const BFFToken * iter,
-                                     const Function * function );
+                                      const Function * function );
     static void Error_1202_ExpectedVarFollowingIn( const BFFToken * iter,
-                                                  const Function * function );
+                                                   const Function * function );
     static void Error_1204_LoopVariableLengthsDiffer( const BFFToken * iter,
-                                                     const Function * function,
-                                                     const char * variableName,
-                                                     uint32_t foundSize,
-                                                     uint32_t expectedSize );
+                                                      const Function * function,
+                                                      const char * variableName,
+                                                      uint32_t foundSize,
+                                                      uint32_t expectedSize );
     static void Error_1254_UnrecognizedOperator( const BFFToken * iter,
                                                  const Function * function );
 
     // 1300 - 1399 : Library specific errors
     //------------------------------------------------------------------------------
-    static void Error_1300_MissingPCHArgs( const BFFToken * iter,
-                                          const Function * function );
+    static void Error_1300_MissingPCHArgs( const BFFToken * iter, const Function * function );
     static void Error_1301_AlreadyDefinedPCH( const BFFToken * iter,
-                                          const Function * function,
-                                          const char * pch );
+                                              const Function * function,
+                                              const char * pch );
     static void Error_1302_MissingPCHCompilerOption( const BFFToken * iter,
                                                      const Function * function,
                                                      const char * option,
@@ -255,7 +255,8 @@ private:
     static void FormatError( const BFFToken * iter,
                              uint32_t errNum,
                              const Function * function,
-                             MSVC_SAL_PRINTF const char * message, ... ) FORMAT_STRING( 4, 5 );
+                             MSVC_SAL_PRINTF const char * message,
+                             ... ) FORMAT_STRING( 4, 5 );
 };
 
 //------------------------------------------------------------------------------

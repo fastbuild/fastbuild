@@ -24,7 +24,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilationDatabase::CompilationDatabase()
-: m_Output( 4 * 1024 * 1024 )
+    : m_Output( 4 * 1024 * 1024 )
 {
     m_DirectoryEscaped = FBuild::Get().GetWorkingDir();
     JSON::Escape( m_DirectoryEscaped );
@@ -92,17 +92,17 @@ void CompilationDatabase::VisitNodes( const NodeGraph & nodeGraph,
             case Node::DIRECTORY_LIST_NODE:
             {
                 // Build directory list node to populate its file list
-                node->CastTo< DirectoryListNode >()->DoBuild( nullptr );
+                node->CastTo<DirectoryListNode>()->DoBuild( nullptr );
                 break;
             }
             case Node::OBJECT_LIST_NODE:
             {
-                HandleObjectListNode( nodeGraph, node->CastTo< ObjectListNode >() );
+                HandleObjectListNode( nodeGraph, node->CastTo<ObjectListNode>() );
                 break;
             }
             case Node::LIBRARY_NODE:
             {
-                HandleObjectListNode( nodeGraph, node->CastTo< LibraryNode >() );
+                HandleObjectListNode( nodeGraph, node->CastTo<LibraryNode>() );
                 break;
             }
             default: break;
@@ -123,7 +123,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
     // Check for MSVC
     const bool isMSVC = compilerNode &&
                         ( compilerNode->GetType() == Node::COMPILER_NODE ) &&
-                        ( compilerNode->CastTo< CompilerNode >()->GetCompilerFamily() == CompilerNode::MSVC );
+                        ( compilerNode->CastTo<CompilerNode>()->GetCompilerFamily() == CompilerNode::MSVC );
 
     // Get the compiler executable name
     if ( compilerNode )
@@ -131,7 +131,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
         if ( compilerNode->GetType() == Node::COMPILER_NODE )
         {
             // Use the name of the executable when dealing with an actual CompilerNode
-            ctx.m_CompilerEscaped = compilerNode->CastTo< CompilerNode >()->GetExecutable();
+            ctx.m_CompilerEscaped = compilerNode->CastTo<CompilerNode>()->GetExecutable();
         }
         else
         {
@@ -166,7 +166,7 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
 //------------------------------------------------------------------------------
 /*static*/ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AString & baseDir, void * userData )
 {
-    ObjectListContext * ctx = static_cast< ObjectListContext * >( userData );
+    ObjectListContext * ctx = static_cast<ObjectListContext *>( userData );
     ctx->m_DB->HandleInputFile( inputFile, baseDir, ctx );
 }
 
@@ -174,11 +174,11 @@ void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, Obj
 //------------------------------------------------------------------------------
 void CompilationDatabase::HandleInputFile( const AString & inputFile, const AString & baseDir, ObjectListContext * ctx )
 {
-    AStackString<> inputFileEscaped;
+    AStackString inputFileEscaped;
     inputFileEscaped = inputFile;
     JSON::Escape( inputFileEscaped );
 
-    AStackString<> outputFileEscaped;
+    AStackString outputFileEscaped;
     ctx->m_ObjectListNode->GetObjectFileName( inputFile, baseDir, outputFileEscaped );
     JSON::Escape( outputFileEscaped );
 
@@ -196,7 +196,7 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
         const char * found = argument.Find( "%1" );
         if ( found )
         {
-            AStackString<> arg;
+            AStackString arg;
             arg.Append( argument.Get(), (size_t)( found - argument.Get() ) );
             arg.Append( inputFileEscaped );
             arg.Append( found + 2, (size_t)( argument.GetEnd() - ( found + 2 ) ) );
@@ -209,7 +209,7 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
         found = argument.Find( "%2" );
         if ( found )
         {
-            AStackString<> arg;
+            AStackString arg;
             arg.Append( argument.Get(), (size_t)( found - argument.Get() ) );
             arg.Append( outputFileEscaped );
             arg.Append( found + 2, (size_t)( argument.GetEnd() - ( found + 2 ) ) );

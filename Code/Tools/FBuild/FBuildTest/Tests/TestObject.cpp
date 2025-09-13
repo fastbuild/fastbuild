@@ -50,9 +50,9 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( SourceMapping )
     REGISTER_TEST( ClangExplicitLanguageType )
     REGISTER_TEST( ClangDependencyArgs )
-    #if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
-        REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
-    #endif
+#if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
+    REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
+#endif
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -61,25 +61,25 @@ void TestObject::MSVCArgHelpers() const
 {
     // Exact match args, using /
     {
-        AStackString<> token( "/Zi" );
+        AStackString token( "/Zi" );
         TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) );
     }
 
     // Exact match args, using -
     {
-        AStackString<> token( "-Zi" );
+        AStackString token( "-Zi" );
         TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) );
     }
 
     // Starts with args, using /
     {
-        AStackString<> token( "/Ipath/path" );
+        AStackString token( "/Ipath/path" );
         TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) );
     }
 
     // Starts with args, using -
     {
-        AStackString<> token( "-Ipath/path" );
+        AStackString token( "-Ipath/path" );
         TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) );
     }
 }
@@ -104,10 +104,9 @@ void TestObject::Preprocessor() const
         TEST_ASSERT( fBuild.Build( "CustomPreprocessor" ) );
         fBuild.SaveDependencyGraph( database );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_NODE ); // 1x cpp
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE ); // 1x cpp
     }
 
     // No Rebuild
@@ -121,10 +120,9 @@ void TestObject::Preprocessor() const
         // Compile
         TEST_ASSERT( fBuild.Build( "CustomPreprocessor" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // 1x cpp
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE ); // 1x cpp
     }
 }
 
@@ -132,10 +130,10 @@ void TestObject::Preprocessor() const
 //------------------------------------------------------------------------------
 void TestObject::TestStaleDynamicDeps() const
 {
-    const char* fileA = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
-    const char* fileB = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
-    const char* fileC = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileC.h";
-    const char* database = "../tmp/Test/Object/StaleDynamicDeps/fbuild.fdb";
+    const char * fileA = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
+    const char * fileB = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
+    const char * fileC = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileC.h";
+    const char * database = "../tmp/Test/Object/StaleDynamicDeps/fbuild.fdb";
 
     // Build CPP Generator
     {
@@ -175,21 +173,19 @@ void TestObject::TestStaleDynamicDeps() const
         // Save DB
         TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode ( 2,     2,      Node::COMPILER_NODE );
-        CheckStatsNode ( 4,     4,      Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity
-
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 2, 2, Node::COMPILER_NODE );
+        CheckStatsNode( 4, 4, Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity
     }
 
     // Delete one of the generated headers
     EnsureFileDoesNotExist( fileB );
 
     // TODO:B Get rid of this (needed to work around poor filetime granularity)
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Build Again
     {
@@ -202,11 +198,10 @@ void TestObject::TestStaleDynamicDeps() const
         // Compile
         TEST_ASSERT( fBuild.Build( "StaleDynamicDeps" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode ( 2,     0,      Node::COMPILER_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity, rebuild of unity
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity, rebuild of unity
     }
 }
 
@@ -215,12 +210,12 @@ void TestObject::TestStaleDynamicDeps() const
 //  - Ensure a file rebuilds if the time changes into the past
 void TestObject::ModTimeChangeBackwards() const
 {
-    const AStackString<> fileA( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileA.cpp" );
-    const AStackString<> fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
+    const AStackString fileA( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileA.cpp" );
+    const AStackString fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
     const char * database = "../tmp/Test/Object/ModTimeChangeBackwards/fbuild.fdb";
 
     // Generate full path file fileA
-    AStackString<> fileAFullPath;
+    AStackString fileAFullPath;
     {
         FileIO::GetCurrentDir( fileAFullPath );
         fileAFullPath += '/';
@@ -273,12 +268,11 @@ void TestObject::ModTimeChangeBackwards() const
         // Save DB
         TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
 
-        // Check stats
-        //              Seen,   Built,  Type
-        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode( 1,      1,      Node::COMPILER_NODE );
-        CheckStatsNode( 2,      2,      Node::OBJECT_NODE );
-        CheckStatsNode( 1,      1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Change modtime into the past
@@ -306,12 +300,11 @@ void TestObject::ModTimeChangeBackwards() const
         // Save DB
         TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
 
-        // Check stats
-        //              Seen,   Built,  Type
-        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
-        CheckStatsNode( 2,      1,      Node::OBJECT_NODE );    // Note: One object rebuilds
-        CheckStatsNode( 1,      1,      Node::LIBRARY_NODE );   // Note: library rebuilds
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 2, 1, Node::OBJECT_NODE );    // Note: One object rebuilds
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );   // Note: library rebuilds
     }
 
     // Ensure no rebuild
@@ -325,12 +318,11 @@ void TestObject::ModTimeChangeBackwards() const
         // Compile
         TEST_ASSERT( fBuild.Build( "ModTimeChangeBackwards" ) );
 
-        // Check stats
-        //              Seen,   Built,  Type
-        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
-        CheckStatsNode( 2,      0,      Node::OBJECT_NODE );
-        CheckStatsNode( 1,      0,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 0, Node::LIBRARY_NODE );
     }
 }
 
@@ -350,18 +342,19 @@ void TestObject::CacheUsingRelativePaths() const
     const char * dstPathB = "../tmp/Test/Object/CacheUsingRelativePaths/B/Code";
     const char * dstPaths[] = { dstPathA, dstPathB };
 
-    #if defined( __WINDOWS__ )
-        const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.obj";
-    #else
-        const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.obj";
+#else
+    const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.o";
+#endif
 
     // Copy file structure to both destinations
     for ( const char * dstPath : dstPaths )
     {
         for ( const char * file : files )
         {
-            AStackString<> src, dst;
+            AStackString src;
+            AStackString dst;
             src.Format( "%s/%s", srcPath, file );
             dst.Format( "%s/%s", dstPath, file );
             TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
@@ -375,8 +368,7 @@ void TestObject::CacheUsingRelativePaths() const
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheWrite = true;
-        //options.m_ForceCleanBuild = true;
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/CacheUsingRelativePaths/A/Code/";
@@ -385,7 +377,7 @@ void TestObject::CacheUsingRelativePaths() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
 
         TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
     }
@@ -415,8 +407,7 @@ void TestObject::CacheUsingRelativePaths() const
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheRead = true;
-        //options.m_ForceCleanBuild = true;
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/CacheUsingRelativePaths/B/Code/";
@@ -425,7 +416,7 @@ void TestObject::CacheUsingRelativePaths() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
 
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
     }
@@ -444,16 +435,17 @@ void TestObject::SourceMapping() const
     // Dest paths
     const char * dstPath = "../tmp/Test/Object/SourceMapping/Code";
 
-    #if defined( __WINDOWS__ )
-        const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.obj";
-    #else
-        const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.obj";
+#else
+    const char * objFile = "../tmp/Test/Object/SourceMapping/out/File.o";
+#endif
 
     // Copy file structure to destination
     for ( const char * file : files )
     {
-        AStackString<> src, dst;
+        AStackString src;
+        AStackString dst;
         src.Format( "%s/%s", srcPath, file );
         dst.Format( "%s/%s", dstPath, file );
         TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
@@ -465,7 +457,7 @@ void TestObject::SourceMapping() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/SourceMapping/Code/";
@@ -474,7 +466,7 @@ void TestObject::SourceMapping() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
     }
 
     // Check the object file to make sure the debugging information has been remapped
@@ -499,7 +491,7 @@ void TestObject::ClangExplicitLanguageType() const
 {
     // Ensure explicitly set language args ("-x c++" etc) are replaced with the
     // correct equivalent for preprocessed code ("-x c++-cpp-output" etc)
-    const char* const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangExplicitLanguageType/fbuild.bff";
+    const char * const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangExplicitLanguageType/fbuild.bff";
 
     // Local
     {
@@ -529,7 +521,7 @@ void TestObject::ClangExplicitLanguageType() const
 
         // start a client to emulate the other end
         Server s( 1 );
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         // Compile
         TEST_ASSERT( fBuild.Build( "ClangExplicitLanguageType" ) );
@@ -543,7 +535,7 @@ void TestObject::ClangDependencyArgs() const
     // Ensure explicitly dependency options are removed from the second pass of
     // compilation. Some integrations (like Unreal) use these commands and process
     // the output.
-    const char* const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangDependencyArgs/fbuild.bff";
+    const char * const configFile = "Tools/FBuild/FBuildTest/Data/TestObject/ClangDependencyArgs/fbuild.bff";
 
     // Local
     {
@@ -573,7 +565,7 @@ void TestObject::ClangDependencyArgs() const
 
         // start a client to emulate the other end
         Server s( 1 );
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         // Compile
         TEST_ASSERT( fBuild.Build( "ClangDependencyArgs" ) );
@@ -600,7 +592,7 @@ void TestObject::CLDependencyArgs() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild(options);
+        FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -632,7 +624,7 @@ void TestObject::CLDependencyArgs() const
 
         // start a client to emulate the other end
         Server s( 1 );
-        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+        s.Listen( Protocol::kTestPort );
 
         // Compile
         TEST_ASSERT( fBuild.Build( "CLDependencyArgs" ) );

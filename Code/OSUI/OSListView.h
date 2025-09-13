@@ -30,8 +30,7 @@ public:
     void SetItemText( uint32_t index, uint32_t subItemIndex, const char * text );
 
 protected:
-    OSFont *    m_Font;
+    OSFont * m_Font = nullptr;
 };
 
 //------------------------------------------------------------------------------
-

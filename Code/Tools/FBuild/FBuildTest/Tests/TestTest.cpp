@@ -50,7 +50,7 @@ void TestTest::Build() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> testExe( "../tmp/Test/Test/test.exe" );
+    const AStackString testExe( "../tmp/Test/Test/test.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( testExe );
@@ -62,16 +62,15 @@ void TestTest::Build() const
     // make sure all output is where it is expected
     EnsureFileExists( testExe );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp / linker exe
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
-    CheckStatsNode ( 1,     1,      Node::TEST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 8,     8 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE ); // cpp / linker exe
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::EXE_NODE );
+    CheckStatsNode( 1, 1, Node::TEST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 8, 8 );
 }
 
 // Build_NoRebuild
@@ -87,17 +86,15 @@ void TestTest::Build_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp  / linker exe
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
-    CheckStatsNode ( 1,     0,      Node::TEST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 8,     3 );
-
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::FILE_NODE ); // cpp  / linker exe
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
+    CheckStatsNode( 1, 0, Node::TEST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( 8, 3 );
 }
 
 // Fail_ReturnCode
@@ -161,7 +158,8 @@ void TestTest::Exclusions() const
     TEST_ASSERT( fBuild.Build( "Test" ) );
 
     // Check all the exclusion methods worked as expected
-    const char* const aliasesToCheck[] =
+    // clang-format off
+    const char * const aliasesToCheck[] =
     {
         "ExcludePath-ForwardSlash",
         "ExcludePath-Backslash",
@@ -171,7 +169,8 @@ void TestTest::Exclusions() const
         "ExcludePattern-ForwardSlash",
         "ExcludePattern-Backslash",
     };
-    for (const char* const aliasToCheck : aliasesToCheck)
+    // clang-format on
+    for ( const char * const aliasToCheck : aliasesToCheck )
     {
         // Get the TestNode (via the Alias)
         const Node * aliasNode = fBuild.GetNode( aliasToCheck );

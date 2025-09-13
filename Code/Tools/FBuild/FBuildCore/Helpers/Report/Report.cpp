@@ -66,7 +66,7 @@ Report::~Report()
 //------------------------------------------------------------------------------
 void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > tmp;
+    AStackString<1024> tmp;
 
     va_list args;
     va_start( args, fmtString );
@@ -105,10 +105,10 @@ void Report::GetReportDateTime( AString & outReportDateTime ) const
 //------------------------------------------------------------------------------
 void Report::FixupTimeTakenPlaceholder()
 {
-    const float timeTakenSecs =  m_Timer.GetElapsed();
+    const float timeTakenSecs = m_Timer.GetElapsed();
 
     // patch in time take
-    AStackString<> timeTakenBuffer;
+    AStackString timeTakenBuffer;
     FBuildStats::FormatTime( timeTakenSecs, timeTakenBuffer );
     m_Output.Replace( GetTimeTakenPlaceholder(), timeTakenBuffer.Get() );
 }
@@ -127,7 +127,7 @@ void Report::GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & s
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const
+void Report::GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Node * node, LibraryStats * currentLib ) const
 {
     // skip nodes we've already seen
     if ( node->GetBuildPassTag() == eNodeSeen )
@@ -178,8 +178,8 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
     bool isLibrary = false;
     switch ( type )
     {
-        case Node::DLL_NODE:        isLibrary = true; break;
-        case Node::LIBRARY_NODE:    isLibrary = true; break;
+        case Node::DLL_NODE: isLibrary = true; break;
+        case Node::LIBRARY_NODE: isLibrary = true; break;
         case Node::OBJECT_LIST_NODE: isLibrary = true; break;
         case Node::CS_NODE:
         {
@@ -220,7 +220,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
+void Report::GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
 {
     for ( const Dependency & dep : dependencies )
     {
@@ -264,7 +264,7 @@ void Report::AddInclude( IncludeStatsMap & incStats, const Node * node, const No
     bool isHeaderInPCH = false;
     if ( parentNode->GetType() == Node::OBJECT_NODE )
     {
-        const ObjectNode * obj = parentNode->CastTo< ObjectNode >();
+        const ObjectNode * obj = parentNode->CastTo<ObjectNode>();
         isHeaderInPCH = obj->IsCreatingPCH();
     }
 
@@ -347,7 +347,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 
 // Flatten
 //------------------------------------------------------------------------------
-void Report::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
+void Report::IncludeStatsMap::Flatten( Array<const IncludeStats *> & stats ) const
 {
     for ( size_t i = 0; i < 65536; ++i )
     {

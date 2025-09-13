@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FileNode.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+
+// Core
 #include "Core/Containers/Array.h"
 
 // Forward Declarations
@@ -20,7 +23,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~TextFileNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::TEXT_FILE_NODE; }
+    static Node::Type GetTypeS() { return Node::TEXT_FILE_NODE; }
 
 private:
     virtual bool DetermineNeedToBuildStatic() const override;
@@ -29,10 +32,10 @@ private:
     void EmitCompilationMessage() const;
 
     // Exposed Properties
-    AString             m_TextFileOutput;
-    Array< AString >    m_TextFileInputStrings;
-    bool                m_TextFileAlways;
-    Array< AString >    m_PreBuildDependencyNames;
+    AString m_TextFileOutput;
+    Array<AString> m_TextFileInputStrings;
+    bool m_TextFileAlways;
+    Array<AString> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

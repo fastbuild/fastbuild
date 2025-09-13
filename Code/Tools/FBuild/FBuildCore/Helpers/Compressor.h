@@ -14,7 +14,7 @@ public:
     explicit Compressor();
     ~Compressor();
 
-    static bool     IsValidData( const void * data, size_t dataSize );
+    static bool IsValidData( const void * data, size_t dataSize );
     static uint32_t GetUncompressedSize( const void * data, size_t dataSize );
 
     // compressionLevel:
@@ -29,17 +29,23 @@ public:
     // Decompress (handled all formats including uncompressed)
     bool Decompress( const void * data );
 
-    const void *    GetResult() const       { return m_Result; }
-    size_t          GetResultSize() const   { return m_ResultSize; }
+    const void * GetResult() const { return m_Result; }
+    size_t GetResultSize() const { return m_ResultSize; }
 
-    inline void *   ReleaseResult()         { void * r = m_Result; m_Result = nullptr; m_ResultSize = 0; return r; }
+    void * ReleaseResult()
+    {
+        void * r = m_Result;
+        m_Result = nullptr;
+        m_ResultSize = 0;
+        return r;
+    }
 
 private:
     enum CompressionType : uint32_t
     {
-        eUncompressed   = 0,
-        eLZ4            = 1,
-        eZstd           = 2,
+        eUncompressed = 0,
+        eLZ4 = 1,
+        eZstd = 2,
     };
     struct Header
     {

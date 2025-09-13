@@ -41,14 +41,14 @@ void TestConcurrencyGroups::TooManyGroups() const
 {
     // Generate a BFF with too many Concurrency Groups and verify the correct
     // error is reported.
-    AStackString<> groups;
-    AStackString<> groupNames;
-    for ( size_t i = 0; ( i < SettingsNode::eMaxConcurrencyGroups + 1 ); ++i )
+    AStackString groups;
+    AStackString groupNames;
+    for ( size_t i = 0; ( i < SettingsNode::kMaxConcurrencyGroups + 1 ); ++i )
     {
         groups.AppendFormat( " .GroupName%zu = [ .ConcurrencyGroupName = 'Group%zu' ]", i, i );
         groupNames.AppendFormat( " .GroupName%zu,", i );
     }
-    AStackString<> bff;
+    AStackString bff;
     bff.Format( "Settings\n"
                 "{\n"
                 "    %s\n"

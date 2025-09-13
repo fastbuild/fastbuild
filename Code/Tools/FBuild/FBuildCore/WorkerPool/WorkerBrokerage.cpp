@@ -33,21 +33,21 @@ void WorkerBrokerage::InitBrokerage()
     }
 
     // brokerage path includes version to reduce unnecessary comms attempts
-    const uint32_t protocolVersion = Protocol::PROTOCOL_VERSION_MAJOR;
+    const uint32_t protocolVersion = Protocol::kVersionMajor;
 
     // root folder
-    AStackString<> brokeragePath;
+    AStackString brokeragePath;
     if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath ) )
     {
         // FASTBUILD_BROKERAGE_PATH can contain multiple paths separated by semi-colon. The worker will register itself into the first path only but
         // the additional paths are paths to additional broker roots allowed for finding remote workers (in order of priority)
         const char * start = brokeragePath.Get();
         const char * end = brokeragePath.GetEnd();
-        AStackString<> pathSeparator( ";" );
+        AStackString pathSeparator( ";" );
         while ( true )
         {
-            AStackString<> root;
-            AStackString<> brokerageRoot;
+            AStackString root;
+            AStackString brokerageRoot;
 
             const char * separator = brokeragePath.Find( pathSeparator, start, end );
             if ( separator != nullptr )
@@ -61,13 +61,13 @@ void WorkerBrokerage::InitBrokerage()
             root.TrimStart( ' ' );
             root.TrimEnd( ' ' );
             // <path>/<group>/<version>/
-            #if defined( __WINDOWS__ )
-                brokerageRoot.Format( "%s\\main\\%u.windows\\", root.Get(), protocolVersion );
-            #elif defined( __OSX__ )
-                brokerageRoot.Format( "%s/main/%u.osx/", root.Get(), protocolVersion );
-            #else
-                brokerageRoot.Format( "%s/main/%u.linux/", root.Get(), protocolVersion );
-            #endif
+#if defined( __WINDOWS__ )
+            brokerageRoot.Format( "%s\\main\\%u.windows\\", root.Get(), protocolVersion );
+#elif defined( __OSX__ )
+            brokerageRoot.Format( "%s/main/%u.osx/", root.Get(), protocolVersion );
+#else
+            brokerageRoot.Format( "%s/main/%u.linux/", root.Get(), protocolVersion );
+#endif
 
             m_BrokerageRoots.Append( brokerageRoot );
             if ( !m_BrokerageRootPaths.IsEmpty() )

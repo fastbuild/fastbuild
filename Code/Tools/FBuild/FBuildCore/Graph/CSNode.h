@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FileNode.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+
+// Core
 #include "Core/Containers/Array.h"
 
 // Forward Declarations
@@ -22,7 +25,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~CSNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::CS_NODE; }
+    static Node::Type GetTypeS() { return Node::CS_NODE; }
 
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
@@ -37,22 +40,22 @@ private:
     void GetExtraRefs( Args & fullArgs, const AString & pre, const AString & post ) const;
 
     // Exposed Properties
-    AString             m_Compiler;
-    AString             m_CompilerOptions;
-    AString             m_CompilerOutput;
-    Array< AString >    m_CompilerInputPath;
-    bool                m_CompilerInputPathRecurse;
-    Array< AString >    m_CompilerInputPattern;
-    Array< AString >    m_CompilerInputExcludePath;
-    Array< AString >    m_CompilerInputExcludedFiles;
-    Array< AString >    m_CompilerInputExcludePattern;
-    Array< AString >    m_CompilerInputFiles;
-    Array< AString >    m_CompilerReferences;
-    Array< AString >    m_PreBuildDependencyNames;
+    AString m_Compiler;
+    AString m_CompilerOptions;
+    AString m_CompilerOutput;
+    Array<AString> m_CompilerInputPath;
+    bool m_CompilerInputPathRecurse;
+    Array<AString> m_CompilerInputPattern;
+    Array<AString> m_CompilerInputExcludePath;
+    Array<AString> m_CompilerInputExcludedFiles;
+    Array<AString> m_CompilerInputExcludePattern;
+    Array<AString> m_CompilerInputFiles;
+    Array<AString> m_CompilerReferences;
+    Array<AString> m_PreBuildDependencyNames;
 
     // Internal State
-    uint32_t            m_NumCompilerInputFiles;
-    uint32_t            m_NumCompilerReferences;
+    uint32_t m_NumCompilerInputFiles;
+    uint32_t m_NumCompilerReferences;
 };
 
 //------------------------------------------------------------------------------

@@ -32,7 +32,7 @@ private:
     void TestLinkWithCopy() const;
 
     const char * GetSingleDLLDBFileName() const { return "../tmp/Test/DLL/singledll.fdb"; }
-    const char * GetTwoDLLsDBFileName() const   { return "../tmp/Test/DLL/twodlls.fdb"; }
+    const char * GetTwoDLLsDBFileName() const { return "../tmp/Test/DLL/twodlls.fdb"; }
     const char * GetDLLWithPCHDBFileName() const { return "../tmp/Test/DLL/dllwithpch.fdb"; }
     const char * GetExeWithDLLDBFileName() const { return "../tmp/Test/DLL/dllwithexe.fdb"; }
 };
@@ -62,7 +62,7 @@ void TestDLL::TestSingleDLL() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dll( "../tmp/Test/DLL/dll.dll" );
+    const AStackString dll( "../tmp/Test/DLL/dll.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dll );
@@ -73,12 +73,11 @@ void TestDLL::TestSingleDLL() const
     // make sure all output files are as expected
     EnsureFileExists( dll );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::DLL_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::DLL_NODE );
 }
 
 // TestSingleDLL_NoRebuild
@@ -90,16 +89,15 @@ void TestDLL::TestSingleDLL_NoRebuild() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetSingleDLLDBFileName() ) );
 
-    const AStackString<> dll( "../tmp/Test/DLL/dll.dll" );
+    const AStackString dll( "../tmp/Test/DLL/dll.dll" );
 
     TEST_ASSERT( fBuild.Build( dll ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     0,      Node::DLL_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 0, Node::DLL_NODE );
 }
 
 // TestTwoDLLs
@@ -111,8 +109,8 @@ void TestDLL::TestTwoDLLs() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dllA( "../tmp/Test/DLL/dllA.dll" );
-    const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
+    const AStackString dllA( "../tmp/Test/DLL/dllA.dll" );
+    const AStackString dllB( "../tmp/Test/DLL/dllB.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dllA );
@@ -126,12 +124,11 @@ void TestDLL::TestTwoDLLs() const
     EnsureFileExists( dllA );
     EnsureFileExists( dllB );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 2,     2,      Node::DLL_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 2, 2, Node::DLL_NODE );
 }
 
 // TestTwoDLLs_NoRebuild
@@ -144,16 +141,15 @@ void TestDLL::TestTwoDLLs_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
     // build again
-    const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
+    const AStackString dllB( "../tmp/Test/DLL/dllB.dll" );
     TEST_ASSERT( fBuild.Build( dllB ) );
 
     // Check stats to be sure nothing was built
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 2,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 2,     0,      Node::DLL_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 2, 0, Node::DLL_NODE );
 }
 
 // TestTwoDLLs_NoUnnecessaryRelink
@@ -167,7 +163,7 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
-        const AStackString<> dllA( "../tmp/Test/DLL/dllA.dll" );
+        const AStackString dllA( "../tmp/Test/DLL/dllA.dll" );
 
         // delete DLL A to have it relink (and regen the import lib)
         EnsureFileDoesNotExist( dllA );
@@ -175,11 +171,11 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
         TEST_ASSERT( fBuild.SaveDependencyGraph( GetTwoDLLsDBFileName() ) );
 
         // Check stats to be sure one dll was built
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::DLL_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::DLL_NODE );
     }
 
     // 2) Ensure DLL B does not relink
@@ -190,15 +186,15 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
         // build again
-        const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
+        const AStackString dllB( "../tmp/Test/DLL/dllB.dll" );
         TEST_ASSERT( fBuild.Build( dllB ) );
 
         // Check stats to be sure nothing was built
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-        CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );
-        CheckStatsNode ( 2,     0,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 2,     0,      Node::DLL_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::DLL_NODE );
     }
 }
 
@@ -211,7 +207,7 @@ void TestDLL::TestDLLWithPCH() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
+    const AStackString dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dllPCH );
@@ -223,12 +219,11 @@ void TestDLL::TestDLLWithPCH() const
     // make sure all output files are as expected
     EnsureFileExists( dllPCH );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );// obj + pch obj
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::DLL_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );// obj + pch obj
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::DLL_NODE );
 }
 
 // TestDLLWithPCH_NoRebuild
@@ -241,17 +236,17 @@ void TestDLL::TestDLLWithPCH_NoRebuild() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetDLLWithPCHDBFileName() ) );
 
-    const AStackString<> dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
+    const AStackString dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
 
     // build dllB which depends on dllA
     TEST_ASSERT( fBuild.Build( dllPCH ) );
 
     // Check we build what was expected
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );// obj + pch obj
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     0,      Node::DLL_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_NODE );// obj + pch obj
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 0, Node::DLL_NODE );
 }
 
 // TestExeWithDLL
@@ -263,7 +258,7 @@ void TestDLL::TestExeWithDLL() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
+    const AStackString exe( "../tmp/Test/DLL/exe.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( exe );
@@ -275,13 +270,12 @@ void TestDLL::TestExeWithDLL() const
     // make sure all output files are as expected
     EnsureFileExists( exe );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );    // exe.obj + a.obj
-    CheckStatsNode ( 2,     2,      Node::OBJECT_LIST_NODE );   // exe lib + dll lib
-    CheckStatsNode ( 1,     1,      Node::DLL_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );    // exe.obj + a.obj
+    CheckStatsNode( 2, 2, Node::OBJECT_LIST_NODE );   // exe lib + dll lib
+    CheckStatsNode( 1, 1, Node::DLL_NODE );
+    CheckStatsNode( 1, 1, Node::EXE_NODE );
 }
 
 // TestExeWithDLL_NoRebuild
@@ -296,20 +290,19 @@ void TestDLL::TestExeWithDLL_NoRebuild() const
     // build executable with depends on DLLA
     TEST_ASSERT( fBuild.Build( "../tmp/Test/DLL/exe.exe" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
-    CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );    // exe.obj + a.obj
-    CheckStatsNode ( 2,     0,      Node::OBJECT_LIST_NODE );   // exe lib + dll lib
-    CheckStatsNode ( 1,     0,      Node::DLL_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_NODE );    // exe.obj + a.obj
+    CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );   // exe lib + dll lib
+    CheckStatsNode( 1, 0, Node::DLL_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
 }
 
 // TestValidExeWithDLL
 //------------------------------------------------------------------------------
 void TestDLL::TestValidExeWithDLL() const
 {
-    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
+    const AStackString exe( "../tmp/Test/DLL/exe.exe" );
 
     Process p;
     TEST_ASSERT( p.Spawn( exe.Get(), nullptr, nullptr, nullptr ) );
@@ -330,14 +323,13 @@ void TestDLL::TestLinkWithCopy() const
     // build executable with depends on DLLA
     TEST_ASSERT( fBuild.Build( "DllBUsingCopy" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 2,     2,      Node::DLL_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::COPY_FILE_NODE );
+    CheckStatsNode( 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 2, 2, Node::DLL_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
 }
 
 //------------------------------------------------------------------------------

@@ -5,18 +5,20 @@
 //------------------------------------------------------------------------------
 #include "TestNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Conversions.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Process/Process.h"
+#include "Core/Strings/AStackString.h"
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -142,16 +144,16 @@ const char * TestNode::GetEnvironmentString() const
 
     // get the result of the directory lists and depend on those
     const size_t startIndex = 1 + m_NumTestInputFiles; // Skip Executable + TestInputFiles
-    const size_t endIndex =  ( 1 + m_NumTestInputFiles + m_TestInputPath.GetSize() );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    const size_t endIndex = ( 1 + m_NumTestInputFiles + m_TestInputPath.GetSize() );
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
 
         ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
         // get the list of files
-        const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
+        const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )
         {
@@ -265,7 +267,7 @@ const char * TestNode::GetEnvironmentString() const
 //------------------------------------------------------------------------------
 void TestNode::EmitCompilationMessage( const char * workingDir ) const
 {
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Running Test: ";
@@ -285,7 +287,10 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
             output += '\n';
         }
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 //------------------------------------------------------------------------------

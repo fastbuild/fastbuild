@@ -25,13 +25,13 @@ WorkerBrokerageClient::~WorkerBrokerageClient() = default;
 
 // FindWorkers
 //------------------------------------------------------------------------------
-void WorkerBrokerageClient::FindWorkers( Array< AString > & outWorkerList )
+void WorkerBrokerageClient::FindWorkers( Array<AString> & outWorkerList )
 {
     PROFILE_FUNCTION;
 
     // Check for workers for the FASTBUILD_WORKERS environment variable
     // which is a list of worker addresses separated by a semi-colon.
-    AStackString<> workersEnv;
+    AStackString workersEnv;
     if ( Env::GetEnvVariable( "FASTBUILD_WORKERS", workersEnv ) )
     {
         // If we find a valid list of workers, we'll use that
@@ -52,13 +52,13 @@ void WorkerBrokerageClient::FindWorkers( Array< AString > & outWorkerList )
         return;
     }
 
-    Array< AString > results;
+    Array<AString> results;
     results.SetCapacity( 256 );
-    for( AString & root : m_BrokerageRoots )
+    for ( AString & root : m_BrokerageRoots )
     {
         const size_t filesBeforeSearch = results.GetSize();
         if ( !FileIO::GetFiles( root,
-                                AStackString<>( "*" ),
+                                AStackString( "*" ),
                                 false,
                                 &results ) )
         {
@@ -81,10 +81,10 @@ void WorkerBrokerageClient::FindWorkers( Array< AString > & outWorkerList )
     Network::GetIPv4Addresses( localAddresses );
 
     // convert worker strings
-    for (const AString & fileName : results )
+    for ( const AString & fileName : results )
     {
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
-        AStackString<> workerName( lastSlash + 1 );
+        AStackString workerName( lastSlash + 1 );
 
         // Filter out local addresses
         if ( localAddresses.Find( workerName ) )

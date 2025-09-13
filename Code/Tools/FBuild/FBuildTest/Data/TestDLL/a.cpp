@@ -2,6 +2,7 @@
 // Some exported functions
 //
 #include <PrecompiledHeader.h>
+
 #include "a.h"
 
 int FunctionA()

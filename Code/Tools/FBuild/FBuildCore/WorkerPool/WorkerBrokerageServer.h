@@ -28,15 +28,15 @@ public:
 protected:
     void UpdateBrokerageFilePath();
 
-    Timer               m_TimerLastUpdate;      // Throttle network access
-    Timer               m_TimerLastIPUpdate;    // Throttle dns access
-    Timer               m_TimerLastCleanBroker;
-    uint64_t            m_SettingsWriteTime = 0; // FileTime of settings time when last changed
-    bool                m_Available = false;
-    AString             m_BrokerageFilePath;
-    AString             m_IPAddress;
-    AString             m_DomainName;
-    AString             m_HostName;
+    Timer m_TimerLastUpdate; // Throttle network access
+    Timer m_TimerLastIPUpdate; // Throttle dns access
+    Timer m_TimerLastCleanBroker;
+    uint64_t m_SettingsWriteTime = 0; // FileTime of settings time when last changed
+    bool m_Available = false;
+    AString m_BrokerageFilePath;
+    AString m_IPAddress;
+    AString m_DomainName;
+    AString m_HostName;
 };
 
 //------------------------------------------------------------------------------

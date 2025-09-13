@@ -6,6 +6,10 @@
 //------------------------------------------------------------------------------
 #include "IOStream.h"
 
+// Forward Declarations
+//------------------------------------------------------------------------------
+class MemoryStream;
+
 // ConstMemoryStream
 //------------------------------------------------------------------------------
 class ConstMemoryStream : public IOStream
@@ -15,10 +19,19 @@ public:
     explicit ConstMemoryStream( const void * data, size_t size );
     virtual ~ConstMemoryStream() override;
 
+    // movable
+    explicit ConstMemoryStream( MemoryStream && other );
+    explicit ConstMemoryStream( ConstMemoryStream && other );
+    void operator=( ConstMemoryStream && other );
+
+    // non-copyable
+    explicit ConstMemoryStream( const ConstMemoryStream & other ) = delete;
+    void operator=( const ConstMemoryStream & other ) = delete;
+
     // memory stream specific functions
-    inline const void * GetData() const { return m_Buffer; }
-    inline size_t       GetSize() const { return m_Size; }
-    void                Replace( const void * data, size_t size, bool ownsMemory );
+    const void * GetData() const { return m_Buffer; }
+    size_t GetSize() const { return m_Size; }
+    void Replace( const void * data, size_t size, bool ownsMemory );
 
     // raw read/write functions
     virtual uint64_t ReadBuffer( void * buffer, uint64_t bytesToRead ) override;
@@ -31,10 +44,10 @@ public:
     virtual uint64_t GetFileSize() const override;
 
 private:
-    const void * m_Buffer;
-    size_t m_Size;
-    mutable size_t m_CurrentPos;
-    bool m_OwnsMemory;
+    const void * m_Buffer = nullptr;
+    size_t m_Size = 0;
+    mutable size_t m_CurrentPos = 0;
+    bool m_OwnsMemory = false;
 };
 
 //------------------------------------------------------------------------------

@@ -45,7 +45,7 @@ private:
     const AString mExeName{ "ExeName" };
     const AString mNodeName{ "NodeName" };
 
-    void operator = (TestArgs &) = delete;
+    void operator=( TestArgs & ) = delete;
 };
 
 // Register Tests
@@ -72,48 +72,48 @@ void TestArgs::Unused() const
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_Never_Short() const
 {
-    //     Mode                         LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::NEVER, false,      true,       false );
+    //     Mode                         LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::NEVER, false, true, false );
 }
 
 // ResponseFile_Never_Long
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_Never_Long() const
 {
-    //     Mode                         LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::NEVER, true,       false,      false );
+    //     Mode                         LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::NEVER, true, false, false );
 }
 
 // ResponseFile_IfNeeded_Short
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_IfNeeded_Short() const
 {
-    //     Mode                             LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::IF_NEEDED, false,      true,       false );
+    //     Mode                             LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::IF_NEEDED, false, true, false );
 }
 
 // ResponseFile_IfNeeded_Long
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_IfNeeded_Long() const
 {
-    //     Mode                             LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::IF_NEEDED, true,       true,       true );
+    //     Mode                             LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::IF_NEEDED, true, true, true );
 }
 
 // ResponseFile_Always_Short
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_Always_Short() const
 {
-    //     Mode                             LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::ALWAYS,    false,      true,       true );
+    //     Mode                             LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::ALWAYS, false, true, true );
 }
 
 // ResponseFile_Always_Long
 //------------------------------------------------------------------------------
 void TestArgs::ResponseFile_Always_Long() const
 {
-    //     Mode                             LongArgs    Success     UseResponseFile
-    Check( ArgsResponseFileMode::ALWAYS,    true,       true,       true );
+    //     Mode                             LongArgs, Success, UseResponseFile
+    Check( ArgsResponseFileMode::ALWAYS, true, true, true );
 }
 
 // ResponseFile_CommandLineQuoting
@@ -208,7 +208,7 @@ void TestArgs::ArgumentParsing() const
     CheckParsing( R"(-aaa -D"ARG")", "-aaa", "-DARG" );
 
     // Escaped quotes
-    CheckParsing( R"(-aaa -D\"ARG\")",   "-aaa", R"(-D"ARG")" );
+    CheckParsing( R"(-aaa -D\"ARG\")", "-aaa", R"(-D"ARG")" );
     CheckParsing( R"(-aaa "-D\"ARG\"")", "-aaa", R"(-D"ARG")" );
 
     // Spaces inside quotes
@@ -224,25 +224,25 @@ void TestArgs::CheckParsing( const char * commandLine,
     // Invoke previously built exe which echoes back commands
     Process p;
     TEST_ASSERT( p.Spawn( "../tmp/Test/Args/ResponseFile/ArgumentParsing/Exe.exe",
-                 commandLine,
-                 nullptr, // working dir
-                 nullptr ) ); // environment
+                          commandLine,
+                          nullptr, // working dir
+                          nullptr ) ); // environment
 
     // Capture the output
-    AStackString<> out;
-    AStackString<> err;
+    AStackString out;
+    AStackString err;
     TEST_ASSERT( p.ReadAllData( out, err ) );
     TEST_ASSERT( p.WaitForExit() == 0 );
 
     // Normalize windows line endings
-    #if defined( __WINDOWS__ )
-        out.Replace( "\r\n", "\n" );
-    #endif
+#if defined( __WINDOWS__ )
+    out.Replace( "\r\n", "\n" );
+#endif
 
     // Generate expected results
-    AStackString<> expected;
-    const size_t numArgsExpected = static_cast<size_t>( arg1 ? 1 : 0 )
-                                 + static_cast<size_t>( arg2 ? 1 : 0 );
+    AStackString expected;
+    const size_t numArgsExpected = ( arg1 ? 1u : 0u ) +
+                                   ( arg2 ? 1u : 0u );
     expected.Format( "%zu\n", numArgsExpected );
     if ( arg1 )
     {

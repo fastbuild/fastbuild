@@ -4,15 +4,18 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "CSNode.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
@@ -135,16 +138,16 @@ CSNode::~CSNode() = default;
 
     // get the result of the directory lists and depend on those
     const size_t startIndex = 1; // Skip Compiler
-    const size_t endIndex =  ( 1 + m_CompilerInputPath.GetSize() );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    const size_t endIndex = ( 1 + m_CompilerInputPath.GetSize() );
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
 
         ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
         // get the list of files
-        const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
+        const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )
         {
@@ -188,8 +191,10 @@ CSNode::~CSNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    if ( p.Spawn( GetCompiler()->GetExecutable().Get(), fullArgs.GetFinalArgs().Get(),
-                  workingDir, environment ) == false )
+    if ( p.Spawn( GetCompiler()->GetExecutable().Get(),
+                  fullArgs.GetFinalArgs().Get(),
+                  workingDir,
+                  environment ) == false )
     {
         if ( p.HasAborted() )
         {
@@ -237,9 +242,9 @@ CSNode::~CSNode() = default;
 
 // GetCompiler
 //------------------------------------------------------------------------------
-CompilerNode* CSNode::GetCompiler() const
+CompilerNode * CSNode::GetCompiler() const
 {
-    return m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >();
+    return m_StaticDependencies[ 0 ].GetNode()->CastTo<CompilerNode>();
 }
 
 // EmitCompilationMessage
@@ -249,7 +254,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     // print basic or detailed output, depending on options
     // we combine everything into one string to ensure it is contiguous in
     // the output
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "C#: ";
@@ -263,7 +268,10 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // BuildArgs
@@ -271,17 +279,17 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
 bool CSNode::BuildArgs( Args & fullArgs ) const
 {
     // split into tokens
-    StackArray< AString > tokens;
+    StackArray<AString> tokens;
     m_CompilerOptions.Tokenize( tokens );
 
-    AStackString<> quote( "\"" );
+    AStackString quote( "\"" );
 
     for ( const AString & token : tokens )
     {
         if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
-            AStackString<> pre;
+            AStackString pre;
             if ( token.GetLength() > 2 )
             {
                 pre.Assign( token.Get(), token.GetEnd() - 2 );
@@ -293,7 +301,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
 
             // concatenate files, quoted
             GetInputFiles( fullArgs, pre, quote );
@@ -303,14 +311,14 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
             // handle /Option:%2 -> /Option:A
             if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>( token.Get(), token.GetEnd() - 2 );
+                fullArgs += AStackString( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += m_Name;
         }
         else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += m_Name;
             fullArgs += '"'; // post
@@ -318,7 +326,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "%3" ) )
         {
             // handle /Option:%3 -> /Option:A,B,C
-            AStackString<> pre( token.Get(), token.GetEnd() - 2 );
+            AStackString pre( token.Get(), token.GetEnd() - 2 );
             fullArgs += pre;
 
             // concatenate files, unquoted
@@ -327,7 +335,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "\"%3\"" ) )
         {
             // handle /Option:"%3" -> /Option:"A","B","C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 4 );
+            AStackString pre( token.Get(), token.GetEnd() - 4 );
             fullArgs += pre;
 
             // concatenate files, quoted
@@ -359,7 +367,7 @@ void CSNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString 
     // Add the explicitly listed files
     const size_t startIndex = ( 1 + m_CompilerInputPath.GetSize() ); // Skip compiler and input paths
     const size_t endIndex = ( startIndex + m_NumCompilerInputFiles );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         if ( !first )
         {
@@ -393,7 +401,7 @@ void CSNode::GetExtraRefs( Args & fullArgs, const AString & pre, const AString &
     const size_t startIndex = ( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles ); // Skip compiler, input paths and files
     const size_t endIndex = ( startIndex + m_NumCompilerReferences );
     ASSERT( endIndex == m_StaticDependencies.GetSize() ); // References are last
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         if ( !first )
         {

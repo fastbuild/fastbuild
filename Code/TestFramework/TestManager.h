@@ -6,9 +6,9 @@
 //------------------------------------------------------------------------------
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/Assert.h"
-#include "Core/Mem/MemTracker.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
+#include "Core/Mem/MemTracker.h"
 #include "Core/Time/Timer.h"
 
 // Forward Declarations
@@ -36,30 +36,34 @@ public:
     // TEST_ASSERT uses this interface to notify of assertion failures
     static bool AssertFailure( const char * message, const char * file, uint32_t line );
     // TEST_ASSERTM uses this interface to notify of assertion failures
-    static bool AssertFailureM( const char* message, const char* file, uint32_t line, MSVC_SAL_PRINTF const char* formatString, ... ) FORMAT_STRING( 4, 5 );
+    static bool AssertFailureM( const char * message,
+                                const char * file,
+                                uint32_t line,
+                                MSVC_SAL_PRINTF const char * formatString,
+                                ... ) FORMAT_STRING( 4, 5 );
 
 private:
-    Timer       m_Timer;
+    Timer m_Timer;
 
     // Track allocations for tests to catch leaks
-    #ifdef MEMTRACKER_ENABLED
-        uint32_t m_CurrentTestAllocationId = 0;
-    #endif
+#ifdef MEMTRACKER_ENABLED
+    uint32_t m_CurrentTestAllocationId = 0;
+#endif
 
-    enum : uint32_t { MAX_TESTS = 1024 };
+    inline static const uint32_t kMaxTests = 1024;
     class TestInfo
     {
     public:
-        TestGroup *     m_TestGroup = nullptr;
-        const char *    m_TestName = nullptr;
-        bool            m_Passed = false;
-        bool            m_MemoryLeaks = false;
-        float           m_TimeTaken = 0.0f;
+        TestGroup * m_TestGroup = nullptr;
+        const char * m_TestName = nullptr;
+        bool m_Passed = false;
+        bool m_MemoryLeaks = false;
+        float m_TimeTaken = 0.0f;
     };
-    static uint32_t     s_NumTests;
-    static TestInfo     s_TestInfos[ MAX_TESTS ];
+    static uint32_t s_NumTests;
+    static TestInfo s_TestInfos[ kMaxTests ];
 
-    static TestGroup *  s_FirstTest;
+    static TestGroup * s_FirstTest;
 };
 
 //------------------------------------------------------------------------------

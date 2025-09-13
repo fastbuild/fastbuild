@@ -44,7 +44,7 @@ bool ResponseFile::Create( const AString & contents )
 {
     if ( m_EscapeSlashes )
     {
-        AStackString< 1024 > fixed;
+        AStackString<1024> fixed;
         if ( contents.GetLength() > 512 )
         {
             fixed.SetReserved( contents.GetLength() * 2 );
@@ -57,12 +57,15 @@ bool ResponseFile::Create( const AString & contents )
             char c = *it;
             if ( ( c == BACK_SLASH ) || ( c == FORWARD_SLASH ) )
             {
-                *dst = BACK_SLASH; dst++;
-                *dst = BACK_SLASH; dst++;
+                *dst = BACK_SLASH;
+                dst++;
+                *dst = BACK_SLASH;
+                dst++;
             }
             else
             {
-                *dst = c; dst++;
+                *dst = c;
+                dst++;
             }
             it++;
         }
@@ -82,8 +85,8 @@ bool ResponseFile::CreateInternal( const AString & contents )
     WorkerThread::CreateTempFilePath( "args.rsp", m_ResponseFilePath );
 
     // write file to disk
-    const uint32_t flags = FileStream::WRITE_ONLY       // we only want to write
-                         | FileStream::TEMP;            // avoid flush to disk if possible
+    const uint32_t flags = FileStream::WRITE_ONLY | // we only want to write
+                           FileStream::TEMP; // avoid flush to disk if possible
     if ( !m_File.Open( m_ResponseFilePath.Get(), flags ) )
     {
         FileIO::WorkAroundForWindowsFilePermissionProblem( m_ResponseFilePath, flags, 5 ); // 5s max wait

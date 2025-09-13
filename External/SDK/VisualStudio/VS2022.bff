@@ -38,38 +38,32 @@
             //
             // Use Visual Studio installation
             //
-            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.44.34918/bin/Hostx64/x64/cl.exe" )
-                // v17.44.0 Preview
-                .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Preview/VC'
-                .VS2022_Version         = '14.44.34918'
+            #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe" )
+                // v17.14.9
+                .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC'
+                .VS2022_Version         = '14.44.35207'
                 .VS2022_MSC_VER         = '1944'
                 #define MSVC_DYNAMIC_DEOPT_AVAILABLE
             #else
-                #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe" )
-                    // v17.8.3
-                    .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Community/VC'
-                    .VS2022_Version         = '14.43.34808'
-                    .VS2022_MSC_VER         = '1943'
+                //
+                // Use Visual Studio 2022 Enterprise installation (used by GitHub Actions)
+                //
+                #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe" )
+                    // v17.14.9
+                    .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC'
+                    .VS2022_Version         = '14.44.35207'
+                    .VS2022_MSC_VER         = '1944'
+                    #define MSVC_DYNAMIC_DEOPT_AVAILABLE
                 #else
                     //
-                    // Use Visual Studio 2022 Enterprise installation (used by GitHub Actions)
+                    // Failed
                     //
-                    #if file_exists( "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe" )
-                        // v17.10.3
-                        .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC'
-                        .VS2022_Version         = '14.43.34808'
-                        .VS2022_MSC_VER         = '1943'
-                    #else
-                        //
-                        // Failed
-                        //
-                        Print( '-----------------------------------------------------------------------' )
-                        Print( '- Unable to auto-detect VS2022 - please specify installation manually -' )
-                        Print( '-----------------------------------------------------------------------' )
-                        .VS2022_BasePath        = .Set_Path_Here    // <-- Set path here
-                        .VS2022_Version         = .Set_Version_Here // <-- Set version here
-                        .VS2022_MSC_VER         = .Set_MSC_VER_Here // <-- Set MSC_VER here
-                    #endif
+                    Print( '-----------------------------------------------------------------------' )
+                    Print( '- Unable to auto-detect VS2022 - please specify installation manually -' )
+                    Print( '-----------------------------------------------------------------------' )
+                    .VS2022_BasePath        = .Set_Path_Here    // <-- Set path here
+                    .VS2022_Version         = .Set_Version_Here // <-- Set version here
+                    .VS2022_MSC_VER         = .Set_MSC_VER_Here // <-- Set MSC_VER here
                 #endif
             #endif
         #endif

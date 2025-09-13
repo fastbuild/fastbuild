@@ -18,7 +18,7 @@
 
 // Other
 //------------------------------------------------------------------------------
-#define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
+#define FBUILDWORKER_SETTINGS_MIN_VERSION     ( 1 )     // Oldest compatible version
 #define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 4 ) // Current version
 
 // CONSTRUCTOR
@@ -33,7 +33,7 @@ WorkerSettings::WorkerSettings()
 {
     // half CPUs available to use by default
     const uint32_t numCPUs = Env::GetNumProcessors();
-    m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
+    m_NumCPUsToUse = Math::Max<uint32_t>( 1, numCPUs / 2 );
 
     Load();
 
@@ -84,7 +84,7 @@ void WorkerSettings::SetMinimumFreeMemoryMiB( uint32_t value )
 //------------------------------------------------------------------------------
 void WorkerSettings::Load()
 {
-    AStackString<> settingsPath;
+    AStackString settingsPath;
     Env::GetExePath( settingsPath );
     settingsPath += ".settings";
 
@@ -122,7 +122,7 @@ void WorkerSettings::Load()
 //------------------------------------------------------------------------------
 void WorkerSettings::Save()
 {
-    AStackString<> settingsPath;
+    AStackString settingsPath;
     Env::GetExePath( settingsPath );
     settingsPath += ".settings";
 

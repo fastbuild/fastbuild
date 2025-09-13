@@ -5,11 +5,13 @@
 //------------------------------------------------------------------------------
 #include "ListDependenciesNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
@@ -17,6 +19,7 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
+// System
 #include <stdio.h>
 
 // REFLECTION
@@ -30,7 +33,7 @@ REFLECT_END( ListDependenciesNode )
 
 // FilterFileDependencies
 //------------------------------------------------------------------------------
-static void FilterFileDependencies( Array< const AString * > * dependencyList , const Array< AString > & patterns , const Dependencies & dependencies )
+static void FilterFileDependencies( Array<const AString *> * dependencyList, const Array<AString> & patterns, const Dependencies & dependencies )
 {
     dependencyList->SetCapacity( dependencyList->GetSize() + dependencies.GetSize() );
 
@@ -74,13 +77,13 @@ static void FilterFileDependencies( Array< const AString * > * dependencyList , 
 class DependencyAscendingCompareIDeref
 {
 public:
-    inline bool operator () ( const AString * a, const AString * b ) const
+    bool operator()( const AString * a, const AString * b ) const
     {
-        #if defined( __WINDOWS__ )
-            return ( a->CompareI( *b ) < 0 );
-        #else
-            return ( a->Compare( *b ) < 0 );
-        #endif
+#if defined( __WINDOWS__ )
+        return ( a->CompareI( *b ) < 0 );
+#else
+        return ( a->Compare( *b ) < 0 );
+#endif
     }
 };
 
@@ -122,7 +125,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     EmitOutputMessage();
 
     // Collect all file dependencies
-    Array< const AString * > dependencyList;
+    Array<const AString *> dependencyList;
 
     for ( const Dependency & source : m_StaticDependencies )
     {
@@ -135,8 +138,8 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         {
             if ( !dep.IsWeak() )
             {
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetStaticDependencies() );
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetDynamicDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetStaticDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetDynamicDependencies() );
             }
         }
 
@@ -144,8 +147,8 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         {
             if ( !dep.IsWeak() )
             {
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetStaticDependencies() );
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetDynamicDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetStaticDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetDynamicDependencies() );
             }
         }
     }
@@ -154,7 +157,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     dependencyList.Sort( DependencyAscendingCompareIDeref{} );
 
     // Format file content
-    AStackString<> fileContents;
+    AStackString fileContents;
 
     const AString * prevDep = nullptr;
     for ( const AString * depName : dependencyList )
@@ -167,11 +170,11 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         prevDep = depName;
         fileContents += *depName;
 
-        #if defined( __WINDOWS__ )
-            fileContents += "\r\n";
-        #else
-            fileContents += '\n';
-        #endif
+#if defined( __WINDOWS__ )
+        fileContents += "\r\n";
+#else
+        fileContents += '\n';
+#endif
     }
 
     // Dump to text file

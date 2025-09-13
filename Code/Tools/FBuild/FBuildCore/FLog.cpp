@@ -5,8 +5,8 @@
 //------------------------------------------------------------------------------
 #include "FLog.h"
 
-#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
@@ -25,11 +25,12 @@
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     // TODO:LINUX TODO:MAC Clean up this _itoa_s mess
-    void _itoa_s( int value, char * buffer, int bufferSize, int base )
-    {
-        ASSERT( base == 10 ); (void)base;
-        snprintf( buffer, static_cast<size_t>(bufferSize), "%i", value );
-    }
+void _itoa_s( int value, char * buffer, int bufferSize, int base )
+{
+    ASSERT( base == 10 );
+    (void)base;
+    snprintf( buffer, static_cast<size_t>( bufferSize ), "%i", value );
+}
 #endif
 
 // Static Data
@@ -39,9 +40,9 @@
 /*static*/ bool FLog::s_ShowErrors = true;
 /*static*/ bool FLog::s_ShowProgress = false;
 /*static*/ bool FLog::s_MonitorEnabled = false;
-/*static*/ AStackString< 64 > FLog::m_ProgressText;
-static AStackString< 72 > g_ClearLineString( "\r                                                               \r" );
-static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
+/*static*/ AStackString<64> FLog::m_ProgressText;
+static AStackString<72> g_ClearLineString( "\r                                                               \r" );
+static AStackString<64> g_OutputString( "\r99.9 % [....................] " );
 static Mutex g_MonitorMutex;
 static FileStream * g_MonitorFileStream = nullptr;
 
@@ -53,10 +54,10 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Verbose( MSVC_SAL_PRINTF const char * formatString, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, formatString);
+    va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
@@ -67,10 +68,10 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Output( MSVC_SAL_PRINTF const char * formatString, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, formatString);
+    va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
@@ -94,13 +95,13 @@ static FileStream * g_MonitorFileStream = nullptr;
 
     PROFILE_SECTION( "FLog::Monitor" );
 
-    AStackString< 1024 > buffer;
+    AStackString<1024> buffer;
     va_list args;
     va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
-    AStackString< 1024 > finalBuffer;
+    AStackString<1024> finalBuffer;
     finalBuffer.Format( "%" PRIu64 " %s", Time::GetCurrentFileTime(), buffer.Get() );
 
     MutexHolder lock( g_MonitorMutex );
@@ -123,10 +124,10 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Warning( MSVC_SAL_PRINTF const char * formatString, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, formatString);
+    va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
@@ -145,10 +146,10 @@ static FileStream * g_MonitorFileStream = nullptr;
         return;
     }
 
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, formatString);
+    va_start( args, formatString );
     buffer.VFormat( formatString, args );
     va_end( args );
 
@@ -177,7 +178,7 @@ static FileStream * g_MonitorFileStream = nullptr;
         return;
     }
 
-    AStackString< 1024 > buffer( message );
+    AStackString<1024> buffer( message );
     if ( buffer.IsEmpty() )
     {
         return;
@@ -199,7 +200,7 @@ static FileStream * g_MonitorFileStream = nullptr;
         // TODO:B Change the monitoring log path
         //  - it's not uniquified per instance
         //  - we already have a .fbuild.tmp folder we should use
-        AStackString<> fullPath;
+        AStackString fullPath;
         FBuild::GetTempDir( fullPath );
         fullPath += "FastBuild";
         if ( FileIO::DirectoryCreate( fullPath ) )
@@ -268,8 +269,10 @@ static FileStream * g_MonitorFileStream = nullptr;
 
     // format progress % (we know it never goes above 99.9%)
     uint32_t intPerc = (uint32_t)( percentage * 10.0f ); // 0 to 999
-    const uint32_t hundreds = ( intPerc / 100 ); intPerc -= ( hundreds * 100 );
-    uint32_t tens = ( intPerc / 10 ); intPerc -= ( tens * 10 );
+    const uint32_t hundreds = ( intPerc / 100 );
+    intPerc -= ( hundreds * 100 );
+    uint32_t tens = ( intPerc / 10 );
+    intPerc -= ( tens * 10 );
     uint32_t ones = intPerc;
     m_ProgressText = g_OutputString;
     m_ProgressText[ 1 ] = ( hundreds > 0 ) ? ( '0' + (char)hundreds ) : ' ';
@@ -278,7 +281,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
     // 20 column output (100/20 = 5% per char)
     const uint32_t numStarsDone = (uint32_t)( percentage * 20.0f / 100.0f ); // 20 columns
-    for ( uint32_t i=0; i<20; ++i )
+    for ( uint32_t i = 0; i < 20; ++i )
     {
         m_ProgressText[ 9 + i ] = ( i < numStarsDone ) ? '*' : '-';
     }
@@ -295,7 +298,10 @@ static FileStream * g_MonitorFileStream = nullptr;
     }
     char buffer[ 8 ];
     _itoa_s( (int32_t)timeTakenSeconds, buffer, 8, 10 );
-    if ( timeTakenSeconds < 10 ) { m_ProgressText += '0'; }
+    if ( timeTakenSeconds < 10 )
+    {
+        m_ProgressText += '0';
+    }
     m_ProgressText += buffer;
     m_ProgressText += 's';
 
@@ -351,7 +357,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 {
     const uint32_t threadIndex = WorkerThread::GetThreadIndex();
 
-    AStackString< 2048 > tmp;
+    AStackString<2048> tmp;
 
     if ( s_ShowProgress )
     {
@@ -375,11 +381,11 @@ static FileStream * g_MonitorFileStream = nullptr;
     tmp += message;
 
     // output to debugger if present
-    #ifdef DEBUG
-        #ifdef __WINDOWS__
-            OutputDebugStringA( message );
-        #endif
+#ifdef DEBUG
+    #ifdef __WINDOWS__
+    OutputDebugStringA( message );
     #endif
+#endif
 
     tmp += m_ProgressText;
 

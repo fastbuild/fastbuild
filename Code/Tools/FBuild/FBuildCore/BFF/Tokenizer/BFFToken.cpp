@@ -9,12 +9,12 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ const BFFFile    BFFToken::s_BuiltInFile( "<builtin>", AString::GetEmpty() );
-/*static*/ const BFFToken   BFFToken::s_BuiltInToken( s_BuiltInFile,
-                                                      s_BuiltInFile.GetSourceFileContents().Get(),
-                                                      BFFTokenType::Invalid,
-                                                      s_BuiltInFile.GetSourceFileContents().Get(),
-                                                      s_BuiltInFile.GetSourceFileContents().Get() );
+/*static*/ const BFFFile BFFToken::s_BuiltInFile( "<builtin>", AString::GetEmpty() );
+/*static*/ const BFFToken BFFToken::s_BuiltInToken( s_BuiltInFile,
+                                                    s_BuiltInFile.GetSourceFileContents().Get(),
+                                                    BFFTokenType::Invalid,
+                                                    s_BuiltInFile.GetSourceFileContents().Get(),
+                                                    s_BuiltInFile.GetSourceFileContents().Get() );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ BFFToken::BFFToken( BFFToken && other )
 //------------------------------------------------------------------------------
 void BFFToken::GetPosInfo( uint32_t & outLine,
                            uint32_t & outColumn,
-                           const char * & outLineStart ) const
+                           const char *& outLineStart ) const
 {
     ASSERT( m_SourcePos >= m_BFFFile.GetSourceFileContents().Get() );
     ASSERT( m_SourcePos <= m_BFFFile.GetSourceFileContents().GetEnd() ); // <= to allow pointing to EOF

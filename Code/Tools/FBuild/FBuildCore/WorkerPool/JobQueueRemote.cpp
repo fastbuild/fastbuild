@@ -40,7 +40,7 @@ JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads )
     m_ThreadPool = FNEW( ThreadPool( numWorkerThreads ) );
 
     // Create a job to run on each thread
-    for ( uint32_t i=0; i<numWorkerThreads; ++i )
+    for ( uint32_t i = 0; i < numWorkerThreads; ++i )
     {
         // identify each worker with an id starting from 1
         // (the "main" thread is considered 0)
@@ -60,7 +60,7 @@ JobQueueRemote::~JobQueueRemote()
 
     // wait for workers to finish - ok if they stopped before this
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         m_Workers[ i ]->WaitForStop();
         FDELETE m_Workers[ i ];
@@ -74,7 +74,7 @@ JobQueueRemote::~JobQueueRemote()
 void JobQueueRemote::SignalStopWorkers()
 {
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         m_Workers[ i ]->Stop();
     }
@@ -82,8 +82,8 @@ void JobQueueRemote::SignalStopWorkers()
     // Signal threads (both active and idle)
     // (We don't know which threads are in any given state, so we signal
     // the worst case for both states)
-    m_WorkerThreadSemaphore.Signal( static_cast<uint32_t>(numWorkerThreads) );
-    m_WorkerThreadSleepSemaphore.Signal( static_cast<uint32_t>(numWorkerThreads) );
+    m_WorkerThreadSemaphore.Signal( static_cast<uint32_t>( numWorkerThreads ) );
+    m_WorkerThreadSleepSemaphore.Signal( static_cast<uint32_t>( numWorkerThreads ) );
 }
 
 // HaveWorkersStopped
@@ -91,7 +91,7 @@ void JobQueueRemote::SignalStopWorkers()
 bool JobQueueRemote::HaveWorkersStopped() const
 {
     const size_t numWorkerThreads = m_Workers.GetSize();
-    for ( size_t i=0; i<numWorkerThreads; ++i )
+    for ( size_t i = 0; i < numWorkerThreads; ++i )
     {
         if ( m_Workers[ i ]->HasExited() == false )
         {
@@ -285,10 +285,10 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         MutexHolder m( m_CompletedJobsMutex );
         switch ( result )
         {
-            case Node::BuildResult::eFailed:            m_CompletedJobsFailed.Append( job ); break;
-            case Node::BuildResult::eAborted:           m_CompletedJobsAborted.Append( job );break;
-            case Node::BuildResult::eNeedSecondPass:    ASSERT( false ); break;
-            case Node::BuildResult::eOk:                m_CompletedJobs.Append( job ); break;
+            case Node::BuildResult::eFailed: m_CompletedJobsFailed.Append( job ); break;
+            case Node::BuildResult::eAborted: m_CompletedJobsAborted.Append( job ); break;
+            case Node::BuildResult::eNeedSecondPass: ASSERT( false ); break;
+            case Node::BuildResult::eOk: m_CompletedJobs.Append( job ); break;
         }
     }
 
@@ -303,7 +303,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
 
     const Timer timer; // track how long the item takes
 
-    ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
+    ObjectNode * node = job->GetNode()->CastTo<ObjectNode>();
 
     if ( job->IsLocal() )
     {
@@ -316,11 +316,9 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         // file name should be the same as on host
         const char * fileName = ( job->GetRemoteName().FindLast( NATIVE_SLASH ) + 1 );
 
-        AStackString<> tmpFileName;
+        AStackString tmpFileName;
         WorkerThread::CreateTempFilePath( fileName, tmpFileName );
         node->ReplaceDummyName( tmpFileName );
-
-        //DEBUGSPAM( "REMOTE: %s (%s)\n", fileName, job->GetRemoteName().Get() );
     }
 
     ASSERT( node->IsAFile() );
@@ -335,7 +333,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     // Delete any left over PDB from a previous run (to be sure we have a clean pdb)
     if ( node->IsUsingPDB() && ( job->IsLocal() == false ) )
     {
-        AStackString<> pdbName;
+        AStackString pdbName;
         node->GetPDBName( pdbName );
         FileIO::FileDelete( pdbName.Get() );
     }
@@ -343,7 +341,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     Node::BuildResult result;
     {
         PROFILE_SECTION( racingRemoteJob ? "RACE" : "LOCAL" );
-        result = ((Node *)node )->DoBuild2( job, racingRemoteJob );
+        result = ( (Node *)node )->DoBuild2( job, racingRemoteJob );
     }
 
     // Ignore result if job was cancelled
@@ -387,14 +385,9 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
             node->SetLastBuildTime( timeTakenMS );
             node->SetStatFlag( Node::STATS_BUILT );
 
-            #ifdef DEBUG
-                if ( job->IsLocal() )
-                {
-                    // we should have recorded the new file time for remote job we built locally
-                    ASSERT( node->m_Stamp == FileIO::GetFileLastWriteTime(node->GetName()) );
-                }
-            #endif
-
+            // we should have recorded the new file time for remote job we built locally
+            ASSERT( !job->IsLocal() ||
+                    ( node->m_Stamp == FileIO::GetFileLastWriteTime( node->GetName() ) ) );
 
             // TODO:A Also read into job if cache is being used
             if ( job->IsLocal() == false )
@@ -418,7 +411,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         // Cleanup PDB file
         if ( node->IsUsingPDB() )
         {
-            AStackString<> pdbName;
+            AStackString pdbName;
             node->GetPDBName( pdbName );
             FileIO::FileDelete( pdbName.Get() );
         }
@@ -429,13 +422,13 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
 
     if ( job->IsLocal() && FLog::IsMonitorEnabled() )
     {
-        AStackString<> msgBuffer;
+        AStackString msgBuffer;
         job->GetMessagesForMonitorLog( msgBuffer );
 
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
                       ( result == Node::BuildResult::eFailed ) ? "ERROR" : "SUCCESS",
                       job->GetNode()->GetName().Get(),
-                      msgBuffer.Get());
+                      msgBuffer.Get() );
     }
 
     return result;
@@ -445,7 +438,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
 //------------------------------------------------------------------------------
 /*static*/ bool JobQueueRemote::ReadResults( Job * job )
 {
-    const ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
+    const ObjectNode * node = job->GetNode()->CastTo<ObjectNode>();
     const bool includePDB = node->IsUsingPDB();
     const bool usingStaticAnalysis = node->IsUsingStaticAnalysisMSVC();
     const bool usingDynamicDeoptimization = node->IsUsingDynamicDeopt();
@@ -454,14 +447,14 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
 
     // 1. Object file
     //---------------
-    StackArray< AString > fileNames;
+    StackArray<AString> fileNames;
     fileNames.Append( node->GetName() );
 
     // 2. PDB file (optional)
     //-----------------------
     if ( includePDB )
     {
-        AStackString<> pdbFileName;
+        AStackString pdbFileName;
         node->GetPDBName( pdbFileName );
         fileNames.Append( pdbFileName );
     }
@@ -470,7 +463,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     //--------------------------------------------
     if ( usingStaticAnalysis )
     {
-        AStackString<> xmlFileName;
+        AStackString xmlFileName;
         node->GetNativeAnalysisXMLPath( xmlFileName );
         fileNames.Append( xmlFileName );
     }
@@ -479,7 +472,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     //--------------------------------------------
     if ( usingDynamicDeoptimization )
     {
-        AStackString<> altObjName;
+        AStackString altObjName;
         node->GetAltObjPath( altObjName );
         fileNames.Append( altObjName );
     }
@@ -490,6 +483,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
     {
         job->Error( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
         FLOG_ERROR( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
+        return false;
     }
 
     // Compress result

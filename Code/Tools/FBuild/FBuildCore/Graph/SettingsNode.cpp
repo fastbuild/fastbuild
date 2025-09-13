@@ -5,11 +5,11 @@
 //------------------------------------------------------------------------------
 #include "SettingsNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
 #include "Core/Containers/UniquePtr.h"
@@ -20,8 +20,8 @@
 // Defines
 //------------------------------------------------------------------------------
 #define DIST_MEMORY_LIMIT_MIN ( 16 ) // 16MiB
-#define DIST_MEMORY_LIMIT_MAX ( ( sizeof(void *) == 8 ) ? 64 * 1024 : 2048 ) // 64 GiB or 2 GiB
-#define DIST_MEMORY_LIMIT_DEFAULT ( ( sizeof(void *) == 8 ) ? 2048 : 1024 ) // 2 GiB or 1 GiB
+#define DIST_MEMORY_LIMIT_MAX ( ( sizeof( void * ) == 8 ) ? 64 * 1024 : 2048 ) // 64 GiB or 2 GiB
+#define DIST_MEMORY_LIMIT_DEFAULT ( ( sizeof( void * ) == 8 ) ? 2048 : 1024 ) // 2 GiB or 1 GiB
 
 // REFLECTION
 //------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ const AString & SettingsNode::GetCachePluginDLLConfig() const
 //------------------------------------------------------------------------------
 const ConcurrencyGroup * SettingsNode::GetConcurrencyGroup( const AString & groupName ) const
 {
-    for (const ConcurrencyGroup & group : m_ConcurrencyGroups )
+    for ( const ConcurrencyGroup & group : m_ConcurrencyGroups )
     {
         // Names are case insensitive
         if ( group.GetName().EqualsI( groupName ) )
@@ -159,27 +159,27 @@ const ConcurrencyGroup & SettingsNode::GetConcurrencyGroup( uint8_t index ) cons
 
 // ProcessEnvironment
 //------------------------------------------------------------------------------
-void SettingsNode::ProcessEnvironment( const Array< AString > & envStrings ) const
+void SettingsNode::ProcessEnvironment( const Array<AString> & envStrings ) const
 {
     // the environment string is used in windows as a double-null terminated string
     // so convert our array to a single buffer
 
     // work out space required
     uint32_t size = 0;
-    for ( uint32_t i=0; i<envStrings.GetSize(); ++i )
+    for ( uint32_t i = 0; i < envStrings.GetSize(); ++i )
     {
         size += envStrings[ i ].GetLength() + 1; // string len inc null
     }
 
     // allocate space
-    UniquePtr< char, FreeDeletor > envString( (char *)ALLOC( size + 1 ) ); // +1 for extra double-null
+    UniquePtr<char, FreeDeletor> envString( (char *)ALLOC( size + 1 ) ); // +1 for extra double-null
 
     // while iterating, extract the LIB environment variable (if there is one)
-    AStackString<> libEnvVar;
+    AStackString libEnvVar;
 
     // copy strings end to end
     char * dst = envString.Get();
-    for ( uint32_t i=0; i<envStrings.GetSize(); ++i )
+    for ( uint32_t i = 0; i < envStrings.GetSize(); ++i )
     {
         if ( envStrings[ i ].BeginsWith( "LIB=" ) )
         {
@@ -205,17 +205,17 @@ bool SettingsNode::InitializeConcurrencyGroups( const BFFToken * iter,
     // Enforce limit on number of groups.
     // Each group adds a small overhead to job processing and too many groups
     // may indicate misuse of the feature.
-    if ( m_ConcurrencyGroups.GetSize() > eMaxConcurrencyGroups )
+    if ( m_ConcurrencyGroups.GetSize() > kMaxConcurrencyGroups )
     {
         Error::Error_1600_TooManyConcurrencyGroups( iter,
                                                     function,
                                                     static_cast<uint32_t>( m_ConcurrencyGroups.GetSize() ),
-                                                    eMaxConcurrencyGroups );
+                                                    kMaxConcurrencyGroups );
         return false;
     }
 
     // Insert "special "default" group for jobs with no concurrency limit
-    Array< ConcurrencyGroup > groups;
+    Array<ConcurrencyGroup> groups;
     groups.SetCapacity( m_ConcurrencyGroups.GetSize() + 1 );
     groups.EmplaceBack().SetLimit( ConcurrencyGroup::eUnlimited );
     groups.Append( m_ConcurrencyGroups );
@@ -270,7 +270,7 @@ bool SettingsNode::InitializeConcurrencyGroups( const BFFToken * iter,
         if ( group.GetMemoryBasedLimit() > 0 )
         {
             // Determine system memory based limit, but always allow 1 job
-            memoryLimit = ( sysMeminfo.mTotalPhysMiB / group.GetMemoryBasedLimit() );
+            memoryLimit = ( sysMeminfo.m_TotalPhysMiB / group.GetMemoryBasedLimit() );
             memoryLimit = Math::Max( memoryLimit, 1U );
         }
 

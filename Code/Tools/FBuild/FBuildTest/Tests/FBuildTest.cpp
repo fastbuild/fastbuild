@@ -44,7 +44,7 @@ FBuildTest::FBuildTest()
     VERIFY( FileIO::GetCurrentDir( m_OriginalWorkingDir ) );
 
     // Set the WorkingDir to be the source code "Code" dir
-    AStackString<> codeDir;
+    AStackString codeDir;
     GetCodeDir( codeDir );
     VERIFY( FileIO::SetCurrentDir( codeDir ) );
 }
@@ -86,15 +86,15 @@ void FBuildTest::EnsureFileExists( const char * fileName ) const
 //------------------------------------------------------------------------------
 void FBuildTest::EnsureDirDoesNotExist( const char * dirPath ) const
 {
-    FileIO::DirectoryDelete( AStackString<>( dirPath ) );
-    TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( dirPath ) ) == false );
+    FileIO::DirectoryDelete( AStackString( dirPath ) );
+    TEST_ASSERT( FileIO::DirectoryExists( AStackString( dirPath ) ) == false );
 }
 
 // EnsureDirExists
 //------------------------------------------------------------------------------
 void FBuildTest::EnsureDirExists( const char * dirPath ) const
 {
-    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( dirPath ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString( dirPath ) ) );
 }
 
 // LoadFileContentsAsString
@@ -160,8 +160,9 @@ bool FBuildTest::ParseFromString( bool expectedResult,
     if ( result != expectedResult )
     {
         // Emit message about mismatch
-        OUTPUT( "Test %s but %s was expected\n", result ? "succeeded" : "failed",
-                                               expectedResult ? "success" : "failure" );
+        OUTPUT( "Test %s but %s was expected\n",
+                result ? "succeeded" : "failed",
+                expectedResult ? "success" : "failure" );
         return false; // break in calling code
     }
 
@@ -253,11 +254,11 @@ void FBuildTest::CheckStatsTotal( size_t numSeen, size_t numBuilt ) const
     {
         codeDir += NATIVE_SLASH;
     }
-    #if defined( __WINDOWS__ )
-        const char * codePos = codeDir.FindLastI( "\\code\\" );
-    #else
-        const char * codePos = codeDir.FindLastI( "/code/" );
-    #endif
+#if defined( __WINDOWS__ )
+    const char * codePos = codeDir.FindLastI( "\\code\\" );
+#else
+    const char * codePos = codeDir.FindLastI( "/code/" );
+#endif
     TEST_ASSERT( codePos );
     codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + 6 ) );
 }
@@ -283,7 +284,7 @@ FBuildTestOptions::FBuildTestOptions()
     m_EnableMonitor = true; // Make sure monitor code paths are tested
 
     // Ensure any distributed compilation tests use the test port
-    m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+    m_DistributionPort = Protocol::kTestPort;
 }
 
 // GetRecursiveDependencyCount
@@ -309,7 +310,7 @@ size_t FBuildForTest::GetRecursiveDependencyCount( const Node * node ) const
 //------------------------------------------------------------------------------
 size_t FBuildForTest::GetRecursiveDependencyCount( const char * nodeName ) const
 {
-    const Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    const Node * node = m_DependencyGraph->FindNode( AStackString( nodeName ) );
     TEST_ASSERT( node );
     return GetRecursiveDependencyCount( node );
 }
@@ -333,14 +334,14 @@ void FBuildForTest::GetNodesOfType( Node::Type type, Array<const Node *> & outNo
 //------------------------------------------------------------------------------
 const Node * FBuildForTest::GetNode( const char * nodeName ) const
 {
-    return m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    return m_DependencyGraph->FindNode( AStackString( nodeName ) );
 }
 
 // SerializeDepGraphToText
 //------------------------------------------------------------------------------
 void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const
 {
-    Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    Node * node = m_DependencyGraph->FindNode( AStackString( nodeName ) );
     Dependencies deps( 1 );
     deps.Add( node );
     m_DependencyGraph->SerializeToText( deps, outBuffer );

@@ -36,10 +36,10 @@ REGISTER_TESTS_BEGIN( TestCachePlugin )
     REGISTER_TEST( PluginOptionsSavedToDB )
 
     // Ensure old plugins with only mangled names on Windows continue to work)
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( BuildPlugin_Old )
-        REGISTER_TEST( UsePlugin_Old )
-    #endif
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( BuildPlugin_Old )
+    REGISTER_TEST( UsePlugin_Old )
+#endif
 REGISTER_TESTS_END
 
 // BuildPlugin
@@ -124,8 +124,8 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/OldInterface/useplugin.bff";
 
-    AStackString<> cachePath;
-    AStackString<> cachePluginDLL;
+    AStackString cachePath;
+    AStackString cachePluginDLL;
 
     {
         // Init the DB from the BFF

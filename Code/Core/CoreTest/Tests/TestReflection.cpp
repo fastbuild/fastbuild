@@ -46,7 +46,10 @@ struct TestStruct
 {
     REFLECT_STRUCT_DECLARE( TestStruct )
 public:
-    TestStruct() : m_MyInt( 851 ) {}
+    TestStruct()
+        : m_MyInt( 851 )
+    {
+    }
 
     uint32_t m_MyInt;
 };
@@ -88,7 +91,7 @@ public:
         m_Int32 = 1000001;
         m_Int64 = 100000000000001;
         m_Bool = true;
-        m_AString =  "Test string.";
+        m_AString = "Test string.";
 
         m_FloatArray.Append( 111.0f );
         m_FloatArray.Append( 222.0f );
@@ -100,23 +103,23 @@ public:
 private: // ensure reflection can set private members
     friend class TestReflection;
 
-    float       m_Float;
-    uint8_t     m_UInt8;
-    uint16_t    m_UInt16;
-    uint32_t    m_UInt32;
-    uint64_t    m_UInt64;
-    int8_t      m_Int8;
-    int16_t     m_Int16;
-    int32_t     m_Int32;
-    int64_t     m_Int64;
-    bool        m_Bool;
-    AString     m_AString;
+    float m_Float;
+    uint8_t m_UInt8;
+    uint16_t m_UInt16;
+    uint32_t m_UInt32;
+    uint64_t m_UInt64;
+    int8_t m_Int8;
+    int16_t m_Int16;
+    int32_t m_Int32;
+    int64_t m_Int64;
+    bool m_Bool;
+    AString m_AString;
 
-    TestStruct  m_TestStruct;
+    TestStruct m_TestStruct;
 
-    Array< float > m_FloatArray;
+    Array<float> m_FloatArray;
 
-    Array< TestStruct > m_StructArray;
+    Array<TestStruct> m_StructArray;
 };
 
 REFLECT_BEGIN( TestObject, Object, MetaNone() )
@@ -143,7 +146,7 @@ void TestReflection::TestGetSet() const
     TestObject o;
     const ReflectionInfo * info = o.GetReflectionInfoV();
 
-    #define CHECK( name, member, type, value ) \
+#define CHECK( name, member, type, value ) \
     { \
         TEST_ASSERT( info->SetProperty( &o, name, (type)value ) ); \
         TEST_ASSERT( o.member == value ); \
@@ -164,7 +167,7 @@ void TestReflection::TestGetSet() const
     CHECK( "Bool", m_Bool, bool, true )
     CHECK( "AString", m_AString, AString, AString( "hello" ) )
 
-    #undef CHECK
+#undef CHECK
 }
 
 // TestInheritance
@@ -173,7 +176,10 @@ class BaseClass : public Object
 {
     REFLECT_DECLARE( BaseClass )
 public:
-    BaseClass() : m_A( -1 ) {}
+    BaseClass()
+        : m_A( -1 )
+    {
+    }
     int m_A;
 };
 
@@ -181,7 +187,10 @@ class DerivedClass : public BaseClass
 {
     REFLECT_DECLARE( DerivedClass )
 public:
-    DerivedClass() : m_B( -1 ) {}
+    DerivedClass()
+        : m_B( -1 )
+    {
+    }
     int m_B;
 };
 
@@ -233,15 +242,15 @@ void TestReflection::MetaData() const
     const ReflectionInfo * ri = obj.GetReflectionInfoV();
 
     // Check all MetaData is present on object
-    TEST_ASSERT( ri->HasMetaData< Meta_File >() );
-    TEST_ASSERT( ri->HasMetaData< Meta_Optional >() );
-    TEST_ASSERT( ri->HasMetaData< Meta_Path >() );
+    TEST_ASSERT( ri->HasMetaData<Meta_File>() );
+    TEST_ASSERT( ri->HasMetaData<Meta_Optional>() );
+    TEST_ASSERT( ri->HasMetaData<Meta_Path>() );
 
     // Check all MetaData is present on property
-    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString<>( "Property" ) );
-    TEST_ASSERT( rp->HasMetaData< Meta_File >() );
-    TEST_ASSERT( rp->HasMetaData< Meta_Optional >() );
-    TEST_ASSERT( rp->HasMetaData< Meta_Path >() );
+    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString( "Property" ) );
+    TEST_ASSERT( rp->HasMetaData<Meta_File>() );
+    TEST_ASSERT( rp->HasMetaData<Meta_Optional>() );
+    TEST_ASSERT( rp->HasMetaData<Meta_Path>() );
 }
 
 // ArraySize
@@ -253,7 +262,7 @@ void TestReflection::ArraySize() const
     // This test should fail if our assumptions are invalidated
     TestObject o;
     const ReflectionInfo * ri = TestObject::GetReflectionInfoS();
-    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString<>( "StructArray" ) );
+    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString( "StructArray" ) );
     const ReflectedPropertyStruct * rps = (const ReflectedPropertyStruct *)rp;
     TEST_ASSERT( rps->GetArraySize( &o ) == 0 );
     o.m_StructArray.SetSize( 4 );

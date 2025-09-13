@@ -74,10 +74,10 @@ void TestChainedMemoryStream::WriteOneFullPage() const
     uint32_t dataSize = 0;
     const char * const data = ms.GetPage( 0, dataSize );
     TEST_ASSERT( data );
-    TEST_ASSERT( dataSize  == ms.GetFileSize() );
+    TEST_ASSERT( dataSize == ms.GetFileSize() );
 
     // Check content of page is as expected
-    AStackString<> buffer( data, ( data + dataSize ) );
+    AStackString buffer( data, ( data + dataSize ) );
     TEST_ASSERT( buffer == "ABCD1234zxcvbnm,zxcvbnm,QWERTYUI" );
 }
 
@@ -96,7 +96,7 @@ void TestChainedMemoryStream::WriteSeveralFullPages() const
     TEST_ASSERT( ms.GetFileSize() == 32 );
     TEST_ASSERT( ms.Tell() == ms.GetFileSize() );
     TEST_ASSERT( ms.GetNumPages() == 2 );
-    AStackString<> buffer;
+    AStackString buffer;
     for ( uint32_t i = 0; i < ms.GetNumPages(); ++i )
     {
         uint32_t dataSize = 0;
@@ -123,8 +123,8 @@ void TestChainedMemoryStream::WriteAcrossPageBoundary() const
 
     // Check state is as expected
     TEST_ASSERT( ms.GetFileSize() == 40 );
-    TEST_ASSERT( ms.GetNumPages() == 2);
-    AStackString<> buffer;
+    TEST_ASSERT( ms.GetNumPages() == 2 );
+    AStackString buffer;
     {
         uint32_t dataSize = 0;
         const char * const data = ms.GetPage( 0, dataSize );
@@ -139,7 +139,7 @@ void TestChainedMemoryStream::WriteAcrossPageBoundary() const
         TEST_ASSERT( dataSize == 8 );
         buffer.Append( data, ( data + dataSize ) );
     }
-    TEST_ASSERT( buffer.GetLength() ==ms.GetFileSize() );
+    TEST_ASSERT( buffer.GetLength() == ms.GetFileSize() );
     TEST_ASSERT( buffer == "ABCDabcd12345678901234567890123456789012" );
 }
 
@@ -148,12 +148,12 @@ void TestChainedMemoryStream::WriteAcrossPageBoundary() const
 void TestChainedMemoryStream::WriteLargerThanPage() const
 {
     // Perform a write that spans several pages
-    const AStackString<> payload( "0123456789abcdef----QWERTYUIASDFGHJKZXCVBNM," );
+    const AStackString payload( "0123456789abcdef----QWERTYUIASDFGHJKZXCVBNM," );
     ChainedMemoryStream ms( 16 );
     TEST_ASSERT( ms.WriteBuffer( payload.Get(), payload.GetLength() ) == 44 );
     TEST_ASSERT( ms.GetFileSize() == 44 );
     TEST_ASSERT( ms.GetNumPages() == 3 );
-    AStackString<> buffer;
+    AStackString buffer;
     for ( uint32_t i = 0; i < ms.GetNumPages(); ++i )
     {
         uint32_t dataSize = 0;

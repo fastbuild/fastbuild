@@ -19,7 +19,7 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~RemoveDirNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::REMOVE_DIR_NODE; }
+    static Node::Type GetTypeS() { return Node::REMOVE_DIR_NODE; }
     virtual bool IsAFile() const override;
 
 private:
@@ -29,14 +29,14 @@ private:
     [[nodiscard]] bool DirectoryDelete( const AString & dir ) const;
 
     // Exposed Properties
-    Array< AString >    m_RemovePaths;
-    bool                m_RemovePathsRecurse = true;
-    bool                m_RemoveDirs = true;
-    bool                m_RemoveRootDir = true;
-    Array< AString >    m_RemovePatterns;
-    Array< AString >    m_RemoveExcludePaths;
-    Array< AString >    m_RemoveExcludeFiles;
-    Array< AString >    m_PreBuildDependencyNames;
+    Array<AString> m_RemovePaths;
+    bool m_RemovePathsRecurse = true;
+    bool m_RemoveDirs = true;
+    bool m_RemoveRootDir = true;
+    Array<AString> m_RemovePatterns;
+    Array<AString> m_RemoveExcludePaths;
+    Array<AString> m_RemoveExcludeFiles;
+    Array<AString> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

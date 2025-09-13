@@ -15,7 +15,7 @@ public:
     explicit Meta_Path( bool relative = false );
     virtual ~Meta_Path() override;
 
-    inline bool IsRelative() const { return m_Relative; }
+    bool IsRelative() const { return m_Relative; }
 
 protected:
     bool m_Relative;

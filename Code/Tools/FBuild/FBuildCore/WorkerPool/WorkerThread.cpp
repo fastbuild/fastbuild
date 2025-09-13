@@ -28,9 +28,9 @@ AStackString<> WorkerThread::s_TmpRoot;
 
 //------------------------------------------------------------------------------
 WorkerThread::WorkerThread( uint16_t threadIndex )
-: m_ShouldExit( false )
-, m_Exited( false )
-, m_ThreadIndex( threadIndex )
+    : m_ShouldExit( false )
+    , m_Exited( false )
+    , m_ThreadIndex( threadIndex )
 {
 }
 
@@ -55,13 +55,13 @@ WorkerThread::~WorkerThread()
 {
     PROFILE_FUNCTION;
 
-    AStackString<> tmpDirPath;
+    AStackString tmpDirPath;
     VERIFY( FBuild::GetTempDir( tmpDirPath ) );
-    #if defined( __WINDOWS__ )
-        tmpDirPath += ".fbuild.tmp\\";
-    #else
-        tmpDirPath += "_fbuild.tmp/";
-    #endif
+#if defined( __WINDOWS__ )
+    tmpDirPath += ".fbuild.tmp\\";
+#else
+    tmpDirPath += "_fbuild.tmp/";
+#endif
 
     // use the working dir hash to uniquify the path
     const uint32_t workingDirHash = remote ? 0 : FBuild::Get().GetOptions().GetWorkingDirHash();
@@ -70,7 +70,7 @@ WorkerThread::~WorkerThread()
 
     VERIFY( FileIO::EnsurePathExists( tmpDirPath ) );
 
-    MutexHolder lock( s_TmpRootMutex );
+    const MutexHolder lock( s_TmpRootMutex );
     s_TmpRoot = tmpDirPath;
 }
 
@@ -107,7 +107,7 @@ void WorkerThread::WaitForStop()
 //------------------------------------------------------------------------------
 /*static*/ void WorkerThread::ThreadWrapperFunc( void * param )
 {
-    WorkerThread * wt = static_cast< WorkerThread * >( param );
+    WorkerThread * wt = static_cast<WorkerThread *>( param );
     s_WorkerThreadThreadIndex = wt->m_ThreadIndex;
 
     wt->Main();
@@ -121,7 +121,7 @@ void WorkerThread::WaitForStop()
 
     CreateThreadLocalTmpDir();
 
-    for (;;)
+    for ( ;; )
     {
         // Wait for work to become available (or quit signal)
         JobQueue::Get().WorkerThreadWait( 500 );
@@ -180,7 +180,7 @@ void WorkerThread::WaitForStop()
     // no local job, see if we can do one from the remote queue
     if ( FBuild::Get().GetOptions().m_NoLocalConsumptionOfRemoteJobs == false )
     {
-        job = JobQueue::IsValid() ? JobQueue::Get().GetDistributableJobToProcess( false, Protocol::PROTOCOL_VERSION_MINOR )
+        job = JobQueue::IsValid() ? JobQueue::Get().GetDistributableJobToProcess( false, Protocol::kVersionMinor )
                                   : nullptr;
         if ( job != nullptr )
         {
@@ -225,7 +225,6 @@ void WorkerThread::WaitForStop()
     return false; // no work to do
 }
 
-
 // GetTempFileDirectory
 //------------------------------------------------------------------------------
 /*static*/ void WorkerThread::GetTempFileDirectory( AString & tmpFileDirectory )
@@ -253,7 +252,7 @@ void WorkerThread::WaitForStop()
 // CreateTempFile
 //------------------------------------------------------------------------------
 /*static*/ bool WorkerThread::CreateTempFile( const AString & tmpFileName,
-                                        FileStream & file )
+                                              FileStream & file )
 {
     ASSERT( tmpFileName.IsEmpty() == false );
     ASSERT( PathUtils::IsFullPath( tmpFileName ) );
@@ -267,7 +266,7 @@ void WorkerThread::WaitForStop()
     PROFILE_FUNCTION;
 
     // create isolated subdir
-    AStackString<> tmpFileName;
+    AStackString tmpFileName;
     CreateTempFilePath( ".tmp", tmpFileName );
     const char * lastSlash = tmpFileName.FindLast( NATIVE_SLASH );
     tmpFileName.SetLength( (uint32_t)( lastSlash - tmpFileName.Get() ) );

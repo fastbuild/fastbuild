@@ -32,10 +32,10 @@ SLNGenerator::~SLNGenerator() = default;
 const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
                                            const AString & solutionVisualStudioVersion,
                                            const AString & solutionMinimumVisualStudioVersion,
-                                           const Array< SolutionConfig > & solutionConfigs,
-                                           const Array< VSProjectBaseNode * > & projects,
-                                           const Array< SolutionDependency > & solutionDependencies,
-                                           const Array< SolutionFolder > & solutionFolders )
+                                           const Array<SolutionConfig> & solutionConfigs,
+                                           const Array<VSProjectBaseNode *> & projects,
+                                           const Array<SolutionDependency> & solutionDependencies,
+                                           const Array<SolutionFolder> & solutionFolders )
 {
     // preallocate to avoid re-allocations
     m_Output.SetReserved( MEGABYTE );
@@ -43,11 +43,11 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
 
     // determine folder for project
     const char * lastSlash = solutionFile.FindLast( NATIVE_SLASH );
-    AStackString<> solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
+    AStackString solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
 
-    StackArray< AString > solutionProjectsToFolder;
+    StackArray<AString> solutionProjectsToFolder;
     solutionProjectsToFolder.SetCapacity( projects.GetSize() );
-    StackArray< AString > solutionFolderPaths;
+    StackArray<AString> solutionFolderPaths;
     solutionFolderPaths.SetCapacity( solutionFolders.GetSize() );
 
     // construct sln file
@@ -68,22 +68,24 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
 void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
                                 const AString & solutionMinimumVisualStudioVersion )
 {
-    const char * defaultVersion         = "14.0.22823.1"; // Visual Studio 2015 RC
-    const char * defaultMinimumVersion  = "10.0.40219.1"; // Visual Studio Express 2010
+    const char * defaultVersion = "14.0.22823.1"; // Visual Studio 2015 RC
+    const char * defaultMinimumVersion = "10.0.40219.1"; // Visual Studio Express 2010
 
     const char * version = ( solutionVisualStudioVersion.GetLength() > 0 )
-                         ? solutionVisualStudioVersion.Get()
-                         : defaultVersion ;
+                               ? solutionVisualStudioVersion.Get()
+                               : defaultVersion;
 
     const char * minimumVersion = ( solutionMinimumVisualStudioVersion.GetLength() > 0 )
-                                ? solutionMinimumVisualStudioVersion.Get()
-                                : defaultMinimumVersion ;
+                                      ? solutionMinimumVisualStudioVersion.Get()
+                                      : defaultMinimumVersion;
 
     const char * shortVersionStart = version;
     const char * shortVersionEnd = version;
-    for ( ; *shortVersionEnd && *shortVersionEnd != '.' ; ++shortVersionEnd );
+    for ( ; *shortVersionEnd && *shortVersionEnd != '.'; ++shortVersionEnd )
+    {
+    }
 
-    AStackString<> shortVersion( shortVersionStart, shortVersionEnd );
+    AStackString shortVersion( shortVersionStart, shortVersionEnd );
 
     // Extract primary version as an int
     uint32_t shortVersionInt = 0;
@@ -106,10 +108,10 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 // WriteProjectListings
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
-                                         const Array< VSProjectBaseNode * > & projects,
-                                         const Array< SolutionFolder > & solutionFolders,
-                                         const Array< SolutionDependency > & solutionDependencies,
-                                         Array< AString > & solutionProjectsToFolder )
+                                         const Array<VSProjectBaseNode *> & projects,
+                                         const Array<SolutionFolder> & solutionFolders,
+                                         const Array<SolutionDependency> & solutionDependencies,
+                                         Array<AString> & solutionProjectsToFolder )
 {
     // Project Listings
 
@@ -118,35 +120,38 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
         const AString & projectPath = project->GetName();
 
         // get project base name only
-        const char * lastSlash  = projectPath.FindLast( NATIVE_SLASH );
+        const char * lastSlash = projectPath.FindLast( NATIVE_SLASH );
         const char * lastPeriod = projectPath.FindLast( '.' );
-        AStackString<> projectName( lastSlash  ? lastSlash + 1  : projectPath.Get(),
-                                    lastPeriod ? lastPeriod     : projectPath.GetEnd() );
+        AStackString projectName( lastSlash ? lastSlash + 1 : projectPath.Get(),
+                                  lastPeriod ? lastPeriod : projectPath.GetEnd() );
 
         // make project path relative
-        AStackString<> solutionRelativePath;
+        AStackString solutionRelativePath;
         ProjectGeneratorBase::GetRelativePath( solutionBasePath, projectPath, solutionRelativePath );
-        #if !defined( __WINDOWS__ )
-            solutionRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
-        #endif
+#if !defined( __WINDOWS__ )
+        solutionRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
+#endif
 
         // retrieve projectGuid
-        AStackString<> projectGuid( project->GetProjectGuid() );
+        AStackString projectGuid( project->GetProjectGuid() );
 
         // Visual Studio expects the GUID to be uppercase
         projectGuid.ToUpper();
 
         // retrieve projectTypeGuid
-        AStackString<> projectTypeGuid( project->GetProjectTypeGuid() );
+        AStackString projectTypeGuid( project->GetProjectTypeGuid() );
 
         // Visual Studio expects the GUID to be uppercase
         projectTypeGuid.ToUpper();
 
         Write( "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n",
-               projectTypeGuid.Get(), projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
+               projectTypeGuid.Get(),
+               projectName.Get(),
+               solutionRelativePath.Get(),
+               projectGuid.Get() );
 
         // Manage dependencies
-        StackArray< AString > dependencyGUIDs;
+        StackArray<AString> dependencyGUIDs;
         for ( const SolutionDependency & deps : solutionDependencies )
         {
             // is the set of deps relevant to this project?
@@ -187,12 +192,12 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
             if ( solutionFolder.m_Projects.Find( projectPath ) )
             {
                 // generate a guid for the solution folder
-                AStackString<> solutionFolderGuid;
+                AStackString solutionFolderGuid;
                 VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, solutionFolder.m_Path );
 
                 solutionFolderGuid.ToUpper();
 
-                AStackString<> projectToFolder;
+                AStackString projectToFolder;
                 projectToFolder.Format( "\t\t%s = %s\r\n", projectGuid.Get(), solutionFolderGuid.Get() );
 
                 solutionProjectsToFolder.Append( projectToFolder );
@@ -204,8 +209,8 @@ void SLNGenerator::WriteProjectListings( const AString & solutionBasePath,
 // WriteSolutionFolderListings
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath,
-                                                const Array< SolutionFolder > & solutionFolders,
-                                                Array< AString > & solutionFolderPaths )
+                                                const Array<SolutionFolder> & solutionFolders,
+                                                Array<AString> & solutionFolderPaths )
 {
     // Create every intermediate path
     for ( const SolutionFolder & solutionFolder : solutionFolders )
@@ -218,7 +223,7 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
         const char * pathEnd = solutionFolder.m_Path.Find( BACK_SLASH ); // Always windows-style
         while ( pathEnd )
         {
-            AStackString<> solutionFolderPath( solutionFolder.m_Path.Get(), pathEnd );
+            AStackString solutionFolderPath( solutionFolder.m_Path.Get(), pathEnd );
             if ( solutionFolderPaths.Find( solutionFolderPath ) == nullptr )
             {
                 solutionFolderPaths.Append( solutionFolderPath );
@@ -239,14 +244,16 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
         solutionFolderName = solutionFolderName ? solutionFolderName + 1 : solutionFolderPath.Get();
 
         // generate a guid for the solution folder
-        AStackString<> solutionFolderGuid;
+        AStackString solutionFolderGuid;
         VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, solutionFolderPath );
 
         // Guid must be uppercase (like visual)
         solutionFolderGuid.ToUpper();
 
         Write( "Project(\"{2150E333-8FDC-42A3-9474-1A3956D46DE8}\") = \"%s\", \"%s\", \"%s\"\r\n",
-               solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
+               solutionFolderName,
+               solutionFolderName,
+               solutionFolderGuid.Get() );
 
         // lookup solution folder to find out if it contains items
         for ( const SolutionFolder & solutionFolder : solutionFolders )
@@ -256,18 +263,18 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
                 if ( solutionFolder.m_Items.IsEmpty() == false )
                 {
                     // make a local copy (to sort before writing to SLN, as Visual Studio will keep doing that after opening it):
-                    Array< AString > items;
+                    Array<AString> items;
                     items.Append( solutionFolder.m_Items );
                     items.Sort();
                     Write( "\tProjectSection(SolutionItems) = preProject\r\n" );
                     for ( const AString & item : items )
                     {
                         // make item path relative
-                        AStackString<> itemRelativePath;
+                        AStackString itemRelativePath;
                         ProjectGeneratorBase::GetRelativePath( solutionBasePath, item, itemRelativePath );
-                        #if !defined( __WINDOWS__ )
-                            itemRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
-                        #endif
+#if !defined( __WINDOWS__ )
+                        itemRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
+#endif
                         Write( "\t\t%s = %s\r\n", itemRelativePath.Get(), itemRelativePath.Get() );
                     }
                     Write( "\tEndProjectSection\r\n" );
@@ -281,7 +288,7 @@ void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath
 
 // WriteSolutionConfigurationPlatforms
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs )
+void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array<SolutionConfig> & solutionConfigs )
 {
     Write( "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n" );
 
@@ -289,8 +296,10 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
     for ( const SolutionConfig & solutionConfig : solutionConfigs )
     {
         Write( "\t\t%s|%s = %s|%s\r\n",
-               solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
-               solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get() );
+               solutionConfig.m_SolutionConfig.Get(),
+               solutionConfig.m_SolutionPlatform.Get(),
+               solutionConfig.m_SolutionConfig.Get(),
+               solutionConfig.m_SolutionPlatform.Get() );
     }
 
     Write( "\tEndGlobalSection\r\n" );
@@ -298,23 +307,25 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
 
 // WriteProjectConfigurationPlatforms
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs,
-                                                       const Array< VSProjectBaseNode * > & projects )
+void SLNGenerator::WriteProjectConfigurationPlatforms( const Array<SolutionConfig> & solutionConfigs,
+                                                       const Array<VSProjectBaseNode *> & projects )
 {
     Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
 
     // Solution Configuration Mappings to Projects
-    for( const VSProjectBaseNode * project : projects )
+    for ( const VSProjectBaseNode * project : projects )
     {
-        AStackString<> projectGuid( project->GetProjectGuid() );
+        AStackString projectGuid( project->GetProjectGuid() );
         projectGuid.ToUpper();
 
-        for( const SolutionConfig & solutionConfig : solutionConfigs )
+        for ( const SolutionConfig & solutionConfig : solutionConfigs )
         {
             Write( "\t\t%s.%s|%s.ActiveCfg = %s|%s\r\n",
                    projectGuid.Get(),
-                   solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
-                   solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
+                   solutionConfig.m_SolutionConfig.Get(),
+                   solutionConfig.m_SolutionPlatform.Get(),
+                   solutionConfig.m_Config.Get(),
+                   solutionConfig.m_Platform.Get() );
 
             // Is project active in solution build?
             bool projectIsActive = false;
@@ -342,17 +353,20 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< SolutionConf
             {
                 Write( "\t\t%s.%s|%s.Build.0 = %s|%s\r\n",
                        projectGuid.Get(),
-                       solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
-                       solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
+                       solutionConfig.m_SolutionConfig.Get(),
+                       solutionConfig.m_SolutionPlatform.Get(),
+                       solutionConfig.m_Config.Get(),
+                       solutionConfig.m_Platform.Get() );
             }
             if ( projectDeployEnabled )
             {
                 Write( "\t\t%s.%s|%s.Deploy.0 = %s|%s\r\n",
                        projectGuid.Get(),
-                       solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
-                       solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
+                       solutionConfig.m_SolutionConfig.Get(),
+                       solutionConfig.m_SolutionPlatform.Get(),
+                       solutionConfig.m_Config.Get(),
+                       solutionConfig.m_Platform.Get() );
             }
-
         }
     }
 
@@ -364,8 +378,8 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< SolutionConf
 
 // WriteNestedProjects
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProjectsToFolder,
-                                        const Array< AString > & solutionFolderPaths )
+void SLNGenerator::WriteNestedProjects( const Array<AString> & solutionProjectsToFolder,
+                                        const Array<AString> & solutionFolderPaths )
 {
     if ( solutionProjectsToFolder.GetSize() == 0 &&
          solutionFolderPaths.GetSize() == 0 )
@@ -382,21 +396,21 @@ void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProject
     }
 
     // Write every intermediate path
-    for( const AString & solutionFolderPath : solutionFolderPaths )
+    for ( const AString & solutionFolderPath : solutionFolderPaths )
     {
         // parse solution folder parent path
-        AStackString<> solutionFolderParentGuid;
+        AStackString solutionFolderParentGuid;
         const char * lastSlash = solutionFolderPath.FindLast( NATIVE_SLASH );
         if ( lastSlash )
         {
-            AStackString<> solutionFolderParentPath( solutionFolderPath.Get(), lastSlash );
+            AStackString solutionFolderParentPath( solutionFolderPath.Get(), lastSlash );
             VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderParentGuid, solutionFolderParentPath );
         }
 
         if ( solutionFolderParentGuid.GetLength() > 0 )
         {
             // generate a guid for the solution folder
-            AStackString<> solutionFolderGuid;
+            AStackString solutionFolderGuid;
             VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, solutionFolderPath );
 
             solutionFolderGuid.ToUpper();
@@ -422,10 +436,10 @@ void SLNGenerator::WriteFooter()
 //------------------------------------------------------------------------------
 void SLNGenerator::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > tmp;
+    AStackString<1024> tmp;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     tmp.VFormat( fmtString, args );
     va_end( args );
 

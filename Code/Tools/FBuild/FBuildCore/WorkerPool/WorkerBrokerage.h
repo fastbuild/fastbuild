@@ -19,12 +19,13 @@ public:
     ~WorkerBrokerage();
 
     const AString & GetBrokerageRootPaths() const { return m_BrokerageRootPaths; }
+
 protected:
     void InitBrokerage();
 
-    Array<AString>      m_BrokerageRoots;
-    AString             m_BrokerageRootPaths;
-    bool                m_BrokerageInitialized;
+    Array<AString> m_BrokerageRoots;
+    AString m_BrokerageRootPaths;
+    bool m_BrokerageInitialized;
 };
 
 //------------------------------------------------------------------------------

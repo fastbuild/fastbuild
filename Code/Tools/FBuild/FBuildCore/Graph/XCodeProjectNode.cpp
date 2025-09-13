@@ -5,14 +5,16 @@
 //------------------------------------------------------------------------------
 #include "XCodeProjectNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/XCodeProjectGenerator.h"
 
+// Core
 #include "Core/Env/Env.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -51,7 +53,7 @@ REFLECT_END( XCodeProjectNode )
 // XCodeProjectConfig::ResolveTargets
 //------------------------------------------------------------------------------
 /*static*/ bool XCodeProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
-                                                    Array< XCodeProjectConfig > & configs,
+                                                    Array<XCodeProjectConfig> & configs,
                                                     const BFFToken * iter,
                                                     const Function * function )
 {
@@ -158,7 +160,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     XCodeProjectGenerator g;
 
     // Project Name
-    AStackString<> tmp( m_Name );
+    AStackString tmp( m_Name );
     const char * lastSlash = tmp.FindLast( NATIVE_SLASH );
     if ( lastSlash )
     {
@@ -169,7 +171,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     const char * projectNameEnd = tmp.FindLast( '.' );
     projectNameStart = projectNameStart ? projectNameStart + 1 : tmp.Get();
     projectNameEnd = projectNameEnd ? projectNameEnd : tmp.GetEnd();
-    AStackString<> projectName( projectNameStart, projectNameEnd );
+    AStackString projectName( projectNameStart, projectNameEnd );
     g.SetProjectName( projectName );
 
     // Base Paths
@@ -190,7 +192,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         const Node * n = dep.GetNode();
         if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+            const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
             for ( const FileIO::FileInfo & file : dln->GetFiles() )
             {
                 //filter the file by pattern
@@ -218,7 +220,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
                 const char * ext = n->GetName().Find( ".xcodeproj/" );
                 if ( ext )
                 {
-                    AStackString<> name( n->GetName().Get(), ext + 10 ); // include .xcodeproj
+                    AStackString name( n->GetName().Get(), ext + 10 ); // include .xcodeproj
                     g.AddFile( name );
                     continue;
                 }
@@ -257,12 +259,12 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     // Get folder containing project.pbxproj
     const char * projectFolderSlash = m_Name.FindLast( NATIVE_SLASH );
     ASSERT( projectFolderSlash );
-    const AStackString<> folder( m_Name.Get(), projectFolderSlash );
+    const AStackString folder( m_Name.Get(), projectFolderSlash );
 
     // Generate user-specific xcschememanagement.plist
     {
         // Get the user name
-        AStackString<> userName;
+        AStackString userName;
         if ( Env::GetLocalUserName( userName ) == false )
         {
             FLOG_ERROR( "Failed to determine username for '%s'", m_Name.Get() );
@@ -273,12 +275,12 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         const AString & output = g.GenerateUserSchemeManagementPList();
 
         // Write to disk if missing (not written if different as this could stomp user settings)
-        AStackString<> plist;
-        #if defined( __WINDOWS__ )
-            plist.Format( "%s\\xcuserdata\\%s.xcuserdatad\\xcschemes\\xcschememanagement.plist", folder.Get(), userName.Get() );
-        #else
-            plist.Format( "%s/xcuserdata/%s.xcuserdatad/xcschemes/xcschememanagement.plist", folder.Get(), userName.Get() );
-        #endif
+        AStackString plist;
+#if defined( __WINDOWS__ )
+        plist.Format( "%s\\xcuserdata\\%s.xcuserdatad\\xcschemes\\xcschememanagement.plist", folder.Get(), userName.Get() );
+#else
+        plist.Format( "%s/xcuserdata/%s.xcuserdatad/xcschemes/xcschememanagement.plist", folder.Get(), userName.Get() );
+#endif
         if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, plist ) == false )
         {
             return BuildResult::eFailed; // WriteIfMissing will have emitted an error
@@ -294,12 +296,12 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         const AString & output = g.GenerateXCScheme();
 
         // Write to disk if missing (not written if different as this could stomp user settings)
-        AStackString<> xcscheme;
-        #if defined( __WINDOWS__ )
-            xcscheme.Format( "%s\\xcshareddata\\xcschemes\\%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
-        #else
-            xcscheme.Format( "%s/xcshareddata/xcschemes/%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
-        #endif
+        AStackString xcscheme;
+#if defined( __WINDOWS__ )
+        xcscheme.Format( "%s\\xcshareddata\\xcschemes\\%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
+#else
+        xcscheme.Format( "%s/xcshareddata/xcschemes/%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
+#endif
         if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, xcscheme ) == false )
         {
             return BuildResult::eFailed; // WriteIfMissing will have emitted an error

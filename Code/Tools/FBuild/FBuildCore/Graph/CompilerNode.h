@@ -23,39 +23,39 @@ public:
 
     virtual bool IsAFile() const override;
 
-    static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }
+    static Node::Type GetTypeS() { return Node::COMPILER_NODE; }
 
-    inline const ToolManifest & GetManifest() const { return m_Manifest; }
+    const ToolManifest & GetManifest() const { return m_Manifest; }
 
-    inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
-    inline bool GetUseLightCache() const { return m_UseLightCache; }
-    inline bool GetUseRelativePaths() const { return m_UseRelativePaths; }
-    inline bool GetUseDeterministicPaths() const { return m_UseDeterministicPaths; }
-    inline bool CanBeDistributed() const { return m_AllowDistribution; }
-    inline bool CanUseResponseFile() const { return m_AllowResponseFile; }
-    inline bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
-    #if defined( __WINDOWS__ )
-        inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
-    #endif
-    inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
-    inline bool IsClangGCCUpdateXLanguageArgEnabled() const { return m_ClangGCCUpdateXLanguageArg; }
-    inline bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }
+    bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
+    bool GetUseLightCache() const { return m_UseLightCache; }
+    bool GetUseRelativePaths() const { return m_UseRelativePaths; }
+    bool GetUseDeterministicPaths() const { return m_UseDeterministicPaths; }
+    bool CanBeDistributed() const { return m_AllowDistribution; }
+    bool CanUseResponseFile() const { return m_AllowResponseFile; }
+    bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
+#if defined( __WINDOWS__ )
+    bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
+#endif
+    bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
+    bool IsClangGCCUpdateXLanguageArgEnabled() const { return m_ClangGCCUpdateXLanguageArg; }
+    bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }
 
     enum CompilerFamily : uint8_t
     {
-        CUSTOM          = 0,
-        MSVC            = 1,
-        CLANG           = 2,
-        GCC             = 3,
-        SNC             = 4,
+        CUSTOM = 0,
+        MSVC = 1,
+        CLANG = 2,
+        GCC = 3,
+        SNC = 4,
         CODEWARRIOR_WII = 5,
         GREENHILLS_WIIU = 6,
-        CUDA_NVCC       = 7,
-        QT_RCC          = 8,
-        VBCC            = 9,
-        ORBIS_WAVE_PSSLC= 10,
-        CSHARP          = 11,
-        CLANG_CL        = 12,
+        CUDA_NVCC = 7,
+        QT_RCC = 8,
+        VBCC = 9,
+        ORBIS_WAVE_PSSLC = 10,
+        CSHARP = 11,
+        CLANG_CL = 12,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 
@@ -70,29 +70,29 @@ private:
     virtual void Migrate( const Node & oldNode ) override;
 
     // Exposed params
-    AString                 m_Executable;
-    Array< AString >        m_ExtraFiles;
-    Array< AString >        m_CustomEnvironmentVariables;
-    bool                    m_AllowDistribution;
-    bool                    m_AllowResponseFile;
-    bool                    m_ForceResponseFile;
-    bool                    m_VS2012EnumBugFix;
-    bool                    m_ClangRewriteIncludes;
-    bool                    m_ClangGCCUpdateXLanguageArg;
-    bool                    m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
-    AString                 m_ExecutableRootPath;
-    AString                 m_CompilerFamilyString;
-    uint8_t                 m_CompilerFamilyEnum;
-    bool                    m_SimpleDistributionMode;
-    bool                    m_UseLightCache;
-    bool                    m_UseRelativePaths;
-    bool                    m_UseDeterministicPaths;
-    ToolManifest            m_Manifest;
-    Array< AString >        m_Environment;
-    AString                 m_SourceMapping;
+    AString m_Executable;
+    Array<AString> m_ExtraFiles;
+    Array<AString> m_CustomEnvironmentVariables;
+    bool m_AllowDistribution;
+    bool m_AllowResponseFile;
+    bool m_ForceResponseFile;
+    bool m_VS2012EnumBugFix;
+    bool m_ClangRewriteIncludes;
+    bool m_ClangGCCUpdateXLanguageArg;
+    bool m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
+    AString m_ExecutableRootPath;
+    AString m_CompilerFamilyString;
+    uint8_t m_CompilerFamilyEnum;
+    bool m_SimpleDistributionMode;
+    bool m_UseLightCache;
+    bool m_UseRelativePaths;
+    bool m_UseDeterministicPaths;
+    ToolManifest m_Manifest;
+    Array<AString> m_Environment;
+    AString m_SourceMapping;
 
     // Internal state
-    mutable const char *    m_EnvironmentString;
+    mutable const char * m_EnvironmentString;
 };
 
 //------------------------------------------------------------------------------

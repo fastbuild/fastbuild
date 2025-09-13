@@ -35,10 +35,10 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestListView::Empty() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // base Create/destroy without initialization
     OSWindow window;
@@ -50,10 +50,10 @@ void TestListView::Empty() const
 //------------------------------------------------------------------------------
 void TestListView::Init() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Initialize and free
     OSWindow window;
@@ -69,10 +69,10 @@ void TestListView::Init() const
 //------------------------------------------------------------------------------
 void TestListView::Items() const
 {
-    #if defined( __OSX__ )
-        // OSX main window appears to be leaked by OS
-        SetMemoryLeakCheckEnabled( false );
-    #endif
+#if defined( __OSX__ )
+    // OSX main window appears to be leaked by OS
+    SetMemoryLeakCheckEnabled( false );
+#endif
 
     // Create dropdown and populate with items
 
@@ -86,7 +86,7 @@ void TestListView::Items() const
     listView.Init( 32, 32, 200, 100 );
 
     // Add Columns
-    listView.AddColumn( "Column 1", 0, 200);
+    listView.AddColumn( "Column 1", 0, 200 );
     listView.AddColumn( "Column 2", 1, 200 );
     listView.AddColumn( "Column 3", 2, 200 );
 

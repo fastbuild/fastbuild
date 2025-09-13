@@ -36,35 +36,35 @@ protected:
 
     enum : uint32_t
     {
-        eNodeNotSeen    = 0,
-        eNodeSeen       = 1,
+        eNodeNotSeen = 0,
+        eNodeSeen = 1,
     };
 
     class LibraryStats
     {
     public:
-        const Node *    m_Library;
-        uint32_t        m_CPUTimeMS;
-        uint32_t        m_ObjectCount;
-        uint32_t        m_ObjectCount_OutOfDate;
-        uint32_t        m_ObjectCount_Cacheable;
-        uint32_t        m_ObjectCount_CacheHits;
-        uint32_t        m_ObjectCount_CacheStores;
-        uint32_t        m_CacheTimeMS;
+        const Node * m_Library;
+        uint32_t m_CPUTimeMS;
+        uint32_t m_ObjectCount;
+        uint32_t m_ObjectCount_OutOfDate;
+        uint32_t m_ObjectCount_Cacheable;
+        uint32_t m_ObjectCount_CacheHits;
+        uint32_t m_ObjectCount_CacheStores;
+        uint32_t m_CacheTimeMS;
 
-        bool operator < ( const LibraryStats & other ) const { return m_CPUTimeMS > other.m_CPUTimeMS; }
+        bool operator<( const LibraryStats & other ) const { return m_CPUTimeMS > other.m_CPUTimeMS; }
     };
 
     class IncludeStats
     {
     public:
-        const Node *    m_Node;
-        uint32_t        m_Count;
-        bool            m_InPCH;
+        const Node * m_Node;
+        uint32_t m_Count;
+        bool m_InPCH;
 
-        bool operator < ( const IncludeStats & other ) const { return m_Count > other.m_Count; }
+        bool operator<( const IncludeStats & other ) const { return m_Count > other.m_Count; }
 
-        IncludeStats *  m_Next; // in-place hash map chain
+        IncludeStats * m_Next; // in-place hash map chain
     };
 
     class IncludeStatsMap
@@ -76,7 +76,8 @@ protected:
         IncludeStats * Find( const Node * node ) const;
         IncludeStats * Insert( const Node * node );
 
-        void Flatten( Array< const IncludeStats * > & stats ) const;
+        void Flatten( Array<const IncludeStats *> & stats ) const;
+
     protected:
         IncludeStats * m_Table[ 65536 ];
         MemPoolBlock m_Pool;
@@ -90,13 +91,13 @@ protected:
 
     // gather stats
     void GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & stats );
-    void GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const;
-    void GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const;
+    void GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Node * node, LibraryStats * currentLib ) const;
+    void GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const;
     void GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const;
     void AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode ) const;
 
     // intermediate collected data
-    Array< LibraryStats * > m_LibraryStats;
+    Array<LibraryStats *> m_LibraryStats;
     Timer m_Timer;
 
     // final output

@@ -8,10 +8,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Containers/Array.h"
-#include "Core/Env/Types.h"
-#include "Core/Process/Thread.h"
-#include "Core/Strings/AStackString.h"
+    #include "Core/Containers/Array.h"
+    #include "Core/Env/Types.h"
+    #include "Core/Process/Thread.h"
+    #include "Core/Strings/AStackString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -43,12 +43,12 @@ private:
 
     struct ProfileEventInfo
     {
-        Thread::ThreadId        m_ThreadId;
-        AStackString< 32 >      m_ThreadName;
-        const ProfileEvent *    m_Events;
-        size_t                  m_NumEvents;
+        Thread::ThreadId m_ThreadId;
+        AStackString<32> m_ThreadName;
+        const ProfileEvent * m_Events;
+        size_t m_NumEvents;
     };
-    static Array< ProfileEventInfo > s_ProfileEventInfo;
+    static Array<ProfileEventInfo> s_ProfileEventInfo;
 };
 
 //------------------------------------------------------------------------------

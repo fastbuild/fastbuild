@@ -32,8 +32,8 @@ public:
     const AString * CheckForChanges( bool & outAdded ) const;
 
 private:
-    Array< AString >    m_FileNames;
-    Array< bool >       m_FileExists;
+    Array<AString> m_FileNames;
+    Array<bool> m_FileExists;
 };
 
 //------------------------------------------------------------------------------

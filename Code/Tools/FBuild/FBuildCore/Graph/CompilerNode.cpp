@@ -5,14 +5,15 @@
 //------------------------------------------------------------------------------
 #include "CompilerNode.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
-
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -53,7 +54,7 @@ CompilerNode::CompilerNode()
     , m_ClangGCCUpdateXLanguageArg( false )
     , m_ClangFixupUnity_Disable( false )
     , m_CompilerFamilyString( "auto" )
-    , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
+    , m_CompilerFamilyEnum( static_cast<uint8_t>( CUSTOM ) )
     , m_SimpleDistributionMode( false )
     , m_UseLightCache( false )
     , m_UseRelativePaths( false )
@@ -92,14 +93,13 @@ CompilerNode::CompilerNode()
     }
 
     // Check for conflicting files
-    AStackString<> relPathExe;
+    AStackString relPathExe;
     ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
 
-
     const size_t numExtraFiles = extraFiles.GetSize();
-    for ( size_t i=0; i<numExtraFiles; ++i )
+    for ( size_t i = 0; i < numExtraFiles; ++i )
     {
-        AStackString<> relPathA;
+        AStackString relPathA;
         ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
 
         // Conflicts with Exe?
@@ -110,9 +110,9 @@ CompilerNode::CompilerNode()
         }
 
         // Conflicts with another file?
-        for ( size_t j=(i+1); j<numExtraFiles; ++j )
+        for ( size_t j = ( i + 1 ); j < numExtraFiles; ++j )
         {
-            AStackString<> relPathB;
+            AStackString relPathB;
             ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
 
             if ( PathUtils::ArePathsEqual( relPathA, relPathB ) )
@@ -128,7 +128,7 @@ CompilerNode::CompilerNode()
     m_StaticDependencies.Add( compilerExeFile );
     m_StaticDependencies.Add( extraFiles );
 
-    if (InitializeCompilerFamily( iter, function ) == false)
+    if ( InitializeCompilerFamily( iter, function ) == false )
     {
         return false;
     }
@@ -162,9 +162,9 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
     {
         // Normalize slashes to make logic consistent on all platforms
-        AStackString<> compiler( GetExecutable() );
+        AStackString compiler( GetExecutable() );
         compiler.Replace( '/', '\\' );
-        AStackString<> compilerWithoutVersion( compiler.Get() );
+        AStackString compilerWithoutVersion( compiler.Get() );
         if ( const char * last = compiler.FindLast( '-' ) )
         {
             compilerWithoutVersion.Assign( compiler.Get(), last );

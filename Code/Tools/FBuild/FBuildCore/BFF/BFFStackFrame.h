@@ -5,6 +5,8 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+
+// Core
 #include "Core/Containers/Array.h"
 
 // Forward Declarations
@@ -29,7 +31,7 @@ public:
                               BFFStackFrame * frame );
     static void SetVarArrayOfStrings( const AString & name,
                                       const BFFToken & token,
-                                      const Array< AString > & values,
+                                      const Array<AString> & values,
                                       BFFStackFrame * frame );
     static void SetVarBool( const AString & name,
                             const BFFToken & token,
@@ -41,7 +43,7 @@ public:
                            BFFStackFrame * frame );
     static void SetVarStruct( const AString & name,
                               const BFFToken & token,
-                              const Array< const BFFVariable * > & members,
+                              const Array<const BFFVariable *> & members,
                               BFFStackFrame * frame );
     static void SetVarStruct( const AString & name,
                               const BFFToken & token,
@@ -49,7 +51,7 @@ public:
                               BFFStackFrame * frame );
     static void SetVarArrayOfStructs( const AString & name,
                                       const BFFToken & token,
-                                      const Array< const BFFVariable * > & structs,
+                                      const Array<const BFFVariable *> & structs,
                                       BFFStackFrame * frame );
 
     // set from an existing variable
@@ -76,14 +78,14 @@ public:
     static const BFFVariable * GetVarAny( const AString & nameOnly );
 
     // get all variables at this stack level only
-    const Array< const BFFVariable * > & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ) }
+    const Array<const BFFVariable *> & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ); }
     Array<BFFVariable *> & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only
     const BFFVariable * GetLocalVar( const AString & name ) const;
 
     static BFFStackFrame * GetCurrent() { return s_StackHead; }
-    static uint32_t        GetDepth() { return s_StackHead ? s_StackHead->m_Depth : 1; }
+    static uint32_t GetDepth() { return s_StackHead ? s_StackHead->m_Depth : 1; }
 
     static BFFStackFrame * GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable );
     static BFFStackFrame * GetParentDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable );
@@ -94,7 +96,7 @@ public:
 
     const AString & GetLastVariableSeen() const { return m_LastVariableSeen; }
     BFFStackFrame * GetLastVariableSeenFrame() const { return m_LastVariableSeenFrame; }
-    void            SetLastVariableSeen( const AString & varName, BFFStackFrame * frame )
+    void SetLastVariableSeen( const AString & varName, BFFStackFrame * frame )
     {
         m_LastVariableSeen = varName;
         m_LastVariableSeenFrame = frame;
@@ -102,7 +104,7 @@ public:
 
 private:
     const BFFVariable * GetVariableRecurse( const AString & nameOnly,
-                                      BFFVariable::VarType type ) const;
+                                            BFFVariable::VarType type ) const;
 
     const BFFVariable * GetVarNoRecurse( const AString & name ) const;
     BFFVariable * GetVarMutableNoRecurse( const AString & name );
@@ -110,12 +112,12 @@ private:
     void CreateOrReplaceVarMutableNoRecurse( BFFVariable * var );
 
     // variables at current scope
-    Array< BFFVariable * > m_Variables;
+    Array<BFFVariable *> m_Variables;
 
     // pointer to parent scope
     BFFStackFrame * m_Next;
     BFFStackFrame * m_OldHeadToRestore;
-    uint32_t        m_Depth;
+    uint32_t m_Depth;
 
     // Track last variable to allow omission of left hand side in operations on the same var
     AString m_LastVariableSeen;

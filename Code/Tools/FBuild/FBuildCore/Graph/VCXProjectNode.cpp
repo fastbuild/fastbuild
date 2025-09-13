@@ -5,12 +5,13 @@
 //------------------------------------------------------------------------------
 #include "VCXProjectNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Error.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -28,7 +29,7 @@
 
 // Globals
 //------------------------------------------------------------------------------
-static const AString g_DefaultProjectTypeGuid( "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
+static const AString g_DefaultProjectTypeGuid( "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" );
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -126,7 +127,7 @@ REFLECT_END( VCXProjectNode )
 // VSProjectConfig::ResolveTargets
 //------------------------------------------------------------------------------
 /*static*/ bool VSProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
-                                                 Array< VSProjectConfig > & configs,
+                                                 Array<VSProjectConfig> & configs,
                                                  const BFFToken * iter,
                                                  const Function * function )
 {
@@ -209,7 +210,7 @@ VCXProjectNode::VCXProjectNode()
     // generate GUID if not specified
     if ( m_ProjectGuid.IsEmpty() )
     {
-        AStackString<> relativePath;
+        AStackString relativePath;
         if ( m_Name.BeginsWith( FBuild::Get().GetWorkingDir() ) )
         {
             relativePath = m_Name.Get() + FBuild::Get().GetWorkingDir().GetLength() + 1;
@@ -231,14 +232,14 @@ VCXProjectNode::VCXProjectNode()
 
         // make the configs
         m_ProjectConfigs.SetCapacity( 4 );
-        config.m_Platform   = "Win32";
-        config.m_Config     = "Debug";
+        config.m_Platform = "Win32";
+        config.m_Config = "Debug";
         m_ProjectConfigs.Append( config );
-        config.m_Config     = "Release";
+        config.m_Config = "Release";
         m_ProjectConfigs.Append( config );
-        config.m_Platform   = "x64";
+        config.m_Platform = "x64";
         m_ProjectConfigs.Append( config );
-        config.m_Config     = "Debug";
+        config.m_Config = "Debug";
         m_ProjectConfigs.Append( config );
     }
 
@@ -293,7 +294,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     // files from directory listings
     for ( const Dependency & staticDep : m_StaticDependencies )
     {
-        const DirectoryListNode * dirNode = staticDep.GetNode()->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dirNode = staticDep.GetNode()->CastTo<DirectoryListNode>();
         for ( const FileIO::FileInfo & fileInfo : dirNode->GetFiles() )
         {
             pg.AddFile( fileInfo.m_Name );
@@ -315,7 +316,7 @@ VCXProjectNode::~VCXProjectNode() = default;
 
     // .vcxproj.filters
     const AString & filters = pg.GenerateVCXProjFilters( m_Name );
-    AStackString<> filterFile( m_Name );
+    AStackString filterFile( m_Name );
     filterFile += ".filters";
     if ( ProjectGeneratorBase::WriteIfDifferent( "VCXProject", filters, filterFile ) == false )
     {

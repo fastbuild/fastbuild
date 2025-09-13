@@ -1,7 +1,6 @@
-
 #include "c.h"
 
 ClassC::ClassC()
-: m_Int( 2 )
+    : m_Int( 2 )
 {
 }

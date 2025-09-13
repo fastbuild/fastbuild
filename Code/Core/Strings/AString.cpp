@@ -62,7 +62,7 @@ AString::AString( AString && string )
     if ( string.MemoryMustBeFreed() == false )
     {
         // Copy
-        m_Contents = const_cast<char*>( s_EmptyString ); // cast to allow pointing to protected string
+        m_Contents = const_cast<char *>( s_EmptyString ); // cast to allow pointing to protected string
         m_Length = 0;
         m_ReservedAndFlags = 0;
         Assign( string );
@@ -76,7 +76,7 @@ AString::AString( AString && string )
     }
 
     // Clear other string
-    string.m_Contents = const_cast<char*>( s_EmptyString );
+    string.m_Contents = const_cast<char *>( s_EmptyString );
     string.m_Length = 0;
     string.m_ReservedAndFlags = 0;
 }
@@ -136,7 +136,7 @@ AString::~AString()
 
 // operator == (const char *)
 //------------------------------------------------------------------------------
-bool AString::operator == ( const char * other ) const
+bool AString::operator==( const char * other ) const
 {
     const char * thisPos = m_Contents;
     const char * otherPos = other;
@@ -159,7 +159,7 @@ loop:
 
 // operator == (const AString &)
 //------------------------------------------------------------------------------
-bool AString::operator == ( const AString & other ) const
+bool AString::operator==( const AString & other ) const
 {
     if ( other.GetLength() != GetLength() )
     {
@@ -187,26 +187,26 @@ int32_t AString::Compare( const char * other ) const
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const AString & other ) const
 {
-    #if defined( __WINDOWS__ )
-        return _stricmp( m_Contents, other.Get() );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return strcasecmp( m_Contents, other.Get() );
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return _stricmp( m_Contents, other.Get() );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return strcasecmp( m_Contents, other.Get() );
+#else
+    #error Unknown platform
+#endif
 }
 
 // CompareI
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const char * other ) const
 {
-    #if defined( __WINDOWS__ )
-        return _stricmp( m_Contents, other );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return strcasecmp( m_Contents, other );
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return _stricmp( m_Contents, other );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return strcasecmp( m_Contents, other );
+#else
+    #error Unknown platform
+#endif
 }
 
 // Format
@@ -231,41 +231,41 @@ AString & AString::VFormat( const char * fmtString, va_list args )
     char * buffer = stackBuffer;
     size_t bufferSize = STACK_BUFFER_SIZE;
 
-    #if defined( __WINDOWS__ )
+#if defined( __WINDOWS__ )
 loop:
-        // attempt the formatting
-        const int len = vsnprintf_s( buffer, bufferSize, _TRUNCATE, fmtString, args );
+    // attempt the formatting
+    const int len = vsnprintf_s( buffer, bufferSize, _TRUNCATE, fmtString, args );
 
-        // did it fail to fit?
-        if ( len < 0 )
+    // did it fail to fit?
+    if ( len < 0 )
+    {
+        // free any old buffer allocations
+        if ( buffer != stackBuffer )
         {
-            // free any old buffer allocations
-            if ( buffer != stackBuffer )
-            {
-                FREE( buffer );
-            }
+            FREE( buffer );
+        }
 
-            // double the buffer and try again
-            bufferSize *= 2;
-            buffer = (char *)ALLOC( bufferSize );
-            goto loop;
-        }
-    #else
-        va_list argsCopy;
-        va_copy( argsCopy, args );
-        PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
-        int len = vsnprintf( nullptr, 0, fmtString, argsCopy );
-        PRAGMA_DISABLE_POP_CLANG
-        va_end( argsCopy );
-        if ( len > ( (int)bufferSize - 1 ) )
-        {
-            bufferSize = static_cast<size_t>( len ) + 1;
-            buffer = (char *)ALLOC( bufferSize );
-        }
-        PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
-        VERIFY( vsnprintf( buffer, bufferSize, fmtString, args ) >= 0 );
-        PRAGMA_DISABLE_POP_CLANG
-    #endif
+        // double the buffer and try again
+        bufferSize *= 2;
+        buffer = (char *)ALLOC( bufferSize );
+        goto loop;
+    }
+#else
+    va_list argsCopy;
+    va_copy( argsCopy, args );
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
+    int len = vsnprintf( nullptr, 0, fmtString, argsCopy );
+    PRAGMA_DISABLE_POP_CLANG
+    va_end( argsCopy );
+    if ( len > ( (int)bufferSize - 1 ) )
+    {
+        bufferSize = static_cast<size_t>( len ) + 1;
+        buffer = (char *)ALLOC( bufferSize );
+    }
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
+    VERIFY( vsnprintf( buffer, bufferSize, fmtString, args ) >= 0 );
+    PRAGMA_DISABLE_POP_CLANG
+#endif
 
     // keep the final result
     Assign( buffer, buffer + len );
@@ -382,7 +382,7 @@ void AString::Tokenize( Array<TokenRange> & outTokenRanges,
 
 // Tokenize
 //------------------------------------------------------------------------------
-void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
+void AString::Tokenize( Array<AString> & tokens, char splitChar ) const
 {
     // Get the bounds of the tokens
     StackArray<TokenRange, 128> tokenRanges;
@@ -402,7 +402,7 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
 
 // RemoveQuotes
 //------------------------------------------------------------------------------
-/*static*/ void AString::RemoveQuotes( Array< AString > & inoutTokens )
+/*static*/ void AString::RemoveQuotes( Array<AString> & inoutTokens )
 {
     for ( AString & token : inoutTokens )
     {
@@ -533,7 +533,7 @@ void AString::Assign( AString && string )
     }
 
     // Clear other string
-    string.m_Contents = const_cast<char*>( s_EmptyString );
+    string.m_Contents = const_cast<char *>( s_EmptyString );
     string.m_Length = 0;
     string.m_ReservedAndFlags = 0;
 }
@@ -563,14 +563,14 @@ void AString::ClearAndFreeMemory()
         FREE( m_Contents );
 
         // Reset to new empty string state
-        m_Contents = const_cast<char*>( s_EmptyString );
+        m_Contents = const_cast<char *>( s_EmptyString );
         m_Length = 0;
         m_ReservedAndFlags = 0;
     }
     else
     {
         // Pointing to unfreeable memory so just reset state
-        if ( m_Contents != const_cast<char*>( s_EmptyString ) )
+        if ( m_Contents != const_cast<char *>( s_EmptyString ) )
         {
             m_Contents[ 0 ] = '\000';
         }
@@ -624,7 +624,7 @@ void AString::SetLength( uint32_t len )
 
 // operator += (char)
 //------------------------------------------------------------------------------
-AString & AString::operator += ( char c )
+AString & AString::operator+=( char c )
 {
     // need more space?
     if ( m_Length >= GetReserved() )
@@ -639,7 +639,7 @@ AString & AString::operator += ( char c )
 
 // operator += (const char *)
 //------------------------------------------------------------------------------
-AString & AString::operator += ( const char * string )
+AString & AString::operator+=( const char * string )
 {
     const uint32_t suffixLen = (uint32_t)StrLen( string );
     if ( suffixLen )
@@ -658,7 +658,7 @@ AString & AString::operator += ( const char * string )
 
 // operator += ( const AString & )
 //------------------------------------------------------------------------------
-AString & AString::operator += ( const AString & string )
+AString & AString::operator+=( const AString & string )
 {
     const uint32_t suffixLen = string.GetLength();
     if ( suffixLen )
@@ -698,7 +698,7 @@ AString & AString::Append( const char * string, size_t len )
 //------------------------------------------------------------------------------
 AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > buffer;
+    AStackString<1024> buffer;
     va_list args;
     va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
@@ -857,7 +857,7 @@ uint32_t AString::Replace( const char * from, const char * to, uint32_t maxRepla
         return 0;
     }
 
-    AStackString< 2 * KILOBYTE > temp;
+    AStackString<2 * KILOBYTE> temp;
     uint32_t replaceCount = 0;
 
     // loop until the last possible position for a potential match
@@ -1370,7 +1370,10 @@ new_segment:
     if ( *pat == '*' )
     {
         star = true;
-        do { pat++; } while ( *pat == '*' );
+        do
+        {
+            pat++;
+        } while ( *pat == '*' );
     }
 
 test_match:
@@ -1381,9 +1384,18 @@ test_match:
         const char b = pat[ i ];
         if ( a != b )
         {
-            if ( !str[ i ] ) return false;
-            if ( ( pat[ i ] == '?' ) && ( str[i] != '.' ) ) continue;
-            if ( !star ) return false;
+            if ( !str[ i ] )
+            {
+                return false;
+            }
+            if ( ( pat[ i ] == '?' ) && ( str[ i ] != '.' ) )
+            {
+                continue;
+            }
+            if ( !star )
+            {
+                return false;
+            }
             str++;
             goto test_match;
         }
@@ -1394,9 +1406,18 @@ test_match:
         pat += i;
         goto new_segment;
     }
-    if ( !str[ i ] ) return true;
-    if ( i && pat[ i - 1 ] == '*' ) return true;
-    if ( !star ) return false;
+    if ( !str[ i ] )
+    {
+        return true;
+    }
+    if ( i && pat[ i - 1 ] == '*' )
+    {
+        return true;
+    }
+    if ( !star )
+    {
+        return false;
+    }
     str++;
     goto test_match;
 }
@@ -1413,20 +1434,34 @@ new_segment:
     if ( *pat == '*' )
     {
         star = true;
-        do { pat++; } while ( *pat == '*' );
+        do
+        {
+            pat++;
+        } while ( *pat == '*' );
     }
 
 test_match:
     int i;
     for ( i = 0; pat[ i ] && ( pat[ i ] != '*' ); i++ )
     {
-        char a = str[ i ]; a = ( ( a >= 'A' ) && ( a <= 'Z' ) ) ? 'a' + ( a - 'A' ) : a;
-        char b = pat[ i ]; b = ( ( b >= 'A' ) && ( b <= 'Z' ) ) ? 'a' + ( b - 'A' ) : b;
+        char a = str[ i ];
+        a = ( ( a >= 'A' ) && ( a <= 'Z' ) ) ? 'a' + ( a - 'A' ) : a;
+        char b = pat[ i ];
+        b = ( ( b >= 'A' ) && ( b <= 'Z' ) ) ? 'a' + ( b - 'A' ) : b;
         if ( a != b )
         {
-            if ( !str[ i ] ) return false;
-            if ( ( pat[ i ] == '?' ) && ( str[i] != '.' ) ) continue;
-            if ( !star ) return false;
+            if ( !str[ i ] )
+            {
+                return false;
+            }
+            if ( ( pat[ i ] == '?' ) && ( str[ i ] != '.' ) )
+            {
+                continue;
+            }
+            if ( !star )
+            {
+                return false;
+            }
             str++;
             goto test_match;
         }
@@ -1437,9 +1472,18 @@ test_match:
         pat += i;
         goto new_segment;
     }
-    if ( !str[ i ] ) return true;
-    if ( i && pat[ i - 1 ] == '*' ) return true;
-    if ( !star ) return false;
+    if ( !str[ i ] )
+    {
+        return true;
+    }
+    if ( i && pat[ i - 1 ] == '*' )
+    {
+        return true;
+    }
+    if ( !star )
+    {
+        return false;
+    }
     str++;
     goto test_match;
 }
@@ -1466,7 +1510,7 @@ test_match:
 /*static*/ void AString::Copy( const char * src, char * dst, size_t len )
 {
     memmove( dst, src, len );
-    dst[len] = '\000';
+    dst[ len ] = '\000';
 }
 
 // StrLen
@@ -1549,7 +1593,7 @@ void AString::Grow( uint32_t newLength )
 {
     // allocate space, rounded up to multiple of 2
     const uint32_t amortizedReserve = ( GetReserved() * 2 );
-    const uint32_t reserve = Math::RoundUp( Math::Max( amortizedReserve, newLength ),(uint32_t)2 );
+    const uint32_t reserve = Math::RoundUp( Math::Max( amortizedReserve, newLength ), (uint32_t)2 );
     char * newMem = (char *)ALLOC( reserve + 1 ); // also allocate for \0 terminator
 
     // transfer existing string data

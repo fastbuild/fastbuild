@@ -20,9 +20,6 @@
 CIncludeParser::CIncludeParser()
     : m_LastCRC1( 0 )
     , m_LastCRC2( 0 )
-#ifdef DEBUG
-    , m_NonUniqueCount( 0 )
-#endif
 {
     m_CRCs1.SetCapacity( 4096 );
     m_CRCs2.SetCapacity( 4096 );
@@ -43,7 +40,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
     (void)compilerOutputSize;
 
     const char * pos = compilerOutput;
-    for (;;)
+    for ( ;; )
     {
         const char * lineStart = pos;
 
@@ -54,7 +51,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
             break; // end of output
         }
 
-        const char * lineEnd = ( lineStart < pos && pos[-1] == '\r' ) ? pos - 1 : pos;
+        const char * lineEnd = ( lineStart < pos && pos[ -1 ] == '\r' ) ? pos - 1 : pos;
 
         ASSERT( *pos == '\n' );
         ++pos; // skip \r for next line
@@ -63,7 +60,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 
         // count colons in the line
         const char * colon1 = nullptr;
-        for ( ; ch < lineEnd ; ++ch )
+        for ( ; ch < lineEnd; ++ch )
         {
             if ( *ch == ':' )
             {
@@ -79,8 +76,10 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
         }
 
         // check that we have two colons separated by at least one char
-        if ( colon1 == nullptr || colon1 == lineStart ||
-             *ch != ':' || (ch - colon1) < 2 )
+        if ( ( colon1 == nullptr ) ||
+             ( colon1 == lineStart ) ||
+             ( *ch != ':' ) ||
+             ( ( ch - colon1 ) < 2 ) )
         {
             continue; // next line
         }
@@ -92,8 +91,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
         do
         {
             ++ch;
-        }
-        while ( *ch == ' ' );
+        } while ( *ch == ' ' );
 
         // must have whitespaces
         if ( ch == colon2 )
@@ -133,7 +131,9 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
                     break;
                 }
                 default:
+                {
                     break;
+                }
             }
         }
 
@@ -163,7 +163,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 
     const char * pos = compilerOutput;
 
-    for (;;)
+    for ( ;; )
     {
         pos = strstr( pos, "#line 1 " );
         if ( !pos )
@@ -227,9 +227,9 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 
 // ParseToNextLineStaringWithHash
 //------------------------------------------------------------------------------
-/*static*/ void CIncludeParser::ParseToNextLineStartingWithHash( const char * & pos )
+/*static*/ void CIncludeParser::ParseToNextLineStartingWithHash( const char *& pos )
 {
-    for (;;)
+    for ( ;; )
     {
         pos = strchr( pos, '#' );
         if ( pos )
@@ -237,7 +237,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
             // Safe to index -1 because # as first char is handled as a
             // special case to avoid having it in this critical loop
             const char prevC = pos[ -1 ];
-            if ( ( prevC  == '\n' ) || ( prevC  == '\r' ) )
+            if ( ( prevC == '\n' ) || ( prevC == '\r' ) )
             {
                 return;
             }
@@ -251,7 +251,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 // Parse
 //------------------------------------------------------------------------------
 // TODO:C - restructure function to avoid use of goto
-PRAGMA_DISABLE_PUSH_MSVC(26051) // Function with irreducible control flow graph.
+PRAGMA_DISABLE_PUSH_MSVC( 26051 ) // Function with irreducible control flow graph.
 bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
                                             size_t compilerOutputSize )
 {
@@ -270,7 +270,7 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         goto possibleInclude;
     }
 
-    for (;;)
+    for ( ;; )
     {
         ParseToNextLineStartingWithHash( pos );
         if ( !pos )
@@ -297,7 +297,7 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         // skip number
         for ( ;; )
         {
-            const char c = * pos;
+            const char c = *pos;
             if ( ( c >= '0' ) && ( c <= '9' ) )
             {
                 pos++;
@@ -352,7 +352,6 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         {
             AddInclude( lineStart, lineEnd );
         }
-
     }
 
     return true;
@@ -361,7 +360,7 @@ PRAGMA_DISABLE_POP_MSVC
 
 // SwapIncludes
 //------------------------------------------------------------------------------
-void CIncludeParser::SwapIncludes( Array< AString > & includes )
+void CIncludeParser::SwapIncludes( Array<AString> & includes )
 {
     m_Includes.Swap( includes );
 }
@@ -370,9 +369,9 @@ void CIncludeParser::SwapIncludes( Array< AString > & includes )
 //------------------------------------------------------------------------------
 void CIncludeParser::AddInclude( const char * begin, const char * end )
 {
-    #ifdef DEBUG
-        m_NonUniqueCount++;
-    #endif
+#if defined( ASSERTS_ENABLED )
+    m_NonUniqueCount++;
+#endif
 
     // quick check
     const uint32_t crc1 = xxHash::Calc32( begin, (size_t)( end - begin ) );
@@ -388,18 +387,18 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
     m_CRCs1.Append( crc1 );
 
     // robust check
-    AStackString< 256 > include( begin, end );
-    AStackString< 256 > cleanInclude;
+    AStackString<256> include( begin, end );
+    AStackString<256> cleanInclude;
     NodeGraph::CleanPath( include, cleanInclude );
-    #if defined( __WINDOWS__ ) || defined( __OSX__ )
-        // Windows and OSX are case-insensitive
-        AStackString<> lowerCopy( cleanInclude );
-        lowerCopy.ToLower();
-        const uint32_t crc2 = xxHash::Calc32( lowerCopy );
-    #else
-        // Linux is case-sensitive
-        const uint32_t crc2 = xxHash::Calc32( cleanInclude );
-    #endif
+#if defined( __WINDOWS__ ) || defined( __OSX__ )
+    // Windows and OSX are case-insensitive
+    AStackString lowerCopy( cleanInclude );
+    lowerCopy.ToLower();
+    const uint32_t crc2 = xxHash::Calc32( lowerCopy );
+#else
+    // Linux is case-sensitive
+    const uint32_t crc2 = xxHash::Calc32( cleanInclude );
+#endif
     if ( crc2 == m_LastCRC2 )
     {
         return;

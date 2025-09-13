@@ -5,18 +5,20 @@
 //------------------------------------------------------------------------------
 #include "TextFileNode.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Conversions.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Process/Process.h"
+#include "Core/Strings/AStackString.h"
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -79,11 +81,11 @@ TextFileNode::~TextFileNode() = default;
         textFileContents += string;
 
         // It's not always safe to include a \r, such as when generating a shell script
-        #if defined( __WINDOWS__ )
-            textFileContents += "\r\n";
-        #else
-            textFileContents += '\n';
-        #endif
+#if defined( __WINDOWS__ )
+        textFileContents += "\r\n";
+#else
+        textFileContents += '\n';
+#endif
     }
 
     FileStream stream;
@@ -110,16 +112,16 @@ TextFileNode::~TextFileNode() = default;
 //------------------------------------------------------------------------------
 void TextFileNode::EmitCompilationMessage() const
 {
-    AStackString<> output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
+        AStackString output;
         output += "Txt: ";
         output += GetName();
         output += '\n';
-    }
 
-    // output all at once for contiguousness
-    FLOG_OUTPUT( output );
+        // output all at once for contiguousness
+        FLOG_OUTPUT( output );
+    }
 }
 
 //------------------------------------------------------------------------------

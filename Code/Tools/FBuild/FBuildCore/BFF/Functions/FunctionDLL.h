@@ -11,9 +11,9 @@
 class FunctionDLL : public FunctionExecutable
 {
 public:
-    explicit        FunctionDLL();
-    inline virtual ~FunctionDLL() override = default;
-    virtual Node *  CreateNode() const override;
+    explicit FunctionDLL();
+    virtual ~FunctionDLL() override = default;
+    virtual Node * CreateNode() const override;
 };
 
 //------------------------------------------------------------------------------

@@ -12,11 +12,13 @@ class IMetaData;
 
 // Chaining operator for reflection macros
 //------------------------------------------------------------------------------
-IMetaData & operator + ( IMetaData & a, IMetaData & b );
+IMetaData & operator+( IMetaData & a, IMetaData & b );
 
 // No MetaData
 //------------------------------------------------------------------------------
-class MetaNone {};
+class MetaNone
+{
+};
 
 // Basic MetaData Types
 //------------------------------------------------------------------------------

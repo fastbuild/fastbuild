@@ -5,11 +5,13 @@
 //------------------------------------------------------------------------------
 #include "CopyFileNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
@@ -97,16 +99,15 @@ void CopyFileNode::EmitCopyMessage() const
 {
     // we combine everything into one string to ensure it is contiguous in
     // the output
-    AStackString<> output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        output += "Copy: ";
+        AStackString<512> output( "Copy: " );
         output += m_StaticDependencies[ 0 ].GetNode()->GetName();
         output += " -> ";
         output += GetName();
         output += '\n';
+        FLOG_OUTPUT( output );
     }
-    FLOG_OUTPUT( output );
 }
 
 //------------------------------------------------------------------------------

@@ -57,19 +57,19 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     TEST_ASSERT( fBuild.Initialize( useDB ? GetDBFile() : nullptr ) );
 
     // Build a subset of targets as a sort of smoke test
-    Array< AString > targets;
-    #if defined( __WINDOWS__ )
-        targets.EmplaceBack( "All-x64-Debug" );
-        targets.EmplaceBack( "All-x64Clang-Release" );
-    #elif defined( __LINUX__ )
-        targets.EmplaceBack( "All-x64Linux-Debug" );
-        targets.EmplaceBack( "All-x64ClangLinux-Release" );
-    #elif defined( __OSX__ )
-        targets.EmplaceBack( "All-x64OSX-Debug" );
-        targets.EmplaceBack( "All-x64OSX-Release" );
-    #else
-        #error Unknown platform
-    #endif
+    Array<AString> targets;
+#if defined( __WINDOWS__ )
+    targets.EmplaceBack( "All-x64-Debug" );
+    targets.EmplaceBack( "All-x64Clang-Release" );
+#elif defined( __LINUX__ )
+    targets.EmplaceBack( "All-x64Linux-Debug" );
+    targets.EmplaceBack( "All-x64ClangLinux-Release" );
+#elif defined( __OSX__ )
+    targets.EmplaceBack( "All-x64OSX-Debug" );
+    targets.EmplaceBack( "All-x64OSX-Release" );
+#else
+    #error Unknown platform
+#endif
 
     TEST_ASSERT( fBuild.Build( targets ) );
 
@@ -85,9 +85,9 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
 void TestBuildFBuild::BuildClean() const
 {
     // delete files from previous runs
-    Array< AString > files;
+    Array<AString> files;
     files.SetCapacity( 1024 );
-    FileIO::GetFiles( AStackString<>( "../tmp/Test/BuildFBuild" ), AStackString<>( "*" ), true, &files );
+    FileIO::GetFiles( AStackString( "../tmp/Test/BuildFBuild" ), AStackString( "*" ), true, &files );
     for ( const AString & file : files )
     {
         FileIO::FileDelete( file.Get() );
@@ -104,12 +104,12 @@ void TestBuildFBuild::BuildClean() const
     TEST_ASSERT( objStats.m_NumProcessed > 10 ); // not exact so we don't have to update it
     TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed ); // everything rebuilt
 
-    #if defined( __WINDOWS__ )
-        // One windows, 2 .res files are built which can't be stored, and everything else can
-        TEST_ASSERT( objStats.m_NumCacheStores == ( objStats.m_NumBuilt - 2 ) );
-    #else
-        TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumBuilt ); // everything stored to the cache
-    #endif
+#if defined( __WINDOWS__ )
+    // One windows, 2 .res files are built which can't be stored, and everything else can
+    TEST_ASSERT( objStats.m_NumCacheStores == ( objStats.m_NumBuilt - 2 ) );
+#else
+    TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumBuilt ); // everything stored to the cache
+#endif
 }
 
 // Build_NoRebuild
@@ -151,14 +151,14 @@ void TestBuildFBuild::BuildCleanWithCache() const
     // test everything was retrieved from the cache
     const FBuildStats::Stats & objStats = stats.GetStatsFor( Node::OBJECT_NODE );
     TEST_ASSERT( objStats.m_NumProcessed > 10 ); // not exact so we don't have to update it
-    #if defined( __WINDOWS__ )
-        // One windows, 2 .res files are built, and everything else comes from the cache
-        TEST_ASSERT( objStats.m_NumBuilt == 2 );
-        TEST_ASSERT( objStats.m_NumCacheHits == ( objStats.m_NumProcessed - 2 ) );
-    #else
-        TEST_ASSERT( objStats.m_NumBuilt == 0 ); // nothing built
-        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed ); // everything read from cache
-    #endif
+#if defined( __WINDOWS__ )
+    // One windows, 2 .res files are built, and everything else comes from the cache
+    TEST_ASSERT( objStats.m_NumBuilt == 2 );
+    TEST_ASSERT( objStats.m_NumCacheHits == ( objStats.m_NumProcessed - 2 ) );
+#else
+    TEST_ASSERT( objStats.m_NumBuilt == 0 ); // nothing built
+    TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed ); // everything read from cache
+#endif
 }
 
 // DBSavePerformance

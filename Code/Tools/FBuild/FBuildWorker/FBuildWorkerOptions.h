@@ -24,23 +24,23 @@ public:
     bool ProcessCommandLine( const AString & commandLine );
 
     // sub-process control
-    #if defined( __WINDOWS__ )
-        bool m_IsSubprocess;    // Process is child? (Internal)
-        bool m_UseSubprocess;   // Should we launch a sub-process?
-    #endif
+#if defined( __WINDOWS__ )
+    bool m_IsSubprocess = false; // Process is child? (Internal)
+    bool m_UseSubprocess = true; // Should we launch a sub-process?
+#endif
 
     // resource usage
-    bool m_OverrideCPUAllocation;
-    uint32_t m_CPUAllocation;
-    bool m_OverrideWorkMode;
-    WorkerSettings::Mode m_WorkMode;
-    uint32_t m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
+    bool m_OverrideCPUAllocation = false;
+    uint32_t m_CPUAllocation = 0;
+    bool m_OverrideWorkMode = false;
+    WorkerSettings::Mode m_WorkMode = WorkerSettings::WHEN_IDLE;
+    uint32_t m_MinimumFreeMemoryMiB = 0; // Minimum OS free memory including virtual memory to let worker do its work
 
     // Console mode
-    bool m_ConsoleMode;
+    bool m_ConsoleMode = false;
 
     // Other
-    bool m_PeriodicRestart;
+    bool m_PeriodicRestart = false;
 
 private:
     void ShowUsageError();

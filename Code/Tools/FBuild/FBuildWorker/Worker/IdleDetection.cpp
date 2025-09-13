@@ -27,11 +27,11 @@
 #endif
 
 // Handle GCC -ffreestanding environment
-#if defined(__STDC_HOSTED__) && (__STDC_HOSTED__ == 0)
-    extern "C"
-    {
-        uint64_t strtoul(const char * nptr, char ** endptr, int32_t base);
-    }
+#if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
+extern "C"
+{
+uint64_t strtoul( const char * nptr, char ** endptr, int32_t base );
+}
 #endif
 
 // Defines
@@ -55,9 +55,9 @@ IdleDetection::IdleDetection()
     ProcessInfo & self = m_ProcessesInOurHierarchy.EmplaceBack();
     self.m_PID = Process::GetCurrentId();
     self.m_AliveValue = 0;
-    #if defined( __WINDOWS__ )
-        self.m_ProcessHandle = ::GetCurrentProcess();
-    #endif
+#if defined( __WINDOWS__ )
+    self.m_ProcessHandle = ::GetCurrentProcess();
+#endif
     self.m_LastTime = 0;
 }
 
@@ -170,7 +170,7 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
             m_CPUUsageFASTBuild = totalPerc;
         }
 
-        m_Timer.Start();
+        m_Timer.Restart();
     }
 
     idleCurrent = ( 1.0f - ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) * 0.01f ) );
@@ -183,112 +183,112 @@ bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleC
                                                        uint64_t & outKernTime,
                                                        uint64_t & outUserTime )
 {
-    #if defined( __WINDOWS__ )
-        FILETIME ftIdle, ftKern, ftUser;
-        VERIFY( ::GetSystemTimes( &ftIdle, &ftKern, &ftUser ) );
-        outIdleTime = ( (uint64_t)ftIdle.dwHighDateTime << 32 ) | (uint64_t)ftIdle.dwLowDateTime;
-        outKernTime = ( (uint64_t)ftKern.dwHighDateTime << 32 ) | (uint64_t)ftKern.dwLowDateTime;
-        outUserTime = ( (uint64_t)ftUser.dwHighDateTime << 32 ) | (uint64_t)ftUser.dwLowDateTime;
-        outKernTime -= outIdleTime; // Kern time includes Idle, but we don't want that
-    #elif defined( __OSX__ )
-        host_cpu_load_info_data_t cpuInfo;
-        mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
-        VERIFY( host_statistics( mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpuInfo, &count ) == KERN_SUCCESS );
-        outIdleTime = cpuInfo.cpu_ticks[ CPU_STATE_IDLE ];
-        outKernTime = cpuInfo.cpu_ticks[ CPU_STATE_SYSTEM ];
-        outUserTime = cpuInfo.cpu_ticks[ CPU_STATE_USER ];
-    #elif defined( __LINUX__ )
-        // Read first line of /proc/stat
-        AStackString< 1024 > procStat;
-        VERIFY( GetProcessInfoString( "/proc/stat", procStat ) ); // Should never fail
+#if defined( __WINDOWS__ )
+    FILETIME ftIdle, ftKern, ftUser;
+    VERIFY( ::GetSystemTimes( &ftIdle, &ftKern, &ftUser ) );
+    outIdleTime = ( (uint64_t)ftIdle.dwHighDateTime << 32 ) | (uint64_t)ftIdle.dwLowDateTime;
+    outKernTime = ( (uint64_t)ftKern.dwHighDateTime << 32 ) | (uint64_t)ftKern.dwLowDateTime;
+    outUserTime = ( (uint64_t)ftUser.dwHighDateTime << 32 ) | (uint64_t)ftUser.dwLowDateTime;
+    outKernTime -= outIdleTime; // Kern time includes Idle, but we don't want that
+#elif defined( __OSX__ )
+    host_cpu_load_info_data_t cpuInfo;
+    mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
+    VERIFY( host_statistics( mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpuInfo, &count ) == KERN_SUCCESS );
+    outIdleTime = cpuInfo.cpu_ticks[ CPU_STATE_IDLE ];
+    outKernTime = cpuInfo.cpu_ticks[ CPU_STATE_SYSTEM ];
+    outUserTime = cpuInfo.cpu_ticks[ CPU_STATE_USER ];
+#elif defined( __LINUX__ )
+    // Read first line of /proc/stat
+    AStackString<1024> procStat;
+    VERIFY( GetProcessInfoString( "/proc/stat", procStat ) ); // Should never fail
 
-        // First line should be system totals
-        if ( procStat.BeginsWithI( "cpu" ) )
+    // First line should be system totals
+    if ( procStat.BeginsWithI( "cpu" ) )
+    {
+        StackArray<uint32_t> values;
+        const char * pos = procStat.Get() + 4; // skip "cpu "
+        for ( ;; )
         {
-            StackArray< uint32_t > values;
-            const char * pos = procStat.Get() + 4; // skip "cpu "
-            for ( ;; )
+            char * end;
+            values.Append( strtoul( pos, &end, 10 ) );
+            pos = end;
+            if ( pos == procStat.GetEnd() )
             {
-                char * end;
-                values.Append( strtoul( pos, &end, 10 ) );
-                pos = end;
-                if ( pos == procStat.GetEnd() )
-                {
-                    break;
-                }
-            }
-            if ( values.GetSize() > 3 )
-            {
-                // 0+1 = user/nice time, 2 = kernel time
-                outUserTime = values[ 0 ] + values[ 1 ];
-                outKernTime = values[ 2 ];
-                // idle is all times minus user/nice/kernel
-                outIdleTime = 0;
-                for ( const uint32_t v : values )
-                {
-                    outIdleTime += v;
-                }
-                outIdleTime -= outUserTime;
-                outIdleTime -= outKernTime;
-                return;
+                break;
             }
         }
-        ASSERT( false && "Unexpected /proc/stat format" );
-    #endif
+        if ( values.GetSize() > 3 )
+        {
+            // 0+1 = user/nice time, 2 = kernel time
+            outUserTime = values[ 0 ] + values[ 1 ];
+            outKernTime = values[ 2 ];
+            // idle is all times minus user/nice/kernel
+            outIdleTime = 0;
+            for ( const uint32_t v : values )
+            {
+                outIdleTime += v;
+            }
+            outIdleTime -= outUserTime;
+            outIdleTime -= outKernTime;
+            return;
+        }
+    }
+    ASSERT( false && "Unexpected /proc/stat format" );
+#endif
 }
 
 // GetProcessTime
 //------------------------------------------------------------------------------
 /*static*/ void IdleDetection::GetProcessTime( const ProcessInfo & pi, uint64_t & outKernTime, uint64_t & outUserTime )
 {
-    #if defined( __WINDOWS__ )
-        FILETIME ftProcKern, ftProcUser, ftUnused;
-        if ( ::GetProcessTimes( pi.m_ProcessHandle,
-                                &ftUnused,      // creation time
-                                &ftUnused,      // exit time
-                                &ftProcKern,    // kernel time
-                                &ftProcUser ) ) // user time
+#if defined( __WINDOWS__ )
+    FILETIME ftProcKern, ftProcUser, ftUnused;
+    if ( ::GetProcessTimes( pi.m_ProcessHandle,
+                            &ftUnused,      // creation time
+                            &ftUnused,      // exit time
+                            &ftProcKern,    // kernel time
+                            &ftProcUser ) ) // user time
+    {
+        outKernTime = ( (uint64_t)ftProcKern.dwHighDateTime << 32 ) | (uint64_t)ftProcKern.dwLowDateTime;
+        outUserTime = ( (uint64_t)ftProcUser.dwHighDateTime << 32 ) | (uint64_t)ftProcUser.dwLowDateTime;
+    }
+    else
+    {
+        // Process no longer exists
+        outKernTime = 0;
+        outUserTime = 0;
+    }
+#elif defined( __OSX__ )
+    // TODO:OSX Implement GetProcecessTime
+    (void)pi;
+    outKernTime = 0;
+    outUserTime = 0;
+#elif defined( __LINUX__ )
+    // Read first line of /proc/<pid>/stat for the process
+    AStackString<1024> processInfo;
+    if ( GetProcessInfoString( AStackString().Format( "/proc/%u/stat", pi.m_PID ).Get(),
+                               processInfo ) )
+    {
+        StackArray<AString> tokens;
+        processInfo.Tokenize( tokens, ' ' );
+        if ( tokens.GetSize() >= 15 )
         {
-            outKernTime = ( (uint64_t)ftProcKern.dwHighDateTime << 32 ) | (uint64_t)ftProcKern.dwLowDateTime;
-            outUserTime = ( (uint64_t)ftProcUser.dwHighDateTime << 32 ) | (uint64_t)ftProcUser.dwLowDateTime;
+            // Item index 13 and 14 (0-based) are the utime and stime
+            outUserTime = strtoul( tokens[ 13 ].Get(), nullptr, 10 );
+            outKernTime = strtoul( tokens[ 14 ].Get(), nullptr, 10 );
+            return;
         }
         else
         {
-            // Process no longer exists
-            outKernTime = 0;
-            outUserTime = 0;
+            // Something is terribly wrong
+            ASSERT( false && "Unexpected '/proc/<pid>/stat' format" );
         }
-    #elif defined( __OSX__ )
-        // TODO:OSX Implement GetProcecessTime
-        (void)pi;
-        outKernTime = 0;
-        outUserTime = 0;
-    #elif defined( __LINUX__ )
-        // Read first line of /proc/<pid>/stat for the process
-        AStackString< 1024 > processInfo;
-        if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pi.m_PID ).Get(),
-                                   processInfo ) )
-        {
-            StackArray< AString > tokens;
-            processInfo.Tokenize( tokens, ' ' );
-            if ( tokens.GetSize() >= 15 )
-            {
-                // Item index 13 and 14 (0-based) are the utime and stime
-                outUserTime = strtoul( tokens[ 13 ].Get(), nullptr, 10 );
-                outKernTime = strtoul( tokens[ 14 ].Get(), nullptr, 10 );
-                return;
-            }
-            else
-            {
-                // Something is terribly wrong
-                ASSERT( false && "Unexpected '/proc/<pid>/stat' format" );
-            }
-        }
+    }
 
-        // Process may have exited, so handle that gracefully
-        outKernTime = 0;
-        outUserTime = 0;
-    #endif
+    // Process may have exited, so handle that gracefully
+    outKernTime = 0;
+    outUserTime = 0;
+#endif
 }
 
 // UpdateProcessList
@@ -299,24 +299,133 @@ void IdleDetection::UpdateProcessList()
     static uint32_t sAliveValue = 0;
     sAliveValue++;
 
-    #if defined( __WINDOWS__ )
-        HANDLE hSnapShot = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
-        if ( hSnapShot == INVALID_HANDLE_VALUE )
-        {
-            return;
-        }
+#if defined( __WINDOWS__ )
+    HANDLE hSnapShot = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
+    if ( hSnapShot == INVALID_HANDLE_VALUE )
+    {
+        return;
+    }
 
-        PROCESSENTRY32 thProcessInfo;
-        memset( &thProcessInfo, 0, sizeof(PROCESSENTRY32) );
-        thProcessInfo.dwSize = sizeof(PROCESSENTRY32);
-        while ( Process32Next( hSnapShot, &thProcessInfo ) != FALSE )
+    PROCESSENTRY32 thProcessInfo;
+    memset( &thProcessInfo, 0, sizeof( PROCESSENTRY32 ) );
+    thProcessInfo.dwSize = sizeof( PROCESSENTRY32 );
+    while ( Process32Next( hSnapShot, &thProcessInfo ) != FALSE )
+    {
+        const uint32_t parentPID = thProcessInfo.th32ParentProcessID;
+
+        // is process a child of one we care about?
+        if ( m_ProcessesInOurHierarchy.Find( parentPID ) )
         {
-            const uint32_t parentPID = thProcessInfo.th32ParentProcessID;
+            const uint32_t pid = thProcessInfo.th32ProcessID;
+            ProcessInfo * info = m_ProcessesInOurHierarchy.Find( pid );
+            if ( info )
+            {
+                // an existing process that is still alive
+                info->m_AliveValue = sAliveValue; // still active
+            }
+            else
+            {
+                // a new process
+                void * handle = OpenProcess( PROCESS_ALL_ACCESS, TRUE, pid );
+                if ( handle )
+                {
+                    // track new process
+                    ProcessInfo newProcess;
+                    newProcess.m_PID = pid;
+                    newProcess.m_ProcessHandle = handle;
+                    newProcess.m_AliveValue = sAliveValue;
+                    newProcess.m_LastTime = 0;
+                    m_ProcessesInOurHierarchy.Append( newProcess );
+                }
+                else
+                {
+                        // gracefully handle failure to open process
+                        // maybe it closed before we got to it
+                }
+            }
+        }
+    }
+    CloseHandle( hSnapShot );
+#elif defined( __OSX__ )
+    // TODO:OSX Implement FindNewProcesses
+#elif defined( __LINUX__ )
+    // Each process has a directory in /proc/
+    // The name of the dir is the pid
+    AStackString path( "/proc/" );
+    DIR * dir = opendir( path.Get() );
+    ASSERT( dir ); // This should never fail
+    if ( dir )
+    {
+        for ( ;; )
+        {
+            dirent * entry = readdir( dir );
+            if ( entry == nullptr )
+            {
+                break; // no more entries
+            }
+
+            bool isDir = ( entry->d_type == DT_DIR );
+
+            // Not all filesystems have support for returning the file type in
+            // d_type and applications must properly handle a return of DT_UNKNOWN.
+            if ( entry->d_type == DT_UNKNOWN )
+            {
+                path.SetLength( 6 ); // truncate to /proc/
+                path += entry->d_name;
+
+                struct stat info;
+                VERIFY( stat( path.Get(), &info ) == 0 );
+                isDir = S_ISDIR( info.st_mode );
+            }
+
+            // Is this a directory?
+            if ( isDir == false )
+            {
+                continue;
+            }
+
+            // Determine if this is a PID
+            const char * pos = entry->d_name;
+            for ( ;; )
+            {
+                const char c = *pos;
+                if ( ( c >= '0' ) && ( c <= '9' ) )
+                {
+                    ++pos;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if ( pos == entry->d_name )
+            {
+                // Not a PID
+                continue;
+            }
+
+            // Filename is PID
+            const uint32_t pid = strtoul( entry->d_name, nullptr, 10 );
+
+            // Read the first line of /proc/<pid>/stat for the process
+            AStackString<1024> processInfo;
+            if ( GetProcessInfoString( AStackString().Format( "/proc/%u/stat", pid ).Get(),
+                                       processInfo ) == false )
+            {
+                continue; // Process might have exited
+            }
+
+            // Item index 3 (0-based) is the parent PID
+            StackArray<AString> tokens;
+            processInfo.Tokenize( tokens, ' ' );
+            const uint32_t parentPID = strtoul( tokens[ 3 ].Get(), nullptr, 10 );
 
             // is process a child of one we care about?
             if ( m_ProcessesInOurHierarchy.Find( parentPID ) )
             {
-                const uint32_t pid = thProcessInfo.th32ProcessID;
+                ASSERT( pid == strtoul( tokens[ 0 ].Get(), nullptr, 10 ) ); // Item index 0 (0-based) is the PID
+
+                // Are we already tracking this process?
                 ProcessInfo * info = m_ProcessesInOurHierarchy.Find( pid );
                 if ( info )
                 {
@@ -325,127 +434,18 @@ void IdleDetection::UpdateProcessList()
                 }
                 else
                 {
-                    // a new process
-                    void * handle = OpenProcess( PROCESS_ALL_ACCESS, TRUE, pid );
-                    if ( handle )
-                    {
-                        // track new process
-                        ProcessInfo newProcess;
-                        newProcess.m_PID = pid;
-                        newProcess.m_ProcessHandle = handle;
-                        newProcess.m_AliveValue = sAliveValue;
-                        newProcess.m_LastTime = 0;
-                        m_ProcessesInOurHierarchy.Append( newProcess );
-                    }
-                    else
-                    {
-                        // gracefully handle failure to open process
-                        // maybe it closed before we got to it
-                    }
+                    // track new process
+                    ProcessInfo newProcess;
+                    newProcess.m_PID = pid;
+                    newProcess.m_AliveValue = sAliveValue;
+                    newProcess.m_LastTime = 0;
+                    m_ProcessesInOurHierarchy.Append( newProcess );
                 }
             }
         }
-        CloseHandle( hSnapShot );
-    #elif defined( __OSX__ )
-        // TODO:OSX Implement FindNewProcesses
-    #elif defined( __LINUX__ )
-        // Each process has a directory in /proc/
-        // The name of the dir is the pid
-        AStackString<> path( "/proc/" );
-        DIR * dir = opendir( path.Get() );
-        ASSERT( dir ); // This should never fail
-        if ( dir )
-        {
-            for ( ;; )
-            {
-                dirent * entry = readdir( dir );
-                if ( entry == nullptr )
-                {
-                    break; // no more entries
-                }
-
-                bool isDir = ( entry->d_type == DT_DIR );
-
-                // Not all filesystems have support for returning the file type in
-                // d_type and applications must properly handle a return of DT_UNKNOWN.
-                if ( entry->d_type == DT_UNKNOWN )
-                {
-                    path.SetLength( 6 ); // truncate to /proc/
-                    path += entry->d_name;
-
-                    struct stat info;
-                    VERIFY( stat( path.Get(), &info ) == 0 );
-                    isDir = S_ISDIR( info.st_mode );
-                }
-
-                // Is this a directory?
-                if ( isDir == false )
-                {
-                    continue;
-                }
-
-                // Determine if this is a PID
-                const char * pos = entry->d_name;
-                for (;;)
-                {
-                    const char c = *pos;
-                    if ( ( c >= '0' ) && ( c <= '9' ) )
-                    {
-                        ++pos;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                if ( pos == entry->d_name )
-                {
-                    // Not a PID
-                    continue;
-                }
-
-                // Filename is PID
-                const uint32_t pid = strtoul( entry->d_name, nullptr, 10 );
-
-                // Read the first line of /proc/<pid>/stat for the process
-                AStackString< 1024 > processInfo;
-                if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pid ).Get(),
-                                           processInfo ) == false )
-                {
-                    continue; // Process might have exited
-                }
-
-                // Item index 3 (0-based) is the parent PID
-                StackArray< AString > tokens;
-                processInfo.Tokenize( tokens, ' ' );
-                const uint32_t parentPID = strtoul( tokens[ 3 ].Get(), nullptr, 10 );
-
-                // is process a child of one we care about?
-                if ( m_ProcessesInOurHierarchy.Find( parentPID ) )
-                {
-                    ASSERT( pid == strtoul( tokens[ 0 ].Get(), nullptr, 10 ) ); // Item index 0 (0-based) is the PID
-
-                    // Are we already tracking this process?
-                    ProcessInfo * info = m_ProcessesInOurHierarchy.Find( pid );
-                    if ( info )
-                    {
-                        // an existing process that is still alive
-                        info->m_AliveValue = sAliveValue; // still active
-                    }
-                    else
-                    {
-                        // track new process
-                        ProcessInfo newProcess;
-                        newProcess.m_PID = pid;
-                        newProcess.m_AliveValue = sAliveValue;
-                        newProcess.m_LastTime = 0;
-                        m_ProcessesInOurHierarchy.Append( newProcess );
-                    }
-                }
-            }
-            closedir( dir );
-        }
-    #endif
+        closedir( dir );
+    }
+#endif
 
     // prune dead processes
     {
@@ -456,9 +456,9 @@ void IdleDetection::UpdateProcessList()
             if ( m_ProcessesInOurHierarchy[ i ].m_AliveValue != sAliveValue )
             {
                 // dead process
-                #if defined( __WINDOWS__ )
-                    CloseHandle( m_ProcessesInOurHierarchy[ i ].m_ProcessHandle );
-                #endif
+#if defined( __WINDOWS__ )
+                CloseHandle( m_ProcessesInOurHierarchy[ i ].m_ProcessHandle );
+#endif
                 m_ProcessesInOurHierarchy.EraseIndex( i );
             }
         }
@@ -468,34 +468,34 @@ void IdleDetection::UpdateProcessList()
 // GetProcessInfoString
 //------------------------------------------------------------------------------
 #if defined( __LINUX__ )
-    /*static*/ bool IdleDetection::GetProcessInfoString( const char * fileName,
-                                                         AStackString< 1024 > & outProcessInfoString )
+/*static*/ bool IdleDetection::GetProcessInfoString( const char * fileName,
+                                                     AStackString<1024> & outProcessInfoString )
+{
+    // Open the file
+    FileStream f;
+    if ( f.Open( fileName, FileStream::READ_ONLY ) == false )
     {
-        // Open the file
-        FileStream f;
-        if ( f.Open( fileName, FileStream::READ_ONLY ) == false )
-        {
-            return false;
-        }
-
-        // Try to read 1KiB
-        outProcessInfoString.SetLength( 1024 );
-        const uint32_t len = f.ReadBuffer( outProcessInfoString.Get(), outProcessInfoString.GetLength() );
-        outProcessInfoString.SetLength( len );
-
-        // Truncate to the first line
-        const char * lineEnd = outProcessInfoString.Find( '\n' );
-        if ( lineEnd )
-        {
-            outProcessInfoString.SetLength( lineEnd - outProcessInfoString.Get() );
-            return true;
-        }
-
-        // Line was too long or there was some other problem
-        ASSERT( false && "Unexpected proc file size");
-        outProcessInfoString.Clear();
         return false;
     }
+
+    // Try to read 1KiB
+    outProcessInfoString.SetLength( 1024 );
+    const uint32_t len = f.ReadBuffer( outProcessInfoString.Get(), outProcessInfoString.GetLength() );
+    outProcessInfoString.SetLength( len );
+
+    // Truncate to the first line
+    const char * lineEnd = outProcessInfoString.Find( '\n' );
+    if ( lineEnd )
+    {
+        outProcessInfoString.SetLength( lineEnd - outProcessInfoString.Get() );
+        return true;
+    }
+
+    // Line was too long or there was some other problem
+    ASSERT( false && "Unexpected proc file size" );
+    outProcessInfoString.Clear();
+    return false;
+}
 #endif
 
 //------------------------------------------------------------------------------

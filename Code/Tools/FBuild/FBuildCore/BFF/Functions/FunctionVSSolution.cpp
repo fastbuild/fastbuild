@@ -14,7 +14,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionVSSolution::FunctionVSSolution()
-: Function( "VSSolution" )
+    : Function( "VSSolution" )
 {
 }
 

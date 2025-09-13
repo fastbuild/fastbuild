@@ -1,3 +1,2 @@
-
 // Define a var that will be used by the file that includes this one
 .var = 'value'

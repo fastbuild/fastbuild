@@ -78,7 +78,6 @@ Executable( 'Exe' )
         .CompilerOutput                 = '$Out$/Test/CSharp/Exclusions/ExcludedFiles-Path-Backslash.dll'
     }
 
-
     // ExcludePattern - forward slash
     CSAssembly( 'ExcludePattern-ForwardSlash' )
     {

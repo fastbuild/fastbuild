@@ -1,8 +1,7 @@
-
 // Avoid include of stdio.h to improve compile time
 extern "C"
 {
-    void printf( const char * format, ... );
+void printf( const char * format, ... );
 }
 
 int main( int argc, char * argv[] )

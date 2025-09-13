@@ -16,13 +16,10 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Mem/MemInfo.h"
 #include "Core/Profile/Profile.h"
-#include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
-#if defined( __WINDOWS__ )
-    #include "Core/Env/WindowsHeader.h"
-    #include "Psapi.h"
-#endif
+#include "Core/Strings/AString.h"
 
 // CONSTRUCTOR (BuildProfiler)
 //------------------------------------------------------------------------------
@@ -54,12 +51,12 @@ void BuildProfiler::StopMetricsGathering()
 // RecordLocal
 //------------------------------------------------------------------------------
 void BuildProfiler::RecordLocal( uint32_t threadId,
-                      int64_t startTime,
-                      int64_t endTime,
-                      const char * stepName,
-                      const char * targetName )
+                                 int64_t startTime,
+                                 int64_t endTime,
+                                 const char * stepName,
+                                 const char * targetName )
 {
-    const int32_t machineId = Event::LOCAL_MACHINE_ID;
+    const int32_t machineId = Event::kLocalMachineId;
 
     MutexHolder mh( m_Mutex );
     m_Events.EmplaceBack( machineId, threadId, startTime, endTime, stepName, targetName );
@@ -78,7 +75,6 @@ void BuildProfiler::RecordRemote( uint32_t workerId,
     MutexHolder mh( m_Mutex );
 
     // Record details of worker the first time we see one
-    //RecordWorkerInfo( workerId, remoteThreadId, workerName );
     if ( workerId >= m_WorkerInfo.GetSize() )
     {
         // Extend the array so it encompasses the new index
@@ -99,12 +95,12 @@ void BuildProfiler::RecordRemote( uint32_t workerId,
     }
 
     // Note the remote compilation event
-    m_Events.EmplaceBack( static_cast<int32_t>(workerId), remoteThreadId, startTime, endTime, stepName, targetName );
+    m_Events.EmplaceBack( static_cast<int32_t>( workerId ), remoteThreadId, startTime, endTime, stepName, targetName );
 }
 
 // SaveJSON
 //------------------------------------------------------------------------------
-bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileName )
+bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileName )
 {
     // Thread must be stopped
     ASSERT( m_Thread.IsRunning() == false );
@@ -124,16 +120,16 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-3,\"tid\":0,\"args\":{\"name\":\"Network Usage\"}},";
 
     // - Local Processing
-    AStackString<> args( options.GetArgs() );
+    AStackString args( options.GetArgs() );
     JSON::Escape( args );
-    AStackString<> programName( options.m_ProgramName );
+    AStackString programName( options.m_ProgramName );
     JSON::Escape( programName );
     buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"%s %s\"}},", programName.Get(), args.Get() );
     buffer += "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"Phase\"}},";
     const uint32_t numThreads = options.m_NumWorkerThreads;
     for ( uint32_t i = 1; i <= numThreads; ++i )
     {
-        buffer.AppendFormat("{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":%u,\"args\":{\"name\":\"Thread %02u\"}},", i, i);
+        buffer.AppendFormat( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":%u,\"args\":{\"name\":\"Thread %02u\"}},", i, i );
     }
 
     // Remote Processing
@@ -143,61 +139,68 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
         buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":%u,\"tid\":0,\"args\":{\"name\":\"Worker: %s\"}},", workedPid, workerInfo.m_WorkerName.Get() );
         for ( uint32_t i = 1000; i <= workerInfo.m_MaxThreadId; ++i )
         {
-            buffer.AppendFormat("{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":%u,\"tid\":%u,\"args\":{\"name\":\"Thread %02u\"}},", workedPid, i, i - 1000);
+            buffer.AppendFormat( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":%u,\"tid\":%u,\"args\":{\"name\":\"Thread %02u\"}},", workedPid, i, i - 1000 );
         }
     }
 
     // Serialize events
-    AStackString<> nameBuffer;
-    const double freqMul = ( static_cast<double>( Timer::GetFrequencyInvFloatMS()) * 1000.0 );
+    const double freqMul = ( static_cast<double>( Timer::GetFrequencyInvFloatMS() ) * 1000.0 );
     for ( const Event & event : m_Events )
     {
         // Emit event with duration
-        buffer.AppendFormat( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u",
-                                event.m_StepName,
-                                (uint64_t)( (double)event.m_StartTime * freqMul ),
-                                (uint64_t)( (double)(event.m_EndTime - event.m_StartTime) * freqMul ),
-                                event.m_MachineId,
-                                event.m_ThreadId );
+        buffer.AppendFormat( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64
+                             ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u",
+                             event.m_StepName,
+                             (uint64_t)( (double)event.m_StartTime * freqMul ),
+                             (uint64_t)( (double)( event.m_EndTime - event.m_StartTime ) * freqMul ),
+                             event.m_MachineId,
+                             event.m_ThreadId );
 
         // Optional additional "target name"
         if ( event.m_TargetName )
         {
-            nameBuffer = event.m_TargetName;
-            JSON::Escape( nameBuffer );
-            buffer.AppendFormat( ",\"args\":{\"name\":\"%s\"}", nameBuffer.Get());
+            buffer += ",\"args\":{\"name\":\"";
+            JSON::AppendEscaped( event.m_TargetName, buffer );
+            buffer += "\"}";
         }
 
         buffer += ( "}," );
     }
 
     // Serialize metrics
+    Metrics lastValues;
     for ( const Metrics & metrics : m_Metrics )
     {
-        // Total Memory
-        buffer.AppendFormat( "{\"name\":\"Total (MiB)\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
-                             (uint64_t)( (double)metrics.m_Time * freqMul ),
-                             metrics.m_TotalMemoryMiB );
-        // Job Memory
-        if ( metrics.m_JobMemoryMiB > 0 )
-        {
-            buffer.AppendFormat( "{\"name\":\"Job (MiB)\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-2,\"args\":{\"MiB\":%u}},",
-                                 (uint64_t)( (double)metrics.m_Time * freqMul ),
-                                 metrics.m_JobMemoryMiB );
+        const uint64_t currentTimeStamp = static_cast<uint64_t>( static_cast<double>( metrics.m_Time ) * freqMul );
+        const bool isLast = ( &metrics == &m_Metrics.Top() );
+
+        // Macro to output a stat, but only if it changed (to reduce output size)
+#define OUTPUT_STAT( stat, pid, name, unit, type, fmt, div ) \
+        if ( ( lastValues.stat != metrics.stat ) || isLast ) \
+        { \
+            buffer.AppendFormat( "{\"name\":\"" name "\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":" pid ",\"args\":{\"" unit "\":" fmt "}},", \
+                                 currentTimeStamp, \
+                                 static_cast<type>( metrics.stat ) / div ); \
+            lastValues.stat = metrics.stat; \
         }
 
+        // Memory
+        OUTPUT_STAT( m_JobMemoryMiB, "-2", "Process - Job (MiB)", "MiB", uint32_t, "%u", 1u )
+        OUTPUT_STAT( m_ProcessMiB, "-2", "Process - Total (MiB)", "MiB", uint32_t, "%u", 1u )
+        OUTPUT_STAT( m_SystemMiB, "-2", "System - Total (GiB)", "GiB", double, "%2.1f", 1024.0 )
+
         // Network Connections (if using distributed compilation)
-        if ( metrics.m_NumConnections > 0 )
+        if ( options.m_AllowDistributed )
         {
-            buffer.AppendFormat( "{\"name\":\"Connections\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":-3,\"args\":{\"Num\":%u}},",
-                                    (uint64_t)( (double)metrics.m_Time * freqMul ),
-                                    metrics.m_NumConnections );
+            OUTPUT_STAT( m_NumConnections, "-3", "Connections", "Num", uint32_t, "%u", 1u )
         }
+
+#undef OUTPUT_STAT
     }
 
     // Open output file and write the majority of the profiling info
     FileStream f;
-    if ( ( f.Open( fileName, FileStream::WRITE_ONLY ) == false ) ||
+    if ( ( f.Open( fileName, FileStream::OPEN_OR_CREATE_READ_WRITE ) == false ) ||
          ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) != buffer.GetLength() ) )
     {
         return false;
@@ -210,10 +213,11 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options,  const char * fileN
     buffer.Format( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u}]",
                    "WriteProfileJSON",
                    (uint64_t)( (double)saveStart * freqMul ),
-                   (uint64_t)( (double)(saveEnd - saveStart) * freqMul ),
-                   Event::LOCAL_MACHINE_ID,
+                   (uint64_t)( (double)( saveEnd - saveStart ) * freqMul ),
+                   Event::kLocalMachineId,
                    0u );
-    return( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() );
+    return ( ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() ) &&
+             f.Truncate() );
 }
 
 // MetricsThreadWrapper
@@ -236,18 +240,15 @@ void BuildProfiler::MetricsUpdate()
         metrics.m_Time = Timer::GetNow();
 
         // FASTBuild memory usage (this process)
-#if defined( __WINDOWS__ )
-        PROCESS_MEMORY_COUNTERS_EX counters;
-        VERIFY( GetProcessMemoryInfo( GetCurrentProcess(),
-                                      (PROCESS_MEMORY_COUNTERS*)&counters,
-                                      sizeof(PROCESS_MEMORY_COUNTERS_EX) ) );
-        metrics.m_TotalMemoryMiB = (uint32_t)( counters.WorkingSetSize / ( 1024 * 1024 ) );
-#else
-        metrics.m_TotalMemoryMiB = 0; // TODO:LINUX TODO:OSX Implement total memory usage stat
-#endif
+        metrics.m_ProcessMiB = MemInfo::GetProcessInfo();
 
         // Memory used by distributed jobs
-        metrics.m_JobMemoryMiB = (uint32_t)( Job::GetTotalLocalDataMemoryUsage() / ( 1024 * 1024 ) );
+        metrics.m_JobMemoryMiB = MemInfo::ConvertBytesToMiB( Job::GetTotalLocalDataMemoryUsage() );
+
+        // System memory
+        SystemMemInfo systemMemInfo;
+        MemInfo::GetSystemInfo( systemMemInfo );
+        metrics.m_SystemMiB = ( systemMemInfo.m_TotalPhysMiB - systemMemInfo.m_AvailPhysMiB );
 
         // Network connections
         metrics.m_NumConnections = (uint16_t)FBuild::Get().GetNumWorkerConnections();

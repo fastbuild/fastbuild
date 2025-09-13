@@ -18,20 +18,20 @@ public:
     virtual ~OSWidget();
 
     void Init();
-    inline bool IsInitialized() const { return m_Initialized; }
+    bool IsInitialized() const { return m_Initialized; }
 
-    inline OSWindow * GetParentWindow() const { return m_Parent; }
-    inline void * GetHandle() const { return m_Handle; }
+    OSWindow * GetParentWindow() const { return m_Parent; }
+    void * GetHandle() const { return m_Handle; }
 
 protected:
-    OSWindow *  m_Parent;
-    void *      m_Handle;
-    bool        m_Initialized;
+    OSWindow * m_Parent = nullptr;
+    void * m_Handle = nullptr;
+    bool m_Initialized = false;
 
-    #if defined( __WINDOWS__ )
-        void InitCommonControls(); // Called by Widgets that need commctl
-        static bool s_CommonControlsInitialized;
-    #endif
+#if defined( __WINDOWS__ )
+    void InitCommonControls(); // Called by Widgets that need commctl
+    static bool s_CommonControlsInitialized;
+#endif
 };
 
 //------------------------------------------------------------------------------

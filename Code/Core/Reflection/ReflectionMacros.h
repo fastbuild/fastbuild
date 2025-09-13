@@ -34,7 +34,8 @@ class ReflectionInfo;
 //------------------------------------------------------------------------------
 #define CHECK_BASE_CLASS( className, baseClass ) \
     const className * c = nullptr; \
-    const baseClass * b = static_cast< const baseClass * >( c ); (void)b;
+    const baseClass * b = static_cast<const baseClass *>( c ); \
+    (void)b;
 
 #define ADD_METADATA( metaData ) \
     AddMetaData( metaData );
@@ -53,7 +54,7 @@ class ReflectionInfo;
     const ReflectionInfo * className::GetReflectionInfoS() \
     { \
         PRAGMA_DISABLE_PUSH_MSVC( 4946 ) \
-        return reinterpret_cast< const ReflectionInfo * >( &g_##className##_ReflectionInfo ); \
+        return reinterpret_cast<const ReflectionInfo *>( &g_##className##_ReflectionInfo ); \
         PRAGMA_DISABLE_POP_MSVC \
     } \
     class className##_ReflectionInfo : public ReflectionInfo \
@@ -67,7 +68,7 @@ class ReflectionInfo;
             AddProperties(); \
             m_StructSize = structSize; \
             m_IsAbstract = isAbstract; \
-            m_SuperClass = reinterpret_cast< const ReflectionInfo * >( &g_##baseClass##_ReflectionInfo ); \
+            m_SuperClass = reinterpret_cast<const ReflectionInfo *>( &g_##baseClass##_ReflectionInfo ); \
             ADD_METADATA( metaData ) \
         } \
         virtual ~className##_ReflectionInfo() override\
@@ -99,7 +100,7 @@ class ReflectionInfo;
     REFLECT_BEGIN_COMMON( structName, baseStruct, metaData, sizeof( structName ), false ) \
         virtual void SetArraySizeV( void * array, size_t size ) const override \
         { \
-            Array< structName > * realArray = static_cast< Array< structName > * >( array ); \
+            Array<structName> * realArray = static_cast<Array<structName> *>( array ); \
             realArray->SetSize( size ); \
         } \
         void AddProperties() \
@@ -116,7 +117,7 @@ class ReflectionInfo;
     REFLECT_BEGIN_COMMON( structName, Struct, MetaNone(), sizeof( structName ), false ) \
         virtual void SetArraySizeV( void * array, size_t size ) const override \
         { \
-            Array< structName > * realArray = static_cast< Array< structName > * >( array ); \
+            Array<structName> * realArray = static_cast<Array<structName> *>( array ); \
             realArray->SetSize( size ); \
         } \
         void AddProperties() \
@@ -125,11 +126,11 @@ class ReflectionInfo;
 // MEMBERS
 //------------------------------------------------------------------------------
 #define REFLECT( member, memberName, metaData ) \
-            AddProperty( offsetof( objectType, member ), memberName, GetPropertyType( static_cast< decltype( objectType::member ) * >( nullptr ) ) ); \
+            AddProperty( offsetof( objectType, member ), memberName, GetPropertyType( static_cast<decltype( objectType::member ) *>( nullptr ) ) ); \
             ADD_PROPERTY_METADATA( metaData )
 
 #define REFLECT_ARRAY( member, memberName, metaData ) \
-            AddPropertyArray( offsetof( objectType, member ), memberName, GetPropertyArrayType( static_cast< decltype( objectType::member ) * >( nullptr ) ) ); \
+            AddPropertyArray( offsetof( objectType, member ), memberName, GetPropertyArrayType( static_cast<decltype( objectType::member ) *>( nullptr ) ) ); \
             ADD_PROPERTY_METADATA( metaData )
 
 #define REFLECT_STRUCT( member, memberName, structType, metaData ) \

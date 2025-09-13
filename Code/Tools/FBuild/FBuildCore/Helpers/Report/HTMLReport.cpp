@@ -19,31 +19,31 @@
 namespace
 {
     static const uint32_t g_ReportNodeColors[] = {
-                                                    0x000000, // PROXY_NODE (never seen)
-                                                    0xFFFFFF, // COPY_FILE_NODE
-                                                    0xAAAAAA, // DIRECTORY_LIST_NODE
-                                                    0x000000, // EXEC_NODE
-                                                    0x888888, // FILE_NODE
-                                                    0x88FF88, // LIBRARY_NODE
-                                                    0xFF8888, // OBJECT_NODE
-                                                    0x228B22, // ALIAS_NODE
-                                                    0xFFFF88, // EXE_NODE
-                                                    0x88AAFF, // UNITY_NODE
-                                                    0x88CCFF, // CS_NODE
-                                                    0xFFAAFF, // TEST_NODE
-                                                    0xDDA0DD, // COMPILER_NODE
-                                                    0xFFCC88, // DLL_NODE
-                                                    0xFFFFFF, // VCXPROJ_NODE
-                                                    0x444444, // OBJECT_LIST_NODE
-                                                    0x000000, // COPY_DIR_NODE (never seen)
-                                                    0xFF3030, // REMOVE_DIR_NODE
-                                                    0x77DDAA, // SLN_NODE
-                                                    0x77DDAA, // XCODEPROJECT_NODE
-                                                    0x000000, // SETTINGS_NODE (never seen)
-                                                    0xFFFFFF, // VSPROJEXTERNAL_NODE
-                                                    0xFFFFFF, // TEXT_FILE_NODE
-                                                    0xEBABCB, // DIRECTORY_LIST_NODE
-                                                 };
+        0x000000, // PROXY_NODE (never seen)
+        0xFFFFFF, // COPY_FILE_NODE
+        0xAAAAAA, // DIRECTORY_LIST_NODE
+        0x000000, // EXEC_NODE
+        0x888888, // FILE_NODE
+        0x88FF88, // LIBRARY_NODE
+        0xFF8888, // OBJECT_NODE
+        0x228B22, // ALIAS_NODE
+        0xFFFF88, // EXE_NODE
+        0x88AAFF, // UNITY_NODE
+        0x88CCFF, // CS_NODE
+        0xFFAAFF, // TEST_NODE
+        0xDDA0DD, // COMPILER_NODE
+        0xFFCC88, // DLL_NODE
+        0xFFFFFF, // VCXPROJ_NODE
+        0x444444, // OBJECT_LIST_NODE
+        0x000000, // COPY_DIR_NODE (never seen)
+        0xFF3030, // REMOVE_DIR_NODE
+        0x77DDAA, // SLN_NODE
+        0x77DDAA, // XCODEPROJECT_NODE
+        0x000000, // SETTINGS_NODE (never seen)
+        0xFFFFFF, // VSPROJEXTERNAL_NODE
+        0xFFFFFF, // TEXT_FILE_NODE
+        0xEBABCB, // DIRECTORY_LIST_NODE
+    };
     // Ensure color vector is in sync
     static_assert( sizeof( g_ReportNodeColors ) / sizeof( uint32_t ) == Node::NUM_NODE_TYPES, "g_ReportNodeColors item count doesn't match NUM_NODE_TYPES" );
 }
@@ -241,7 +241,7 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
 {
     DoSectionTitle( "Overview", "overview" );
 
-    AStackString<> buffer;
+    AStackString buffer;
 
     DoTableStart();
 
@@ -249,18 +249,18 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
     Write( "<tr><th width=150>Item</th><th>Details</th></tr>\n" );
 
     // Full command line
-    AStackString<> commandLineBuffer;
+    AStackString commandLineBuffer;
     Env::GetCmdLine( commandLineBuffer );
-    #if defined( __WINDOWS__ )
-        const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
-        const char * commandLine = exeExtension ? ( exeExtension + 5 ) : commandLineBuffer.Get(); // skip .exe + closing quote
-    #else
-        const char * commandLine = commandLineBuffer.Get();
-    #endif
+#if defined( __WINDOWS__ )
+    const char * exeExtension = commandLineBuffer.FindLast( ".exe\"" );
+    const char * commandLine = exeExtension ? ( exeExtension + 5 ) : commandLineBuffer.Get(); // skip .exe + closing quote
+#else
+    const char * commandLine = commandLineBuffer.Get();
+#endif
     Write( "<tr><td width=80>Cmd Line Options</td><td>%s</td></tr>", commandLine );
 
     // Target
-    AStackString<> targets;
+    AStackString targets;
     const Node * rootNode = stats.GetRootNode();
     if ( rootNode->GetType() != Node::PROXY_NODE )
     {
@@ -307,7 +307,7 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
     Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
 
     // report time
-    AStackString<> reportDateTime;
+    AStackString reportDateTime;
     GetReportDateTime( reportDateTime );
 
     // NOTE: time is patched in later
@@ -342,8 +342,8 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
         }
         const uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
-        StackArray< PieItem > pieItems;
-        pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
+        StackArray<PieItem> pieItems;
+        pieItems.EmplaceBack( "Uncacheable", (float)( totalOutOfDateItems - totalCacheable ), (uint32_t)0xFF8888 );
         pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, (uint32_t)0xFFCC88 );
         pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, (uint32_t)0x88FF88 );
         DoPieChart( pieItems, "" );
@@ -364,28 +364,28 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
             const uint32_t items = ls->m_ObjectCount;
 
             // out of date items
-            const uint32_t  outOfDateItems      = ls->m_ObjectCount_OutOfDate;
+            const uint32_t outOfDateItems = ls->m_ObjectCount_OutOfDate;
             if ( outOfDateItems == 0 )
             {
                 continue; // skip library if nothing was done
             }
-            const float     outOfDateItemsPerc  = ( (float)outOfDateItems / (float)items ) * 100.0f;
+            const float outOfDateItemsPerc = ( (float)outOfDateItems / (float)items ) * 100.0f;
 
             // cacheable
-            const uint32_t  cItems       = ls->m_ObjectCount_Cacheable;
-            const float     cItemsPerc   = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
+            const uint32_t cItems = ls->m_ObjectCount_Cacheable;
+            const float cItemsPerc = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
 
             // hits
-            const uint32_t  cHits        = ls->m_ObjectCount_CacheHits;
-            const float     cHitsPerc    = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
+            const uint32_t cHits = ls->m_ObjectCount_CacheHits;
+            const float cHitsPerc = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
 
             // misses
-            const uint32_t  cMisses      = ( cItems - cHits );
-            const float     cMissesPerc  = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
+            const uint32_t cMisses = ( cItems - cHits );
+            const float cMissesPerc = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
 
             // stores
-            const uint32_t  cStores     = ls->m_ObjectCount_CacheStores;
-            const float     cStoreTime  = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
+            const uint32_t cStores = ls->m_ObjectCount_CacheStores;
+            const float cStoreTime = (float)ls->m_CacheTimeMS / 1000.0f; // ms to s
 
             // start collapsible section
             if ( numOutput == 10 )
@@ -395,13 +395,18 @@ void HTMLReport::DoCacheStats( const FBuildStats & /*stats*/ )
 
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td>%s</td><td style=\"width:70px;\">%u</td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:60px;\">%u</td><td style=\"width:100px;\">%2.3fs</td></tr>\n"
                                        : "<tr><td>%s</td><td>%u</td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u</td><td>%2.3fs</td></tr>\n",
-                        libraryName,
-                        items,
-                        outOfDateItems, (double)outOfDateItemsPerc,
-                        cItems, (double)cItemsPerc,
-                        cHits, (double)cHitsPerc,
-                        cMisses, (double)cMissesPerc,
-                        cStores, (double)cStoreTime );
+                   libraryName,
+                   items,
+                   outOfDateItems,
+                   (double)outOfDateItemsPerc,
+                   cItems,
+                   (double)cItemsPerc,
+                   cHits,
+                   (double)cHitsPerc,
+                   cMisses,
+                   (double)cMissesPerc,
+                   cStores,
+                   (double)cStoreTime );
             numOutput++;
         }
 
@@ -425,9 +430,9 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
     DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
 
     // Summary Pie Chart
-    StackArray< PieItem > items;
+    StackArray<PieItem> items;
 
-    for ( size_t i=0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
+    for ( size_t i = 0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
     {
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( (Node::Type)i );
         if ( nodeStats.m_NumProcessed == 0 )
@@ -451,9 +456,9 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
     // table
     DoTableStart();
     Write( "<tr><th width=80>Type</th><th width=80>Time</th><th width=80>Processed</th><th width=80>Built</th><th width=80>Cache Hits</th></tr>\n" );
-    for ( size_t i=0; i < items.GetSize(); ++i )
+    for ( size_t i = 0; i < items.GetSize(); ++i )
     {
-        const Node::Type type = (Node::Type)(size_t)items[ i ].m_UserData;
+        const Node::Type type = static_cast<Node::Type>( (size_t)items[ i ].m_UserData );
         const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
         if ( nodeStats.m_NumProcessed == 0 )
         {
@@ -467,10 +472,10 @@ void HTMLReport::DoCPUTimeByType( const FBuildStats & stats )
         const uint32_t cacheHits = nodeStats.m_NumCacheHits;
 
         Write( "<tr><td>%s</td><td>%2.3fs</td><td>%u</td><td>%u</td>",
-                    typeName,
-                    (double)value,
-                    processed,
-                    built );
+               typeName,
+               (double)value,
+               processed,
+               built );
         if ( type == Node::OBJECT_NODE )
         {
             // cacheable
@@ -503,8 +508,8 @@ void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
     size_t numOutput = 0;
 
     // Result
-    const Array< const Node * > & nodes = stats.GetNodesByTime();
-    for ( const Node * node: nodes )
+    const Array<const Node *> & nodes = stats.GetNodesByTime();
+    for ( const Node * node : nodes )
     {
         const float time = ( (float)node->GetProcessingTime() * 0.001f ); // ms to s
         const char * type = node->GetTypeName();
@@ -518,17 +523,23 @@ void HTMLReport::DoCPUTimeByItem( const FBuildStats & stats )
 
         if ( cacheEnabled )
         {
-            const bool cacheHit = node->GetStatFlag(Node::STATS_CACHE_HIT);
-            const bool cacheStore = node->GetStatFlag(Node::STATS_CACHE_STORE);
+            const bool cacheHit = node->GetStatFlag( Node::STATS_CACHE_HIT );
+            const bool cacheStore = node->GetStatFlag( Node::STATS_CACHE_STORE );
 
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td style=\"width:120px;\">%s</td><td>%s</td></tr>\n"
-                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A" ), name );
+                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n",
+                   (double)time,
+                   type,
+                   cacheHit ? "HIT" : ( cacheStore ? "STORE" : "N/A" ),
+                   name );
         }
         else
         {
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td>%s</td></tr>\n"
-                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, name);
-
+                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n",
+                   (double)time,
+                   type,
+                   name );
         }
         numOutput++;
     }
@@ -586,16 +597,20 @@ void HTMLReport::DoCPUTimeByLibrary()
         const char * type = ls->m_Library->GetTypeName();
         switch ( ls->m_Library->GetType() )
         {
-            case Node::LIBRARY_NODE:        type = "Static"; break;
-            case Node::DLL_NODE:            type = "DLL"; break;
-            case Node::CS_NODE:             type = "C# DLL"; break;
-            case Node::OBJECT_LIST_NODE:    type = "ObjectList"; break;
-            default:                        break;
+            case Node::LIBRARY_NODE: type = "Static"; break;
+            case Node::DLL_NODE: type = "DLL"; break;
+            case Node::CS_NODE: type = "C# DLL"; break;
+            case Node::OBJECT_LIST_NODE: type = "ObjectList"; break;
+            default: break;
         }
         const char * name = ls->m_Library->GetName().Get();
         Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%2.3fs</td><td style=\"width:50px;\">%2.1f</td><td style=\"width:70px;\">%u</td><td style=\"width:50px;\">%s</td><td>%s</td></tr>\n"
                                    : "<tr><td>%2.3fs</td><td>%2.1f</td><td>%u</td><td>%s</td><td>%s</td></tr>\n",
-                                        (double)time, (double)perc, objCount, type, name );
+               (double)time,
+               (double)perc,
+               objCount,
+               type,
+               name );
         numOutput++;
     }
 
@@ -630,7 +645,7 @@ void HTMLReport::DoIncludes()
         GetIncludeFilesRecurse( incStatsMap, library );
 
         // flatten and sort by usage
-        Array< const IncludeStats * > incStats;
+        Array<const IncludeStats *> incStats;
         incStats.SetCapacity( 10 * 1024 );
         incStatsMap.Flatten( incStats );
         incStats.SortDeref();
@@ -652,7 +667,7 @@ void HTMLReport::DoIncludes()
         // output
         const size_t numIncludes = incStats.GetSize();
         size_t numOutput = 0;
-        for ( size_t i=0; i<numIncludes; ++i )
+        for ( size_t i = 0; i < numIncludes; ++i )
         {
             const IncludeStats & s = *incStats[ i ];
             const char * fileName = s.m_Node->GetName().Get();
@@ -667,10 +682,10 @@ void HTMLReport::DoIncludes()
 
             Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%u</td><td style=\"width:80px;\">%u</td><td style=\"width:60px;\">%s</td><td>%s</td></tr>\n"
                                        : "<tr><td>%u</td><td>%u</td><td>%s</td><td>%s</td></tr>\n",
-                        numObjects,
-                        included,
-                        inPCH ? "YES" : "no",
-                        fileName );
+                   numObjects,
+                   included,
+                   inPCH ? "YES" : "no",
+                   fileName );
             numOutput++;
         }
 
@@ -694,11 +709,11 @@ PRAGMA_DISABLE_POP_MSVC // warning C6262: Function uses '262212' bytes of stack
 
 // DoPieChart
 //------------------------------------------------------------------------------
-void HTMLReport::DoPieChart( const Array< PieItem > & items, const char * units )
+void HTMLReport::DoPieChart( const Array<PieItem> & items, const char * units )
 {
-    AStackString<> buffer;
+    AStackString buffer;
 
-    const uint32_t height = Math::Max< uint32_t >( 140, 40 + 25 * (uint32_t)items.GetSize() );
+    const uint32_t height = Math::Max<uint32_t>( 140, 40 + 25 * (uint32_t)items.GetSize() );
 
     m_NumPieCharts++;
 
@@ -711,7 +726,7 @@ void HTMLReport::DoPieChart( const Array< PieItem > & items, const char * units 
 
     Write( "<script type=\"text/javascript\">\n" );
     Write( "    var myData = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
+    for ( size_t i = 0; i < items.GetSize(); ++i )
     {
         if ( i > 0 )
         {
@@ -722,7 +737,7 @@ void HTMLReport::DoPieChart( const Array< PieItem > & items, const char * units 
     }
     Write( "];\n" );
     Write( "    var myLabels = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
+    for ( size_t i = 0; i < items.GetSize(); ++i )
     {
         if ( i > 0 )
         {
@@ -732,7 +747,7 @@ void HTMLReport::DoPieChart( const Array< PieItem > & items, const char * units 
     }
     Write( "];\n" );
     Write( "    var myColors = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
+    for ( size_t i = 0; i < items.GetSize(); ++i )
     {
         if ( i > 0 )
         {
@@ -768,7 +783,7 @@ void HTMLReport::DoSectionTitle( const char * sectionName, const char * sectionI
 //------------------------------------------------------------------------------
 void HTMLReport::DoTableStart( uint32_t width, const char * id, bool hidden )
 {
-    AStackString<> output;
+    AStackString output;
     output.Format( "<table width=%u", width );
     if ( id )
     {
@@ -797,17 +812,17 @@ void HTMLReport::DoToggleSection( size_t numMore )
 {
     static uint32_t tableId = 0;
     ++tableId;
-    AStackString<> tableIdStr;
+    AStackString tableIdStr;
     tableIdStr.Format( "table%u", tableId );
 
     DoTableStop();
-    AStackString<> more;
+    AStackString more;
     if ( numMore )
     {
         more.Format( "%u ", (uint32_t)numMore );
     }
     Write( "<a href='javascript:toggleTable(\"%s\");'>%sMore...</a>\n", tableIdStr.Get(), more.Get() );
-    DoTableStart( DEFAULT_TABLE_WIDTH, tableIdStr.Get(), true ); // hide table
+    DoTableStart( kDefaultTableWidth, tableIdStr.Get(), true ); // hide table
 }
 
 //------------------------------------------------------------------------------

@@ -29,7 +29,7 @@ IMetaData::~IMetaData() = default;
 
 // Chaining operator for reflection macros
 //------------------------------------------------------------------------------
-IMetaData & operator + ( IMetaData & a, IMetaData & b )
+IMetaData & operator+( IMetaData & a, IMetaData & b )
 {
     b.m_Next = a.m_Next;
     a.m_Next = &b;

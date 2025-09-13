@@ -11,7 +11,6 @@
 
 // Core
 #include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Profile/Profile.h"
@@ -101,9 +100,10 @@ public:
         m_Files.EmplaceBack( Move( info ) );
     }
 
-    Array<AString>& GetDirectories() { return m_Directories; }
+    Array<AString> & GetDirectories() { return m_Directories; }
 
-    DirectoryListNodeGetFilesHelper & operator =(DirectoryListNodeGetFilesHelper&) = delete;
+    DirectoryListNodeGetFilesHelper & operator=( DirectoryListNodeGetFilesHelper & ) = delete;
+
 protected:
     const Array<AString> & m_ExcludePaths;
     const Array<AString> & m_FilesToExclude;
@@ -125,29 +125,29 @@ DirectoryListNode::DirectoryListNode()
 //------------------------------------------------------------------------------
 /*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
-    #if defined( ASSERTS_ENABLED )
-        // ensure name is correctly formatted
-        AStackString<> expectedName;
-        FormatName( m_Path,
-                    &m_Patterns,
-                    m_Recursive,
-                    m_IncludeReadOnlyStatusInHash,
-                    m_IncludeDirs,
-                    m_ExcludePaths,
-                    m_FilesToExclude,
-                    m_ExcludePatterns,
-                    expectedName );
-        ASSERT( m_Name == expectedName );
+#if defined( ASSERTS_ENABLED )
+    // ensure name is correctly formatted
+    AStackString expectedName;
+    FormatName( m_Path,
+                &m_Patterns,
+                m_Recursive,
+                m_IncludeReadOnlyStatusInHash,
+                m_IncludeDirs,
+                m_ExcludePaths,
+                m_FilesToExclude,
+                m_ExcludePatterns,
+                expectedName );
+    ASSERT( m_Name == expectedName );
 
-        // paths must have trailing slash
-        ASSERT( m_Path.EndsWith( NATIVE_SLASH ) );
+    // paths must have trailing slash
+    ASSERT( m_Path.EndsWith( NATIVE_SLASH ) );
 
-        // make sure exclusion path has trailing slash if provided
-        for ( const AString & excludePath : m_ExcludePaths )
-        {
-            ASSERT( excludePath.EndsWith( NATIVE_SLASH ) );
-        }
-    #endif
+    // make sure exclusion path has trailing slash if provided
+    for ( const AString & excludePath : m_ExcludePaths )
+    {
+        ASSERT( excludePath.EndsWith( NATIVE_SLASH ) );
+    }
+#endif
 
     return true;
 }
@@ -159,13 +159,13 @@ DirectoryListNode::~DirectoryListNode() = default;
 // FormatName
 //------------------------------------------------------------------------------
 /*static*/ void DirectoryListNode::FormatName( const AString & path,
-                                               const Array< AString > * patterns,
+                                               const Array<AString> * patterns,
                                                bool recursive,
                                                bool includeReadOnlyFlagInHash,
                                                bool includeDirs,
-                                               const Array< AString > & excludePaths,
-                                               const Array< AString > & excludeFiles,
-                                               const Array< AString > & excludePatterns,
+                                               const Array<AString> & excludePaths,
+                                               const Array<AString> & excludeFiles,
+                                               const Array<AString> & excludePatterns,
                                                AString & result )
 {
     ASSERT( path.EndsWith( NATIVE_SLASH ) );
@@ -242,7 +242,7 @@ DirectoryListNode::~DirectoryListNode() = default;
         class FileSorter
         {
         public:
-            bool operator () ( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
+            bool operator()( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
             {
                 return ( a.m_Name < b.m_Name );
             }
@@ -256,7 +256,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 
     if ( FLog::ShowVerbose() )
     {
-        AStackString<> buffer;
+        AStackString buffer;
         buffer.AppendFormat( "Dir: '%s' (%zu files)\n",
                              m_Name.Get(),
                              m_Files.GetSize() );
@@ -284,24 +284,27 @@ DirectoryListNode::~DirectoryListNode() = default;
     }
     else
     {
-        MemoryStream ms;
-        for ( const FileIO::FileInfo & file : m_Files )
+        xxHash3Accumulator hashAccumulator;
         {
-            // Include filenames, so additions and removals will change the hash
-            ms.WriteBuffer( file.m_Name.Get(), file.m_Name.GetLength() );
-
-            // Include read-only status if desired
-            if ( m_IncludeReadOnlyStatusInHash )
+            for ( const FileIO::FileInfo & file : m_Files )
             {
-                ms.Write( file.IsReadOnly() );
+                // Include filenames, so additions and removals will change the hash
+                hashAccumulator.AddData( file.m_Name.Get(), file.m_Name.GetLength() );
+
+                // Include read-only status if desired
+                if ( m_IncludeReadOnlyStatusInHash )
+                {
+                    const bool b = file.IsReadOnly();
+                    hashAccumulator.AddData( &b, sizeof( b ) );
+                }
             }
         }
         for ( const AString & dir : m_Directories )
         {
             // additions and removals will change the hash
-            ms.WriteBuffer( dir.Get(), dir.GetLength() );
+            hashAccumulator.AddData( dir.Get(), dir.GetLength() );
         }
-        m_Stamp = xxHash3::Calc64( ms.GetData(), ms.GetSize() );
+        m_Stamp = hashAccumulator.Finalize64();
     }
 
     return BuildResult::eOk;
@@ -311,8 +314,8 @@ DirectoryListNode::~DirectoryListNode() = default;
 //------------------------------------------------------------------------------
 void DirectoryListNode::MakePrettyName()
 {
-    AStackString<> prettyName( m_Path );
-    if (m_Recursive)
+    AStackString prettyName( m_Path );
+    if ( m_Recursive )
     {
         prettyName += " (recursive)";
     }

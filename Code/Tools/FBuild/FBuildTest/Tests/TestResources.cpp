@@ -40,7 +40,7 @@ void TestResources::BuildResource() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> binRes( "../tmp/Test/Resources/resource.res" );
+    const AStackString binRes( "../tmp/Test/Resources/resource.res" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( "binRes" );
@@ -57,14 +57,13 @@ void TestResources::BuildResource() const
     const int ret = p.WaitForExit();
     TEST_ASSERT( ret == 1 ); // verify expected ret code
 
-    // Check stats
-    //               Seen,  Built,  Type
+    // Check stats: Seen, Built, Type
     // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 1, Node::EXE_NODE );
 }
 
 // BuildResource_NoRebuild
@@ -79,14 +78,13 @@ void TestResources::BuildResource_NoRebuild() const
 
     TEST_ASSERT( fBuild.Build( "exe" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
+    // Check stats: Seen, Built, Type
     // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     0,      Node::LIBRARY_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 0, Node::LIBRARY_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
 }
 
 //------------------------------------------------------------------------------

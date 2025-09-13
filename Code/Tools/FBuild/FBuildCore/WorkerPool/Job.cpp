@@ -5,9 +5,11 @@
 //------------------------------------------------------------------------------
 #include "Job.h"
 
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
+// Core
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
@@ -15,6 +17,7 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
+// System
 #include <stdarg.h>
 
 // Static
@@ -26,6 +29,9 @@ static uint32_t s_LastJobId( 0 );
 //------------------------------------------------------------------------------
 Job::Job( Node * node )
     : m_Node( node )
+    , m_DataIsCompressed( false )
+    , m_IsLocal( true )
+    , m_AllowZstdUse( false )
 {
     // Constructor that assigns JobId can only be called on the main thread.
     ASSERT( Thread::IsMainThread() );
@@ -35,7 +41,9 @@ Job::Job( Node * node )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Job::Job( IOStream & stream )
-    : m_IsLocal( false )
+    : m_DataIsCompressed( false )
+    , m_IsLocal( false )
+    , m_AllowZstdUse( false )
 {
     Deserialize( stream );
 }
@@ -108,10 +116,10 @@ void Job::OwnData( void * data, size_t size, bool compressed )
 //------------------------------------------------------------------------------
 void Job::Error( MSVC_SAL_PRINTF const char * format, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, format);
+    va_start( args, format );
     buffer.VFormat( format, args );
     va_end( args );
 
@@ -151,7 +159,7 @@ void Job::ErrorPreformatted( const char * message )
 
 // SetMessages
 //------------------------------------------------------------------------------
-void Job::SetMessages( const Array< AString > & messages )
+void Job::SetMessages( const Array<AString> & messages )
 {
     m_Messages = messages;
 }
@@ -165,7 +173,7 @@ void Job::Serialize( IOStream & stream )
     // write jobid
     stream.Write( m_JobId );
     stream.Write( m_Node->GetName() );
-    AStackString<> workingDir;
+    AStackString workingDir;
     VERIFY( FileIO::GetCurrentDir( workingDir ) );
     stream.Write( workingDir );
 
@@ -217,7 +225,7 @@ void Job::GetMessagesForLog( AString & buffer ) const
 
 // GetMessagesForLog
 //------------------------------------------------------------------------------
-/*static*/ void Job::GetMessagesForLog( const Array< AString > & messages, AString & outBuffer )
+/*static*/ void Job::GetMessagesForLog( const Array<AString> & messages, AString & outBuffer )
 {
     // Ensure the output buffer is pre-sized
     // (errors can sometimes be very large so we want to avoid re-allocs)
@@ -229,7 +237,7 @@ void Job::GetMessagesForLog( AString & buffer ) const
     outBuffer.SetReserved( size ); // Will be safely ignored if smaller than already reserved
 
     // Concatenate the errors
-    for( const AString & msg : messages )
+    for ( const AString & msg : messages )
     {
         outBuffer += msg;
     }
@@ -251,7 +259,7 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
 
 // GetMessagesForMonitorLog
 //------------------------------------------------------------------------------
-/*static*/ void Job::GetMessagesForMonitorLog( const Array< AString > & messages, AString & outBuffer )
+/*static*/ void Job::GetMessagesForMonitorLog( const Array<AString> & messages, AString & outBuffer )
 {
     // Concatenate all messages
     GetMessagesForLog( messages, outBuffer );

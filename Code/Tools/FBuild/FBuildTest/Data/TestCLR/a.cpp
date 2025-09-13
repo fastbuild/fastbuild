@@ -1,4 +1,3 @@
-
 #include "a.h"
 
 // A managed class, which creates an unmanaged object
@@ -8,7 +7,7 @@ public:
     AMaker() {}
     A * MakeA()
     {
-        A* a = new A;
+        A * a = new A;
         a->value = 15613223; // test will check for this value
         return a;
     }
@@ -18,6 +17,6 @@ public:
 A * FunctionsAsCLR_A()
 {
     // use garbage collected new/clr methods
-    AMaker^ aMaker = gcnew AMaker;
+    AMaker ^ aMaker = gcnew AMaker;
     return aMaker->MakeA();
 }

@@ -31,24 +31,24 @@ class GlobalTimerFrequencyInitializer
 public:
     GlobalTimerFrequencyInitializer()
     {
-        #if defined( __WINDOWS__ )
-            ASSERT( Timer::s_Frequency == 0 );
-            LARGE_INTEGER freq;
-            VERIFY( QueryPerformanceFrequency( &freq ) );
-            Timer::s_Frequency = freq.QuadPart;
-        #endif
-        #if defined( __APPLE__ )
-            #if defined( __aarch64__ ) // ARM
-                Timer::s_Frequency = 1000000000;
-            #else
-                mach_timebase_info_data_t info;
-                mach_timebase_info( &info );
-                Timer::s_Frequency = (int64_t)( info.numer / info.denom ) * 1000000000;
-            #endif
-        #endif
-        #if defined( __LINUX__ )
-            Timer::s_Frequency = 1000000000ULL;
-        #endif
+#if defined( __WINDOWS__ )
+        ASSERT( Timer::s_Frequency == 0 );
+        LARGE_INTEGER freq;
+        VERIFY( QueryPerformanceFrequency( &freq ) );
+        Timer::s_Frequency = freq.QuadPart;
+#endif
+#if defined( __APPLE__ )
+    #if defined( __aarch64__ ) // ARM
+        Timer::s_Frequency = 1000000000;
+    #else
+        mach_timebase_info_data_t info;
+        mach_timebase_info( &info );
+        Timer::s_Frequency = (int64_t)( info.numer / info.denom ) * 1000000000;
+    #endif
+#endif
+#if defined( __LINUX__ )
+        Timer::s_Frequency = 1000000000ULL;
+#endif
         Timer::s_FrequencyInvFloat = (float)( 1.0 / (double)Timer::s_Frequency );
         Timer::s_FrequencyInvFloatMS = (float)( 1.0 / (double)Timer::s_Frequency * 1000.0 );
     }
@@ -59,24 +59,24 @@ GlobalTimerFrequencyInitializer g_GlobalTimerFrequencyInitializer;
 //------------------------------------------------------------------------------
 int64_t Timer::GetNow()
 {
-    #if defined( __WINDOWS__ )
-        LARGE_INTEGER now;
-        VERIFY( QueryPerformanceCounter( &now ) );
-        return now.QuadPart;
-    #elif defined( __APPLE__ )
-        #if defined( __aarch64__ ) // ARM
-            // mach_absolute_time seems to return the wrong time on Apple Silicon
-            return (int64_t)clock_gettime_nsec_np( CLOCK_MONOTONIC );
-        #else
-            return (int64_t)mach_absolute_time();
-        #endif
-    #elif defined( __LINUX__ )
-        timespec ts;
-        VERIFY( clock_gettime( CLOCK_REALTIME, &ts ) == 0 );
-        return static_cast<int64_t>( ( (uint64_t)ts.tv_sec * 1000000000ULL ) + (uint64_t)ts.tv_nsec );
+#if defined( __WINDOWS__ )
+    LARGE_INTEGER now;
+    VERIFY( QueryPerformanceCounter( &now ) );
+    return now.QuadPart;
+#elif defined( __APPLE__ )
+    #if defined( __aarch64__ ) // ARM
+    // mach_absolute_time seems to return the wrong time on Apple Silicon
+    return (int64_t)clock_gettime_nsec_np( CLOCK_MONOTONIC );
     #else
-        #error Unknown platform
+    return (int64_t)mach_absolute_time();
     #endif
+#elif defined( __LINUX__ )
+    timespec ts;
+    VERIFY( clock_gettime( CLOCK_REALTIME, &ts ) == 0 );
+    return static_cast<int64_t>( ( (uint64_t)ts.tv_sec * 1000000000ULL ) + (uint64_t)ts.tv_nsec );
+#else
+    #error Unknown platform
+#endif
 }
 
 //------------------------------------------------------------------------------

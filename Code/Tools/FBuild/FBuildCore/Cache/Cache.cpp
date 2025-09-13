@@ -25,8 +25,8 @@
 class CacheStats
 {
 public:
-    uint32_t    m_NumFiles = 0;
-    uint64_t    m_NumBytes = 0;
+    uint32_t m_NumFiles = 0;
+    uint64_t m_NumBytes = 0;
 };
 
 // OldestFileTimeSorter
@@ -34,7 +34,7 @@ public:
 class OldestFileTimeSorter
 {
 public:
-    bool operator () ( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
+    bool operator()( const FileIO::FileInfo & a, const FileIO::FileInfo & b ) const
     {
         return ( a.m_LastWriteTime < b.m_LastWriteTime );
     }
@@ -63,18 +63,18 @@ public:
     PathUtils::EnsureTrailingSlash( m_CachePath );
 
     // Check cache mount point if option is enabled
-    #if defined( __WINDOWS__ )
-        (void)cachePathMountPoint; // Not supported on Windows
-    #else
-        if ( cachePathMountPoint.IsEmpty() == false )
+#if defined( __WINDOWS__ )
+    (void)cachePathMountPoint; // Not supported on Windows
+#else
+    if ( cachePathMountPoint.IsEmpty() == false )
+    {
+        if ( FileIO::GetDirectoryIsMountPoint( cachePathMountPoint ) == false )
         {
-            if ( FileIO::GetDirectoryIsMountPoint( cachePathMountPoint ) == false )
-            {
-                FLOG_WARN( "Caching disabled because '%s' is not a mount point", cachePathMountPoint.Get() );
-                return false;
-            }
+            FLOG_WARN( "Caching disabled because '%s' is not a mount point", cachePathMountPoint.Get() );
+            return false;
         }
-    #endif
+    }
+#endif
 
     if ( FileIO::EnsurePathExists( m_CachePath ) )
     {
@@ -96,7 +96,7 @@ public:
 //------------------------------------------------------------------------------
 /*virtual*/ bool Cache::Publish( const AString & cacheId, const void * data, size_t dataSize )
 {
-    AStackString<> fullPath;
+    AStackString fullPath;
     GetFullPathForCacheEntry( cacheId, fullPath );
 
     // make sure the cache output path exists
@@ -106,7 +106,7 @@ public:
     }
 
     // open output cache (tmp) file
-    AStackString<> fullPathTmp( fullPath );
+    AStackString fullPathTmp( fullPath );
     fullPathTmp += ".tmp";
     FileStream cacheTmpFile;
     if ( !cacheTmpFile.Open( fullPathTmp.Get(), FileStream::WRITE_ONLY ) )
@@ -145,19 +145,19 @@ public:
 
 // Retrieve
 //------------------------------------------------------------------------------
-/*virtual*/ bool Cache::Retrieve( const AString & cacheId, void * & data, size_t & dataSize )
+/*virtual*/ bool Cache::Retrieve( const AString & cacheId, void *& data, size_t & dataSize )
 {
     data = nullptr;
     dataSize = 0;
 
-    AStackString<> fullPath;
+    AStackString fullPath;
     GetFullPathForCacheEntry( cacheId, fullPath );
 
     FileStream cacheFile;
     if ( cacheFile.Open( fullPath.Get(), FileStream::READ_ONLY ) )
     {
         const size_t cacheFileSize = (size_t)cacheFile.GetFileSize();
-        UniquePtr< char, FreeDeletor > mem( (char *)ALLOC( cacheFileSize ) );
+        UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( cacheFileSize ) );
         if ( cacheFile.Read( mem.Get(), cacheFileSize ) == cacheFileSize )
         {
             dataSize = cacheFileSize;
@@ -185,7 +185,7 @@ public:
     CacheStats perDay[ NUM_DAYS ];
 
     // Get all the files
-    Array< FileIO::FileInfo > allFiles;
+    Array<FileIO::FileInfo> allFiles;
     allFiles.SetCapacity( 1000000 );
     uint64_t totalSize = 0;
     GetCacheFiles( showProgress, allFiles, totalSize );
@@ -196,11 +196,11 @@ public:
     {
         // Determine age bucket
         const uint64_t age = currentTime - info.m_LastWriteTime;
-        #if defined( __WINDOWS__ )
-            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
-        #else
-            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)1000000000 );
-        #endif
+#if defined( __WINDOWS__ )
+        const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+#else
+        const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)1000000000 );
+#endif
         uint32_t ageInDays = (uint32_t)( age / oneDay );
         if ( ageInDays >= 30 )
         {
@@ -219,13 +219,13 @@ public:
     OUTPUT( "================================================================================\n" );
     OUTPUT( " Age (Days) | Files    | Size (MiB) | %%\n" );
     OUTPUT( "================================================================================\n" );
-    for ( uint32_t i=0; i<30; ++i )
+    for ( uint32_t i = 0; i < 30; ++i )
     {
         const uint32_t num = perDay[ i ].m_NumFiles;
         const uint64_t size = perDay[ i ].m_NumBytes / MEGABYTE;
         const float sizePerc = ( total.m_NumBytes > 0 ) ? 100.0f * ( (float)size / (float)( total.m_NumBytes / MEGABYTE ) ) : 0.0f;
-        AStackString<> graphBar;
-        for ( uint32_t j=0; j < (uint32_t)(sizePerc); ++j )
+        AStackString graphBar;
+        for ( uint32_t j = 0; j < (uint32_t)( sizePerc ); ++j )
         {
             if ( graphBar.GetLength() < 35 )
             {
@@ -246,7 +246,7 @@ public:
 /*virtual*/ bool Cache::Trim( bool showProgress, uint32_t sizeMiB )
 {
     // Get all the files
-    Array< FileIO::FileInfo > allFiles;
+    Array<FileIO::FileInfo> allFiles;
     allFiles.SetCapacity( 1000000 );
     uint64_t totalSize = 0;
     GetCacheFiles( showProgress, allFiles, totalSize );
@@ -314,7 +314,7 @@ public:
 // GetCacheFiles
 //------------------------------------------------------------------------------
 void Cache::GetCacheFiles( bool showProgress,
-                           Array< FileIO::FileInfo > & outInfo,
+                           Array<FileIO::FileInfo> & outInfo,
                            uint64_t & outTotalSize ) const
 {
     // Throttle progress messages to avoid impacting performance significantly
@@ -327,17 +327,18 @@ void Cache::GetCacheFiles( bool showProgress,
     }
 
     // Scan the matrix of directories
-    for ( size_t i=0; i<256; ++i )
+    for ( size_t i = 0; i < 256; ++i )
     {
-        for ( size_t j=0; j<256; ++j )
+        for ( size_t j = 0; j < 256; ++j )
         {
             // Get Files
-            AStackString<> path;
-            path.Format( "%s%02X%c%02X%c", m_CachePath.Get(),
-                                               (uint32_t)i,
-                                               NATIVE_SLASH,
-                                               (uint32_t)j,
-                                               NATIVE_SLASH);
+            AStackString path;
+            path.Format( "%s%02X%c%02X%c",
+                         m_CachePath.Get(),
+                         (uint32_t)i,
+                         NATIVE_SLASH,
+                         (uint32_t)j,
+                         NATIVE_SLASH );
             FileIO::GetFilesEx( path, nullptr, false, &outInfo );
 
             // Progress
@@ -346,7 +347,7 @@ void Cache::GetCacheFiles( bool showProgress,
                 // Throttled to avoid perf impact
                 if ( ( timer.GetElapsed() - lastProgressTime ) > 0.5f )
                 {
-                    const float perc = ( (float)( ( i*256 ) + j ) / (float)( 256 * 256 ) ) * 100.0f;
+                    const float perc = ( (float)( ( i * 256 ) + j ) / (float)( 256 * 256 ) ) * 100.0f;
                     FLog::OutputProgress( timer.GetElapsed(), perc, 0, 0, 0, 0 );
                     lastProgressTime = timer.GetElapsed();
                 }
@@ -373,14 +374,15 @@ void Cache::GetFullPathForCacheEntry( const AString & cacheId,
                                       AString & outFullPath ) const
 {
     // format example: N:\\fbuild.cache\\AA\\BB\\<ABCD.......>
-    outFullPath.Format( "%s%c%c%c%c%c%c%s", m_CachePath.Get(),
-                                            cacheId[ 0 ],
-                                            cacheId[ 1 ],
-                                            NATIVE_SLASH,
-                                            cacheId[ 2 ],
-                                            cacheId[ 3 ],
-                                            NATIVE_SLASH,
-                                            cacheId.Get() );
+    outFullPath.Format( "%s%c%c%c%c%c%c%s",
+                        m_CachePath.Get(),
+                        cacheId[ 0 ],
+                        cacheId[ 1 ],
+                        NATIVE_SLASH,
+                        cacheId[ 2 ],
+                        cacheId[ 3 ],
+                        NATIVE_SLASH,
+                        cacheId.Get() );
 }
 
 //------------------------------------------------------------------------------

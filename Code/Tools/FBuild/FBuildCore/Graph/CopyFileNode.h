@@ -20,9 +20,9 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~CopyFileNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }
+    static Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }
 
-    FileNode * GetSourceNode() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
+    FileNode * GetSourceNode() const { return m_StaticDependencies[ 0 ].GetNode()->CastTo<FileNode>(); }
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;
@@ -31,9 +31,9 @@ private:
 
     friend class FunctionCopy;
     friend class CopyDirNode; // TODO: Remove
-    AString             m_Source;
-    AString             m_Dest;
-    Array< AString >    m_PreBuildDependencyNames;
+    AString m_Source;
+    AString m_Dest;
+    Array<AString> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

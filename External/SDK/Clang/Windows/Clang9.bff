@@ -53,7 +53,6 @@ Compiler( 'Compiler-Clang9-NonCL' )
 
     .Platform                       = 'x64Clang'
 
-
     // Librarian
     .Librarian                      = '$Clang9_BasePath$\bin\llvm-ar.exe'
     .LibrarianOptions               = 'rc "%2" "%1"' // NOTE: output must come first

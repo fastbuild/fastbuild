@@ -50,11 +50,10 @@ void TestListDependencies::Build() const
     TEST_ASSERT( fBuild.Build( "ListDependencies" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/ListDependencies/fbuild.fdb" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::LIST_DEPENDENCIES_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 2, Node::LIST_DEPENDENCIES_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
 
     // Check dependencies outputted
     Check_SourceResults( options );
@@ -72,11 +71,10 @@ void TestListDependencies::Build_NoRebuild() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "ListDependencies" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     0,      Node::LIST_DEPENDENCIES_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 0, Node::LIST_DEPENDENCIES_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
 
     // Check dependencies outputted
     Check_SourceResults( options );
@@ -96,11 +94,10 @@ void TestListDependencies::Build_NoRebuild_BFFChange() const
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "ListDependencies" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     0,      Node::LIST_DEPENDENCIES_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 2, 0, Node::LIST_DEPENDENCIES_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
 
     // Check dependencies outputted
     Check_SourceResults( options );
@@ -110,7 +107,7 @@ void TestListDependencies::Build_NoRebuild_BFFChange() const
 //------------------------------------------------------------------------------
 void TestListDependencies::Check_SourceResults( const FBuildTestOptions & options ) const
 {
-    AStackString<> outputFilename( options.GetWorkingDir() );
+    AStackString outputFilename( options.GetWorkingDir() );
     outputFilename += "/../tmp/Test/ListDependencies/SourceDeps.txt";
 
     PathUtils::FixupFilePath( outputFilename );
@@ -120,7 +117,7 @@ void TestListDependencies::Check_SourceResults( const FBuildTestOptions & option
     LoadFileContentsAsString( outputFilename.Get(), dependencies );
 
     // Split lines
-    Array< AString > files;
+    Array<AString> files;
     dependencies.Replace( '\r', '\n' );
     dependencies.Tokenize( files, '\n' ); // Will discard empty lines
 
@@ -133,12 +130,12 @@ void TestListDependencies::Check_SourceResults( const FBuildTestOptions & option
         filename.TrimStart( '\t' );
     }
 
-    TEST_ASSERTM( files.GetSize() == 4 , "Expected 4 dependencies, but got %zu instead" , files.GetSize() );
+    TEST_ASSERTM( files.GetSize() == 4, "Expected 4 dependencies, but got %zu instead", files.GetSize() );
 
-    TEST_ASSERTM( files[0].EndsWithI( "HeaderA.h" ) , "Expected 'HeaderA.h' in files[0], but got '%s' instead" , files[0].Get() );
-    TEST_ASSERTM( files[1].EndsWithI( "HeaderB.h" ) , "Expected 'HeaderB.h' in files[1], but got '%s' instead" , files[1].Get() );
-    TEST_ASSERTM( files[2].EndsWithI( "HeaderC.h" ) , "Expected 'HeaderC.h' in files[2], but got '%s' instead" , files[2].Get() );
-    TEST_ASSERTM( files[3].EndsWithI( "SimpleObject.cpp" ) , "Expected 'SimpleObject.cpp' int file[3], but got '%s' instead" , files[3].Get() );
+    TEST_ASSERTM( files[ 0 ].EndsWithI( "HeaderA.h" ), "Expected 'HeaderA.h' in files[0], but got '%s' instead", files[ 0 ].Get() );
+    TEST_ASSERTM( files[ 1 ].EndsWithI( "HeaderB.h" ), "Expected 'HeaderB.h' in files[1], but got '%s' instead", files[ 1 ].Get() );
+    TEST_ASSERTM( files[ 2 ].EndsWithI( "HeaderC.h" ), "Expected 'HeaderC.h' in files[2], but got '%s' instead", files[ 2 ].Get() );
+    TEST_ASSERTM( files[ 3 ].EndsWithI( "SimpleObject.cpp" ), "Expected 'SimpleObject.cpp' int file[3], but got '%s' instead", files[ 3 ].Get() );
 }
 
 //------------------------------------------------------------------------------
