@@ -77,7 +77,7 @@ inline PropertyType GetPropertyType( const AString * )
     return PT_ASTRING;
 }
 template <class T>
-inline PropertyType GetPropertyArrayType( const Array<T> * )
+inline PropertyType GetPropertyType( const Array<T> * )
 {
     return GetPropertyType( static_cast<T *>( nullptr ) );
 }

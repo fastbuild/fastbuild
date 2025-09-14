@@ -130,7 +130,7 @@ class ReflectionInfo;
             ADD_PROPERTY_METADATA( metaData )
 
 #define REFLECT_ARRAY( member, memberName, metaData ) \
-            AddPropertyArray( offsetof( objectType, member ), memberName, GetPropertyArrayType( static_cast<decltype( objectType::member ) *>( nullptr ) ) ); \
+            AddPropertyArray( offsetof( objectType, member ), memberName, GetPropertyType( static_cast<decltype( objectType::member ) *>( nullptr ) ) ); \
             ADD_PROPERTY_METADATA( metaData )
 
 #define REFLECT_STRUCT( member, memberName, structType, metaData ) \

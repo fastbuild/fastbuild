@@ -1309,7 +1309,7 @@ bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFToken * i
         }
     }
 
-    property.SetProperty( base, strings );
+    property.SetProperty( base, Move( strings ) );
     return true;
 }
 
@@ -1353,7 +1353,7 @@ bool Function::PopulateString( NodeGraph & nodeGraph, const BFFToken * iter, voi
         }
 
         // String to String
-        property.SetProperty( base, strings[ 0 ] );
+        property.SetProperty( base, Move( strings[ 0 ] ) );
         return true;
     }
 
