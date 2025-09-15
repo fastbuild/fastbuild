@@ -749,12 +749,15 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                        Dependencies & nodes,
                                        const GetNodeListOptions & options )
 {
+    // Start a fresh pass operation so we can see which nodes we already visited
+    Node::StartSecondaryTagSweep();
+
     // Ok for nodeNames to be empty
     for ( const AString & nodeName : nodeNames )
     {
         ASSERT( nodeName.IsEmpty() == false ); // MetaData should prevent this
 
-        if ( !GetNodeList( nodeGraph, iter, function, propertyName, nodeName, nodes, options ) )
+        if ( !GetNodeListInternal( nodeGraph, iter, function, propertyName, nodeName, nodes, options ) )
         {
             return false; // GetNodeList will have emitted an error
         }
@@ -773,6 +776,21 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                        Dependencies & nodes,
                                        const GetNodeListOptions & options )
 {
+    // Start a fresh pass operation so we can see which nodes we already visited
+    Node::StartSecondaryTagSweep();
+
+    return GetNodeListInternal( nodeGraph, iter, function, propertyName, nodeName, nodes, options );
+}
+
+//------------------------------------------------------------------------------
+/*static*/ bool Function::GetNodeListInternal( NodeGraph & nodeGraph,
+                                               const BFFToken * iter,
+                                               const Function * function,
+                                               const char * propertyName,
+                                               const AString & nodeName,
+                                               Dependencies & nodes,
+                                               const GetNodeListOptions & options )
+{
     // get node
     Node * n = nodeGraph.FindNode( nodeName );
     if ( n == nullptr )
@@ -780,22 +798,33 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         // not found - create a new file node
         n = nodeGraph.CreateNode<FileNode>( nodeName, iter );
         nodes.Add( n );
+        n->SetSecondaryTag();
         return true;
     }
 
-    return GetNodeList( iter, function, propertyName, n, nodes, options );
+    return GetNodeListInternal( nodeGraph, iter, function, propertyName, n, nodes, options );
 }
 
-// GetNodeList
 //------------------------------------------------------------------------------
-/*static*/ bool Function::GetNodeList( const BFFToken * iter,
-                                       const Function * function,
-                                       const char * propertyName,
-                                       Node * n,
-                                       Dependencies & nodes,
-                                       const GetNodeListOptions & options )
+/*static*/ bool Function::GetNodeListInternal( NodeGraph & nodeGraph,
+                                               const BFFToken * iter,
+                                               const Function * function,
+                                               const char * propertyName,
+                                               Node * n,
+                                               Dependencies & nodes,
+                                               const GetNodeListOptions & options )
 {
     ASSERT( n );
+
+    // Tag nodes as we go so we only visit them once
+    if ( options.m_RemoveDuplicates )
+    {
+        if ( n->HasSecondaryTag() )
+        {
+            return true;
+        }
+        n->SetSecondaryTag();
+    }
 
     // found - is it a file?
     if ( n->IsAFile() )
@@ -861,7 +890,13 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         const AliasNode * an = n->CastTo<AliasNode>();
         for ( const Dependency & dep : an->GetAliasedNodes() )
         {
-            if ( !GetNodeList( iter, function, propertyName, dep.GetNode(), nodes, options ) )
+            if ( !GetNodeListInternal( nodeGraph,
+                                       iter,
+                                       function,
+                                       propertyName,
+                                       dep.GetNode(),
+                                       nodes,
+                                       options ) )
             {
                 return false;
             }

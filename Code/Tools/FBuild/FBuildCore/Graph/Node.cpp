@@ -60,6 +60,7 @@
 
 // Static Data
 //------------------------------------------------------------------------------
+/*static*/ uint32_t Node::s_SecondaryTag = 0;
 // clang-format off
 /*static*/ const char * const Node::s_NodeTypeNames[] =
 {
@@ -1174,6 +1175,7 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
     options.m_AllowUnityNodes = true;
     options.m_AllowRemoveDirNodes = true;
     options.m_AllowCompilerNodes = true;
+    options.m_RemoveDuplicates = true;
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preBuildDependencyNames, m_PreBuildDependencies, options ) )
     {
         return false; // GetNodeList will have emitted an error

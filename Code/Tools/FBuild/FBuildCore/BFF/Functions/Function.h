@@ -32,6 +32,7 @@ public:
     bool m_AllowUnityNodes = false;
     bool m_AllowRemoveDirNodes = false;
     bool m_AllowCompilerNodes = false;
+    bool m_RemoveDuplicates = false;
 };
 
 // Function
@@ -124,14 +125,23 @@ public:
                              const AString & nodeName,
                              Dependencies & nodes,
                              const GetNodeListOptions & options = GetNodeListOptions() );
-    static bool GetNodeList( const BFFToken * iter,
-                             const Function * function,
-                             const char * propertyName,
-                             Node * node,
-                             Dependencies & nodes,
-                             const GetNodeListOptions & options = GetNodeListOptions() );
 
 protected:
+    static bool GetNodeListInternal( NodeGraph & nodeGraph,
+                                     const BFFToken * iter,
+                                     const Function * function,
+                                     const char * propertyName,
+                                     const AString & nodeName,
+                                     Dependencies & nodes,
+                                     const GetNodeListOptions & options );
+    static bool GetNodeListInternal( NodeGraph & nodeGraph,
+                                     const BFFToken * iter,
+                                     const Function * function,
+                                     const char * propertyName,
+                                     Node * node,
+                                     Dependencies & nodes,
+                                     const GetNodeListOptions & options );
+
     AString m_Name;
     mutable bool m_Seen; // track for unique enforcement
 
