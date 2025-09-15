@@ -178,7 +178,7 @@ public:
 
     static void StartSecondaryTagSweep() { s_SecondaryTag++; }
     void SetSecondaryTag() { m_SecondaryTag = s_SecondaryTag; }
-    [[nodiscard]] bool HasSecondaryTag() const { return (m_SecondaryTag == s_SecondaryTag); }
+    [[nodiscard]] bool HasSecondaryTag() const { return ( m_SecondaryTag == s_SecondaryTag ); }
 
     const AString & GetName() const { return m_Name; }
 
