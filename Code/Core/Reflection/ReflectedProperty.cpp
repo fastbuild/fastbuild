@@ -107,26 +107,29 @@ GETSET_PROPERTY( int16_t, int16_t )
 GETSET_PROPERTY( int32_t, int32_t )
 GETSET_PROPERTY( int64_t, int64_t )
 GETSET_PROPERTY( bool, bool )
-GETSET_PROPERTY( AString, const AString & )
 
-#define GETSET_PROPERTY_ARRAY( valueType ) \
-    void ReflectedProperty::GetProperty( const void * object, Array<valueType> * value ) const \
+#define GETSET_PROPERTY_REF( valueType ) \
+    void ReflectedProperty::GetProperty( const void * object, valueType * value ) const \
     { \
         ASSERT( (PropertyType)m_Type == GetPropertyType( (valueType *)nullptr ) ); \
-        ASSERT( m_IsArray ); \
-        ( *value ) = *(const Array<valueType> *)( (size_t)object + m_Offset ); \
+        ( *value ) = *(const valueType *)( (size_t)object + m_Offset ); \
     } \
-    void ReflectedProperty::SetProperty( void * object, const Array<valueType> & value ) const \
+    void ReflectedProperty::SetProperty( void * object, const valueType & value ) const \
     { \
         ASSERT( (PropertyType)m_Type == GetPropertyType( (valueType *)nullptr ) ); \
-        ASSERT( m_IsArray ); \
-        *( (Array<valueType> *)( (size_t)object + m_Offset ) ) = value; \
+        *( (valueType *)( (size_t)object + m_Offset ) ) = value; \
+    } \
+    void ReflectedProperty::SetProperty( void * object, valueType && value ) const \
+    { \
+        ASSERT( (PropertyType)m_Type == GetPropertyType( (valueType *)nullptr ) ); \
+        *( (valueType *)( (size_t)object + m_Offset ) ) = Move( value ); \
     }
 
-GETSET_PROPERTY_ARRAY( AString )
+GETSET_PROPERTY_REF( AString )
+GETSET_PROPERTY_REF( Array<AString> )
 
 #undef GETSET_PROPERTY
-#undef GETSET_PROPERTY_ARRAY
+#undef GETSET_PROPERTY_REF
 
 // AddMetaData
 //------------------------------------------------------------------------------

@@ -176,6 +176,10 @@ public:
     void SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
     uint32_t GetBuildPassTag() const { return m_BuildPassTag; }
 
+    static void StartSecondaryTagSweep() { s_SecondaryTag++; }
+    void SetSecondaryTag() { m_SecondaryTag = s_SecondaryTag; }
+    [[nodiscard]] bool HasSecondaryTag() const { return ( m_SecondaryTag == s_SecondaryTag ); }
+
     const AString & GetName() const { return m_Name; }
 
     virtual const AString & GetPrettyName() const { return GetName(); }
@@ -280,12 +284,14 @@ protected:
     uint32_t m_ProcessingTime = 0; // Time spent on this node during this build
     uint32_t m_CachingTime = 0; // Time spent caching this node
     mutable uint32_t m_ProgressAccumulator = 0; // Used to estimate build progress percentage
+    uint32_t m_SecondaryTag = 0;
 
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
     Dependencies m_DynamicDependencies;
 
     // Static Data
+    static uint32_t s_SecondaryTag;
     static const char * const s_NodeTypeNames[];
 };
 
