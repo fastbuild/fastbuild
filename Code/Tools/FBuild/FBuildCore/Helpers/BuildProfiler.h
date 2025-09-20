@@ -17,6 +17,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class FBuild;
 class FBuildOptions;
 class Job;
 
@@ -48,12 +49,19 @@ public:
                        const char * stepName,
                        const char * targetName );
 
+    // Capture data from FBuild that we have pointers to so that it can
+    // be safely destroyed (along with BuildProfiler)
+    // Must be called before SaveJSON()
+    void Capture( const FBuild & fBuild );
+
     // Write the profiling info in Chrome tracing format
-    bool SaveJSON( const FBuildOptions & options, const char * fileName );
+    static bool SaveJSON( const char * fileName );
 
 protected:
     static uint32_t MetricsThreadWrapper( void * userData );
     void MetricsUpdate();
+
+    void Serialize( const FBuildOptions & options );
 
     // Items processed during the build
     class Event
@@ -109,6 +117,11 @@ protected:
     Array<Event> m_Events;
     Array<Metrics> m_Metrics;
     Array<WorkerInfo> m_WorkerInfo;
+
+    // Static data for use after teardown
+    static int64_t s_CaptureStart;
+    static int64_t s_CaptureEnd;
+    static AString s_Buffer; // Final JSON to write to disk
 };
 
 // BuildProfilerScope

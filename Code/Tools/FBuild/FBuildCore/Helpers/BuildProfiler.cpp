@@ -21,6 +21,12 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
+// Static Data
+//------------------------------------------------------------------------------
+/*static*/ int64_t BuildProfiler::s_CaptureStart;
+/*static*/ int64_t BuildProfiler::s_CaptureEnd;
+/*static*/ AString BuildProfiler::s_Buffer;
+
 // CONSTRUCTOR (BuildProfiler)
 //------------------------------------------------------------------------------
 BuildProfiler::BuildProfiler() = default;
@@ -98,48 +104,60 @@ void BuildProfiler::RecordRemote( uint32_t workerId,
     m_Events.EmplaceBack( static_cast<int32_t>( workerId ), remoteThreadId, startTime, endTime, stepName, targetName );
 }
 
-// SaveJSON
 //------------------------------------------------------------------------------
-bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileName )
+void BuildProfiler::Capture( const FBuild & fBuild )
 {
     // Thread must be stopped
     ASSERT( m_Thread.IsRunning() == false );
 
-    // Record time taken to save (can't use regular macros since we're process those)
-    const int64_t saveStart = Timer::GetNow();
+    // Start of capture
+    ASSERT( s_CaptureStart == 0 );
+    s_CaptureStart = Timer::GetNow();
 
-    AString buffer;
-    buffer.SetReserved( 1024 * 1024 );
+    s_Buffer.SetReserved( MEGABYTE );
+
+    // Write data into in-memory buffer
+    Serialize( fBuild.GetOptions() );
+
+    // End of capture
+    ASSERT( s_CaptureEnd == 0 );
+    s_CaptureEnd = Timer::GetNow();
+}
+
+//------------------------------------------------------------------------------
+void BuildProfiler::Serialize( const FBuildOptions & options )
+{
+    ASSERT( s_Buffer.IsEmpty() ); // Headers must only be saved once
 
     // Open JSON
-    buffer += '[';
+    s_Buffer += '[';
 
     // Section headings
     // - Global metrics
-    buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
-    buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-3,\"tid\":0,\"args\":{\"name\":\"Network Usage\"}},";
+    s_Buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
+    s_Buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-3,\"tid\":0,\"args\":{\"name\":\"Network Usage\"}},";
 
     // - Local Processing
     AStackString args( options.GetArgs() );
     JSON::Escape( args );
     AStackString programName( options.m_ProgramName );
     JSON::Escape( programName );
-    buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"%s %s\"}},", programName.Get(), args.Get() );
-    buffer += "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"Phase\"}},";
+    s_Buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"%s %s\"}},", programName.Get(), args.Get() );
+    s_Buffer += "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":0,\"args\":{\"name\":\"Phase\"}},";
     const uint32_t numThreads = options.m_NumWorkerThreads;
     for ( uint32_t i = 1; i <= numThreads; ++i )
     {
-        buffer.AppendFormat( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":%u,\"args\":{\"name\":\"Thread %02u\"}},", i, i );
+        s_Buffer.AppendFormat( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":-1,\"tid\":%u,\"args\":{\"name\":\"Thread %02u\"}},", i, i );
     }
 
     // Remote Processing
     for ( const WorkerInfo & workerInfo : m_WorkerInfo )
     {
         const uint32_t workedPid = static_cast<uint32_t>( m_WorkerInfo.GetIndexOf( &workerInfo ) );
-        buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":%u,\"tid\":0,\"args\":{\"name\":\"Worker: %s\"}},", workedPid, workerInfo.m_WorkerName.Get() );
+        s_Buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":%u,\"tid\":0,\"args\":{\"name\":\"Worker: %s\"}},", workedPid, workerInfo.m_WorkerName.Get() );
         for ( uint32_t i = 1000; i <= workerInfo.m_MaxThreadId; ++i )
         {
-            buffer.AppendFormat( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":%u,\"tid\":%u,\"args\":{\"name\":\"Thread %02u\"}},", workedPid, i, i - 1000 );
+            s_Buffer.AppendFormat( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":%u,\"tid\":%u,\"args\":{\"name\":\"Thread %02u\"}},", workedPid, i, i - 1000 );
         }
     }
 
@@ -148,23 +166,23 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
     for ( const Event & event : m_Events )
     {
         // Emit event with duration
-        buffer.AppendFormat( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64
-                             ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u",
-                             event.m_StepName,
-                             (uint64_t)( (double)event.m_StartTime * freqMul ),
-                             (uint64_t)( (double)( event.m_EndTime - event.m_StartTime ) * freqMul ),
-                             event.m_MachineId,
-                             event.m_ThreadId );
+        s_Buffer.AppendFormat( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64
+                               ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u",
+                               event.m_StepName,
+                               (uint64_t)( (double)event.m_StartTime * freqMul ),
+                               (uint64_t)( (double)( event.m_EndTime - event.m_StartTime ) * freqMul ),
+                               event.m_MachineId,
+                               event.m_ThreadId );
 
         // Optional additional "target name"
         if ( event.m_TargetName )
         {
-            buffer += ",\"args\":{\"name\":\"";
-            JSON::AppendEscaped( event.m_TargetName, buffer );
-            buffer += "\"}";
+            s_Buffer += ",\"args\":{\"name\":\"";
+            JSON::AppendEscaped( event.m_TargetName, s_Buffer );
+            s_Buffer += "\"}";
         }
 
-        buffer += ( "}," );
+        s_Buffer += ( "}," );
     }
 
     // Serialize metrics
@@ -178,9 +196,9 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
 #define OUTPUT_STAT( stat, pid, name, unit, type, fmt, div ) \
         if ( ( lastValues.stat != metrics.stat ) || isLast ) \
         { \
-            buffer.AppendFormat( "{\"name\":\"" name "\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":" pid ",\"args\":{\"" unit "\":" fmt "}},", \
-                                 currentTimeStamp, \
-                                 static_cast<type>( metrics.stat ) / div ); \
+            s_Buffer.AppendFormat( "{\"name\":\"" name "\",\"ph\":\"C\",\"ts\":%" PRIu64 ",\"pid\":" pid ",\"args\":{\"" unit "\":" fmt "}},", \
+                                   currentTimeStamp, \
+                                   static_cast<type>( metrics.stat ) / div ); \
             lastValues.stat = metrics.stat; \
         }
 
@@ -198,24 +216,58 @@ bool BuildProfiler::SaveJSON( const FBuildOptions & options, const char * fileNa
 #undef OUTPUT_STAT
     }
 
+    // Free data we've now serialized
+    m_Events.Clear();
+    m_Metrics.Clear();
+}
+
+// SaveJSON
+//------------------------------------------------------------------------------
+/*static*/ bool BuildProfiler::SaveJSON( const char * fileName )
+{
+    ASSERT( !s_Buffer.IsEmpty() ); // Capture must be called first
+
+    // Record time taken to save (can't use regular macros since we're process those)
+    const int64_t saveStart = Timer::GetNow();
+
     // Open output file and write the majority of the profiling info
     FileStream f;
     if ( ( f.Open( fileName, FileStream::OPEN_OR_CREATE_READ_WRITE ) == false ) ||
-         ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) != buffer.GetLength() ) )
+         ( f.WriteBuffer( s_Buffer.Get(), s_Buffer.GetLength() ) != s_Buffer.GetLength() ) )
     {
         return false;
     }
+    s_Buffer.ClearAndFreeMemory();
 
-    // Note the time taken to generate the file so far
+    // Note the time taken to open and write file
     const int64_t saveEnd = Timer::GetNow();
 
-    // Write a final event recording the time we took to generate the file
-    buffer.Format( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":%i,\"tid\":%u}]",
+    const double freqMul = ( static_cast<double>( Timer::GetFrequencyInvFloatMS() ) * 1000.0 );
+
+    // Write a final event recording:
+    //  - time taken to Capture()
+    //  - time taken so shutdown FBuild etc
+    //  - time taken to write the data (SaveJSON() upto this point)
+    static_assert( Event::kLocalMachineId == -1 ); // Baked into format below
+    AStackString<1024> buffer;
+    buffer.Format( "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":-1,\"tid\":0},"
+                   "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":-1,\"tid\":0},"
+                   "{\"name\":\"%s\",\"ph\":\"X\",\"ts\":%" PRIu64 ",\"dur\":%" PRIu64 ",\"pid\":-1,\"tid\":0}]",
+                   "CaptureProfileJSON",
+                   (uint64_t)( (double)s_CaptureStart * freqMul ),
+                   (uint64_t)( (double)( s_CaptureEnd - s_CaptureStart ) * freqMul ),
+                   "Shutdown",
+                   (uint64_t)( (double)s_CaptureEnd * freqMul ),
+                   (uint64_t)( (double)( saveStart - s_CaptureEnd ) * freqMul ),
                    "WriteProfileJSON",
                    (uint64_t)( (double)saveStart * freqMul ),
-                   (uint64_t)( (double)( saveEnd - saveStart ) * freqMul ),
-                   Event::kLocalMachineId,
-                   0u );
+                   (uint64_t)( (double)( saveEnd - saveStart ) * freqMul ) );
+
+    // Allow for BuildProfiler re-use, esp in tests
+    s_CaptureStart = 0;
+    s_CaptureEnd = 0;
+
+    // Final write and truncate can't be capture in profile unfortunately
     return ( ( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() ) &&
              f.Truncate() );
 }

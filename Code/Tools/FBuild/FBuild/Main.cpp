@@ -175,63 +175,83 @@ int Main( int argc, char * argv[] )
         sharedData->Started = true;
     }
 
-    FBuild fBuild( options );
-
-    // load the dependency graph if available
-    if ( !fBuild.Initialize() )
+    // Scope around main logic so that timings include cleanup
+    bool problemSavingBuildProfileJSON = false;
+    bool result = false;
     {
-        if ( sharedData )
+        FBuild fBuild( options );
+
+        // load the dependency graph if available
+        if ( !fBuild.Initialize() )
         {
-            sharedData->ReturnCode = FBUILD_ERROR_LOADING_BFF;
+            if ( sharedData )
+            {
+                sharedData->ReturnCode = FBUILD_ERROR_LOADING_BFF;
+            }
+            ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
+            return FBUILD_ERROR_LOADING_BFF;
+        }
+
+        if ( options.m_DisplayTargetList )
+        {
+            fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
+            result = true; // DisplayTargetList cannot fail
+        }
+        else if ( options.m_DisplayDependencyDB )
+        {
+            result = fBuild.DisplayDependencyDB( options.m_Targets );
+        }
+        else if ( options.m_GenerateDotGraph )
+        {
+            result = fBuild.GenerateDotGraph( options.m_Targets, options.m_GenerateDotGraphFull );
+        }
+        else if ( options.m_GenerateCompilationDatabase )
+        {
+            result = fBuild.GenerateCompilationDatabase( options.m_Targets );
+        }
+        else if ( options.m_CacheInfo )
+        {
+            result = fBuild.CacheOutputInfo();
+        }
+        else if ( options.m_CacheTrim )
+        {
+            result = fBuild.CacheTrim();
+        }
+        else
+        {
+            result = fBuild.Build( options.m_Targets );
+        }
+
+        // Capture data from FBuild for profiling if active
+        if ( options.m_Profile )
+        {
+            BuildProfiler::Get().Capture( fBuild );
         }
         ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
-        return FBUILD_ERROR_LOADING_BFF;
+
+        // FBuild is destroyed here (along with FBuildProfiler)
     }
 
-    bool result = false;
-    if ( options.m_DisplayTargetList )
-    {
-        fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
-        result = true; // DisplayTargetList cannot fail
-    }
-    else if ( options.m_DisplayDependencyDB )
-    {
-        result = fBuild.DisplayDependencyDB( options.m_Targets );
-    }
-    else if ( options.m_GenerateDotGraph )
-    {
-        result = fBuild.GenerateDotGraph( options.m_Targets, options.m_GenerateDotGraphFull );
-    }
-    else if ( options.m_GenerateCompilationDatabase )
-    {
-        result = fBuild.GenerateCompilationDatabase( options.m_Targets );
-    }
-    else if ( options.m_CacheInfo )
-    {
-        result = fBuild.CacheOutputInfo();
-    }
-    else if ( options.m_CacheTrim )
-    {
-        result = fBuild.CacheTrim();
-    }
-    else
-    {
-        result = fBuild.Build( options.m_Targets );
-    }
-
-    // Build Profiling enabled?
-    bool problemSavingBuildProfileJSON = false;
+    // Save profiling data to disk if enabled
     if ( options.m_Profile )
     {
-        if ( BuildProfiler::Get().SaveJSON( options, "fbuild_profile.json" ) == false )
+        if ( BuildProfiler::SaveJSON( "fbuild_profile.json" ) == false )
         {
             problemSavingBuildProfileJSON = true;
         }
     }
 
+    // Determine the final exit code
+    ReturnCodes retCode = ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
+    if ( ( retCode == FBUILD_OK ) && problemSavingBuildProfileJSON )
+    {
+        retCode = FBUILD_FAILED_TO_WRITE_PROFILE_JSON;
+    }
+
+    // Store final return code in SharedData if running under a wrapper
     if ( sharedData )
     {
-        sharedData->ReturnCode = ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
+        sharedData->ReturnCode = retCode;
     }
 
     // final line of output - status of build
@@ -250,13 +270,7 @@ int Main( int argc, char * argv[] )
         }
     }
 
-    ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
-
-    if ( problemSavingBuildProfileJSON )
-    {
-        return FBUILD_FAILED_TO_WRITE_PROFILE_JSON;
-    }
-    return ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
+    return retCode;
 }
 
 // WrapperMainProcess

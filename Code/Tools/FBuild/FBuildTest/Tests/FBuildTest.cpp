@@ -357,7 +357,8 @@ void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString & ou
     // Output -profile info if enabled
     if ( m_Options.m_Profile )
     {
-        VERIFY( BuildProfiler::Get().SaveJSON( m_Options, "fbuild_profile.json" ) );
+        BuildProfiler::Get().Capture( *this );
+        VERIFY( BuildProfiler::Get().SaveJSON( "fbuild_profile.json" ) );
     }
 
     return result;
