@@ -25,6 +25,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
@@ -77,7 +78,6 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
-    REFLECT( m_ConcurrencyGroupName,                "ConcurrencyGroupName",             MetaOptional() )
 
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
@@ -91,7 +91,6 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
     REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
     REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
-    REFLECT( m_ConcurrencyGroupIndex,               "ConcurrencyGroupIndex",            MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -115,7 +114,7 @@ ObjectNode::ObjectNode()
         return false; // InitializePreBuildDependencies will have emitted an error
     }
 
-    // NOTE: ConcurrencyGroup set directly by ObjectList or Library
+    // NOTE: ConcurrencyGroup stored in mOwnerObjectList
 
     // .Compiler
     CompilerNode * compiler( nullptr );
@@ -334,6 +333,13 @@ ObjectNode::~ObjectNode()
     // to prevent unnecessary rebuilds of object that depend on this one, if this
     // is a precompiled header object.
     m_PCHCacheKey = oldNode.CastTo<ObjectNode>()->m_PCHCacheKey;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t ObjectNode::GetConcurrencyGroupIndex() const
+{
+    // ObjectNodes inherit their concurrency group value from their owner
+    return m_OwnerObjectList->GetConcurrencyGroupIndex();
 }
 
 // DoBuildMSCL_NoCache

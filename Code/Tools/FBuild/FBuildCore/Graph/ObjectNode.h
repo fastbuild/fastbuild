@@ -194,6 +194,8 @@ private:
 
     virtual void Migrate( const Node & oldNode ) override;
 
+    virtual uint8_t GetConcurrencyGroupIndex() const override;
+
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
     BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
     BuildResult DoBuildWithPreProcessor2( Job * job,
@@ -297,7 +299,6 @@ private:
     AString m_Preprocessor;
     AString m_PreprocessorOptions;
     Array<AString> m_PreBuildDependencyNames;
-    AString m_ConcurrencyGroupName;
 
     // Internal State
     AString m_PrecompiledHeader;
