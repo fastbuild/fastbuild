@@ -79,7 +79,11 @@ LinkerNode::LinkerNode()
     }
 
     // .ConcurrencyGroupName
-    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    if ( !InitializeConcurrencyGroup( nodeGraph,
+                                      iter,
+                                      function,
+                                      m_ConcurrencyGroupName,
+                                      m_ConcurrencyGroupIndex ) )
     {
         return false; // InitializeConcurrencyGroup will have emitted an error
     }
@@ -396,6 +400,12 @@ LinkerNode::~LinkerNode()
     RecordStampFromBuiltFile();
 
     return BuildResult::eOk;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t LinkerNode::GetConcurrencyGroupIndex() const
+{
+    return m_ConcurrencyGroupIndex;
 }
 
 // DoPreLinkCleanup

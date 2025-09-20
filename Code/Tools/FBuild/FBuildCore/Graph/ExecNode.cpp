@@ -73,7 +73,11 @@ ExecNode::ExecNode()
     }
 
     // .ConcurrencyGroupName
-    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    if ( !InitializeConcurrencyGroup( nodeGraph,
+                                      iter,
+                                      function,
+                                      m_ConcurrencyGroupName,
+                                      m_ConcurrencyGroupIndex ) )
     {
         return false; // InitializeConcurrencyGroup will have emitted an error
     }
@@ -261,6 +265,12 @@ ExecNode::~ExecNode()
     RecordStampFromBuiltFile();
 
     return BuildResult::eOk;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t ExecNode::GetConcurrencyGroupIndex() const
+{
+    return m_ConcurrencyGroupIndex;
 }
 
 // EmitCompilationMessage

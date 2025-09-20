@@ -98,7 +98,11 @@ ObjectListNode::ObjectListNode()
     }
 
     // .ConcurrencyGroupName
-    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    if ( !InitializeConcurrencyGroup( nodeGraph,
+                                      iter,
+                                      function,
+                                      m_ConcurrencyGroupName,
+                                      m_ConcurrencyGroupIndex ) )
     {
         return false; // InitializeConcurrencyGroup will have emitted an error
     }
@@ -356,6 +360,12 @@ ObjectListNode::~ObjectListNode() = default;
 /*virtual*/ bool ObjectListNode::IsAFile() const
 {
     return false;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t ObjectListNode::GetConcurrencyGroupIndex() const
+{
+    return m_ConcurrencyGroupIndex;
 }
 
 // GatherDynamicDependencies
@@ -813,8 +823,6 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
     node->m_OwnerObjectList = this;
-    node->m_ConcurrencyGroupName = m_ConcurrencyGroupName;
-    node->m_ConcurrencyGroupIndex = m_ConcurrencyGroupIndex;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

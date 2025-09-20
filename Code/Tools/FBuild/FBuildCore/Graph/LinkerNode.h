@@ -52,6 +52,7 @@ protected:
     friend class TestLinker;
 
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual uint8_t GetConcurrencyGroupIndex() const override;
 
     bool DoPreLinkCleanup() const;
 
@@ -107,6 +108,7 @@ protected:
     bool m_LinkerLinkObjects = false;
     bool m_LinkerAllowResponseFile;
     bool m_LinkerForceResponseFile;
+    uint8_t m_ConcurrencyGroupIndex = 0; // Internal; placed here to use padding
     AString m_LinkerStampExe;
     AString m_LinkerStampExeArgs;
     Array<AString> m_PreBuildDependencyNames;

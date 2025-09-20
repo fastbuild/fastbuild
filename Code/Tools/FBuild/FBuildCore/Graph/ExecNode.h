@@ -29,6 +29,7 @@ private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual bool DetermineNeedToBuildStatic() const override;
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual uint8_t GetConcurrencyGroupIndex() const override;
 
     const FileNode * GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->CastTo<FileNode>(); }
     void GetFullArgs( AString & fullArgs ) const;
@@ -57,6 +58,7 @@ private:
 
     // Internal State
     uint32_t m_NumExecInputFiles;
+    uint8_t m_ConcurrencyGroupIndex = 0;
     mutable const char * m_EnvironmentString = nullptr;
 };
 

@@ -1080,6 +1080,12 @@ void Node::ReplaceDummyName( const AString & newName )
     NodeGraph::CleanPath( path, outFixedPath );
 }
 
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t Node::GetConcurrencyGroupIndex() const
+{
+    return 0; // Default is the unconstrained group zero
+}
+
 // CalcNameHash
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Node::CalcNameHash( const AString & name )
@@ -1189,7 +1195,8 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
 bool Node::InitializeConcurrencyGroup( NodeGraph & nodeGraph,
                                        const BFFToken * iter,
                                        const Function * function,
-                                       const AString & concurrencyGroupName )
+                                       const AString & concurrencyGroupName,
+                                       uint8_t & outConcurrencyGroupIndex )
 {
     // If no ConcurrencyGroup is specified, feature is not in use
     if ( concurrencyGroupName.IsEmpty() )
@@ -1213,7 +1220,7 @@ bool Node::InitializeConcurrencyGroup( NodeGraph & nodeGraph,
     }
 
     // Store the inndex
-    m_ConcurrencyGroupIndex = group->GetIndex();
+    outConcurrencyGroupIndex = group->GetIndex();
     return true;
 }
 
