@@ -320,8 +320,18 @@ void TestLinker::IncrementalLinking_MSVC() const
 
         const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
-        // Should see incremental linking messages..
-        TEST_ASSERT( output.Find( "modules have changed since prior linking" ) );
+        if ( output.Find( "FBuild: Warning: Linker crashed (LNK1000), retrying" ) )
+        {
+            // MSVC linker crashes as of v14.44.35207
+            // When we retry it works, but we don't get the normal output which means
+            // we can't test things as thoroughly as we'd like
+            // TODO:B - Re-instate this test when linker crash is fixed
+        }
+        else
+        {
+            // Should see incremental linking messages..
+            TEST_ASSERT( output.Find( "modules have changed since prior linking" ) );
+        }
 
         // .. but should not be a full link
         TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
