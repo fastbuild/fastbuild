@@ -43,6 +43,9 @@ public:
     const AString & GetCompilerOptions() const { return m_CompilerOptions; }
     const AString & GetCompiler() const { return m_Compiler; }
 
+    [[nodiscard]] bool IsCachingAllowed() const { return m_AllowCaching; }
+    [[nodiscard]] bool IsDistributionAllowed() const { return m_AllowDistribution; }
+
     void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
 
     void EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
