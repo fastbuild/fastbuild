@@ -75,8 +75,6 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
     REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
-    REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
-    REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
 
     // Preprocessor
@@ -238,7 +236,7 @@ ObjectNode::~ObjectNode()
     bool useDeoptimization = ShouldUseDeoptimization();
 
     const bool useCache = ShouldUseCache();
-    const bool useDist = m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+    const bool useDist = IsDistributionAllowed();
     const bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
     bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
     if ( GetDedicatedPreprocessor() )
@@ -461,7 +459,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
             // Cache miss
             const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
-            const bool canDistribute = belowMemoryLimit && m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+            const bool canDistribute = belowMemoryLimit && IsDistributionAllowed();
             if ( canDistribute == false )
             {
                 // can't distribute, so generating preprocessed output is useless
@@ -519,7 +517,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     }
 
     // can we do the rest of the work remotely?
-    const bool canDistribute = useSimpleDist || ( m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed );
+    const bool canDistribute = useSimpleDist || IsDistributionAllowed();
     const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
     if ( canDistribute && belowMemoryLimit )
     {
@@ -2730,7 +2728,7 @@ bool ObjectNode::ShouldUseDeoptimization() const
 bool ObjectNode::ShouldUseCache() const
 {
     bool useCache = IsCacheable() &&
-                    m_AllowCaching &&
+                    m_OwnerObjectList->IsCachingAllowed() &&
                     ( FBuild::Get().GetOptions().m_UseCacheRead ||
                       FBuild::Get().GetOptions().m_UseCacheWrite );
     if ( IsIsolatedFromUnity() )
@@ -2754,6 +2752,14 @@ bool ObjectNode::ShouldUseCache() const
         }
     }
     return useCache;
+}
+
+//------------------------------------------------------------------------------
+bool ObjectNode::IsDistributionAllowed() const
+{
+    return m_CompilerFlags.IsDistributable() &&
+           m_OwnerObjectList->IsDistributionAllowed() &&
+           FBuild::Get().GetOptions().m_AllowDistributed;
 }
 
 // GetResponseFileMode

@@ -243,6 +243,7 @@ private:
     bool ShouldUseDeoptimization() const;
     friend class ClientToWorkerConnection;
     bool ShouldUseCache() const;
+    [[nodiscard]] bool IsDistributionAllowed() const;
     ArgsResponseFileMode GetResponseFileMode() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
@@ -293,8 +294,6 @@ private:
     AString m_PCHObjectFileName;
     bool m_DeoptimizeWritableFiles = false;
     bool m_DeoptimizeWritableFilesWithToken = false;
-    bool m_AllowDistribution = true;
-    bool m_AllowCaching = true;
     Array<AString> m_CompilerForceUsing;
     AString m_Preprocessor;
     AString m_PreprocessorOptions;
