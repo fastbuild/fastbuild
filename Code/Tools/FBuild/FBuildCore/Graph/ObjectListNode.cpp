@@ -813,8 +813,6 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
         node->m_DeoptimizeWritableFiles = m_DeoptimizeWritableFiles;
         node->m_DeoptimizeWritableFilesWithToken = m_DeoptimizeWritableFilesWithToken;
     }
-    node->m_AllowDistribution = m_AllowDistribution;
-    node->m_AllowCaching = m_AllowCaching;
     node->m_CompilerForceUsing = m_CompilerForceUsing;
     node->m_PreBuildDependencyNames = m_PreBuildDependencyNames;
     node->m_PrecompiledHeader = m_PrecompiledHeaderName;
