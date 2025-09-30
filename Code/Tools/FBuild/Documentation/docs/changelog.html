@@ -26,6 +26,30 @@
 
 <h1>Changelog</h1>
 
+<div class='newsitemheader'>
+    v1.17&nbsp;<font color='#bbbbbb'>(30th-Sep-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>[Note] -nounity command line is no longer considered experimental</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Unity generates correct paths when using UseRelativePaths_Experimental (Thanks to Eduard Voronkin)</li>
+        <li>Total build "Time: X.XXXs" captures missing shutdown costs</li>
+        <li>-profile option includes missing shutdown costs</li>
+        <li>-profile write failure return code correctly returned when using -wrapper mode</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Improve bff parsing performance by avoiding string copies</li>
+        <li>Improve bff parsing speed by eliminating redundant PreBuildDependencies and Alias Targets</li>
+        <li>Improve fbd load/save performance</li>
+        <li>Improve fdb load/save time slightly by removing redundant properties</li>
+    </ul>
+</div>
 
 <div class='newsitemheader'>
     v1.16&nbsp;<font color='#bbbbbb'>(13th-Sep-2025)</font>
