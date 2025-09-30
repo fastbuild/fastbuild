@@ -194,6 +194,8 @@ private:
 
     virtual void Migrate( const Node & oldNode ) override;
 
+    virtual uint8_t GetConcurrencyGroupIndex() const override;
+
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
     BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
     BuildResult DoBuildWithPreProcessor2( Job * job,
@@ -241,6 +243,7 @@ private:
     bool ShouldUseDeoptimization() const;
     friend class ClientToWorkerConnection;
     bool ShouldUseCache() const;
+    [[nodiscard]] bool IsDistributionAllowed() const;
     ArgsResponseFileMode GetResponseFileMode() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
@@ -291,13 +294,10 @@ private:
     AString m_PCHObjectFileName;
     bool m_DeoptimizeWritableFiles = false;
     bool m_DeoptimizeWritableFilesWithToken = false;
-    bool m_AllowDistribution = true;
-    bool m_AllowCaching = true;
     Array<AString> m_CompilerForceUsing;
     AString m_Preprocessor;
     AString m_PreprocessorOptions;
     Array<AString> m_PreBuildDependencyNames;
-    AString m_ConcurrencyGroupName;
 
     // Internal State
     AString m_PrecompiledHeader;

@@ -28,6 +28,7 @@ public:
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual uint8_t GetConcurrencyGroupIndex() const override;
 
     void EmitCompilationMessage( const char * workingDir ) const;
 
@@ -49,6 +50,7 @@ private:
 
     // Internal State
     uint32_t m_NumTestInputFiles;
+    uint8_t m_ConcurrencyGroupIndex = 0;
     mutable const char * m_EnvironmentString;
 };
 

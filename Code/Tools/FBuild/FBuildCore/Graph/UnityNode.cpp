@@ -359,7 +359,7 @@ UnityNode::~UnityNode()
     AStackString includeBasePath;
     if ( m_UseRelativePaths_Experimental )
     {
-        includeBasePath = FBuild::Get().GetOptions().GetWorkingDir();
+        includeBasePath = m_OutputPath;
         PathUtils::EnsureTrailingSlash( includeBasePath );
     }
 

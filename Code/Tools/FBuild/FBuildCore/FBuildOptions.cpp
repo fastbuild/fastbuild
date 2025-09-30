@@ -661,7 +661,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -nofastcancel     Disable aborting other tasks as soon any task fails.\n"
             " -nolocalrace      Disable local race of remotely started jobs.\n"
             " -noprogress       Don't show the progress bar while building.\n"
-            " -nounity          (Experimental) Build files individually, ignoring Unity.\n"
+            " -nounity          Build files individually, ignoring Unity.\n"
             " -nostoponerror    On error, favor building as much as possible.\n"
             " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"
             " -profile          Output an fbuild_profiling.json describing the build.\n"

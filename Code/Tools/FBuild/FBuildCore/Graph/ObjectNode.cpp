@@ -25,6 +25,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
@@ -74,10 +75,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
     REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
-    REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
-    REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
-    REFLECT( m_ConcurrencyGroupName,                "ConcurrencyGroupName",             MetaOptional() )
 
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
@@ -91,7 +89,6 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
     REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
     REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
-    REFLECT( m_ConcurrencyGroupIndex,               "ConcurrencyGroupIndex",            MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -115,7 +112,7 @@ ObjectNode::ObjectNode()
         return false; // InitializePreBuildDependencies will have emitted an error
     }
 
-    // NOTE: ConcurrencyGroup set directly by ObjectList or Library
+    // NOTE: ConcurrencyGroup stored in mOwnerObjectList
 
     // .Compiler
     CompilerNode * compiler( nullptr );
@@ -239,7 +236,7 @@ ObjectNode::~ObjectNode()
     bool useDeoptimization = ShouldUseDeoptimization();
 
     const bool useCache = ShouldUseCache();
-    const bool useDist = m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+    const bool useDist = IsDistributionAllowed();
     const bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
     bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
     if ( GetDedicatedPreprocessor() )
@@ -334,6 +331,13 @@ ObjectNode::~ObjectNode()
     // to prevent unnecessary rebuilds of object that depend on this one, if this
     // is a precompiled header object.
     m_PCHCacheKey = oldNode.CastTo<ObjectNode>()->m_PCHCacheKey;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t ObjectNode::GetConcurrencyGroupIndex() const
+{
+    // ObjectNodes inherit their concurrency group value from their owner
+    return m_OwnerObjectList->GetConcurrencyGroupIndex();
 }
 
 // DoBuildMSCL_NoCache
@@ -455,7 +459,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
             // Cache miss
             const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
-            const bool canDistribute = belowMemoryLimit && m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+            const bool canDistribute = belowMemoryLimit && IsDistributionAllowed();
             if ( canDistribute == false )
             {
                 // can't distribute, so generating preprocessed output is useless
@@ -513,7 +517,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     }
 
     // can we do the rest of the work remotely?
-    const bool canDistribute = useSimpleDist || ( m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed );
+    const bool canDistribute = useSimpleDist || IsDistributionAllowed();
     const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
     if ( canDistribute && belowMemoryLimit )
     {
@@ -2724,7 +2728,7 @@ bool ObjectNode::ShouldUseDeoptimization() const
 bool ObjectNode::ShouldUseCache() const
 {
     bool useCache = IsCacheable() &&
-                    m_AllowCaching &&
+                    m_OwnerObjectList->IsCachingAllowed() &&
                     ( FBuild::Get().GetOptions().m_UseCacheRead ||
                       FBuild::Get().GetOptions().m_UseCacheWrite );
     if ( IsIsolatedFromUnity() )
@@ -2748,6 +2752,14 @@ bool ObjectNode::ShouldUseCache() const
         }
     }
     return useCache;
+}
+
+//------------------------------------------------------------------------------
+bool ObjectNode::IsDistributionAllowed() const
+{
+    return m_CompilerFlags.IsDistributable() &&
+           m_OwnerObjectList->IsDistributionAllowed() &&
+           FBuild::Get().GetOptions().m_AllowDistributed;
 }
 
 // GetResponseFileMode

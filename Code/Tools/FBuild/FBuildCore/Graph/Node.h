@@ -176,12 +176,16 @@ public:
     void SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
     uint32_t GetBuildPassTag() const { return m_BuildPassTag; }
 
+    static void StartSecondaryTagSweep() { s_SecondaryTag++; }
+    void SetSecondaryTag() { m_SecondaryTag = s_SecondaryTag; }
+    [[nodiscard]] bool HasSecondaryTag() const { return ( m_SecondaryTag == s_SecondaryTag ); }
+
     const AString & GetName() const { return m_Name; }
 
     virtual const AString & GetPrettyName() const { return GetName(); }
 
     bool IsHidden() const { return m_Hidden; }
-    uint8_t GetConcurrencyGroupIndex() const { return m_ConcurrencyGroupIndex; }
+    virtual uint8_t GetConcurrencyGroupIndex() const;
 
     const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
     const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
@@ -254,7 +258,8 @@ protected:
     bool InitializeConcurrencyGroup( NodeGraph & nodeGraph,
                                      const BFFToken * iter,
                                      const Function * function,
-                                     const AString & concurrencyGroupName );
+                                     const AString & concurrencyGroupName,
+                                     uint8_t & outConcurrencyGroupIndex );
 
     static const char * GetEnvironmentString( const Array<AString> & envVars,
                                               const char *& inoutCachedEnvString );
@@ -271,8 +276,7 @@ protected:
     uint64_t m_Stamp = 0; // "Stamp" representing this node for dependency comparisons
     uint8_t m_ControlFlags = FLAG_NONE; // Control build behavior special cases - Set by constructor
     bool m_Hidden = false; // Hidden from -showtargets?
-    uint8_t m_ConcurrencyGroupIndex = 0; // Concurrency group, or 0 if not set
-    // Note: Unused 1 byte here
+    // Note: Unused 2 bytes here
     uint32_t m_RecursiveCost = 0; // Recursive cost used during task ordering
     Node * m_Next = nullptr; // Node map in-place linked list pointer
     uint32_t m_NameHash; // Hash of mName
@@ -280,12 +284,14 @@ protected:
     uint32_t m_ProcessingTime = 0; // Time spent on this node during this build
     uint32_t m_CachingTime = 0; // Time spent caching this node
     mutable uint32_t m_ProgressAccumulator = 0; // Used to estimate build progress percentage
+    uint32_t m_SecondaryTag = 0;
 
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
     Dependencies m_DynamicDependencies;
 
     // Static Data
+    static uint32_t s_SecondaryTag;
     static const char * const s_NodeTypeNames[];
 };
 

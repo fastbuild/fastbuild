@@ -36,6 +36,7 @@ AliasNode::AliasNode()
     options.m_AllowUnityNodes = true;
     options.m_AllowRemoveDirNodes = true;
     options.m_AllowCompilerNodes = true;
+    options.m_RemoveDuplicates = true;
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".Targets", m_Targets, targets, options ) )
     {
         return false; // GetNodeList will have emitted an error

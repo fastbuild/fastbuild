@@ -71,7 +71,11 @@ TestNode::TestNode()
     }
 
     // .ConcurrencyGroupName
-    if ( !InitializeConcurrencyGroup( nodeGraph, iter, function, m_ConcurrencyGroupName ) )
+    if ( !InitializeConcurrencyGroup( nodeGraph,
+                                      iter,
+                                      function,
+                                      m_ConcurrencyGroupName,
+                                      m_ConcurrencyGroupIndex ) )
     {
         return false; // InitializeConcurrencyGroup will have emitted an error
     }
@@ -261,6 +265,12 @@ const char * TestNode::GetEnvironmentString() const
     RecordStampFromBuiltFile();
 
     return BuildResult::eOk;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t TestNode::GetConcurrencyGroupIndex() const
+{
+    return m_ConcurrencyGroupIndex;
 }
 
 // EmitCompilationMessage

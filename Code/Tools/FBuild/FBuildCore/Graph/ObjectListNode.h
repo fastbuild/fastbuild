@@ -32,6 +32,7 @@ public:
     static Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
 
     virtual bool IsAFile() const override;
+    virtual uint8_t GetConcurrencyGroupIndex() const override;
 
     const char * GetObjExtension() const;
 
@@ -41,6 +42,9 @@ public:
     const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
     const AString & GetCompilerOptions() const { return m_CompilerOptions; }
     const AString & GetCompiler() const { return m_Compiler; }
+
+    [[nodiscard]] bool IsCachingAllowed() const { return m_AllowCaching; }
+    [[nodiscard]] bool IsDistributionAllowed() const { return m_AllowDistribution; }
 
     void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
 
@@ -96,6 +100,7 @@ protected:
     bool m_DeoptimizeWritableFilesWithToken = false;
     bool m_AllowDistribution = true;
     bool m_AllowCaching = true;
+    uint8_t m_ConcurrencyGroupIndex = 0; // Internal; placed here to use padding
     AString m_PCHInputFile;
     AString m_PCHOutputFile;
     AString m_PCHOptions;
