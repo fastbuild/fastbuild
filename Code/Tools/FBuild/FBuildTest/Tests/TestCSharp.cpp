@@ -61,7 +61,7 @@ void TestCSharp::TestSingleFile() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
     options.m_ForceCleanBuild = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // delete files from previous runs
@@ -90,7 +90,7 @@ void TestCSharp::TestSingleFile_NoRebuild() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpsingle.fdb" ) );
 
     // Build it
@@ -113,7 +113,7 @@ void TestCSharp::TestSingleFile_NoRebuild_BFFChange() const
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpsingle.fdb" ) );
 
     // Build it
@@ -135,7 +135,7 @@ void TestCSharp::TestMultipleFiles() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
     options.m_ForceCleanBuild = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // delete files from previous runs
@@ -164,7 +164,7 @@ void TestCSharp::TestMultipleFiles_NoRebuild() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmulti.fdb" ) );
 
     // Build it
@@ -188,7 +188,7 @@ void TestCSharp::TestMultipleFiles_NoRebuild_BFFChange() const
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmulti.fdb" ) );
 
     // Build it
@@ -211,7 +211,7 @@ void TestCSharp::TestMultipleAssemblies() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
     options.m_ForceCleanBuild = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // delete files from previous runs
@@ -243,7 +243,7 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
     // Build it
@@ -266,7 +266,7 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild_BFFChange() const
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
     // Build it
@@ -298,7 +298,7 @@ void TestCSharp::CSharpWithObjectListFails() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/ObjectListFails/fbuild.bff";
 
     // Expect failure
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() == false );
 
     // Check for the expected failure
@@ -316,7 +316,7 @@ void TestCSharp::UsingNonCSharpCompilerFails() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/UsingNonCSharpCompilerFails/fbuild.bff";
 
     // Expect failure
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() == false );
 
     // Check for the expected failure

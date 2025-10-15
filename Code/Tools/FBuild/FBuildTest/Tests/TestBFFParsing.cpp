@@ -471,7 +471,7 @@ void TestBFFParsing::IfFileExistsDirective() const
 
         // Parse bff, which checks if file exists
         {
-            FBuild fBuild( options );
+            FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
             fBuild.SaveDependencyGraph( db );
 
@@ -485,7 +485,7 @@ void TestBFFParsing::IfFileExistsDirective() const
         {
             const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
 
-            FBuild fBuild( options );
+            FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize( db ) );
             fBuild.SaveDependencyGraph( db );
 
@@ -505,7 +505,7 @@ void TestBFFParsing::IfFileExistsDirective() const
         {
             const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
 
-            FBuild fBuild( options );
+            FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize( db ) );
             fBuild.SaveDependencyGraph( db );
 
@@ -525,7 +525,7 @@ void TestBFFParsing::IfFileExistsDirective() const
         {
             const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
 
-            FBuild fBuild( options );
+            FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize( db ) );
 
             const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
@@ -549,7 +549,7 @@ void TestBFFParsing::IfFileExistsDirective_RelativePaths() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/IfFileExistsDirective/RelativePaths/root.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Check for expected output
@@ -877,7 +877,7 @@ void TestBFFParsing::CyclicDependency() const
     // detected at build time and tested elsewhere.
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/cyclic_dependency.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
 
     // Parsing should fail due to cyclic dependency
     TEST_ASSERT( fBuild.Initialize() == false );
@@ -890,7 +890,7 @@ void TestBFFParsing::SelfAssignment() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/self_assignment.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() == true );
     TEST_ASSERT( GetRecordedOutput().Find( "FAILED" ) == nullptr );
@@ -904,7 +904,7 @@ void TestBFFParsing::SelfAssignment2() const
     // a variable with the same name as a higher level scope (shadowing)
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/self_assignment2.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() == true );
     TEST_ASSERT( GetRecordedOutput().Find( "FAILED" ) == nullptr );

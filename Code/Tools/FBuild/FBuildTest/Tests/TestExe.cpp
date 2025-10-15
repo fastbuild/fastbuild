@@ -39,7 +39,7 @@ void TestExe::Build() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExe/exe.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString exe( "../tmp/Test/Exe/exe.exe" );
@@ -80,7 +80,7 @@ void TestExe::Build_NoRebuild() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExe/exe.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Exe/exe.fdb" ) );
 
     // build (via alias)

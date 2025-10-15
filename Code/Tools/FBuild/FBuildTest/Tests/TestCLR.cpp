@@ -58,7 +58,7 @@ FBuildStats TestCLR::Build( FBuildTestOptions options, bool useDB, const char * 
 {
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCLR/clr.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestDBFileName() : nullptr ) );
 
     // Build it

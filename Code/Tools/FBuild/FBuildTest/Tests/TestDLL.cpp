@@ -59,7 +59,7 @@ void TestDLL::TestSingleDLL() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dll( "../tmp/Test/DLL/dll.dll" );
@@ -86,7 +86,7 @@ void TestDLL::TestSingleDLL_NoRebuild() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetSingleDLLDBFileName() ) );
 
     const AStackString dll( "../tmp/Test/DLL/dll.dll" );
@@ -106,7 +106,7 @@ void TestDLL::TestTwoDLLs() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest//Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dllA( "../tmp/Test/DLL/dllA.dll" );
@@ -137,7 +137,7 @@ void TestDLL::TestTwoDLLs_NoRebuild() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
     // build again
@@ -160,7 +160,7 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
         const AStackString dllA( "../tmp/Test/DLL/dllA.dll" );
@@ -182,7 +182,7 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
         // build again
@@ -204,7 +204,7 @@ void TestDLL::TestDLLWithPCH() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
@@ -233,7 +233,7 @@ void TestDLL::TestDLLWithPCH_NoRebuild() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetDLLWithPCHDBFileName() ) );
 
     const AStackString dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
@@ -255,7 +255,7 @@ void TestDLL::TestExeWithDLL() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString exe( "../tmp/Test/DLL/exe.exe" );
@@ -284,7 +284,7 @@ void TestDLL::TestExeWithDLL_NoRebuild() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetExeWithDLLDBFileName() ) );
 
     // build executable with depends on DLLA
@@ -317,7 +317,7 @@ void TestDLL::TestLinkWithCopy() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build executable with depends on DLLA

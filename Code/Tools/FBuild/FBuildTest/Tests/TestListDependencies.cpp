@@ -43,7 +43,7 @@ void TestListDependencies::Build() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestListDependencies/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
@@ -65,7 +65,7 @@ void TestListDependencies::Build_NoRebuild() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestListDependencies/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/ListDependencies/fbuild.fdb" ) );
 
     // build (via alias)
@@ -88,7 +88,7 @@ void TestListDependencies::Build_NoRebuild_BFFChange() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestListDependencies/fbuild.bff";
     options.m_ForceDBMigration_Debug = true; // Force bff modified re-parse
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/ListDependencies/fbuild.fdb" ) );
 
     // build (via alias)

@@ -98,7 +98,7 @@ void TestObjectList::CompilerInputFilesRoot() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/CompilerInputFilesRoot/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 }
@@ -113,7 +113,7 @@ void TestObjectList::ConflictingObjects1() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ConflictingObjects/fbuild1.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "ObjectList" ) == false );
     TEST_ASSERT( GetRecordedOutput().Find( "Conflicting objects found" ) );
@@ -129,7 +129,7 @@ void TestObjectList::ConflictingObjects2() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ConflictingObjects/fbuild2.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "ObjectLists" ) == false );
     TEST_ASSERT( GetRecordedOutput().Find( "Conflicting objects found" ) );
@@ -328,7 +328,7 @@ void TestObjectList::ExtraOutputFolders_Build() const
 
     // ObjectList
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
@@ -338,7 +338,7 @@ void TestObjectList::ExtraOutputFolders_Build() const
 
     // Library
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "Library" ) );
 

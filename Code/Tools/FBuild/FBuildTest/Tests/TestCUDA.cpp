@@ -42,7 +42,7 @@ void TestCUDA::Build() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCUDA/cuda.bff";
     options.m_ForceCleanBuild = true;
     options.m_UseCacheWrite = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString obj( "../tmp/Test/CUDA/test.obj" );
@@ -78,7 +78,7 @@ void TestCUDA::Build_NoRebuild() const
 #if defined( _MSC_VER ) && ( _MSC_VER <= 1800 )
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCUDA/cuda.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CUDA/cuda.fdb" ) );
 
     const AStackString obj( "../tmp/Test/CUDA/test.obj" );
@@ -107,7 +107,7 @@ void TestCUDA::Build_CacheHit() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCUDA/cuda.bff";
     options.m_UseCacheRead = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CUDA/cuda.fdb" ) );
 
     const AStackString obj( "../tmp/Test/CUDA/test.obj" );

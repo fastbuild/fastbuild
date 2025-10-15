@@ -48,7 +48,7 @@ void TestAlias::MissingAliasTarget() const
     options.m_ForceCleanBuild = true;
 
     // Parsing of BFF should be ok
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // building should fail
@@ -65,7 +65,7 @@ void TestAlias::ReflectionAliasResolution_Case1() const
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/bad_string.bff";
 
         // Parsing of BFF should FAIL
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() == false );
         TEST_ASSERT( GetRecordedOutput().Find( "Error #1050" ) );
     }
@@ -81,7 +81,7 @@ void TestAlias::ReflectionAliasResolution_Case2() const
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/bad_string_recurse.bff";
 
         // Parsing of BFF should FAIL
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() == false );
         TEST_ASSERT( GetRecordedOutput().Find( "Error #1050" ) );
     }
@@ -97,7 +97,7 @@ void TestAlias::ReflectionAliasResolution_Case3() const
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/ok_string.bff";
 
         // Parsing of BFF should FAIL
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
     }
 }
@@ -112,7 +112,7 @@ void TestAlias::ReflectionAliasResolution_Case4() const
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/ok_string_recurse.bff";
 
         // Parsing of BFF should FAIL
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
     }
 }
@@ -123,7 +123,7 @@ void TestAlias::NonFileNodes() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/ok_to_non_filenode.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 }
 

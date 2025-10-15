@@ -53,7 +53,7 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildFBuild/fbuild.bff";
     options.m_ForceDBMigration_Debug = forceMigration;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetDBFile() : nullptr ) );
 
     // Build a subset of targets as a sort of smoke test
@@ -168,7 +168,7 @@ void TestBuildFBuild::DBSavePerformance() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildFBuild/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetDBFile() ) );
 
     const Timer t;

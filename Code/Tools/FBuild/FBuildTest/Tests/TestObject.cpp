@@ -97,7 +97,7 @@ void TestObject::Preprocessor() const
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
         options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -114,7 +114,7 @@ void TestObject::Preprocessor() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
@@ -141,7 +141,7 @@ void TestObject::TestStaleDynamicDeps() const
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/cppgenerator.bff";
         options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Generate some header files
@@ -164,7 +164,7 @@ void TestObject::TestStaleDynamicDeps() const
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/staledeps.bff";
         options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -192,7 +192,7 @@ void TestObject::TestStaleDynamicDeps() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/staledeps.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
@@ -259,7 +259,7 @@ void TestObject::ModTimeChangeBackwards() const
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/ModTimeChangeBackwards/fbuild.bff";
         options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -291,7 +291,7 @@ void TestObject::ModTimeChangeBackwards() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
@@ -312,7 +312,7 @@ void TestObject::ModTimeChangeBackwards() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
@@ -373,7 +373,7 @@ void TestObject::CacheUsingRelativePaths() const
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/CacheUsingRelativePaths/A/Code/";
         options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -412,7 +412,7 @@ void TestObject::CacheUsingRelativePaths() const
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/CacheUsingRelativePaths/B/Code/";
         options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -462,7 +462,7 @@ void TestObject::SourceMapping() const
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/SourceMapping/Code/";
         options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -498,7 +498,7 @@ void TestObject::ClangExplicitLanguageType() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -516,7 +516,7 @@ void TestObject::ClangExplicitLanguageType() const
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // start a client to emulate the other end
@@ -542,7 +542,7 @@ void TestObject::ClangDependencyArgs() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -560,7 +560,7 @@ void TestObject::ClangDependencyArgs() const
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // start a client to emulate the other end
@@ -592,7 +592,7 @@ void TestObject::CLDependencyArgs() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -619,7 +619,7 @@ void TestObject::CLDependencyArgs() const
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // start a client to emulate the other end
@@ -652,7 +652,7 @@ void TestObject::CLDependencyArgs() const
         options.m_NoLocalConsumptionOfRemoteJobs = false;
         options.m_AllowLocalRace = true;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile

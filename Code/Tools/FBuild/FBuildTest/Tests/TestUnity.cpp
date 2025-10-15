@@ -85,7 +85,7 @@ FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, boo
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = forceMigration;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestGenerateDBFileName() : nullptr ) );
 
     // Implement Unity and activate this test
@@ -234,7 +234,7 @@ FBuildStats TestUnity::BuildCompile( FBuildTestOptions options, bool useDB, bool
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = forceMigration;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestCompileDBFileName() : nullptr ) );
 
     // Implement Unity and activate this test
@@ -325,7 +325,7 @@ void TestUnity::TestGenerateFromExplicitList() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/unity.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( "Unity-Explicit-Files" ) );
@@ -343,28 +343,28 @@ void TestUnity::TestExcludedFiles() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/Exclusions/fbuild.bff";
 
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "ExcludeFileName" ) );
     }
 
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "ExcludeFilePath" ) );
     }
 
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "ExcludeFilePathRelative" ) );
     }
 
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "ExcludeFilePattern" ) );
@@ -382,7 +382,7 @@ void TestUnity::IsolateFromUnity_Regression() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateFromUnity/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 }
@@ -393,7 +393,7 @@ void TestUnity::UnityInputIsolatedFiles() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/UnityInputIsolatedFiles/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 
@@ -409,7 +409,7 @@ void TestUnity::IsolateListFile() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateListFile/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 
@@ -428,7 +428,7 @@ void TestUnity::ClangStaticAnalysis() const
     //
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) ); // Success, regardless of warnings
 
@@ -446,7 +446,7 @@ void TestUnity::ClangStaticAnalysis_InjectHeader() const
     //
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile-InjectHeader" ) ); // Success, regardless of warnings
 
@@ -497,7 +497,7 @@ void TestUnity::LinkMultiple() const
 
     // Compile
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -518,7 +518,7 @@ void TestUnity::LinkMultiple() const
         // Make file writeable so it is isolated
         FileIO::SetReadOnly( fileA, false );
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -539,7 +539,7 @@ void TestUnity::LinkMultiple() const
         // Make file read-only so it is put back in Unity
         FileIO::SetReadOnly( fileA, true );
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -565,7 +565,7 @@ void TestUnity::LinkMultiple() const
         FBuildOptions optionsCopy( options );
         optionsCopy.m_ForceDBMigration_Debug = true;
 
-        FBuild fBuild( optionsCopy );
+        FBuildForTest fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
 
@@ -620,7 +620,7 @@ void TestUnity::LinkMultiple_InputFiles() const
 
     // Compile
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -641,7 +641,7 @@ void TestUnity::LinkMultiple_InputFiles() const
         // Make file writeable so it is isolated
         FileIO::SetReadOnly( fileA, false );
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -662,7 +662,7 @@ void TestUnity::LinkMultiple_InputFiles() const
         // Make file read-only so it is put back in Unity
         FileIO::SetReadOnly( fileA, true );
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -688,7 +688,7 @@ void TestUnity::LinkMultiple_InputFiles() const
         FBuildOptions optionsCopy( options );
         optionsCopy.m_ForceDBMigration_Debug = true;
 
-        FBuild fBuild( optionsCopy );
+        FBuildForTest fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
 
@@ -897,7 +897,7 @@ void TestUnity::CacheUsingRelativePaths() const
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Unity/CacheUsingRelativePaths/A/Code/";
         options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -940,7 +940,7 @@ void TestUnity::CacheUsingRelativePaths() const
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Unity/CacheUsingRelativePaths/B/Code/";
         options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -963,7 +963,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build normally
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -980,7 +980,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -999,7 +999,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -1018,7 +1018,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -1037,7 +1037,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -1068,7 +1068,7 @@ void TestUnity::NoUnityCache() const
 
     // Build normally
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
 
@@ -1085,7 +1085,7 @@ void TestUnity::NoUnityCache() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
 
@@ -1102,7 +1102,7 @@ void TestUnity::NoUnityCache() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
 

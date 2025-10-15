@@ -40,7 +40,7 @@ void TestTextFile::Build() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTextFile/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
@@ -59,7 +59,7 @@ void TestTextFile::Build_NoRebuild() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTextFile/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TextFile/fbuild.fdb" ) );
 
     // build (via alias)
@@ -79,7 +79,7 @@ void TestTextFile::Build_NoRebuild_BFFChange() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTextFile/fbuild.bff";
     options.m_ForceDBMigration_Debug = true; // Force bff modified re-parse
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TextFile/fbuild.fdb" ) );
 
     // build (via alias)

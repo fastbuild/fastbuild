@@ -71,7 +71,7 @@ void TestFastCancel::BuildFailure() const
     }
 
     // Init
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Start build and check it failed as expected
@@ -139,7 +139,7 @@ void TestFastCancel::Cancel() const
     options.m_ForceCleanBuild = true;
 
     // Init
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Create thread that will abort build once all processes are spawned
