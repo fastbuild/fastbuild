@@ -98,6 +98,12 @@ void Dependencies::GrowCapacity( size_t newCapacity )
         ASSERT( newCapacity > 0 );
     }
 
+    // Ensure the current list will fit in the newCapacity
+    if ( m_DependencyList != nullptr )
+    {
+        newCapacity = Math::Max<size_t>( m_DependencyList->m_Size, newCapacity );
+    }
+
     // Allocate space for new list
     const size_t allocSize = ( sizeof( DependencyList ) + ( newCapacity * sizeof( Dependency ) ) );
     DependencyList * newList = static_cast<DependencyList *>( ALLOC( allocSize ) );

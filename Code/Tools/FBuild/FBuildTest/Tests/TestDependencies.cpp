@@ -198,6 +198,18 @@ void TestDependencies::SetCapacity() const
         TEST_ASSERT( d.GetSize() == 1 ); // Item should not be lost
         TEST_ASSERT( d.GetCapacity() == 16 );
     }
+
+    // Set capacity lower than size, but not zero (which is ammortizing growth)
+    {
+        Node * node = nullptr;
+        Dependencies d;
+        d.Add( node );
+        d.Add( node );
+        d.SetCapacity( 1 );
+        TEST_ASSERT( d.IsEmpty() == false ); // Items should not be lost
+        TEST_ASSERT( d.GetSize() == 2 ); // Items should not be lost
+        TEST_ASSERT( d.GetCapacity() >= d.GetSize() ); // Capacity must not have shrunk
+    }
 }
 
 // Iteration
