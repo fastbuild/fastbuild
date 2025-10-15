@@ -169,7 +169,7 @@ void TestIncludeParser::TestMSVC_P() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestIncludeParser/MSVC-P/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     fBuild.Initialize();
 
     const AStackString file( "../tmp/Test/IncludeParser/MSVC-P/test.i" );

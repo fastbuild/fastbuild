@@ -67,7 +67,7 @@ void TestExec::BuildHelperExe() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     fBuild.Initialize();
 
     const AStackString exec( "../tmp/Test/Exec/exec.exe" );
@@ -97,7 +97,7 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // Make the relevant inputs
@@ -155,7 +155,7 @@ void TestExec::Build_ExecCommand_NoRebuild() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     TEST_ASSERT( fBuild.Build( "ExecCommandTest_ExpectedSuccesses" ) );
@@ -181,7 +181,7 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     const AStackString inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
@@ -221,7 +221,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
 
     // Try first file
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         fBuild.Initialize( dbName );
 
         const AStackString inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
@@ -243,7 +243,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
 
     // Try second file
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         fBuild.Initialize( dbName );
 
         const AStackString inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
@@ -297,7 +297,7 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_NumWorkerThreads = 2;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // build
@@ -315,7 +315,7 @@ void TestExec::Build_ExecEnvCommand() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/Environment/execenv.bff";
     options.m_NumWorkerThreads = 1;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build and run exe that checks env var is set

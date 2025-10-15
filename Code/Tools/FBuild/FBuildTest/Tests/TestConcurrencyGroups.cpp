@@ -128,7 +128,7 @@ void TestConcurrencyGroups::EnforceLimit() const
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestConcurrencyGroups/EnforceLimit/enforcelimit.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build
