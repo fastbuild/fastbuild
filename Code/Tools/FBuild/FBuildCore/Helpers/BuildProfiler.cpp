@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
+#include "Core/Env/CPUInfo.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Conversions.h"
@@ -132,10 +133,15 @@ void BuildProfiler::Serialize( const FBuildOptions & options )
     // Open JSON
     s_Buffer += '[';
 
+    AStackString cpuDetails;
+    CPUInfo::Get().GetCPUDetailsString( cpuDetails );
+
     // Section headings
     // - Global metrics
     s_Buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
     s_Buffer += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-3,\"tid\":0,\"args\":{\"name\":\"Network Usage\"}},";
+    s_Buffer.AppendFormat( "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-4,\"tid\":0,\"args\":{\"name\":\"CPU: %s\"}},",
+                           cpuDetails.Get() );
 
     // - Local Processing
     AStackString args( options.GetArgs() );
@@ -214,6 +220,13 @@ void BuildProfiler::Serialize( const FBuildOptions & options )
         }
 
 #undef OUTPUT_STAT
+    }
+
+    // CPU Info
+    {
+        // Write an empty event so that the section is not hidden
+        const uint64_t ts = static_cast<uint64_t>( static_cast<double>( s_CaptureStart ) * freqMul );
+        s_Buffer.AppendFormat( "{\"ts\":%" PRIu64 ",\"name\":\"\",\"ph\":\"C\",\"pid\":-4},", ts );
     }
 
     // Free data we've now serialized
