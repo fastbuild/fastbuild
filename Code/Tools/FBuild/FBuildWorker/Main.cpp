@@ -116,13 +116,6 @@ int Main( const AString & args )
     // TODO:LINUX SetErrorMode equivalent
 #endif
 
-#if defined( __WINDOWS__ )
-    VERIFY( SetPriorityClass( GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS ) );
-#else
-    // TODO:MAC SetPriorityClass equivalent
-    // TODO:LINUX SetPriorityClass equivalent
-#endif
-
     // start the worker and wait for it to be closed
     int ret;
     {
