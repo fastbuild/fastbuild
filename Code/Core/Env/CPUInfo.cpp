@@ -276,12 +276,12 @@ void CPUInfo::DetermineProcessorType()
     // Read Value
     AStackString value;
     value.SetLength( valueSize / sizeof( char ) );
-    if (::RegQueryValueEx( key,
-                           "ProcessorNameString",
-                           nullptr,
-                           nullptr,
-                           reinterpret_cast<LPBYTE>( value.Get() ),
-                           &valueSize ) == ERROR_SUCCESS)
+    if ( ::RegQueryValueEx( key,
+                            "ProcessorNameString",
+                            nullptr,
+                            nullptr,
+                            reinterpret_cast<LPBYTE>( value.Get() ),
+                            &valueSize ) == ERROR_SUCCESS )
     {
         m_CPUName = value;
     }
@@ -434,16 +434,16 @@ void CPUInfo::DetermineCoreTypes()
     // Query core efficiency classes via Windows API.
     DWORD bufferSize = 0;
     VERIFY( GetLogicalProcessorInformationEx(
-                                             RelationProcessorCore,
-                                             nullptr,
-                                             &bufferSize ) == FALSE );
+                RelationProcessorCore,
+                nullptr,
+                &bufferSize ) == FALSE );
     VERIFY( GetLastError() == ERROR_INSUFFICIENT_BUFFER );
 
-    char * buffer = (char *)ALLOC(bufferSize);
+    char * buffer = (char *)ALLOC( bufferSize );
     VERIFY( GetLogicalProcessorInformationEx(
-                                             RelationProcessorCore,
-                                             reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(buffer),
-                                             &bufferSize ) == TRUE );
+                RelationProcessorCore,
+                reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>( buffer ),
+                &bufferSize ) == TRUE );
 
     // Find out max efficiency class.
     uint32_t performanceEfficiencyClass = 0;
@@ -453,7 +453,7 @@ void CPUInfo::DetermineCoreTypes()
 
     while ( ptr < endPtr )
     {
-        PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX info = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(ptr);
+        PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX info = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>( ptr );
 
         performanceEfficiencyClass = Math::Max<uint32_t>( performanceEfficiencyClass, info->Processor.EfficiencyClass );
 
@@ -463,7 +463,7 @@ void CPUInfo::DetermineCoreTypes()
     // Now count cores based on efficiency class.
     ptr = buffer;
 
-    while (ptr < endPtr)
+    while ( ptr < endPtr )
     {
         PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX info = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>( ptr );
 
@@ -474,7 +474,7 @@ void CPUInfo::DetermineCoreTypes()
             cores += Math::PopCount( info->Processor.GroupMask[ i ].Mask );
         }
 
-        if (info->Processor.EfficiencyClass == performanceEfficiencyClass)
+        if ( info->Processor.EfficiencyClass == performanceEfficiencyClass )
         {
             m_NumPCores += cores;
         }
@@ -487,7 +487,7 @@ void CPUInfo::DetermineCoreTypes()
     }
 
     FREE( buffer );
-    
+
     #else
     // Detect Performance and Efficiency core breakdown
 
