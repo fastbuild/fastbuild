@@ -274,17 +274,24 @@ void CPUInfo::DetermineProcessorType()
                              &valueSize ) == ERROR_SUCCESS );
 
     // Read Value
-    AStackString value;
-    value.SetLength( valueSize / sizeof( char ) );
+    char * value = (char *)ALLOC( valueSize + 1 );
+
     if ( ::RegQueryValueEx( key,
                             "ProcessorNameString",
                             nullptr,
                             nullptr,
-                            reinterpret_cast<LPBYTE>( value.Get() ),
+                            reinterpret_cast<LPBYTE>( value ),
                             &valueSize ) == ERROR_SUCCESS )
     {
+        value[ valueSize ] = 0; // Ensure null terminated
         m_CPUName = value;
     }
+    else
+    {
+        m_CPUName = "Unknown";
+    }
+
+    FREE( value );
 
     VERIFY( RegCloseKey( key ) == ERROR_SUCCESS );
 #else
