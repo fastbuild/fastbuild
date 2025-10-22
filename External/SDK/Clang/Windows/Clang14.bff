@@ -122,6 +122,7 @@ Compiler( 'Compiler-Clang14-NonCL' )
 
                                     // x64
                                     + ' -m64'
+                                    + ' --target=x86_64-windows-msvc'
 
                                     // Enable warnings
                                     + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
@@ -173,6 +174,7 @@ Compiler( 'Compiler-Clang14-NonCL' )
 
                                     // x64
                                     + ' -m64'
+                                    + ' --target=x86_64-windows-msvc'
 
                                     // Enable warnings
                                     + ' -Wall -Werror -Wfatal-errors'   // warnings as errors

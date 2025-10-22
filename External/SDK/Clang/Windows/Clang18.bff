@@ -154,6 +154,7 @@ Compiler( 'Compiler-Clang18-NonCL' )
 
                                     // x64
                                     + ' -m64'
+                                    + ' --target=x86_64-windows-msvc'
 
                                     // No RTTI
                                     + ' /GR-'
@@ -187,6 +188,7 @@ Compiler( 'Compiler-Clang18-NonCL' )
 
                                     // x64
                                     + ' -m64'
+                                    + ' --target=x86_64-windows-msvc'
 
                                     // No RTTI
                                     + ' -fno-rtti'
