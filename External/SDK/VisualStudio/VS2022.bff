@@ -163,6 +163,7 @@ Compiler( 'Compiler-VS2022-ARM64' )
                                     + ' /wd4820' // '%s': '%u' bytes padding added after data member '%s'
                                     + ' /wd5045' // Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
                                     + ' /wd5220' // '%s': a non-static data member with a volatile qualified type no longer implies that compiler generated copy/move constructors and copy/move assignment operators are not trivial
+                                    + ' /wd5245' // 'function': unreferenced function with internal linkage has been removed
 
                                     // Include Paths
                                     + ' /I"./"'

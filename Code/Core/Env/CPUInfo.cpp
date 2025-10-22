@@ -252,6 +252,41 @@ void CPUInfo::DetermineProcessorType()
         // Stepping
         m_Stepping = static_cast<uint8_t>( cpuId1.m_EAX & 0xF );
     }
+#elif defined( __WINDOWS__ )
+    // On non-x64 Windows platforms we can query the registry for the CPU name
+    HKEY key;
+    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                       "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+                       0,
+                       KEY_READ,
+                       &key ) != ERROR_SUCCESS )
+    {
+        return; // Entry doesn't exit
+    }
+
+    // Query Value size
+    DWORD valueSize = 0;
+    VERIFY( RegQueryValueEx( key,
+                             "ProcessorNameString",
+                             nullptr,
+                             nullptr,
+                             nullptr,
+                             &valueSize ) == ERROR_SUCCESS );
+
+    // Read Value
+    AStackString value;
+    value.SetLength( valueSize / sizeof( char ) );
+    if (::RegQueryValueEx( key,
+                           "ProcessorNameString",
+                           nullptr,
+                           nullptr,
+                           reinterpret_cast<LPBYTE>( value.Get() ),
+                           &valueSize ) == ERROR_SUCCESS)
+    {
+        m_CPUName = value;
+    }
+
+    VERIFY( RegCloseKey( key ) == ERROR_SUCCESS );
 #else
     #if defined( __APPLE__ )
     char buffer[ 1024 ] = { 0 };
@@ -395,7 +430,65 @@ void CPUInfo::DetermineCoreTypes()
         return;
     }
 
-    #if defined( __x86_64__ ) || defined( _M_X64 )
+    #if defined( __WINDOWS__ ) && defined( _M_ARM64 )
+    // Query core efficiency classes via Windows API.
+    DWORD bufferSize = 0;
+    VERIFY( GetLogicalProcessorInformationEx(
+                                             RelationProcessorCore,
+                                             nullptr,
+                                             &bufferSize ) == FALSE );
+    VERIFY( GetLastError() == ERROR_INSUFFICIENT_BUFFER );
+
+    char * buffer = (char *)ALLOC(bufferSize);
+    VERIFY( GetLogicalProcessorInformationEx(
+                                             RelationProcessorCore,
+                                             reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(buffer),
+                                             &bufferSize ) == TRUE );
+
+    // Find out max efficiency class.
+    uint32_t performanceEfficiencyClass = 0;
+
+    char * ptr = buffer;
+    char * endPtr = buffer + bufferSize;
+
+    while ( ptr < endPtr )
+    {
+        PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX info = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(ptr);
+
+        performanceEfficiencyClass = Math::Max<uint32_t>( performanceEfficiencyClass, info->Processor.EfficiencyClass );
+
+        ptr += info->Size;
+    }
+
+    // Now count cores based on efficiency class.
+    ptr = buffer;
+
+    while (ptr < endPtr)
+    {
+        PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX info = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>( ptr );
+
+        uint32_t cores = 0;
+
+        for ( uint32_t i = 0; i < info->Processor.GroupCount; ++i )
+        {
+            cores += Math::PopCount( info->Processor.GroupMask[ i ].Mask );
+        }
+
+        if (info->Processor.EfficiencyClass == performanceEfficiencyClass)
+        {
+            m_NumPCores += cores;
+        }
+        else
+        {
+            m_NumECores += cores;
+        }
+
+        ptr += info->Size;
+    }
+
+    FREE( buffer );
+    
+    #else
     // Detect Performance and Efficiency core breakdown
 
     // Introspect each core per Intel's guidance:
@@ -459,9 +552,6 @@ void CPUInfo::DetermineCoreTypes()
 
     // Restore original affinity
     SetCurrentThreadAffinityMask( originalAffinity );
-    #else
-    // On non-x64 platforms, assume they all are performance cores
-    m_NumPCores = m_NumCores;
     #endif
 #endif
 }
