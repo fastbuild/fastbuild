@@ -21,7 +21,7 @@ public:
     void GetCPUDetailsString( AString & outDetails ) const;
 
     // Processor Type info
-    AStackString<48> m_CPUName;
+    AStackString<128> m_CPUName;
 #if defined( __x86_64__ ) || defined( _M_X64 )
     uint8_t m_Model = 0;
     uint8_t m_Family = 0;
