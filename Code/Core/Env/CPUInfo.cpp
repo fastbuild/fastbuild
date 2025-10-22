@@ -395,6 +395,7 @@ void CPUInfo::DetermineCoreTypes()
         return;
     }
 
+    #if defined( __x86_64__ ) || defined( _M_X64 )
     // Detect Performance and Efficiency core breakdown
 
     // Introspect each core per Intel's guidance:
@@ -458,6 +459,10 @@ void CPUInfo::DetermineCoreTypes()
 
     // Restore original affinity
     SetCurrentThreadAffinityMask( originalAffinity );
+    #else
+    // On non-x64 platforms, assume they all are performance cores
+    m_NumPCores = m_NumCores;
+    #endif
 #endif
 }
 

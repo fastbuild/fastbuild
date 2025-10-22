@@ -10,6 +10,9 @@
 #if defined( MEMTRACKER_ENABLED )
     // Includes
     //------------------------------------------------------------------------------
+    #if defined( __WINDOWS__ )
+        #include "Core/Env/WindowsHeader.h"
+    #endif
     #include "Core/Mem/MemPoolBlock.h"
     #include "Core/Process/Atomic.h"
     #include "Core/Process/Thread.h"

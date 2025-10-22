@@ -12,7 +12,7 @@
 
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #if !defined( _M_X64 )
+    #if !defined( _M_X64 ) && !defined( _M_ARM64 )
         // If some future Windows platforms on another architecture is supported
         // the implementation will need to be updated (arm for example)
         #error Windows atomic ops have been imlpemented assuming an x86 memory model
@@ -23,7 +23,7 @@
 //------------------------------------------------------------------------------
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #define MemoryBarrier() __asm__ __volatile__( "" )
-#else
+#elif defined( _M_X64 )
     #define MemoryBarrier __faststorefence
 #endif
 
