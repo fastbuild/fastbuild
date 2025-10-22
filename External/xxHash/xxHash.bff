@@ -10,6 +10,9 @@
     .xxHashOptions_x64      = [
                                 .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
                               ]
+    .xxHashOptions_ARM64    = [
+                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
+                              ]
     .xxHashOptions_x64Clang = [
                                 .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
                               ]

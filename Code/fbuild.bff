@@ -228,6 +228,22 @@ Settings
                                 + .Release_Optimizations
 #endif
 
+// ARM64
+//------------------------------------------------------------------------------
+#if __WINDOWS__
+    .ARM64BaseConfig            = .ToolChain_VS_Windows_ARM64
+                                + .Windows10_SDK_ARM64
+    .ARM64DebugConfig           = .ARM64BaseConfig
+                                + .Debug_Config
+                                + .Debug_Optimizations
+    .ARM64ReleaseConfig         = .ARM64BaseConfig
+                                + .Release_Config
+                                + .Release_Optimizations
+    .ARM64ProfileConfig         = .ARM64BaseConfig
+                                + .Profile_Config
+                                + .Profile_Optimizations
+#endif
+
 // Linux
 //------------------------------------------------------------------------------
 #if __LINUX__
@@ -344,6 +360,9 @@ Settings
     .Project_x64Clang_Release = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'Release' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64Clang_ASan    = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'ASan'    .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64Clang_TSan    = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'TSan'    .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_ARM64_Debug      = [ Using( .ProjectCommon ) .SolutionPlatform = 'ARM64'       .SolutionConfig = 'Debug'   .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_ARM64_Profile    = [ Using( .ProjectCommon ) .SolutionPlatform = 'ARM64'       .SolutionConfig = 'Profile' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_ARM64_Release    = [ Using( .ProjectCommon ) .SolutionPlatform = 'ARM64'       .SolutionConfig = 'Release' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
 #endif
 
 // Configurations
@@ -352,7 +371,8 @@ Settings
     .BuildConfigs               = { .X64DebugConfig, .X64AnalyzeConfig, .X64ProfileConfig, .X64ReleaseConfig
                                     .X64ASanConfig, .X64TSanConfig
                                     .X64ClangDebugConfig, .X64ClangAnalyzeConfig .X64ClangProfileConfig, .X64ClangReleaseConfig
-                                    .X64ClangASanConfig, .X64ClangTSanConfig }
+                                    .X64ClangASanConfig, .X64ClangTSanConfig
+                                    .ARM64DebugConfig, .ARM64ProfileConfig, .ARM64ReleaseConfig }
 #endif
 #if __LINUX__
     .BuildConfigs               = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
@@ -379,6 +399,10 @@ Settings
 .Targets_x64Clang_Release = {}
 .Targets_x64Clang_ASan = {}
 .Targets_x64Clang_TSan = {}
+
+.Targets_ARM64_Debug = {}
+.Targets_ARM64_Profile = {}
+.Targets_ARM64_Release = {}
 
 .Targets_x64Linux_Debug = {}
 .Targets_x64Linux_Profile = {}
@@ -456,6 +480,7 @@ Alias( 'Exes' )
 //------------------------------------------------------------------------------
 .Platforms =
 {
+    'ARM64',
     'x64',
     'x64Clang',
     'x64Linux',
@@ -466,6 +491,7 @@ Alias( 'Exes' )
         'OSX'
     #endif
 }
+.PlatformConfigs_ARM64         = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
@@ -506,7 +532,8 @@ ForEach( .Platform in .Platforms )
     Alias( 'All' )
     {
         .Targets        = { 'All-x64Clang',
-                            'All-x64'
+                            'All-x64',
+                            'All-ARM64',
                           }
     }
 #endif
