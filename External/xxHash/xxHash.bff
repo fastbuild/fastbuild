@@ -7,25 +7,16 @@
     .ProjectPath        = '$xxHashBasePath$'
 
     // Target/Compiler specific options
-    .xxHashOptions_x64      = [
+    .xxHashOptions          = [
                                 .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
                               ]
-    .xxHashOptions_ARM64    = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
-    .xxHashOptions_x64Clang = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
-    .xxHashOptions_x64Linux = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
+    .xxHashOptions_x64      = .xxHashOptions
+    .xxHashOptions_ARM64    = .xxHashOptions
+    .xxHashOptions_x64Clang = .xxHashOptions
+    .xxHashOptions_x64Linux = .xxHashOptions
     .xxHashOptions_x64ClangLinux  = .xxHashOptions_x64Linux
-    .xxHashOptions_x64OSX   = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
-    .xxHashOptions_ARMOSX   = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
+    .xxHashOptions_x64OSX   = .xxHashOptions
+    .xxHashOptions_ARMOSX   = .xxHashOptions
 
     // Library
     //--------------------------------------------------------------------------

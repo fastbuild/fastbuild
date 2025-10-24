@@ -30,7 +30,6 @@ Compiler( 'Compiler-Clang' )
                                     + ' -g'             // Generate debug info
                                     + ' -m64'           // x86_64
                                     + ' -D__LINUX__'    // Platform define
-                                    + ' --target=x86_64-windows-msvc'
 
                                     // Include paths
                                     + ' -I./'

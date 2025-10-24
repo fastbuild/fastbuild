@@ -41,7 +41,7 @@
 
 // Windows 10 SDK
 //------------------------------------------------------------------------------
-.Windows10_SDK_X64 =
+.Windows10_SDK =
 [
 #if USING_VS2022
     .WindowsSDK_IncludePaths        = ' "/external:I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
@@ -66,6 +66,11 @@
     .CompilerOptionsC               = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
     .PCHOptions                     = .CommonCompilerOptions
+]
+
+.Windows10_SDK_X64 =
+[
+    Using( .Windows10_SDK )
 
     .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/x64"'
                                     + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x64"'
@@ -73,29 +78,7 @@
 ]
 .Windows10_SDK_ARM64 =
 [
-#if USING_VS2022
-    .WindowsSDK_IncludePaths        = ' "/external:I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
-                                    + ' "/external:I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
-                                    + ' "/external:I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
-#else
-    .WindowsSDK_IncludePaths        = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
-                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
-                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
-#endif
-    .WindowsSDK_IncludePaths_RC     = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
-                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
-                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
-
-    .WindowsDK_WinRTAssemblyPath    = '$Windows10_SDKBasePath$/UnionMetadata/$Windows10_SDKVersion$/'
-
-    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
-                                    + .WindowsSDK_Defines
-                                    + ' -DWIN64'
-
-    .CompilerOptions                = .CommonCompilerOptions
-    .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsDeoptimized     = .CommonCompilerOptions
-    .PCHOptions                     = .CommonCompilerOptions
+    Using( .Windows10_SDK )
 
     .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/arm64"'
                                     + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/arm64"'
