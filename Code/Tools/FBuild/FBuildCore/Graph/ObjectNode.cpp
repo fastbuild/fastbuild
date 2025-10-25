@@ -958,6 +958,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 
     const bool isDistributableCompiler = compilerNode->CanBeDistributed();
+    const bool isCacheableCompiler = compilerNode->CanBeCached();
 
     // Compiler Type - TODO:C Eliminate duplication of these flags
     const CompilerNode::CompilerFamily compilerFamily = compilerNode->GetCompilerFamily();
@@ -1057,7 +1058,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             }
 
             // TODO:A Support caching of 7i format
-            if ( flags.IsUsingPDB() == false )
+            if ( isCacheableCompiler &&
+                 ( flags.IsUsingPDB() == false ) )
             {
                 flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
             }
@@ -1155,14 +1157,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
 
         // all objects can be cached with GCC/SNC/Clang (including PCH files)
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     // CUDA Compiler
     if ( flags.IsCUDANVCC() )
     {
         // Can cache objects
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     if ( flags.IsOrbisWavePSSLC() )
@@ -1173,7 +1181,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
 
         // Can cache objects
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     return flags;

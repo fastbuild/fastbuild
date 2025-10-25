@@ -40,6 +40,7 @@ distribution, caching and more.
  
   // Additional Options
   .CompilerFamily               // (optional) Explicitly specify compiler type (default: auto)
+  .AllowCaching                 // (optional) Allow cached compilation (if available) (default: true)
   .AllowDistribution            // (optional) Allow distributed compilation (if available) (default: true)
   .ExecutableRootPath           // (optional) Override default path for executable distribution
   .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsupported "compilers" (default: false)
@@ -155,6 +156,9 @@ Compiler( 'Test' )
     </table></p>
  
   	<p><hr></p>
+
+    <p><b>.AllowCaching</b> - Boolean - (Optional)</p>
+    <p>For compilers where caching is supported, said feature can be disabled.<p>
 
 	<p><b>.AllowDistribution</b> - Boolean - (Optional)</p>
 	<p>For compilers where distributed compilation is supported, said feature can be disabled.<p>
