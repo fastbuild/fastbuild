@@ -41,11 +41,15 @@
         {
             // Input - Only build specific files we use
             .CompilerInputFiles         = {
-                                            #if __X64__
-                                                '$xxHashBasePath$\xxh_x86dispatch.c'
-                                            #endif
                                             '$xxHashBasePath$\xxhash.c'
                                           }
+
+            // Add dynamic dispatch for x86_64 platforms
+            If( ( .Platform != 'ARMOSX' ) &&
+                ( .Platform != 'ARM64' ) )
+            {
+                ^CompilerInputFiles + '$xxHashBasePath$\xxh_x86dispatch.c'
+            }
 
             // Options
             .CompilerOptions            = .CompilerOptionsC
