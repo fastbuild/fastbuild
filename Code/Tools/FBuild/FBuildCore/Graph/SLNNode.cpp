@@ -303,7 +303,7 @@ SLNNode::~SLNNode() = default;
     }
 
     // Record stamp representing the contents of the files
-    m_Stamp = xxHash3::Calc64( sln );
+    m_Stamp = xxHash3::Calc64Big( sln );
 
     return BuildResult::eOk;
 }
