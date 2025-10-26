@@ -9,6 +9,7 @@
     // Target/Compiler specific options
     .xxHashOptions_x64      = [
                                 .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
+                                                        + ' /wd4113'    // Inconsisitent use of __restrict with function pointers
                               ]
     .xxHashOptions_x64Clang = [
                                 .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
@@ -40,6 +41,9 @@
         {
             // Input - Only build specific files we use
             .CompilerInputFiles         = {
+                                            #if __X64__
+                                                '$xxHashBasePath$\xxh_x86dispatch.c'
+                                            #endif
                                             '$xxHashBasePath$\xxhash.c'
                                           }
 
