@@ -13,7 +13,7 @@ namespace UnorderedMapKeyHashingFunctions
 {
     inline uint32_t Hash( const AString & key )
     {
-        return xxHash::Calc32( key );
+        return xxHash3::Calc32( key );
     }
 }
 
