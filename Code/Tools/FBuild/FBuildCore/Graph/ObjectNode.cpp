@@ -2146,11 +2146,11 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         PathUtils::EnsureTrailingSlash( basePath );
         AStackString relativeFileName;
         PathUtils::GetRelativePath( basePath, sourceFile->GetName(), relativeFileName );
-        sourceNameHash = xxHash::Calc32( relativeFileName.Get(), relativeFileName.GetLength() );
+        sourceNameHash = xxHash3::Calc32( relativeFileName.Get(), relativeFileName.GetLength() );
     }
     else
     {
-        sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+        sourceNameHash = xxHash3::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
     }
 
     FileStream tmpFile;
