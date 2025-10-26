@@ -1378,7 +1378,8 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
-    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey : xxHash3::Calc64( job->GetData(), job->GetDataSize() );
+    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey
+                                                           : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
     ASSERT( preprocessedSourceKey );
 
     // hash the build "environment"
@@ -1456,7 +1457,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         uint64_t pchKey = 0;
         if ( IsCreatingPCH() && IsMSVC() )
         {
-            pchKey = xxHash3::Calc64( cacheData, cacheDataSize );
+            pchKey = xxHash3::Calc64Big( cacheData, cacheDataSize );
         }
 
         const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
@@ -1654,7 +1655,7 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
         // Dependent objects need to know the PCH key to be able to pull from the cache
         if ( IsCreatingPCH() && IsMSVC() )
         {
-            m_PCHCacheKey = xxHash3::Calc64( compressedData, compressedDataSize );
+            m_PCHCacheKey = xxHash3::Calc64Big( compressedData, compressedDataSize );
         }
 
         const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );

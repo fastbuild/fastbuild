@@ -354,7 +354,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
     f.Close();
 
     // Store hash of file
-    file->m_ContentHash = xxHash3::Calc64( fileContents );
+    file->m_ContentHash = xxHash3::Calc64Big( fileContents );
 
     const char * pos = fileContents.Get();
     for ( ;; )
