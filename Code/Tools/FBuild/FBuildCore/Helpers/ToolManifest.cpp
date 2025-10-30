@@ -109,7 +109,7 @@ void ToolManifestFile::StoreCompressedContent( const void * uncompressedData, co
 
 // DoBuild
 //------------------------------------------------------------------------------
-bool ToolManifestFile::DoBuild()
+bool ToolManifestFile::DoBuild( bool skipHashing )
 {
     // Name should be set
     ASSERT( m_Name.IsEmpty() == false );
@@ -118,6 +118,30 @@ bool ToolManifestFile::DoBuild()
     ASSERT( m_CompressedContent == nullptr );
     ASSERT( m_CompressedContentSize == 0 );
 
+    if ( skipHashing )
+    {
+        // Get the file's timestamp (a fast 'stat' call)
+        const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
+
+        // Check if our 'fake' hash is already up to date
+        if ( ( m_Hash != 0 ) && ( m_TimeStamp == lastWriteTime ) )
+        {
+            return true; // Nothing to do
+        }
+
+        // File missing?
+        if ( lastWriteTime == 0 )
+        {
+            FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest. File not found.\n", m_Name.Get() );
+            return false;
+        }
+
+        // File has "changed" or is new, re-calculate our "fake" hash
+        // We hash the NAME instead of the CONTENT.
+        m_Hash = xxHash::Calc32( m_Name );
+        m_TimeStamp = lastWriteTime;
+        return true; // We're done, skip the expensive file I/O below
+    }
     // Do we already have a hash?
     if ( m_Hash != 0 )
     {
@@ -182,7 +206,7 @@ void ToolManifest::Initialize( const AString & mainExecutableRoot, const Depende
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::DoBuild( const Dependencies & dependencies )
+bool ToolManifest::DoBuild( const Dependencies & dependencies, bool skipHashing )
 {
     ASSERT( m_Files.GetSize() == dependencies.GetSize() );
     (void)dependencies;
@@ -192,7 +216,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     // Get timestamps and hashes
     for ( ToolManifestFile & file : m_Files )
     {
-        if ( !file.DoBuild() )
+        if ( !file.DoBuild( skipHashing ) )
         {
             return false; // DoBuild will have emitted an error
         }

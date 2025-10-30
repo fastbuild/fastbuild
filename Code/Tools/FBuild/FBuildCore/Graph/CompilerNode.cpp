@@ -369,7 +369,8 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
+    const bool skipHashing = ( !m_AllowCaching && !m_AllowDistribution );
+    if ( !m_Manifest.DoBuild( m_StaticDependencies, skipHashing ) )
     {
         return BuildResult::eFailed; // Generate will have emitted error
     }
