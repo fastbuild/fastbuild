@@ -36,6 +36,8 @@ def get_clang_format_exe():
                             'C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\Llvm\\bin\\clang-format.exe',
                             'C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\Llvm\\bin\\clang-format.exe',
                             'C:\\Program Files\\LLVM\\bin\\clang-format.exe',
+                            '/usr/bin/clang-format',
+                            '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-format',
                           ]
 
     # We require at least clang-format 19.x.x
@@ -46,7 +48,7 @@ def get_clang_format_exe():
     for potential_location in potential_locations:
         if os.path.exists(potential_location):
             # found at this location. Check version
-            cmdline = '"{}" --version"'.format(potential_location)
+            cmdline = '"{}" --version'.format(potential_location)
             result = subprocess.run(cmdline,
                                     shell = True,
                                     capture_output = True,
@@ -59,6 +61,7 @@ def get_clang_format_exe():
 
             # check major version
             version_string = result.stdout
+            version_string = version_string.replace('Apple ', '') # OSX only
             version_string = version_string.replace('clang-format version ', '')
             major_version = int(version_string.split('.')[0])
             if major_version < min_major_version:
