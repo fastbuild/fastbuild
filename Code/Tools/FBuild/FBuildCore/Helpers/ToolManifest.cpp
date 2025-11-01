@@ -123,12 +123,6 @@ bool ToolManifestFile::DoBuild( bool skipHashing )
         // Get the file's timestamp (a fast 'stat' call)
         const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
 
-        // Check if our 'fake' hash is already up to date
-        if ( ( m_Hash != 0 ) && ( m_TimeStamp == lastWriteTime ) )
-        {
-            return true; // Nothing to do
-        }
-
         // File missing?
         if ( lastWriteTime == 0 )
         {
@@ -136,9 +130,8 @@ bool ToolManifestFile::DoBuild( bool skipHashing )
             return false;
         }
 
-        // File has "changed" or is new, re-calculate our "fake" hash
         // We hash the NAME instead of the CONTENT.
-        m_Hash = xxHash::Calc32( m_Name );
+        m_Hash = xxHash3::Calc32( m_Name );
         m_TimeStamp = lastWriteTime;
         return true; // We're done, skip the expensive file I/O below
     }
