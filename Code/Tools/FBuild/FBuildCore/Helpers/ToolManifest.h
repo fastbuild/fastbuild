@@ -35,7 +35,7 @@ public:
         SYNCHRONIZED,
     };
 
-    bool DoBuild();
+    bool DoBuild( bool skipHashing = false );
     void StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
     void Migrate( const ToolManifestFile & oldFile );
 
@@ -81,7 +81,7 @@ public:
     ~ToolManifest();
 
     void Initialize( const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables );
-    bool DoBuild( const Dependencies & dependencies );
+    bool DoBuild( const Dependencies & dependencies, bool skipHashing = false );
     void Migrate( const ToolManifest & oldManifest );
 
     uint64_t GetToolId() const { return m_ToolId; }
