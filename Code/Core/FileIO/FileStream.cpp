@@ -402,3 +402,18 @@ bool FileStream::Truncate()
 }
 
 //------------------------------------------------------------------------------
+bool FileStream::ReadIntoString( AString & outString )
+{
+    const uint64_t bytesRemaining = ( GetFileSize() - Tell() );
+    ASSERT( bytesRemaining < 0xFFFF'FFFFull );
+    outString.SetLength( static_cast<uint32_t>( bytesRemaining ) );
+    return ( ReadBuffer( outString.Get(), bytesRemaining ) == bytesRemaining );
+}
+
+//------------------------------------------------------------------------------
+bool FileStream::WriteFromString( const AString & string )
+{
+    return ( WriteBuffer( string.Get(), string.GetLength() ) == string.GetLength() );
+}
+
+//------------------------------------------------------------------------------

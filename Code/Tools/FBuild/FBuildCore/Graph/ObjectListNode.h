@@ -41,6 +41,11 @@ public:
 
     const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
     const AString & GetCompilerOptions() const { return m_CompilerOptions; }
+    const AString & GetCompilerOptionsDeoptimized() const { return m_CompilerOptionsDeoptimized; }
+    const AString & GetCompilerOptionsPCH() const { return m_PCHOptions; }
+    const AString & GetPreprocessorOptions() const { return m_PreprocessorOptions; }
+    const Array<AString> & GetPreBuildDependencyNames() const { return m_PreBuildDependencyNames; }
+    const Array<AString> & GetCompilerForceUsing() const { return m_CompilerForceUsing; }
     const AString & GetCompiler() const { return m_Compiler; }
 
     [[nodiscard]] bool IsCachingAllowed() const { return m_AllowCaching; }
@@ -68,10 +73,7 @@ protected:
                                    const Function * function,
                                    const ObjectNode::CompilerFlags flags,
                                    const ObjectNode::CompilerFlags preprocessorFlags,
-                                   const AString & compilerOptions,
-                                   const AString & compilerOptionsDeoptimized,
                                    const AString & preprocessor,
-                                   const AString & preprocessorOptions,
                                    const AString & objectName,
                                    const AString & objectInput,
                                    const AString & pchObjectName );
