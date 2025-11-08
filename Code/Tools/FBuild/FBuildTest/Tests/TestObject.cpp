@@ -694,6 +694,7 @@ void TestObject::OwnerObjectList() const
 
     // Read config file into memory that modify and write
     {
+        FileIO::EnsurePathExistsForFile( AStackString( dstBFFFile ) );
         FileStream f;
         TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
                      f.WriteFromString( bff ) );
