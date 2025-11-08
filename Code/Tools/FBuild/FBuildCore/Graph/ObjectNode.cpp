@@ -69,19 +69,13 @@
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile())
-    REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
-    REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
     REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
     REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
     REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
-    REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
 
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
-    REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
-
-    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
     REFLECT( m_PrecompiledHeader,                   "PrecompiledHeader",                MetaHidden() )
@@ -106,11 +100,8 @@ ObjectNode::ObjectNode()
 {
     ASSERT( m_OwnerObjectList ); // Must be set before we get here
 
-    // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    // .PreBuildDependencies (OwnerObjectList will have handled checks/errors)
+    m_PreBuildDependencies = m_OwnerObjectList->GetPreBuildDependencies();
 
     // NOTE: ConcurrencyGroup stored in mOwnerObjectList
 
@@ -141,7 +132,12 @@ ObjectNode::ObjectNode()
 
     // .CompilerForceUsing
     Dependencies compilerForceUsing;
-    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
+    if ( !Function::GetFileNodes( nodeGraph,
+                                  iter,
+                                  function,
+                                  m_OwnerObjectList->GetCompilerForceUsing(),
+                                  ".CompilerForceUsing",
+                                  compilerForceUsing ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -169,38 +165,9 @@ ObjectNode::ObjectNode()
     return true;
 }
 
-// CONSTRUCTOR (Remote)
-//------------------------------------------------------------------------------
-ObjectNode::ObjectNode( AString && objectName,
-                        NodeProxy * srcFile,
-                        const AString & compilerOptions,
-                        uint32_t flags )
-    : FileNode()
-    , m_CompilerOptions( compilerOptions )
-    , m_Remote( true )
-{
-    SetName( Move( objectName ) );
-    m_Type = OBJECT_NODE;
-    m_LastBuildTimeMs = 5000; // higher default than a file node
-    m_CompilerFlags.m_Flags = flags;
-
-    m_StaticDependencies.SetCapacity( 2 );
-    m_StaticDependencies.Add( nullptr );
-    m_StaticDependencies.Add( srcFile );
-}
-
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::~ObjectNode()
-{
-    // remote worker owns the ProxyNode for the source file, so must free it
-    if ( m_Remote )
-    {
-        Node * srcFile = GetSourceFile();
-        ASSERT( srcFile->GetType() == Node::PROXY_NODE );
-        FDELETE srcFile;
-    }
-}
+ObjectNode::~ObjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -924,7 +891,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     AString name;
     AString sourceFile;
     uint32_t flags;
-    AStackString compilerArgs;
+    AString compilerArgs;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
@@ -935,7 +902,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     NodeProxy * srcFile = FNEW( NodeProxy( Move( sourceFile ) ) );
 
-    return FNEW( ObjectNode( Move( name ), srcFile, compilerArgs, flags ) );
+    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags ) );
 }
 
 // DetermineFlags
@@ -1241,7 +1208,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 /*virtual*/ void ObjectNode::SaveRemote( IOStream & stream ) const
 {
     // Force using implies /clr which is not distributable
-    ASSERT( m_CompilerForceUsing.IsEmpty() );
+    ASSERT( m_OwnerObjectList->GetCompilerForceUsing().IsEmpty() );
 
     // Save minimal information for the remote worker
     stream.Write( m_Name );
@@ -1250,7 +1217,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     // TODO:B would be nice to make ShouldUseDeoptimization cache the result for this build
     // instead of opening the file again.
-    const AString & compilerOptions = ShouldUseDeoptimization() ? m_CompilerOptionsDeoptimized : m_CompilerOptions;
+    const AString & compilerOptions = ShouldUseDeoptimization() ? m_OwnerObjectList->GetCompilerOptionsDeoptimized()
+                                                                : m_OwnerObjectList->GetCompilerOptions();
 
     // Prepare args for remote worker
     UniquePtr<CompilerDriverBase> driver;
@@ -1816,19 +1784,10 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     StackArray<AString> tokens;
 
     const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
-    if ( useDedicatedPreprocessor )
-    {
-        m_PreprocessorOptions.Tokenize( tokens );
-    }
-    else if ( useDeoptimization )
-    {
-        ASSERT( !m_CompilerOptionsDeoptimized.IsEmpty() );
-        m_CompilerOptionsDeoptimized.Tokenize( tokens );
-    }
-    else
-    {
-        m_CompilerOptions.Tokenize( tokens );
-    }
+
+    const AString & commandLine = GetCommandLine( useDedicatedPreprocessor, useDeoptimization );
+    ASSERT( !commandLine.IsEmpty() );
+    commandLine.Tokenize( tokens );
     fullArgs.Clear();
 
     // Get base path if needed
@@ -3017,6 +2976,72 @@ void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
     }
 
     outDriver->Init( this, remoteSourceRoot );
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & ObjectNode::GetCommandLine( bool useDedicatedPreprocessor,
+                                                        bool useDeoptimization ) const
+{
+    // Objects compiled locally in all situations source their command line
+    // from the OwnerObjectList node
+
+    if ( useDedicatedPreprocessor )
+    {
+        return m_OwnerObjectList->GetPreprocessorOptions();
+    }
+
+    if ( useDeoptimization )
+    {
+        return m_OwnerObjectList->GetCompilerOptionsDeoptimized();
+    }
+
+    if ( IsCreatingPCH() )
+    {
+        return m_OwnerObjectList->GetCompilerOptionsPCH();
+    }
+
+    return m_OwnerObjectList->GetCompilerOptions();
+}
+
+//------------------------------------------------------------------------------
+ObjectNodeRemote::ObjectNodeRemote( AString && objectName,
+                                    NodeProxy * srcFile,
+                                    AString && compilerOptions,
+                                    uint32_t flags )
+    : ObjectNode()
+    , m_CompilerOptions( Move( compilerOptions ) )
+{
+    SetName( Move( objectName ) );
+    m_CompilerFlags.m_Flags = flags;
+
+    m_StaticDependencies.SetCapacity( 2 );
+    m_StaticDependencies.Add( nullptr );
+    m_StaticDependencies.Add( srcFile );
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ ObjectNodeRemote::~ObjectNodeRemote()
+{
+    // remote worker owns the ProxyNode for the source file, so must free it
+    Node * srcFile = GetSourceFile();
+    ASSERT( srcFile->GetType() == Node::PROXY_NODE );
+    FDELETE srcFile;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & ObjectNodeRemote::GetCommandLine( bool useDedicatedPreprocessor,
+                                                              bool useDeoptimization ) const
+{
+    // Objects compiled remotely use the options serialized in the special
+    // derived node (and don't have access to the OwnerObjectList)
+
+    // Flags are unused compiling remotely (everything is baked into m_CompilerOptions)
+    ASSERT( !useDedicatedPreprocessor && !useDeoptimization );
+#if !defined( ASSERTS_ENABLED )
+    (void)useDedicatedPreprocessor;
+    (void)useDeoptimization;
+#endif
+    return m_CompilerOptions;
 }
 
 //------------------------------------------------------------------------------
