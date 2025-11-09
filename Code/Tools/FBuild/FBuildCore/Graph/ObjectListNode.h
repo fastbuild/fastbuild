@@ -47,6 +47,10 @@ public:
     const Array<AString> & GetPreBuildDependencyNames() const { return m_PreBuildDependencyNames; }
     const Array<AString> & GetCompilerForceUsing() const { return m_CompilerForceUsing; }
     const AString & GetCompiler() const { return m_Compiler; }
+    bool GetDeoptimizeWritableFiles() const { return m_DeoptimizeWritableFiles; }
+    bool GetDeoptimizeWritableFilesWithToken() const { return m_DeoptimizeWritableFilesWithToken; }
+    const AString & GetPrecompiledHeaderName() const { return m_PrecompiledHeaderName; }
+    const AString & GetPCHObjectFileName() const { return m_PCHObjectFileName; }
 
     [[nodiscard]] bool IsCachingAllowed() const { return m_AllowCaching; }
     [[nodiscard]] bool IsDistributionAllowed() const { return m_AllowDistribution; }
@@ -75,8 +79,7 @@ protected:
                                    const ObjectNode::CompilerFlags preprocessorFlags,
                                    const AString & preprocessor,
                                    const AString & objectName,
-                                   const AString & objectInput,
-                                   const AString & pchObjectName );
+                                   const AString & objectInput );
 
     // Exposed Properties
     AString m_Compiler;
@@ -116,6 +119,7 @@ protected:
 #if defined( __WINDOWS__ )
     AString m_PrecompiledHeaderCPPFile;
 #endif
+    AString m_PCHObjectFileName;
     AString m_ExtraPDBPath;
     AString m_ExtraASMPath;
     AString m_ExtraSourceDependenciesPath;

@@ -703,7 +703,6 @@ void TestObject::OwnerObjectList() const
     // Common options
     FBuildTestOptions options;
     options.m_ConfigFile = dstBFFFile;
-    options.m_ShowBuildReason = true; // DO NOT SUBMIT
 
     // Clear output directory
     EnsureFileDoesNotExist( outputFile );
@@ -736,11 +735,13 @@ void TestObject::OwnerObjectList() const
         {
             { "// Comment", false },
             { ".CompilerOptions +", true },
-            { ".CompilerOptionsDeoptimized =", true },
+            { ".CompilerOptionsDeoptimized +", true },
             { ".PCHOptions +", true },
             { ".PreprocessorOptions =", true },
             { ".PreBuildDependencies =", true },
             { ".CompilerForceUsing =", true },
+            { ".DeoptimizeWritableFiles =", true },
+            { ".DeoptimizeWritableFilesWithToken =", true },
         };
 
     for ( const BFFEdit & edit : bffEdits )
