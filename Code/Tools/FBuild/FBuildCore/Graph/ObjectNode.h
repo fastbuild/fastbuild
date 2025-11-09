@@ -165,7 +165,8 @@ public:
     void GetGCNOPath( AString & gcnoFileName ) const;
     void GetAltObjPath( AString & altObjName ) const;
 
-    const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
+    const AString & GetPCHObjectName() const;
+    const AString & GetPrecompiledHeaderName() const;
     const ObjectListNode & GetOwnerObjectList() const { return *m_OwnerObjectList; }
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
@@ -236,6 +237,8 @@ protected:
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
     bool ShouldUseDeoptimization() const;
+    bool GetDeoptimizeWritableFiles() const;
+    bool GetDeoptimizeWritableFilesWithToken() const;
     friend class ClientToWorkerConnection;
     bool ShouldUseCache() const;
     [[nodiscard]] bool IsDistributionAllowed() const;
@@ -287,13 +290,9 @@ protected:
     friend class ObjectListNode;
     AString m_Compiler;
     AString m_CompilerInputFile;
-    AString m_PCHObjectFileName;
-    bool m_DeoptimizeWritableFiles = false;
-    bool m_DeoptimizeWritableFilesWithToken = false;
     AString m_Preprocessor;
 
     // Internal State
-    AString m_PrecompiledHeader;
     CompilerFlags m_CompilerFlags;
     CompilerFlags m_PreprocessorFlags;
     uint64_t m_PCHCacheKey = 0;

@@ -736,11 +736,13 @@ void TestObject::OwnerObjectList() const
         {
             { "// Comment", false },
             { ".CompilerOptions +", true },
-            { ".CompilerOptionsDeoptimized =", true },
+            { ".CompilerOptionsDeoptimized +", true },
             { ".PCHOptions +", true },
             { ".PreprocessorOptions =", true },
             { ".PreBuildDependencies =", true },
             { ".CompilerForceUsing =", true },
+            { ".DeoptimizeWritableFiles =", true },
+            { ".DeoptimizeWritableFilesWithToken =", true },
         };
 
     for ( const BFFEdit & edit : bffEdits )

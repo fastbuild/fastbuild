@@ -70,15 +70,11 @@
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile())
     REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
-    REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
-    REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
-    REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
 
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
 
     // Internal State
-    REFLECT( m_PrecompiledHeader,                   "PrecompiledHeader",                MetaHidden() )
     REFLECT( m_CompilerFlags.m_Flags,               "CompilerFlags",                    MetaHidden() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
     REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
@@ -144,10 +140,15 @@ ObjectNode::ObjectNode()
 
     // Precompiled Header
     Dependencies precompiledHeader;
-    if ( m_PrecompiledHeader.IsEmpty() == false )
+    if ( GetPrecompiledHeaderName().IsEmpty() == false )
     {
         // m_PrecompiledHeader is only set if our associated ObjectList or Library created one
-        VERIFY( Function::GetFileNode( nodeGraph, iter, function, m_PrecompiledHeader, ".PrecompiledHeader", precompiledHeader ) );
+        VERIFY( Function::GetFileNode( nodeGraph,
+                                       iter,
+                                       function,
+                                       GetPrecompiledHeaderName(),
+                                       ".PrecompiledHeader",
+                                       precompiledHeader ) );
         ASSERT( precompiledHeader.GetSize() == 1 );
     }
 
@@ -186,7 +187,7 @@ ObjectNode::~ObjectNode() = default;
         }
         if ( IsMSVC() && IsCreatingPCH() )
         {
-            if ( DoPreBuildFileDeletion( m_PCHObjectFileName ) == false )
+            if ( DoPreBuildFileDeletion( GetPCHObjectName() ) == false )
             {
                 return BuildResult::eFailed; // HandleFileDeletion will have emitted an error
             }
@@ -1268,7 +1269,7 @@ CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
         return nullptr;
     }
     size_t preprocessorIndex = 2;
-    if ( m_PrecompiledHeader.IsEmpty() == false )
+    if ( GetPrecompiledHeaderName().IsEmpty() == false )
     {
         ++preprocessorIndex;
     }
@@ -1279,7 +1280,7 @@ CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
 //------------------------------------------------------------------------------
 ObjectNode * ObjectNode::GetPrecompiledHeader() const
 {
-    ASSERT( m_PrecompiledHeader.IsEmpty() == false );
+    ASSERT( GetPrecompiledHeaderName().IsEmpty() == false );
     return m_StaticDependencies[ 2 ].GetNode()->CastTo<ObjectNode>();
 }
 
@@ -1298,7 +1299,7 @@ void ObjectNode::GetNativeAnalysisXMLPath( AString & outXMLFileName ) const
 {
     ASSERT( IsUsingStaticAnalysisMSVC() );
 
-    const AString & sourceName = m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName;
+    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
 
     // TODO:B The xml path can be manually specified with /analyze:log
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
@@ -1324,12 +1325,26 @@ void ObjectNode::GetAltObjPath( AString & altObjName ) const
 {
     ASSERT( IsUsingDynamicDeopt() );
 
-    const AString & sourceName = m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName;
+    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
 
     // TODO:B The suffix ('.alt') can be manually specified with /dynamicdeopt:suffix
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
     altObjName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
     altObjName += ".alt.obj";
+}
+
+//------------------------------------------------------------------------------
+const AString & ObjectNode::GetPCHObjectName() const
+{
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPCHObjectFileName()
+                             : AString::GetEmpty();
+}
+
+//------------------------------------------------------------------------------
+const AString & ObjectNode::GetPrecompiledHeaderName() const
+{
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPrecompiledHeaderName()
+                             : AString::GetEmpty();
 }
 
 // GetCacheName
@@ -1683,7 +1698,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
          ( objectNode->m_CompilerFlags.IsMSVC() || objectNode->m_CompilerFlags.IsClangCl() ) )
     {
         // .pch.obj
-        outFileNames.Append( m_PCHObjectFileName );
+        outFileNames.Append( GetPCHObjectName() );
     }
 
     // MSVC static analysis adds extra files
@@ -1694,9 +1709,9 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
             // .pchast (precompiled headers only)
 
             // Get file name start
-            ASSERT( PathUtils::IsFullPath( m_PCHObjectFileName ) ); // Something is terribly wrong
+            ASSERT( PathUtils::IsFullPath( GetPCHObjectName() ) ); // Something is terribly wrong
 
-            AStackString pchASTFileName( m_PCHObjectFileName );
+            AStackString pchASTFileName( GetPCHObjectName() );
             if ( pchASTFileName.EndsWithI( ".obj" ) )
             {
                 pchASTFileName.SetLength( pchASTFileName.GetLength() - 4 );
@@ -1886,7 +1901,10 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 //------------------------------------------------------------------------------
 void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const
 {
-    const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1u : 0u ) + ( !m_Preprocessor.IsEmpty() ? 1u : 0u ); // Skip Compiler, InputFile, PCH and Preprocessor
+    // Skip Compiler, InputFile, PCH and Preprocessor
+    const size_t startIndex = 2 +
+                              ( !GetPrecompiledHeaderName().IsEmpty() ? 1u : 0u ) +
+                              ( !m_Preprocessor.IsEmpty() ? 1u : 0u );
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i = startIndex; i < endIndex; ++i )
     {
@@ -2654,8 +2672,8 @@ bool ObjectNode::ShouldUseDeoptimization() const
         return false; // disabled for Unity files (which are always writable)
     }
 
-    if ( ( m_DeoptimizeWritableFilesWithToken == false ) &&
-         ( m_DeoptimizeWritableFiles == false ) )
+    if ( ( GetDeoptimizeWritableFilesWithToken() == false ) &&
+         ( GetDeoptimizeWritableFiles() == false ) )
     {
         return false; // feature not enabled
     }
@@ -2668,7 +2686,7 @@ bool ObjectNode::ShouldUseDeoptimization() const
         return false; // file is read only (not modified)
     }
 
-    if ( m_DeoptimizeWritableFiles )
+    if ( GetDeoptimizeWritableFiles() )
     {
         return true; // file modified - deoptimize with or without token
     }
@@ -2692,6 +2710,24 @@ bool ObjectNode::ShouldUseDeoptimization() const
 
     // problem reading file - TODO:B emit an error?
     return false;
+}
+
+//------------------------------------------------------------------------------
+bool ObjectNode::GetDeoptimizeWritableFiles() const
+{
+    ASSERT( m_OwnerObjectList );
+    return !m_CompilerFlags.IsCreatingPCH() &&
+           m_OwnerObjectList &&
+           m_OwnerObjectList->GetDeoptimizeWritableFiles();
+}
+
+//------------------------------------------------------------------------------
+bool ObjectNode::GetDeoptimizeWritableFilesWithToken() const
+{
+    ASSERT( m_OwnerObjectList );
+    return !m_CompilerFlags.IsCreatingPCH() &&
+           m_OwnerObjectList &&
+           m_OwnerObjectList->GetDeoptimizeWritableFilesWithToken();
 }
 
 // ShouldUseCache

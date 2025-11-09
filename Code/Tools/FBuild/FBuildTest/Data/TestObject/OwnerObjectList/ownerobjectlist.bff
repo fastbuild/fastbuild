@@ -10,13 +10,18 @@ ObjectList( 'OwnerObjectList' )
     .CompilerInputFiles         = 'Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectList/a.cpp'
     .CompilerOutputPath         = '$Out$/Test/Object/OwnerObjectList/'
 
+    // Depending on other settings, this is required so make sure it's defined
+    .CompilerOptionsDeoptimized = ' -DDEOPTBASE'
+
     // BEGIN lines we will modify
     // Comment
     .CompilerOptions + ' -DOPT=TRUE'
-    .CompilerOptionsDeoptimized = ' -DDEOPT=TRUE'
+    .CompilerOptionsDeoptimized + ' -DDEOPT=TRUE'
     .PCHOptions + ' -DPCHOPT=TRUE'
     .PreprocessorOptions = ' -DPREPROOPT=TRUE'
     .PreBuildDependencies = 'Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectList/prebuilddep.h'
     .CompilerForceUsing = 'Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectList/forceinclude.h'
+    .DeoptimizeWritableFiles = true
+    .DeoptimizeWritableFilesWithToken = true
     // END lines we will modify
 }

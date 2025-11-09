@@ -66,7 +66,7 @@ public:
     }
     ~NodeGraphHeader() = default;
 
-    inline static const uint8_t kCurrentVersion = 185;
+    inline static const uint8_t kCurrentVersion = 186;
 
     bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == kCurrentVersion; }
