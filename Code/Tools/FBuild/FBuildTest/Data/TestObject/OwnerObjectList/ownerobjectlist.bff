@@ -11,7 +11,7 @@ ObjectList( 'OwnerObjectList' )
     .CompilerOutputPath         = '$Out$/Test/Object/OwnerObjectList/'
 
     // Depending on other settings, this is required so make sure it's defined
-    .CompilerOptionsDeoptimized = ' -DDEOPTBASE'
+    .CompilerOptionsDeoptimized = .CompilerOptions
 
     // BEGIN lines we will modify
     // Comment

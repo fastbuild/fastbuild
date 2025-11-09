@@ -703,8 +703,6 @@ void TestObject::OwnerObjectList() const
     // Common options
     FBuildTestOptions options;
     options.m_ConfigFile = dstBFFFile;
-    options.m_ShowBuildReason = true; // DO NOT SUBMIT
-    options.m_ShowCommandLines = true; // DO NOT SUBMIT
 
     // Clear output directory
     EnsureFileDoesNotExist( outputFile );
