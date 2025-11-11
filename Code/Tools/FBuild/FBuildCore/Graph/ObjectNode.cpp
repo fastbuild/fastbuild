@@ -1576,6 +1576,9 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
     WriteToCache_FromUncompressedData( job,
                                        buffer.GetData(),
                                        buffer.GetDataSize() );
+
+    job->GetBuildProfilerScope()->SetStepName( "Cache Store" );
+
 }
 
 // WriteToCache_FromUncompressedData
