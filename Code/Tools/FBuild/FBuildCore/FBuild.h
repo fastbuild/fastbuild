@@ -12,6 +12,7 @@
 
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
@@ -103,7 +104,7 @@ public:
     static void AbortBuild();
     static void OnBuildError();
     static bool GetStopBuild();
-    static volatile bool * GetAbortBuildPointer() { return &s_AbortBuild; }
+    static Atomic<bool> * GetAbortBuildPointer() { return &s_AbortBuild; }
 
     ICache * GetCache() const { return m_Cache; }
 
@@ -128,8 +129,8 @@ protected:
     const char * GetFinalStatus( const Node * node );
     bool GetFinalStatusFailure( const Dependencies & deps ) const;
 
-    static bool s_StopBuild;
-    static volatile bool s_AbortBuild; // -fastcancel - TODO:C merge with StopBuild
+    static Atomic<bool> s_StopBuild;
+    static Atomic<bool> s_AbortBuild; // -fastcancel - TODO:C merge with StopBuild
 
     NodeGraph * m_DependencyGraph;
     ThreadPool * m_ThreadPool = nullptr;

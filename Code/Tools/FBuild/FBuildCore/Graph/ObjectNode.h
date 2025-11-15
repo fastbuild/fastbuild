@@ -259,7 +259,7 @@ protected:
     class CompileHelper
     {
     public:
-        explicit CompileHelper( bool handleOutput = true, const volatile bool * abort = nullptr );
+        explicit CompileHelper( bool handleOutput = true, const Atomic<bool> * abort = nullptr );
         ~CompileHelper();
 
         // start compilation
@@ -277,6 +277,10 @@ protected:
         const AString & GetOut() const { return m_Out; }
         const AString & GetErr() const { return m_Err; }
         bool HasAborted() const { return m_Process.HasAborted(); }
+
+        // Copies not allowed
+        explicit CompileHelper( CompileHelper & other ) = delete;
+        CompileHelper & operator=( CompileHelper & other ) = delete;
 
     private:
         bool m_HandleOutput;
