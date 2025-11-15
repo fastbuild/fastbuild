@@ -9,14 +9,15 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
+template <class T> class Atomic;
 
 // Process
 //------------------------------------------------------------------------------
 class Process
 {
 public:
-    explicit Process( const volatile bool * mainAbortFlag = nullptr,
-                      const volatile bool * abortFlag = nullptr );
+    explicit Process( const Atomic<bool> * mainAbortFlag = nullptr,
+                      const Atomic<bool> * abortFlag = nullptr );
     ~Process();
 
     [[nodiscard]] bool Spawn( const char * executable,
@@ -41,6 +42,10 @@ public:
 #endif
     [[nodiscard]] bool HasAborted() const;
     [[nodiscard]] static uint32_t GetCurrentId();
+
+    // Copies not allowed
+    explicit Process( Process & other ) = delete;
+    Process & operator=( Process & other ) = delete;
 
 private:
 #if defined( __APPLE__ ) || defined( __LINUX__ )
@@ -106,8 +111,8 @@ private:
     int m_StdOutRead;
     int m_StdErrRead;
 #endif
-    const volatile bool * m_MainAbortFlag; // This member is set when we must cancel processes asap when the main process dies.
-    const volatile bool * m_AbortFlag;
+    const Atomic<bool> * const m_MainAbortFlag; // This member is set when we must cancel processes asap when the main process dies.
+    const Atomic<bool> * const m_AbortFlag;
 };
 
 //------------------------------------------------------------------------------

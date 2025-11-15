@@ -2369,7 +2369,7 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
 
 // CompileHelper::CONSTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool * abortPointer )
+ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const Atomic<bool> * abortPointer )
     : m_HandleOutput( handleOutput )
     , m_Process( FBuild::GetAbortBuildPointer(), abortPointer )
     , m_Result( 0 )

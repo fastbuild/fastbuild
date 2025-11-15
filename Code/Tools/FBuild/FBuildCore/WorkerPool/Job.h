@@ -35,7 +35,7 @@ public:
     void SetCacheName( const AString & cacheName ) { m_CacheName = cacheName; }
     const AString & GetCacheName() const { return m_CacheName; }
 
-    const volatile bool * GetAbortFlagPointer() const { return &m_Abort; }
+    const Atomic<bool> * GetAbortFlagPointer() const { return &m_Abort; }
     void CancelDueToRemoteRaceWin();
 
     // associate some data with this object, and destroy it when freed
@@ -115,7 +115,7 @@ private:
     Node * m_Node = nullptr;
     void * m_Data = nullptr;
     void * m_UserData = nullptr;
-    volatile bool m_Abort = false;
+    Atomic<bool> m_Abort{ false };
     bool m_DataIsCompressed:1;
     bool m_IsLocal:1;
     bool m_AllowZstdUse:1; // Can client accept Zstd results?
