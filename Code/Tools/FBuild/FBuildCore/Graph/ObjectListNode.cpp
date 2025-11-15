@@ -67,6 +67,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
 #if defined( __WINDOWS__ )
     REFLECT( m_PrecompiledHeaderCPPFile,            "PrecompiledHeaderCPPFile",         MetaHidden() )
 #endif
+    REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaHidden() )
     REFLECT( m_ExtraPDBPath,                        "ExtraPDBPath",                     MetaHidden() )
     REFLECT( m_ExtraASMPath,                        "ExtraASMPath",                     MetaHidden() )
     REFLECT( m_ExtraSourceDependenciesPath,         "ExtraSourceDependenciesPath",      MetaHidden() )
@@ -161,11 +162,10 @@ ObjectListNode::ObjectListNode()
         }
 
         // Check PCH creation command line options
-        AStackString pchObjectName; // TODO:A Use this
         const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
         if ( pchFlags.IsMSVC() || pchFlags.IsClangCl() )
         {
-            if ( ( (FunctionObjectList *)function )->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
+            if ( ( (FunctionObjectList *)function )->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), m_PCHObjectFileName ) == false )
             {
                 return false; // CheckMSVCPCHFlags_Create will have emitted an error
             }
@@ -179,7 +179,14 @@ ObjectListNode::ObjectListNode()
         }
 
         // Create the PCH node
-        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, ObjectNode::CompilerFlags(), m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
+        precompiledHeader = CreateObjectNode( nodeGraph,
+                                              iter,
+                                              function,
+                                              pchFlags,
+                                              ObjectNode::CompilerFlags(),
+                                              AString::GetEmpty(),
+                                              m_PCHOutputFile,
+                                              m_PCHInputFile );
         if ( precompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
@@ -741,7 +748,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
         }
 
         const BFFToken * token = nullptr;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, m_PreprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFileName, AString::GetEmpty() );
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, m_PreprocessorFlags, m_Preprocessor, objFile, inputFileName );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
@@ -788,36 +795,14 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const Function * function,
                                                const ObjectNode::CompilerFlags flags,
                                                const ObjectNode::CompilerFlags preprocessorFlags,
-                                               const AString & compilerOptions,
-                                               const AString & compilerOptionsDeoptimized,
                                                const AString & preprocessor,
-                                               const AString & preprocessorOptions,
                                                const AString & objectName,
-                                               const AString & objectInput,
-                                               const AString & pchObjectName )
+                                               const AString & objectInput )
 {
     ObjectNode * node = nodeGraph.CreateNode<ObjectNode>( objectName, iter );
     node->m_Compiler = m_Compiler;
-    node->m_CompilerOptions = compilerOptions;
-    node->m_CompilerOptionsDeoptimized = compilerOptionsDeoptimized;
     node->m_CompilerInputFile = objectInput;
-    node->m_PCHObjectFileName = pchObjectName;
-    if ( flags.IsCreatingPCH() )
-    {
-        // Precompiled headers are never de-optimized
-        node->m_DeoptimizeWritableFiles = false;
-        node->m_DeoptimizeWritableFilesWithToken = false;
-    }
-    else
-    {
-        node->m_DeoptimizeWritableFiles = m_DeoptimizeWritableFiles;
-        node->m_DeoptimizeWritableFilesWithToken = m_DeoptimizeWritableFilesWithToken;
-    }
-    node->m_CompilerForceUsing = m_CompilerForceUsing;
-    node->m_PreBuildDependencyNames = m_PreBuildDependencyNames;
-    node->m_PrecompiledHeader = m_PrecompiledHeaderName;
     node->m_Preprocessor = preprocessor;
-    node->m_PreprocessorOptions = preprocessorOptions;
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
     node->m_OwnerObjectList = this;

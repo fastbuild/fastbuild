@@ -22,6 +22,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_CustomEnvironmentVariables, "CustomEnvironmentVariables",  MetaOptional() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
+    REFLECT( m_AllowCaching,        "AllowCaching",         MetaOptional() )
     REFLECT( m_AllowResponseFile,   "AllowResponseFile",    MetaOptional() )
     REFLECT( m_ForceResponseFile,   "ForceResponseFile",    MetaOptional() )
     REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
@@ -368,7 +369,8 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
+    const bool skipHashing = ( !m_AllowCaching && !m_AllowDistribution );
+    if ( !m_Manifest.DoBuild( m_StaticDependencies, skipHashing ) )
     {
         return BuildResult::eFailed; // Generate will have emitted error
     }

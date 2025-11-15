@@ -317,7 +317,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
             return LoadResult::LOAD_ERROR; // error reading
         }
 
-        const uint64_t dataHash = xxHash3::Calc64( mem.Get(), size );
+        const uint64_t dataHash = xxHash3::Calc64Big( mem.Get(), size );
         if ( dataHash == usedFiles[ i ].m_DataHash )
         {
             // file didn't change, update stored timestamp to save time on the next run
@@ -562,7 +562,7 @@ void NodeGraph::Save( ChainedMemoryStream & stream, const char * nodeGraphDBFile
                 dataSize -= sizeof( NodeGraphHeader );
             }
 
-            accumulator.AddData( data, dataSize );
+            accumulator.AddDataBig( data, dataSize );
         }
         const uint64_t hash = accumulator.Finalize64();
 
@@ -1737,7 +1737,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, con
         ASSERT( tell == sizeof( NodeGraphHeader ) ); // Stream should be after header
         const char * data = ( static_cast<const char *>( nodeGraphStream.GetData() ) + tell );
         const size_t remainingSize = ( nodeGraphStream.GetSize() - tell );
-        const uint64_t hash = xxHash3::Calc64( data, remainingSize );
+        const uint64_t hash = xxHash3::Calc64Big( data, remainingSize );
         if ( hash != ngh.GetContentHash() )
         {
             return false; // DB is corrupt

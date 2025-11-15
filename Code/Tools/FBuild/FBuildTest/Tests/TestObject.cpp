@@ -37,6 +37,7 @@ private:
     void ClangExplicitLanguageType() const;
     void ClangDependencyArgs() const;
     void CLDependencyArgs() const;
+    void OwnerObjectList() const;
 };
 
 // Register Tests
@@ -53,6 +54,7 @@ REGISTER_TESTS_BEGIN( TestObject )
 #if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
     REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
 #endif
+    REGISTER_TEST( OwnerObjectList )
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -665,6 +667,111 @@ void TestObject::CLDependencyArgs() const
         AString depsFileContents;
         LoadFileContentsAsString( sourceDependenciesFile, depsFileContents );
         TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
+    }
+}
+
+//------------------------------------------------------------------------------
+void TestObject::OwnerObjectList() const
+{
+    // Check behavior of properties stored in OwnerObjectList
+
+    const char * const srcBFFFile = "Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectList/ownerobjectlist.bff";
+    const char * const dstBFFFile = "../tmp/Test/Object/OwnerObjectList/ownerobjectlist.bff";
+#if defined( __WINDOWS__ )
+    const char * const outputFile = "../tmp/Test/Object/OwnerObjectList/a.obj";
+#else
+    const char * const outputFile = "../tmp/Test/Object/OwnerObjectList/a.o";
+#endif
+    const char * const database = "../tmp/Test/Object/OwnerObjectList/fbuild.fdb";
+
+    // Read BFF file contents into string
+    AString bff;
+    {
+        FileStream f;
+        TEST_ASSERT( f.Open( srcBFFFile ) &&
+                     f.ReadIntoString( bff ) );
+    }
+
+    // Read config file into memory that modify and write
+    {
+        FileIO::EnsurePathExistsForFile( AStackString( dstBFFFile ) );
+        FileStream f;
+        TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
+                     f.WriteFromString( bff ) );
+    }
+
+    // Common options
+    FBuildTestOptions options;
+    options.m_ConfigFile = dstBFFFile;
+
+    // Clear output directory
+    EnsureFileDoesNotExist( outputFile );
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "OwnerObjectList" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+        CheckStatsNode( fBuild.GetStats(), 1, 1, Node::OBJECT_NODE );
+    }
+
+    EnsureFileExists( outputFile );
+
+    class BFFEdit
+    {
+    public:
+        BFFEdit( const char * from, bool shouldCauseRebuild )
+            : m_From( from )
+            , m_ShouldCauseRebuild( shouldCauseRebuild )
+        {
+        }
+        BFFEdit & operator=( const BFFEdit & other ) = delete;
+
+        const char * const m_From;
+        const bool m_ShouldCauseRebuild;
+    };
+    static const BFFEdit bffEdits[] =
+        {
+            { "// Comment", false },
+            { ".CompilerOptions +", true },
+            { ".CompilerOptionsDeoptimized +", true },
+            { ".PCHOptions +", true },
+            { ".PreprocessorOptions =", true },
+            { ".PreBuildDependencies =", true },
+            { ".CompilerForceUsing =", true },
+            { ".DeoptimizeWritableFiles =", true },
+            { ".DeoptimizeWritableFilesWithToken =", true },
+        };
+
+    for ( const BFFEdit & edit : bffEdits )
+    {
+        // First ensure no rebuilding without changes
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( database ) );
+            TEST_ASSERT( fBuild.Build( "OwnerObjectList" ) );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+            CheckStatsNode( fBuild.GetStats(), 1, 0, Node::OBJECT_NODE );
+        }
+
+        // Modify BFF
+        {
+            TEST_ASSERT( bff.Replace( edit.m_From, "//" ) == 1 );
+            FileStream f;
+            TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
+                         f.WriteFromString( bff ) );
+        }
+
+        // Ensure ObjectNode rebuilds after modifying ObjectListNode
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( database ) );
+            TEST_ASSERT( fBuild.Build( "OwnerObjectList" ) );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+            const uint32_t expectedBuild = edit.m_ShouldCauseRebuild ? 1 : 0;
+            CheckStatsNode( fBuild.GetStats(), 1, expectedBuild, Node::OBJECT_NODE );
+        }
     }
 }
 

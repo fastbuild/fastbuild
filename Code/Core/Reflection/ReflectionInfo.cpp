@@ -148,7 +148,7 @@ GETSET_PROPERTY_ARRAY( AString )
 void ReflectionInfo::SetTypeName( const char * typeName )
 {
     m_TypeName = typeName;
-    m_TypeNameCRC = xxHash::Calc32( typeName, AString::StrLen( typeName ) );
+    m_TypeNameCRC = xxHash3::Calc32( typeName, AString::StrLen( typeName ) );
 }
 
 // HasMetaDataInternal
@@ -231,7 +231,7 @@ void ReflectionInfo::AddPropertyMetaData( IMetaData & metaDataChain )
 //------------------------------------------------------------------------------
 const ReflectedProperty * ReflectionInfo::FindProperty( const char * name ) const
 {
-    const uint32_t nameCRC = xxHash::Calc32( name, AString::StrLen( name ) );
+    const uint32_t nameCRC = xxHash3::Calc32( name, AString::StrLen( name ) );
     return FindPropertyRecurse( nameCRC );
 }
 
