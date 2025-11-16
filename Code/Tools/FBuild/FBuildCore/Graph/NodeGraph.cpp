@@ -2258,7 +2258,9 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
             ASSERT( property.IsArray() == false );
             const Node * nodeA = *property.GetPtrToPropertyCustom<Node *>( baseA );
             const Node * nodeB = *property.GetPtrToPropertyCustom<Node *>( baseB );
-            if ( nodeA->GetName() != nodeB->GetName() )
+            const bool same = ( nodeA && nodeB ) ? ( nodeA->GetName() == nodeB->GetName() )
+                                                 : ( ( nodeA == nullptr ) && ( nodeB == nullptr ) );
+            if ( !same )
             {
                 return false;
             }

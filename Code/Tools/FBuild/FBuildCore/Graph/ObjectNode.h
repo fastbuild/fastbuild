@@ -292,9 +292,7 @@ protected:
 
     // Exposed Properties
     friend class ObjectListNode;
-    AString m_Compiler;
     AString m_CompilerInputFile;
-    AString m_Preprocessor;
 
     // Internal State
     CompilerFlags m_CompilerFlags;
