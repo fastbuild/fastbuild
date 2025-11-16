@@ -28,17 +28,23 @@ EXE_LINUX_FBUILDWORKER       = '../tmp/x64Linux-Release/Tools/FBuild/FBuildWorke
 EXE_LINUX_FBUILDWORKER_SYM   = '../tmp/x64Linux-Release/Tools/FBuild/FBuildWorker/fbuildworker.debug'
 EXE_OSX_FBUILD               = '../tmp/OSX-Release/Tools/FBuild/FBuild/FBuild'
 EXE_OSX_FBUILDWORKER         = '../tmp/OSX-Release/Tools/FBuild/FBuildWorker/FBuildWorker'
-EXE_WINDOWS_FBUILD           = '../tmp/x64-Release/Tools/FBuild/FBuild/FBuild.exe'
-EXE_WINDOWS_FBUILD_SYM       = '../tmp/x64-Release/Tools/FBuild/FBuild/FBuild.pdb'
-EXE_WINDOWS_FBUILDWORKER     = '../tmp/x64-Release/Tools/FBuild/FBuildWorker/FBuildWorker.exe'
-EXE_WINDOWS_FBUILDWORKER_SYM = '../tmp/x64-Release/Tools/FBuild/FBuildWorker/FBuildWorker.pdb'
+EXE_WINDOWS_ARM_FBUILD           = '../tmp/ARM64-Release/Tools/FBuild/FBuild/FBuild.exe'
+EXE_WINDOWS_ARM_FBUILD_SYM       = '../tmp/ARM64-Release/Tools/FBuild/FBuild/FBuild.pdb'
+EXE_WINDOWS_ARM_FBUILDWORKER     = '../tmp/ARM64-Release/Tools/FBuild/FBuildWorker/FBuildWorker.exe'
+EXE_WINDOWS_ARM_FBUILDWORKER_SYM = '../tmp/ARM64-Release/Tools/FBuild/FBuildWorker/FBuildWorker.pdb'
+EXE_WINDOWS_X64_FBUILD           = '../tmp/x64-Release/Tools/FBuild/FBuild/FBuild.exe'
+EXE_WINDOWS_X64_FBUILD_SYM       = '../tmp/x64-Release/Tools/FBuild/FBuild/FBuild.pdb'
+EXE_WINDOWS_X64_FBUILDWORKER     = '../tmp/x64-Release/Tools/FBuild/FBuildWorker/FBuildWorker.exe'
+EXE_WINDOWS_X64_FBUILDWORKER_SYM = '../tmp/x64-Release/Tools/FBuild/FBuildWorker/FBuildWorker.pdb'
 # Paths to integration files
-INTEGRATION_FILES   = {
-                        '../Code/Tools/FBuild/Integration/FASTBuild.sublime-syntax.txt',
-                        '../Code/Tools/FBuild/Integration/fbuild.bash-completion',
-                        '../Code/Tools/FBuild/Integration/notepad++markup.xml',
-                        '../Code/Tools/FBuild/Integration/usertype.dat',
-                      }
+INTEGRATION_FILES_COPY  = {
+                            '../Code/Tools/FBuild/Integration/FASTBuild.sublime-syntax.txt',
+                            '../Code/Tools/FBuild/Integration/fbuild.bash-completion',
+                            '../Code/Tools/FBuild/Integration/notepad++markup.xml',
+                          }
+INTEGRATION_FILES_ZIP   = {
+                            '../Code/Tools/FBuild/Integration/usertype.dat',
+                          }
 # License file
 LICENSE_TXT = '../Code/LICENSE.TXT'
 # Output path
@@ -107,8 +113,10 @@ def check_binaries(version):
     ok =  check_binary(version, EXE_OSX_FBUILD)
     ok &= check_binary(version, EXE_OSX_FBUILDWORKER)
     # Windows
-    ok &= check_binary(version, EXE_WINDOWS_FBUILD, EXE_WINDOWS_FBUILD_SYM)
-    ok &= check_binary(version, EXE_WINDOWS_FBUILDWORKER, EXE_WINDOWS_FBUILDWORKER_SYM)
+    ok &= check_binary(version, EXE_WINDOWS_ARM_FBUILD, EXE_WINDOWS_ARM_FBUILD_SYM)
+    ok &= check_binary(version, EXE_WINDOWS_ARM_FBUILDWORKER, EXE_WINDOWS_ARM_FBUILDWORKER_SYM)
+    ok &= check_binary(version, EXE_WINDOWS_X64_FBUILD, EXE_WINDOWS_X64_FBUILD_SYM)
+    ok &= check_binary(version, EXE_WINDOWS_X64_FBUILDWORKER, EXE_WINDOWS_X64_FBUILDWORKER_SYM)
     return ok
 
 # prepare_output_folders
@@ -137,21 +145,38 @@ def handle_integration_files(version):
     else:
         print_fail('FAIL', 'Integration Files up-to-date')
 
-    # Stage integration files in output dir
+    # Copy integration files to output dir
     copy_ok = True
-    for filename in INTEGRATION_FILES:
-        #try:
+    for filename in INTEGRATION_FILES_COPY:
+        try:
             # Ensure destination writable if it already exists
             dst_file = f'{OUTPUT_ROOT}/{version}/' + filename[filename.rfind('/') + 1:]
             if os.path.exists(dst_file):
                 os.chmod(dst_file, stat.S_IWRITE)
             # Copy file
             shutil.copy(filename, dst_file)
-        #except:
-        #    print_fail('FAIL', f'Copy failed: {filename} -> {OUTPUT_ROOT}/{version}/')
-        #    copy_ok = False
+        except:
+            print_fail('FAIL', f'Copy failed: {filename} -> {OUTPUT_ROOT}/{version}/')
+            copy_ok = False
     if copy_ok:
         print_ok('Copy Integration Files')
+
+    # Zip integration files that are shipped in zipped form
+    zip_ok = True
+    for filename in INTEGRATION_FILES_ZIP:
+        try:
+            # Ensure destination writable if it already exists
+            zip_file = f'{OUTPUT_ROOT}/{version}/' + filename[filename.rfind('/') + 1:filename.rfind('.')] + '.zip'
+            if os.path.exists(dst_file):
+                os.chmod(dst_file, stat.S_IWRITE)
+            # Zip file
+            with zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+                archive.write(filename, filename[filename.rfind('/') + 1:])
+        except:
+            print_fail('FAIL', f'Zip failed: {filename} -> {OUTPUT_ROOT}/{version}/')
+            copy_ok = False
+    if zip_ok:
+        print_ok('Zip Integration Files')
 
     # Overall result
     return check_ok and copy_ok
@@ -170,9 +195,9 @@ def create_binary_archive(version, os, arch, exe1, exe2):
         print_fail('FAIL', f'{os}-{arch} Binaries')
         return False
 
-# get_files_recurse
+# get_source_files_recurse
 #-------------------------------------------------------------------------------
-def get_files_recurse(base_path, out_files):
+def get_source_files_recurse(base_path, out_files):
     # traverse directory, and list directories as dirs and files as files
     for root, dirs, files in os.walk(base_path):
         path = root.split('/')
@@ -184,6 +209,7 @@ def get_files_recurse(base_path, out_files):
                file.endswith('.pyc') or \
                file == 'compile_commands.json' or \
                file == 'fbuild_profile.json' or \
+               file == 'FBuild.pdb' or \
                file == 'profile.json':
                continue;
 
@@ -205,9 +231,9 @@ def create_source_archive(version):
     try:
         # Get source files
         files = []
-        get_files_recurse('../Code', files)
-        get_files_recurse('../External', files)
-        get_files_recurse('../Scripts', files)
+        get_source_files_recurse('../Code', files)
+        get_source_files_recurse('../External', files)
+        get_source_files_recurse('../Scripts', files)
 
         # Create archive
         with zipfile.ZipFile(f'{OUTPUT_ROOT}/{version}/FASTBuild-Src-v{version}.zip', 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
@@ -217,16 +243,20 @@ def create_source_archive(version):
                 archive.write(file, relative_file)
 
             # Add binaries
-            archive.write(EXE_WINDOWS_FBUILD,           'Bin/Windows-x64/FBuild.exe')
-            archive.write(EXE_WINDOWS_FBUILD_SYM,       'Bin/Windows-x64/FBuild.pdb')
-            archive.write(EXE_WINDOWS_FBUILDWORKER,     'Bin/Windows-x64/FBuildWorker.exe')
-            archive.write(EXE_WINDOWS_FBUILDWORKER_SYM, 'Bin/Windows-x64/FBuildWorker.pdb')
-            archive.write(EXE_LINUX_FBUILD,             'Bin/Linux-x64/fbuild')
-            archive.write(EXE_LINUX_FBUILD_SYM,         'Bin/Linux-x64/fbuild.debug')
-            archive.write(EXE_LINUX_FBUILDWORKER,       'Bin/Linux-x64/fbuildworker')
-            archive.write(EXE_LINUX_FBUILDWORKER_SYM,   'Bin/Linux-x64/fbuildworker.debug')
-            archive.write(EXE_OSX_FBUILD,               'Bin/OSX-x64+ARM/FBuild')
-            archive.write(EXE_OSX_FBUILDWORKER,         'Bin/OSX-x64+ARM/FBuildWorker')
+            archive.write(EXE_WINDOWS_ARM_FBUILD,           'Bin/Windows-ARM/FBuild.exe')
+            archive.write(EXE_WINDOWS_ARM_FBUILD_SYM,       'Bin/Windows-ARM/FBuild.pdb')
+            archive.write(EXE_WINDOWS_ARM_FBUILDWORKER,     'Bin/Windows-ARM/FBuildWorker.exe')
+            archive.write(EXE_WINDOWS_ARM_FBUILDWORKER_SYM, 'Bin/Windows-ARM/FBuildWorker.pdb')
+            archive.write(EXE_WINDOWS_X64_FBUILD,           'Bin/Windows-x64/FBuild.exe')
+            archive.write(EXE_WINDOWS_X64_FBUILD_SYM,       'Bin/Windows-x64/FBuild.pdb')
+            archive.write(EXE_WINDOWS_X64_FBUILDWORKER,     'Bin/Windows-x64/FBuildWorker.exe')
+            archive.write(EXE_WINDOWS_X64_FBUILDWORKER_SYM, 'Bin/Windows-x64/FBuildWorker.pdb')
+            archive.write(EXE_LINUX_FBUILD,                 'Bin/Linux-x64/fbuild')
+            archive.write(EXE_LINUX_FBUILD_SYM,             'Bin/Linux-x64/fbuild.debug')
+            archive.write(EXE_LINUX_FBUILDWORKER,           'Bin/Linux-x64/fbuildworker')
+            archive.write(EXE_LINUX_FBUILDWORKER_SYM,       'Bin/Linux-x64/fbuildworker.debug')
+            archive.write(EXE_OSX_FBUILD,                   'Bin/OSX-x64+ARM/FBuild')
+            archive.write(EXE_OSX_FBUILDWORKER,             'Bin/OSX-x64+ARM/FBuildWorker')
         print_ok('Source')
         return True
     except:
@@ -238,7 +268,8 @@ def create_source_archive(version):
 def create_archives(version):
     print_header('Creating Archives')
     # Binary archives
-    ok  = create_binary_archive(version, 'Windows', 'x64', EXE_WINDOWS_FBUILD, EXE_WINDOWS_FBUILDWORKER)
+    ok  = create_binary_archive(version, 'Windows', 'ARM', EXE_WINDOWS_ARM_FBUILD, EXE_WINDOWS_ARM_FBUILDWORKER)
+    ok &= create_binary_archive(version, 'Windows', 'x64', EXE_WINDOWS_X64_FBUILD, EXE_WINDOWS_X64_FBUILDWORKER)
     ok &= create_binary_archive(version, 'OSX', 'x64+ARM', EXE_OSX_FBUILD, EXE_OSX_FBUILDWORKER)
     ok &= create_binary_archive(version, 'Linux', 'x64', EXE_LINUX_FBUILD, EXE_LINUX_FBUILDWORKER)
 
