@@ -68,11 +68,7 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
-    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile())
     REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
-
-    // Preprocessor
-    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
 
     // Internal State
     REFLECT( m_CompilerFlags.m_Flags,               "CompilerFlags",                    MetaHidden() )
@@ -101,13 +97,6 @@ ObjectNode::ObjectNode()
 
     // NOTE: ConcurrencyGroup stored in mOwnerObjectList
 
-    // .Compiler
-    CompilerNode * compiler( nullptr );
-    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compiler ) )
-    {
-        return false; // GetCompilerNode will have emitted an error
-    }
-
     // .CompilerInputFile
     Dependencies compilerInputFile;
     if ( !Function::GetFileNode( nodeGraph, iter, function, m_CompilerInputFile, ".CompilerInputFile", compilerInputFile ) )
@@ -115,16 +104,6 @@ ObjectNode::ObjectNode()
         return false; // GetFileNode will have emitted an error
     }
     ASSERT( compilerInputFile.GetSize() == 1 ); // Should not be possible to expand to > 1 thing
-
-    // .Preprocessor
-    CompilerNode * preprocessor( nullptr );
-    if ( m_Preprocessor.IsEmpty() == false )
-    {
-        if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, preprocessor ) )
-        {
-            return false; // GetCompilerNode will have emitted an error
-        }
-    }
 
     // .CompilerForceUsing
     Dependencies compilerForceUsing;
@@ -151,6 +130,9 @@ ObjectNode::ObjectNode()
                                        precompiledHeader ) );
         ASSERT( precompiledHeader.GetSize() == 1 );
     }
+
+    CompilerNode * compiler = m_OwnerObjectList->GetCompiler();
+    CompilerNode * preprocessor = m_OwnerObjectList->GetPreprocessor();
 
     // Store Dependencies
     m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
@@ -1264,16 +1246,8 @@ CompilerNode * ObjectNode::GetCompiler() const
 //------------------------------------------------------------------------------
 CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
 {
-    if ( m_Preprocessor.IsEmpty() )
-    {
-        return nullptr;
-    }
-    size_t preprocessorIndex = 2;
-    if ( GetPrecompiledHeaderName().IsEmpty() == false )
-    {
-        ++preprocessorIndex;
-    }
-    return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo<CompilerNode>();
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPreprocessor()
+                             : nullptr;
 }
 
 // GetPrecompiledHeader()
@@ -1904,7 +1878,7 @@ void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre,
     // Skip Compiler, InputFile, PCH and Preprocessor
     const size_t startIndex = 2 +
                               ( !GetPrecompiledHeaderName().IsEmpty() ? 1u : 0u ) +
-                              ( !m_Preprocessor.IsEmpty() ? 1u : 0u );
+                              ( ( GetDedicatedPreprocessor() != nullptr ) ? 1u : 0u );
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i = startIndex; i < endIndex; ++i )
     {

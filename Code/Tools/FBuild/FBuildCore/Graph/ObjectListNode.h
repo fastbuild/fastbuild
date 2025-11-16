@@ -46,7 +46,8 @@ public:
     const AString & GetPreprocessorOptions() const { return m_PreprocessorOptions; }
     const Array<AString> & GetPreBuildDependencyNames() const { return m_PreBuildDependencyNames; }
     const Array<AString> & GetCompilerForceUsing() const { return m_CompilerForceUsing; }
-    const AString & GetCompiler() const { return m_Compiler; }
+    CompilerNode * GetCompiler() const { return m_CompilerNode; }
+    CompilerNode * GetPreprocessor() const { return m_PreprocessorNode; }
     bool GetDeoptimizeWritableFiles() const { return m_DeoptimizeWritableFiles; }
     bool GetDeoptimizeWritableFilesWithToken() const { return m_DeoptimizeWritableFilesWithToken; }
     const AString & GetPrecompiledHeaderName() const { return m_PrecompiledHeaderName; }
@@ -77,7 +78,6 @@ protected:
                                    const Function * function,
                                    const ObjectNode::CompilerFlags flags,
                                    const ObjectNode::CompilerFlags preprocessorFlags,
-                                   const AString & preprocessor,
                                    const AString & objectName,
                                    const AString & objectInput );
 
@@ -115,6 +115,8 @@ protected:
     AString m_ConcurrencyGroupName;
 
     // Internal State
+    CompilerNode * m_CompilerNode = nullptr;
+    CompilerNode * m_PreprocessorNode = nullptr;
     AString m_PrecompiledHeaderName;
 #if defined( __WINDOWS__ )
     AString m_PrecompiledHeaderCPPFile;

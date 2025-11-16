@@ -97,12 +97,12 @@ void CompilationDatabase::VisitNodes( const NodeGraph & nodeGraph,
             }
             case Node::OBJECT_LIST_NODE:
             {
-                HandleObjectListNode( nodeGraph, node->CastTo<ObjectListNode>() );
+                HandleObjectListNode( node->CastTo<ObjectListNode>() );
                 break;
             }
             case Node::LIBRARY_NODE:
             {
-                HandleObjectListNode( nodeGraph, node->CastTo<LibraryNode>() );
+                HandleObjectListNode( node->CastTo<LibraryNode>() );
                 break;
             }
             default: break;
@@ -112,13 +112,13 @@ void CompilationDatabase::VisitNodes( const NodeGraph & nodeGraph,
 
 // HandleObjectListNode
 //------------------------------------------------------------------------------
-void CompilationDatabase::HandleObjectListNode( const NodeGraph & nodeGraph, ObjectListNode * node )
+void CompilationDatabase::HandleObjectListNode( ObjectListNode * node )
 {
     ObjectListContext ctx;
     ctx.m_DB = this;
     ctx.m_ObjectListNode = node;
 
-    const Node * compilerNode = nodeGraph.FindNode( node->GetCompiler() );
+    const CompilerNode * compilerNode = node->GetCompiler();
 
     // Check for MSVC
     const bool isMSVC = compilerNode &&

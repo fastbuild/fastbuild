@@ -40,7 +40,7 @@ protected:
     };
 
     void VisitNodes( const NodeGraph & nodeGraph, const Dependencies & dependencies );
-    void HandleObjectListNode( const NodeGraph & nodeGraph, ObjectListNode * node );
+    void HandleObjectListNode( ObjectListNode * node );
     static void HandleInputFile( const AString & inputFile, const AString & baseDir, void * userData );
     void HandleInputFile( const AString & inputFile, const AString & baseDir, ObjectListContext * ctx );
 

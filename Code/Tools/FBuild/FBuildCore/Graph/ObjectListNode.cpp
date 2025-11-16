@@ -63,6 +63,8 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_ConcurrencyGroupName,                "ConcurrencyGroupName",             MetaOptional() )
 
     // Internal State
+    REFLECT( m_CompilerNode,                        "CompilerNode",                     MetaHidden() )
+    REFLECT( m_PreprocessorNode,                    "PreprocessorNode",                 MetaHidden() )
     REFLECT( m_PrecompiledHeaderName,               "PrecompiledHeaderName",            MetaHidden() )
 #if defined( __WINDOWS__ )
     REFLECT( m_PrecompiledHeaderCPPFile,            "PrecompiledHeaderCPPFile",         MetaHidden() )
@@ -109,25 +111,23 @@ ObjectListNode::ObjectListNode()
     }
 
     // .Compiler
-    CompilerNode * compilerNode( nullptr );
-    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compilerNode ) )
+    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, m_CompilerNode ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
 
     // Check for CSharp (this must use CSAssembly not ObjectList)
-    if ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CSHARP )
+    if ( m_CompilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CSHARP )
     {
         Error::Error_1503_CSharpCompilerShouldUseCSAssembly( iter, function );
         return false;
     }
 
     // .Preprocessor
-    CompilerNode * preprocessorNode( nullptr );
     if ( m_Preprocessor.IsEmpty() == false )
     {
         // get the preprocessor executable
-        if ( Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, preprocessorNode ) == false )
+        if ( Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, m_PreprocessorNode ) == false )
         {
             return false; // GetCompilerNode will have emitted an error
         }
@@ -162,7 +162,7 @@ ObjectListNode::ObjectListNode()
         }
 
         // Check PCH creation command line options
-        const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
+        const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( m_CompilerNode, m_PCHOptions, true, false );
         if ( pchFlags.IsMSVC() || pchFlags.IsClangCl() )
         {
             if ( ( (FunctionObjectList *)function )->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), m_PCHObjectFileName ) == false )
@@ -184,7 +184,6 @@ ObjectListNode::ObjectListNode()
                                               function,
                                               pchFlags,
                                               ObjectNode::CompilerFlags(),
-                                              AString::GetEmpty(),
                                               m_PCHOutputFile,
                                               m_PCHInputFile );
         if ( precompiledHeader == nullptr )
@@ -204,10 +203,10 @@ ObjectListNode::ObjectListNode()
         const bool usingPCH = ( m_PCHOutputFile.IsEmpty() == false );
 
         // Cache flags for compiler and preprocessor
-        m_CompilerFlags = ObjectNode::DetermineFlags( compilerNode, m_CompilerOptions, false, usingPCH );
-        if ( preprocessorNode )
+        m_CompilerFlags = ObjectNode::DetermineFlags( m_CompilerNode, m_CompilerOptions, false, usingPCH );
+        if ( m_PreprocessorNode )
         {
-            m_PreprocessorFlags = ObjectNode::DetermineFlags( preprocessorNode, m_PreprocessorOptions, false, usingPCH );
+            m_PreprocessorFlags = ObjectNode::DetermineFlags( m_PreprocessorNode, m_PreprocessorOptions, false, usingPCH );
         }
 
         // Check validity of PCH setup
@@ -265,8 +264,8 @@ ObjectListNode::ObjectListNode()
         // Cache the CPP file associated with the PCH for MSVC (and Clang in MSVC mode)
         // so that it can be excluded from normal compilation
 #if defined( __WINDOWS__ )
-        if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) ||
-             ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CLANG_CL ) )
+        if ( ( m_CompilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) ||
+             ( m_CompilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CLANG_CL ) )
         {
             m_PrecompiledHeaderCPPFile = precompiledHeader->GetPrecompiledHeaderCPPFile()->GetName();
         }
@@ -748,7 +747,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
         }
 
         const BFFToken * token = nullptr;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, m_PreprocessorFlags, m_Preprocessor, objFile, inputFileName );
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, m_PreprocessorFlags, objFile, inputFileName );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
@@ -795,14 +794,11 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const Function * function,
                                                const ObjectNode::CompilerFlags flags,
                                                const ObjectNode::CompilerFlags preprocessorFlags,
-                                               const AString & preprocessor,
                                                const AString & objectName,
                                                const AString & objectInput )
 {
     ObjectNode * node = nodeGraph.CreateNode<ObjectNode>( objectName, iter );
-    node->m_Compiler = m_Compiler;
     node->m_CompilerInputFile = objectInput;
-    node->m_Preprocessor = preprocessor;
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
     node->m_OwnerObjectList = this;
