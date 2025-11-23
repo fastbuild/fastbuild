@@ -168,7 +168,6 @@ LocalDebuggerWorkingDirectory
 Output
 OutputDirectory
 PCHInputFile
-PCHObjectFileName
 PCHOptions
 PCHOutputFile
 PackagePath
