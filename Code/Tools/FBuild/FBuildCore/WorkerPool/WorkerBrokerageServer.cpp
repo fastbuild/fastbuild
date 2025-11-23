@@ -127,7 +127,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
             {
                 // Version
                 AStackString buffer;
-                buffer.AppendFormat( "Version: %s\n", FBUILD_VERSION_STRING );
+                buffer.AppendFormat( "Version: %s\n", GetVersionString() );
 
                 // Username
                 AStackString userName;

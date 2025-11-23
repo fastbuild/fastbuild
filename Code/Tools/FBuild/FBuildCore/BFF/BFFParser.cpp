@@ -1679,7 +1679,7 @@ void BFFParser::CreateBuiltInVariables()
     {
         AStackString varName( "._FASTBUILD_VERSION_STRING_" );
         ASSERT( BFFStackFrame::GetVarAny( AStackString( varName.Get() + 1 ) ) == nullptr );
-        BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), AStackString( FBUILD_VERSION_STRING ), &m_BaseStackFrame );
+        BFFStackFrame::SetVarString( varName, BFFToken::GetBuiltInToken(), AStackString( GetVersionString() ), &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
 
@@ -1687,7 +1687,7 @@ void BFFParser::CreateBuiltInVariables()
     {
         AStackString varName( "._FASTBUILD_VERSION_" );
         ASSERT( BFFStackFrame::GetVarAny( AStackString( varName.Get() + 1 ) ) == nullptr );
-        BFFStackFrame::SetVarInt( varName, BFFToken::GetBuiltInToken(), (int32_t)FBUILD_VERSION, &m_BaseStackFrame );
+        BFFStackFrame::SetVarInt( varName, BFFToken::GetBuiltInToken(), (int32_t)GetVersionIdentifier(), &m_BaseStackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
 
