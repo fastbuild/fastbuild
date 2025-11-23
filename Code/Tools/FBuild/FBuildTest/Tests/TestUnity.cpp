@@ -616,8 +616,6 @@ void TestUnity::LinkMultiple_InputFiles() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/LinkMultiple_InputFiles/fbuild.bff";
     const char * dbFile = "../tmp/Test/Unity/LinkMultiple_InputFiles/fbuild.fdb";
 
-    options.m_NumWorkerThreads = 1; // DO NOT SUBMIT
-
     // Compile
     {
         FBuildForTest fBuild( options );
