@@ -136,7 +136,7 @@ void JSONReport::CreateOverview( const FBuildStats & stats )
     Write( "\"Remote CPU Time\": \"%s (%.1f:1)\",\n\t\t", buffer.Get(), (double)remoteRatio );
 
     // version info
-    Write( "\"Version\": \"%s %s\",\n\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    Write( "\"Version\": \"%s %s\",\n\t\t", GetVersionString(), FBUILD_VERSION_PLATFORM );
 
     // report time
     AStackString reportDateTime;

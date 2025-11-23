@@ -304,7 +304,7 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
     Write( "<tr><td>Remote CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)remoteRatio );
 
     // version info
-    Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", GetVersionString(), FBUILD_VERSION_PLATFORM );
 
     // report time
     AStackString reportDateTime;
