@@ -445,6 +445,13 @@
     FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %zu boolean operators supported.", BFFParser::kMaxOperatorHistory );
 }
 
+// Error_1048_ElifWithoutIf
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1048_ElifWithoutIf( const BFFToken * iter )
+{
+    FormatError( iter, 1048u, nullptr, "#elif without matching #if or #elif." );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFToken * iter,
