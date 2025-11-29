@@ -56,6 +56,14 @@ protected:
     bool HandleDirective_IfExists( BFFTokenRange & iter, bool * outResult );
     bool HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool * outResult );
     bool HandleDirective_IfDefined( BFFTokenRange & iter, bool * outResult );
+
+    enum class IfBlockEndType
+    {
+        ELIF,
+        ELSE,
+        ENDIF
+    };
+
     bool ParseToEndIf( const char *& pos, const char * end, const BFFFile & file, bool allowElse, const char *& outBlockEnd, IfBlockEndType * outEndType );
     bool HandleDirective_Import( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_Include( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
@@ -63,13 +71,6 @@ protected:
     bool HandleDirective_Undef( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
 
     void ExpandIncludePath( const BFFFile & file, AString & includePath ) const;
-
-    enum IfBlockEndType
-    {
-        ELIF,
-        ELSE,
-        ENDIF
-    }
 
     struct IncludedFile
     {

@@ -533,6 +533,7 @@ bool BFFTokenizer::HandleDirective( const char *& pos, const char * end, const B
     ++pos;
 
     StackArray<BFFToken> args;
+    const char * argsStart = pos;
 
     if ( ParseDirectiveLine( pos, end, file, args ) == false )
     {
@@ -619,7 +620,7 @@ bool BFFTokenizer::HandleDirective( const char *& pos, const char * end, const B
 
 // ParseDirectiveLine
 //------------------------------------------------------------------------------
-BFFTokenRange BFFTokenizer::ParseDirectiveLine( const char *& pos, const char * end, const BFFFile & file, StackArray<BFFToken> & argsOut)
+bool BFFTokenizer::ParseDirectiveLine( const char *& pos, const char * end, const BFFFile & file, StackArray<BFFToken> & argsOut)
 {
     // Take note of the number of non-directive tokens
     const size_t numTokens = m_Tokens.GetSize();
@@ -642,7 +643,7 @@ BFFTokenRange BFFTokenizer::ParseDirectiveLine( const char *& pos, const char * 
     const size_t numArgTokens = m_Tokens.GetSize() - numTokens;
     for ( size_t i = 0; i < numArgTokens; ++i )
     {
-        args.Append( Move( m_Tokens[ numTokens + i ] ) );
+        argsOut.Append( Move( m_Tokens[ numTokens + i ] ) );
     }
     for ( size_t i = 0; i < numArgTokens; ++i )
     {
@@ -752,8 +753,6 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
         trueBlockBegin = ifBlockBegin;
         trueBlockEnd = ifBlockEnd;
     }
-
-    const char * prevBlockEnd = ifBlockEnd;
 
     while( endType == IfBlockEndType::ELIF )
     {
@@ -895,7 +894,7 @@ bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenR
         }
 
         // Negate result to handle "#if !"
-        if ( ( evaluateResult ) && ( ifOperator & IF_NEGATE ) )
+        if ( ( outResult != nullptr ) && ( ifOperator & IF_NEGATE ) )
         {
             result = !( result );
         }
