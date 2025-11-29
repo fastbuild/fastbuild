@@ -11,6 +11,7 @@
                                     .ZstdCompilerOptions    = ' /wd4365'    // conversion from '%s' to '%s', signed/unsigned mismatch
                                                             + ' /wd4464'    // relative include path contains '..'
                                                             + ' /wd4574'    // '__has_attribute' is defined to be '0': did you mean to use '#if __has_attribute'?
+                                                            + ' /wd4668'    // '_M_X64' is not defined as a preprocessor macro, replacing with '0' for '#if/#elif'
                                                             + ' /wd5262'    // implicit fall-through occurs here; are you missing a break statement?
                                                             + ' /wd6011'    // Dereferencing NULL pointer 'ptr'.
                                                             + ' /wd6239'    // (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
@@ -26,6 +27,7 @@
 
                                                             + ' -O2'        // Compile with optimizations even in debug to improve performance
                                   ]
+    .ZstdOptions_ARM64          = .ZstdOptions_x64
     .ZstdOptions_x64Clang       = [
                                     .ZstdCompilerOptions    = ' -O2'        // Compile with optimizations even in debug to improve performance
                                   ]

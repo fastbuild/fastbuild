@@ -47,7 +47,7 @@ void TestZW::Caching() const
         options.m_UseCacheWrite = true;
         options.m_ForceCleanBuild = true;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         EnsureFileDoesNotExist( objFile );
@@ -65,7 +65,7 @@ void TestZW::Caching() const
 
     // No op
     {
-        FBuild fBuild( baseOptions );
+        FBuildForTest fBuild( baseOptions );
         TEST_ASSERT( fBuild.Initialize( dbFileName ) );
         TEST_ASSERT( fBuild.Build( "Caching" ) );
 
@@ -83,7 +83,7 @@ void TestZW::Caching() const
         FBuildOptions options( baseOptions );
         options.m_UseCacheRead = true;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "Caching" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFileName ) );
@@ -99,7 +99,7 @@ void TestZW::Caching() const
 
     // No op (after cache retrieval)
     {
-        FBuild fBuild( baseOptions );
+        FBuildForTest fBuild( baseOptions );
         TEST_ASSERT( fBuild.Initialize( dbFileName ) );
         TEST_ASSERT( fBuild.Build( "Caching" ) );
 

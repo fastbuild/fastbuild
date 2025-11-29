@@ -62,7 +62,7 @@ void TestRemoveDir::RemoveDirRecurse() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     CreateFiles();
@@ -93,7 +93,7 @@ void TestRemoveDir::RemoveDirRecurseNoExist() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Ensure no files or directories exist
@@ -121,7 +121,7 @@ void TestRemoveDir::RemoveDirNoRecurse() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     CreateFiles();
@@ -156,7 +156,7 @@ void TestRemoveDir::RemoveDirNoRemoveDirs() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     CreateFiles();
@@ -187,7 +187,7 @@ void TestRemoveDir::RemoveDirNoRemoveRootDir() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     CreateFiles();

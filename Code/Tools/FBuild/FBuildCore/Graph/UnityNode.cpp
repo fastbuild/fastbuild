@@ -525,7 +525,7 @@ UnityNode::~UnityNode()
             m_UnityFileNames.Append( unityName );
         }
 
-        stamps.Append( xxHash3::Calc64( output.Get(), output.GetLength() ) );
+        stamps.Append( xxHash3::Calc64Big( output.Get(), output.GetLength() ) );
 
         // need to write the unity file?
         bool needToWrite = false;

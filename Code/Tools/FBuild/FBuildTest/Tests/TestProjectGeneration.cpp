@@ -253,7 +253,7 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Data/TestProjectGeneration/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
     // Delete old files from previous runs
@@ -430,7 +430,7 @@ void TestProjectGeneration::IntellisenseAndCodeSense() const
     // Parse bff
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Intellisense/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Generate project
@@ -799,7 +799,7 @@ void TestProjectGeneration::VCXProj_DefaultConfigs() const
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/VCXProj_DefaultConfigs/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete files from previous builds
@@ -843,7 +843,7 @@ void TestProjectGeneration::VCXProj_PerConfigOverrides() const
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/VCXProj_PerConfigOverrides/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete files from previous builds
@@ -1248,7 +1248,7 @@ void TestProjectGeneration::Solution_Empty() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Empty/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -1276,7 +1276,7 @@ void TestProjectGeneration::Solution_SolutionRelativePaths() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_SolutionRelativePaths/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -1315,7 +1315,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_None() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_None/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -1349,7 +1349,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_Project/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -1395,7 +1395,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_PerSolutionConfig/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -1434,7 +1434,7 @@ void TestProjectGeneration::Solution_Items() const
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -1462,7 +1462,7 @@ void TestProjectGeneration::VSExternalProj_ExternalProject() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -1501,7 +1501,7 @@ void TestProjectGeneration::VSExternalProj_ExternalProjectWrongData() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild_WrongData.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
@@ -1521,7 +1521,7 @@ void TestProjectGeneration::VSExternalProj_ExternalProject_MissingProjectGUID() 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild_MissingProjectGUID.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // building will fail

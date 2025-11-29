@@ -226,7 +226,7 @@ void TestGraph::TestSerialization() const
 
         FBuildOptions options;
         options.m_ConfigFile = "fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
         TEST_ASSERT( FileIO::FileExists( dbFile1 ) );
@@ -236,7 +236,7 @@ void TestGraph::TestSerialization() const
     {
         FBuildOptions options;
         options.m_ConfigFile = "fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile2 ) );
         TEST_ASSERT( FileIO::FileExists( dbFile2 ) );
@@ -277,7 +277,7 @@ void TestGraph::TestCleanPath() const
     fo.SetWorkingDir( AStackString( "/tmp/subDir" ) );
 #endif
 
-    FBuild f( fo );
+    FBuildForTest f( fo );
 
 #if defined( __WINDOWS__ )
     #define CHECK( a, b, c ) \
@@ -375,7 +375,7 @@ void TestGraph::TestCleanPathPartial() const
     fo.SetWorkingDir( AStackString( "/tmp/subDir" ) );
 #endif
 
-    FBuild f( fo );
+    FBuildForTest f( fo );
 
 #define CHECK( input, expectedOutput, makeFullPath ) \
         do \
@@ -479,7 +479,7 @@ void TestGraph::TestDeepGraph() const
 
     {
         // do a clean build
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "all" ) );
 
@@ -492,7 +492,7 @@ void TestGraph::TestDeepGraph() const
         const Timer t;
 
         // no op build
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
         TEST_ASSERT( fBuild.Build( "all" ) );
         CheckStatsNode( 1, 0, Node::OBJECT_NODE );
@@ -513,7 +513,7 @@ void TestGraph::TestNoStopOnFirstError() const
 
     // "Stop On First Error" build (default behaviour)
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "all" ) == false ); // Expect build to fail
 
@@ -530,7 +530,7 @@ void TestGraph::TestNoStopOnFirstError() const
     // "No Stop On First Error" build
     options.m_StopOnFirstError = false;
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "all" ) == false ); // Expect build to fail
 
@@ -560,7 +560,7 @@ void TestGraph::DBLocationChanged() const
 
     // Create a DB
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
 
@@ -573,7 +573,7 @@ void TestGraph::DBLocationChanged() const
 
     // Moving a DB should result in a message and a failed build
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile2 ) == false );
         TEST_ASSERT( GetRecordedOutput().Find( "Database has been moved" ) );
     }
@@ -581,7 +581,7 @@ void TestGraph::DBLocationChanged() const
     // With -continueafterdmove, message should be emitted, but build should pass
     options.m_ContinueAfterDBMove = true;
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile2 ) == true );
         TEST_ASSERT( AStackString( GetRecordedOutput() ).Replace( "Database has been moved", "", 2 ) == 2 ); // Find twice
     }
@@ -618,7 +618,7 @@ void TestGraph::DBCorrupt() const
     {
         // Create a DB
         {
-            FBuild fBuild( options );
+            FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
             TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
         }
@@ -644,7 +644,7 @@ void TestGraph::DBCorrupt() const
 
         // Initialization should report a warning, but still work
         {
-            FBuild fBuild( options );
+            FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
             TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
 
@@ -683,7 +683,7 @@ void TestGraph::BFFDirtied() const
 
     // Load from copy of BFF
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
@@ -726,7 +726,7 @@ void TestGraph::BFFDirtied() const
 
     // Load from dirtied BFF
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
 
         // Ensure user was informed of reparsing trigger
@@ -765,7 +765,7 @@ void TestGraph::DBVersionChanged() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = emptyBFF;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
 
     // cleanup & prep
     {
@@ -804,7 +804,7 @@ void TestGraph::FixupErrorPaths() const
     // FBuild is used during path cleaning to access working dir
     FBuildOptions fo;
     fo.SetWorkingDir( workingDir );
-    FBuild f( fo );
+    FBuildForTest f( fo );
 
     // Helper macro
     AStackString fixup;
@@ -877,7 +877,7 @@ void TestGraph::CyclicDependency() const
     // First run
     {
         // Initialization is ok because the problem occurs at build time
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() == true );
 
         // First build passes, but outputs data into the source dir that is a problem next time
@@ -888,7 +888,7 @@ void TestGraph::CyclicDependency() const
     // Second run
     {
         // Initialize
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
 
         // Second build detects the bad dependency created by the first invocation

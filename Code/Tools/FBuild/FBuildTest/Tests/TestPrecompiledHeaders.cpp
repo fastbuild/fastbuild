@@ -88,7 +88,7 @@ FBuildStats TestPrecompiledHeaders::Build( FBuildTestOptions options, bool useDB
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetPCHDBFileName() : nullptr ) );
 
     TEST_ASSERT( fBuild.Build( target ? target : "PCHTest" ) );
@@ -396,7 +396,7 @@ void TestPrecompiledHeaders::CacheUniqueness() const
         FBuildTestOptions options( baseOptions );
         options.m_UseCacheWrite = true;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
         AStackString target( "PCHTest-Uniqueness" );
@@ -415,7 +415,7 @@ void TestPrecompiledHeaders::CacheUniqueness() const
         FBuildTestOptions options( baseOptions );
         options.m_UseCacheRead = true;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
         AStackString target( "PCHTest-Uniqueness" );
@@ -445,7 +445,7 @@ void TestPrecompiledHeaders::CacheUniqueness2() const
     {
         FBuildTestOptions optionsCopy( options );
         optionsCopy.m_UseCacheWrite = true;
-        FBuild fBuild( optionsCopy );
+        FBuildForTest fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
         TEST_ASSERT( fBuild.Build( target ) );
@@ -460,7 +460,7 @@ void TestPrecompiledHeaders::CacheUniqueness2() const
     {
         FBuildTestOptions optionsCopy( options );
         optionsCopy.m_UseCacheRead = true;
-        FBuild fBuild( optionsCopy );
+        FBuildForTest fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
         TEST_ASSERT( fBuild.Build( target ) );
@@ -481,7 +481,7 @@ void TestPrecompiledHeaders::Deoptimization() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/Deoptimization/fbuild.bff";
     options.m_ForceCleanBuild = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
     // Copy files to temp dir
@@ -514,7 +514,7 @@ void TestPrecompiledHeaders::PCHOnly() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHOnly/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
     TEST_ASSERT( fBuild.Build( "PCHOnly" ) );
@@ -532,7 +532,7 @@ void TestPrecompiledHeaders::PCHReuse() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHReuse/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
     TEST_ASSERT( fBuild.Build( "PCHReuse" ) );
@@ -550,7 +550,7 @@ void TestPrecompiledHeaders::PCHMultipleUses() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHMultipleUses/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
     TEST_ASSERT( fBuild.Build( "PCHMultipleUses" ) );
@@ -569,7 +569,7 @@ void TestPrecompiledHeaders::PCHRedefinitionError() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHRedefinitionError/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
 
     // Expect failure
     TEST_ASSERT( fBuild.Initialize( nullptr ) == false );
@@ -585,7 +585,7 @@ void TestPrecompiledHeaders::PCHNotDefinedError() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PCHNotDefinedError/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
 
     // Expect failure
     TEST_ASSERT( fBuild.Initialize( nullptr ) == false );
@@ -634,7 +634,7 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
     {
         FBuildTestOptions optionsCopy( options );
         optionsCopy.m_UseCacheWrite = true;
-        FBuild fBuild( optionsCopy );
+        FBuildForTest fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
         // Delete pch and related files (if left from an old build)
@@ -668,7 +668,7 @@ void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
     {
         FBuildTestOptions optionsCopy( options );
         optionsCopy.m_UseCacheRead = true;
-        FBuild fBuild( optionsCopy );
+        FBuildForTest fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
         TEST_ASSERT( fBuild.Build( target ) );
@@ -704,7 +704,7 @@ void TestPrecompiledHeaders::TestPCHClangWindows() const
     EnsureFileDoesNotExist( pch );
     EnsureFileDoesNotExist( pchObj );
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
     AStackString target( "PCHTestClang-Windows" );
@@ -731,7 +731,7 @@ void TestPrecompiledHeaders::TestPCHClangWindows_NoRebuild() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetPCHDBClangFileName() ) );
 
     AStackString target( "PCHTestClang-Windows" );
@@ -764,7 +764,7 @@ void TestPrecompiledHeaders::TestPCHClangWindowsWithCache() const
     EnsureFileDoesNotExist( pch );
     EnsureFileDoesNotExist( pchObj );
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
     AStackString target( "PCHTestClang-Windows" );
@@ -794,7 +794,7 @@ void TestPrecompiledHeaders::TestPCHClangWindowsWithCache_NoRebuild() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetPCHDBClangFileName() ) );
 
     AStackString target( "PCHTestClang-Windows" );

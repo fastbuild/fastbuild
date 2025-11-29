@@ -50,7 +50,7 @@ void TestCachePlugin::BuildPlugin() const
     options.m_ForceCleanBuild = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/Interface/buildplugin.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( "Plugin-DLL-X64" ) );
@@ -68,7 +68,7 @@ void TestCachePlugin::UsePlugin() const
 
     // Write
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( GetRecordedOutput().Find( "Missing CachePluginDLL function" ) == nullptr );
@@ -88,7 +88,7 @@ void TestCachePlugin::UsePlugin() const
     {
         options.m_UseCacheWrite = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "TestFiles-Lib" ) );
@@ -100,7 +100,7 @@ void TestCachePlugin::UsePlugin() const
 
     // OutputInfo
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.CacheOutputInfo() );
 
@@ -109,7 +109,7 @@ void TestCachePlugin::UsePlugin() const
 
     // Trim
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.CacheTrim() );
 
@@ -129,7 +129,7 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
 
     {
         // Init the DB from the BFF
-        FBuild f( options );
+        FBuildForTest f( options );
         TEST_ASSERT( f.Initialize() );
 
         // store a copy of the cache params
@@ -144,7 +144,7 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
 
     {
         // reload from the db
-        FBuild f( options );
+        FBuildForTest f( options );
         TEST_ASSERT( f.Initialize( "../tmp/Test/CachePlugin/CachePlugin.fdb" ) );
 
         // check that the cache params were persisted
@@ -161,7 +161,7 @@ void TestCachePlugin::BuildPlugin_Old() const
     options.m_ForceCleanBuild = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/OldInterface/buildplugin.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( "Plugin-DLL-X64" ) );
@@ -179,7 +179,7 @@ void TestCachePlugin::UsePlugin_Old() const
 
     // Read
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( GetRecordedOutput().Find( "Missing CachePluginDLL function" ) == nullptr );
 
@@ -192,7 +192,7 @@ void TestCachePlugin::UsePlugin_Old() const
     {
         options.m_UseCacheWrite = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "TestFiles-Lib" ) );
@@ -202,14 +202,14 @@ void TestCachePlugin::UsePlugin_Old() const
 
     // OutputInfo
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.CacheOutputInfo() );
     }
 
     // Trim
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.CacheTrim() );
     }

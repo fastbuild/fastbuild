@@ -6,6 +6,7 @@
 #include "TestFramework/TestGroup.h"
 
 // Core
+#include "Core/Env/CPUInfo.h"
 #include <Core/Env/Env.h>
 #include <Core/Strings/AStackString.h>
 #include <Core/Tracing/Tracing.h>
@@ -18,7 +19,7 @@ private:
     DECLARE_TESTS
 
     void GetCommandLine() const;
-    void GetProcessorInfo() const;
+    void GetCPUInfo() const;
     void GetExePath() const;
 };
 
@@ -26,7 +27,7 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestEnv )
     REGISTER_TEST( GetCommandLine )
-    REGISTER_TEST( GetProcessorInfo )
+    REGISTER_TEST( GetCPUInfo )
     REGISTER_TEST( GetExePath )
 REGISTER_TESTS_END
 
@@ -52,15 +53,17 @@ void TestEnv::GetExePath() const
 #endif
 }
 
-// GetProcessorInfo
 //------------------------------------------------------------------------------
-void TestEnv::GetProcessorInfo() const
+void TestEnv::GetCPUInfo() const
 {
-    const Env::ProcessorInfo & info = Env::GetProcessorInfo();
-    OUTPUT( "Num Cores: %u (PCores: %u + ECores: %u)\n",
-            info.mNumCores,
-            info.mNumPCores,
-            info.mNumECores );
+    const CPUInfo & info = CPUInfo::Get();
+
+    AStackString details;
+    info.GetCPUDetailsString( details );
+    OUTPUT( "CPU Info: %s\n", details.Get() );
+
+    TEST_ASSERT( info.m_NumCores > 0 );
+    TEST_ASSERT( info.m_NumCores == ( info.m_NumPCores + info.m_NumECores + info.m_NumLPECores ) );
 }
 
 //------------------------------------------------------------------------------

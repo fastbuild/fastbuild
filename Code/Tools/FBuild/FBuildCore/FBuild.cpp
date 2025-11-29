@@ -51,8 +51,8 @@
 
 // Static
 //------------------------------------------------------------------------------
-/*static*/ bool FBuild::s_StopBuild( false );
-/*static*/ volatile bool FBuild::s_AbortBuild( false );
+/*static*/ Atomic<bool> FBuild::s_StopBuild( false );
+/*static*/ Atomic<bool> FBuild::s_AbortBuild( false );
 
 // CONSTRUCTOR - FBuild
 //------------------------------------------------------------------------------
@@ -385,8 +385,8 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char * nod
 {
     ASSERT( nodeToBuild );
 
-    AtomicStoreRelaxed( &s_StopBuild, false ); // allow multiple runs in same process
-    AtomicStoreRelaxed( &s_AbortBuild, false ); // allow multiple runs in same process
+    s_StopBuild.Store( false ); // allow multiple runs in same process
+    s_AbortBuild.Store( false ); // allow multiple runs in same process
 
     // create worker threads
     m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads, m_ThreadPool ) );
@@ -445,7 +445,7 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char * nod
             const bool complete = ( nodeToBuild->GetState() == Node::UP_TO_DATE ) ||
                                   ( nodeToBuild->GetState() == Node::FAILED );
 
-            if ( AtomicLoadRelaxed( &s_StopBuild ) || complete )
+            if ( s_StopBuild.Load() || complete )
             {
                 if ( stopping == false )
                 {
@@ -464,7 +464,7 @@ void FBuild::SaveDependencyGraph( ChainedMemoryStream & stream, const char * nod
                     if ( m_Options.m_FastCancel )
                     {
                         // Notify the system that the main process has been killed and that it can kill its process.
-                        AtomicStoreRelaxed( &s_AbortBuild, true );
+                        s_AbortBuild.Store( true );
                     }
                 }
             }
@@ -613,11 +613,11 @@ void FBuild::GetLibEnvVar( AString & value ) const
 //------------------------------------------------------------------------------
 void FBuild::AbortBuild()
 {
-    AtomicStoreRelaxed( &s_StopBuild, true );
+    s_StopBuild.Store( true );
     if ( FBuild::IsValid() && FBuild::Get().m_Options.m_FastCancel )
     {
         // Notify the system that the main process has been killed and that it can kill its process.
-        AtomicStoreRelaxed( &s_AbortBuild, true );
+        s_AbortBuild.Store( true );
     }
 }
 
@@ -635,7 +635,7 @@ void FBuild::AbortBuild()
 //------------------------------------------------------------------------------
 /*static*/ bool FBuild::GetStopBuild()
 {
-    return AtomicLoadRelaxed( &s_StopBuild );
+    return s_StopBuild.Load();
 }
 
 // UpdateBuildStatus

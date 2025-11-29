@@ -170,8 +170,11 @@ void MemoryStream::GrowToAccommodate( uint64_t bytesToAccommodate )
     m_Begin = (char *)ALLOC( newCapacity );
     m_End = m_Begin + ( oldEnd - oldBegin );
     m_MaxEnd = m_Begin + newCapacity;
-    memcpy( m_Begin, oldBegin, (size_t)( oldEnd - oldBegin ) );
-    FREE( oldBegin );
+    if ( oldBegin != nullptr )
+    {
+        memcpy( m_Begin, oldBegin, (size_t)( oldEnd - oldBegin ) );
+        FREE( oldBegin );
+    }
 }
 
 //------------------------------------------------------------------------------

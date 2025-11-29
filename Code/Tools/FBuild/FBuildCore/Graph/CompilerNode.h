@@ -32,6 +32,7 @@ public:
     bool GetUseRelativePaths() const { return m_UseRelativePaths; }
     bool GetUseDeterministicPaths() const { return m_UseDeterministicPaths; }
     bool CanBeDistributed() const { return m_AllowDistribution; }
+    bool CanBeCached() const { return m_AllowCaching; }
     bool CanUseResponseFile() const { return m_AllowResponseFile; }
     bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
 #if defined( __WINDOWS__ )
@@ -74,6 +75,7 @@ private:
     Array<AString> m_ExtraFiles;
     Array<AString> m_CustomEnvironmentVariables;
     bool m_AllowDistribution;
+    bool m_AllowCaching = true;
     bool m_AllowResponseFile;
     bool m_ForceResponseFile;
     bool m_VS2012EnumBugFix;

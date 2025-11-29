@@ -10,6 +10,7 @@
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Env/CPUInfo.h"
 #include "Core/Env/Env.h"
 #include "Core/Strings/AStackString.h"
 
@@ -51,7 +52,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 #endif
         if ( token.BeginsWith( "-cpus=" ) )
         {
-            const int32_t numCPUs = (int32_t)Env::GetNumProcessors();
+            const int32_t numCPUs = static_cast<int32_t>( CPUInfo::Get().GetNumUsefulCores() );
             int32_t num( 0 );
             if ( AString::ScanS( token.Get() + 6, "%i", &num ) == 1 )
             {
@@ -145,39 +146,40 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 //------------------------------------------------------------------------------
 void FBuildWorkerOptions::ShowUsageError()
 {
-    const char * msg = "FBuildWorker.exe - " FBUILD_VERSION_STRING "\n"
-                       "Copyright 2012-2025 Franta Fulin - https://www.fastbuild.org\n"
-                       "\n"
-                       "Command Line Options:\n"
-                       "---------------------------------------------------------------------------\n"
-                       " -console\n"
-                       "        (Windows/OSX) Operate from console instead of GUI.\n"
-                       " -cpus=<n|-n|n%>   Set number of CPUs to use:\n"
-                       "        -  n : Explicit number.\n"
-                       "        - -n : Num CPU Cores-n.\n"
-                       "        - n% : % of CPU Cores.\n"
-                       " -debug\n"
-                       "        (Windows) Break at startup, to attach debugger.\n"
-                       " -mode=<disabled|idle|dedicated|proportional>\n"
-                       "        Set work mode:\n"
-                       "        - disabled : Don't accept any work.\n"
-                       "        - idle : Accept work when PC is idle.\n"
-                       "        - dedicated : Accept work always.\n"
-                       "        - proportional : Accept work proportional to free CPUs.\n"
-                       " -minfreememory <MiB>\n"
-                       "        Set minimum free memory (MiB) required to accept work.\n"
-                       " -nosubprocess\n"
-                       "        (Windows) Don't spawn a sub-process worker copy.\n"
-                       " -periodicrestart\n"
-                       "        Worker will restart every 4 hours.\n"
-                       "---------------------------------------------------------------------------\n";
+    AStackString msg;
+    msg.Format( "FBuildWorker.exe - %s\n", GetVersionString() );
+    msg.Append( "Copyright 2012-2025 Franta Fulin - https://www.fastbuild.org\n"
+                "\n"
+                "Command Line Options:\n"
+                "---------------------------------------------------------------------------\n"
+                " -console\n"
+                "        (Windows/OSX) Operate from console instead of GUI.\n"
+                " -cpus=<n|-n|n%> Set number of CPUs to use:\n"
+                "        -  n : Explicit number.\n"
+                "        - -n : Num CPU Cores-n.\n"
+                "        - n% : % of CPU Cores.\n"
+                " -debug\n"
+                "        (Windows) Break at startup, to attach debugger.\n"
+                " -mode=<disabled|idle|dedicated|proportional>\n"
+                "        Set work mode:\n"
+                "        - disabled : Don't accept any work.\n"
+                "        - idle : Accept work when PC is idle.\n"
+                "        - dedicated : Accept work always.\n"
+                "        - proportional : Accept work proportional to free CPUs.\n"
+                " -minfreememory <MiB>\n"
+                "        Set minimum free memory (MiB) required to accept work.\n"
+                " -nosubprocess\n"
+                "        (Windows) Don't spawn a sub-process worker copy.\n"
+                " -periodicrestart\n"
+                "        Worker will restart every 4 hours.\n"
+                "---------------------------------------------------------------------------\n" );
 
 #if defined( __WINDOWS__ )
-    ::MessageBox( nullptr, msg, "FBuildWorker - Bad Command Line", MB_ICONERROR | MB_OK );
+    ::MessageBox( nullptr, msg.Get(), "FBuildWorker - Bad Command Line", MB_ICONERROR | MB_OK );
 #else
-    printf( "%s", msg );
-    (void)msg; // TODO:MAC Fix missing MessageBox
-    (void)msg; // TODO:LINUX Fix missing MessageBox
+    printf( "%s", msg.Get() );
+    // TODO:MAC Fix missing MessageBox
+    // TODO:LINUX Fix missing MessageBox
 #endif
 }
 

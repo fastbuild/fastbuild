@@ -27,6 +27,7 @@ OK_GLIBC_VERSIONS   = [
                         'GLIBC_2.2.5 ',
                         'GLIBC_2.3 ',
                         'GLIBC_2.3.3 ',
+                        'GLIBC_2.3.4 ',
                         'GLIBC_2.6 ',
                         'GLIBC_2.10 ',
                       ]

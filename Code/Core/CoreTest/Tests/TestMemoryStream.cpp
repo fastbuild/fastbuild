@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/FileIO/MemoryStream.h"
+#include "Core/Strings/AStackString.h"
 
 // TestMemoryStream
 //------------------------------------------------------------------------------
@@ -16,6 +17,7 @@ private:
     DECLARE_TESTS
 
     void Empty() const;
+    void InitiallyEmpty() const;
     void InitialBuffer() const;
     void Reset() const;
     void MoveConstructor() const;
@@ -26,6 +28,7 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestMemoryStream )
     REGISTER_TEST( Empty )
+    REGISTER_TEST( InitiallyEmpty )
     REGISTER_TEST( InitialBuffer )
     REGISTER_TEST( Reset )
     REGISTER_TEST( MoveConstructor )
@@ -40,6 +43,20 @@ void TestMemoryStream::Empty() const
     TEST_ASSERT( ms.GetData() == nullptr );
     TEST_ASSERT( ms.GetSize() == 0 );
     TEST_ASSERT( ms.Tell() == 0 );
+    TEST_ASSERT( ms.GetSize() == ms.GetFileSize() );
+}
+
+//------------------------------------------------------------------------------
+void TestMemoryStream::InitiallyEmpty() const
+{
+    // Start empty and write ensure growth from no initial buffer is handled
+    // correctly
+    MemoryStream ms;
+    AStackString buffer( "hello" );
+    TEST_ASSERT( ms.WriteBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() );
+    TEST_ASSERT( ms.GetData() != nullptr );
+    TEST_ASSERT( ms.GetSize() == buffer.GetLength() );
+    TEST_ASSERT( ms.Tell() == ms.GetSize() );
     TEST_ASSERT( ms.GetSize() == ms.GetFileSize() );
 }
 

@@ -47,7 +47,7 @@ void TestTest::Build() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test.bff";
     options.m_ForceCleanBuild = true;
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString testExe( "../tmp/Test/Test/test.exe" );
@@ -80,7 +80,7 @@ void TestTest::Build_NoRebuild() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Test/test.fdb" ) );
 
     // build (via alias)
@@ -103,7 +103,7 @@ void TestTest::Fail_ReturnCode() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/Fail_ReturnCode/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build and run test, expecting failure
@@ -119,7 +119,7 @@ void TestTest::Fail_Crash() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/Fail_Crash/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build and run test, expecting failure
@@ -135,7 +135,7 @@ void TestTest::TimeOut() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test_timeout.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)

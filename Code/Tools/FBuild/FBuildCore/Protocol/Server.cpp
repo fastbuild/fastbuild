@@ -12,6 +12,8 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h"
 
+// Core
+#include "Core/Env/CPUInfo.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
@@ -33,7 +35,9 @@ Server::Server( uint32_t numThreadsInJobQueue )
 {
     m_ClientList.SetCapacity( 32 );
 
-    m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
+    const uint32_t numCores = numThreadsInJobQueue ? numThreadsInJobQueue
+                                                   : CPUInfo::Get().GetNumUsefulCores();
+    m_JobQueueRemote = FNEW( JobQueueRemote( numCores ) );
 
     m_Thread.Start( ThreadFuncStatic, "Server", this );
 }

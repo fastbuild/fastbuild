@@ -26,6 +26,40 @@
 
 <h1>Changelog</h1>
 
+
+<div class='newsitemheader'>
+    v1.18&nbsp;<font color='#bbbbbb'>(29th-Nov-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix Dependencies::GrowCapacity potential memory corruption (Thanks to Jean-Sebastien Pelletier)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>FBuild ignores Low Power E-Cores (Intel Meteor Lake)</li>
+        <li>FBuildWorker -cpus and UI ignores Low Power E-Cores (Intel Meteor Lake)</li>
+        <li>Worker brokerage tokens contain CPU information (vendor, model, family & core breakdown)</li>
+        <li>-profile output contains CPU information (vendor, model, family & core breakdown)</li>
+        <li>FBuild and FBuildWorker are no longer "below normal" priority</li>
+        <li>New AllowCaching option on Compiler() can be used to disable caching</li>
+        <li>Various operations use a more performant hash, improving performance slightly</li>
+        <li>Small fdb load/save performance gains on x86_64 with AVX2 support</li>
+        <li>Small VisualStudio and XCode project gen performance gains on x86_64 with AVX2 support</li>
+        <li>Cache performance improved slightly on x86_64 with AVX2</li>
+        <li>Improve performance of Unity generation slightly on x86_64 with AVX2 support</li>
+        <li>Improve BFF parsing performance slightly on x86_64 with AVX2 support</li>
+        <li>Compiler() file hashing is skipped when !AllowDistribution and !AllowCaching (Thanks to Bill Hoffman)</li>
+        <li>Reduce memory usage of dependency graph</li>
+        <li>Reduce cost of PreBuildDependencies processing for ObjectList & Library when parsing bff files</li>
+        <li>Reduce redundancy in .fdb, improving startup/shutdown times</li>
+    </ul>
+</div>
+
 <div class='newsitemheader'>
     v1.17&nbsp;<font color='#bbbbbb'>(30th-Sep-2025)</font>
 </div>

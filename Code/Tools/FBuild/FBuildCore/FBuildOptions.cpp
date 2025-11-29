@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
+#include "Core/Env/CPUInfo.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
@@ -28,8 +29,8 @@ FBuildOptions::FBuildOptions()
     //m_ShowInfo = true; // uncomment this to enable spam when debugging
 #endif
 
-    // Default to NUMBER_OF_PROCESSORS
-    m_NumWorkerThreads = Env::GetNumProcessors();
+    // Default to number of useful processors in the system
+    m_NumWorkerThreads = CPUInfo::Get().GetNumUsefulCores();
 
     // Default working dir is the system working dir
     AStackString workingDir;
@@ -699,8 +700,9 @@ void FBuildOptions::DisplayVersion() const
 #else
     #define VERSION_CONFIG ""
 #endif
-    OUTPUT( "FASTBuild " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
-            "Copyright 2012-2025 Franta Fulin - https://www.fastbuild.org\n" );
+    OUTPUT( "FASTBuild %s " VERSION_CONFIG "- "
+            "Copyright 2012-2025 Franta Fulin - https://www.fastbuild.org\n",
+            GetVersionString() );
 #undef VERSION_CONFIG
 }
 

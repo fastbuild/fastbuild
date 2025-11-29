@@ -257,7 +257,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
             {
                 if ( info.m_ThreadName.IsEmpty() == false )
                 {
-                    threadId = xxHash::Calc32( info.m_ThreadName );
+                    threadId = xxHash3::Calc32( info.m_ThreadName );
                 }
                 FormatU64( threadId, threadIsAsString );
 

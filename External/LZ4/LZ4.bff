@@ -18,6 +18,9 @@
 
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
+    .LZ4Options_ARM64   = [
+                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
+                          ]
     .LZ4Options_x64Clang= [
                             .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
 

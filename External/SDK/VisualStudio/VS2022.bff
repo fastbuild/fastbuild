@@ -95,20 +95,44 @@ Compiler( 'Compiler-VS2022-x64' )
     #endif
 }
 
-// X64 ToolChain for Windows
+// ARM64 Compiler
 //------------------------------------------------------------------------------
-.ToolChain_VS2022_Windows_X64 =
-[
-    .Platform                       = 'x64'
+Compiler( 'Compiler-VS2022-ARM64' )
+{
+    .Root       = '$VS2022_ToolchainPath$/bin/Hostx64/arm64'
+    .Executable = '$Root$/cl.exe'
+    .ExtraFiles = { '$Root$/c1.dll'
+                    '$Root$/c1xx.dll',
+                    '$Root$/c2.dll',
+                    '$Root$/msobj140.dll'
+                    '$Root$/mspdb140.dll'
+                    '$Root$/mspdbcore.dll'
+                    '$Root$/mspdbsrv.exe'
+                    '$Root$/mspft140.dll'
+                    '$Root$/msvcp140.dll'
+                    '$Root$/msvcp140_atomic_wait.dll' // Required circa 16.8.3 (14.28.29333)
+                    '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
+                    '$Root$/vcruntime140.dll'
+                    '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
+                    '$Root$/1033/clui.dll'
+                    '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
+                  }
 
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
+    #endif
+}
+
+// Common Toolchain for Windows
+//------------------------------------------------------------------------------
+.Toolchain_VS2022_Windows =
+[
     // Paths
     .VSIncludePaths                 = ' /external:W0 /external:I"$VS2022_ToolchainPath$/include/"'
     .VSIncludePaths_ClangCl         = ' /imsvc "$VS2022_ToolchainPath$/include/"'
-    .VSLibPaths                     = ' /LIBPATH:"$VS2022_ToolchainPath$/lib/x64"'
     .VCPackagesPath                 = '$VS2022_BasePath$/../Common7/IDE/VC/vcpackages'
 
     // Compiler
-    .Compiler                       = 'Compiler-VS2022-X64'
     .CommonCompilerOptions          = ' /Z7 /nologo /c'
                                     + ' /Zc:inline'         // Remove unreferenced COMDATs at compile time (VS2013.2+)
                                     + ' /Zc:strictStrings'  // Require const only usage of string literals (VS2013+)
@@ -127,14 +151,17 @@ Compiler( 'Compiler-VS2022-x64' )
 
                                     // These warnings are not useful
                                     + ' /wd4061' // enumerator '%s' in switch of enum '%s' is not explicitly handled by a case label
+                                    + ' /wd4505' // unreferenced function with internal linkage has been removed
                                     + ' /wd4514' // '%s': unreferenced inline function has been removed
                                     + ' /wd4577' // 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed. Specify /EHsc
                                     + ' /wd4625' // '%s' : copy constructor was implicitly defined as deleted
                                     + ' /wd4710' // '%s': function not inlined
                                     + ' /wd4711' // function '%s' selected for automatic inline expansion
+                                    + ' /wd4746' // volatile access of '<expression>' is subject to /volatile:<iso|ms> setting; consider using __iso_volatile_load/store intrinsic functions
                                     + ' /wd4820' // '%s': '%u' bytes padding added after data member '%s'
                                     + ' /wd5045' // Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
                                     + ' /wd5220' // '%s': a non-static data member with a volatile qualified type no longer implies that compiler generated copy/move constructors and copy/move assignment operators are not trivial
+                                    + ' /wd5245' // 'function': unreferenced function with internal linkage has been removed
 
                                     // Include Paths
                                     + ' /I"./"'
@@ -146,13 +173,11 @@ Compiler( 'Compiler-VS2022-x64' )
     .PCHOptions                     = ' $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
 
     // Librarian
-    .Librarian                      = '$VS2022_ToolchainPath$/bin/Hostx64/x64/lib.exe'
     .LibrarianOptions               = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
 
     // Linker
-    .Linker                         = '$VS2022_ToolchainPath$/bin/Hostx64/x64/link.exe'
     .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
-                                    + .VSLibPaths
+
     //CRT
     .CRTLibs_Static                 = ' LIBCMT.LIB'
                                     + ' libvcruntime.lib'
@@ -164,6 +189,49 @@ Compiler( 'Compiler-VS2022-x64' )
 
     // Exception Control
     .UseExceptions                  = ' /EHsc'
+]
+
+
+// X64 ToolChain for Windows
+//------------------------------------------------------------------------------
+.ToolChain_VS2022_Windows_X64 =
+[
+    Using( .Toolchain_VS2022_Windows )
+
+    .Platform                       = 'x64'
+
+    // Paths
+    .VSLibPaths                     = ' /LIBPATH:"$VS2022_ToolchainPath$/lib/x64"'
+    
+    // Compiler
+    .Compiler                       = 'Compiler-VS2022-X64'
+
+    // Librarian
+    .Librarian                      = '$VS2022_ToolchainPath$/bin/Hostx64/x64/lib.exe'
+
+    // Linker
+    .Linker                         = '$VS2022_ToolchainPath$/bin/Hostx64/x64/link.exe'
+    .LinkerOptions                  + .VSLibPaths
+]
+
+.ToolChain_VS2022_Windows_ARM64 =
+[
+    Using( .Toolchain_VS2022_Windows )
+
+    .Platform                       = 'ARM64'
+
+    // Paths
+    .VSLibPaths                     = ' /LIBPATH:"$VS2022_ToolchainPath$/lib/arm64"'
+
+    // Compiler
+    .Compiler                       = 'Compiler-VS2022-ARM64'
+
+    // Librarian
+    .Librarian                      = '$VS2022_ToolchainPath$/bin/Hostx64/arm64/lib.exe'
+
+    // Linker
+    .Linker                         = '$VS2022_ToolchainPath$/bin/Hostx64/arm64/link.exe'
+    .LinkerOptions                  + .VSLibPaths
 ]
 
 // PATH environment variable
@@ -187,6 +255,7 @@ Compiler( 'Compiler-VS2022-x64' )
     .MSC_VER                        = .VS2022_MSC_VER
     .VS_ToolchainPath               = .VS2022_ToolchainPath
     .ToolChain_VS_Windows_X64       = .ToolChain_VS2022_Windows_X64
+    .ToolChain_VS_Windows_ARM64     = .ToolChain_VS2022_Windows_ARM64
     .VS_PATH                        = .VS_2022_PATH
     .VS_PlatformToolset             = .VS_2022_PlatformToolset
 

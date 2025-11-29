@@ -37,7 +37,7 @@ void TestResources::BuildResource() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestResources/fbuild.bff";
     options.m_ForceCleanBuild = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString binRes( "../tmp/Test/Resources/resource.res" );
@@ -73,7 +73,7 @@ void TestResources::BuildResource_NoRebuild() const
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestResources/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Resources/resource.fdb" ) );
 
     TEST_ASSERT( fBuild.Build( "exe" ) );
