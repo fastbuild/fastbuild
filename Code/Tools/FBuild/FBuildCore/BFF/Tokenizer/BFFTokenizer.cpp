@@ -790,7 +790,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
         }
     }
 
-    if ( endType == IfBlockEndType::ELIF )
+    if ( endType == IfBlockEndType::ELSE )
     {
         // Find end of else block
         const char * elseBlockBegin = pos;
