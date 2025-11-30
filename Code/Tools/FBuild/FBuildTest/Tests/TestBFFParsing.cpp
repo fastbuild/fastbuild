@@ -52,6 +52,11 @@ private:
     void IfFileExistsDirective() const;
     void IfFileExistsDirective_RelativePaths() const;
     void IfBooleanOperators() const;
+    void ElifDirective() const;
+    void ElifExistsDirective() const;
+    void ElifFileExistsDirective() const;
+    void ElifFileExistsDirective_RelativePaths() const;
+    void ElifBooleanOperators() const;
     void ElseDirective() const;
     void ElseDirective_Bad() const;
     void ElseDirective_Bad2() const;
@@ -117,6 +122,11 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IfFileExistsDirective )
     REGISTER_TEST( IfFileExistsDirective_RelativePaths )
     REGISTER_TEST( IfBooleanOperators )
+    REGISTER_TEST( ElifDirective )
+    REGISTER_TEST( ElifExistsDirective )
+    REGISTER_TEST( ElifFileExistsDirective )
+    REGISTER_TEST( ElifFileExistsDirective_RelativePaths )
+    REGISTER_TEST( ElifBooleanOperators )
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
     REGISTER_TEST( ElseDirective_Bad2 )
@@ -694,6 +704,471 @@ void TestBFFParsing::IfBooleanOperators() const
                    "#define BBB\n"
                    "#define CCC\n"
                    "#if DDD || BBB && CCC && AAA || DDD && AAA\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+}
+
+    // ElifDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElifDirective() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/elif_directive.bff" );
+
+    TEST_PARSE_FAIL( "#elif X"            "Error #1048 - #elif without matching #if" );
+    TEST_PARSE_FAIL( "#if X\n"
+                     "#elif",           "Error #1031 - Unknown char" );
+    TEST_PARSE_FAIL( "#if X\n"
+                     "#elif 'string'",  "Error #1031 - Unknown char" );
+    TEST_PARSE_FAIL( "#if Z\n"
+                     "#elif X Y\n"
+                     "#endif",          "Error #1045 - Extraneous token(s)" );
+    TEST_PARSE_FAIL( "#if X\n"
+                     "##elif!X\n"
+                     "#endif",          "Error #1010 - Unknown construct" );
+
+    // Ensure directives inside lists are handled correctly
+    TEST_PARSE_OK( ".A = {\n"
+                   "#if __UNDEFINED__\n"
+                   "    'X'\n"
+                   "#elif __UNDEFINED__\n"
+                   "    'Y'\n"
+                   "#endif\n"
+                   "}" );
+    TEST_PARSE_OK( ".A = {\n"
+                   "#if !__UNDEFINED__\n"
+                   "    'X'\n"
+                   "#elif !__UNDEFINED__\n"
+                   "    'Y'\n"
+                   "#endif\n"
+                   "}" );
+    TEST_PARSE_OK( ".A = {\n"
+                   "#if __UNDEFINED__\n"
+                   "    'X'\n"
+                   "#elif !__UNDEFINED__\n"
+                   "    'Y'\n"
+                   "#endif\n"
+                   "}" );
+    TEST_PARSE_OK( ".A = {\n"
+                   "#if !__UNDEFINED__\n"
+                   "    'X'\n"
+                   "#elif __UNDEFINED__\n"
+                   "    'Y'\n"
+                   "#endif\n"
+                   "}" );
+}
+
+// ElifExistsDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElifExistsDirective() const
+{
+    Env::SetEnvVariable( "BFF_TEST_ENV_VAR1", AString( "1" ) );
+    Env::SetEnvVariable( "BFF_TEST_ENV_VAR2", AString( "2" ) );
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/elif_exists_directive.bff" );
+}
+
+// ElifFileExistsDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElifFileExistsDirective() const
+{
+    // Detect existence (or not) of files
+    TEST_PARSE_OK( "#if __UNDEFINED__\n"
+                   "#elif file_exists(\"doesnotexist.dat\")\n"
+                   "    #error\n"
+                   "#endif" );
+    TEST_PARSE_OK( "#if __UNDEFINED__\n"
+                   "#elif !file_exists(\"fbuild.bff\")\n"
+                   "    #error\n"
+                   "#endif" );
+
+    // Check changes are detected (or not) between builds
+    {
+        const char * rootBFF = "../tmp/Test/BFFParsing/FileExistsDirective/elif_true_path_file_exists_directive.dat";
+        const char * fileName = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
+        const char * db = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
+
+        // Copy root bff to temp dir
+        FileIO::SetReadOnly( rootBFF, false );
+        EnsureFileDoesNotExist( rootBFF );
+        EnsureDirExists( "../tmp/Test/BFFParsing/FileExistsDirective/" );
+        FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/elif_true_path_file_exists_directive.bff", rootBFF );
+
+        // Delete extra file from previous test run
+        EnsureFileDoesNotExist( fileName );
+
+        FBuildTestOptions options;
+        options.m_ConfigFile = rootBFF;
+
+        // Parse bff, which checks if file exists
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+            fBuild.SaveDependencyGraph( db );
+
+            const AString & output( GetRecordedOutput() );
+
+            // File should NOT exist
+            TEST_ASSERT( output.Find( "File does not exist" ) );
+        }
+
+        // Check existence re-parsing does not occur with not change to file existence
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            // Should not re-parse
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
+        }
+
+        // Create file
+        {
+            FileIO::EnsurePathExistsForFile( AStackString( fileName ) );
+            FileStream f;
+            TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
+        }
+
+        // Load db and ensure it is re-parsed
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was triggered
+            TEST_ASSERT( output.Find( "File used in file_exists was added" ) );
+
+            // File should exist
+            TEST_ASSERT( output.Find( "File exists" ) );
+        }
+
+        // Delete file
+        EnsureFileDoesNotExist( fileName );
+
+        // Load db and ensure it is re-parsed again
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was triggered
+            TEST_ASSERT( output.Find( "File used in file_exists was removed" ) );
+
+            // File should exist
+            TEST_ASSERT( output.Find( "File does not exist" ) );
+        }
+    }
+
+    // Check changes are detected (or not) between builds
+    {
+        const char * rootBFF = "../tmp/Test/BFFParsing/FileExistsDirective/elif_false_path_file_exists_directive.dat";
+        const char * fileName = "../tmp/Test/BFFParsing/FileExistsDirective/file.dat";
+        const char * db = "../tmp/Test/BFFParsing/FileExistsDirective/fbuild.fdb";
+
+        // Copy root bff to temp dir
+        FileIO::SetReadOnly( rootBFF, false );
+        EnsureFileDoesNotExist( rootBFF );
+        EnsureDirExists( "../tmp/Test/BFFParsing/FileExistsDirective/" );
+        FileIO::FileCopy( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/elif_false_path_file_exists_directive.bff", rootBFF );
+
+        // Delete extra file from previous test run
+        EnsureFileDoesNotExist( fileName );
+
+        FBuildTestOptions options;
+        options.m_ConfigFile = rootBFF;
+
+        // Parse bff, but it shouldn't check if the file exists
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+            fBuild.SaveDependencyGraph( db );
+
+            const AString & output( GetRecordedOutput() );
+
+            // File existence does not matter because the check is in a false path
+            TEST_ASSERT( output.Find( "File existence not checked" ) );
+            TEST_ASSERT( output.Find( "File exists" ) == nullptr );
+            TEST_ASSERT( output.Find( "File does not exist" ) == nullptr );
+        }
+
+        // Check existence re-parsing does not occur with not change to file existence
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            // Should not re-parse
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+            TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
+        }
+
+        // Create file
+        {
+            FileIO::EnsurePathExistsForFile( AStackString( fileName ) );
+            FileStream f;
+            TEST_ASSERT( f.Open( fileName, FileStream::WRITE_ONLY ) );
+        }
+
+        // Load db, but it shouldn't trigger a reparse because the file existence exists on the false path
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+            fBuild.SaveDependencyGraph( db );
+
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was NOT triggered, because the file existence is on the false path
+            TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
+
+            // File existence does not matter because the check is in a false path
+            TEST_ASSERT( output.Find( "File existence not checked" ) );
+            TEST_ASSERT( output.Find( "File exists" ) == nullptr );
+            TEST_ASSERT( output.Find( "File does not exist" ) == nullptr );
+        }
+
+        // Delete file
+        EnsureFileDoesNotExist( fileName );
+
+        // Load db, but it shouldn't trigger a reparse because the file existence exists on the false path
+        {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( db ) );
+
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
+
+            // Check re-parse was NOT triggered, because the file existence is on the false path
+            TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
+
+            // File existence does not matter because the check is in a false path
+            TEST_ASSERT( output.Find( "File existence not checked" ) );
+            TEST_ASSERT( output.Find( "File exists" ) == nullptr );
+            TEST_ASSERT( output.Find( "File does not exist" ) == nullptr );
+        }
+    }
+}
+
+// ElifFileExistsDirective_RelativePaths
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElifFileExistsDirective_RelativePaths() const
+{
+    // file_exists treats paths the same way as #include
+    // (paths are relative to the bff)
+
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/ElifFileExistsDirective/RelativePaths/root.bff";
+
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Check for expected output
+    const AString & output( GetRecordedOutput() );
+    TEST_ASSERT( output.Find( "OK-1A" ) && output.Find( "OK-1B" ) );
+    TEST_ASSERT( output.Find( "OK-2A" ) && output.Find( "OK-2B" ) );
+    TEST_ASSERT( output.Find( "OK-3A" ) && output.Find( "OK-3B" ) );
+    TEST_ASSERT( output.Find( "OK-4" ) );
+}
+
+// ElifBooleanOperators
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElifBooleanOperators() const
+{
+    // Failure cases
+    TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
+                     "#elif ||",              "#1046 - #elif expression cannot start with boolean operator");
+    TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
+                     "#elif &&",              "#1046 - #elif expression cannot start with boolean operator");
+    TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
+                     " #elif X && || Y\n"
+                     "#endif",              "#1031 - Unknown char '|' following 'elif' directive." );
+    TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
+                     "#elif X &&\n"
+                     "#endif",              "#1031 - Unknown char '#' following 'elif' directive. (Expected '?')." );
+    TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
+                     "#elif X && Y Z\n"
+                     "#endif",              "#1045 - Extraneous token(s) following 'elif' directive." );
+
+    // Failure cases, even in the false path
+    TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
+                     "#elif ||",              "#1046 - #elif expression cannot start with boolean operator");
+    TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
+                     "#elif &&",              "#1046 - #elif expression cannot start with boolean operator");
+    TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
+                     " #elif X && || Y\n"
+                     "#endif",              "#1031 - Unknown char '|' following 'elif' directive." );
+    TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
+                     "#elif X &&\n"
+                     "#endif",              "#1031 - Unknown char '#' following 'elif' directive. (Expected '?')." );
+    TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
+                     "#elif X && Y Z\n"
+                     "#endif",              "#1045 - Extraneous token(s) following 'elif' directive." );
+
+    // Expression too complex
+    {
+        AStackString complex( "#if __UNDEFINED__\n"
+                              "#elif " );
+        for ( size_t i = 0; i < 256; ++i )
+        {
+            complex.AppendFormat( "A%u &&", (uint32_t)i );
+        }
+        complex += "B";
+        TEST_PARSE_FAIL( complex.Get(),         "#1047 - Elif expression too complex. Up to 256 boolean operators supported." );
+    }
+
+    // Expression too complex, even in false path
+    {
+        AStackString complex( "#if !__UNDEFINED__\n"
+                              "#elif " );
+        for ( size_t i = 0; i < 256; ++i )
+        {
+            complex.AppendFormat( "A%u &&", (uint32_t)i );
+        }
+        complex += "B";
+        TEST_PARSE_FAIL( complex.Get(),         "#1047 - Elif expression too complex. Up to 256 boolean operators supported." );
+    }
+
+    // OR
+    TEST_PARSE_OK( "#define A\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif A || B\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#if __UNDEFINED__\n"
+                   "#elif A || B\n"
+                   "#else"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif DDD || CCC\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif CCC || DDD || AAA || BBB\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    // AND
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif AAA && BBB\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif AAA && BBB && CCC\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    // AND !
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif AAA && !DDD\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif !DDD && AAA\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    // OR !
+    TEST_PARSE_OK( "#if __UNDEFINED__\n"
+                   "#elif !EEE || !DDD\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif AAA || !DDD\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+    TEST_PARSE_OK( "#define aaa\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif !ddd || aaa\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    // Check precedence
+    TEST_PARSE_OK( "#define A\n"
+                   "#define B\n"
+                   "#if A || B && C\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif DDD || BBB && CCC\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif DDD || BBB && CCC || EEE\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif DDD || BBB && DDD || EEE && AAA\n"
+                   "    #error Should not be here\n"
+                   "#else\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif DDD || BBB && AAA || EEE && AAA\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif DDD || BBB && DDD || BBB && AAA\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif DDD || BBB && DDD || DDD && AAA || CCC\n"
+                   "    Print( 'OK' )\n"
+                   "#endif",                "OK" );
+
+    TEST_PARSE_OK( "#define AAA\n"
+                   "#define BBB\n"
+                   "#define CCC\n"
+                   "#if __UNDEFINED__\n"
+                   "#elif DDD || BBB && CCC && AAA || DDD && AAA\n"
                    "    Print( 'OK' )\n"
                    "#endif",                "OK" );
 }
