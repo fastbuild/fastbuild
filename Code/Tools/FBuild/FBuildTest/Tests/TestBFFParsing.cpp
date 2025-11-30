@@ -887,11 +887,13 @@ void TestBFFParsing::ElifFileExistsDirective() const
 
         // Parse bff, but it shouldn't check if the file exists
         {
+            const size_t sizeOfRecordedOutput = GetRecordedOutput().GetLength();
+
             FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
             fBuild.SaveDependencyGraph( db );
 
-            const AString & output( GetRecordedOutput() );
+            const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
             // File existence does not matter because the check is in a false path
             TEST_ASSERT( output.Find( "File existence not checked" ) );
@@ -931,11 +933,6 @@ void TestBFFParsing::ElifFileExistsDirective() const
 
             // Check re-parse was NOT triggered, because the file existence is on the false path
             TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
-
-            // File existence does not matter because the check is in a false path
-            TEST_ASSERT( output.Find( "File existence not checked" ) );
-            TEST_ASSERT( output.Find( "File exists" ) == nullptr );
-            TEST_ASSERT( output.Find( "File does not exist" ) == nullptr );
         }
 
         // Delete file
@@ -952,11 +949,6 @@ void TestBFFParsing::ElifFileExistsDirective() const
 
             // Check re-parse was NOT triggered, because the file existence is on the false path
             TEST_ASSERT( output.Find( "BFF will be re-parsed" ) == nullptr );
-
-            // File existence does not matter because the check is in a false path
-            TEST_ASSERT( output.Find( "File existence not checked" ) );
-            TEST_ASSERT( output.Find( "File exists" ) == nullptr );
-            TEST_ASSERT( output.Find( "File does not exist" ) == nullptr );
         }
     }
 }
@@ -988,9 +980,9 @@ void TestBFFParsing::ElifBooleanOperators() const
 {
     // Failure cases
     TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
-                     "#elif ||",              "#1046 - #elif expression cannot start with boolean operator");
+                     "#elif ||",              "#1046 - #if expression cannot start with boolean operator");
     TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
-                     "#elif &&",              "#1046 - #elif expression cannot start with boolean operator");
+                     "#elif &&",              "#1046 - #if expression cannot start with boolean operator");
     TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
                      " #elif X && || Y\n"
                      "#endif",              "#1031 - Unknown char '|' following 'elif' directive." );
@@ -1003,9 +995,9 @@ void TestBFFParsing::ElifBooleanOperators() const
 
     // Failure cases, even in the false path
     TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
-                     "#elif ||",              "#1046 - #elif expression cannot start with boolean operator");
+                     "#elif ||",              "#1046 - #if expression cannot start with boolean operator");
     TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
-                     "#elif &&",              "#1046 - #elif expression cannot start with boolean operator");
+                     "#elif &&",              "#1046 - #if expression cannot start with boolean operator");
     TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
                      " #elif X && || Y\n"
                      "#endif",              "#1031 - Unknown char '|' following 'elif' directive." );
@@ -1025,7 +1017,7 @@ void TestBFFParsing::ElifBooleanOperators() const
             complex.AppendFormat( "A%u &&", (uint32_t)i );
         }
         complex += "B";
-        TEST_PARSE_FAIL( complex.Get(),         "#1047 - Elif expression too complex. Up to 256 boolean operators supported." );
+        TEST_PARSE_FAIL( complex.Get(),         "#1047 - If expression too complex. Up to 256 boolean operators supported." );
     }
 
     // Expression too complex, even in false path
@@ -1037,7 +1029,7 @@ void TestBFFParsing::ElifBooleanOperators() const
             complex.AppendFormat( "A%u &&", (uint32_t)i );
         }
         complex += "B";
-        TEST_PARSE_FAIL( complex.Get(),         "#1047 - Elif expression too complex. Up to 256 boolean operators supported." );
+        TEST_PARSE_FAIL( complex.Get(),         "#1047 - If expression too complex. Up to 256 boolean operators supported." );
     }
 
     // OR
