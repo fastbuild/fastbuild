@@ -449,7 +449,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1048_ElifWithoutIf( const BFFToken * iter )
 {
-    FormatError( iter, 1048u, nullptr, "#elif without matching #if or #elif." );
+    FormatError( iter, 1048u, nullptr, "#elif without matching #if." );
 }
 
 // Error_1050_PropertyMustBeString
