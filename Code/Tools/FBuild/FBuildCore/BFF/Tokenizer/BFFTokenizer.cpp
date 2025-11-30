@@ -732,7 +732,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
 
     bool result( false );
 
-    if ( HandleDirective_IfExpression( file, argsIter, &result ) == false )
+    if ( HandleDirective_IfExpression( file, argsIter, "if", &result ) == false )
     {
         return false; // HandleDirective_IfExpression will have emitted an error
     }
@@ -770,7 +770,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
         // Otherwise, just consume the tokens and check for errors.
         bool * resultPtr = ( result == false ? &result : nullptr );
 
-        if ( HandleDirective_IfExpression( file, elifArgsIter, resultPtr ) == false )
+        if ( HandleDirective_IfExpression( file, elifArgsIter, "elif", resultPtr ) == false )
         {
             return false; // HandleDirective_IfExpression will have emitted an error
         }
@@ -827,7 +827,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
 
 // HandleDirective_IfExpression
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenRange& argsIter, bool * outResult )
+bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenRange& argsIter, const char * directiveName, bool * outResult )
 {
     enum
     {
@@ -896,7 +896,7 @@ bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenR
         else
         {
             // TODO:C A better error
-            Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
+            Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), directiveName, '?' );
             return false;
         }
 
