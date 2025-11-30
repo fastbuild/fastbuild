@@ -714,7 +714,7 @@ void TestBFFParsing::ElifDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/elif_directive.bff" );
 
-    TEST_PARSE_FAIL( "#elif X"            "Error #1048 - #elif without matching #if" );
+    TEST_PARSE_FAIL( "#elif X",         "Error #1048 - #elif without matching #if" );
     TEST_PARSE_FAIL( "#if X\n"
                      "#elif",           "Error #1031 - Unknown char" );
     TEST_PARSE_FAIL( "#if X\n"
