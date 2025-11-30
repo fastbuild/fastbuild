@@ -57,7 +57,6 @@ public:
 
     inline static const size_t kMaxVariableNameLength = 256;
     inline static const size_t kMaxOperatorHistory = 256;
-    inline static const size_t kMaxIfElifElseBlocks = 256;
 
     static bool PerformVariableSubstitutions( const BFFToken * inputToken, AString & value );
     static bool ParseVariableName( const BFFToken * iter, AString & name, bool & parentScope );
