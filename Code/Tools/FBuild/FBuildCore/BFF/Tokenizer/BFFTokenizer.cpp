@@ -788,6 +788,13 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
             trueBlockBegin = elifBlockBegin;
             trueBlockEnd = elifBlockEnd;
         }
+
+        // If it passed, all tokens should have been consumed.
+        if ( elifArgsIter->GetType() != BFFTokenType::EndOfFile )
+        {
+            Error::Error_1045_ExtraneousTokenFollowingDirective( elifArgsIter.GetCurrent(), "elif" );
+            return false;
+        }
     }
 
     if ( endType == IfBlockEndType::ELSE )
