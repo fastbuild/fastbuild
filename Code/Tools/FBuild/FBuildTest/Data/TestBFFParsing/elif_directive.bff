@@ -1,0 +1,57 @@
+//
+// #elif directive
+//
+
+// Define a variable
+#if __WINDOWS__
+    .Platform = 'Windows'
+#elif __LINUX__
+    .Platform = 'Linux'
+#elif __OSX__
+    .Platform = 'OSX'
+#endif
+
+// If the variable is not defined this will cause an error
+Print( "Platform = $Platform$" )
+
+// check false blocks are ignored
+#if __WINDOWS__
+    #if __LINUX__
+        should never get here
+    #elif __OSX__
+        should never get here
+    #endif
+#elif __LINUX__
+    #if __WINDOWS__
+        should never get here
+    #elif __OSX__
+        should never get here
+    #endif
+#elif __OSX__
+    #if __WINDOWS__
+        should never get here
+    #elif __LINUX__
+        should never get here
+    #endif
+#endif
+
+// Negation
+#if !__WINDOWS__
+    #if __WINDOWS__
+        should never get here
+    #endif
+#elif !__OSX__
+    #if __OSX__
+        should never get here
+    #endif
+#elif !__LINUX__
+    #if __LINUX__
+        should never get here
+    #endif
+#endif
+
+// #endif at very end of line
+#if __LINUX__
+#elif __OSX__
+#elif __WINDOWS__
+#endif

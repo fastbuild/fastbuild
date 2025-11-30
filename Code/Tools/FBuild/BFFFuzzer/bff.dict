@@ -29,6 +29,7 @@
 "#define"
 "#undef"
 "#if"
+"#elif"
 "#else"
 "#endif"
 "#include"

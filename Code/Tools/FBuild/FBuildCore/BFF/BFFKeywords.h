@@ -4,6 +4,7 @@
 // Defines
 //------------------------------------------------------------------------------
 #define BFF_KEYWORD_DEFINE  "define"
+#define BFF_KEYWORD_ELIF    "elif"
 #define BFF_KEYWORD_ELSE    "else"
 #define BFF_KEYWORD_ENDIF   "endif"
 #define BFF_KEYWORD_EXISTS  "exists"

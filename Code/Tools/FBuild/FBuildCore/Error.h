@@ -112,6 +112,7 @@ public:
                                                               const char * directiveName );
     static void Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter );
     static void Error_1047_IfExpressionTooComplex( const BFFToken * iter );
+    static void Error_1048_ElifWithoutIf( const BFFToken * iter );
 
     // 1050 - 1099 : Variable type errors
     //------------------------------------------------------------------------------
