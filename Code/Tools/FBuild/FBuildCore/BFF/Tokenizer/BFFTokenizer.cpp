@@ -1359,6 +1359,12 @@ bool BFFTokenizer::GetDirective( const BFFFile & file, const char *& pos, AStrin
             ++pos;
         }
     }
+    else
+    {
+        const BFFToken error( file, pos, BFFTokenType::Invalid, directiveNameStart, pos );
+        Error::Error_1010_UnknownConstruct( &error );
+        return false;
+    }
 
     outDirectiveName.Assign( directiveNameStart, pos );
 
