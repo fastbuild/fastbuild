@@ -75,6 +75,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
     REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
     REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
+    REFLECT( m_PCHOptionsHash,                      "PCHOptionsHash",                   MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -91,6 +92,7 @@ ObjectNode::ObjectNode()
 /*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     ASSERT( m_OwnerObjectList ); // Must be set before we get here
+    ASSERT( !IsCreatingPCH() || m_PCHOptionsHash );
 
     // .PreBuildDependencies (OwnerObjectList will have handled checks/errors)
     m_PreBuildDependencies = m_OwnerObjectList->GetPreBuildDependencies();
