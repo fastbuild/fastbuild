@@ -1,0 +1,32 @@
+//
+// Object
+//
+#include "../../../../Code/Tools/FBuild/FBuildTest/Data/testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+ObjectList( 'OwnerObjectListPCH' )
+{
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectListPCH/a.cpp'
+    .CompilerOutputPath = '$Out$/Test/Object/OwnerObjectListPCH/'
+
+    #if __WINDOWS__
+        .PCHInputFile       = 'Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectListPCH/PrecompiledHeader.cpp'
+        .PCHOutputFile      = '$CompilerOutputPath$/PrecompiledHeader.pch'
+        .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+    #else
+        .PCHInputFile       = 'Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectListPCH/PrecompiledHeader.h'
+        .PCHOutputFile      = '$CompilerOutputPath$/PrecompiledHeader.h.gch'
+    #endif
+
+    .AdditionalOptions      = ' "-ITools/FBuild/FBuildTest/Data/TestObject/OwnerObjectListPCH/"'
+
+    // BEGIN lines we will modify
+    .AdditionalOptions + ' -DD1'
+    .AdditionalOptions + ' -DD2'
+    .AdditionalOptions + ' -IInclude1'
+    // END lines we will modify
+
+    .CompilerOptions    + .AdditionalOptions
+    .PCHOptions         + .AdditionalOptions
+}
