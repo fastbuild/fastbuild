@@ -291,9 +291,9 @@ THREAD_LOCAL uint32_t g_MemTrackerDisabledOnThisThread( 0 );
     }
 
     // Register leak detection
-#if !defined( __OSX__ ) // TODO:B Investigate OSX only leaks
+    #if !defined( __OSX__ ) // TODO:B Investigate OSX only leaks
     atexit( MemTracker::DumpLeaksAtExit );
-#endif
+    #endif
 
     // construct primary mutex in-place
     INPLACE_NEW( &GetMutex() ) Mutex;
