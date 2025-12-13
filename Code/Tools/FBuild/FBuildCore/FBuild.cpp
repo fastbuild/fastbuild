@@ -65,6 +65,7 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_LastProgressCalcTime( 0.0f )
     , m_SmoothedProgressCurrent( 0.0f )
     , m_SmoothedProgressTarget( 0.0f )
+    , m_Options( options )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
 {
@@ -75,9 +76,6 @@ FBuild::FBuild( const FBuildOptions & options )
                     _CRTDBG_DELAY_FREE_MEM_DF |
                     _CRTDBG_LEAK_CHECK_DF );
 #endif
-
-    // store all user provided options
-    m_Options = options;
 
     // Create ThreadPool
     if ( m_Options.m_NumWorkerThreads > 0 )
