@@ -17,6 +17,7 @@ class FBuildOptions
 {
 public:
     FBuildOptions();
+    explicit FBuildOptions( const FBuildOptions & other ) = default;
 
     enum OptionsResult
     {
