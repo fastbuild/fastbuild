@@ -25,45 +25,19 @@
 /*static*/ TestManager::TestInfo TestManager::s_TestInfos[ kMaxTests ];
 /*static*/ TestGroup * TestManager::s_FirstTest = nullptr;
 
-// OnAssert callback
-//------------------------------------------------------------------------------
-/*static*/
-#if defined( __WINDOWS__ )
-__declspec( noreturn )
-#endif
-// clang-format off
-void OnAssert( const char * /*message*/ )
-// clang-format on
-{
-    throw "Assert Failed";
-}
-
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TestManager::TestManager()
 {
-    // if we're running outside the debugger, we don't want
-    // failures to pop up a dialog.  We want them to throw so
-    // the test framework can catch the exception
-#ifdef ASSERTS_ENABLED
-    if ( IsDebuggerAttached() == false )
-    {
-        AssertHandler::SetAssertCallback( OnAssert );
-    }
-#endif
+    // don't buffer output so that logging is complete prior to a crash
+    VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
+    VERIFY( setvbuf( stderr, nullptr, _IONBF, 0 ) == 0 );
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 TestManager::~TestManager()
 {
-#ifdef ASSERTS_ENABLED
-    if ( IsDebuggerAttached() == false )
-    {
-        AssertHandler::SetAssertCallback( nullptr );
-    }
-#endif
-
     // free all registered tests
     TestGroup * testGroup = s_FirstTest;
     while ( testGroup )
@@ -125,14 +99,8 @@ bool TestManager::RunTests( const char * testGroup )
 #ifdef PROFILING_ENABLED
         ProfileManager::Start( test->GetName() );
 #endif
-        try
         {
             test->RunTests();
-        }
-        catch ( ... )
-        {
-            OUTPUT( " - Test '%s' *** FAILED ***\n", s_TestInfos[ s_NumTests - 1 ].m_TestName );
-            s_TestInfos[ s_NumTests - 1 ].m_TestGroup->PostTest( false );
         }
 #ifdef PROFILING_ENABLED
         ProfileManager::Stop();
@@ -215,7 +183,7 @@ void TestManager::TestEnd()
 {
     TestInfo & info = s_TestInfos[ s_NumTests - 1 ];
 
-    info.m_TestGroup->PostTest( true );
+    info.m_TestGroup->PostTest();
 
 #ifdef MEMTRACKER_ENABLED
     // Get allocation state here (before profiling, which can cause allocations)
@@ -265,13 +233,7 @@ void TestManager::TestEnd()
     OUTPUT( "%s(%u): Assert: %s", file, line, message );
     OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
 
-    if ( IsDebuggerAttached() )
-    {
-        return true; // tell the calling code to break at the failure site
-    }
-
-    // throw will be caught by the unit test framework and noted as a failure
-    throw "Test Failed";
+    return true; // tell the calling code to break at the failure site
 }
 
 // AssertFailureM
@@ -293,13 +255,7 @@ void TestManager::TestEnd()
     OUTPUT( "\n%s", buffer.Get() );
     OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
 
-    if ( IsDebuggerAttached() )
-    {
-        return true; // tell the calling code to break at the failure site
-    }
-
-    // throw will be caught by the unit test framework and noted as a failure
-    throw "Test Failed";
+    return true; // tell the calling code to break at the failure site
 }
 
 //------------------------------------------------------------------------------
