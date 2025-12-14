@@ -186,9 +186,6 @@ Compiler( 'Compiler-VS2022-ARM64' )
     // File Extensions
     .LibExtension                   = '.lib'
     .ExeExtension                   = '.exe'
-
-    // Exception Control
-    .UseExceptions                  = ' /EHsc'
 ]
 
 

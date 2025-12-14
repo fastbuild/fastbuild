@@ -110,15 +110,6 @@ bool IsDebuggerAttached()
         ( *s_AssertCallback )( buffer );
     }
 
-    if ( IsDebuggerAttached() == false )
-    {
-        #if defined( __WINDOWS__ )
-        // TODO:LINUX Fix MessageBox use
-        // TODO:OSX Fix MessageBox use
-        const int res = MessageBox( nullptr, buffer, "Assertion Failed - Break Execution?", MB_YESNO | MB_ICONERROR );
-        return ( res == IDYES );
-        #endif
-    }
     return true; // break execution
     #else
     (void)message;

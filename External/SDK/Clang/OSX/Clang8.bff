@@ -49,10 +49,12 @@ Compiler( 'Compiler-Clang8' )
 
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
 
     // Librarian
     .Librarian                      = '$Clang8_BasePath$/ar'
@@ -69,9 +71,6 @@ Compiler( 'Compiler-Clang8' )
     // File Extensions
     .LibExtension                   = '.a'
     .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
 ]
 
 //------------------------------------------------------------------------------

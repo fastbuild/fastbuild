@@ -22,7 +22,7 @@ protected:
 
     // Run before and after each test
     virtual void PreTest() const {}
-    virtual void PostTest( bool /*passed*/ ) const {}
+    virtual void PostTest() const {}
 
     // Memory Leak checks can be disabled for individual tests
     static void SetMemoryLeakCheckEnabled( bool enabled ) { sMemoryLeakCheckEnabled = enabled; }

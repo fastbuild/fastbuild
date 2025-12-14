@@ -51,20 +51,13 @@ FBuildTest::FBuildTest()
 
 // PostTest
 //------------------------------------------------------------------------------
-/*virtual*/ void FBuildTest::PostTest( bool passed ) const
+/*virtual*/ void FBuildTest::PostTest() const
 {
     VERIFY( FileIO::SetCurrentDir( m_OriginalWorkingDir ) );
 
     FBuildStats::SetIgnoreCompilerNodeDeps( false );
 
     Tracing::RemoveCallbackOutput( LoggingCallback );
-
-    // Print the output on failure, unless in the debugger
-    // (we print as we go if the debugger is attached)
-    if ( ( passed == false ) && ( s_DebuggerAttached == false ) )
-    {
-        OUTPUT( "%s", s_RecordedOutput.Get() );
-    }
 }
 
 // EnsureFileDoesNotExist
@@ -269,9 +262,8 @@ bool FBuildTest::LoggingCallback( const char * message )
 {
     MutexHolder mh( s_OutputMutex );
     s_RecordedOutput.Append( message, AString::StrLen( message ) );
-    // If in the debugger, print the output normally as well, otherwise
-    // suppress and only print on failure
-    return s_DebuggerAttached;
+
+    return true; // Caller should also print to stdout
 }
 
 // CONSTRUCTOR - FBuildTestOptions

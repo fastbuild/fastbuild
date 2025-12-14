@@ -46,10 +46,12 @@ Compiler( 'Compiler-Clang12' )
 
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
 
     // Librarian
     .Librarian                      = '$Clang12_BasePath$/ar'
@@ -64,9 +66,6 @@ Compiler( 'Compiler-Clang12' )
     // File Extensions
     .LibExtension                   = '.a'
     .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
 ]
 
 .ToolChain_Clang_OSX =
