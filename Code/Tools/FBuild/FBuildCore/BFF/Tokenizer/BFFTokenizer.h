@@ -52,7 +52,7 @@ protected:
     bool HandleDirective_Elif( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_Else( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_If( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
-    bool HandleDirective_IfExpression( const BFFFile & file, BFFTokenRange& argsIter, const char * directiveName, bool * outResult );
+    bool HandleDirective_IfExpression( const BFFFile & file, BFFTokenRange & argsIter, const char * directiveName, bool * outResult );
     bool HandleDirective_IfExists( BFFTokenRange & iter, bool * outResult );
     bool HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool * outResult );
     bool HandleDirective_IfDefined( BFFTokenRange & iter, bool * outResult );

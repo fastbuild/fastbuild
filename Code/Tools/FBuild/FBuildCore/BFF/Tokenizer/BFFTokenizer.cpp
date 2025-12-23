@@ -620,7 +620,7 @@ bool BFFTokenizer::HandleDirective( const char *& pos, const char * end, const B
 
 // ParseDirectiveLine
 //------------------------------------------------------------------------------
-bool BFFTokenizer::ParseDirectiveLine( const char *& pos, const char * end, const BFFFile & file, StackArray<BFFToken> & argsOut)
+bool BFFTokenizer::ParseDirectiveLine( const char *& pos, const char * end, const BFFFile & file, StackArray<BFFToken> & argsOut )
 {
     // Take note of the number of non-directive tokens
     const size_t numTokens = m_Tokens.GetSize();
@@ -754,7 +754,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
         trueBlockEnd = ifBlockEnd;
     }
 
-    while( endType == IfBlockEndType::ELIF )
+    while ( endType == IfBlockEndType::ELIF )
     {
         // Parse the remainder of the line. This assumes that pos is immediately after "elif".
         StackArray<BFFToken> elifArgs;
@@ -827,7 +827,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
 
 // HandleDirective_IfExpression
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenRange& argsIter, const char * directiveName, bool * outResult )
+bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenRange & argsIter, const char * directiveName, bool * outResult )
 {
     enum
     {
@@ -867,7 +867,7 @@ bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenR
         bool result = false;
 
         // If outResult is null, do not evaluate. Only consume the tokens and check for errors.
-        bool* resultPtr = outResult ? &result : nullptr;
+        bool * resultPtr = outResult ? &result : nullptr;
 
         // Keyword or identifier?
         if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
