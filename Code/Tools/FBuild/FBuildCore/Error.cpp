@@ -433,9 +433,9 @@
 
 // Error_1046_IfExpressionCannotStartWithBooleanOperator
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter )
+/*static*/ void Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter, const char * directiveName )
 {
-    FormatError( iter, 1046u, nullptr, "#if expression cannot start with boolean operator." );
+    FormatError( iter, 1046u, nullptr, "#%s expression cannot start with boolean operator.", directiveName );
 }
 
 // Error_1047_IfExpressionTooComplex

@@ -849,7 +849,7 @@ bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenR
             // expressions like #if &&a
             if ( !ranOnce )
             {
-                Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( argsIter.GetCurrent() );
+                Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( argsIter.GetCurrent(), directiveName );
                 return false;
             }
 

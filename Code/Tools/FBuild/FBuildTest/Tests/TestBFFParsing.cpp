@@ -980,9 +980,9 @@ void TestBFFParsing::ElifBooleanOperators() const
 {
     // Failure cases
     TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
-                     "#elif ||",              "#1046 - #if expression cannot start with boolean operator");
+                     "#elif ||",              "#1046 - #elif expression cannot start with boolean operator");
     TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
-                     "#elif &&",              "#1046 - #if expression cannot start with boolean operator");
+                     "#elif &&",              "#1046 - #elif expression cannot start with boolean operator");
     TEST_PARSE_FAIL( "#if __UNDEFINED__\n"
                      " #elif X && || Y\n"
                      "#endif",              "#1031 - Unknown char '|' following 'elif' directive." );
@@ -995,9 +995,9 @@ void TestBFFParsing::ElifBooleanOperators() const
 
     // Failure cases, even in the false path
     TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
-                     "#elif ||",              "#1046 - #if expression cannot start with boolean operator");
+                     "#elif ||",              "#1046 - #elif expression cannot start with boolean operator");
     TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
-                     "#elif &&",              "#1046 - #if expression cannot start with boolean operator");
+                     "#elif &&",              "#1046 - #elif expression cannot start with boolean operator");
     TEST_PARSE_FAIL( "#if !__UNDEFINED__\n"
                      " #elif X && || Y\n"
                      "#endif",              "#1031 - Unknown char '|' following 'elif' directive." );
