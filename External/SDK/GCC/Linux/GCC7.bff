@@ -46,11 +46,13 @@ Compiler( 'Compiler-GCC7' )
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
                                     + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
                                     + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
 
     // Librarian
     .Librarian                      = '$GCC7_BasePath$/x86_64-linux-gnu-ar'
@@ -63,9 +65,6 @@ Compiler( 'Compiler-GCC7' )
     // File Extensions
     .LibExtension                   = '.a'
     .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
 ]
 
 //------------------------------------------------------------------------------

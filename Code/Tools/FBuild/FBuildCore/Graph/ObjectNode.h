@@ -297,6 +297,7 @@ protected:
     // Internal State
     CompilerFlags m_CompilerFlags;
     CompilerFlags m_PreprocessorFlags;
+    uint32_t m_PCHOptionsHash = 0; // Hash of PCHOptions from OwnerObjectList
     uint64_t m_PCHCacheKey = 0;
     uint64_t m_LightCacheKey = 0;
     ObjectListNode * m_OwnerObjectList = nullptr;

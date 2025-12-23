@@ -153,9 +153,6 @@ Compiler( 'Compiler-Clang14-NonCL' )
     .CompilerOptionsC               = ' /TC -o"%2" "%1" $CommonCompilerOptions$'
     .PCHOptions                     = ' /TP $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
                                     + ' /std:c++17'                     // Enable c++17 features
-
-    // Exception Control
-    .UseExceptions                  = ' /EHs'
 ]
 
 // ToolChain
@@ -202,6 +199,7 @@ Compiler( 'Compiler-Clang14-NonCL' )
 
     .CompilerOptions                = ' -x c++ -o"%2" "%1" $CommonCompilerOptions$'
                                     + ' -std=c++17'                     // Enable c++17 features
+                                    + ' -fno-exceptions'
     .CompilerOptionsC               = ' -x c -o"%2" "%1" $CommonCompilerOptions$'
 ]
 

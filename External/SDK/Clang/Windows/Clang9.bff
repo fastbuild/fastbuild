@@ -115,9 +115,6 @@ Compiler( 'Compiler-Clang9-NonCL' )
     .CompilerOptionsC               = ' /TC -o"%2" "%1" $CommonCompilerOptions$'
     .PCHOptions                     = ' /TP $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
                                     + ' /std:c++17'                     // Enable c++17 features
-
-    // Exception Control
-    .UseExceptions                  = ' /EHs'
 ]
 
 // ToolChain
@@ -145,6 +142,7 @@ Compiler( 'Compiler-Clang9-NonCL' )
 
                                     // No RTTI
                                     + ' -fno-rtti'
+                                    + ' -fno-exceptions'
 
                                     // Warnings that are not useful
                                     + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]

@@ -87,9 +87,6 @@ Compiler( 'Compiler-Clang18' )
     // File Extensions
     .LibExtension                   = '.a'
     .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
 ]
 
 //------------------------------------------------------------------------------

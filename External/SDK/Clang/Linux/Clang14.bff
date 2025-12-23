@@ -83,9 +83,6 @@ Compiler( 'Compiler-Clang14' )
     // File Extensions
     .LibExtension                   = '.a'
     .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
 ]
 
 //------------------------------------------------------------------------------

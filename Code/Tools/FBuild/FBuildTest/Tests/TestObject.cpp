@@ -38,6 +38,7 @@ private:
     void ClangDependencyArgs() const;
     void CLDependencyArgs() const;
     void OwnerObjectList() const;
+    void OwnerObjectListPCH() const;
 };
 
 // Register Tests
@@ -55,6 +56,7 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
 #endif
     REGISTER_TEST( OwnerObjectList )
+    REGISTER_TEST( OwnerObjectListPCH )
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -771,6 +773,105 @@ void TestObject::OwnerObjectList() const
             TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
             const uint32_t expectedBuild = edit.m_ShouldCauseRebuild ? 1 : 0;
             CheckStatsNode( fBuild.GetStats(), 1, expectedBuild, Node::OBJECT_NODE );
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+void TestObject::OwnerObjectListPCH() const
+{
+    // Check behavior of properties stored in OwnerObjectList
+
+    const char * const srcBFFFile = "Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectListPCH/ownerobjectlistpch.bff";
+    const char * const dstBFFFile = "../tmp/Test/Object/OwnerObjectListPCH/ownerobjectlistpch.bff";
+#if defined( __WINDOWS__ )
+    const char * const outputFile = "../tmp/Test/Object/OwnerObjectListPCH/a.obj";
+#else
+    const char * const outputFile = "../tmp/Test/Object/OwnerObjectListPCH/a.o";
+#endif
+    const char * const database = "../tmp/Test/Object/OwnerObjectListPCH/fbuild.fdb";
+
+    // Read BFF file contents into string
+    AString bff;
+    {
+        FileStream f;
+        TEST_ASSERT( f.Open( srcBFFFile ) &&
+                     f.ReadIntoString( bff ) );
+    }
+
+    // Read config file into memory that modify and write
+    {
+        FileIO::EnsurePathExistsForFile( AStackString( dstBFFFile ) );
+        FileStream f;
+        TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
+                     f.WriteFromString( bff ) );
+    }
+
+    // Common options
+    FBuildTestOptions options;
+    options.m_ConfigFile = dstBFFFile;
+    options.m_ShowBuildReason = true;
+
+    // Clear output directory
+    EnsureFileDoesNotExist( outputFile );
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "OwnerObjectListPCH" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+        CheckStatsNode( fBuild.GetStats(), 2, 2, Node::OBJECT_NODE );
+    }
+
+    EnsureFileExists( outputFile );
+
+    class BFFEdit
+    {
+    public:
+        BFFEdit( const char * from, const char * to )
+            : m_From( from )
+            , m_To( to )
+        {
+        }
+        BFFEdit & operator=( const BFFEdit & other ) = delete;
+
+        const char * const m_From;
+        const char * const m_To;
+    };
+    static const BFFEdit bffEdits[] =
+        {
+            { "+ ' -DD1'", "+ ' -DD1 -DNEW_OPTION'" }, // Add option
+            { "+ ' -DD2'", "+ ''" }, // Remove option
+            { "+ ' -IInclude1'", "+ ' -IInclude2'" }, // Modify option
+        };
+
+    for ( const BFFEdit & edit : bffEdits )
+    {
+        // First ensure no rebuilding without changes
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( database ) );
+            TEST_ASSERT( fBuild.Build( "OwnerObjectListPCH" ) );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+            CheckStatsNode( fBuild.GetStats(), 2, 0, Node::OBJECT_NODE );
+        }
+
+        // Modify BFF
+        {
+            TEST_ASSERT( bff.Replace( edit.m_From, edit.m_To ) == 1 );
+            FileStream f;
+            TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
+                         f.WriteFromString( bff ) );
+        }
+
+        // Ensure ObjectNode rebuilds after modifying ObjectListNode
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( database ) );
+            TEST_ASSERT( fBuild.Build( "OwnerObjectListPCH" ) );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+            CheckStatsNode( fBuild.GetStats(), 2, 2, Node::OBJECT_NODE );
         }
     }
 }

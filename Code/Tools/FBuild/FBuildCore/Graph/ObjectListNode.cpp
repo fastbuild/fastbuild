@@ -75,6 +75,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_ExtraSourceDependenciesPath,         "ExtraSourceDependenciesPath",      MetaHidden() )
     REFLECT( m_ObjectListInputStartIndex,           "ObjectListInputStartIndex",        MetaHidden() )
     REFLECT( m_ObjectListInputEndIndex,             "ObjectListInputEndIndex",          MetaHidden() )
+    REFLECT( m_PCHOptionsHash,                      "PCHOptionsHash",                   MetaHidden() )
     REFLECT( m_CompilerFlags.m_Flags,               "ObjFlags",                         MetaHidden() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "ObjFlagsPreprocessor",             MetaHidden() )
     REFLECT( m_ConcurrencyGroupIndex,               "ConcurrencyGroupIndex",            MetaHidden() )
@@ -160,6 +161,8 @@ ObjectListNode::ObjectListNode()
             Error::Error_1300_MissingPCHArgs( iter, function );
             return false;
         }
+
+        m_PCHOptionsHash = xxHash3::Calc32( m_PCHOptions );
 
         // Check PCH creation command line options
         const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( m_CompilerNode, m_PCHOptions, true, false );
@@ -802,6 +805,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
     node->m_OwnerObjectList = this;
+    node->m_PCHOptionsHash = m_PCHOptionsHash;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

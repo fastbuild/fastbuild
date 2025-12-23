@@ -127,6 +127,7 @@ protected:
     AString m_ExtraSourceDependenciesPath;
     uint32_t m_ObjectListInputStartIndex = 0;
     uint32_t m_ObjectListInputEndIndex = 0;
+    uint32_t m_PCHOptionsHash = 0;
     ObjectNode::CompilerFlags m_CompilerFlags;
     ObjectNode::CompilerFlags m_PreprocessorFlags;
 };
