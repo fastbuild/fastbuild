@@ -440,9 +440,9 @@
 
 // Error_1047_IfExpressionTooComplex
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken * iter )
+/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken * iter, const char * directiveName )
 {
-    FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %zu boolean operators supported.", BFFParser::kMaxOperatorHistory );
+    FormatError( iter, 1047u, nullptr, "#%s expression too complex. Up to %zu boolean operators supported.", directiveName, BFFParser::kMaxOperatorHistory );
 }
 
 // Error_1048_ElifWithoutIf

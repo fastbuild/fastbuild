@@ -927,7 +927,7 @@ bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenR
             // Check for excessive complexity
             if ( numOperators == BFFParser::kMaxOperatorHistory )
             {
-                Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
+                Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent(), directiveName );
                 return false;
             }
         }

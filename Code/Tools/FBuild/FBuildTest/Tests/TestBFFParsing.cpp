@@ -591,7 +591,7 @@ void TestBFFParsing::IfBooleanOperators() const
         complex.AppendFormat( "A%u &&", (uint32_t)i );
     }
     complex += "B";
-    TEST_PARSE_FAIL( complex.Get(),         "#1047 - If expression too complex. Up to 256 boolean operators supported." );
+    TEST_PARSE_FAIL( complex.Get(),         "#1047 - #if expression too complex. Up to 256 boolean operators supported." );
 
     // OR
     TEST_PARSE_OK( "#define A\n"
@@ -1017,7 +1017,7 @@ void TestBFFParsing::ElifBooleanOperators() const
             complex.AppendFormat( "A%u &&", (uint32_t)i );
         }
         complex += "B";
-        TEST_PARSE_FAIL( complex.Get(),         "#1047 - If expression too complex. Up to 256 boolean operators supported." );
+        TEST_PARSE_FAIL( complex.Get(),         "#1047 - #elif expression too complex. Up to 256 boolean operators supported." );
     }
 
     // Expression too complex, even in false path
@@ -1029,7 +1029,7 @@ void TestBFFParsing::ElifBooleanOperators() const
             complex.AppendFormat( "A%u &&", (uint32_t)i );
         }
         complex += "B";
-        TEST_PARSE_FAIL( complex.Get(),         "#1047 - If expression too complex. Up to 256 boolean operators supported." );
+        TEST_PARSE_FAIL( complex.Get(),         "#1047 - #elif expression too complex. Up to 256 boolean operators supported." );
     }
 
     // OR
