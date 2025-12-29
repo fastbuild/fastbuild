@@ -437,7 +437,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 AString compileFileCommand( config.m_CompileFileCommand );
                 compileFileCommand.Replace( "%1", "$(SelectedFiles)" );
                 Write( "    <NMakeCompile>\n" );
-            	WritePGItem( "NMakeCompileFileCommandLine", compileFileCommand );
+                WritePGItem( "NMakeCompileFileCommandLine", compileFileCommand );
                 Write( "    </NMakeCompile>\n" );
             }
             Write( "  </ItemDefinitionGroup>\n" );
