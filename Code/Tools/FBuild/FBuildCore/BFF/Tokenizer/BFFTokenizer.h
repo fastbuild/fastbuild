@@ -46,14 +46,25 @@ protected:
     bool HandleIdentifier( const char *& pos, const char * end, const BFFFile & file );
     bool HandleVariable( const char *& pos, const char * end, const BFFFile & file );
     bool HandleDirective( const char *& pos, const char * end, const BFFFile & file );
+    bool ParseDirectiveLine( const char *& pos, const char * end, const BFFFile & file, StackArray<BFFToken> & argsOut );
 
     bool HandleDirective_Define( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
+    bool HandleDirective_Elif( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_Else( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_If( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
-    bool HandleDirective_IfExists( BFFTokenRange & iter, bool & outResult );
-    bool HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool & outResult );
-    bool HandleDirective_IfDefined( BFFTokenRange & iter, bool & outResult );
-    bool ParseToEndIf( const char *& pos, const char * end, const BFFFile & file, bool allowElse, const char *& outBlockEnd, bool * outIsElse );
+    bool HandleDirective_IfExpression( const BFFFile & file, BFFTokenRange & argsIter, const char * directiveName, bool * outResult );
+    bool HandleDirective_IfExists( BFFTokenRange & iter, bool * outResult );
+    bool HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool * outResult );
+    bool HandleDirective_IfDefined( BFFTokenRange & iter, bool * outResult );
+
+    enum class IfBlockEndType
+    {
+        ELIF,
+        ELSE,
+        ENDIF
+    };
+
+    bool ParseToEndIf( const char *& pos, const char * end, const BFFFile & file, bool allowElse, const char *& outBlockEnd, IfBlockEndType * outEndType );
     bool HandleDirective_Import( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_Include( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_Once( const BFFFile & file, const char *& pos, const char * end, BFFTokenRange & argsIter );

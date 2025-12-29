@@ -433,16 +433,23 @@
 
 // Error_1046_IfExpressionCannotStartWithBooleanOperator
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter )
+/*static*/ void Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( const BFFToken * iter, const char * directiveName )
 {
-    FormatError( iter, 1046u, nullptr, "#if expression cannot start with boolean operator." );
+    FormatError( iter, 1046u, nullptr, "#%s expression cannot start with boolean operator.", directiveName );
 }
 
 // Error_1047_IfExpressionTooComplex
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken * iter )
+/*static*/ void Error::Error_1047_IfExpressionTooComplex( const BFFToken * iter, const char * directiveName )
 {
-    FormatError( iter, 1047u, nullptr, "If expression too complex. Up to %zu boolean operators supported.", BFFParser::kMaxOperatorHistory );
+    FormatError( iter, 1047u, nullptr, "#%s expression too complex. Up to %zu boolean operators supported.", directiveName, BFFParser::kMaxOperatorHistory );
+}
+
+// Error_1048_ElifWithoutIf
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1048_ElifWithoutIf( const BFFToken * iter )
+{
+    FormatError( iter, 1048u, nullptr, "#elif without matching #if." );
 }
 
 // Error_1050_PropertyMustBeString

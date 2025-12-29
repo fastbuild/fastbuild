@@ -24,24 +24,24 @@
 	        </div>
 	        <div class='inner'>
 
-<h1>1041 - #else without matching #if.</h1>
+<h1>1048 - #elif without matching #if.</h1>
     <div class='newsitemheader'>Description</div>
     <div class='newsitembody'>
-A #else token can only be used after an #if or an #elif token.
+A #elif token can only be used after an #if token or another #elif token.
     </div>
 <div class='newsitemheader'>Example</div>
     <div class='newsitembody'>
 Config:
-<div class='code'>#else
+<div class='code'>#elif __LINUX__
 #endif</div>
 Output:
-<div class='output'>C:\Test\fbuild.bff(1,2): FASTBuild Error #1041 - #else without matching #if.
-#else
+<div class='output'>C:\Test\fbuild.bff(1,2): FASTBuild Error #1048 - #elif without matching #if.
+#elif __LINUX__
  ^
  \--here</div>
 Fix:
 <div class='code'>#if __OSX__
-#else
+#elif __LINUX__
 #endif</div>
     </div>
 
