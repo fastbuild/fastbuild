@@ -430,11 +430,11 @@ Example:
 
       <p><b>CompileFileCommand</b> - String - (Optional)</p>
       <p>Command to launch when "compile file" (CTRL+F7) is selected for a file in Solution Explorer. This option is supported in Visual Studio 2022 and later.</p>
-      <p>%1 is replaced by the currently selected file path.</p>
+      <p>The Visual Studio runtime macro $(SelectedFiles) can be used to target the selected file, in addition to the other runtime macros.</p>
       <p>Note: FASTBuild targets typically define a fixed set of inputs, so compiling an arbitrary single file requires an explicit single-file target or a workaround.</p>
       <p>One workaround is to pass the selected filename via an environment variable and import it in the BFF using the #import directive.</p>
-	  Example:
-<div class='code'>.CompileFileCommand = 'set "SELECTED_FILE=%1" &amp;amp; fbuild -ide SingleFile-MyProject-X64-Debug'</div>
+	  Example (this assumes a single file is selected):
+<div class='code'>.CompileFileCommand = 'set "SELECTED_FILE=^$(SelectedFiles)" &amp;amp; fbuild -ide SingleFile-MyProject-X64-Debug'</div>
 
 <div class='code'>#import SELECTED_FILE
 ObjectList( 'SingleFile-MyProject-X64-Debug' )
