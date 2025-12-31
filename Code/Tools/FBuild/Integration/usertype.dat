@@ -1,4 +1,5 @@
 define
+elif
 else
 endif
 exists
@@ -70,6 +71,7 @@ CachePluginDLLConfig
 ClangFixupUnity_Disable
 ClangGCCUpdateXLanguageArg
 ClangRewriteIncludes
+CompileFileCommand
 Compiler
 CompilerFamily
 CompilerForceUsing
