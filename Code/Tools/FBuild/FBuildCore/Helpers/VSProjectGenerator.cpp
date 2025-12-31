@@ -132,7 +132,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // files
     {
-        AStackString fileEntryType( hasAnyCompileFileCommand ? "ClCompile" : "CustomBuild" );
+        const char * const fileEntryType = ( hasAnyCompileFileCommand ? "ClCompile" : "CustomBuild" );
 
         Write( "  <ItemGroup>\n" );
         for ( const VSProjectFilePair & filePathPair : m_Files )
@@ -150,13 +150,13 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             }
             if ( fileTypeToUse )
             {
-                WriteF( "    <%s Include=\"%s\">\n", fileEntryType.Get(), fileName.Get() );
+                WriteF( "    <%s Include=\"%s\">\n", fileEntryType, fileName.Get() );
                 WriteF( "        <FileType>%s</FileType>\n", fileTypeToUse );
-                WriteF( "    </%s>\n", fileEntryType.Get() );
+                WriteF( "    </%s>\n", fileEntryType );
             }
             else
             {
-                WriteF( "    <%s Include=\"%s\" />\n", fileEntryType.Get(), fileName.Get() );
+                WriteF( "    <%s Include=\"%s\" />\n", fileEntryType, fileName.Get() );
             }
         }
         Write( "  </ItemGroup>\n" );
