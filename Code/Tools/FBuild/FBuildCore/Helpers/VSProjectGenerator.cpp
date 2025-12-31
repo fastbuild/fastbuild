@@ -108,6 +108,8 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     Write( "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" );
     Write( "<Project DefaultTargets=\"Build\" ToolsVersion=\"15.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
 
+    bool hasAnyCompileFileCommand = false;
+
     // Project Configurations
     {
         Write( "  <ItemGroup Label=\"ProjectConfigurations\">\n" );
@@ -119,12 +121,19 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WriteF( "      <Configuration>%s</Configuration>\n", config.m_Config.Get() );
             WriteF( "      <Platform>%s</Platform>\n", config.m_Platform.Get() );
             Write( "    </ProjectConfiguration>\n" );
+
+            if ( !config.m_CompileFileCommand.IsEmpty() )
+            {
+                hasAnyCompileFileCommand = true;
+            }
         }
         Write( "  </ItemGroup>\n" );
     }
 
     // files
     {
+        AStackString fileEntryType( hasAnyCompileFileCommand ? "ClCompile" : "CustomBuild" );
+
         Write( "  <ItemGroup>\n" );
         for ( const VSProjectFilePair & filePathPair : m_Files )
         {
@@ -141,13 +150,13 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             }
             if ( fileTypeToUse )
             {
-                WriteF( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
+                WriteF( "    <%s Include=\"%s\">\n", fileEntryType.Get(), fileName.Get() );
                 WriteF( "        <FileType>%s</FileType>\n", fileTypeToUse );
-                Write( "    </CustomBuild>\n" );
+                WriteF( "    </%s>\n", fileEntryType.Get() );
             }
             else
             {
-                WriteF( "    <CustomBuild Include=\"%s\" />\n", fileName.Get() );
+                WriteF( "    <%s Include=\"%s\" />\n", fileEntryType.Get(), fileName.Get() );
             }
         }
         Write( "  </ItemGroup>\n" );
@@ -431,6 +440,12 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WritePGItem( "DeploymentType", config.m_DeploymentType );
                 WritePGItem( "DeploymentFiles", config.m_DeploymentFiles );
                 Write( "    </Deploy>\n" );
+            }
+            if ( !config.m_CompileFileCommand.IsEmpty() )
+            {
+                Write( "    <NMakeCompile>\n" );
+                WritePGItem( "NMakeCompileFileCommandLine", config.m_CompileFileCommand );
+                Write( "    </NMakeCompile>\n" );
             }
             Write( "  </ItemDefinitionGroup>\n" );
         }
