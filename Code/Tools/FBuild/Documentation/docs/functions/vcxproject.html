@@ -348,18 +348,18 @@ Example:
       for better integration/debugging of non-native architectures.</p>
       Example:
 <div class='code'>.ProjectImport          = [
-                            .Condition = "'$(ConfigurationType)' == 'Makefile'"
-                            .Project = "$(VCTargetsPath)\Platforms\$(Platform)\Custom.Makefile.targets"
+                            .Condition = "'^$(ConfigurationType)' == 'Makefile'"
+                            .Project = "^$(VCTargetsPath)\Platforms\^$(Platform)\Custom.Makefile.targets"
                           ]
 .ProjectProjectImports  = { .ProjectImport }</div>
       NOTE: By default, the following project imports are active.
 <div class='code'>.ProjectImportPS4       = [
-                            .Condition = "'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets')"
-                            .Project = "$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets"
+                            .Condition = "'^$(ConfigurationType)' == 'Makefile' and Exists('^$(VCTargetsPath)\Platforms\^$(Platform)\SCE.Makefile.^$(Platform).targets')"
+                            .Project = "^$(VCTargetsPath)\Platforms\^$(Platform)\SCE.Makefile.^$(Platform).targets"
                           ]
 .ProjectImportAndroid   = [
-                            .Condition = "'$(ConfigurationType)' == 'Makefile' and '$(AndroidAPILevel)' != '' and Exists('$(VCTargetsPath)\Application Type\$(ApplicationType)\$(ApplicationTypeRevision)\Android.Common.targets')"
-                            .Project = "$(VCTargetsPath)\Application Type\$(ApplicationType)\$(ApplicationTypeRevision)\Android.Common.targets"
+                            .Condition = "'^$(ConfigurationType)' == 'Makefile' and '^$(AndroidAPILevel)' != '' and Exists('^$(VCTargetsPath)\Application Type\^$(ApplicationType)\^$(ApplicationTypeRevision)\Android.Common.targets')"
+                            .Project = "^$(VCTargetsPath)\Application Type\^$(ApplicationType)\^$(ApplicationTypeRevision)\Android.Common.targets"
                           ]
 .ProjectProjectImports  = { .ProjectImportPS4, .ProjectImportAndroid }</div>
 </div>
@@ -407,7 +407,7 @@ Example:
 <div class='code'>.ProjectBuildCommand = 'fbuild -ide -dist -cache MyProject-X64-Debug'</div>
       <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
       Example:
-<div class='code'>.ProjectBuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp;amp; fbuild -ide -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
+<div class='code'>.ProjectBuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
 <hr>
 
       <p><b>ProjectRebuildCommand</b> - String - (Optional)</p>
@@ -416,7 +416,7 @@ Example:
 <div class='code'>.ProjectRebuildCommand = 'fbuild -ide -clean -dist -cache MyProject-X64-Debug'</div>
       <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
       Example:
-<div class='code'>.ProjectRebuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp;amp; fbuild -ide -clean -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
+<div class='code'>.ProjectRebuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide -clean -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
 <hr>
 
       <p><b>ProjectCleanCommand</b> - String - (Optional)</p>
@@ -425,7 +425,7 @@ Example:
 <div class='code'>.ProjectCleanCommand = 'fbuild -ide Clean-MyProject-X64-Debug'</div>
       <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
       Example:
-<div class='code'>.ProjectCleanCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp;amp; fbuild -ide Clean-$(ProjectName)-^$(Configuration)'</div>
+<div class='code'>.ProjectCleanCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide Clean-^$(ProjectName)-^$(Configuration)'</div>
 <hr>
 
       <p><b>CompileFileCommand</b> - String - (Optional)</p>
@@ -434,7 +434,7 @@ Example:
       <p>Note: FASTBuild targets typically define a fixed set of inputs, so compiling an arbitrary single file requires an explicit single-file target or a workaround.</p>
       <p>One workaround is to pass the selected filename via an environment variable and import it in the BFF using the #import directive.</p>
 	  Example (this assumes a single file is selected):
-<div class='code'>.CompileFileCommand = 'set "SELECTED_FILE=^$(SelectedFiles)" &amp;amp; fbuild -ide SingleFile-MyProject-X64-Debug'</div>
+<div class='code'>.CompileFileCommand = 'set "SELECTED_FILE=^$(SelectedFiles)" &amp; fbuild -ide SingleFile-MyProject-X64-Debug'</div>
 
 <div class='code'>#import SELECTED_FILE
 ObjectList( 'SingleFile-MyProject-X64-Debug' )
