@@ -75,7 +75,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_ExtraSourceDependenciesPath,         "ExtraSourceDependenciesPath",      MetaHidden() )
     REFLECT( m_ObjectListInputStartIndex,           "ObjectListInputStartIndex",        MetaHidden() )
     REFLECT( m_ObjectListInputEndIndex,             "ObjectListInputEndIndex",          MetaHidden() )
-    REFLECT( m_PCHOptionsHash,                      "PCHOptionsHash",                   MetaHidden() )
+    REFLECT( m_OwnerObjectListHash,                 "OwnerObjectListHash",              MetaHidden() )
     REFLECT( m_CompilerFlags.m_Flags,               "ObjFlags",                         MetaHidden() )
     REFLECT( m_PreprocessorFlags.m_Flags,           "ObjFlagsPreprocessor",             MetaHidden() )
     REFLECT( m_ConcurrencyGroupIndex,               "ConcurrencyGroupIndex",            MetaHidden() )
@@ -150,6 +150,8 @@ ObjectListNode::ObjectListNode()
         return false;
     }
 
+    CalculateOwnerObjectListHash();
+
     // Creating a PCH?
     const bool creatingPCH = ( m_PCHInputFile.IsEmpty() == false );
     ObjectNode * precompiledHeader = nullptr;
@@ -161,8 +163,6 @@ ObjectListNode::ObjectListNode()
             Error::Error_1300_MissingPCHArgs( iter, function );
             return false;
         }
-
-        m_PCHOptionsHash = xxHash3::Calc32( m_PCHOptions );
 
         // Check PCH creation command line options
         const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( m_CompilerNode, m_PCHOptions, true, false );
@@ -722,6 +722,29 @@ void ObjectListNode::GetObjectFileName( const AString & fileName, const AString 
     objFile += GetObjExtension();
 }
 
+//------------------------------------------------------------------------------
+void ObjectListNode::CalculateOwnerObjectListHash()
+{
+    ASSERT( m_OwnerObjectListHash == 0 ); // Should only be called once
+
+    xxHash3Accumulator accumulator;
+    for ( const AString & string : GetCompilerForceUsing() )
+    {
+        accumulator.AddData( string );
+    }
+    accumulator.AddData( GetCompilerOptions() );
+    accumulator.AddData( GetCompilerOptionsDeoptimized() );
+    accumulator.AddData( GetCompilerOptionsPCH() );
+    accumulator.AddData( GetPCHObjectFileName() );
+    accumulator.AddData( GetPrecompiledHeaderName() );
+    const uint32_t flags = ( GetDeoptimizeWritableFiles() ? 1u : 0u ) |
+                           ( GetDeoptimizeWritableFilesWithToken() ? 2u : 0u ) |
+                           ( IsCachingAllowed() ? 4u : 0u ) |
+                           ( IsDistributionAllowed() ? 8u : 0u );
+    accumulator.AddData( &flags, sizeof( flags ) );
+    m_OwnerObjectListHash = accumulator.Finalize32();
+}
+
 // CreateDynamicObjectNode
 //------------------------------------------------------------------------------
 bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
@@ -800,12 +823,14 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const AString & objectName,
                                                const AString & objectInput )
 {
+    ASSERT( m_OwnerObjectListHash );
+
     ObjectNode * node = nodeGraph.CreateNode<ObjectNode>( objectName, iter );
     node->m_CompilerInputFile = objectInput;
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
     node->m_OwnerObjectList = this;
-    node->m_PCHOptionsHash = m_PCHOptionsHash;
+    node->m_OwnerObjectListHash = m_OwnerObjectListHash;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

@@ -99,6 +99,12 @@ public:
                                       data,
                                       dataSize );
     }
+    void AddData( const AString & string )
+    {
+        const uint32_t len = string.GetLength();
+        AddData( &len, sizeof( len ) );
+        AddData( string.Get(), len );
+    }
     void AddDataBig( const void * data, size_t dataSize )
     {
         ASSERT( mFinalized == false );
@@ -118,6 +124,10 @@ public:
         mFinalized = true;
 #endif
         return xxHashLib_XXH3_64bits_digest( reinterpret_cast<xxHashLib_XXH3_state_s *>( m_State ) );
+    }
+    uint32_t Finalize32()
+    {
+        return static_cast<uint32_t>( Finalize64() );
     }
 
 protected:
