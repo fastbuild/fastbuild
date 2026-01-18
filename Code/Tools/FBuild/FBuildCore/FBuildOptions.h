@@ -49,6 +49,7 @@ public:
 
     // Targets
     Array<AString> m_Targets;
+    Array<AString> m_SourceFiles;
 
     // Build Behaviour
     bool m_ForceCleanBuild = false;

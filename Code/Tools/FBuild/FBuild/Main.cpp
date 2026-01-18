@@ -213,7 +213,7 @@ int Main( int argc, char * argv[] )
         }
         else
         {
-            result = fBuild.Build( options.m_Targets );
+            result = fBuild.Build( options.m_Targets, options.m_SourceFiles );
         }
 
         // Capture data from FBuild for profiling if active

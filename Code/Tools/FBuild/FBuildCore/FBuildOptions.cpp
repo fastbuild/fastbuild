@@ -419,6 +419,27 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowHiddenTargets = true;
                 continue;
             }
+            else if ( thisArg == "-sourcefile" )
+            {
+                const int32_t pathIndex = ( i + 1 );
+                if ( pathIndex < argc )
+                {
+                    const AStackString pathArg( argv[ pathIndex ] );
+                    pathArg.Tokenize( m_SourceFiles, ';' );
+                    ++i;
+
+                    // add to args we might pass to subprocess
+                    m_Args += ' ';
+                    m_Args += argv[ i ];
+                }
+                if ( m_SourceFiles.IsEmpty() )
+                {
+                    OUTPUT( "FBuild: Error: Missing <path> for '-sourcefile' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                continue;
+            }
             else if ( thisArg == "-summary" )
             {
                 m_ShowSummary = true;
@@ -677,6 +698,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -showdeps         Show known dependency tree for specified targets.\n"
             " -showtargets      Display primary targets, excluding those marked \"Hidden\".\n"
             " -showalltargets   Display primary targets, including those marked \"Hidden\".\n"
+            " -sourcefile <path[s]>\n"
+            "                   Reduce targets to attempt minimal source file builds.\n"
             " -summary          Show a summary at the end of the build.\n"
             " -verbose          Show detailed diagnostic info. (Increases built time)\n"
             " -version          Print version and exit.\n"
