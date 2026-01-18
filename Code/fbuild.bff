@@ -341,6 +341,7 @@ Settings
     [
         .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs -dist -monitor -cache ^$(ProjectName)-^$(Configuration)'
         .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs -dist -monitor -cache -clean ^$(ProjectName)-^$(Configuration)'
+        .CompileFileCommand         = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs ^$(ProjectName)-^$(Configuration) -sourcefile ^$(ProjectDir)^$(SelectedFiles)'
         .OutputDirectory            = '^$(SolutionDir)\Temp'
         .IntermediateDirectory      = '^$(SolutionDir)\Temp'
         .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'

@@ -18,6 +18,7 @@
 #include "Graph/SettingsNode.h"
 #include "Helpers/BuildProfiler.h"
 #include "Helpers/CompilationDatabase.h"
+#include "Helpers/SourceFileTargetResolver.h"
 #include "Protocol/Client.h"
 #include "Protocol/Protocol.h"
 #include "WorkerPool/JobQueue.h"
@@ -283,6 +284,35 @@ bool FBuild::GetTargets( const Array<AString> & targets, Dependencies & outDeps 
     }
 
     return true;
+}
+
+//------------------------------------------------------------------------------
+bool FBuild::Build( const Array<AString> & targets, const Array<AString> & sourceFiles )
+{
+    PROFILE_FUNCTION;
+
+    // If source files are not being used, use targets directly
+    if ( sourceFiles.IsEmpty() )
+    {
+        return Build( targets );
+    }
+
+    // Get the nodes for the hint target(s)
+    Dependencies targetHints( targets.GetSize() );
+    if ( !GetTargets( targets, targetHints ) )
+    {
+        return false; // GetTargets will have emitted an error
+    }
+
+    // Attempt to find targets that depend on this source file
+    StackArray<AString> targetsToBuild;
+    SourceFileTargetResolver resolver;
+    if ( resolver.Resolve( *m_DependencyGraph, targetHints, sourceFiles, targetsToBuild ) == false )
+    {
+        return false;
+    }
+
+    return Build( targetsToBuild );
 }
 
 // Build
