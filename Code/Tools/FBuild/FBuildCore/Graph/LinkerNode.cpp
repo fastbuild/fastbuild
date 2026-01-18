@@ -288,6 +288,22 @@ LinkerNode::~LinkerNode()
                     continue; // try again
                 }
 
+                // Did the linker encounter "fatal error LNK1140: limit exceeded for program database"?
+                // Unbounded pdb growth results in this has been seen with /dynamicdeopt with VS2022.
+                if ( result == 1140 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker exceeded pdb size limit (LNK1140), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
+                // Did the linker encounter "fatal error LNK1158 : cannot run 'shadow build'"?
+                // This has been seen with /dynamicdeopt with VS2022 and appears to be a bug
+                if ( result == 1158 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker failed with (LNK1158), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
                 // Did the linker encounter "fatal error LNK1201: error writing to program database"?
                 // The MSVC toolchain (as of VS2019 upto 16.7.5) occasionally emits this error. It seems there
                 // is a bug where the PDB size can grow a lot and this error will start to occur.
