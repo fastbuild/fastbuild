@@ -7,6 +7,7 @@
 #include "TestGroup.h"
 
 #include "Core/Env/Assert.h"
+#include "Core/Env/Env.h"
 #include "Core/Env/Types.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
@@ -74,8 +75,25 @@ TestManager::~TestManager()
 
 // RunTests
 //------------------------------------------------------------------------------
-bool TestManager::RunTests( const char * testGroup )
+bool TestManager::RunTests()
 {
+    ParseCommandLineArgs();
+
+    // In discovery mode?
+    if ( mListTestsForDiscovery )
+    {
+        // Print list of tests. This is in gtest compatible format for
+        // free integration in Visual Studio
+        TestGroup * group = s_FirstTest;
+        while ( group )
+        {
+            OUTPUT( "%s.\n", group->GetName() );
+            group->RunTests( true, Array<AString>() ); // Print instead of running
+            group = group->m_NextTestGroup;
+        }
+        return true;
+    }
+
     // Reset results so RunTests can be called multiple times
     s_NumTests = 0;
 
@@ -83,24 +101,11 @@ bool TestManager::RunTests( const char * testGroup )
     TestGroup * test = s_FirstTest;
     while ( test )
     {
-        if ( testGroup != nullptr )
-        {
-            // is this test the one we want?
-            if ( AString::StrNCmp( test->GetName(), testGroup, strlen( testGroup ) ) != 0 )
-            {
-                // no -skip it
-                test = test->m_NextTestGroup;
-                continue;
-            }
-        }
-
-        OUTPUT( "------------------------------\n" );
-        OUTPUT( "Test Group: %s\n", test->GetName() );
 #ifdef PROFILING_ENABLED
         ProfileManager::Start( test->GetName() );
 #endif
         {
-            test->RunTests();
+            test->RunTests( false, m_TestFilters );
         }
 #ifdef PROFILING_ENABLED
         ProfileManager::Stop();
@@ -109,32 +114,15 @@ bool TestManager::RunTests( const char * testGroup )
         test = test->m_NextTestGroup;
     }
 
-    OUTPUT( "------------------------------------------------------------\n" );
-    OUTPUT( "Summary For All Tests\n" );
     uint32_t numPassed = 0;
     float totalTime = 0.0f;
-    TestGroup * lastGroup = nullptr;
     for ( size_t i = 0; i < s_NumTests; ++i )
     {
         const TestInfo & info = s_TestInfos[ i ];
-        if ( info.m_TestGroup != lastGroup )
-        {
-            OUTPUT( "------------------------------------------------------------\n" );
-            OUTPUT( "             : %s\n", info.m_TestGroup->GetName() );
-            lastGroup = info.m_TestGroup;
-        }
-
-        const char * status = "OK";
         if ( info.m_Passed )
         {
             ++numPassed;
         }
-        else
-        {
-            status = ( info.m_MemoryLeaks ) ? "FAIL (LEAKS)" : "FAIL";
-        }
-
-        OUTPUT( "%12s : %5.3fs : %s\n", status, (double)info.m_TimeTaken, info.m_TestName );
         totalTime += info.m_TimeTaken;
     }
     OUTPUT( "------------------------------------------------------------\n" );
@@ -159,7 +147,9 @@ void TestManager::TestBegin( TestGroup * testGroup, const char * testName )
     info.m_TestName = testName;
     ++s_NumTests;
 
-    OUTPUT( " - Test '%s'\n", testName );
+    // Note: gtest compatible output for VS Test Explorer integration
+    OUTPUT( "[ RUN      ] %s.%s\n", testGroup->GetName(), testName );
+
     // Flush the output to ensure that name of the test will be logged in case the test will crash the whole binary.
     fflush( stdout );
 
@@ -206,6 +196,8 @@ void TestManager::TestEnd()
     {
         info.m_MemoryLeaks = true;
         OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
+        // Note: gtest compatible output for VS Test Explorer integration
+        OUTPUT( "[   FAILED ] %s.%s\n", info.m_TestGroup->GetName(), info.m_TestName );
         MemTracker::DumpAllocations( m_CurrentTestAllocationId, postAllocationId );
         if ( IsDebuggerAttached() )
         {
@@ -219,7 +211,11 @@ void TestManager::TestEnd()
     TestGroup::SetMemoryLeakCheckEnabled( true );
 #endif
 
-    OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, (double)timeTaken );
+    // Note: gtest compatible output for VS Test Explorer integration
+    OUTPUT( "[       OK ] %s.%s (%ums)\n",
+            info.m_TestGroup->GetName(),
+            info.m_TestName,
+            static_cast<uint32_t>( timeTaken * 1000.0f ) );
     info.m_Passed = true;
 }
 
@@ -256,6 +252,61 @@ void TestManager::TestEnd()
     OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
 
     return true; // tell the calling code to break at the failure site
+}
+
+//------------------------------------------------------------------------------
+void TestManager::ParseCommandLineArgs()
+{
+    // Test can be controlled via command line args:
+    //   - listed (for discovery)
+    //   - filtered (to run subsets of tests)
+    // We emulate behavior of gtest executables so that we are compatible with
+    // the gtest adaptor for the Visual Studio Test Explorer.
+
+    // Obtain command line args
+    AStackString cmdLine;
+    Env::GetCmdLine( cmdLine );
+    StackArray<AString> args;
+    cmdLine.Tokenize( args, ' ' );
+
+    for ( const AString & arg : args )
+    {
+        // Discovery arg
+        if ( arg.EqualsI( "-List" ) ||
+             arg.EqualsI( "--gtest_list_tests" ) ) // gtest style
+        {
+            // Set flag so RunTests() will print the list of tests instead
+            mListTestsForDiscovery = true;
+            continue;
+        }
+
+        // Filter arg
+        if ( arg.BeginsWithI( "-Filter" ) ||
+             arg.BeginsWithI( "--gtest_filter=" ) ) // gtest style
+        {
+            // Extract name of TestGroup so RunTests() only runs that
+            // For all tests in a TestGroup, format is:
+            //  - ':' delimited
+            //  - 'TestGroup.TestName' for a single test
+            //  - 'TestGroup.*' for all tests in a group
+            // These can be strung together in various combinations
+            //
+            // NOTE: gtest supports other more complex filtering, but we only
+            // implement what's needed to integrate in Visual Studio Test Explorer
+            AStackString( arg.Find( '=' ) + 1 ).Tokenize( m_TestFilters, ':' );
+            continue;
+        }
+
+        // Embed some stings that must be present in the exectuable for the
+        // VisualStudio gtest adapater to consider running our tests
+        // consider this a gtest executable
+        if ( arg == "MagicStringsForGTestCompatibility" )
+        {
+            OUTPUT( "This program contains tests written using Google Test. You can use the" );
+            OUTPUT( "For more information, please read the Google Test documentation at" );
+            OUTPUT( "Run only the tests whose name matches one of the positive patterns but" );
+        }
+    }
 }
 
 //------------------------------------------------------------------------------
