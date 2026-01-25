@@ -4,11 +4,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 #include "Core/Mem/MemTracker.h"
+#include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
 
 // Forward Declarations
@@ -24,7 +26,7 @@ public:
     ~TestManager();
 
     // run all tests, or tests from a group
-    bool RunTests( const char * testGroup = nullptr );
+    bool RunTests();
 
     // tests register (using the test declaration macros) via this interface
     static void RegisterTestGroup( TestGroup * testGroup );
@@ -43,7 +45,13 @@ public:
                                 ... ) FORMAT_STRING( 4, 5 );
 
 private:
+    void ParseCommandLineArgs();
+
     Timer m_Timer;
+
+    // Behavior control options
+    bool mListTestsForDiscovery = false; // List tests instead of running them
+    Array<AString> m_TestFilters; // Run only specified TestGroups of Tests
 
     // Track allocations for tests to catch leaks
 #ifdef MEMTRACKER_ENABLED

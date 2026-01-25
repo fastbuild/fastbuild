@@ -8,6 +8,7 @@
 
 // Core
 #include "Core/Mem/MemTracker.h" // For MEMTRACKER_ENABLED
+#include "Core/Tracing/Tracing.h"
 
 // TestGroup - Tests derive from this interface
 //------------------------------------------------------------------------------
@@ -17,7 +18,7 @@ protected:
     explicit TestGroup() { m_NextTestGroup = nullptr; }
     virtual ~TestGroup() = default;
 
-    virtual void RunTests() = 0;
+    virtual void RunTests( bool listOnly, const Array<AString> & filters ) = 0;
     virtual const char * GetName() const = 0;
 
     // Run before and after each test
@@ -27,6 +28,9 @@ protected:
     // Memory Leak checks can be disabled for individual tests
     static void SetMemoryLeakCheckEnabled( bool enabled ) { sMemoryLeakCheckEnabled = enabled; }
     static bool IsMemoryLeakCheckEnabled() { return sMemoryLeakCheckEnabled; }
+
+    // Test filtering
+    [[nodiscard]] bool ShouldRun( const char * test, const Array<AString> & filters ) const;
 
 private:
     friend class TestManager;
@@ -82,7 +86,7 @@ __declspec( noreturn ) void TestNoReturn();
 // Test Declarations
 //------------------------------------------------------------------------------
 #define DECLARE_TESTS                                               \
-    virtual void RunTests() override;                               \
+    virtual void RunTests( bool listOnly, const Array<AString> & filters ) override; \
     virtual const char * GetName() const override;
 
 #define REGISTER_TESTS_BEGIN( testGroupName )                       \
@@ -94,15 +98,27 @@ __declspec( noreturn ) void TestNoReturn();
     {                                                               \
         return #testGroupName;                                      \
     }                                                               \
-    void testGroupName::RunTests()                                  \
+    void testGroupName::RunTests( bool listOnly, const Array<AString> & filters ) \
     {                                                               \
+        (void)listOnly;                                             \
+        (void)filters;                                              \
         TestManager & utm = TestManager::Get();                     \
         (void)utm;
 
 #define REGISTER_TEST( testFunction )                               \
-        utm.TestBegin( this, #testFunction );                       \
-        testFunction();                                             \
-        utm.TestEnd();
+        if ( listOnly )                                                \
+        {                                                           \
+            OUTPUT( "  %s\n", #testFunction ); /*Note gtest indent format*/ \
+        }                                                           \
+        else                                                        \
+        {                                                           \
+            if ( ShouldRun( #testFunction, filters ) )              \
+            {                                                       \
+                utm.TestBegin( this, #testFunction );               \
+                testFunction();                                     \
+                utm.TestEnd();                                      \
+            }                                                       \
+        }
 
 #define REGISTER_TESTS_END                                          \
     }
