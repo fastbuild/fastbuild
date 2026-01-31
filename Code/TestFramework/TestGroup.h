@@ -92,7 +92,8 @@ __declspec( noreturn ) void TestNoReturn();
 #define REGISTER_TESTS_BEGIN( testGroupName )                       \
     void testGroupName##Register()                                  \
     {                                                               \
-        TestManager::RegisterTestGroup( new testGroupName );        \
+        static bool registered = TestManager::RegisterTestGroup( new testGroupName ); \
+        (void)registered;                                           \
     }                                                               \
     const char * testGroupName::GetName() const                     \
     {                                                               \
