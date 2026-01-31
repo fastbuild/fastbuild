@@ -14,7 +14,9 @@
 #include "Core/Strings/AString.h"
 #include "Core/Tracing/Tracing.h"
 
+// System
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
@@ -37,7 +39,10 @@ TestManager::TestManager()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-TestManager::~TestManager()
+TestManager::~TestManager() = default;
+
+//------------------------------------------------------------------------------
+/*static*/ void TestManager::FreeRegisteredTests()
 {
     // free all registered tests
     TestGroup * testGroup = s_FirstTest;
@@ -49,25 +54,30 @@ TestManager::~TestManager()
     }
 }
 
-// RegisterTest
 //------------------------------------------------------------------------------
-/*static*/ void TestManager::RegisterTestGroup( TestGroup * testGroup )
+/*static*/ bool TestManager::RegisterTestGroup( TestGroup * testGroup )
 {
+    // Once any  test is registered, set shutdown cleanup function
+    static int32_t sAtExitRegistered = atexit( TestManager::FreeRegisteredTests );
+    ASSERT( sAtExitRegistered == 0 );
+    (void)sAtExitRegistered;
+
     // first ever test? place as head of list
     if ( s_FirstTest == nullptr )
     {
         s_FirstTest = testGroup;
-        return;
+        return true;
     }
 
     // link to end of list
     TestGroup * thisGroup = s_FirstTest;
     for ( ;; )
     {
+        ASSERT( thisGroup != testGroup );
         if ( thisGroup->m_NextTestGroup == nullptr )
         {
             thisGroup->m_NextTestGroup = testGroup;
-            return;
+            return true;
         }
         thisGroup = thisGroup->m_NextTestGroup;
     }
@@ -75,7 +85,7 @@ TestManager::~TestManager()
 
 // RunTests
 //------------------------------------------------------------------------------
-bool TestManager::RunTests()
+bool TestManager::RunTests( uint32_t runCount )
 {
     ParseCommandLineArgs();
 
@@ -94,6 +104,27 @@ bool TestManager::RunTests()
         return true;
     }
 
+    // Run tests the required amount of times
+    runCount = Math::Max( runCount, m_RunCount );
+    for ( uint32_t i = 0; i < runCount; ++i )
+    {
+        if ( runCount > 0 )
+        {
+            OUTPUT( "------------------------------------------------------------\n" );
+            OUTPUT( " Run %u / %u\n", ( i + 1 ), runCount );
+            OUTPUT( "------------------------------------------------------------\n" );
+        }
+        if ( !RunTestsInternal() )
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+//------------------------------------------------------------------------------
+bool TestManager::RunTestsInternal()
+{
     // Reset results so RunTests can be called multiple times
     s_NumTests = 0;
 
@@ -305,6 +336,13 @@ void TestManager::ParseCommandLineArgs()
             OUTPUT( "This program contains tests written using Google Test. You can use the" );
             OUTPUT( "For more information, please read the Google Test documentation at" );
             OUTPUT( "Run only the tests whose name matches one of the positive patterns but" );
+        }
+
+        // Run count arg
+        uint32_t runCount = 0;
+        if ( arg.Scan( "-RunCount=%u", &runCount ) )
+        {
+            m_RunCount = runCount;
         }
     }
 }
