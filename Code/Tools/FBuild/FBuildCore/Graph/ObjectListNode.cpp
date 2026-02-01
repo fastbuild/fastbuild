@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerInfoNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
@@ -65,6 +66,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     // Internal State
     REFLECT( m_CompilerNode,                        "CompilerNode",                     MetaHidden() )
     REFLECT( m_PreprocessorNode,                    "PreprocessorNode",                 MetaHidden() )
+    REFLECT( m_CompilerInfoNode,                    "CompilerInfoNode",                 MetaHidden() )
     REFLECT( m_PrecompiledHeaderName,               "PrecompiledHeaderName",            MetaHidden() )
 #if defined( __WINDOWS__ )
     REFLECT( m_PrecompiledHeaderCPPFile,            "PrecompiledHeaderCPPFile",         MetaHidden() )
@@ -345,10 +347,22 @@ ObjectListNode::ObjectListNode()
         // clang-format on
     }
 
+    // Check LightCache compatibility
+    if ( !CheckLightCacheArgs( nodeGraph, iter, function, m_CompilerInfoNode ) )
+    {
+        return false;
+    }
+
     // Store dependencies
-    m_StaticDependencies.SetCapacity( compilerInputPath.GetSize() +
+    m_StaticDependencies.SetCapacity( ( m_CompilerInfoNode ? 1 : 0 ) +
+                                      compilerInputPath.GetSize() +
                                       compilerInputUnity.GetSize() +
                                       compilerInputObjectLists.GetSize() );
+    if ( m_CompilerInfoNode )
+    {
+        m_StaticDependencies.Add( m_CompilerInfoNode );
+        m_ObjectListInputStartIndex++;
+    }
     m_StaticDependencies.Add( compilerInputPath );
     m_StaticDependencies.Add( compilerInputUnity );
     m_StaticDependencies.Add( compilerInputObjectLists );
@@ -895,6 +909,62 @@ void ObjectListNode::EnumerateInputFiles( void ( *callback )( const AString & in
             ASSERT( false ); // unexpected node type
         }
     }
+}
+
+//------------------------------------------------------------------------------
+bool ObjectListNode::CheckLightCacheArgs( NodeGraph & nodeGraph,
+                                          const BFFToken * iter,
+                                          const Function * function,
+                                          CompilerInfoNode *& outCompilerInfoDependency ) const
+{
+    outCompilerInfoDependency = nullptr;
+
+    CompilerNode * compiler = m_PreprocessorNode ? m_PreprocessorNode : m_CompilerNode;
+    if ( compiler->GetUseLightCache() == false )
+    {
+        return true; // Not using the LightCache, so there can be no problems
+    }
+
+    const ObjectNode::CompilerFlags & flags = m_PreprocessorNode ? m_PreprocessorFlags
+                                                                 : m_CompilerFlags;
+
+    // MSVC?
+    if ( flags.IsMSVC() )
+    {
+        return true; // MSVC can always be used
+    }
+
+    // Clang?
+    if ( flags.IsClang() || flags.IsClangCl() || flags.IsGCC() )
+    {
+        AStackString ciNodeName;
+        ciNodeName.Format( "%s_$Info_%c%c$",
+                           compiler->GetName().Get(),
+                           flags.IsNoStdInc() ? '1' : '0',
+                           flags.IsNoStdIncPP() ? '1' : '0' );
+        CompilerInfoNode * ciNode = nullptr;
+        if ( const Node * node = nodeGraph.FindNode( ciNodeName ) )
+        {
+            ciNode = node->CastTo<CompilerInfoNode>();
+        }
+        else
+        {
+            ciNode = nodeGraph.CreateNode( Node::COMPILER_INFO_NODE,
+                                           ciNodeName,
+                                           iter )
+                         ->CastTo<CompilerInfoNode>();
+            ciNode->m_Compiler = compiler;
+            ciNode->m_NoStdInc = flags.IsNoStdInc();
+            ciNode->m_NoStdIncPP = flags.IsNoStdIncPP();
+            VERIFY( ciNode->Initialize( nodeGraph, iter, function ) ); // Failure should be impossible
+        }
+        outCompilerInfoDependency = ciNode;
+        return true;
+    }
+
+    // Unsupported Compiler
+    Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
+    return false;
 }
 
 //------------------------------------------------------------------------------

@@ -74,6 +74,8 @@ public:
         bool IsClangCl() const { return ( ( m_Flags & FLAG_CLANG_CL ) != 0 ); }
         bool IsUsingGcovCoverage() const { return ( ( m_Flags & FLAG_GCOV_COVERAGE ) != 0 ); }
         bool IsUsingDynamicDeopt() const { return ( ( m_Flags & FLAG_DYNAMIC_DEOPT ) != 0 ); }
+        [[nodiscard]] bool IsNoStdInc() const { return ( ( m_Flags & FLAG_NOSTDINC ) != 0 ); }
+        [[nodiscard]] bool IsNoStdIncPP() const { return ( ( m_Flags & FLAG_NOSTDINCPP ) != 0 ); }
 
         enum Flag : uint32_t
         {
@@ -103,6 +105,8 @@ public:
             FLAG_CLANG_CL = 0x2000000,
             FLAG_GCOV_COVERAGE = 0x4000000,
             FLAG_DYNAMIC_DEOPT = 0x8000000,
+            FLAG_NOSTDINC = 0x10000000,
+            FLAG_NOSTDINCPP = 0x20000000,
         };
 
         void Set( Flag flag ) { m_Flags |= flag; }

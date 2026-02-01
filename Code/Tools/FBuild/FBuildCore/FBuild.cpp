@@ -798,6 +798,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
                 break;
             }
             case Node::LIST_DEPENDENCIES_NODE: break;
+            case Node::COMPILER_INFO_NODE: break;
             case Node::NUM_NODE_TYPES: ASSERT( false ); break;
         }
         if ( displayName && ( !hidden || showHidden ) )

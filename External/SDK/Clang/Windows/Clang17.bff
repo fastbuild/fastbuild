@@ -64,6 +64,9 @@ Compiler( 'Compiler-Clang17' )
     #if ENABLE_SOURCE_MAPPING
         .SourceMapping_Experimental = '/fastbuild-test-mapping'
     #endif
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
+    #endif
 }
 
 // Compiler
@@ -83,6 +86,9 @@ Compiler( 'Compiler-Clang17-NonCL' )
     #endif
     #if ENABLE_SOURCE_MAPPING
         .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
     #endif
 }
 

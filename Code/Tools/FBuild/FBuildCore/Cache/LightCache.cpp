@@ -7,6 +7,7 @@
 
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerInfoNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
@@ -255,6 +256,7 @@ LightCache::~LightCache() = default;
 // Hash
 //------------------------------------------------------------------------------
 bool LightCache::Hash( ObjectNode * node,
+                       const CompilerInfoNode * compilerInfo,
                        const AString & compilerArgs,
                        uint64_t & outSourceHash,
                        Array<AString> & outIncludes )
@@ -275,6 +277,13 @@ bool LightCache::Hash( ObjectNode * node,
                                                m_IncludePaths,
                                                forceIncludes,
                                                false ); // escapeQuotes
+
+    // If CompilerInfo is provided (Clang/GCC), add the additional
+    // system includes
+    if ( compilerInfo )
+    {
+        m_IncludePaths.Append( compilerInfo->GetBuiltInIncludes() );
+    }
 
     // Ensure all includes are slash terminated
     for ( AString & includePath : m_IncludePaths )

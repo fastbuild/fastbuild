@@ -15,6 +15,7 @@
 
 #include "AliasNode.h"
 #include "CSNode.h"
+#include "CompilerInfoNode.h"
 #include "CompilerNode.h"
 #include "CopyDirNode.h"
 #include "CopyFileNode.h"
@@ -896,6 +897,7 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHas
         case Node::SETTINGS_NODE: node = FNEW( SettingsNode() ); break;
         case Node::TEXT_FILE_NODE: node = FNEW( TextFileNode() ); break;
         case Node::LIST_DEPENDENCIES_NODE: node = FNEW( ListDependenciesNode() ); break;
+        case Node::COMPILER_INFO_NODE: node = FNEW( CompilerInfoNode() ); break;
         case Node::NUM_NODE_TYPES: ASSERT( false ); return nullptr;
     }
 
