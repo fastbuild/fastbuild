@@ -348,7 +348,11 @@ ObjectListNode::ObjectListNode()
     }
 
     // Check LightCache compatibility
-    if ( !CheckLightCacheArgs( nodeGraph, iter, function, m_CompilerInfoNode ) )
+    if ( !CheckLightCacheArgs( nodeGraph,
+                               iter,
+                               function,
+                               compilingFiles,
+                               m_CompilerInfoNode ) )
     {
         return false;
     }
@@ -915,9 +919,17 @@ void ObjectListNode::EnumerateInputFiles( void ( *callback )( const AString & in
 bool ObjectListNode::CheckLightCacheArgs( NodeGraph & nodeGraph,
                                           const BFFToken * iter,
                                           const Function * function,
+                                          bool compilingFiles,
                                           CompilerInfoNode *& outCompilerInfoDependency ) const
 {
     outCompilerInfoDependency = nullptr;
+
+    // If we're not compiling any files (for example in a Library()) then we
+    // don't care about compiler compatibility as the compiler is unused
+    if ( compilingFiles == false )
+    {
+        return true;
+    }
 
     CompilerNode * compiler = m_PreprocessorNode ? m_PreprocessorNode : m_CompilerNode;
     if ( compiler->GetUseLightCache() == false )

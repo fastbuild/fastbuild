@@ -87,6 +87,7 @@ protected:
     [[nodiscard]] bool CheckLightCacheArgs( NodeGraph & nodeGraph,
                                             const BFFToken * iter,
                                             const Function * function,
+                                            bool compilingFiles,
                                             CompilerInfoNode *& outCompilerInfoDependency ) const;
 
     // Exposed Properties
