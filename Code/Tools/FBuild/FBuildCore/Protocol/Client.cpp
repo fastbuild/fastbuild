@@ -742,16 +742,28 @@ void ClientToWorkerConnection::ProcessJobResultCommon( bool isCompressed,
     if ( result == false )
     {
         failureOutput.Format( "PROBLEM: %s\n", node->GetName().Get() );
-        for ( const AString & message : messages )
+
+        // When invoked from MSBuild (directly or from Visual Studio) and
+        // using -distverbose we might output a remote error string for a
+        // "system error" which is then retried. The build may ultimately
+        // succeed and return 0, but MSBuild uses regexs to pattern match
+        // these strings and force an error which we don't want.
+        // So we "clean" these strings to tweak the message slightly to
+        // avoid that
+        const bool applyMSBuildWorkAround = systemError &&
+                                            m_DetailedLogging; //-distverbose
+        if ( applyMSBuildWorkAround )
         {
-            // When invoked from MSBuild (directly or from Visual Studio) and
-            // using -distverbose we might output a remote error string. MSBuild
-            // uses regexs to pattern match these strings and force an error
-            // which we don't want. So we "clean" these strings to tweak the
-            // message slightly to avoid that
-            AStackString messageCleaned;
-            Node::CleanMessageToPreventMSBuildFailure( message, messageCleaned );
-            failureOutput += messageCleaned;
+            for ( const AString & message : messages )
+            {
+                AStackString messageCleaned;
+                Node::CleanMessageToPreventMSBuildFailure( message, messageCleaned );
+                failureOutput += messageCleaned;
+            }
+        }
+        else
+        {
+            failureOutput.AppendList( messages );
         }
     }
 
