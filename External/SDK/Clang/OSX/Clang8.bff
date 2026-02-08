@@ -68,7 +68,7 @@ Compiler( 'Compiler-Clang8' )
     .LinkerOptions                  = '"%1" -o "%2" -g'
                                     + ' -Wl,-fatal_warnings'
                                     + ' -Wl,-dead_strip'
-                                    + ' -mmacosx-version-min=10.7'
+                                    + ' -mmacosx-version-min=10.13'
                                     + ' -stdlib=libc++'
 
     // File Extensions

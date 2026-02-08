@@ -77,10 +77,10 @@ Compiler( 'Compiler-Clang12' )
 
     // Intel 64-bit
     .Platform                       = 'x64OSX'
-    .CompilerOptions                + ' -arch x86_64 -mmacosx-version-min=10.7'
-    .CompilerOptionsC               + ' -arch x86_64 -mmacosx-version-min=10.7'
-    .PCHOptions                     + ' -arch x86_64 -mmacosx-version-min=10.7'
-    .LinkerOptions                  + ' -arch x86_64 -mmacosx-version-min=10.7'
+    .CompilerOptions                + ' -arch x86_64 -mmacosx-version-min=10.13'
+    .CompilerOptionsC               + ' -arch x86_64 -mmacosx-version-min=10.13'
+    .PCHOptions                     + ' -arch x86_64 -mmacosx-version-min=10.13'
+    .LinkerOptions                  + ' -arch x86_64 -mmacosx-version-min=10.13'
 ]
 
 .ToolChain_Clang_ARMOSX =
