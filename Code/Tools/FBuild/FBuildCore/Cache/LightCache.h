@@ -14,6 +14,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
+class CompilerInfoNode;
 class FileStream;
 class IncludedFile;
 class IncludeDefine;
@@ -29,6 +30,7 @@ public:
     ~LightCache();
 
     bool Hash( ObjectNode * node,               // Object to be compiled
+               const CompilerInfoNode * compilerInfo, // Optional CompilerInfo for Clang/GCC
                const AString & compilerArgs,    // Args to extract include paths from
                uint64_t & outSourceHash,        // Resulting hash of source code
                Array<AString> & outIncludes );  // Discovered dependencies

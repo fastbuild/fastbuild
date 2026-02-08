@@ -811,7 +811,7 @@
 /*static*/ void Error::Error_1502_LightCacheIncompatibleWithCompiler( const BFFToken * iter,
                                                                       const Function * function )
 {
-    FormatError( iter, 1502u, function, "LightCache only compatible with MSVC Compiler." );
+    FormatError( iter, 1502u, function, "LightCache not compatible with Compiler." );
 }
 
 // Error_1503_CSharpCompilerShouldUseCSAssembly

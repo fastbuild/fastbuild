@@ -88,6 +88,7 @@
     "VSExtProj",
     "TextFile",
     "ListDependencies",
+    "CompilerInfo",
 };
 // clang-format on
 static Mutex g_NodeEnvStringMutex;

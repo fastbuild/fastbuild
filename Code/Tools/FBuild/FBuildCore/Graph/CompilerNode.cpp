@@ -134,15 +134,6 @@ CompilerNode::CompilerNode()
         return false;
     }
 
-    // The LightCache is only compatible with MSVC for now
-    // - GCC/Clang can be supported when built in include paths can be extracted
-    //   and -nostdinc/-nostdinc++ is handled
-    if ( m_UseLightCache && ( m_CompilerFamilyEnum != MSVC ) )
-    {
-        Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
-        return false;
-    }
-
     m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables );
 
     return true;

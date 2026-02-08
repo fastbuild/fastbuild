@@ -41,6 +41,7 @@ private:
     void LightCache_ForceInclude() const;
     void LightCache_SourceDependencies() const;
     void LightCache_ResponseFile() const;
+    void LightCache_LibraryNoFiles() const;
 
     // MSVC Static Analysis tests
     const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -77,6 +78,7 @@ REGISTER_TESTS_BEGIN( TestCache )
 #if defined( __WINDOWS__ )
     REGISTER_TEST( ExtraFiles_DynamicDeopt )
     REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
+#endif
     REGISTER_TEST( LightCache_IncludeUsingMacro )
     REGISTER_TEST( LightCache_IncludeUsingMacro2 )
     REGISTER_TEST( LightCache_IncludeUsingMacro3 )
@@ -86,9 +88,13 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( LightCache_IncludeHierarchy )
     REGISTER_TEST( LightCache_CyclicInclude )
     REGISTER_TEST( LightCache_ImportDirective )
-    REGISTER_TEST( LightCache_ForceInclude )
+#if defined( __WINDOWS__ )
+    REGISTER_TEST( LightCache_ForceInclude ) // TODO:B Add coverage for GCC/Clang with (-include)
     REGISTER_TEST( LightCache_SourceDependencies )
+#endif
     REGISTER_TEST( LightCache_ResponseFile )
+    REGISTER_TEST( LightCache_LibraryNoFiles )
+#if defined( __WINDOWS__ )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
 
@@ -913,6 +919,18 @@ void TestCache::LightCache_ResponseFile() const
     const Dependencies & deps = nodes[ 0 ]->GetDynamicDependencies();
     TEST_ASSERT( deps.GetSize() == 2 ); // main cpp plus include
     TEST_ASSERT( deps[ 1 ].GetNode()->GetName().EndsWith( "include.h" ) );
+}
+
+//------------------------------------------------------------------------------
+void TestCache::LightCache_LibraryNoFiles() const
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_LibraryNoFiles/fbuild.bff";
+
+    // Initialize (parsing the BFF is enough to ensure we had no errors)
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 }
 
 // Analyze_MSVC_WarningsOnly_Write
