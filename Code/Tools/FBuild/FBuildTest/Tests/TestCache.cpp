@@ -42,6 +42,7 @@ private:
     void LightCache_SourceDependencies() const;
     void LightCache_ResponseFile() const;
     void LightCache_LibraryNoFiles() const;
+    void LightCache_NoStdInc() const;
 
     // MSVC Static Analysis tests
     const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -94,6 +95,7 @@ REGISTER_TESTS_BEGIN( TestCache )
 #endif
     REGISTER_TEST( LightCache_ResponseFile )
     REGISTER_TEST( LightCache_LibraryNoFiles )
+    REGISTER_TEST( LightCache_NoStdInc )
 #if defined( __WINDOWS__ )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
@@ -931,6 +933,21 @@ void TestCache::LightCache_LibraryNoFiles() const
     // Initialize (parsing the BFF is enough to ensure we had no errors)
     FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
+}
+
+//------------------------------------------------------------------------------
+void TestCache::LightCache_NoStdInc() const
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_NoStdInc/fbuild.bff";
+
+    // Initialize
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Build - Ensure CompilerInfo is built
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 }
 
 // Analyze_MSVC_WarningsOnly_Write
