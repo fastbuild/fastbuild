@@ -28,6 +28,8 @@ private:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual Node::BuildResult DoBuild( Job * job ) override;
 
+    void EmitCompilationMessage( const AString & args ) const;
+
     friend class ObjectListNode;
 
     // Settings/Configuration

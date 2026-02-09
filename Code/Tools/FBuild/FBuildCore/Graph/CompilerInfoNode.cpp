@@ -71,13 +71,14 @@ CompilerInfoNode::~CompilerInfoNode() = default;
     AStackString args;
     args += " -v"; // 'verbose' - used to see include paths
     args += " -fsyntax-only"; // Minimize work done processing empty input
+    args += " -Werror -Wfatal-errors"; // Make warnings fatal errors
     if ( m_NoStdInc )
     {
-        args += " --nostdinc";
+        args += " -nostdinc";
     }
     if ( m_NoStdIncPP )
     {
-        args += " --nostdincpp";
+        args += " -nostdinc++";
     }
 
     // Specify the language
@@ -99,6 +100,8 @@ CompilerInfoNode::~CompilerInfoNode() = default;
 #else
     args += " /dev/null";
 #endif
+
+    EmitCompilationMessage( args );
 
     // Spawn process and capture all output
     Process p( FBuild::Get().GetAbortBuildPointer() );
@@ -143,17 +146,33 @@ CompilerInfoNode::~CompilerInfoNode() = default;
     ASSERT( stdErr.IsEmpty() == false );
 
     // The includes are between these lines
-    const char * const includesStartString = "#include <...> search starts here:";
+    const char * const includesStartStringA = "#include \"...\" search starts here:";
+    const char * const includesStartStringB = "#include <...> search starts here:";
     const char * const includesEndString = "End of search list.";
 
-    // Search for the start of the include output
-    const char * const pos = stdErr.Find( includesStartString );
+    // Search for the first include output start section
+    const char * const posA = stdErr.Find( includesStartStringA );
+    const char * const posB = stdErr.Find( includesStartStringB );
+    const char * pos = posA;
+    if ( posA )
+    {
+        // Take lower of non-null pointers
+        if ( posB && ( posB < posA ) )
+        {
+            pos = posB;
+        }
+    }
+    else
+    {
+        pos = posB;
+    }
     if ( pos == nullptr )
     {
         FLOG_ERROR( "Compiler output unexpected extracting CompilerInfo.\n"
-                    " - Problem: Failed to find \"%s\"\n"
+                    " - Problem: Failed to find \"%s\" or \"%s\"\n"
                     " - Target: '%s'\n",
-                    includesStartString,
+                    includesStartStringA,
+                    includesStartStringB,
                     GetName().Get() );
         return BuildResult::eFailed;
     }
@@ -175,7 +194,8 @@ CompilerInfoNode::~CompilerInfoNode() = default;
         {
             break; // All done. Ignore lines that may be after
         }
-        else if ( line.BeginsWith( includesStartString ) )
+        else if ( line.BeginsWith( includesStartStringA ) ||
+                  line.BeginsWith( includesStartStringB ) )
         {
             continue; // Skip first line
         }
@@ -192,6 +212,32 @@ CompilerInfoNode::~CompilerInfoNode() = default;
     }
 
     return BuildResult::eOk;
+}
+
+//------------------------------------------------------------------------------
+void CompilerInfoNode::EmitCompilationMessage( const AString & args ) const
+{
+    // print basic or detailed output, depending on options
+    // we combine everything into one string to ensure it is contiguous in
+    // the output
+    AStackString output;
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "CompilerInfo: ";
+        output += GetName();
+        output += '\n';
+    }
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines )
+    {
+        output += m_Compiler->GetExecutable();
+        output += ' ';
+        output += args;
+        output += '\n';
+    }
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 //------------------------------------------------------------------------------

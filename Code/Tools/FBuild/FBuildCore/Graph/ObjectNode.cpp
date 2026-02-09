@@ -993,7 +993,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             {
                 flags.Set( CompilerFlags::FLAG_DYNAMIC_DEOPT );
             }
-            else if ( flags.IsClangCl() && IsCompilerArg_MSVC( token, "-nostdinc" ) )
+            else if ( flags.IsClangCl() && IsCompilerArg_MSVC( token, "nostdinc" ) )
             {
                 // Clang-Cl has -nostdinc, but not -nostdinc++
                 flags.Set( CompilerFlags::FLAG_NOSTDINC );
