@@ -19,14 +19,14 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( DirectoryListNode, Node, MetaNone() )
-    REFLECT( m_Path,                    "Path",             MetaHidden() )
-    REFLECT_ARRAY( m_Patterns,          "Patterns",         MetaHidden() )
-    REFLECT_ARRAY( m_ExcludePaths,      "ExcludePaths",     MetaHidden() )
-    REFLECT_ARRAY( m_FilesToExclude,    "FilesToExclude",   MetaHidden() )
-    REFLECT_ARRAY( m_ExcludePatterns,   "ExcludePatterns",  MetaHidden() )
-    REFLECT( m_Recursive,               "Recursive",        MetaHidden() )
-    REFLECT( m_IncludeReadOnlyStatusInHash, "IncludeReadOnlyStatusInHash", MetaHidden() )
-    REFLECT( m_IncludeDirs,             "IncludeDirs",      MetaHidden() )
+    REFLECT( m_Path, MetaHidden() )
+    REFLECT( m_Patterns, MetaHidden() )
+    REFLECT( m_ExcludePaths, MetaHidden() )
+    REFLECT( m_FilesToExclude, MetaHidden() )
+    REFLECT( m_ExcludePatterns, MetaHidden() )
+    REFLECT( m_Recursive, MetaHidden() )
+    REFLECT( m_IncludeReadOnlyStatusInHash, MetaHidden() )
+    REFLECT( m_IncludeDirs, MetaHidden() )
 REFLECT_END( DirectoryListNode )
 
 // DirectoryListNodeGetFilesHelper

@@ -55,7 +55,7 @@ public:
 };
 
 REFLECT_STRUCT_BEGIN_BASE( TestStruct )
-    REFLECT( m_MyInt,   "MyInt",    MetaNone() )
+    REFLECT( m_MyInt, MetaNone() )
 REFLECT_END( TestStruct )
 
 // TestObject
@@ -123,20 +123,20 @@ private: // ensure reflection can set private members
 };
 
 REFLECT_BEGIN( TestObject, Object, MetaNone() )
-    REFLECT( m_Float,   "Float",    MetaNone() )
-    REFLECT( m_UInt8,   "UInt8",    MetaNone() )
-    REFLECT( m_UInt16,  "UInt16",   MetaNone() )
-    REFLECT( m_UInt32,  "UInt32",   MetaNone() )
-    REFLECT( m_UInt64,  "UInt64",   MetaNone() )
-    REFLECT( m_Int8,    "Int8",     MetaNone() )
-    REFLECT( m_Int16,   "Int16",    MetaNone() )
-    REFLECT( m_Int32,   "Int32",    MetaNone() )
-    REFLECT( m_Int64,   "Int64",    MetaNone() )
-    REFLECT( m_Bool,    "Bool",     MetaNone() )
-    REFLECT( m_AString, "AString",  MetaNone() )
-    REFLECT_STRUCT( m_TestStruct,   "TestStruct",   TestStruct, MetaNone() )
-    REFLECT_ARRAY( m_FloatArray, "FloatArray", MetaNone() )
-    REFLECT_ARRAY_OF_STRUCT( m_StructArray, "StructArray", TestStruct, MetaNone() )
+    REFLECT( m_Float, MetaNone() )
+    REFLECT( m_UInt8, MetaNone() )
+    REFLECT( m_UInt16, MetaNone() )
+    REFLECT( m_UInt32, MetaNone() )
+    REFLECT( m_UInt64, MetaNone() )
+    REFLECT( m_Int8, MetaNone() )
+    REFLECT( m_Int16, MetaNone() )
+    REFLECT( m_Int32, MetaNone() )
+    REFLECT( m_Int64, MetaNone() )
+    REFLECT( m_Bool, MetaNone() )
+    REFLECT( m_AString, MetaNone() )
+    REFLECT_STRUCT( m_TestStruct, TestStruct, MetaNone() )
+    REFLECT( m_FloatArray, MetaNone() )
+    REFLECT_ARRAY_OF_STRUCT( m_StructArray, TestStruct, MetaNone() )
 REFLECT_END( TestObject )
 
 // TestGetSet
@@ -195,11 +195,11 @@ public:
 };
 
 REFLECT_BEGIN( BaseClass, Object, MetaNone() )
-    REFLECT( m_A, "a", MetaNone() )
+    REFLECT( m_A, MetaNone() )
 REFLECT_END( BaseClass )
 
 REFLECT_BEGIN( DerivedClass, BaseClass, MetaNone() )
-    REFLECT( m_B, "b", MetaNone() )
+    REFLECT( m_B, MetaNone() )
 REFLECT_END( DerivedClass )
 
 void TestReflection::TestInheritance() const
@@ -210,16 +210,16 @@ void TestReflection::TestInheritance() const
     // Set property on class
     const ReflectionInfo * ri = obj.GetReflectionInfoV();
     const int bValue = 200;
-    TEST_ASSERT( ri->SetProperty( &obj, "b", bValue ) );
+    TEST_ASSERT( ri->SetProperty( &obj, "B", bValue ) );
     int bValueGet = 0;
-    TEST_ASSERT( ri->GetProperty( &obj, "b", &bValueGet ) );
+    TEST_ASSERT( ri->GetProperty( &obj, "B", &bValueGet ) );
     TEST_ASSERT( bValue == bValueGet );
 
     // Set property on base class
     const int aValue = 100;
-    TEST_ASSERT( ri->SetProperty( &obj, "a", aValue ) );
+    TEST_ASSERT( ri->SetProperty( &obj, "A", aValue ) );
     int aValueGet = 0;
-    TEST_ASSERT( ri->GetProperty( &obj, "a", &aValueGet ) );
+    TEST_ASSERT( ri->GetProperty( &obj, "A", &aValueGet ) );
     TEST_ASSERT( aValue == aValueGet );
 }
 
@@ -233,7 +233,7 @@ public:
 };
 
 REFLECT_BEGIN( ObjectWithMetaData, Object, MetaFile() + MetaOptional() + MetaPath() )
-    REFLECT( m_Property, "Property", MetaFile() + MetaOptional() + MetaPath() )
+    REFLECT( m_Property, MetaFile() + MetaOptional() + MetaPath() )
 REFLECT_END( ObjectWithMetaData )
 
 void TestReflection::MetaData() const

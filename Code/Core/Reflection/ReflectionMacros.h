@@ -37,6 +37,8 @@ class ReflectionInfo;
     const baseClass * b = static_cast<const baseClass *>( c ); \
     (void)b;
 
+#define MEMBER_PTR( member ) static_cast<decltype( objectType::member ) *>( nullptr )
+
 #define ADD_METADATA( metaData ) \
     AddMetaData( metaData );
 
@@ -125,21 +127,41 @@ class ReflectionInfo;
 
 // MEMBERS
 //------------------------------------------------------------------------------
-#define REFLECT( member, memberName, metaData ) \
-            AddProperty( offsetof( objectType, member ), memberName, GetPropertyType( static_cast<decltype( objectType::member ) *>( nullptr ) ) ); \
-            ADD_PROPERTY_METADATA( metaData )
+#define REFLECT_RENAME( member, memberName, metaData ) \
+            { \
+                if constexpr ( IsArrayProperty( MEMBER_PTR( member ) ) ) \
+                { \
+                    AddPropertyArray( offsetof( objectType, member ), memberName, GetPropertyType( MEMBER_PTR( member ) ) ); \
+                } \
+                else \
+                { \
+                    AddProperty( offsetof( objectType, member ), memberName, GetPropertyType( MEMBER_PTR( member ) ) ); \
+                } \
+                ADD_PROPERTY_METADATA( metaData ) \
+            }
 
-#define REFLECT_ARRAY( member, memberName, metaData ) \
-            AddPropertyArray( offsetof( objectType, member ), memberName, GetPropertyType( static_cast<decltype( objectType::member ) *>( nullptr ) ) ); \
-            ADD_PROPERTY_METADATA( metaData )
+#define REFLECT( member, metaData ) \
+        { \
+            constexpr auto memberName = #member; \
+            static_assert( ( memberName[ 0 ] == 'm' ) && ( memberName[ 1 ] == '_' ) ); \
+            REFLECT_RENAME( member, ( memberName + 2 ), metaData ) \
+        }
 
-#define REFLECT_STRUCT( member, memberName, structType, metaData ) \
-            AddPropertyStruct( offsetof( objectType, member ), memberName, structType::GetReflectionInfoS() ); \
-            ADD_PROPERTY_METADATA( metaData )
+#define REFLECT_STRUCT( member, structType, metaData ) \
+        { \
+            constexpr auto memberName = #member; \
+            static_assert( ( memberName[ 0 ] == 'm' ) && ( memberName[ 1 ] == '_' ) ); \
+            AddPropertyStruct( offsetof( objectType, member ), ( memberName + 2 ), structType::GetReflectionInfoS() ); \
+            ADD_PROPERTY_METADATA( metaData ) \
+        }
 
-#define REFLECT_ARRAY_OF_STRUCT( member, memberName, structType, metaData ) \
-            AddPropertyArrayOfStruct( offsetof( objectType, member ), memberName, structType::GetReflectionInfoS() ); \
-            ADD_PROPERTY_METADATA( metaData )
+#define REFLECT_ARRAY_OF_STRUCT( member, structType, metaData ) \
+        { \
+            constexpr auto memberName = #member; \
+            static_assert( ( memberName[ 0 ] == 'm' ) && ( memberName[ 1 ] == '_' ) ); \
+            AddPropertyArrayOfStruct( offsetof( objectType, member ), ( memberName + 2 ), structType::GetReflectionInfoS() ); \
+            ADD_PROPERTY_METADATA( metaData ) \
+        }
 
 // END
 //------------------------------------------------------------------------------

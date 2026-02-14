@@ -8,7 +8,7 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN_ABSTRACT( VSProjectBaseNode, Node, MetaNone() )
-    REFLECT( m_ProjectGuid,     "ProjectGuid",     MetaOptional() )
+    REFLECT( m_ProjectGuid, MetaOptional() )
 REFLECT_END( VSProjectBaseNode )
 
 // CONSTRUCTOR

@@ -23,25 +23,25 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
-    REFLECT(        m_TestExecutable,           "TestExecutable",           MetaFile() )
-    REFLECT_ARRAY(  m_TestInput,                "TestInput",                MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_TestInputPath,            "TestInputPath",            MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_TestInputPattern,         "TestInputPattern",         MetaOptional() )
-    REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
-    REFLECT_ARRAY(  m_TestInputExcludePath,     "TestInputExcludePath",     MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_TestInputExcludedFiles,   "TestInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_TestInputExcludePattern,  "TestInputExcludePattern",  MetaOptional() + MetaFile( true ) )
-    REFLECT(        m_TestArguments,            "TestArguments",            MetaOptional() )
-    REFLECT(        m_TestWorkingDir,           "TestWorkingDir",           MetaOptional() + MetaPath() )
-    REFLECT(        m_TestTimeOut,              "TestTimeOut",              MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
-    REFLECT(        m_TestAlwaysShowOutput,     "TestAlwaysShowOutput",     MetaOptional() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
-    REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
-    REFLECT(        m_ConcurrencyGroupName,     "ConcurrencyGroupName",     MetaOptional() )
+    REFLECT( m_TestExecutable, MetaFile() )
+    REFLECT( m_TestInput, MetaOptional() + MetaFile() )
+    REFLECT( m_TestInputPath, MetaOptional() + MetaPath() )
+    REFLECT( m_TestInputPattern, MetaOptional() )
+    REFLECT( m_TestInputPathRecurse, MetaOptional() )
+    REFLECT( m_TestInputExcludePath, MetaOptional() + MetaPath() )
+    REFLECT( m_TestInputExcludedFiles, MetaOptional() + MetaFile( true ) )
+    REFLECT( m_TestInputExcludePattern, MetaOptional() + MetaFile( true ) )
+    REFLECT( m_TestArguments, MetaOptional() )
+    REFLECT( m_TestWorkingDir, MetaOptional() + MetaPath() )
+    REFLECT( m_TestTimeOut, MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
+    REFLECT( m_TestAlwaysShowOutput, MetaOptional() )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Environment, MetaOptional() )
+    REFLECT( m_ConcurrencyGroupName, MetaOptional() )
 
     // Internal State
-    REFLECT(        m_NumTestInputFiles,        "NumTestInputFiles",        MetaHidden() )
-    REFLECT(        m_ConcurrencyGroupIndex,    "ConcurrencyGroupIndex",    MetaHidden() )
+    REFLECT( m_NumTestInputFiles, MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex, MetaHidden() )
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
