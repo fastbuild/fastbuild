@@ -68,14 +68,14 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
-    REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
+    REFLECT( m_CompilerInputFile, MetaFile() )
 
     // Internal State
-    REFLECT( m_CompilerFlags.m_Flags,               "CompilerFlags",                    MetaHidden() )
-    REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
-    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
-    REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
-    REFLECT( m_OwnerObjectListHash,                 "OwnerObjectListHash",              MetaHidden() )
+    REFLECT_RENAME( m_CompilerFlags.m_Flags, "CompilerFlags", MetaHidden() )
+    REFLECT_RENAME( m_PreprocessorFlags.m_Flags, "PreprocessorFlags", MetaHidden() )
+    REFLECT( m_PCHCacheKey, MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_OwnerObjectList, MetaHidden() )
+    REFLECT( m_OwnerObjectListHash, MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR

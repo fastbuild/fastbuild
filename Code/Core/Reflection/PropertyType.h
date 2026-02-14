@@ -32,54 +32,68 @@ enum PropertyType : uint8_t
     PT_CUSTOM_1 = 128,
 };
 
-inline PropertyType GetPropertyType( const float * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const float * )
 {
     return PT_FLOAT;
 }
-inline PropertyType GetPropertyType( const uint8_t * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const uint8_t * )
 {
     return PT_UINT8;
 }
-inline PropertyType GetPropertyType( const uint16_t * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const uint16_t * )
 {
     return PT_UINT16;
 }
-inline PropertyType GetPropertyType( const uint32_t * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const uint32_t * )
 {
     return PT_UINT32;
 }
-inline PropertyType GetPropertyType( const uint64_t * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const uint64_t * )
 {
     return PT_UINT64;
 }
-inline PropertyType GetPropertyType( const int8_t * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const int8_t * )
 {
     return PT_INT8;
 }
-inline PropertyType GetPropertyType( const int16_t * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const int16_t * )
 {
     return PT_INT16;
 }
-inline PropertyType GetPropertyType( const int32_t * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const int32_t * )
 {
     return PT_INT32;
 }
-inline PropertyType GetPropertyType( const int64_t * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const int64_t * )
 {
     return PT_INT64;
 }
-inline PropertyType GetPropertyType( const bool * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const bool * )
 {
     return PT_BOOL;
 }
-inline PropertyType GetPropertyType( const AString * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const AString * )
 {
     return PT_ASTRING;
 }
 template <class T>
-inline PropertyType GetPropertyType( const Array<T> * )
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const Array<T> * )
 {
     return GetPropertyType( static_cast<T *>( nullptr ) );
+}
+
+//------------------------------------------------------------------------------
+template <class T>
+[[nodiscard]] inline constexpr bool IsArrayProperty( const Array<T> * )
+{
+    return true;
+}
+
+//------------------------------------------------------------------------------
+template <class T>
+[[nodiscard]] inline constexpr bool IsArrayProperty( const T * )
+{
+    return false;
 }
 
 //------------------------------------------------------------------------------

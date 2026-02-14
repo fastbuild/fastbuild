@@ -18,10 +18,10 @@
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CompilerInfoNode, Node, MetaNone() )
     // Internal
-    REFLECT( m_Compiler,            "Compiler",             MetaHidden() )
-    REFLECT( m_NoStdInc,            "NoStdInc",             MetaHidden() )
-    REFLECT( m_NoStdIncPP,          "NoStdIncPP",           MetaHidden() )
-    REFLECT_ARRAY( m_BuiltinIncludePaths, "BuiltinIncludePaths", MetaHidden() )
+    REFLECT( m_Compiler, MetaHidden() )
+    REFLECT( m_NoStdInc, MetaHidden() )
+    REFLECT( m_NoStdIncPP, MetaHidden() )
+    REFLECT( m_BuiltinIncludePaths, MetaHidden() )
 REFLECT_END( CompilerInfoNode )
 
 // CONSTRUCTOR

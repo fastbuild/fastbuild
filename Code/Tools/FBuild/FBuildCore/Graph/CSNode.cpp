@@ -24,22 +24,22 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
-    REFLECT(        m_Compiler,                     "Compiler",                     MetaFile() + MetaAllowNonFile() )
-    REFLECT(        m_CompilerOptions,              "CompilerOptions",              MetaNone() )
-    REFLECT(        m_CompilerOutput,               "CompilerOutput",               MetaFile() )
-    REFLECT_ARRAY(  m_CompilerInputPath,            "CompilerInputPath",            MetaOptional() + MetaPath() )
-    REFLECT(        m_CompilerInputPathRecurse,     "CompilerInputPathRecurse",     MetaOptional() )
-    REFLECT_ARRAY(  m_CompilerInputPattern,         "CompilerInputPattern",         MetaOptional() )
-    REFLECT_ARRAY(  m_CompilerInputExcludePath,     "CompilerInputExcludePath",     MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_CompilerInputExcludedFiles,   "CompilerInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_CompilerInputExcludePattern,  "CompilerInputExcludePattern",  MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_CompilerInputFiles,           "CompilerInputFiles",           MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_CompilerReferences,           "CompilerReferences",           MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,      "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Compiler, MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_CompilerOptions, MetaNone() )
+    REFLECT( m_CompilerOutput, MetaFile() )
+    REFLECT( m_CompilerInputPath, MetaOptional() + MetaPath() )
+    REFLECT( m_CompilerInputPathRecurse, MetaOptional() )
+    REFLECT( m_CompilerInputPattern, MetaOptional() )
+    REFLECT( m_CompilerInputExcludePath, MetaOptional() + MetaPath() )
+    REFLECT( m_CompilerInputExcludedFiles, MetaOptional() + MetaFile( true ) )
+    REFLECT( m_CompilerInputExcludePattern, MetaOptional() + MetaFile( true ) )
+    REFLECT( m_CompilerInputFiles, MetaOptional() + MetaFile() )
+    REFLECT( m_CompilerReferences, MetaOptional() + MetaFile() )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
-    REFLECT(        m_NumCompilerInputFiles,        "NumCompilerInputFiles",        MetaHidden() )
-    REFLECT(        m_NumCompilerReferences,        "NumCompilerReferences",        MetaHidden() )
+    REFLECT( m_NumCompilerInputFiles, MetaHidden() )
+    REFLECT( m_NumCompilerReferences, MetaHidden() )
 REFLECT_END( CSNode )
 
 // CONSTRUCTOR

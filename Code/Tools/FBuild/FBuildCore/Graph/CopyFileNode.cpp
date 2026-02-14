@@ -19,9 +19,9 @@
 // REFLECTION
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CopyFileNode, Node, MetaNone() )
-    REFLECT(        m_Source,                   "Source",                   MetaFile() )
-    REFLECT(        m_Dest,                     "Dest",                     MetaPath() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Source, MetaFile() )
+    REFLECT( m_Dest, MetaPath() )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
 REFLECT_END( CopyFileNode )
 
 // CONSTRUCTOR
