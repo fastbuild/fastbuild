@@ -30,35 +30,35 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN_BASE( SolutionConfigBase )
-    REFLECT_RENAME( m_SolutionBuildProjects, "SolutionBuildProject", MetaInheritFromOwner() + MetaOptional() + MetaFile() ) // "SolutionBuildProject" for backwards compat
-    REFLECT( m_SolutionDeployProjects, MetaInheritFromOwner() + MetaOptional() + MetaFile() )
+    REFLECT_RENAME( m_SolutionBuildProjects, "SolutionBuildProject", MetaInheritFromOwner() + MetaFile() ) // "SolutionBuildProject" for backwards compat
+    REFLECT( m_SolutionDeployProjects, MetaInheritFromOwner() + MetaFile() )
 REFLECT_END( SolutionConfigBase )
 
-REFLECT_STRUCT_BEGIN( SolutionConfig, SolutionConfigBase, MetaNone() )
-    REFLECT( m_SolutionPlatform, MetaOptional() )
-    REFLECT( m_SolutionConfig, MetaOptional() )
-    REFLECT( m_Platform, MetaNone() )
-    REFLECT( m_Config, MetaNone() )
+REFLECT_STRUCT_BEGIN( SolutionConfig, SolutionConfigBase )
+    REFLECT( m_SolutionPlatform )
+    REFLECT( m_SolutionConfig )
+    REFLECT( m_Platform, MetaRequired() )
+    REFLECT( m_Config, MetaRequired() )
 REFLECT_END( SolutionConfig )
 
 REFLECT_STRUCT_BEGIN_BASE( SolutionFolder )
-    REFLECT( m_Path, MetaNone() )
-    REFLECT( m_Projects, MetaOptional() + MetaFile() )
-    REFLECT( m_Items, MetaOptional() + MetaFile() )
+    REFLECT( m_Path, MetaRequired() )
+    REFLECT( m_Projects, MetaFile() )
+    REFLECT( m_Items, MetaFile() )
 REFLECT_END( SolutionFolder )
 
 REFLECT_STRUCT_BEGIN_BASE( SolutionDependency )
-    REFLECT( m_Projects, MetaFile() )
-    REFLECT( m_Dependencies, MetaFile() )
+    REFLECT( m_Projects, MetaFile() + MetaRequired() )
+    REFLECT( m_Dependencies, MetaFile() + MetaRequired() )
 REFLECT_END( SolutionDependency )
 
 REFLECT_NODE_BEGIN( SLNNode, Node, MetaName( "SolutionOutput" ) + MetaFile() )
-    REFLECT( m_SolutionProjects, MetaOptional() + MetaFile() )
-    REFLECT( m_SolutionVisualStudioVersion, MetaOptional() )
-    REFLECT( m_SolutionMinimumVisualStudioVersion, MetaOptional() )
-    REFLECT( m_SolutionConfigs, MetaOptional() )
-    REFLECT( m_SolutionFolders, MetaOptional() )
-    REFLECT( m_SolutionDependencies, MetaOptional() )
+    REFLECT( m_SolutionProjects, MetaFile() )
+    REFLECT( m_SolutionVisualStudioVersion )
+    REFLECT( m_SolutionMinimumVisualStudioVersion )
+    REFLECT( m_SolutionConfigs )
+    REFLECT( m_SolutionFolders )
+    REFLECT( m_SolutionDependencies )
 
     // Base Project Config settings
     REFLECT( m_BaseSolutionConfig, MetaEmbedMembers() )

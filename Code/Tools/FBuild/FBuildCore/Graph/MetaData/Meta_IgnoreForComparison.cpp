@@ -7,7 +7,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( Meta_IgnoreForComparison, IMetaData, MetaNone() )
+REFLECT_BEGIN( Meta_IgnoreForComparison, IMetaData )
 REFLECT_END( Meta_IgnoreForComparison )
 
 // CONSTRUCTOR

@@ -67,7 +67,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
+REFLECT_NODE_BEGIN( ObjectNode, Node )
     REFLECT( m_CompilerInputFile, MetaFile() )
 
     // Internal State

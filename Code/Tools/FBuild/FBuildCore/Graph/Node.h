@@ -40,11 +40,11 @@ class ObjectListNode;
         return nodeName::GetReflectionInfoS();                          \
     }
 
-#define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
-    REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
+#define REFLECT_NODE_BEGIN( nodeName, baseNodeName, ... ) \
+    REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, __VA_ARGS__ )
 
-#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData ) \
-    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData )
+#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, ... ) \
+    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, __VA_ARGS__ )
 
 inline constexpr PropertyType GetPropertyType( ObjectListNode * const * )
 {

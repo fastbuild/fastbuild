@@ -28,7 +28,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
+REFLECT_STRUCT_BEGIN( ToolManifest, Struct )
     REFLECT( m_ToolId, MetaHidden() )
     REFLECT( m_TimeStamp, MetaHidden() )
     REFLECT( m_MainExecutableRootPath, MetaHidden() )
@@ -36,7 +36,7 @@ REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
     REFLECT( m_CustomEnvironmentVariables, MetaHidden() )
 REFLECT_END( ToolManifest )
 
-REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct, MetaNone() )
+REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct )
     REFLECT( m_Name, MetaHidden() )
     REFLECT( m_TimeStamp, MetaHidden() )
     REFLECT( m_Hash, MetaHidden() )

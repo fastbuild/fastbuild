@@ -122,6 +122,7 @@ Compiler( 'Compiler-Clang18-NonCL' )
                                     + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
                                     + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
                                     + ' -Wno-global-constructors'       // declaration requires a global destructor
+                                    + ' -Wno-gnu-zero-variadic-macro-arguments' // Allow empty variadic args
                                     + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
                                     + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
                                     + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'

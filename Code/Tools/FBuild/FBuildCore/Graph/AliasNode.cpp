@@ -12,9 +12,9 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( AliasNode, Node, MetaNone() )
-    REFLECT( m_Targets, MetaFile() + MetaAllowNonFile() )
-    REFLECT( m_Hidden, MetaOptional() )
+REFLECT_NODE_BEGIN( AliasNode, Node )
+    REFLECT( m_Targets, MetaFile() + MetaAllowNonFile() + MetaRequired() )
+    REFLECT( m_Hidden )
 REFLECT_END( AliasNode )
 
 // CONSTRUCTOR

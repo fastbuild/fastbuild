@@ -16,7 +16,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( CompilerInfoNode, Node, MetaNone() )
+REFLECT_NODE_BEGIN( CompilerInfoNode, Node )
     // Internal
     REFLECT( m_Compiler, MetaHidden() )
     REFLECT( m_NoStdInc, MetaHidden() )

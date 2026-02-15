@@ -8,7 +8,6 @@
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
-#include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Reflection/ReflectedProperty.h"
@@ -62,7 +61,7 @@ public:
 };
 
 REFLECT_STRUCT_BEGIN_BASE( TestStruct )
-    REFLECT( m_MyInt, MetaNone() )
+    REFLECT( m_MyInt )
 REFLECT_END( TestStruct )
 
 // TestObject
@@ -129,21 +128,21 @@ private: // ensure reflection can set private members
     Array<TestStruct> m_StructArray;
 };
 
-REFLECT_BEGIN( TestObject, Object, MetaNone() )
-    REFLECT( m_Float, MetaNone() )
-    REFLECT( m_UInt8, MetaNone() )
-    REFLECT( m_UInt16, MetaNone() )
-    REFLECT( m_UInt32, MetaNone() )
-    REFLECT( m_UInt64, MetaNone() )
-    REFLECT( m_Int8, MetaNone() )
-    REFLECT( m_Int16, MetaNone() )
-    REFLECT( m_Int32, MetaNone() )
-    REFLECT( m_Int64, MetaNone() )
-    REFLECT( m_Bool, MetaNone() )
-    REFLECT( m_AString, MetaNone() )
-    REFLECT( m_TestStruct, MetaNone() )
-    REFLECT( m_FloatArray, MetaNone() )
-    REFLECT( m_StructArray, MetaNone() )
+REFLECT_BEGIN( TestObject, Object )
+    REFLECT( m_Float )
+    REFLECT( m_UInt8 )
+    REFLECT( m_UInt16 )
+    REFLECT( m_UInt32 )
+    REFLECT( m_UInt64 )
+    REFLECT( m_Int8 )
+    REFLECT( m_Int16 )
+    REFLECT( m_Int32 )
+    REFLECT( m_Int64 )
+    REFLECT( m_Bool )
+    REFLECT( m_AString )
+    REFLECT( m_TestStruct )
+    REFLECT( m_FloatArray )
+    REFLECT( m_StructArray )
 REFLECT_END( TestObject )
 
 //------------------------------------------------------------------------------
@@ -253,12 +252,12 @@ public:
     int m_B;
 };
 
-REFLECT_BEGIN( BaseClass, Object, MetaNone() )
-    REFLECT( m_A, MetaNone() )
+REFLECT_BEGIN( BaseClass, Object )
+    REFLECT( m_A )
 REFLECT_END( BaseClass )
 
-REFLECT_BEGIN( DerivedClass, BaseClass, MetaNone() )
-    REFLECT( m_B, MetaNone() )
+REFLECT_BEGIN( DerivedClass, BaseClass )
+    REFLECT( m_B )
 REFLECT_END( DerivedClass )
 
 void TestReflection::TestInheritance() const
@@ -291,8 +290,8 @@ public:
     uint32_t m_Property = 0;
 };
 
-REFLECT_BEGIN( ObjectWithMetaData, Object, MetaFile() + MetaOptional() + MetaPath() )
-    REFLECT( m_Property, MetaFile() + MetaOptional() + MetaPath() )
+REFLECT_BEGIN( ObjectWithMetaData, Object, MetaFile() + MetaPath() )
+    REFLECT( m_Property, MetaFile() + MetaPath() )
 REFLECT_END( ObjectWithMetaData )
 
 void TestReflection::MetaData() const
@@ -302,13 +301,11 @@ void TestReflection::MetaData() const
 
     // Check all MetaData is present on object
     TEST_ASSERT( ri->HasMetaData<Meta_File>() );
-    TEST_ASSERT( ri->HasMetaData<Meta_Optional>() );
     TEST_ASSERT( ri->HasMetaData<Meta_Path>() );
 
     // Check all MetaData is present on property
     const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString( "Property" ) );
     TEST_ASSERT( rp->HasMetaData<Meta_File>() );
-    TEST_ASSERT( rp->HasMetaData<Meta_Optional>() );
     TEST_ASSERT( rp->HasMetaData<Meta_Path>() );
 }
 

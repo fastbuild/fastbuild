@@ -104,7 +104,7 @@ public:
 
     using Node::FixupPathForVSIntegration;
 };
-REFLECT_BEGIN( NodeTestHelper, Node, MetaNone() )
+REFLECT_BEGIN( NodeTestHelper, Node )
 REFLECT_END( NodeTestHelper )
 
 // FileNodeTestHelper

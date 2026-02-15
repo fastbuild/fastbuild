@@ -24,8 +24,8 @@ class MetaNone
 //------------------------------------------------------------------------------
 IMetaData & MetaFile( bool relative = false );
 IMetaData & MetaHidden();
-IMetaData & MetaOptional();
 IMetaData & MetaPath( bool relative = false );
 IMetaData & MetaRange( int32_t minVal, int32_t maxVal );
+IMetaData & MetaRequired();
 
 //------------------------------------------------------------------------------
