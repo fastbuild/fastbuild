@@ -22,8 +22,8 @@
     //#define USING_CLANG_14
     //#define USING_CLANG_15
     //#define USING_CLANG_17
-    #define USING_CLANG_18
-    //#define USING_CLANG_19
+    //#define USING_CLANG_18
+    #define USING_CLANG_19
 #endif
 
 // Activate
@@ -62,7 +62,7 @@
 #if __WINDOWS__
     #if CI_BUILD
         #if USING_VS2022
-            #define USING_CLANG_18
+            #define USING_CLANG_19
         #else
             #define USING_CLANG_11
         #endif
