@@ -86,8 +86,10 @@ protected:
                       bool isArray,
                       const ReflectionInfo * structInfo );
 
+    void AddMetaData() {}
     void AddMetaData( const MetaNone & metaNone );
     void AddMetaData( IMetaData & metaDataChain );
+    void AddPropertyMetaData() {}
     void AddPropertyMetaData( const MetaNone & metaNone );
     void AddPropertyMetaData( IMetaData & metaDataChain );
 

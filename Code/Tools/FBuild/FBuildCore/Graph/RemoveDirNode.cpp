@@ -16,15 +16,15 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( RemoveDirNode, Node, MetaNone() )
-    REFLECT( m_RemovePaths, MetaPath() )
-    REFLECT( m_RemovePatterns, MetaOptional() )
-    REFLECT( m_RemovePathsRecurse, MetaOptional() )
-    REFLECT( m_RemoveDirs, MetaOptional() )
-    REFLECT( m_RemoveRootDir, MetaOptional() )
-    REFLECT( m_RemoveExcludePaths, MetaOptional() + MetaPath() )
-    REFLECT( m_RemoveExcludeFiles, MetaOptional() + MetaFile() )
-    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
+REFLECT_NODE_BEGIN( RemoveDirNode, Node )
+    REFLECT( m_RemovePaths, MetaPath() + MetaRequired() )
+    REFLECT( m_RemovePatterns )
+    REFLECT( m_RemovePathsRecurse )
+    REFLECT( m_RemoveDirs )
+    REFLECT( m_RemoveRootDir )
+    REFLECT( m_RemoveExcludePaths, MetaPath() )
+    REFLECT( m_RemoveExcludeFiles, MetaFile() )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 REFLECT_END( RemoveDirNode )
 
 // CONSTRUCTOR

@@ -25,33 +25,33 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
-    REFLECT_RENAME( m_InputPaths, "UnityInputPath", MetaOptional() + MetaPath() )
-    REFLECT_RENAME( m_PathsToExclude, "UnityInputExcludePath", MetaOptional() + MetaPath() )
-    REFLECT_RENAME( m_InputPathRecurse, "UnityInputPathRecurse", MetaOptional() )
-    REFLECT_RENAME( m_InputPattern, "UnityInputPattern", MetaOptional() )
-    REFLECT_RENAME( m_Files, "UnityInputFiles", MetaOptional() + MetaFile() )
-    REFLECT_RENAME( m_FilesToExclude, "UnityInputExcludedFiles", MetaOptional() + MetaFile( true ) ) // relative
-    REFLECT_RENAME( m_FilesToIsolate, "UnityInputIsolatedFiles", MetaOptional() + MetaFile( true ) ) // relative
-    REFLECT_RENAME( m_ExcludePatterns, "UnityInputExcludePattern", MetaOptional() + MetaFile( true ) ) // relative
-    REFLECT_RENAME( m_ObjectLists, "UnityInputObjectLists", MetaOptional() )
-    REFLECT_RENAME( m_OutputPath, "UnityOutputPath", MetaPath() )
-    REFLECT_RENAME( m_OutputPattern, "UnityOutputPattern", MetaOptional() )
-    REFLECT_RENAME( m_NumUnityFilesToCreate, "UnityNumFiles", MetaOptional() + MetaRange( 1, 1048576 ) )
-    REFLECT_RENAME( m_MaxIsolatedFiles, "UnityInputIsolateWritableFilesLimit", MetaOptional() + MetaRange( 0, 1048576 ) )
-    REFLECT_RENAME( m_IsolateWritableFiles, "UnityInputIsolateWritableFiles", MetaOptional() )
-    REFLECT_RENAME( m_IsolateListFile, "UnityInputIsolateListFile", MetaOptional() + MetaFile() )
-    REFLECT_RENAME( m_PrecompiledHeader, "UnityPCH", MetaOptional() + MetaFile( true ) ) // relative
-    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
-    REFLECT( m_Hidden, MetaOptional() )
-    REFLECT_RENAME( m_UseRelativePaths_Experimental, "UseRelativePaths_Experimental", MetaOptional() )
+REFLECT_NODE_BEGIN( UnityNode, Node )
+    REFLECT_RENAME( m_InputPaths, "UnityInputPath", MetaPath() )
+    REFLECT_RENAME( m_PathsToExclude, "UnityInputExcludePath", MetaPath() )
+    REFLECT_RENAME( m_InputPathRecurse, "UnityInputPathRecurse" )
+    REFLECT_RENAME( m_InputPattern, "UnityInputPattern" )
+    REFLECT_RENAME( m_Files, "UnityInputFiles", MetaFile() )
+    REFLECT_RENAME( m_FilesToExclude, "UnityInputExcludedFiles", MetaFile( true ) ) // relative
+    REFLECT_RENAME( m_FilesToIsolate, "UnityInputIsolatedFiles", MetaFile( true ) ) // relative
+    REFLECT_RENAME( m_ExcludePatterns, "UnityInputExcludePattern", MetaFile( true ) ) // relative
+    REFLECT_RENAME( m_ObjectLists, "UnityInputObjectLists" )
+    REFLECT_RENAME( m_OutputPath, "UnityOutputPath", MetaPath() + MetaRequired() )
+    REFLECT_RENAME( m_OutputPattern, "UnityOutputPattern" )
+    REFLECT_RENAME( m_NumUnityFilesToCreate, "UnityNumFiles", MetaRange( 1, 1048576 ) )
+    REFLECT_RENAME( m_MaxIsolatedFiles, "UnityInputIsolateWritableFilesLimit", MetaRange( 0, 1048576 ) )
+    REFLECT_RENAME( m_IsolateWritableFiles, "UnityInputIsolateWritableFiles" )
+    REFLECT_RENAME( m_IsolateListFile, "UnityInputIsolateListFile", MetaFile() )
+    REFLECT_RENAME( m_PrecompiledHeader, "UnityPCH", MetaFile( true ) ) // relative
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Hidden )
+    REFLECT( m_UseRelativePaths_Experimental )
 
     // Internal state
     REFLECT( m_UnityFileNames, MetaHidden() + MetaIgnoreForComparison() )
     REFLECT( m_IsolatedFiles, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( UnityNode )
 
-REFLECT_STRUCT_BEGIN( UnityIsolatedFile, Struct, MetaNone() )
+REFLECT_STRUCT_BEGIN( UnityIsolatedFile, Struct )
     REFLECT( m_FileName, MetaHidden() )
     REFLECT( m_DirListOriginPath, MetaHidden() )
 REFLECT_END( UnityIsolatedFile )

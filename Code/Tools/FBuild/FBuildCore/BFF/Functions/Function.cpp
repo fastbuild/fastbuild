@@ -50,9 +50,9 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
 #include "Core/Reflection/MetaData/Meta_Hidden.h"
-#include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/MetaData/Meta_Range.h"
+#include "Core/Reflection/MetaData/Meta_Required.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Strings/AStackString.h"
 
@@ -1101,7 +1101,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
     // Handle missing but required
     if ( variable == nullptr )
     {
-        const bool required = ( property.HasMetaData<Meta_Optional>() == nullptr );
+        const bool required = ( property.HasMetaData<Meta_Required>() != nullptr );
         if ( required )
         {
             Error::Error_1101_MissingProperty( iter, this, AStackString( property.GetName() ) );
@@ -1116,7 +1116,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
     {
         case PT_ASTRING:
         {
-            const bool required = ( property.HasMetaData<Meta_Optional>() == nullptr );
+            const bool required = ( property.HasMetaData<Meta_Required>() != nullptr );
             if ( property.IsArray() )
             {
                 return PopulateArrayOfStrings( nodeGraph, iter, base, property, variable, required );

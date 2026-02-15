@@ -119,9 +119,11 @@ Compiler( 'Compiler-Clang19-NonCL' )
 
                                     // Warnings that are not useful
                                     + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
+                                    + ' -Wno-c++20-extensions'          // don't warn that '...' parameter of a variadic macro is a C++20 extension
                                     + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
                                     + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
                                     + ' -Wno-global-constructors'       // declaration requires a global destructor
+                                    + ' -Wno-gnu-zero-variadic-macro-arguments' // Allow empty variadic args
                                     + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
                                     + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
                                     + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'

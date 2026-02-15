@@ -184,7 +184,7 @@ public:
     AString m_String;
     Array<AString> m_ArrayOfStrings;
 };
-REFLECT_BEGIN( BaseNode, Node, MetaNone() )
+REFLECT_BEGIN( BaseNode, Node )
 REFLECT_END( BaseNode )
 
 // FunctionWrapper
@@ -258,7 +258,7 @@ public:
     { \
         REFLECT_NODE_DECLARE( name ) \
     }; \
-    REFLECT_NODE_BEGIN( name, BaseNode, MetaNone() )
+    REFLECT_NODE_BEGIN( name, BaseNode )
 
 #define TEST_NODE_END( name ) \
     REFLECT_END( name )
@@ -267,7 +267,7 @@ public:
 // String - Optional
 //==============================================================================
 TEST_NODE_BEGIN( Node_String_Optional )
-    REFLECT( m_String, MetaOptional() )
+    REFLECT( m_String )
 TEST_NODE_END( Node_String_Optional )
 
 // String_Optional_NotSet
@@ -315,7 +315,7 @@ void TestNodeReflection::String_Optional_Empty() const
 // String - Required
 //==============================================================================
 TEST_NODE_BEGIN( Node_String_Required )
-    REFLECT( m_String, MetaNone() )
+    REFLECT( m_String, MetaRequired() )
 TEST_NODE_END( Node_String_Required )
 
 // String_Required_NotSet
@@ -364,7 +364,7 @@ void TestNodeReflection::String_Required_Empty() const
 // ArrayOfStrings - Optional
 //==============================================================================
 TEST_NODE_BEGIN( Node_ArrayOfStrings_Optional )
-    REFLECT( m_ArrayOfStrings, MetaOptional() )
+    REFLECT( m_ArrayOfStrings )
 TEST_NODE_END( Node_ArrayOfStrings_Optional )
 
 // ArrayOfStrings_Optional_NotSet
@@ -433,7 +433,7 @@ void TestNodeReflection::ArrayOfStrings_Optional_EmptyElement() const
 // ArrayOfStrings - Required
 //==============================================================================
 TEST_NODE_BEGIN( Node_ArrayOfStrings_Required )
-    REFLECT( m_ArrayOfStrings, MetaNone() )
+    REFLECT( m_ArrayOfStrings, MetaRequired() )
 TEST_NODE_END( Node_ArrayOfStrings_Required )
 
 // ArrayOfStrings_Required_NotSet
@@ -502,7 +502,7 @@ void TestNodeReflection::ArrayOfStrings_Required_EmptyElement() const
 // MetaFile - String - Optional
 //==============================================================================
 TEST_NODE_BEGIN( Node_MetaFile_String_Optional )
-    REFLECT( m_String, MetaFile() + MetaOptional() )
+    REFLECT( m_String, MetaFile() )
 TEST_NODE_END( Node_MetaFile_String_Optional )
 
 // MetaFile_String_Optional_NotSet
@@ -549,7 +549,7 @@ void TestNodeReflection::MetaFile_String_Optional_Empty() const
 // MetaFile - String - Required
 //==============================================================================
 TEST_NODE_BEGIN( Node_MetaFile_String_Required )
-    REFLECT( m_String, MetaFile() )
+    REFLECT( m_String, MetaFile() + MetaRequired() )
 TEST_NODE_END( Node_MetaFile_String_Required )
 
 // MetaFile_String_Required_NotSet
@@ -598,7 +598,7 @@ void TestNodeReflection::MetaFile_String_Required_Empty() const
 // MetaFile - ArrayOfStrings - Optional
 //==============================================================================
 TEST_NODE_BEGIN( Node_MetaFile_ArrayOfStrings_Optional )
-    REFLECT( m_ArrayOfStrings, MetaFile() + MetaOptional() )
+    REFLECT( m_ArrayOfStrings, MetaFile() )
 TEST_NODE_END( Node_MetaFile_ArrayOfStrings_Optional )
 
 // MetaFile_ArrayOfStringsOptional_NotSet
@@ -666,7 +666,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Optional_EmptyElement() const
 // MetaFile - ArrayOfStrings - Required
 //==============================================================================
 TEST_NODE_BEGIN( Node_MetaFile_ArrayOfStrings_Required )
-    REFLECT( m_ArrayOfStrings, MetaFile() )
+    REFLECT( m_ArrayOfStrings, MetaFile() + MetaRequired() )
 TEST_NODE_END( Node_MetaFile_ArrayOfStrings_Required )
 
 // MetaFile_ArrayOfStrings_Required_NotSet
@@ -736,7 +736,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Required_EmptyElement() const
 // MetaPath - String - Optional
 //==============================================================================
 TEST_NODE_BEGIN( Node_MetaPath_String_Optional )
-    REFLECT( m_String, MetaPath() + MetaOptional() ) // Optional
+    REFLECT( m_String, MetaPath() )
 TEST_NODE_END( Node_MetaPath_String_Optional )
 
 // MetaPath_String_Optional_NotSet
@@ -783,7 +783,7 @@ void TestNodeReflection::MetaPath_String_Optional_Empty() const
 // MetaPath - String - Required
 //==============================================================================
 TEST_NODE_BEGIN( Node_MetaPath_String_Required )
-    REFLECT( m_String, MetaPath() )
+    REFLECT( m_String, MetaPath() + MetaRequired() )
 TEST_NODE_END( Node_MetaPath_String_Required )
 
 // MetaPath_String_Required_NotSet
@@ -832,7 +832,7 @@ void TestNodeReflection::MetaPath_String_Required_Empty() const
 // MetaPath - ArrayOfStrings - Optional
 //==============================================================================
 TEST_NODE_BEGIN( Node_MetaPath_ArrayOfStrings_Optional )
-    REFLECT( m_ArrayOfStrings, MetaPath() + MetaOptional() )
+    REFLECT( m_ArrayOfStrings, MetaPath() )
 TEST_NODE_END( Node_MetaPath_ArrayOfStrings_Optional )
 
 // MetaPath_ArrayOfStringsOptional_NotSet
@@ -900,7 +900,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Optional_EmptyElement() const
 // MetaPath - ArrayOfStrings - Required
 //==============================================================================
 TEST_NODE_BEGIN( Node_MetaPath_ArrayOfStrings_Required )
-    REFLECT( m_ArrayOfStrings, MetaPath() )
+    REFLECT( m_ArrayOfStrings, MetaPath() + MetaRequired() )
 TEST_NODE_END( Node_MetaPath_ArrayOfStrings_Required )
 
 // MetaPath_ArrayOfStrings_Required_NotSet

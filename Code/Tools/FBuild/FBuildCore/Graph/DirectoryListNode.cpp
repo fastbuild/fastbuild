@@ -18,7 +18,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( DirectoryListNode, Node, MetaNone() )
+REFLECT_NODE_BEGIN( DirectoryListNode, Node )
     REFLECT( m_Path, MetaHidden() )
     REFLECT( m_Patterns, MetaHidden() )
     REFLECT( m_ExcludePaths, MetaHidden() )
