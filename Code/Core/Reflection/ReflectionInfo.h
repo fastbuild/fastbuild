@@ -80,17 +80,11 @@ protected:
 
     void SetTypeName( const char * typeName );
 
-    // basic types
-    void AddProperty( uint32_t offset, const char * memberName, PropertyType type );
-
-    // struct
-    void AddPropertyStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo );
-
-    // array
-    void AddPropertyArray( uint32_t offset, const char * memberName, PropertyType type );
-
-    // array of struct
-    void AddPropertyArrayOfStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo );
+    void AddProperty( uint32_t offset,
+                      const char * memberName,
+                      PropertyType type,
+                      bool isArray,
+                      const ReflectionInfo * structInfo );
 
     void AddMetaData( const MetaNone & metaNone );
     void AddMetaData( IMetaData & metaDataChain );

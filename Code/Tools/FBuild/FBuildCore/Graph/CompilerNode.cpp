@@ -40,7 +40,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum, MetaHidden() )
-    REFLECT_STRUCT( m_Manifest, ToolManifest, MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_Manifest, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR

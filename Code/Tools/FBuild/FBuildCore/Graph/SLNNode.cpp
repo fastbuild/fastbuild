@@ -56,12 +56,12 @@ REFLECT_NODE_BEGIN( SLNNode, Node, MetaName( "SolutionOutput" ) + MetaFile() )
     REFLECT( m_SolutionProjects, MetaOptional() + MetaFile() )
     REFLECT( m_SolutionVisualStudioVersion, MetaOptional() )
     REFLECT( m_SolutionMinimumVisualStudioVersion, MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_SolutionConfigs, SolutionConfig, MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_SolutionFolders, SolutionFolder, MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_SolutionDependencies, SolutionDependency, MetaOptional() )
+    REFLECT( m_SolutionConfigs, MetaOptional() )
+    REFLECT( m_SolutionFolders, MetaOptional() )
+    REFLECT( m_SolutionDependencies, MetaOptional() )
 
     // Base Project Config settings
-    REFLECT_STRUCT( m_BaseSolutionConfig, SolutionConfigBase, MetaEmbedMembers() )
+    REFLECT( m_BaseSolutionConfig, MetaEmbedMembers() )
 REFLECT_END( SLNNode )
 
 // VCXProjectNodeComp

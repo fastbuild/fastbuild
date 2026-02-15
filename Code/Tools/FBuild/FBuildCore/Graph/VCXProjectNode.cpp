@@ -109,8 +109,8 @@ REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput"
     REFLECT( m_ProjectPatternToExclude, MetaOptional() + MetaFile() )
     REFLECT_RENAME( m_ProjectBasePaths, "ProjectBasePath", MetaOptional() + MetaPath() ) // NOTE: Exposed as "ProjectBasePath" for backwards compat
     REFLECT( m_ProjectAllowedFileExtensions, MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_ProjectConfigs, VSProjectConfig, MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_ProjectFileTypes, VSProjectFileType, MetaOptional() )
+    REFLECT( m_ProjectConfigs, MetaOptional() )
+    REFLECT( m_ProjectFileTypes, MetaOptional() )
 
     REFLECT( m_DefaultLanguage, MetaOptional() )
     REFLECT( m_ApplicationEnvironment, MetaOptional() )
@@ -119,10 +119,10 @@ REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput"
     REFLECT( m_ProjectReferences, MetaOptional() )
     REFLECT( m_ProjectProjectReferences, MetaOptional() )
 
-    REFLECT_ARRAY_OF_STRUCT( m_ProjectProjectImports,  VSProjectImport, MetaOptional() )
+    REFLECT( m_ProjectProjectImports, MetaOptional() )
 
     // Base Project Config settings
-    REFLECT_STRUCT( m_BaseProjectConfig, VSProjectConfigBase, MetaEmbedMembers() )
+    REFLECT( m_BaseProjectConfig, MetaEmbedMembers() )
 REFLECT_END( VCXProjectNode )
 
 // VSProjectConfig::ResolveTargets

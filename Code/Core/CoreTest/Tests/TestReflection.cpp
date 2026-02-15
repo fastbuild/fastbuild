@@ -12,6 +12,7 @@
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Reflection/ReflectedProperty.h"
+#include "Core/Reflection/Struct.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -25,6 +26,9 @@ class TestReflection : public TestGroup
 private:
     DECLARE_TESTS
 
+    void IsArrayProperty() const;
+    void IsStruct() const;
+    void GetStructType() const;
     void TestGetSet() const;
     void TestInheritance() const;
     void MetaData() const;
@@ -34,6 +38,9 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestReflection )
+    REGISTER_TEST( IsArrayProperty )
+    REGISTER_TEST( IsStruct )
+    REGISTER_TEST( GetStructType )
     REGISTER_TEST( TestGetSet )
     REGISTER_TEST( TestInheritance )
     REGISTER_TEST( MetaData )
@@ -42,7 +49,7 @@ REGISTER_TESTS_END
 
 // TestStruct
 //------------------------------------------------------------------------------
-struct TestStruct
+struct TestStruct : public Struct
 {
     REFLECT_STRUCT_DECLARE( TestStruct )
 public:
@@ -134,10 +141,62 @@ REFLECT_BEGIN( TestObject, Object, MetaNone() )
     REFLECT( m_Int64, MetaNone() )
     REFLECT( m_Bool, MetaNone() )
     REFLECT( m_AString, MetaNone() )
-    REFLECT_STRUCT( m_TestStruct, TestStruct, MetaNone() )
+    REFLECT( m_TestStruct, MetaNone() )
     REFLECT( m_FloatArray, MetaNone() )
-    REFLECT_ARRAY_OF_STRUCT( m_StructArray, TestStruct, MetaNone() )
+    REFLECT( m_StructArray, MetaNone() )
 REFLECT_END( TestObject )
+
+//------------------------------------------------------------------------------
+void TestReflection::IsArrayProperty() const
+{
+    const float singleFloat = 0.0f;
+    const TestStruct singleStruct;
+    const Array<float> arrayFloats;
+    const Array<TestStruct> arrayStructs;
+
+    static_assert( ::IsArrayProperty( &singleFloat ) == false );
+    static_assert( ::IsArrayProperty( &singleStruct ) == false );
+    static_assert( ::IsArrayProperty( &arrayFloats ) == true );
+    static_assert( ::IsArrayProperty( &arrayStructs ) == true );
+}
+
+//------------------------------------------------------------------------------
+void TestReflection::IsStruct() const
+{
+    // Structures (alone or in Arrays)
+    const TestStruct singleStruct;
+    const Array<TestStruct> arrayStructs;
+    static_assert( ::IsStruct( &singleStruct ) == true );
+    static_assert( ::IsStruct( &arrayStructs ) == true );
+
+    // Non-Struct single types
+    const float singleFloat = 0.0f;
+    const AString singleString;
+    static_assert( ::IsStruct( &singleFloat ) == false );
+    static_assert( ::IsStruct( &singleString ) == false );
+
+    // Non-Struct arrays
+    const Array<float> arrayFloats;
+    const Array<AString> arrayStrings;
+    static_assert( ::IsStruct( &arrayFloats ) == false );
+    static_assert( ::IsStruct( &arrayStrings ) == false );
+}
+
+//------------------------------------------------------------------------------
+void TestReflection::GetStructType() const
+{
+    // Anything that derives from Struct should return valid ReflectionInfo
+    const TestStruct singleStruct;
+    const Array<TestStruct> arrayStructs;
+    TEST_ASSERT( ::GetStructType( &singleStruct ) == TestStruct::GetReflectionInfoS() );
+    TEST_ASSERT( ::GetStructType( &arrayStructs ) == TestStruct::GetReflectionInfoS() );
+
+    // Non-Struct types should return nullptr
+    const float singleFloat = 0.0f;
+    const Array<float> arrayFloats;
+    TEST_ASSERT( ::GetStructType( &singleFloat ) == nullptr );
+    TEST_ASSERT( ::GetStructType( &arrayFloats ) == nullptr );
+}
 
 // TestGetSet
 //------------------------------------------------------------------------------

@@ -60,7 +60,7 @@ private:
 };
 
 //------------------------------------------------------------------------------
-class ConcurrencyGroup
+class ConcurrencyGroup : public Struct
 {
     REFLECT_STRUCT_DECLARE( ConcurrencyGroup )
 public:

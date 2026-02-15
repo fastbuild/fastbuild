@@ -37,7 +37,7 @@ REFLECT_END( VSExternalProjectConfig )
 
 REFLECT_NODE_BEGIN( VSProjectExternalNode, VSProjectBaseNode, MetaName( "ExternalProjectPath" ) + MetaFile() )
     REFLECT( m_ProjectTypeGuid, MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_ProjectConfigs, VSExternalProjectConfig, MetaOptional() )
+    REFLECT( m_ProjectConfigs, MetaOptional() )
 REFLECT_END( VSProjectExternalNode )
 
 // CONSTRUCTOR

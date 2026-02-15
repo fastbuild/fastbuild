@@ -34,7 +34,7 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT( m_Workers, MetaOptional() )
     REFLECT( m_WorkerConnectionLimit, MetaOptional() )
     REFLECT( m_DistributableJobMemoryLimitMiB, MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
-    REFLECT_ARRAY_OF_STRUCT( m_ConcurrencyGroups, ConcurrencyGroup, MetaOptional() )
+    REFLECT( m_ConcurrencyGroups, MetaOptional() )
 REFLECT_END( SettingsNode )
 
 REFLECT_STRUCT_BEGIN_BASE( ConcurrencyGroup )
