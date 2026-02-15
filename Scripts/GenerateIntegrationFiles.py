@@ -70,8 +70,7 @@ def parse_files(files):
                 continue
 
             # Properties with name derived from member
-            if ((line.find('REFLECT(') != -1) or
-                (line.find('REFLECT_STRUCT(') != -1)):
+            if line.find('REFLECT(') != -1:
                 # Get member_name
                 member_name = line[line.find('(')+1:]
                 member_name = member_name[:member_name.find(',')]
@@ -82,8 +81,7 @@ def parse_files(files):
                 continue
 
             # Properties with manually specified name
-            if ((line.find('REFLECT_RENAME(') != -1) or
-                (line.find('REFLECT_ARRAY_OF_STRUCT(') != -1)):
+            if line.find('REFLECT_RENAME(') != -1:
                 # Get property name (first quoted string)
                 quote_pos = line.find('"')
                 if quote_pos != -1:

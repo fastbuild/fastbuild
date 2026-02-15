@@ -48,7 +48,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
 
     // Internal state
     REFLECT( m_UnityFileNames, MetaHidden() + MetaIgnoreForComparison() )
-    REFLECT_ARRAY_OF_STRUCT( m_IsolatedFiles, UnityIsolatedFile, MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_IsolatedFiles, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( UnityNode )
 
 REFLECT_STRUCT_BEGIN( UnityIsolatedFile, Struct, MetaNone() )

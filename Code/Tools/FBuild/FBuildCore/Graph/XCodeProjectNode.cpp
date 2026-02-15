@@ -40,7 +40,7 @@ REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFi
     REFLECT_RENAME( m_PatternToExclude, "ProjectPatternToExclude", MetaOptional() + MetaFile() )
     REFLECT( m_ProjectBasePath, MetaOptional() + MetaPath() )
     REFLECT( m_ProjectAllowedFileExtensions, MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_ProjectConfigs, XCodeProjectConfig, MetaNone() )
+    REFLECT( m_ProjectConfigs, MetaNone() )
     REFLECT( m_XCodeOrganizationName, MetaOptional() )
     REFLECT( m_XCodeBuildToolPath, MetaOptional() )
     REFLECT( m_XCodeBuildToolArgs, MetaOptional() )

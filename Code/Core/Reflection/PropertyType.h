@@ -9,6 +9,8 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
+class ReflectionInfo;
+class Struct;
 template <class T> class Array;
 
 // PropertyType
@@ -76,6 +78,10 @@ enum PropertyType : uint8_t
 {
     return PT_ASTRING;
 }
+[[nodiscard]] inline constexpr PropertyType GetPropertyType( const Struct * )
+{
+    return PT_STRUCT;
+}
 template <class T>
 [[nodiscard]] inline constexpr PropertyType GetPropertyType( const Array<T> * )
 {
@@ -94,6 +100,54 @@ template <class T>
 [[nodiscard]] inline constexpr bool IsArrayProperty( const T * )
 {
     return false;
+}
+
+//------------------------------------------------------------------------------
+template <class T>
+[[nodiscard]] inline constexpr bool IsStruct( const T * single )
+{
+    return ( GetPropertyType( single ) == PropertyType::PT_STRUCT );
+}
+
+//------------------------------------------------------------------------------
+[[nodiscard]] inline constexpr bool IsStruct( const Struct * /*single*/ )
+{
+    return true;
+}
+
+//------------------------------------------------------------------------------
+template <class T>
+[[nodiscard]] inline constexpr bool IsStruct( const Array<T> * /*array*/ )
+{
+    return IsStruct( (T *)nullptr );
+}
+
+//------------------------------------------------------------------------------
+template <class T>
+[[nodiscard]] inline constexpr const ReflectionInfo * GetStructType( const T * /*single*/ )
+{
+    if constexpr ( IsStruct( (T *)nullptr ) )
+    {
+        return T::GetReflectionInfoS();
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+//------------------------------------------------------------------------------
+template <class T>
+[[nodiscard]] inline constexpr const ReflectionInfo * GetStructType( const Array<T> * /*array*/ )
+{
+    if constexpr ( IsStruct( (T *)nullptr ) )
+    {
+        return T::GetReflectionInfoS();
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 //------------------------------------------------------------------------------

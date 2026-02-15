@@ -32,7 +32,7 @@ REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
     REFLECT( m_ToolId, MetaHidden() )
     REFLECT( m_TimeStamp, MetaHidden() )
     REFLECT( m_MainExecutableRootPath, MetaHidden() )
-    REFLECT_ARRAY_OF_STRUCT( m_Files, ToolManifestFile, MetaHidden() )
+    REFLECT( m_Files, MetaHidden() )
     REFLECT( m_CustomEnvironmentVariables, MetaHidden() )
 REFLECT_END( ToolManifest )
 
