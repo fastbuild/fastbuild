@@ -43,6 +43,7 @@ private:
     void LightCache_ResponseFile() const;
     void LightCache_LibraryNoFiles() const;
     void LightCache_NoStdInc() const;
+    void LightCache_NoRebuild() const;
 
     // MSVC Static Analysis tests
     const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -96,6 +97,7 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( LightCache_ResponseFile )
     REGISTER_TEST( LightCache_LibraryNoFiles )
     REGISTER_TEST( LightCache_NoStdInc )
+    REGISTER_TEST( LightCache_NoRebuild )
 #if defined( __WINDOWS__ )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
@@ -948,6 +950,42 @@ void TestCache::LightCache_NoStdInc() const
 
     // Build - Ensure CompilerInfo is built
     TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+}
+
+//------------------------------------------------------------------------------
+void TestCache::LightCache_NoRebuild() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_NoRebuild/fbuild.bff";
+
+    const char * const dbFile = "../tmp/Test/Cache/NoRebuild/fbuild.fdb";
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+    }
+
+    // Build again
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+    }
 }
 
 // Analyze_MSVC_WarningsOnly_Write
