@@ -11,6 +11,7 @@
 
 // Core
 #include "Core/Env/ErrorFormat.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
@@ -210,6 +211,15 @@ CompilerInfoNode::~CompilerInfoNode() = default;
             return BuildResult::eFailed;
         }
     }
+
+    // Stamp for node is the hash of discovered information
+    xxHash3Accumulator acc;
+    for ( const AString & include : m_BuiltinIncludePaths )
+    {
+        acc.AddData( include );
+    }
+    m_Stamp = acc.Finalize64();
+    ASSERT( m_Stamp != 0 ); // Should be non-zero even if m_BuiltinIncludePaths was empty
 
     return BuildResult::eOk;
 }
