@@ -6,6 +6,8 @@
 #include "Random.h"
 
 #include <time.h>
+#include <stdio.h>
+#include "Core/Strings/AStackString.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

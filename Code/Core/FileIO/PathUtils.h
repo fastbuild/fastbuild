@@ -51,6 +51,9 @@ public:
     static void GetRelativePath( const AString & basePath,
                                  const AString & fileName,
                                  AString & outRelativeFileName );
+    static void GetBaseName( const AString& pathName, AString& baseName );
+    static void GetDirectoryName( const AString& pathName, AString& dirName );
+    static void JoinPath( AString& pathName, const AString& baseName );
 };
 
 //------------------------------------------------------------------------------
