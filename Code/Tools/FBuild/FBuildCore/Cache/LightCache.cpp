@@ -6,9 +6,12 @@
 #include "LightCache.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerInfoNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 
@@ -57,6 +60,7 @@ public:
     uint64_t m_FileNameHash;
     AString m_FileName;
     bool m_Exists;
+    uint64_t m_RelativePathHash;
     uint64_t m_ContentHash;
     Array<Include> m_Includes;
     Array<const IncludeDefine *> m_IncludeDefines;
@@ -272,6 +276,14 @@ bool LightCache::Hash( ObjectNode * node,
         return false;
     }
 
+    // If using relative paths, we'll need the base path
+    const bool useRelativePaths = node->GetOwnerObjectList().GetCompiler()->GetUseRelativePaths();
+    if ( useRelativePaths )
+    {
+        m_BasePath = FBuild::Get().GetOptions().GetWorkingDir();
+        PathUtils::EnsureTrailingSlash( m_BasePath );
+    }
+
     StackArray<AString> forceIncludes;
     ProjectGeneratorBase::ExtractIncludePaths( compilerArgs,
                                                m_IncludePaths,
@@ -326,7 +338,9 @@ bool LightCache::Hash( ObjectNode * node,
     outIncludes.SetCapacity( numIncludes );
     for ( const IncludedFile * file : m_AllIncludedFiles )
     {
-        hashes.Append( file->m_FileNameHash ); // Filename can change compilation result
+        // Filename can change compilation result
+        hashes.Append( useRelativePaths ? file->m_RelativePathHash
+                                        : file->m_FileNameHash );
         hashes.Append( file->m_ContentHash );
         outIncludes.Append( file->m_FileName );
     }
@@ -893,6 +907,12 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     newFile->m_FileName = fileName;
     newFile->m_Exists = false;
     newFile->m_ContentHash = 0;
+    if ( m_BasePath.IsEmpty() == false )
+    {
+        AStackString relativePath;
+        PathUtils::GetRelativePath( m_BasePath, fileName, relativePath );
+        newFile->m_RelativePathHash = xxHash3::Calc64( relativePath );
+    }
 
     // Try to open the new file
     FileStream f;

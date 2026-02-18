@@ -72,6 +72,7 @@ protected:
     Array<const IncludedFile *> m_AllIncludedFiles; // List of files seen during parsing
     Array<const IncludedFile *> m_IncludeStack; // Stack of includes, for file relative checks
     Array<const IncludeDefine *> m_IncludeDefines; // Macros describing files to include
+    AString m_BasePath; // Base path if using relative paths
     AString m_Errors; // Did we encounter some code we couldn't parse?
 };
 

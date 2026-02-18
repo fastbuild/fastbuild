@@ -339,7 +339,8 @@ void TestObject::CacheUsingRelativePaths() const
     const char * fileA = "File.cpp";
     const char * fileB = "Subdir/Header.h";
     const char * fileC = "fbuild.bff";
-    const char * files[] = { fileA, fileB, fileC };
+    const char * fileD = "fbuild-lightcache.bff";
+    const char * files[] = { fileA, fileB, fileC, fileD };
 
     // Dest paths
     const char * dstPathA = "../tmp/Test/Object/CacheUsingRelativePaths/A/Code";
@@ -352,77 +353,85 @@ void TestObject::CacheUsingRelativePaths() const
     const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.o";
 #endif
 
-    // Copy file structure to both destinations
-    for ( const char * dstPath : dstPaths )
+    // Run twice, once for regular cache and once for LightCache
+    for ( uint32_t i = 0; i < 2; ++i )
     {
-        for ( const char * file : files )
+        const bool useLightCache = ( i == 1 );
+        const char * const bffFile = useLightCache ? "fbuild-lightcache.bff"
+                                                   : "fbuild.bff";
+
+        // Copy file structure to both destinations
+        for ( const char * dstPath : dstPaths )
         {
-            AStackString src;
-            AStackString dst;
-            src.Format( "%s/%s", srcPath, file );
-            dst.Format( "%s/%s", dstPath, file );
-            TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
-            TEST_ASSERT( FileIO::FileCopy( src.Get(), dst.Get() ) );
-        }
-    }
-
-    // Build in path A, writing to the cache
-    {
-        // Init
-        FBuildTestOptions options;
-        options.m_ConfigFile = "fbuild.bff";
-        options.m_UseCacheWrite = true;
-        AStackString codeDir;
-        GetCodeDir( codeDir );
-        codeDir.Trim( 0, 5 ); // Remove Code/
-        codeDir += "tmp/Test/Object/CacheUsingRelativePaths/A/Code/";
-        options.SetWorkingDir( codeDir );
-        FBuildForTest fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
-
-        // Compile
-        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
-
-        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
-    }
-
-    // Check some problematic cases in the object file
-    {
-        // Read obj file into memory
-        AString buffer;
-        {
-            FileStream f;
-            TEST_ASSERT( f.Open( objFileA ) );
-            buffer.SetLength( (uint32_t)f.GetFileSize() );
-            TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-            buffer.Replace( (char)0, ' ' ); // Make string searches simpler
+            for ( const char * file : files )
+            {
+                AStackString src;
+                AStackString dst;
+                src.Format( "%s/%s", srcPath, file );
+                dst.Format( "%s/%s", dstPath, file );
+                TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
+                TEST_ASSERT( FileIO::FileCopy( src.Get(), dst.Get() ) );
+            }
         }
 
-        // Check __FILE__ paths are relative
-        // Slash direction changed in Clang 18.x.x from forward slash to backslash
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) ||
-                     buffer.Find( "FILE_MACRO_START_1(.\\Subdir/Header.h)FILE_MACRO_END_1" ) );
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(File.cpp)FILE_MACRO_END_2" ) );
-    }
+        // Build in path A, writing to the cache
+        {
+            // Init
+            FBuildTestOptions options;
+            options.m_ConfigFile = bffFile;
+            options.m_UseCacheWrite = true;
+            AStackString codeDir;
+            GetCodeDir( codeDir );
+            codeDir.Trim( 0, 5 ); // Remove Code/
+            codeDir += "tmp/Test/Object/CacheUsingRelativePaths/A/Code/";
+            options.SetWorkingDir( codeDir );
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
 
-    // Build in path B, reading from the cache
-    {
-        // Init
-        FBuildTestOptions options;
-        options.m_ConfigFile = "fbuild.bff";
-        options.m_UseCacheRead = true;
-        AStackString codeDir;
-        GetCodeDir( codeDir );
-        codeDir.Trim( 0, 5 ); // Remove Code/
-        codeDir += "tmp/Test/Object/CacheUsingRelativePaths/B/Code/";
-        options.SetWorkingDir( codeDir );
-        FBuildForTest fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+            // Compile
+            TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
 
-        // Compile
-        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
+        }
 
-        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
+        // Check some problematic cases in the object file
+        {
+            // Read obj file into memory
+            AString buffer;
+            {
+                FileStream f;
+                TEST_ASSERT( f.Open( objFileA ) );
+                buffer.SetLength( (uint32_t)f.GetFileSize() );
+                TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+                buffer.Replace( (char)0, ' ' ); // Make string searches simpler
+            }
+
+            // Check __FILE__ paths are relative
+            // Slash direction changed in Clang 18.x.x from forward slash to backslash
+            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) ||
+                         buffer.Find( "FILE_MACRO_START_1(.\\Subdir/Header.h)FILE_MACRO_END_1" ) );
+            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(File.cpp)FILE_MACRO_END_2" ) );
+        }
+
+        // Build in path B, reading from the cache
+        {
+            // Init
+            FBuildTestOptions options;
+            options.m_ConfigFile = bffFile;
+            options.m_UseCacheRead = true;
+            AStackString codeDir;
+            GetCodeDir( codeDir );
+            codeDir.Trim( 0, 5 ); // Remove Code/
+            codeDir += "tmp/Test/Object/CacheUsingRelativePaths/B/Code/";
+            options.SetWorkingDir( codeDir );
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+
+            // Compile
+            TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
+
+            TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
+        }
     }
 }
 
