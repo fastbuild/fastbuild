@@ -44,6 +44,7 @@ private:
     void LightCache_LibraryNoFiles() const;
     void LightCache_NoStdInc() const;
     void LightCache_NoRebuild() const;
+    void LightCache_MissingInclude() const;
 
     // MSVC Static Analysis tests
     const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -61,6 +62,7 @@ private:
 
     // Helpers
     void CheckForDependencies( const FBuildForTest & fBuild, const char * const files[], size_t numFiles ) const;
+    void CheckLightCacheCounts( FBuild & fbuild, uint32_t numsStores, uint32_t numHits ) const;
     void LightCache_IncludeUsingUndefinedMacros( const char * consfigFile,
                                                  bool expectedBuildResult,
                                                  bool expectedLightCacheUsage,
@@ -98,6 +100,7 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( LightCache_LibraryNoFiles )
     REGISTER_TEST( LightCache_NoStdInc )
     REGISTER_TEST( LightCache_NoRebuild )
+    REGISTER_TEST( LightCache_MissingInclude )
 #if defined( __WINDOWS__ )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
@@ -988,6 +991,45 @@ void TestCache::LightCache_NoRebuild() const
     }
 }
 
+//------------------------------------------------------------------------------
+void TestCache::LightCache_MissingInclude() const
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_MissingInclude/fbuild.bff";
+
+    const char * const dbFile = "../tmp/Test/Cache/MissingInclude/fbuild.fdb";
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckLightCacheCounts( fBuild, 1, 0 );
+    }
+
+    // Build again
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckLightCacheCounts( fBuild, 0, 0 );
+    }
+}
+
 // Analyze_MSVC_WarningsOnly_Write
 //------------------------------------------------------------------------------
 void TestCache::Analyze_MSVC_WarningsOnly_Write() const
@@ -1245,6 +1287,16 @@ void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char *
         }
         TEST_ASSERTM( found, "Missing dependency: %s", files[ i ] );
     }
+}
+
+//------------------------------------------------------------------------------
+void TestCache::CheckLightCacheCounts( FBuild & fBuild, uint32_t numStores, uint32_t numHits ) const
+{
+    // Ensure cache was used in LightCache mode
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumCacheStores == numStores );
+    TEST_ASSERT( objStats.m_NumCacheHits == numHits );
+    TEST_ASSERT( objStats.m_NumLightCache == ( numStores + numHits ) );
 }
 
 //------------------------------------------------------------------------------
