@@ -73,7 +73,10 @@ def parse_files(files):
             if line.find('REFLECT(') != -1:
                 # Get member_name
                 member_name = line[line.find('(')+1:]
-                member_name = member_name[:member_name.find(',')]
+                if member_name.find(',') != -1:
+                    member_name = member_name[:member_name.find(',')]
+                else:
+                    member_name = member_name[:member_name.find(')')]
                 member_name = member_name.strip()
                 if member_name.startswith('m_'):
                     member_name = member_name[2:]
