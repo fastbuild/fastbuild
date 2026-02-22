@@ -10,6 +10,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Dependencies;
+class FBuildOptions;
 class Node;
 class NodeGraph;
 
@@ -36,7 +37,7 @@ public:
     // after the build it complete, accumulate all the stats
     void GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node * node );
 
-    void OutputSummary() const;
+    void OutputSummary( const FBuildOptions & options ) const;
 
     // get the total stats
     uint32_t GetNodesProcessed() const { return m_Totals.m_NumProcessed; }
