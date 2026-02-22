@@ -410,7 +410,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
         }
 
         // block comment?
-        if ( ( c == '/' ) && ( pos[ 1 ] == '*' ) )
+        if ( IsCommentBlockStart( pos ) )
         {
             SkipCommentBlock( pos );
         }
@@ -457,6 +457,13 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char *& pos 
     pos += 7;
     SkipWhitespace( pos );
 
+    // Comments can existing between "include" directive and the path
+    if ( IsCommentBlockStart( pos ) )
+    {
+        SkipCommentBlock( pos );
+        SkipWhitespace( pos );
+    }
+
     // Get include string
     AString include;
     if ( ( *pos == '"' ) || ( *pos == '<' ) )
@@ -497,6 +504,13 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char *& pos )
     pos += 6;
     SkipWhitespace( pos );
 
+    // Comments can existing between "define" directive and macro name
+    if ( IsCommentBlockStart( pos ) )
+    {
+        SkipCommentBlock( pos );
+        SkipWhitespace( pos );
+    }
+
     // Get macro name
     AStackString macroName;
     const char * macroStart = pos;
@@ -508,6 +522,13 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char *& pos )
     }
 
     SkipWhitespace( pos );
+
+    // Comments can existing between macro name and value
+    if ( IsCommentBlockStart( pos ) )
+    {
+        SkipCommentBlock( pos );
+        SkipWhitespace( pos );
+    }
 
     // Is this defining an include path?
     AStackString include;
@@ -534,12 +555,19 @@ bool LightCache::ParseDirective_Import( IncludedFile & file, const char *& pos )
     return false;
 }
 
+//------------------------------------------------------------------------------
+/*static*/ bool LightCache::IsCommentBlockStart( const char * pos )
+{
+    return ( ( *pos == '/' ) && ( pos[ 1 ] == '*' ) );
+}
+
 // SkipCommentBlock
 //------------------------------------------------------------------------------
-void LightCache::SkipCommentBlock( const char *& pos )
+/*static*/ void LightCache::SkipCommentBlock( const char *& pos )
 {
     // Skip opening /*
-    ASSERT( ( pos[ 0 ] == '/' ) && ( pos[ 1 ] == '*' ) );
+    ASSERT( IsCommentBlockStart( pos ) );
+    pos += 2;
 
     // Skip to closing*/
     for ( ;; )
