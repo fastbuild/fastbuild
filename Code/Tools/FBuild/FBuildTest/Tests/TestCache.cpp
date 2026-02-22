@@ -45,6 +45,7 @@ private:
     void LightCache_NoStdInc() const;
     void LightCache_NoRebuild() const;
     void LightCache_MissingInclude() const;
+    void LightCache_CommentInDirective() const;
 
     // MSVC Static Analysis tests
     const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
@@ -102,6 +103,7 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( LightCache_NoStdInc )
     REGISTER_TEST( LightCache_NoRebuild )
     REGISTER_TEST( LightCache_MissingInclude )
+    REGISTER_TEST( LightCache_CommentInDirective )
 #if defined( __WINDOWS__ )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
     REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
@@ -1008,6 +1010,28 @@ void TestCache::LightCache_MissingInclude() const
         CheckStatsNode( 1, 0, Node::OBJECT_NODE );
         CheckLightCacheStores( fBuild, 0 );
         CheckLightCacheHits( fBuild, 0 );
+    }
+}
+
+//------------------------------------------------------------------------------
+void TestCache::LightCache_CommentInDirective() const
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_CommentInDirective/fbuild.bff";
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckLightCacheStores( fBuild, 1 );
     }
 }
 
