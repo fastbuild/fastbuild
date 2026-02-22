@@ -26,6 +26,44 @@
 
 <h1>Changelog</h1>
 
+<div class='newsitemheader'>
+    v1.19&nbsp;<font color='#bbbbbb'>(22nd-Feb-2026)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>OSX version now requires at least OSX 10.13</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>Add <a href="options.html#sourcefile">-sourcefile</a> cmdline option to support .CompileFileCommand in <a href="functions/vcxproject.html">VCXProject</a></li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix precompiled headers not rebuilding after PCHOptions edited (v1.18 regression)</li>
+        <li>VCXProject documentation example fixes (Thanks to Léo Carnaut-Delord)</li>
+        <li>Stop altering normal remote errors and impacting the Visual Studio Error List</li>
+        <li>Prevent rebuilding when LightCache encouters missing full-path includes (Thanks to Antoine Vugliano)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>        
+        <li>Light Cache</li>
+        <ul>
+            <li>LightCache now supports Clang & GCC</li>
+            <li>LightCache respects UseRelativePath when generating cache keys</li>
+            <li>LightCache can process comments in the middle of include directives</li>
+            <li><a href="options.html#summary">-summary<a/> shows additional info relating to LightCache use</li>
+        </ul>
+        <li>Add #elif support to bff parsing (Thanks to Dan Andrus)</li>
+        <li>Support <a href="functions/vcxproject.html">CompileFileCommand</a> (Ctrl+F7) with VS2022 or later (Thanks to Léo Carnaut-Delord)</li>
+        <li>Add "FASTBuild Task Provider" VSCode ext as 3rd party (Thanks to SherAndrei)</li>
+        <li>Add retries to LNK1140 & LNK1158 to work around MSVC linker /dynamicdeopt bugs</li>
+        <li>Exec exposes then Hidden flag to allow hiding from <a href="options.html#showtargets">-showtargets<a/></li>
+        <li><a href="options.html#summary">-summary<a/> omits distribution timing if not using distributed compilation</li>
+        <li>Reduce FBuild startup time slightly by avoiding redundant SetWorkingDir</li>
+    </ul>
+</div>
 
 <div class='newsitemheader'>
     v1.18&nbsp;<font color='#bbbbbb'>(29th-Nov-2025)</font>

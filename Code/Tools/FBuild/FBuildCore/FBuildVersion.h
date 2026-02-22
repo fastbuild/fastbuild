@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 // FASTBuild controlled versions
 #define FBUILD_VERSION_MAJOR 1
-#define FBUILD_VERSION_MINOR 18
+#define FBUILD_VERSION_MINOR 19
 
 // Version extensions reserved for 3rd party use
 #if !defined( FBUILD_VERSION_EXT )
