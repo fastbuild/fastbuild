@@ -40,6 +40,7 @@ REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
     REFLECT( m_Environment )
     REFLECT( m_ConcurrencyGroupName )
+    REFLECT( m_Hidden )
 
     // Internal State
     REFLECT( m_NumExecInputFiles, MetaHidden() )
