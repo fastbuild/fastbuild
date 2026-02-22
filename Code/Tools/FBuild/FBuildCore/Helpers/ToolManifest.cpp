@@ -28,20 +28,20 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
-    REFLECT(        m_ToolId,                       "ToolId",                       MetaHidden() )
-    REFLECT(        m_TimeStamp,                    "TimeStamp",                    MetaHidden() )
-    REFLECT(        m_MainExecutableRootPath,       "MainExecutableRootPath",       MetaHidden() )
-    REFLECT_ARRAY_OF_STRUCT( m_Files,               "Files",    ToolManifestFile,   MetaHidden() )
-    REFLECT_ARRAY(  m_CustomEnvironmentVariables,   "CustomEnvironmentVariables",   MetaHidden() )
+REFLECT_STRUCT_BEGIN( ToolManifest, Struct )
+    REFLECT( m_ToolId, MetaHidden() )
+    REFLECT( m_TimeStamp, MetaHidden() )
+    REFLECT( m_MainExecutableRootPath, MetaHidden() )
+    REFLECT( m_Files, MetaHidden() )
+    REFLECT( m_CustomEnvironmentVariables, MetaHidden() )
 REFLECT_END( ToolManifest )
 
-REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct, MetaNone() )
-    REFLECT( m_Name,        "Name",         MetaHidden() )
-    REFLECT( m_TimeStamp,   "TimeStamp",    MetaHidden() )
-    REFLECT( m_Hash,        "Hash",         MetaHidden() )
-    REFLECT( m_UncompressedContentSize, "UncompressedContentSize",  MetaHidden() )
-    REFLECT( m_CompressedContentSize, "CompressedContentSize",  MetaHidden() )
+REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct )
+    REFLECT( m_Name, MetaHidden() )
+    REFLECT( m_TimeStamp, MetaHidden() )
+    REFLECT( m_Hash, MetaHidden() )
+    REFLECT( m_UncompressedContentSize, MetaHidden() )
+    REFLECT( m_CompressedContentSize, MetaHidden() )
 REFLECT_END( ToolManifestFile )
 
 // CONSTRUCTOR (ToolManifestFile)

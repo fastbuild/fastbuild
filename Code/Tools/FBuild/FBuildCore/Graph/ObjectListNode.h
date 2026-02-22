@@ -15,6 +15,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
+class CompilerInfoNode;
 class CompilerNode;
 class Function;
 class NodeGraph;
@@ -58,6 +59,8 @@ public:
 
     void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
 
+    [[nodiscard]] const CompilerInfoNode * GetCompilerInfo() const { return m_CompilerInfoNode; }
+
     void EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
 protected:
@@ -68,6 +71,7 @@ protected:
     virtual BuildResult DoBuild( Job * job ) override;
 
     // internal helpers
+    void CalculateOwnerObjectListHash();
     bool CreateDynamicObjectNode( NodeGraph & nodeGraph,
                                   const AString & inputFileName,
                                   const AString & baseDir,
@@ -80,6 +84,11 @@ protected:
                                    const ObjectNode::CompilerFlags preprocessorFlags,
                                    const AString & objectName,
                                    const AString & objectInput );
+    [[nodiscard]] bool CheckLightCacheArgs( NodeGraph & nodeGraph,
+                                            const BFFToken * iter,
+                                            const Function * function,
+                                            bool compilingFiles,
+                                            CompilerInfoNode *& outCompilerInfoDependency ) const;
 
     // Exposed Properties
     AString m_Compiler;
@@ -117,6 +126,7 @@ protected:
     // Internal State
     CompilerNode * m_CompilerNode = nullptr;
     CompilerNode * m_PreprocessorNode = nullptr;
+    CompilerInfoNode * m_CompilerInfoNode = nullptr;
     AString m_PrecompiledHeaderName;
 #if defined( __WINDOWS__ )
     AString m_PrecompiledHeaderCPPFile;
@@ -127,6 +137,7 @@ protected:
     AString m_ExtraSourceDependenciesPath;
     uint32_t m_ObjectListInputStartIndex = 0;
     uint32_t m_ObjectListInputEndIndex = 0;
+    uint32_t m_OwnerObjectListHash = 0;
     ObjectNode::CompilerFlags m_CompilerFlags;
     ObjectNode::CompilerFlags m_PreprocessorFlags;
 };

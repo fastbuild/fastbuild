@@ -17,13 +17,13 @@
 
 // REFLECTION
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( CopyDirNode, Node, MetaNone() )
-    REFLECT_ARRAY(  m_SourcePaths,              "SourcePaths",              MetaPath() )
-    REFLECT(        m_Dest,                     "Dest",                     MetaPath() )
-    REFLECT_ARRAY(  m_SourcePathsPattern,       "SourcePathsPattern",       MetaOptional() )
-    REFLECT_ARRAY(  m_SourceExcludePaths,       "SourceExcludePaths",       MetaOptional() + MetaPath() )
-    REFLECT(        m_SourcePathsRecurse,       "SourcePathsRecurse",       MetaOptional() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+REFLECT_NODE_BEGIN( CopyDirNode, Node )
+    REFLECT( m_SourcePaths, MetaPath() + MetaRequired() )
+    REFLECT( m_Dest, MetaPath() + MetaRequired() )
+    REFLECT( m_SourcePathsPattern )
+    REFLECT( m_SourceExcludePaths, MetaPath() )
+    REFLECT( m_SourcePathsRecurse )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 REFLECT_END( CopyDirNode )
 
 // CONSTRUCTOR

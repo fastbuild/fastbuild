@@ -31,13 +31,13 @@ PRAGMA_DISABLE_POP_CLANG // -Wunknown-warning-option
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN_BASE( VSExternalProjectConfig )
-    REFLECT( m_Platform, "Platform", MetaNone() )
-    REFLECT( m_Config, "Config", MetaNone() )
+    REFLECT( m_Platform, MetaRequired() )
+    REFLECT( m_Config, MetaRequired() )
 REFLECT_END( VSExternalProjectConfig )
 
 REFLECT_NODE_BEGIN( VSProjectExternalNode, VSProjectBaseNode, MetaName( "ExternalProjectPath" ) + MetaFile() )
-    REFLECT( m_ProjectTypeGuid, "ProjectTypeGuid", MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_ProjectConfigs, "ProjectConfigs", VSExternalProjectConfig, MetaOptional() )
+    REFLECT( m_ProjectTypeGuid )
+    REFLECT( m_ProjectConfigs )
 REFLECT_END( VSProjectExternalNode )
 
 // CONSTRUCTOR

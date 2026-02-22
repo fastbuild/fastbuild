@@ -17,30 +17,30 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
-    REFLECT( m_Executable,          "Executable",           MetaFile() )
-    REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
-    REFLECT_ARRAY( m_CustomEnvironmentVariables, "CustomEnvironmentVariables",  MetaOptional() )
-    REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
-    REFLECT( m_AllowCaching,        "AllowCaching",         MetaOptional() )
-    REFLECT( m_AllowResponseFile,   "AllowResponseFile",    MetaOptional() )
-    REFLECT( m_ForceResponseFile,   "ForceResponseFile",    MetaOptional() )
-    REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
-    REFLECT( m_ClangRewriteIncludes, "ClangRewriteIncludes", MetaOptional() )
-    REFLECT( m_ClangGCCUpdateXLanguageArg, "ClangGCCUpdateXLanguageArg",  MetaOptional() )
-    REFLECT( m_ClangFixupUnity_Disable, "ClangFixupUnity_Disable", MetaOptional() )
-    REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
-    REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
-    REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
-    REFLECT_ARRAY( m_Environment,   "Environment",          MetaOptional() )
-    REFLECT( m_UseLightCache,       "UseLightCache_Experimental", MetaOptional() )
-    REFLECT( m_UseRelativePaths,    "UseRelativePaths_Experimental", MetaOptional() )
-    REFLECT( m_UseDeterministicPaths, "UseDeterministicPaths_Experimental", MetaOptional() )
-    REFLECT( m_SourceMapping,       "SourceMapping_Experimental", MetaOptional() )
+REFLECT_NODE_BEGIN( CompilerNode, Node )
+    REFLECT( m_Executable, MetaFile() + MetaRequired() )
+    REFLECT( m_ExtraFiles, MetaFile() )
+    REFLECT( m_CustomEnvironmentVariables )
+    REFLECT( m_AllowDistribution )
+    REFLECT( m_AllowCaching )
+    REFLECT( m_AllowResponseFile )
+    REFLECT( m_ForceResponseFile )
+    REFLECT( m_VS2012EnumBugFix )
+    REFLECT( m_ClangRewriteIncludes )
+    REFLECT( m_ClangGCCUpdateXLanguageArg )
+    REFLECT( m_ClangFixupUnity_Disable )
+    REFLECT( m_ExecutableRootPath, MetaPath() )
+    REFLECT( m_SimpleDistributionMode )
+    REFLECT_RENAME( m_CompilerFamilyString, "CompilerFamily" )
+    REFLECT( m_Environment )
+    REFLECT_RENAME( m_UseLightCache, "UseLightCache_Experimental" )
+    REFLECT_RENAME( m_UseRelativePaths, "UseRelativePaths_Experimental" )
+    REFLECT_RENAME( m_UseDeterministicPaths, "UseDeterministicPaths_Experimental" )
+    REFLECT_RENAME( m_SourceMapping, "SourceMapping_Experimental" )
 
     // Internal
-    REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
-    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_CompilerFamilyEnum, MetaHidden() )
+    REFLECT( m_Manifest, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
@@ -131,15 +131,6 @@ CompilerNode::CompilerNode()
 
     if ( InitializeCompilerFamily( iter, function ) == false )
     {
-        return false;
-    }
-
-    // The LightCache is only compatible with MSVC for now
-    // - GCC/Clang can be supported when built in include paths can be extracted
-    //   and -nostdinc/-nostdinc++ is handled
-    if ( m_UseLightCache && ( m_CompilerFamilyEnum != MSVC ) )
-    {
-        Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
         return false;
     }
 

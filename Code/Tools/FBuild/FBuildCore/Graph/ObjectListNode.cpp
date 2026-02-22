@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerInfoNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
@@ -27,57 +28,59 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
-    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile() )
-    REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
-    REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
-    REFLECT( m_CompilerOutputPath,                  "CompilerOutputPath",               MetaOptional() + MetaPath() )
-    REFLECT( m_CompilerOutputPrefix,                "CompilerOutputPrefix",             MetaOptional() )
-    REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
-    REFLECT( m_CompilerOutputKeepBaseExtension,     "CompilerOutputKeepBaseExtension",  MetaOptional() )
-    REFLECT( m_CompilerInputAllowNoFiles,           "CompilerInputAllowNoFiles",        MetaOptional() )
-    REFLECT_ARRAY( m_CompilerInputPath,             "CompilerInputPath",                MetaOptional() + MetaPath() )
-    REFLECT_ARRAY( m_CompilerInputPattern,          "CompilerInputPattern",             MetaOptional() )
-    REFLECT( m_CompilerInputPathRecurse,            "CompilerInputPathRecurse",         MetaOptional() )
-    REFLECT_ARRAY( m_CompilerInputExcludePath,      "CompilerInputExcludePath",         MetaOptional() + MetaPath() )
-    REFLECT_ARRAY( m_CompilerInputExcludedFiles,    "CompilerInputExcludedFiles",       MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY( m_CompilerInputExcludePattern,   "CompilerInputExcludePattern",      MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY( m_CompilerInputUnity,            "CompilerInputUnity",               MetaOptional() )
-    REFLECT_ARRAY( m_CompilerInputFiles,            "CompilerInputFiles",               MetaOptional() + MetaFile() )
-    REFLECT( m_CompilerInputFilesRoot,              "CompilerInputFilesRoot",           MetaOptional() + MetaPath() )
-    REFLECT_ARRAY( m_CompilerInputObjectLists,      "CompilerInputObjectLists",         MetaOptional() )
-    REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
-    REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
-    REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
-    REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
-    REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
-    REFLECT( m_Hidden,                              "Hidden",                           MetaOptional() )
+REFLECT_NODE_BEGIN( ObjectListNode, Node )
+    REFLECT( m_Compiler, MetaFile() + MetaAllowNonFile() + MetaRequired() )
+    REFLECT( m_CompilerOptions, MetaRequired() )
+    REFLECT( m_CompilerOptionsDeoptimized )
+    REFLECT( m_CompilerOutputPath, MetaPath() )
+    REFLECT( m_CompilerOutputPrefix )
+    REFLECT( m_CompilerOutputExtension )
+    REFLECT( m_CompilerOutputKeepBaseExtension )
+    REFLECT( m_CompilerInputAllowNoFiles )
+    REFLECT( m_CompilerInputPath, MetaPath() )
+    REFLECT( m_CompilerInputPattern )
+    REFLECT( m_CompilerInputPathRecurse )
+    REFLECT( m_CompilerInputExcludePath, MetaPath() )
+    REFLECT( m_CompilerInputExcludedFiles, MetaFile( true ) )
+    REFLECT( m_CompilerInputExcludePattern, MetaFile( true ) )
+    REFLECT( m_CompilerInputUnity )
+    REFLECT( m_CompilerInputFiles, MetaFile() )
+    REFLECT( m_CompilerInputFilesRoot, MetaPath() )
+    REFLECT( m_CompilerInputObjectLists )
+    REFLECT( m_CompilerForceUsing, MetaFile() )
+    REFLECT( m_DeoptimizeWritableFiles )
+    REFLECT( m_DeoptimizeWritableFilesWithToken )
+    REFLECT( m_AllowDistribution )
+    REFLECT( m_AllowCaching )
+    REFLECT( m_Hidden )
     // Precompiled Headers
-    REFLECT( m_PCHInputFile,                        "PCHInputFile",                     MetaOptional() + MetaFile() )
-    REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
-    REFLECT( m_PCHOptions,                          "PCHOptions",                       MetaOptional() )
+    REFLECT( m_PCHInputFile, MetaFile() )
+    REFLECT( m_PCHOutputFile, MetaFile() )
+    REFLECT( m_PCHOptions )
     // Preprocessor
-    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile() )
-    REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
-    REFLECT( m_ConcurrencyGroupName,                "ConcurrencyGroupName",             MetaOptional() )
+    REFLECT( m_Preprocessor, MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_PreprocessorOptions )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_ConcurrencyGroupName )
 
     // Internal State
-    REFLECT( m_CompilerNode,                        "CompilerNode",                     MetaHidden() )
-    REFLECT( m_PreprocessorNode,                    "PreprocessorNode",                 MetaHidden() )
-    REFLECT( m_PrecompiledHeaderName,               "PrecompiledHeaderName",            MetaHidden() )
+    REFLECT( m_CompilerNode, MetaHidden() )
+    REFLECT( m_PreprocessorNode, MetaHidden() )
+    REFLECT( m_CompilerInfoNode, MetaHidden() )
+    REFLECT( m_PrecompiledHeaderName, MetaHidden() )
 #if defined( __WINDOWS__ )
-    REFLECT( m_PrecompiledHeaderCPPFile,            "PrecompiledHeaderCPPFile",         MetaHidden() )
+    REFLECT( m_PrecompiledHeaderCPPFile, MetaHidden() )
 #endif
-    REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaHidden() )
-    REFLECT( m_ExtraPDBPath,                        "ExtraPDBPath",                     MetaHidden() )
-    REFLECT( m_ExtraASMPath,                        "ExtraASMPath",                     MetaHidden() )
-    REFLECT( m_ExtraSourceDependenciesPath,         "ExtraSourceDependenciesPath",      MetaHidden() )
-    REFLECT( m_ObjectListInputStartIndex,           "ObjectListInputStartIndex",        MetaHidden() )
-    REFLECT( m_ObjectListInputEndIndex,             "ObjectListInputEndIndex",          MetaHidden() )
-    REFLECT( m_CompilerFlags.m_Flags,               "ObjFlags",                         MetaHidden() )
-    REFLECT( m_PreprocessorFlags.m_Flags,           "ObjFlagsPreprocessor",             MetaHidden() )
-    REFLECT( m_ConcurrencyGroupIndex,               "ConcurrencyGroupIndex",            MetaHidden() )
+    REFLECT( m_PCHObjectFileName, MetaHidden() )
+    REFLECT( m_ExtraPDBPath, MetaHidden() )
+    REFLECT( m_ExtraASMPath, MetaHidden() )
+    REFLECT( m_ExtraSourceDependenciesPath, MetaHidden() )
+    REFLECT( m_ObjectListInputStartIndex, MetaHidden() )
+    REFLECT( m_ObjectListInputEndIndex, MetaHidden() )
+    REFLECT( m_OwnerObjectListHash, MetaHidden() )
+    REFLECT_RENAME( m_CompilerFlags.m_Flags, "ObjFlags", MetaHidden() )
+    REFLECT_RENAME( m_PreprocessorFlags.m_Flags, "ObjFlagsPreprocessor", MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex, MetaHidden() )
 REFLECT_END( ObjectListNode )
 
 // ObjectListNode
@@ -148,6 +151,8 @@ ObjectListNode::ObjectListNode()
         Error::Error_1101_MissingProperty( iter, function, AStackString( ".CompilerOptionsDeoptimized" ) );
         return false;
     }
+
+    CalculateOwnerObjectListHash();
 
     // Creating a PCH?
     const bool creatingPCH = ( m_PCHInputFile.IsEmpty() == false );
@@ -342,10 +347,26 @@ ObjectListNode::ObjectListNode()
         // clang-format on
     }
 
+    // Check LightCache compatibility
+    if ( !CheckLightCacheArgs( nodeGraph,
+                               iter,
+                               function,
+                               compilingFiles,
+                               m_CompilerInfoNode ) )
+    {
+        return false;
+    }
+
     // Store dependencies
-    m_StaticDependencies.SetCapacity( compilerInputPath.GetSize() +
+    m_StaticDependencies.SetCapacity( ( m_CompilerInfoNode ? 1 : 0 ) +
+                                      compilerInputPath.GetSize() +
                                       compilerInputUnity.GetSize() +
                                       compilerInputObjectLists.GetSize() );
+    if ( m_CompilerInfoNode )
+    {
+        m_StaticDependencies.Add( m_CompilerInfoNode );
+        m_ObjectListInputStartIndex++;
+    }
     m_StaticDependencies.Add( compilerInputPath );
     m_StaticDependencies.Add( compilerInputUnity );
     m_StaticDependencies.Add( compilerInputObjectLists );
@@ -719,6 +740,29 @@ void ObjectListNode::GetObjectFileName( const AString & fileName, const AString 
     objFile += GetObjExtension();
 }
 
+//------------------------------------------------------------------------------
+void ObjectListNode::CalculateOwnerObjectListHash()
+{
+    ASSERT( m_OwnerObjectListHash == 0 ); // Should only be called once
+
+    xxHash3Accumulator accumulator;
+    for ( const AString & string : GetCompilerForceUsing() )
+    {
+        accumulator.AddData( string );
+    }
+    accumulator.AddData( GetCompilerOptions() );
+    accumulator.AddData( GetCompilerOptionsDeoptimized() );
+    accumulator.AddData( GetCompilerOptionsPCH() );
+    accumulator.AddData( GetPCHObjectFileName() );
+    accumulator.AddData( GetPrecompiledHeaderName() );
+    const uint32_t flags = ( GetDeoptimizeWritableFiles() ? 1u : 0u ) |
+                           ( GetDeoptimizeWritableFilesWithToken() ? 2u : 0u ) |
+                           ( IsCachingAllowed() ? 4u : 0u ) |
+                           ( IsDistributionAllowed() ? 8u : 0u );
+    accumulator.AddData( &flags, sizeof( flags ) );
+    m_OwnerObjectListHash = accumulator.Finalize32();
+}
+
 // CreateDynamicObjectNode
 //------------------------------------------------------------------------------
 bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
@@ -797,11 +841,14 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const AString & objectName,
                                                const AString & objectInput )
 {
+    ASSERT( m_OwnerObjectListHash );
+
     ObjectNode * node = nodeGraph.CreateNode<ObjectNode>( objectName, iter );
     node->m_CompilerInputFile = objectInput;
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
     node->m_OwnerObjectList = this;
+    node->m_OwnerObjectListHash = m_OwnerObjectListHash;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {
@@ -866,6 +913,70 @@ void ObjectListNode::EnumerateInputFiles( void ( *callback )( const AString & in
             ASSERT( false ); // unexpected node type
         }
     }
+}
+
+//------------------------------------------------------------------------------
+bool ObjectListNode::CheckLightCacheArgs( NodeGraph & nodeGraph,
+                                          const BFFToken * iter,
+                                          const Function * function,
+                                          bool compilingFiles,
+                                          CompilerInfoNode *& outCompilerInfoDependency ) const
+{
+    outCompilerInfoDependency = nullptr;
+
+    // If we're not compiling any files (for example in a Library()) then we
+    // don't care about compiler compatibility as the compiler is unused
+    if ( compilingFiles == false )
+    {
+        return true;
+    }
+
+    CompilerNode * compiler = m_PreprocessorNode ? m_PreprocessorNode : m_CompilerNode;
+    if ( compiler->GetUseLightCache() == false )
+    {
+        return true; // Not using the LightCache, so there can be no problems
+    }
+
+    const ObjectNode::CompilerFlags & flags = m_PreprocessorNode ? m_PreprocessorFlags
+                                                                 : m_CompilerFlags;
+
+    // MSVC?
+    if ( flags.IsMSVC() )
+    {
+        return true; // MSVC can always be used
+    }
+
+    // Clang?
+    if ( flags.IsClang() || flags.IsClangCl() || flags.IsGCC() )
+    {
+        AStackString ciNodeName;
+        ciNodeName.Format( "%s_$Info_%c%c$",
+                           compiler->GetName().Get(),
+                           flags.IsNoStdInc() ? '1' : '0',
+                           flags.IsNoStdIncPP() ? '1' : '0' );
+        CompilerInfoNode * ciNode = nullptr;
+        if ( const Node * node = nodeGraph.FindNode( ciNodeName ) )
+        {
+            ciNode = node->CastTo<CompilerInfoNode>();
+        }
+        else
+        {
+            ciNode = nodeGraph.CreateNode( Node::COMPILER_INFO_NODE,
+                                           ciNodeName,
+                                           iter )
+                         ->CastTo<CompilerInfoNode>();
+            ciNode->m_Compiler = compiler;
+            ciNode->m_NoStdInc = flags.IsNoStdInc();
+            ciNode->m_NoStdIncPP = flags.IsNoStdIncPP();
+            VERIFY( ciNode->Initialize( nodeGraph, iter, function ) ); // Failure should be impossible
+        }
+        outCompilerInfoDependency = ciNode;
+        return true;
+    }
+
+    // Unsupported Compiler
+    Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
+    return false;
 }
 
 //------------------------------------------------------------------------------

@@ -8,10 +8,10 @@
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
-#include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Reflection/ReflectedProperty.h"
+#include "Core/Reflection/Struct.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -25,6 +25,9 @@ class TestReflection : public TestGroup
 private:
     DECLARE_TESTS
 
+    void IsArrayProperty() const;
+    void IsStruct() const;
+    void GetStructType() const;
     void TestGetSet() const;
     void TestInheritance() const;
     void MetaData() const;
@@ -34,6 +37,9 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestReflection )
+    REGISTER_TEST( IsArrayProperty )
+    REGISTER_TEST( IsStruct )
+    REGISTER_TEST( GetStructType )
     REGISTER_TEST( TestGetSet )
     REGISTER_TEST( TestInheritance )
     REGISTER_TEST( MetaData )
@@ -42,7 +48,7 @@ REGISTER_TESTS_END
 
 // TestStruct
 //------------------------------------------------------------------------------
-struct TestStruct
+struct TestStruct : public Struct
 {
     REFLECT_STRUCT_DECLARE( TestStruct )
 public:
@@ -55,7 +61,7 @@ public:
 };
 
 REFLECT_STRUCT_BEGIN_BASE( TestStruct )
-    REFLECT( m_MyInt,   "MyInt",    MetaNone() )
+    REFLECT( m_MyInt )
 REFLECT_END( TestStruct )
 
 // TestObject
@@ -122,22 +128,74 @@ private: // ensure reflection can set private members
     Array<TestStruct> m_StructArray;
 };
 
-REFLECT_BEGIN( TestObject, Object, MetaNone() )
-    REFLECT( m_Float,   "Float",    MetaNone() )
-    REFLECT( m_UInt8,   "UInt8",    MetaNone() )
-    REFLECT( m_UInt16,  "UInt16",   MetaNone() )
-    REFLECT( m_UInt32,  "UInt32",   MetaNone() )
-    REFLECT( m_UInt64,  "UInt64",   MetaNone() )
-    REFLECT( m_Int8,    "Int8",     MetaNone() )
-    REFLECT( m_Int16,   "Int16",    MetaNone() )
-    REFLECT( m_Int32,   "Int32",    MetaNone() )
-    REFLECT( m_Int64,   "Int64",    MetaNone() )
-    REFLECT( m_Bool,    "Bool",     MetaNone() )
-    REFLECT( m_AString, "AString",  MetaNone() )
-    REFLECT_STRUCT( m_TestStruct,   "TestStruct",   TestStruct, MetaNone() )
-    REFLECT_ARRAY( m_FloatArray, "FloatArray", MetaNone() )
-    REFLECT_ARRAY_OF_STRUCT( m_StructArray, "StructArray", TestStruct, MetaNone() )
+REFLECT_BEGIN( TestObject, Object )
+    REFLECT( m_Float )
+    REFLECT( m_UInt8 )
+    REFLECT( m_UInt16 )
+    REFLECT( m_UInt32 )
+    REFLECT( m_UInt64 )
+    REFLECT( m_Int8 )
+    REFLECT( m_Int16 )
+    REFLECT( m_Int32 )
+    REFLECT( m_Int64 )
+    REFLECT( m_Bool )
+    REFLECT( m_AString )
+    REFLECT( m_TestStruct )
+    REFLECT( m_FloatArray )
+    REFLECT( m_StructArray )
 REFLECT_END( TestObject )
+
+//------------------------------------------------------------------------------
+void TestReflection::IsArrayProperty() const
+{
+    const float singleFloat = 0.0f;
+    const TestStruct singleStruct;
+    const Array<float> arrayFloats;
+    const Array<TestStruct> arrayStructs;
+
+    static_assert( ::IsArrayProperty( &singleFloat ) == false );
+    static_assert( ::IsArrayProperty( &singleStruct ) == false );
+    static_assert( ::IsArrayProperty( &arrayFloats ) == true );
+    static_assert( ::IsArrayProperty( &arrayStructs ) == true );
+}
+
+//------------------------------------------------------------------------------
+void TestReflection::IsStruct() const
+{
+    // Structures (alone or in Arrays)
+    const TestStruct singleStruct;
+    const Array<TestStruct> arrayStructs;
+    static_assert( ::IsStruct( &singleStruct ) == true );
+    static_assert( ::IsStruct( &arrayStructs ) == true );
+
+    // Non-Struct single types
+    const float singleFloat = 0.0f;
+    const AString singleString;
+    static_assert( ::IsStruct( &singleFloat ) == false );
+    static_assert( ::IsStruct( &singleString ) == false );
+
+    // Non-Struct arrays
+    const Array<float> arrayFloats;
+    const Array<AString> arrayStrings;
+    static_assert( ::IsStruct( &arrayFloats ) == false );
+    static_assert( ::IsStruct( &arrayStrings ) == false );
+}
+
+//------------------------------------------------------------------------------
+void TestReflection::GetStructType() const
+{
+    // Anything that derives from Struct should return valid ReflectionInfo
+    const TestStruct singleStruct;
+    const Array<TestStruct> arrayStructs;
+    TEST_ASSERT( ::GetStructType( &singleStruct ) == TestStruct::GetReflectionInfoS() );
+    TEST_ASSERT( ::GetStructType( &arrayStructs ) == TestStruct::GetReflectionInfoS() );
+
+    // Non-Struct types should return nullptr
+    const float singleFloat = 0.0f;
+    const Array<float> arrayFloats;
+    TEST_ASSERT( ::GetStructType( &singleFloat ) == nullptr );
+    TEST_ASSERT( ::GetStructType( &arrayFloats ) == nullptr );
+}
 
 // TestGetSet
 //------------------------------------------------------------------------------
@@ -194,12 +252,12 @@ public:
     int m_B;
 };
 
-REFLECT_BEGIN( BaseClass, Object, MetaNone() )
-    REFLECT( m_A, "a", MetaNone() )
+REFLECT_BEGIN( BaseClass, Object )
+    REFLECT( m_A )
 REFLECT_END( BaseClass )
 
-REFLECT_BEGIN( DerivedClass, BaseClass, MetaNone() )
-    REFLECT( m_B, "b", MetaNone() )
+REFLECT_BEGIN( DerivedClass, BaseClass )
+    REFLECT( m_B )
 REFLECT_END( DerivedClass )
 
 void TestReflection::TestInheritance() const
@@ -210,16 +268,16 @@ void TestReflection::TestInheritance() const
     // Set property on class
     const ReflectionInfo * ri = obj.GetReflectionInfoV();
     const int bValue = 200;
-    TEST_ASSERT( ri->SetProperty( &obj, "b", bValue ) );
+    TEST_ASSERT( ri->SetProperty( &obj, "B", bValue ) );
     int bValueGet = 0;
-    TEST_ASSERT( ri->GetProperty( &obj, "b", &bValueGet ) );
+    TEST_ASSERT( ri->GetProperty( &obj, "B", &bValueGet ) );
     TEST_ASSERT( bValue == bValueGet );
 
     // Set property on base class
     const int aValue = 100;
-    TEST_ASSERT( ri->SetProperty( &obj, "a", aValue ) );
+    TEST_ASSERT( ri->SetProperty( &obj, "A", aValue ) );
     int aValueGet = 0;
-    TEST_ASSERT( ri->GetProperty( &obj, "a", &aValueGet ) );
+    TEST_ASSERT( ri->GetProperty( &obj, "A", &aValueGet ) );
     TEST_ASSERT( aValue == aValueGet );
 }
 
@@ -232,8 +290,8 @@ public:
     uint32_t m_Property = 0;
 };
 
-REFLECT_BEGIN( ObjectWithMetaData, Object, MetaFile() + MetaOptional() + MetaPath() )
-    REFLECT( m_Property, "Property", MetaFile() + MetaOptional() + MetaPath() )
+REFLECT_BEGIN( ObjectWithMetaData, Object, MetaFile() + MetaPath() )
+    REFLECT( m_Property, MetaFile() + MetaPath() )
 REFLECT_END( ObjectWithMetaData )
 
 void TestReflection::MetaData() const
@@ -243,13 +301,11 @@ void TestReflection::MetaData() const
 
     // Check all MetaData is present on object
     TEST_ASSERT( ri->HasMetaData<Meta_File>() );
-    TEST_ASSERT( ri->HasMetaData<Meta_Optional>() );
     TEST_ASSERT( ri->HasMetaData<Meta_Path>() );
 
     // Check all MetaData is present on property
     const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString( "Property" ) );
     TEST_ASSERT( rp->HasMetaData<Meta_File>() );
-    TEST_ASSERT( rp->HasMetaData<Meta_Optional>() );
     TEST_ASSERT( rp->HasMetaData<Meta_Path>() );
 }
 

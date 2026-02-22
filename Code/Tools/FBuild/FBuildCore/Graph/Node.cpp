@@ -88,6 +88,7 @@
     "VSExtProj",
     "TextFile",
     "ListDependencies",
+    "CompilerInfo",
 };
 // clang-format on
 static Mutex g_NodeEnvStringMutex;
@@ -144,7 +145,7 @@ IMetaData & MetaIgnoreForComparison()
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_STRUCT_BEGIN_ABSTRACT( Node, Struct, MetaNone() )
+REFLECT_STRUCT_BEGIN_ABSTRACT( Node, Struct )
 REFLECT_END( Node )
 
 // CONSTRUCTOR

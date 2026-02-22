@@ -33,28 +33,28 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
-    REFLECT( m_Linker,                          "Linker",                       MetaFile() )
-    REFLECT( m_LinkerOptions,                   "LinkerOptions",                MetaNone() )
-    REFLECT( m_LinkerType,                      "LinkerType",                   MetaOptional() )
-    REFLECT( m_LinkerAllowResponseFile,         "LinkerAllowResponseFile",      MetaOptional() )
-    REFLECT( m_LinkerForceResponseFile,         "LinkerForceResponseFile",      MetaOptional() )
-    REFLECT_ARRAY( m_Libraries,                 "Libraries",                    MetaFile() + MetaAllowNonFile() )
-    REFLECT_ARRAY( m_Libraries2,                "Libraries2",                   MetaFile() + MetaAllowNonFile() + MetaOptional() )
-    REFLECT_ARRAY( m_LinkerAssemblyResources,   "LinkerAssemblyResources",      MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
-    REFLECT( m_LinkerLinkObjects,               "LinkerLinkObjects",            MetaOptional() )
-    REFLECT( m_LinkerStampExe,                  "LinkerStampExe",               MetaOptional() + MetaFile() )
-    REFLECT( m_LinkerStampExeArgs,              "LinkerStampExeArgs",           MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
-    REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
-    REFLECT( m_ConcurrencyGroupName,            "ConcurrencyGroupName",         MetaOptional() )
+    REFLECT( m_Linker, MetaFile() + MetaRequired() )
+    REFLECT( m_LinkerOptions, MetaRequired() )
+    REFLECT( m_LinkerType )
+    REFLECT( m_LinkerAllowResponseFile )
+    REFLECT( m_LinkerForceResponseFile )
+    REFLECT( m_Libraries, MetaFile() + MetaAllowNonFile() + MetaRequired() )
+    REFLECT( m_Libraries2, MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_LinkerAssemblyResources, MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
+    REFLECT( m_LinkerLinkObjects )
+    REFLECT( m_LinkerStampExe, MetaFile() )
+    REFLECT( m_LinkerStampExeArgs )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Environment )
+    REFLECT( m_ConcurrencyGroupName )
 
     // Internal State
-    REFLECT( m_Libraries2StartIndex,            "Libraries2StartIndex",         MetaHidden() )
-    REFLECT( m_Flags,                           "Flags",                        MetaHidden() )
-    REFLECT( m_AssemblyResourcesStartIndex,     "AssemblyResourcesStartIndex",  MetaHidden() )
-    REFLECT( m_AssemblyResourcesNum,            "AssemblyResourcesNum",         MetaHidden() )
-    REFLECT( m_ImportLibName,                   "ImportLibName",                MetaHidden() )
-    REFLECT( m_ConcurrencyGroupIndex,           "ConcurrencyGroupIndex",        MetaHidden() )
+    REFLECT( m_Libraries2StartIndex, MetaHidden() )
+    REFLECT( m_Flags, MetaHidden() )
+    REFLECT( m_AssemblyResourcesStartIndex, MetaHidden() )
+    REFLECT( m_AssemblyResourcesNum, MetaHidden() )
+    REFLECT( m_ImportLibName, MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex, MetaHidden() )
 REFLECT_END( LinkerNode )
 
 // CONSTRUCTOR
@@ -285,6 +285,22 @@ LinkerNode::~LinkerNode()
                 if ( result == 1136 )
                 {
                     FLOG_WARN( "FBuild: Warning: Linker corrupted the PDB (LNK1136), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
+                // Did the linker encounter "fatal error LNK1140: limit exceeded for program database"?
+                // Unbounded pdb growth results in this has been seen with /dynamicdeopt with VS2022.
+                if ( result == 1140 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker exceeded pdb size limit (LNK1140), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
+                // Did the linker encounter "fatal error LNK1158 : cannot run 'shadow build'"?
+                // This has been seen with /dynamicdeopt with VS2022 and appears to be a bug
+                if ( result == 1158 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker failed with (LNK1158), retrying '%s'", GetName().Get() );
                     continue; // try again
                 }
 

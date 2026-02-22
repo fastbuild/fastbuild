@@ -19,4 +19,9 @@ ObjectList( 'ObjectList' )
     .CompilerOutputPath = '$Out$/Test/Cache/LightCache_IncludeHierarchy/'
 
     .CompilerOptions    + ' -I$TestRoot$/Data/'
+
+                        // TODO:C Why is this additional include needed?
+                        #if !__WINDOWS__
+                            + ' -I$TestRoot$/Data/TestCache/LightCache_IncludeHierarchy/Folder1/'
+                        #endif
 }

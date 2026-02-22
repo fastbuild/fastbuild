@@ -23,12 +23,6 @@
                           ]
     .LZ4Options_x64Clang= [
                             .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
-
-                            // When mixing old versions of Clang with VS2019, there are some problems with certian
-                            // bitscan intrinsics, so we disable their use here
-                            #if USING_CLANG_8 || USING_CLANG_9
-                                .LZ4CompilerOptions + ' -DLZ4_FORCE_SW_BITCOUNT'
-                            #endif
                           ]
     .LZ4Options_x64Linux= [
                             .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance

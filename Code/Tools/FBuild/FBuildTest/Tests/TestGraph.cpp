@@ -104,7 +104,7 @@ public:
 
     using Node::FixupPathForVSIntegration;
 };
-REFLECT_BEGIN( NodeTestHelper, Node, MetaNone() )
+REFLECT_BEGIN( NodeTestHelper, Node )
 REFLECT_END( NodeTestHelper )
 
 // FileNodeTestHelper
@@ -138,6 +138,7 @@ void TestGraph::TestNodeTypes() const
 
     // Test each node can be created and type mappings are consistent
 #define TEST_NODE( TYPE, TYPE_ENUM, FRIENDLY_TYPE, WINDOWS_PATH, OTHER_PATH ) \
+    do \
     { \
         CHOOSE_NAME( WINDOWS_PATH, OTHER_PATH ); \
         const TYPE * node = ng.CreateNode<TYPE>( name ); \

@@ -43,7 +43,7 @@ Details of the FASTBuild configuration file syntax can be grouped into 4 categor
 <b>Directives</b>
 <ul>
   <li><a href='#define'>#define / #undef</a></li>
-  <li><a href='#if'>#if / #else / #endif</a></li>
+  <li><a href='#if'>#if / #elif / #else / #endif</a></li>
   <li><a href='#import'>#import</a></li>
   <li><a href='#include'>#include</a></li>
   <li><a href='#once'>#once</a></li>
@@ -134,11 +134,11 @@ Examples:
  </div>
 
     <div class='newsitemheader' id='if'>
-      #if / #else / #endif
+      #if / #elif / #else / #endif
     </div>
     <div class='newsitembody'>
 <p>
-#if / #else / #endif directives allow parts of a bff configuration file to be applied conditionally,
+#if / #elif / #else / #endif directives allow parts of a bff configuration file to be applied conditionally,
 depending on previous #define declarations. Limited support for the boolean operators && and || for
 logical AND and OR respectively is available. Conditions are parsed in C precedence order (&& takes
 precedence over ||). Currently there is no support for parentheses within expressions.
@@ -146,14 +146,16 @@ precedence over ||). Currently there is no support for parentheses within expres
 Examples:
 <div class='code'>#if USE_MSVC
     .CompilerOptions = '/c "%1" /Fo"%2"' 
+#elif USE_CLANG
+    .CompilerOptions = '-c "%1" -o "%2"'
 #else
-    .CompilerOptions = '-c "%1" -o "%2"' 
+    No compiler specified // Cause an error
 #endif
 </div>
 <p>
-An if can be inverted with the ! operator:</p>
+An if expression can be inverted with the ! operator:</p>
 Examples:
-<div class='code'>#if !__WINDOWS__
+<div class='code'>#if !USE_MSVC
     #define USE_CLANG
 #endif
 </div>
@@ -180,6 +182,15 @@ Examples:
 <tr><td>__OSX__</td><td>Defined if running on OS X</td></tr>
 <tr><td>__WINDOWS__</td><td>Defined if running on Windows</td></tr>
 </table>
+Example:
+<div class='code'>#if __LINUX__
+    #define USE_GCC
+#elif __OSX__
+    #define USE_CLANG
+#elif __WINDOWS__
+    #define USE_MSVC
+#endif
+</div>
 <p>Additionally "exists" can be used to branch on the existence of an environment variable.</p>
 Example:
 <div class='code'>#if exists(MY_ENV_VAR)
@@ -544,6 +555,6 @@ FunctionB( 'ALiteralString' .APreviouslyDeclaredString )
 </div>
 
 
-    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2026 Franta Fulin</div></div></div>
 </body>
 </html>

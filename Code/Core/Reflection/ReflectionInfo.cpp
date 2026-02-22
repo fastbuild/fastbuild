@@ -167,36 +167,21 @@ const IMetaData * ReflectionInfo::HasMetaDataInternal( const ReflectionInfo * ri
     return m_SuperClass ? m_SuperClass->HasMetaDataInternal( ri ) : nullptr;
 }
 
-// AddProperty
 //------------------------------------------------------------------------------
-void ReflectionInfo::AddProperty( uint32_t offset, const char * memberName, PropertyType type )
+void ReflectionInfo::AddProperty( uint32_t offset,
+                                  const char * memberName,
+                                  PropertyType type,
+                                  bool isArray,
+                                  const ReflectionInfo * structInfo )
 {
-    ReflectedProperty * r = new ReflectedProperty( memberName, offset, type, false );
-    m_Properties.Append( r );
-}
-
-// AddPropertyStruct
-//------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo )
-{
-    ReflectedPropertyStruct * r = new ReflectedPropertyStruct( memberName, offset, structInfo );
-    m_Properties.Append( r );
-}
-
-// AddPropertyArray
-//------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyArray( uint32_t offset, const char * memberName, PropertyType type )
-{
-    ReflectedProperty * r = new ReflectedProperty( memberName, offset, type, true );
-    m_Properties.Append( r );
-}
-
-// AddPropertyArrayOfStruct
-//------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyArrayOfStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo )
-{
-    ReflectedPropertyStruct * r = new ReflectedPropertyStruct( memberName, offset, structInfo, true );
-    m_Properties.Append( r );
+    if ( structInfo )
+    {
+        m_Properties.EmplaceBack( new ReflectedPropertyStruct( memberName, offset, structInfo, isArray ) );
+    }
+    else
+    {
+        m_Properties.EmplaceBack( new ReflectedProperty( memberName, offset, type, isArray ) );
+    }
 }
 
 // AddMetaData

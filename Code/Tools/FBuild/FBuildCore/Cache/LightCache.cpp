@@ -6,8 +6,12 @@
 #include "LightCache.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerInfoNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 
@@ -56,6 +60,7 @@ public:
     uint64_t m_FileNameHash;
     AString m_FileName;
     bool m_Exists;
+    uint64_t m_RelativePathHash;
     uint64_t m_ContentHash;
     Array<Include> m_Includes;
     Array<const IncludeDefine *> m_IncludeDefines;
@@ -255,6 +260,7 @@ LightCache::~LightCache() = default;
 // Hash
 //------------------------------------------------------------------------------
 bool LightCache::Hash( ObjectNode * node,
+                       const CompilerInfoNode * compilerInfo,
                        const AString & compilerArgs,
                        uint64_t & outSourceHash,
                        Array<AString> & outIncludes )
@@ -270,11 +276,26 @@ bool LightCache::Hash( ObjectNode * node,
         return false;
     }
 
+    // If using relative paths, we'll need the base path
+    const bool useRelativePaths = node->GetOwnerObjectList().GetCompiler()->GetUseRelativePaths();
+    if ( useRelativePaths )
+    {
+        m_BasePath = FBuild::Get().GetOptions().GetWorkingDir();
+        PathUtils::EnsureTrailingSlash( m_BasePath );
+    }
+
     StackArray<AString> forceIncludes;
     ProjectGeneratorBase::ExtractIncludePaths( compilerArgs,
                                                m_IncludePaths,
                                                forceIncludes,
                                                false ); // escapeQuotes
+
+    // If CompilerInfo is provided (Clang/GCC), add the additional
+    // system includes
+    if ( compilerInfo )
+    {
+        m_IncludePaths.Append( compilerInfo->GetBuiltInIncludes() );
+    }
 
     // Ensure all includes are slash terminated
     for ( AString & includePath : m_IncludePaths )
@@ -317,7 +338,9 @@ bool LightCache::Hash( ObjectNode * node,
     outIncludes.SetCapacity( numIncludes );
     for ( const IncludedFile * file : m_AllIncludedFiles )
     {
-        hashes.Append( file->m_FileNameHash ); // Filename can change compilation result
+        // Filename can change compilation result
+        hashes.Append( useRelativePaths ? file->m_RelativePathHash
+                                        : file->m_FileNameHash );
         hashes.Append( file->m_ContentHash );
         outIncludes.Append( file->m_FileName );
     }
@@ -387,7 +410,7 @@ void LightCache::Parse( IncludedFile * file, FileStream & f )
         }
 
         // block comment?
-        if ( ( c == '/' ) && ( pos[ 1 ] == '*' ) )
+        if ( IsCommentBlockStart( pos ) )
         {
             SkipCommentBlock( pos );
         }
@@ -434,6 +457,13 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char *& pos 
     pos += 7;
     SkipWhitespace( pos );
 
+    // Comments can existing between "include" directive and the path
+    if ( IsCommentBlockStart( pos ) )
+    {
+        SkipCommentBlock( pos );
+        SkipWhitespace( pos );
+    }
+
     // Get include string
     AString include;
     if ( ( *pos == '"' ) || ( *pos == '<' ) )
@@ -474,6 +504,13 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char *& pos )
     pos += 6;
     SkipWhitespace( pos );
 
+    // Comments can existing between "define" directive and macro name
+    if ( IsCommentBlockStart( pos ) )
+    {
+        SkipCommentBlock( pos );
+        SkipWhitespace( pos );
+    }
+
     // Get macro name
     AStackString macroName;
     const char * macroStart = pos;
@@ -485,6 +522,13 @@ bool LightCache::ParseDirective_Define( IncludedFile & file, const char *& pos )
     }
 
     SkipWhitespace( pos );
+
+    // Comments can existing between macro name and value
+    if ( IsCommentBlockStart( pos ) )
+    {
+        SkipCommentBlock( pos );
+        SkipWhitespace( pos );
+    }
 
     // Is this defining an include path?
     AStackString include;
@@ -511,12 +555,19 @@ bool LightCache::ParseDirective_Import( IncludedFile & file, const char *& pos )
     return false;
 }
 
+//------------------------------------------------------------------------------
+/*static*/ bool LightCache::IsCommentBlockStart( const char * pos )
+{
+    return ( ( *pos == '/' ) && ( pos[ 1 ] == '*' ) );
+}
+
 // SkipCommentBlock
 //------------------------------------------------------------------------------
-void LightCache::SkipCommentBlock( const char *& pos )
+/*static*/ void LightCache::SkipCommentBlock( const char *& pos )
 {
     // Skip opening /*
-    ASSERT( ( pos[ 0 ] == '/' ) && ( pos[ 1 ] == '*' ) );
+    ASSERT( IsCommentBlockStart( pos ) );
+    pos += 2;
 
     // Skip to closing*/
     for ( ;; )
@@ -713,7 +764,7 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
         }
     }
 
-    if ( file == nullptr )
+    if ( ( file == nullptr ) || ( file->m_Exists == false ) )
     {
         // Include not found. This is ok because:
         // a) The file might not be needed. If the include is within an inactive part of the file
@@ -884,6 +935,12 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     newFile->m_FileName = fileName;
     newFile->m_Exists = false;
     newFile->m_ContentHash = 0;
+    if ( m_BasePath.IsEmpty() == false )
+    {
+        AStackString relativePath;
+        PathUtils::GetRelativePath( m_BasePath, fileName, relativePath );
+        newFile->m_RelativePathHash = xxHash3::Calc64( relativePath );
+    }
 
     // Try to open the new file
     FileStream f;

@@ -453,6 +453,7 @@ bool BFFTokenizer::HandleIdentifier( const char *& pos, const char * /*end*/, co
 
     // - Keywords
     if ( ( identifier == BFF_KEYWORD_DEFINE ) ||
+         ( identifier == BFF_KEYWORD_ELIF ) ||
          ( identifier == BFF_KEYWORD_ELSE ) ||
          ( identifier == BFF_KEYWORD_EXISTS ) ||
          ( identifier == BFF_KEYWORD_FILE_EXISTS ) ||
@@ -531,36 +532,13 @@ bool BFFTokenizer::HandleDirective( const char *& pos, const char * end, const B
     ASSERT( *pos == '#' );
     ++pos;
 
-    // Take note of the number of non-directive tokens
-    const size_t numTokens = m_Tokens.GetSize();
-
-    // Find the limits of the current line (directives cannot span lines)
-    const char * argsStart = pos;
-    SkipToStartOfNextLine( pos, end );
-    const char * argsEnd = pos;
-
-    // Tokenize the line
-    m_ParsingDirective = true;
-    if ( Tokenize( file, argsStart, argsEnd ) == false )
-    {
-        return false; // Tokenize will have emitted an error
-    }
-    m_ParsingDirective = false;
-
-    // Remove directive args tokens (the directive parsing consumes them)
-    const size_t numArgTokens = m_Tokens.GetSize() - numTokens;
     StackArray<BFFToken> args;
-    for ( size_t i = 0; i < numArgTokens; ++i )
-    {
-        args.Append( Move( m_Tokens[ numTokens + i ] ) );
-    }
-    for ( size_t i = 0; i < numArgTokens; ++i )
-    {
-        m_Tokens.Pop(); // Avoiding use of SetSize as this requires a default constructor
-    }
+    const char * argsStart = pos;
 
-    // Terminate arg stream so handlers can safely manage invalid cases
-    args.EmplaceBack( file, pos, BFFTokenType::EndOfFile, AString::GetEmpty() );
+    if ( ParseDirectiveLine( pos, end, file, args ) == false )
+    {
+        return false;
+    }
 
     BFFTokenRange argsRange( args.Begin(), args.End() );
 
@@ -575,6 +553,11 @@ bool BFFTokenizer::HandleDirective( const char *& pos, const char * end, const B
         {
             directiveName = "define";
             result = HandleDirective_Define( file, pos, end, argsRange );
+        }
+        else if ( directive == "elif" )
+        {
+            directiveName = "elif";
+            result = HandleDirective_Elif( file, pos, end, argsRange );
         }
         else if ( directive == "else" )
         {
@@ -635,6 +618,43 @@ bool BFFTokenizer::HandleDirective( const char *& pos, const char * end, const B
     return false;
 }
 
+// ParseDirectiveLine
+//------------------------------------------------------------------------------
+bool BFFTokenizer::ParseDirectiveLine( const char *& pos, const char * end, const BFFFile & file, StackArray<BFFToken> & argsOut )
+{
+    // Take note of the number of non-directive tokens
+    const size_t numTokens = m_Tokens.GetSize();
+
+    // Find the limits of the current line (directives cannot span lines)
+    const char * argsStart = pos;
+    SkipToStartOfNextLine( pos, end );
+    const char * argsEnd = pos;
+
+    // Tokenize the line
+    ASSERT( m_ParsingDirective == false );
+    m_ParsingDirective = true;
+    if ( Tokenize( file, argsStart, argsEnd ) == false )
+    {
+        return false; // Tokenize will have emitted an error
+    }
+    m_ParsingDirective = false;
+
+    // Remove directive args tokens (the directive parsing consumes them)
+    const size_t numArgTokens = m_Tokens.GetSize() - numTokens;
+    for ( size_t i = 0; i < numArgTokens; ++i )
+    {
+        argsOut.Append( Move( m_Tokens[ numTokens + i ] ) );
+    }
+    for ( size_t i = 0; i < numArgTokens; ++i )
+    {
+        m_Tokens.Pop(); // Avoiding use of SetSize as this requires a default constructor
+    }
+
+    // Terminate arg stream so handlers can safely manage invalid cases
+    argsOut.EmplaceBack( file, pos, BFFTokenType::EndOfFile, AString::GetEmpty() );
+    return true;
+}
+
 // HandleDirective_Define
 //------------------------------------------------------------------------------
 bool BFFTokenizer::HandleDirective_Define( const BFFFile & /*file*/,
@@ -666,6 +686,21 @@ bool BFFTokenizer::HandleDirective_Define( const BFFFile & /*file*/,
     return true;
 }
 
+// HandleDirective_Elif
+//------------------------------------------------------------------------------
+bool BFFTokenizer::HandleDirective_Elif( const BFFFile & /*file*/,
+                                         const char *& /*pos*/,
+                                         const char * /*end*/,
+                                         BFFTokenRange & argsIter )
+{
+    ASSERT( argsIter->IsKeyword( "elif" ) );
+
+    // Finding the elif directive is handled by ParseIfDirective, so if we hit one
+    // by itself, that's an error
+    Error::Error_1048_ElifWithoutIf( argsIter.GetCurrent() );
+    return false;
+}
+
 // HandleDirective_Else
 //------------------------------------------------------------------------------
 bool BFFTokenizer::HandleDirective_Else( const BFFFile & /*file*/,
@@ -691,6 +726,109 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
     ASSERT( argsIter->IsKeyword( "if" ) );
     argsIter++;
 
+    // The block that will ultimately be tokenized.
+    const char * trueBlockBegin = nullptr;
+    const char * trueBlockEnd = nullptr;
+
+    bool result( false );
+
+    if ( HandleDirective_IfExpression( file, argsIter, "if", &result ) == false )
+    {
+        return false; // HandleDirective_IfExpression will have emitted an error
+    }
+
+    // take note of start of if block
+    const char * ifBlockBegin = pos;
+    const char * ifBlockEnd;
+
+    // Find #elif, #else, or #endif
+    IfBlockEndType endType;
+    if ( !ParseToEndIf( pos, end, file, true, ifBlockEnd, &endType ) ) // Allow elif and else
+    {
+        return false; // ParseToEndIf will have emitted an error
+    }
+
+    if ( result )
+    {
+        trueBlockBegin = ifBlockBegin;
+        trueBlockEnd = ifBlockEnd;
+    }
+
+    while ( endType == IfBlockEndType::ELIF )
+    {
+        // Parse the remainder of the line. This assumes that pos is immediately after "elif".
+        StackArray<BFFToken> elifArgs;
+
+        if ( ParseDirectiveLine( pos, end, file, elifArgs ) == false )
+        {
+            return false;
+        }
+
+        BFFTokenRange elifArgsIter( elifArgs.Begin(), elifArgs.End() );
+
+        // Only evaluate the expression if this is the first #if block or all previous #if/#elif blocks have evaluated to false
+        // Otherwise, just consume the tokens and check for errors.
+        bool * resultPtr = ( result == false ? &result : nullptr );
+
+        if ( HandleDirective_IfExpression( file, elifArgsIter, "elif", resultPtr ) == false )
+        {
+            return false; // HandleDirective_IfExpression will have emitted an error
+        }
+
+        // Find the next #elif, #else, or #endif
+        const char * elifBlockBegin = pos;
+        const char * elifBlockEnd;
+        if ( !ParseToEndIf( pos, end, file, true, elifBlockEnd, &endType ) ) // Allow elif and else
+        {
+            return false; // ParseToEndIf will have emitted an error
+        }
+
+        if ( ( resultPtr ) && ( result == true ) )
+        {
+            trueBlockBegin = elifBlockBegin;
+            trueBlockEnd = elifBlockEnd;
+        }
+
+        // If it passed, all tokens should have been consumed.
+        if ( elifArgsIter->GetType() != BFFTokenType::EndOfFile )
+        {
+            Error::Error_1045_ExtraneousTokenFollowingDirective( elifArgsIter.GetCurrent(), "elif" );
+            return false;
+        }
+    }
+
+    if ( endType == IfBlockEndType::ELSE )
+    {
+        // Find end of else block
+        const char * elseBlockBegin = pos;
+        const char * elseBlockEnd;
+        if ( !ParseToEndIf( pos, end, file, false, elseBlockEnd, nullptr ) ) // Must be endif
+        {
+            return false; // ParseToEndIf will have emitted an error
+        }
+
+        if ( result == false )
+        {
+            trueBlockBegin = elseBlockBegin;
+            trueBlockEnd = elseBlockEnd;
+        }
+    }
+
+    if ( trueBlockBegin != nullptr )
+    {
+        ASSERT( trueBlockEnd != nullptr );
+        if ( Tokenize( file, trueBlockBegin, trueBlockEnd ) == false )
+        {
+            return false; // Parse will have emitted an error
+        }
+    }
+    return true;
+}
+
+// HandleDirective_IfExpression
+//------------------------------------------------------------------------------
+bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenRange & argsIter, const char * directiveName, bool * outResult )
+{
     enum
     {
         IF_NONE = 1,
@@ -711,7 +849,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
             // expressions like #if &&a
             if ( !ranOnce )
             {
-                Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( argsIter.GetCurrent() );
+                Error::Error_1046_IfExpressionCannotStartWithBooleanOperator( argsIter.GetCurrent(), directiveName );
                 return false;
             }
 
@@ -726,13 +864,16 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
             argsIter++; // consume negation operator
         }
 
-        bool result;
+        bool result = false;
+
+        // If outResult is null, do not evaluate. Only consume the tokens and check for errors.
+        bool * resultPtr = outResult ? &result : nullptr;
 
         // Keyword or identifier?
         if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
         {
             argsIter++; // consume keyword
-            if ( HandleDirective_IfExists( argsIter, result ) == false )
+            if ( HandleDirective_IfExists( argsIter, resultPtr ) == false )
             {
                 return false;
             }
@@ -740,14 +881,14 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
         else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
         {
             argsIter++; // consume keyword
-            if ( HandleDirective_IfFileExists( file, argsIter, result ) == false )
+            if ( HandleDirective_IfFileExists( file, argsIter, resultPtr ) == false )
             {
                 return false;
             }
         }
         else if ( argsIter->IsIdentifier() )
         {
-            if ( HandleDirective_IfDefined( argsIter, result ) == false )
+            if ( HandleDirective_IfDefined( argsIter, resultPtr ) == false )
             {
                 return false;
             }
@@ -755,12 +896,12 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
         else
         {
             // TODO:C A better error
-            Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
+            Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), directiveName, '?' );
             return false;
         }
 
         // Negate result to handle "#if !"
-        if ( ifOperator & IF_NEGATE )
+        if ( ( outResult != nullptr ) && ( ifOperator & IF_NEGATE ) )
         {
             result = !( result );
         }
@@ -786,84 +927,40 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file,
             // Check for excessive complexity
             if ( numOperators == BFFParser::kMaxOperatorHistory )
             {
-                Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent() );
+                Error::Error_1047_IfExpressionTooComplex( argsIter.GetCurrent(), directiveName );
                 return false;
             }
         }
     }
 
-    // Apply any && operators. Any valid expression isn't going to end with an operator, so we don't check that.
-    for ( uint32_t i = 0; i < ( numOperators - 1 ); i++ )
+    if ( outResult ) // If outResult is null, do not evaluate. Only consume the tokens and check for errors.
     {
-        if ( operatorHistory[ i + 1 ] & IF_AND )
+        // Apply any && operators. Any valid expression isn't going to end with an operator, so we don't check that.
+        for ( uint32_t i = 0; i < ( numOperators - 1 ); i++ )
         {
-            // Do the AND operation and store it in the right hand operator being tested
-            operatorHistory[ i + 1 ] = (uint8_t)( operatorHistory[ i ] & operatorHistory[ i + 1 ] );
-            // Clear the left hand operator, its job is now done
-            operatorHistory[ i ] = 0;
-        }
-    }
-    // Apply any || operators
-    bool result = false;
-    for ( uint32_t i = 0; i < numOperators; i++ )
-    {
-        result |= ( operatorHistory[ i ] & 1 );
-    }
-
-    // take note of start of "true" block
-    const char * ifBlockBegin = pos;
-
-    // Find #else or #endif
-    bool hasElseBlock( false );
-    const char * ifBlockEnd;
-    if ( !ParseToEndIf( pos, end, file, true, ifBlockEnd, &hasElseBlock ) ) // Allow else
-    {
-        return false; // ParseToEndIf will have emitted an error
-    }
-    if ( hasElseBlock )
-    {
-        // Find end of else block
-        const char * elseBlockBegin = pos;
-        const char * elseBlockEnd;
-        if ( !ParseToEndIf( pos, end, file, false, elseBlockEnd, nullptr ) ) // Must be endif
-        {
-            return false; // ParseToEndIf will have emitted an error
-        }
-
-        if ( result == true )
-        {
-            // Parse If -> Else
-            if ( Tokenize( file, ifBlockBegin, ifBlockEnd ) == false )
+            if ( operatorHistory[ i + 1 ] & IF_AND )
             {
-                return false; // Parse will have emitted an error
+                // Do the AND operation and store it in the right hand operator being tested
+                operatorHistory[ i + 1 ] = (uint8_t)( operatorHistory[ i ] & operatorHistory[ i + 1 ] );
+                // Clear the left hand operator, its job is now done
+                operatorHistory[ i ] = 0;
             }
         }
-        else
+        // Apply any || operators
+        bool result = false;
+        for ( uint32_t i = 0; i < numOperators; i++ )
         {
-            // Parse Else -> EndIf
-            if ( Tokenize( file, elseBlockBegin, elseBlockEnd ) == false )
-            {
-                return false; // Parse will have emitted an error
-            }
+            result |= ( operatorHistory[ i ] & 1 );
         }
-    }
-    else
-    {
-        if ( result == true )
-        {
-            // Parse If -> EndIf
-            if ( Tokenize( file, ifBlockBegin, ifBlockEnd ) == false )
-            {
-                return false; // Parse will have emitted an error
-            }
-        }
+
+        *outResult = result;
     }
     return true;
 }
 
 // HandleDirective_IfExists
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outResult )
+bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool * outResult )
 {
     // Expect open bracket
     if ( iter->IsRoundBracket( '(' ) == false )
@@ -891,19 +988,22 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     }
     iter++; // consume close )
 
-    // look for varName in system environment
-    AStackString varValue;
-    uint32_t varHash = 0;
-    const bool optional = true;
-    // TODO:C Move ImportEnvironmentVar to BFFTokenizer
-    FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash );
-    outResult = ( varHash != 0 ); // a hash of 0 means the env var was not found
+    if ( outResult ) // If outResult is null, do not evaluate. Only consume the tokens.
+    {
+        // look for varName in system environment
+        AStackString varValue;
+        uint32_t varHash = 0;
+        const bool optional = true;
+        // TODO:C Move ImportEnvironmentVar to BFFTokenizer
+        FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash );
+        *outResult = ( varHash != 0 ); // a hash of 0 means the env var was not found
+    }
     return true;
 }
 
 // HandleDirective_IfFileExists
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool & outResult )
+bool BFFTokenizer::HandleDirective_IfFileExists( const BFFFile & file, BFFTokenRange & iter, bool * outResult )
 {
     // Expect open bracket
     if ( iter->IsRoundBracket( '(' ) == false )
@@ -931,24 +1031,29 @@ bool BFFTokenizer::HandleDirective_IfFileExists( const BFFFile & file, BFFTokenR
     }
     iter++; // consume close )
 
-    AStackString includePath( fileName );
-    ExpandIncludePath( file, includePath );
+    if ( outResult ) // If outResult is null, do not evaluate. Only consume the tokens.
+    {
+        AStackString includePath( fileName );
+        ExpandIncludePath( file, includePath );
 
-    // check if file exists
-    outResult = FBuild::Get().AddFileExistsCheck( includePath );
+        // check if file exists
+        *outResult = FBuild::Get().AddFileExistsCheck( includePath );
+    }
     return true;
 }
 
 // HandleDirective_IfDefined
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_IfDefined( BFFTokenRange & iter,
-                                              bool & outResult )
+bool BFFTokenizer::HandleDirective_IfDefined( BFFTokenRange & iter, bool * outResult )
 {
     ASSERT( iter->IsIdentifier() );
     const AString & identifier = iter->GetValueString();
     iter++; // consume identifier
 
-    outResult = m_Macros.IsDefined( identifier );
+    if ( outResult ) // If outResult is null, do not evaluate. Only consume the tokens.
+    {
+        *outResult = m_Macros.IsDefined( identifier );
+    }
     return true;
 }
 
@@ -959,7 +1064,7 @@ bool BFFTokenizer::ParseToEndIf( const char *& pos,
                                  const BFFFile & file,
                                  bool allowElse,
                                  const char *& outBlockEnd,
-                                 bool * outIsElse )
+                                 IfBlockEndType * outEndType )
 {
     const char * blockEnd = nullptr;
 
@@ -999,6 +1104,21 @@ bool BFFTokenizer::ParseToEndIf( const char *& pos,
             {
                 ++depth;
             }
+            else if ( ( depth == 1 ) && ( directiveName == BFF_KEYWORD_ELIF ) )
+            {
+                if ( allowElse == false )
+                {
+                    BFFToken error( file, pos, BFFTokenType::Invalid, pos, pos + 1 );
+                    Error::Error_1048_ElifWithoutIf( &error );
+                    return false;
+                }
+                if ( outEndType )
+                {
+                    *outEndType = IfBlockEndType::ELIF;
+                }
+                outBlockEnd = blockEnd;
+                return true;
+            }
             else if ( ( depth == 1 ) && ( directiveName == BFF_KEYWORD_ELSE ) )
             {
                 if ( allowElse == false )
@@ -1007,9 +1127,9 @@ bool BFFTokenizer::ParseToEndIf( const char *& pos,
                     Error::Error_1041_ElseWithoutIf( &error );
                     return false;
                 }
-                if ( outIsElse )
+                if ( outEndType )
                 {
-                    *outIsElse = true;
+                    *outEndType = IfBlockEndType::ELSE;
                 }
                 outBlockEnd = blockEnd;
                 return true;
@@ -1022,9 +1142,9 @@ bool BFFTokenizer::ParseToEndIf( const char *& pos,
         SkipToStartOfNextLine( pos, end );
     }
 
-    if ( outIsElse )
+    if ( outEndType )
     {
-        *outIsElse = false;
+        *outEndType = IfBlockEndType::ENDIF;
     }
     outBlockEnd = blockEnd;
 
@@ -1238,6 +1358,12 @@ bool BFFTokenizer::GetDirective( const BFFFile & file, const char *& pos, AStrin
         {
             ++pos;
         }
+    }
+    else
+    {
+        const BFFToken error( file, pos, BFFTokenType::Invalid, directiveNameStart, pos );
+        Error::Error_1010_UnknownConstruct( &error );
+        return false;
     }
 
     outDirectiveName.Assign( directiveNameStart, pos );

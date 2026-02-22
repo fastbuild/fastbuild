@@ -29,17 +29,17 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) + MetaFile() )
-    REFLECT( m_Librarian,                       "Librarian",                    MetaFile() )
-    REFLECT( m_LibrarianOptions,                "LibrarianOptions",             MetaNone() )
-    REFLECT( m_LibrarianType,                   "LibrarianType",                MetaOptional() )
-    REFLECT( m_LibrarianOutput,                 "LibrarianOutput",              MetaFile() )
-    REFLECT_ARRAY( m_LibrarianAdditionalInputs, "LibrarianAdditionalInputs",    MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
-    REFLECT( m_LibrarianAllowResponseFile,      "LibrarianAllowResponseFile",   MetaOptional() )
-    REFLECT( m_LibrarianForceResponseFile,      "LibrarianForceResponseFile",   MetaOptional() )
+    REFLECT( m_Librarian, MetaFile() + MetaRequired() )
+    REFLECT( m_LibrarianOptions, MetaRequired() )
+    REFLECT( m_LibrarianType )
+    REFLECT( m_LibrarianOutput, MetaFile() + MetaRequired() )
+    REFLECT( m_LibrarianAdditionalInputs, MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
+    REFLECT( m_LibrarianAllowResponseFile )
+    REFLECT( m_LibrarianForceResponseFile )
 
-    REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
-    REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )
-    REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
+    REFLECT( m_NumLibrarianAdditionalInputs, MetaHidden() )
+    REFLECT( m_LibrarianFlags, MetaHidden() )
+    REFLECT( m_Environment )
 REFLECT_END( LibraryNode )
 
 // CONSTRUCTOR

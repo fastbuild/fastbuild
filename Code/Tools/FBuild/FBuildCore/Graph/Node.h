@@ -16,6 +16,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class BFFToken;
+class CompilerInfoNode;
 class CompilerNode;
 class ConstMemoryStream;
 class FileNode;
@@ -39,17 +40,21 @@ class ObjectListNode;
         return nodeName::GetReflectionInfoS();                          \
     }
 
-#define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
-    REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
+#define REFLECT_NODE_BEGIN( nodeName, baseNodeName, ... ) \
+    REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, __VA_ARGS__ )
 
-#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData ) \
-    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData )
+#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, ... ) \
+    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, __VA_ARGS__ )
 
 inline constexpr PropertyType GetPropertyType( ObjectListNode * const * )
 {
     return PT_CUSTOM_1;
 }
 inline constexpr PropertyType GetPropertyType( CompilerNode * const * )
+{
+    return PT_CUSTOM_1;
+}
+inline constexpr PropertyType GetPropertyType( CompilerInfoNode * const * )
 {
     return PT_CUSTOM_1;
 }
@@ -91,6 +96,7 @@ public:
         VSPROJEXTERNAL_NODE = 21,
         TEXT_FILE_NODE = 22,
         LIST_DEPENDENCIES_NODE = 23,
+        COMPILER_INFO_NODE = 24,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
     };

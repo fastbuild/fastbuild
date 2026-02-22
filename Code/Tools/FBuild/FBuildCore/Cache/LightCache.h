@@ -14,6 +14,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
+class CompilerInfoNode;
 class FileStream;
 class IncludedFile;
 class IncludeDefine;
@@ -29,6 +30,7 @@ public:
     ~LightCache();
 
     bool Hash( ObjectNode * node,               // Object to be compiled
+               const CompilerInfoNode * compilerInfo, // Optional CompilerInfo for Clang/GCC
                const AString & compilerArgs,    // Args to extract include paths from
                uint64_t & outSourceHash,        // Resulting hash of source code
                Array<AString> & outIncludes );  // Discovered dependencies
@@ -44,7 +46,8 @@ protected:
     bool ParseDirective_Include( IncludedFile & file, const char *& pos );
     bool ParseDirective_Define( IncludedFile & file, const char *& pos );
     bool ParseDirective_Import( IncludedFile & file, const char *& pos );
-    void SkipCommentBlock( const char *& pos );
+    static bool IsCommentBlockStart( const char * pos );
+    static void SkipCommentBlock( const char *& pos );
     bool ParseIncludeString( const char *& pos, AString & outIncludePath, IncludeType & outIncludeType );
     bool ParseMacroName( const char *& pos, AString & outMacroName );
     void ProcessInclude( const AString & include, IncludeType type );
@@ -70,6 +73,7 @@ protected:
     Array<const IncludedFile *> m_AllIncludedFiles; // List of files seen during parsing
     Array<const IncludedFile *> m_IncludeStack; // Stack of includes, for file relative checks
     Array<const IncludeDefine *> m_IncludeDefines; // Macros describing files to include
+    AString m_BasePath; // Base path if using relative paths
     AString m_Errors; // Did we encounter some code we couldn't parse?
 };
 

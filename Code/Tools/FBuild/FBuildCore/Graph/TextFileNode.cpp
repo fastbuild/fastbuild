@@ -23,10 +23,10 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TextFileNode, Node, MetaName( "TextFileOutput" ) + MetaFile() )
-    REFLECT_ARRAY( m_TextFileInputStrings, "TextFileInputStrings", MetaNone() )
-    REFLECT( m_TextFileAlways, "TextFileAlways", MetaOptional() )
-    REFLECT( m_Hidden, "Hidden", MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_TextFileInputStrings, MetaRequired() )
+    REFLECT( m_TextFileAlways )
+    REFLECT( m_Hidden )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 REFLECT_END( TextFileNode )
 
 // CONSTRUCTOR

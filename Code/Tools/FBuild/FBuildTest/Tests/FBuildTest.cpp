@@ -51,20 +51,13 @@ FBuildTest::FBuildTest()
 
 // PostTest
 //------------------------------------------------------------------------------
-/*virtual*/ void FBuildTest::PostTest( bool passed ) const
+/*virtual*/ void FBuildTest::PostTest() const
 {
     VERIFY( FileIO::SetCurrentDir( m_OriginalWorkingDir ) );
 
     FBuildStats::SetIgnoreCompilerNodeDeps( false );
 
     Tracing::RemoveCallbackOutput( LoggingCallback );
-
-    // Print the output on failure, unless in the debugger
-    // (we print as we go if the debugger is attached)
-    if ( ( passed == false ) && ( s_DebuggerAttached == false ) )
-    {
-        OUTPUT( "%s", s_RecordedOutput.Get() );
-    }
 }
 
 // EnsureFileDoesNotExist
@@ -259,8 +252,27 @@ void FBuildTest::CheckStatsTotal( size_t numSeen, size_t numBuilt ) const
 #else
     const char * codePos = codeDir.FindLastI( "/code/" );
 #endif
-    TEST_ASSERT( codePos );
-    codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + 6 ) );
+    if ( codePos )
+    {
+        codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + 6 ) );
+        return;
+    }
+
+    // If not already set to code dir, try to discover it automatically
+    // relative to executable compilation location
+#if defined( __WINDOWS__ )
+    const char * const tmpPos = codeDir.FindLastI( "\\tmp\\" );
+#else
+    const char * const tmpPos = codeDir.FindLastI( "/tmp/" );
+#endif
+    if ( tmpPos )
+    {
+        // Truncate before "tmp", but include slash
+        codeDir.SetLength( (uint16_t)( tmpPos - codeDir.Get() + 1 ) );
+        codeDir.AppendFormat( "Code%c", NATIVE_SLASH );
+        return;
+    }
+    TEST_ASSERT( false && "Failed to determine 'Code' folder location" );
 }
 
 // LoggingCallback
@@ -269,9 +281,8 @@ bool FBuildTest::LoggingCallback( const char * message )
 {
     MutexHolder mh( s_OutputMutex );
     s_RecordedOutput.Append( message, AString::StrLen( message ) );
-    // If in the debugger, print the output normally as well, otherwise
-    // suppress and only print on failure
-    return s_DebuggerAttached;
+
+    return true; // Caller should also print to stdout
 }
 
 // CONSTRUCTOR - FBuildTestOptions

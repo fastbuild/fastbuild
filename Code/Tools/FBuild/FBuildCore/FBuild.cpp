@@ -18,6 +18,7 @@
 #include "Graph/SettingsNode.h"
 #include "Helpers/BuildProfiler.h"
 #include "Helpers/CompilationDatabase.h"
+#include "Helpers/SourceFileTargetResolver.h"
 #include "Protocol/Client.h"
 #include "Protocol/Protocol.h"
 #include "WorkerPool/JobQueue.h"
@@ -65,6 +66,7 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_LastProgressCalcTime( 0.0f )
     , m_SmoothedProgressCurrent( 0.0f )
     , m_SmoothedProgressTarget( 0.0f )
+    , m_Options( options )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
 {
@@ -75,9 +77,6 @@ FBuild::FBuild( const FBuildOptions & options )
                     _CRTDBG_DELAY_FREE_MEM_DF |
                     _CRTDBG_LEAK_CHECK_DF );
 #endif
-
-    // store all user provided options
-    m_Options = options;
 
     // Create ThreadPool
     if ( m_Options.m_NumWorkerThreads > 0 )
@@ -285,6 +284,35 @@ bool FBuild::GetTargets( const Array<AString> & targets, Dependencies & outDeps 
     }
 
     return true;
+}
+
+//------------------------------------------------------------------------------
+bool FBuild::Build( const Array<AString> & targets, const Array<AString> & sourceFiles )
+{
+    PROFILE_FUNCTION;
+
+    // If source files are not being used, use targets directly
+    if ( sourceFiles.IsEmpty() )
+    {
+        return Build( targets );
+    }
+
+    // Get the nodes for the hint target(s)
+    Dependencies targetHints( targets.GetSize() );
+    if ( !GetTargets( targets, targetHints ) )
+    {
+        return false; // GetTargets will have emitted an error
+    }
+
+    // Attempt to find targets that depend on this source file
+    StackArray<AString> targetsToBuild;
+    SourceFileTargetResolver resolver;
+    if ( resolver.Resolve( *m_DependencyGraph, targetHints, sourceFiles, targetsToBuild ) == false )
+    {
+        return false;
+    }
+
+    return Build( targetsToBuild );
 }
 
 // Build
@@ -770,6 +798,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
                 break;
             }
             case Node::LIST_DEPENDENCIES_NODE: break;
+            case Node::COMPILER_INFO_NODE: break;
             case Node::NUM_NODE_TYPES: ASSERT( false ); break;
         }
         if ( displayName && ( !hidden || showHidden ) )

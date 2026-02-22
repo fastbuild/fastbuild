@@ -24,9 +24,9 @@
 	        </div>
 	        <div class='inner'>
 
-<h1>1047 - If expression too complex. Up to %u boolean operators supported.</h1>
+<h1>1047 - #%s expression too complex. Up to %u boolean operators supported.</h1>
     <div class='newsitemheader'>Description</div>
-    <div class='newsitembody'>A compound #if expression was encountered that is too complex. The limit for complexity
+    <div class='newsitembody'>A compound #if or #elif expression was encountered that is too complex. The limit for complexity
 is very generous, so this is more likely to result from an error than a legitimately complex expression. If the expression
 is correct, consider breaking it up into sub-expressions.
     </div>
@@ -36,7 +36,7 @@ Config:
 <div class='code'>#if A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A && A
 #endif</div>
 Output:
-<div class='output'>c:\test\fbuild.bff(2,1): FASTBuild Error #1047 - If expression too complex. Up to 256 boolean operators supported.
+<div class='output'>c:\test\fbuild.bff(2,1): FASTBuild Error #1047 - #if expression too complex. Up to 256 boolean operators supported.
 #endif
 ^
 \--here
@@ -44,6 +44,6 @@ Output:
     </div>
 
 
-    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2026 Franta Fulin</div></div></div>
 </body>
 </html>

@@ -25,10 +25,10 @@
 // REFLECTION
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ListDependenciesNode, Node, MetaName( "Dest" ) + MetaFile() )
-    REFLECT(        m_Source,                   "Source",                   MetaFile() + MetaAllowNonFile() )
-    REFLECT(        m_Dest,                     "Dest",                     MetaFile() )
-    REFLECT_ARRAY(  m_Patterns,                 "Patterns",                 MetaOptional() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Source, MetaFile() + MetaAllowNonFile() + MetaRequired() )
+    REFLECT( m_Dest, MetaFile() + MetaRequired() )
+    REFLECT( m_Patterns )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 REFLECT_END( ListDependenciesNode )
 
 // FilterFileDependencies

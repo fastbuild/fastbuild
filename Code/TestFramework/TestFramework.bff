@@ -25,9 +25,6 @@
         //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
         {
-            // Test framework uses exceptions
-            .CompilerOptions            + .UseExceptions
-
             // Input (Unity)
             .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
 

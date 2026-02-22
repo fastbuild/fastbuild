@@ -44,6 +44,7 @@ public:
     // build a target
     bool Build( const char * target );
     bool Build( const AString & target );
+    bool Build( const Array<AString> & targets, const Array<AString> & sourceFiles );
     bool Build( const Array<AString> & targets );
     virtual bool Build( Node * nodeToBuild ); // Virtual to allow for testing
 

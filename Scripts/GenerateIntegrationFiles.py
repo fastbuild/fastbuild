@@ -52,25 +52,46 @@ def parse_files(files):
                 keyword_name = line[line.find('"')+1:]
                 keyword_name = keyword_name[:keyword_name.find('"')]
                 keywords.append(keyword_name)
-
-            # Properties
-            if ((line.find('REFLECT(') == -1) and
-                (line.find('REFLECT_ARRAY(') == -1) and
-                (line.find('REFLECT_ARRAY_OF_STRUCT(') == -1) and
-                (line.find('REFLECT_STRUCT(') == -1) and
-                (line.find('MetaName( "') == -1)):
                 continue
-            if (line.find('#define') != -1):
+
+            if line.find('MetaName( "') != -1:
+                # Get property name (first quoted string)
+                property_name = line[line.find('"')+1:]
+                property_name = property_name[:property_name.find('"')]
+                properties.append(property_name)
+                continue
+
+            # Ignore the definitions of macros
+            if line.find('#define') != -1:
                 continue
 
             # Ignore hidden properties
             if (line.find('MetaHidden') != -1):
                 continue
 
-            # Get property name (first quoted string)
-            property_name = line[line.find('"')+1:]
-            property_name = property_name[:property_name.find('"')]
-            properties.append(property_name)
+            # Properties with name derived from member
+            if line.find('REFLECT(') != -1:
+                # Get member_name
+                member_name = line[line.find('(')+1:]
+                if member_name.find(',') != -1:
+                    member_name = member_name[:member_name.find(',')]
+                else:
+                    member_name = member_name[:member_name.find(')')]
+                member_name = member_name.strip()
+                if member_name.startswith('m_'):
+                    member_name = member_name[2:]
+                properties.append(member_name)
+                continue
+
+            # Properties with manually specified name
+            if line.find('REFLECT_RENAME(') != -1:
+                # Get property name (first quoted string)
+                quote_pos = line.find('"')
+                if quote_pos != -1:
+                    property_name = line[quote_pos+1:]
+                    property_name = property_name[:property_name.find('"')]
+                    properties.append(property_name)
+                    continue
 
     # Uniquify and sort
     functions = sorted(set(functions))

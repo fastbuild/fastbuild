@@ -67,14 +67,15 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
-    REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
+REFLECT_NODE_BEGIN( ObjectNode, Node )
+    REFLECT( m_CompilerInputFile, MetaFile() )
 
     // Internal State
-    REFLECT( m_CompilerFlags.m_Flags,               "CompilerFlags",                    MetaHidden() )
-    REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
-    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
-    REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
+    REFLECT_RENAME( m_CompilerFlags.m_Flags, "CompilerFlags", MetaHidden() )
+    REFLECT_RENAME( m_PreprocessorFlags.m_Flags, "PreprocessorFlags", MetaHidden() )
+    REFLECT( m_PCHCacheKey, MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_OwnerObjectList, MetaHidden() )
+    REFLECT( m_OwnerObjectListHash, MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -91,6 +92,7 @@ ObjectNode::ObjectNode()
 /*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     ASSERT( m_OwnerObjectList ); // Must be set before we get here
+    ASSERT( m_OwnerObjectListHash );
 
     // .PreBuildDependencies (OwnerObjectList will have handled checks/errors)
     m_PreBuildDependencies = m_OwnerObjectList->GetPreBuildDependencies();
@@ -382,7 +384,11 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     if ( useCache && GetCompiler()->GetUseLightCache() )
     {
         LightCache lc;
-        if ( lc.Hash( this, fullArgs.GetRawArgs(), m_LightCacheKey, m_Includes ) == false )
+        if ( lc.Hash( this,
+                      GetOwnerObjectList().GetCompilerInfo(),
+                      fullArgs.GetRawArgs(),
+                      m_LightCacheKey,
+                      m_Includes ) == false )
         {
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
@@ -987,6 +993,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             {
                 flags.Set( CompilerFlags::FLAG_DYNAMIC_DEOPT );
             }
+            else if ( flags.IsClangCl() && IsCompilerArg_MSVC( token, "nostdinc" ) )
+            {
+                // Clang-Cl has -nostdinc, but not -nostdinc++
+                flags.Set( CompilerFlags::FLAG_NOSTDINC );
+            }
         }
 
         // 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
@@ -1076,6 +1087,15 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                         objectiveC = true;
                     }
                 }
+            }
+            else if ( ( token == "-nostdinc" ) ||
+                      ( token == "--no-standard-includes" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_NOSTDINC );
+            }
+            else if ( ( token == "-nostdinc++" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_NOSTDINCPP );
             }
         }
 

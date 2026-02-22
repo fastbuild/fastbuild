@@ -4,11 +4,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 #include "Core/Mem/MemTracker.h"
+#include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
 
 // Forward Declarations
@@ -23,11 +25,16 @@ public:
     TestManager();
     ~TestManager();
 
-    // run all tests, or tests from a group
-    bool RunTests( const char * testGroup = nullptr );
+    // Run tests:
+    //   - all tests (default), or
+    //   - filtered subset (if -Filter=filter set on cmdline)
+    // Run all tests
+    //   - once by default, or
+    //   - repeatedly (if runCount > 1, or with -RunCount=x on cmdline)
+    bool RunTests( uint32_t runCount = 1 );
 
     // tests register (using the test declaration macros) via this interface
-    static void RegisterTestGroup( TestGroup * testGroup );
+    [[nodiscard]] static bool RegisterTestGroup( TestGroup * testGroup );
 
     // When tests are being executed, they are wrapped with these
     void TestBegin( TestGroup * testGroup, const char * testName );
@@ -43,7 +50,16 @@ public:
                                 ... ) FORMAT_STRING( 4, 5 );
 
 private:
+    static void FreeRegisteredTests();
+    [[nodiscard]] bool RunTestsInternal();
+    void ParseCommandLineArgs();
+
     Timer m_Timer;
+
+    // Behavior control options
+    bool mListTestsForDiscovery = false; // List tests instead of running them
+    Array<AString> m_TestFilters; // Run only specified TestGroups of Tests
+    uint32_t m_RunCount = 1;
 
     // Track allocations for tests to catch leaks
 #ifdef MEMTRACKER_ENABLED

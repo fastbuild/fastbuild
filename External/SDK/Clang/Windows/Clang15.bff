@@ -58,6 +58,9 @@ Compiler( 'Compiler-Clang15' )
     #if ENABLE_SOURCE_MAPPING
         .SourceMapping_Experimental = '/fastbuild-test-mapping'
     #endif
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
+    #endif
 }
 
 // Compiler
@@ -77,6 +80,9 @@ Compiler( 'Compiler-Clang15-NonCL' )
     #endif
     #if ENABLE_SOURCE_MAPPING
         .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
     #endif
 }
 
@@ -110,6 +116,7 @@ Compiler( 'Compiler-Clang15-NonCL' )
                                     + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98
                                     + ' -Wno-exit-time-destructors'     // declaration requires an exit-time destructor
                                     + ' -Wno-global-constructors'       // declaration requires a global destructor
+                                    + ' -Wno-gnu-zero-variadic-macro-arguments' // Allow empty variadic args
                                     + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
                                     + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
                                     + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'
@@ -157,9 +164,6 @@ Compiler( 'Compiler-Clang15-NonCL' )
     .CompilerOptionsC               = ' /TC -o"%2" "%1" $CommonCompilerOptions$'
     .PCHOptions                     = ' /TP $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
                                     + ' /std:c++17'                     // Enable c++17 features
-
-    // Exception Control
-    .UseExceptions                  = ' /EHs'
 ]
 
 // ToolChain
@@ -188,6 +192,7 @@ Compiler( 'Compiler-Clang15-NonCL' )
 
     .CompilerOptions                = ' -x c++ -o"%2" "%1" $CommonCompilerOptions$'
                                     + ' -std=c++17'                     // Enable c++17 features
+                                    + ' -fno-exceptions'
     .CompilerOptionsC               = ' -x c -o"%2" "%1" $CommonCompilerOptions$'
 ]
 

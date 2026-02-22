@@ -21,6 +21,7 @@ const char * GetVersionString()
                                                "."
                                                TOSTRING( FBUILD_VERSION_MINOR )
 #if ( FBUILD_VERSION_EXT > 0 )
+                                               "."
                                                TOSTRING( FBUILD_VERSION_EXT )
 #endif
                                                FBUILD_VERSION_EXT_SUFFIX_STRING;

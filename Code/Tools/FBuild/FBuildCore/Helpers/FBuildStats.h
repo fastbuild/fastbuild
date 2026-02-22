@@ -10,6 +10,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Dependencies;
+class FBuildOptions;
 class Node;
 class NodeGraph;
 
@@ -36,7 +37,7 @@ public:
     // after the build it complete, accumulate all the stats
     void GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node * node );
 
-    void OutputSummary() const;
+    void OutputSummary( const FBuildOptions & options ) const;
 
     // get the total stats
     uint32_t GetNodesProcessed() const { return m_Totals.m_NumProcessed; }
@@ -44,7 +45,9 @@ public:
     uint32_t GetCacheHits() const { return m_Totals.m_NumCacheHits; }
     uint32_t GetCacheMisses() const { return m_Totals.m_NumCacheMisses; }
     uint32_t GetCacheStores() const { return m_Totals.m_NumCacheStores; }
-    uint32_t GetLightCacheCount() const { return m_Totals.m_NumLightCache; }
+    uint32_t GetLightCacheHitCount() const { return m_Totals.m_NumLightCacheHits; }
+    uint32_t GetLightCacheMissCount() const { return m_Totals.m_NumLightCacheMisses; }
+    uint32_t GetLightCacheStoreCount() const { return m_Totals.m_NumLightCacheStores; }
 
     // get stats per node type
     struct Stats;
@@ -60,7 +63,9 @@ public:
         uint32_t m_NumCacheHits;
         uint32_t m_NumCacheMisses;
         uint32_t m_NumCacheStores;
-        uint32_t m_NumLightCache;
+        uint32_t m_NumLightCacheHits;
+        uint32_t m_NumLightCacheMisses;
+        uint32_t m_NumLightCacheStores;
 
         uint32_t m_ProcessingTimeMS;
         uint32_t m_NumFailed;
