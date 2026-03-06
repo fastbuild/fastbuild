@@ -7,6 +7,10 @@
 #include "Core/Env/Types.h"
 #include "Core/Strings/AString.h"
 
+// Forward Declaration
+//------------------------------------------------------------------------------
+template <class T> class Array;
+
 // avoid including xxhash header directly
 extern "C"
 {
@@ -50,6 +54,9 @@ public:
     static uint32_t Calc32( const AString & string ) { return static_cast<uint32_t>( Calc64Static( string.Get(), string.GetLength() ) ); }
     static uint64_t Calc64( const void * buffer, size_t len ) { return Calc64Static( buffer, len ); }
     static uint64_t Calc64( const AString & string ) { return Calc64Static( string.Get(), string.GetLength() ); }
+
+    // Convenience wrappers
+    static uint64_t Calc64( const Array<AString> & strings );
 
     // Functions for large inputs
     //  - Use dynamic dispatch on x86_64 to utilize AVX2 etc if available
