@@ -77,11 +77,11 @@ FunctionCopy::FunctionCopy()
     {
         return false; // GetNodeList will have emitted an error
     }
-    Array<AString> preBuildDependencyNames;
+    StackArray<Node *> preBuildDependencyNames;
     preBuildDependencyNames.SetCapacity( preBuildDependencies.GetSize() );
     for ( const Dependency & dep : preBuildDependencies )
     {
-        preBuildDependencyNames.Append( dep.GetNode()->GetName() );
+        preBuildDependencyNames.Append( dep.GetNode() );
     }
 
     // get source node

@@ -596,15 +596,29 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
         case PT_CUSTOM_1:
         {
-            const Node * node = *property.GetPtrToPropertyCustom<Node *>( base );
-            if ( node )
+            if ( property.IsArray() )
             {
-                const uint32_t nodeIndex = node->GetBuildPassTag();
-                stream.Write( nodeIndex );
+                const Array<Node *> & nodes = *property.GetPtrToArray<Node *>( base );
+                stream.Write( static_cast<uint32_t>( nodes.GetSize() ) );
+                for ( const Node * node : nodes )
+                {
+                    ASSERT( node ); // Arrays of Node pointers cannot contain nullptr
+                    const uint32_t nodeIndex = node->GetBuildPassTag();
+                    stream.Write( nodeIndex );
+                }
             }
             else
             {
-                stream.Write( INVALID_NODE_INDEX );
+                const Node * node = *property.GetPtrToPropertyCustom<Node *>( base );
+                if ( node )
+                {
+                    const uint32_t nodeIndex = node->GetBuildPassTag();
+                    stream.Write( nodeIndex );
+                }
+                else
+                {
+                    stream.Write( INVALID_NODE_INDEX );
+                }
             }
             return;
         }
@@ -736,12 +750,29 @@ void Node::SetLastBuildTime( uint32_t ms )
         }
         case PT_CUSTOM_1:
         {
-            uint32_t index;
-            VERIFY( stream.Read( index ) );
-            Node * node = ( index == INVALID_NODE_INDEX ) ? nullptr
-                                                          : nodeGraph.GetNodeByIndex( index );
-            Node ** propertyPtr = property.GetPtrToPropertyCustom<Node *>( base );
-            *propertyPtr = node;
+            if ( property.IsArray() )
+            {
+                uint32_t numNodes;
+                VERIFY( stream.Read( numNodes ) );
+                Array<Node *> & nodes = *property.GetPtrToArray<Node *>( base );
+                nodes.SetCapacity( numNodes );
+                for ( uint32_t i = 0; i < numNodes; ++i )
+                {
+                    uint32_t index;
+                    VERIFY( stream.Read( index ) );
+                    Node * node = nodeGraph.GetNodeByIndex( index );
+                    nodes.EmplaceBack( node );
+                }
+            }
+            else
+            {
+                uint32_t index;
+                VERIFY( stream.Read( index ) );
+                Node * node = ( index == INVALID_NODE_INDEX ) ? nullptr
+                                                              : nodeGraph.GetNodeByIndex( index );
+                Node ** propertyPtr = property.GetPtrToPropertyCustom<Node *>( base );
+                *propertyPtr = node;
+            }
             return;
         }
         default:

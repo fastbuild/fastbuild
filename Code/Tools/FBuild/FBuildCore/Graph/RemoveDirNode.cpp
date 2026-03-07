@@ -41,10 +41,7 @@ RemoveDirNode::RemoveDirNode()
 /*virtual*/ bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // Convert RemovePaths paths to DirectoryListNodes
     Dependencies fileListDeps( m_RemovePaths.GetSize() );

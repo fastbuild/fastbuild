@@ -111,7 +111,7 @@ protected:
     uint8_t m_ConcurrencyGroupIndex = 0; // Internal; placed here to use padding
     AString m_LinkerStampExe;
     AString m_LinkerStampExeArgs;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
     Array<AString> m_Environment;
     AString m_ConcurrencyGroupName;
 

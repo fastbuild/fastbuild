@@ -28,21 +28,9 @@ AliasNode::AliasNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
+/*virtual*/ bool AliasNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
-    Dependencies targets( 32 );
-    GetNodeListOptions options;
-    options.m_AllowCopyDirNodes = true;
-    options.m_AllowUnityNodes = true;
-    options.m_AllowRemoveDirNodes = true;
-    options.m_AllowCompilerNodes = true;
-    options.m_RemoveDuplicates = true;
-    if ( !Function::GetNodeList( nodeGraph, iter, function, ".Targets", m_Targets, targets, options ) )
-    {
-        return false; // GetNodeList will have emitted an error
-    }
-
-    m_StaticDependencies = targets;
+    m_StaticDependencies.Add( m_Targets );
 
     return true;
 }

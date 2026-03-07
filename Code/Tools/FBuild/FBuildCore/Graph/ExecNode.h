@@ -52,7 +52,7 @@ private:
     bool m_ExecUseStdOutAsOutput;
     bool m_ExecAlways;
     bool m_ExecInputPathRecurse;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
     Array<AString> m_Environment;
     AString m_ConcurrencyGroupName;
 

@@ -45,7 +45,6 @@ public:
     const AString & GetCompilerOptionsDeoptimized() const { return m_CompilerOptionsDeoptimized; }
     const AString & GetCompilerOptionsPCH() const { return m_PCHOptions; }
     const AString & GetPreprocessorOptions() const { return m_PreprocessorOptions; }
-    const Array<AString> & GetPreBuildDependencyNames() const { return m_PreBuildDependencyNames; }
     const Array<AString> & GetCompilerForceUsing() const { return m_CompilerForceUsing; }
     CompilerNode * GetCompiler() const { return m_CompilerNode; }
     CompilerNode * GetPreprocessor() const { return m_PreprocessorNode; }
@@ -120,7 +119,7 @@ protected:
     AString m_PCHOptions;
     AString m_Preprocessor;
     AString m_PreprocessorOptions;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
     AString m_ConcurrencyGroupName;
 
     // Internal State
