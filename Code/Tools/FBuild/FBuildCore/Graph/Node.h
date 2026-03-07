@@ -58,6 +58,10 @@ inline constexpr PropertyType GetPropertyType( CompilerInfoNode * const * )
 {
     return PT_CUSTOM_1;
 }
+inline constexpr PropertyType GetPropertyType( Node * const * )
+{
+    return PT_CUSTOM_1;
+}
 
 // FBuild
 //------------------------------------------------------------------------------

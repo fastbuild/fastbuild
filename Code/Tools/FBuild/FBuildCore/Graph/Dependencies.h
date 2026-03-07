@@ -77,6 +77,7 @@ public:
     void Add( Node * node );
     void Add( Node * node, uint64_t stamp, bool isWeak );
     void Add( const Dependencies & deps );
+    void Add( const Array<Node *> & nodes );
     Dependencies & operator=( const Dependencies & other );
 
     void Save( IOStream & stream ) const;

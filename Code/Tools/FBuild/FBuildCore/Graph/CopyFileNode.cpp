@@ -37,10 +37,7 @@ CopyFileNode::CopyFileNode()
 /*virtual*/ bool CopyFileNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // Get node for Source of copy
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".Source", m_Source, m_StaticDependencies ) )

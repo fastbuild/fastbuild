@@ -1146,6 +1146,10 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
             }
             break;
         }
+        case PT_CUSTOM_1:
+        {
+            return PopulateCustom( nodeGraph, iter, base, property, variable );
+        }
         default:
         {
             break;
@@ -1518,6 +1522,72 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
 
     Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRUCT, BFFVariable::VAR_ARRAY_OF_STRUCTS );
     return false;
+}
+
+//------------------------------------------------------------------------------
+bool Function::PopulateCustom( NodeGraph & nodeGraph,
+                               const BFFToken * iter,
+                               void * base,
+                               const ReflectedProperty & property,
+                               const BFFVariable * variable ) const
+{
+    AStackString propertyName;
+    propertyName += '.';
+    propertyName += property.GetName();
+
+    // Get list of nodes
+    const bool required = ( property.HasMetaData<Meta_Required>() != nullptr );
+    Dependencies nodes;
+    GetNodeListOptions options;
+    options.m_AllowCopyDirNodes = true;
+    options.m_AllowUnityNodes = true;
+    options.m_AllowRemoveDirNodes = true;
+    options.m_AllowCompilerNodes = true;
+    options.m_RemoveDuplicates = true;
+    if ( !GetNodeList( nodeGraph,
+                       iter,
+                       propertyName.Get(),
+                       nodes,
+                       required,
+                       options ) )
+    {
+        return false; // GetNodeList will have emitted an error
+    }
+
+    if ( property.IsArray() )
+    {
+        Array<Node *> * dst = property.GetPtrToArray<Node *>( base );
+        dst->Clear();
+        dst->SetCapacity( nodes.GetSize() );
+        for ( const Dependency & dep : nodes )
+        {
+            dst->Append( dep.GetNode() );
+        }
+    }
+    else
+    {
+        Node ** dst = property.GetPtrToPropertyCustom<Node *>( base );
+        if ( nodes.IsEmpty() )
+        {
+            // If not required, can be not set
+            *dst = nullptr;
+        }
+        else if ( nodes.GetSize() == 1 )
+        {
+            *dst = nodes[ 0 ].GetNode();
+        }
+        else
+        {
+            // Property supports a single item, but an Array was provided
+            Error::Error_1050_PropertyMustBeOfType( iter,
+                                                    this,
+                                                    variable->GetName().Get(),
+                                                    BFFVariable::VAR_ARRAY_OF_STRINGS,
+                                                    BFFVariable::VAR_STRING );
+            return false;
+        }
+    }
+    return true;
 }
 
 // PopulateArrayOfStructsElement

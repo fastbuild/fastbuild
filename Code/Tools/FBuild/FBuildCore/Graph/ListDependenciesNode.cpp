@@ -100,10 +100,7 @@ ListDependenciesNode::ListDependenciesNode()
 /*virtual*/ bool ListDependenciesNode::Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, funcStartIter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // Get nodes for Source of dependency list
     if ( !Function::GetNodeList( nodeGraph, funcStartIter, function, ".Source", m_Source, m_StaticDependencies ) )

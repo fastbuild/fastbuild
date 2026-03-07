@@ -35,7 +35,7 @@ private:
     AString m_TextFileOutput;
     Array<AString> m_TextFileInputStrings;
     bool m_TextFileAlways;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

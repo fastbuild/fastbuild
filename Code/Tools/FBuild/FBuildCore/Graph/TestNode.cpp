@@ -65,10 +65,7 @@ TestNode::TestNode()
 /*virtual*/ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // .ConcurrencyGroupName
     if ( !InitializeConcurrencyGroup( nodeGraph,

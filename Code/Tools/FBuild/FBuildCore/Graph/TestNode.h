@@ -44,7 +44,7 @@ private:
     uint32_t m_TestTimeOut;
     bool m_TestAlwaysShowOutput;
     bool m_TestInputPathRecurse;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
     Array<AString> m_Environment;
     AString m_ConcurrencyGroupName;
 
