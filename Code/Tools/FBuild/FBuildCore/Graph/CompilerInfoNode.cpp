@@ -22,7 +22,7 @@ REFLECT_NODE_BEGIN( CompilerInfoNode, Node )
     REFLECT( m_Compiler, MetaHidden() )
     REFLECT( m_NoStdInc, MetaHidden() )
     REFLECT( m_NoStdIncPP, MetaHidden() )
-    REFLECT( m_BuiltinIncludePaths, MetaHidden() )
+    REFLECT( m_BuiltinIncludePaths, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( CompilerInfoNode )
 
 // CONSTRUCTOR
@@ -248,6 +248,17 @@ void CompilerInfoNode::EmitCompilationMessage( const AString & args ) const
     {
         FLOG_OUTPUT( output );
     }
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ void CompilerInfoNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate lazily evaluated properties
+    const CompilerInfoNode * oldCompilerInfoNode = oldNode.CastTo<CompilerInfoNode>();
+    m_BuiltinIncludePaths = oldCompilerInfoNode->m_BuiltinIncludePaths;
 }
 
 //------------------------------------------------------------------------------

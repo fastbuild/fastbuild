@@ -971,6 +971,23 @@ void TestCache::LightCache_NoRebuild() const
         CheckLightCacheStores( fBuild, 0 );
         CheckLightCacheHits( fBuild, 0 );
     }
+
+    // BFF edit no rebuild
+    {
+        FBuildTestOptions optionsCopy( options );
+        optionsCopy.m_ForceDBMigration_Debug = true;
+        FBuildForTest fBuild( optionsCopy );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckLightCacheStores( fBuild, 0 );
+        CheckLightCacheHits( fBuild, 0 );
+    }
 }
 
 //------------------------------------------------------------------------------
