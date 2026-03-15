@@ -216,7 +216,10 @@ uint32_t Worker::WorkThread()
     }
 
     // Now that we will no longer interact with the UI, we can stop the message pump
-    m_MainWindow->StopMessagePump();
+    if ( m_MainWindow )
+    {
+        m_MainWindow->StopMessagePump();
+    }
 
     m_WorkerBrokerage.SetAvailability( false );
 

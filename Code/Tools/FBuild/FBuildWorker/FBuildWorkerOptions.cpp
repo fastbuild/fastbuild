@@ -44,9 +44,6 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         if ( token == "-console" )
         {
             m_ConsoleMode = true;
-    #if defined( __WINDOWS__ )
-            m_UseSubprocess = false;
-    #endif
             continue;
         }
 #endif
