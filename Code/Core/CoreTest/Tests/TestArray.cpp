@@ -2113,9 +2113,9 @@ void TestArray::MoveWhenGrowing() const
     // array will need to reallocate
     array.Append( string5 );
 
-    // Should be 2 allocs: one for resize and one for new string
+    // Should be 1 allocs: one for resize, but not for new string because unchanged strings share underlying data
     // but existing strings should have been moved
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 2u )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u )
 
     CheckConsistency( array );
 }

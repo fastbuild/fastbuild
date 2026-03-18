@@ -13,6 +13,7 @@ class AStackString : public AString
 {
 public:
     explicit AStackString();
+    explicit AStackString( uint32_t reserve );
     explicit AStackString( const AString & string );
     explicit AStackString( AString && string );
     explicit AStackString( const AStackString & string );
@@ -63,14 +64,27 @@ template <int RESERVED>
 AStackString<RESERVED>::AStackString()
 {
     ASSERT( m_ReferenceCount == nullptr );
+    ASSERT( m_Contents == AString::s_EmptyString );
+    ASSERT( m_Length == 0 );
+    ASSERT( m_Reserved == 0 );
     m_ReferenceCount = nullptr;
     m_Contents = m_Storage;
-    SetReserved( RESERVED );
-    ASSERT( !IsUsingSharedMemory() );
+    m_Length = 0;
+    m_Reserved = RESERVED;
     m_Storage[ 0 ] = '\0';
+    ASSERT( !IsUsingSharedMemory() );
 }
 
-// CONSTRUCTOR
+// CONSTRUCTOR (uint32_t)
+//------------------------------------------------------------------------------
+template <int RESERVED>
+AStackString<RESERVED>::AStackString( uint32_t reserve )
+    : AStackString()
+{
+    SetReserved( reserve );
+}
+
+// CONSTRUCTOR (const AString &)
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const AString & string )
@@ -88,7 +102,7 @@ AStackString<RESERVED>::AStackString( AString && string )
     Assign( Move( string ) );
 }
 
-// CONSTRUCTOR (const AString &)
+// CONSTRUCTOR (const AStackString &)
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const AStackString & string )

@@ -92,7 +92,7 @@ AString::AString( const char * string )
     ASSERT( string );
     const uint32_t len = (uint32_t)StrLen( string );
     UnsafeInitAsEmpty( len );
-    Copy( string, m_Contents, len ); // copy handles terminator
+    Assign( string, string + len );
 }
 
 // CONSTRUCTOR (const char *, const char *)
@@ -103,7 +103,7 @@ AString::AString( const char * start, const char * end )
     ASSERT( end >= start );
     const uint32_t len = uint32_t( end - start );
     UnsafeInitAsEmpty( len );
-    Copy( start, m_Contents, len ); // copy handles terminator
+    Assign( start, end );
 }
 
 // DESTRUCTOR

@@ -805,8 +805,8 @@ void TestAString::FindLastI() const
 void TestAString::Format() const
 {
     // Create a really long input string
-    AStackString longInput;
     const size_t longStringLen( 1024 * 1024 );
+    AStackString longInput( longStringLen );
     for ( size_t i = 0; i < longStringLen; ++i )
     {
         longInput += 'A';

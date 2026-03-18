@@ -114,7 +114,7 @@ public:
     [[nodiscard]] bool operator>( const AString & other ) const { return ( Compare( other ) > 0 ); }
 
     [[nodiscard]] bool MemoryMustBeFreed() const { return ( m_ReferenceCount != nullptr ); }
-    [[nodiscard]] bool IsUsingSharedMemory() const { return ( m_ReferenceCount != nullptr ) || ( m_Contents != s_EmptyString ); }
+    [[nodiscard]] bool IsUsingSharedMemory() const { return ( m_ReferenceCount != nullptr ) || ( m_Contents == s_EmptyString ); }
     [[nodiscard]] bool IsOnlyOwner() const
     {
         return ( ( m_ReferenceCount != nullptr ) && ( m_ReferenceCount->Load() == 1 ) ) ||
