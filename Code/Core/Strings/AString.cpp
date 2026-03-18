@@ -20,9 +20,10 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 AString::AString()
-    : m_Contents( const_cast<char *>( s_EmptyString ) ) // cast to allow pointing to protected string
+    : m_ReferenceCount( nullptr )
+    , m_Contents( const_cast<char *>( s_EmptyString ) ) // cast to allow pointing to protected string
     , m_Length( 0 )
-    , m_ReservedAndFlags( 0 )
+    , m_Reserved( 0 )
 {
 }
 
@@ -30,55 +31,58 @@ AString::AString()
 //------------------------------------------------------------------------------
 AString::AString( uint32_t reserve )
 {
-    char * mem = const_cast<char *>( s_EmptyString ); // cast to allow pointing to protected string
-    if ( reserve > 0 )
+    if ( reserve == 0 )
     {
-        reserve = Math::RoundUp( reserve, (uint32_t)2 );
-        mem = (char *)ALLOC( reserve + 1 );
-        mem[ 0 ] = '\000';
+        UnsafeAssignSharingWith( s_EmptyAString );
     }
-    m_Contents = mem;
-    m_Length = 0;
-    SetReserved( reserve, true );
+    else
+    {
+        UnsafeInitAsEmpty( reserve );
+    }
 }
 
 // CONSTRUCTOR (const AString &)
 //------------------------------------------------------------------------------
 AString::AString( const AString & string )
 {
-    const uint32_t len = string.GetLength();
-    m_Length = len;
-    const uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
-    m_Contents = (char *)ALLOC( reserved + 1 );
-    SetReserved( reserved, true );
-    Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
+    if ( string.m_ReferenceCount )
+    {
+        m_ReferenceCount = string.m_Contents != s_EmptyString ? string.m_ReferenceCount : nullptr;
+        m_Contents = string.m_Contents;
+        m_Length = string.m_Length;
+        m_Reserved = string.m_Reserved;
+
+        if ( m_ReferenceCount )
+        {
+            *m_ReferenceCount += 1;
+        }
+    }
+    else
+    {
+        // Source string doesn't support reference counting, so copy
+        UnsafeInitAsEmpty( string.GetLength() );
+        Assign( string );
+    }
 }
 
 // CONSTRUCTOR (AString &&)
 //------------------------------------------------------------------------------
 AString::AString( AString && string )
 {
-    // If source string memory can't be freed, it can't be moved
-    if ( string.MemoryMustBeFreed() == false )
+    if ( string.IsUsingSharedMemory() )
     {
-        // Copy
-        m_Contents = const_cast<char *>( s_EmptyString ); // cast to allow pointing to protected string
-        m_Length = 0;
-        m_ReservedAndFlags = 0;
-        Assign( string );
+        UnsafeAssignSharingWith( string );
+        string.UnsafeAssignSharingWith( s_EmptyAString );
     }
     else
     {
-        // Move
-        m_Contents = string.m_Contents;
-        m_Length = string.m_Length;
-        m_ReservedAndFlags = string.m_ReservedAndFlags;
-    }
+        // Source string memory doesn't support reference counting, so copy
+        UnsafeInitAsEmpty( string.GetLength() );
+        Assign( string );
 
-    // Clear other string
-    string.m_Contents = const_cast<char *>( s_EmptyString );
-    string.m_Length = 0;
-    string.m_ReservedAndFlags = 0;
+        // Clear other string
+        string.Assign( s_EmptyAString );
+    }
 }
 
 // CONSTRUCTOR (const char *)
@@ -87,11 +91,8 @@ AString::AString( const char * string )
 {
     ASSERT( string );
     const uint32_t len = (uint32_t)StrLen( string );
-    m_Length = len;
-    const uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
-    m_Contents = (char *)ALLOC( reserved + 1 );
-    SetReserved( reserved, true );
-    Copy( string, m_Contents ); // copy handles terminator
+    UnsafeInitAsEmpty( len );
+    Copy( string, m_Contents, len ); // copy handles terminator
 }
 
 // CONSTRUCTOR (const char *, const char *)
@@ -101,10 +102,7 @@ AString::AString( const char * start, const char * end )
     ASSERT( start );
     ASSERT( end >= start );
     const uint32_t len = uint32_t( end - start );
-    m_Length = len;
-    const uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
-    m_Contents = (char *)ALLOC( reserved + 1 );
-    SetReserved( reserved, true );
+    UnsafeInitAsEmpty( len );
     Copy( start, m_Contents, len ); // copy handles terminator
 }
 
@@ -112,26 +110,7 @@ AString::AString( const char * start, const char * end )
 //------------------------------------------------------------------------------
 AString::~AString()
 {
-    // At this point, we should
-    if ( MemoryMustBeFreed() )
-    {
-        // if we own the memory, we must:
-        // a) NOT be pointing to the shared global string
-        ASSERT( m_Contents != s_EmptyString );
-        // b) NOT be pointing to an internal buffer
-        // Depending on the memory allocator, it could be valid to have an allocation
-        // immediately after the string itself, so we can't have an assert for this
-        FREE( m_Contents );
-    }
-    else
-    {
-        // if we don't own the memory, either:
-        // a) We are an empty string, pointing to the special global empty string
-        // OR:
-        // b) We are a StackString, and we should point to our internal buffer
-        ASSERT( ( m_Contents == s_EmptyString ) ||
-                ( (void *)m_Contents == (void *)( (char *)this + sizeof( AString ) ) ) );
-    }
+    UnsafeReleaseSharedMemory();
 }
 
 // operator == (const char *)
@@ -414,6 +393,8 @@ void AString::Tokenize( Array<AString> & tokens, char splitChar ) const
 //------------------------------------------------------------------------------
 void AString::RemoveQuotes()
 {
+    EnsureOnlyOwner();
+
     // Remove quotes in-place
     char * src = Get();
     char * dst = src;
@@ -496,17 +477,38 @@ void AString::Assign( const char * start, const char * end )
 //------------------------------------------------------------------------------
 void AString::Assign( const AString & string )
 {
+    if ( IsUsingSharedMemory() && string.IsUsingSharedMemory() )
+    {
+        // Other string supports shared memory, so we don't need to perform a deep copy.
+        if ( (void *)m_Contents == (void *)string.Get() )
+        {
+            // Already pointing to the same shared memory. Nothing to do.
+            ASSERT( ( m_ReferenceCount == string.m_ReferenceCount ) && ( m_Length == string.m_Length ) && ( m_Reserved == string.m_Reserved ) );
+            return;
+        }
+
+        // Copy the pointers and increment the reference count.
+        UnsafeReleaseSharedMemory();
+        UnsafeAssignSharingWith( string );
+        if ( m_ReferenceCount )
+        {
+            *m_ReferenceCount += 1;
+        }
+        return;
+    }
+
     const uint32_t len = string.GetLength();
     if ( len > GetReserved() )
     {
         GrowNoCopy( len );
     }
-    else if ( m_Contents == s_EmptyString )
+    if ( m_Contents == s_EmptyString )
     {
         // if we are the special empty string, and we
         // didn't resize then the passed in string is empty too
         return;
     }
+    EnsureOnlyOwner(); // should do nothing if grew
     Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
     m_Length = len;
 }
@@ -515,27 +517,42 @@ void AString::Assign( const AString & string )
 //------------------------------------------------------------------------------
 void AString::Assign( AString && string )
 {
-    // If memory can't be freed, it can't be moved
-    if ( string.MemoryMustBeFreed() == false )
+    if ( IsUsingSharedMemory() && string.IsUsingSharedMemory() )
     {
-        // Fallback to regular assignment
-        Assign( string );
-    }
-    else
-    {
-        if ( MemoryMustBeFreed() )
+        // Other string supports shared memory, so we don't need to perform a deep copy.
+        if ( (void *)m_Contents == (void *)string.Get() )
         {
-            FREE( m_Contents );
+            // Already pointing to the same shared memory. Just clear the other.
+            ASSERT( ( m_ReferenceCount == string.m_ReferenceCount ) && ( m_Length == string.m_Length ) && ( m_Reserved == string.m_Reserved ) );
+            string.Clear();
+            return;
         }
-        m_Contents = string.m_Contents;
-        m_Length = string.m_Length;
-        m_ReservedAndFlags = string.m_ReservedAndFlags;
+
+        UnsafeReleaseSharedMemory();
+        UnsafeAssignSharingWith( string );
+        string.UnsafeAssignSharingWith( s_EmptyAString );
+        ASSERT( ( m_ReferenceCount != nullptr ) || ( *m_ReferenceCount != 0 ) );
+        return;
     }
 
+    // Fallback to regular copy assignment
+    const uint32_t len = string.GetLength();
+    if ( len > GetReserved() )
+    {
+        GrowNoCopy( len );
+    }
+    if ( m_Contents == s_EmptyString )
+    {
+        // if we are the special empty string, and we
+        // didn't resize then the passed in string is empty too
+        return;
+    }
+    EnsureOnlyOwner(); // should do nothing if grew
+    Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
+    m_Length = len;
+
     // Clear other string
-    string.m_Contents = const_cast<char *>( s_EmptyString );
-    string.m_Length = 0;
-    string.m_ReservedAndFlags = 0;
+    string.Clear();
 }
 
 // Clear
@@ -545,6 +562,12 @@ void AString::Clear()
     // handle the special case empty string with no mem usage
     if ( m_Contents == s_EmptyString )
     {
+        return;
+    }
+    if ( !IsOnlyOwner() )
+    {
+        UnsafeReleaseSharedMemory();
+        UnsafeAssignSharingWith( s_EmptyAString );
         return;
     }
 
@@ -557,25 +580,21 @@ void AString::Clear()
 //------------------------------------------------------------------------------
 void AString::ClearAndFreeMemory()
 {
-    if ( MemoryMustBeFreed() )
+    // handle the special case empty string with no mem usage
+    if ( m_Contents == s_EmptyString )
     {
-        // Free memory that was allocated
-        FREE( m_Contents );
+        return;
+    }
+    if ( IsUsingSharedMemory() )
+    {
+        UnsafeReleaseSharedMemory();
+        UnsafeAssignSharingWith( s_EmptyAString );
+        return;
+    }
 
-        // Reset to new empty string state
-        m_Contents = const_cast<char *>( s_EmptyString );
-        m_Length = 0;
-        m_ReservedAndFlags = 0;
-    }
-    else
-    {
-        // Pointing to unfreeable memory so just reset state
-        if ( m_Contents != const_cast<char *>( s_EmptyString ) )
-        {
-            m_Contents[ 0 ] = '\000';
-        }
-        m_Length = 0;
-    }
+    // Pointing to unfreeable memory so just reset state
+    m_Contents[ 0 ] = '\000';
+    m_Length = 0;
 }
 
 // SetReserved
@@ -605,17 +624,23 @@ void AString::SetReserved( size_t capacity )
 //------------------------------------------------------------------------------
 void AString::SetLength( uint32_t len )
 {
+    if ( len == m_Length )
+    {
+        return;
+    }
     if ( len > GetReserved() )
     {
         Grow( len );
     }
-
     // Gracefully handle SetLength( 0 ) on already empty string pointing to the
     // global storage.
-    if ( m_Contents != s_EmptyString )
+    if ( m_Contents == s_EmptyString )
     {
-        m_Contents[ len ] = '\000';
+        return;
     }
+
+    EnsureOnlyOwner();
+    m_Contents[ len ] = '\000';
     m_Length = len;
 
     // NOTE: it's up to the user to ensure everything upto the null is
@@ -631,6 +656,8 @@ AString & AString::operator+=( char c )
     {
         Grow( m_Length + 1 );
     }
+
+    EnsureOnlyOwner();
     m_Contents[ m_Length++ ] = c;
     m_Contents[ m_Length ] = '\000';
 
@@ -650,6 +677,7 @@ AString & AString::operator+=( const char * string )
             Grow( newLen );
         }
 
+        EnsureOnlyOwner();
         Copy( string, m_Contents + m_Length ); // handles terminator
         m_Length += suffixLen;
     }
@@ -660,6 +688,11 @@ AString & AString::operator+=( const char * string )
 //------------------------------------------------------------------------------
 AString & AString::operator+=( const AString & string )
 {
+    if ( IsEmpty() )
+    {
+        Assign( string );
+        return *this;
+    }
     const uint32_t suffixLen = string.GetLength();
     if ( suffixLen )
     {
@@ -669,6 +702,7 @@ AString & AString::operator+=( const AString & string )
             Grow( newLen );
         }
 
+        EnsureOnlyOwner();
         Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator (NOTE: Using suffixLen to support embedded nuls)
         m_Length += suffixLen;
     }
@@ -687,6 +721,7 @@ AString & AString::Append( const char * string, size_t len )
             Grow( newLen );
         }
 
+        EnsureOnlyOwner();
         Copy( string, m_Contents + m_Length, len ); // handles terminator
         m_Length = newLen;
     }
@@ -740,6 +775,12 @@ AString & AString::AppendList( const Array<AString> & list, char separator )
 //------------------------------------------------------------------------------
 uint32_t AString::Replace( char from, char to, uint32_t maxReplaces )
 {
+    if ( from == to || maxReplaces == 0 )
+    {
+        return 0;
+    }
+
+    EnsureOnlyOwner();
     uint32_t replaceCount = 0;
     char * pos = m_Contents;
     const char * end = m_Contents + m_Length;
@@ -763,6 +804,7 @@ uint32_t AString::Replace( char from, char to, uint32_t maxReplaces )
 //------------------------------------------------------------------------------
 void AString::ToLower()
 {
+    EnsureOnlyOwner();
     char * pos = m_Contents;
     const char * const end = m_Contents + m_Length;
     while ( pos < end )
@@ -781,6 +823,7 @@ void AString::ToLower()
 //------------------------------------------------------------------------------
 void AString::ToUpper()
 {
+    EnsureOnlyOwner();
     char * pos = m_Contents;
     const char * const end = m_Contents + m_Length;
     while ( pos < end )
@@ -851,7 +894,7 @@ void AString::TrimEnd( char charToTrimFromEnd )
 uint32_t AString::Replace( const char * from, const char * to, uint32_t maxReplaces )
 {
     const size_t fromLength = StrLen( from );
-    if ( fromLength == 0 )
+    if ( fromLength == 0 || maxReplaces == 0 || StrNCmp( from, to, fromLength ) == 0 )
     {
         // string to replace can't be empty, otherwise replace operation doesn't make sense
         return 0;
@@ -1591,36 +1634,131 @@ test_match:
 //------------------------------------------------------------------------------
 void AString::Grow( uint32_t newLength )
 {
-    // allocate space, rounded up to multiple of 2
-    const uint32_t amortizedReserve = ( GetReserved() * 2 );
-    const uint32_t reserve = Math::RoundUp( Math::Max( amortizedReserve, newLength ), (uint32_t)2 );
-    char * newMem = (char *)ALLOC( reserve + 1 ); // also allocate for \0 terminator
+    uint32_t * const oldReferenceCount = m_ReferenceCount;
+    const char * const oldContents = m_Contents;
+
+    UnsafeAllocateSharedMemory( newLength );
 
     // transfer existing string data
-    Copy( m_Contents, newMem, m_Length ); // copy handles terminator
+    Copy( oldContents, m_Contents, m_Length ); // copy handles terminator
 
-    if ( MemoryMustBeFreed() )
-    {
-        FREE( m_Contents );
-    }
-
-    m_Contents = newMem;
-    SetReserved( reserve, true );
+    AString::ReleaseSharedMemory( this, oldReferenceCount, oldContents );
 }
 
 // GrowNoCopy
 //------------------------------------------------------------------------------
 void AString::GrowNoCopy( uint32_t newLength )
 {
-    if ( MemoryMustBeFreed() )
-    {
-        FREE( m_Contents );
-    }
+    UnsafeReleaseSharedMemory();
+    UnsafeAllocateSharedMemory( newLength );
+}
 
-    // allocate space, rounded up to multiple of 2
-    const uint32_t reserve = Math::RoundUp( newLength, (uint32_t)2 );
-    m_Contents = (char *)ALLOC( reserve + 1 ); // also allocate for \0 terminator
-    SetReserved( reserve, true );
+// UnsafeAllocateSharedMemory
+//------------------------------------------------------------------------------
+void AString::UnsafeAllocateSharedMemory( uint32_t reserve )
+{
+    AString::AllocateSharedMemory( m_ReferenceCount, m_Contents, reserve );
+    m_Reserved = reserve;
+    *m_ReferenceCount = 1;
+}
+
+// UnsafeReleaseSharedMemory
+//------------------------------------------------------------------------------
+void AString::UnsafeReleaseSharedMemory()
+{
+    // Unsafe because it leaves the string in an unsafe state.
+    // Safe to call from any state, but caller must restore a valid state ASAP.
+    AString::ReleaseSharedMemory( this, m_ReferenceCount, m_Contents );
+}
+
+/*static*/ void AString::AllocateSharedMemory( uint32_t * & referenceCount, char * & contents, uint32_t reserve )
+{
+    void * const newMem = ALLOC( sizeof(uint32_t) + reserve + 1 ); // also allocate for \0 terminator
+    referenceCount = (uint32_t *)newMem;
+    contents = (char *)newMem + sizeof( uint32_t );
+}
+
+// ReleaseSharedMemory
+//------------------------------------------------------------------------------
+/*static*/ void AString::ReleaseSharedMemory( const AString* string, uint32_t * referenceCount, const char * contents )
+{
+    (void) contents;
+    (void) string;
+    if ( referenceCount )
+    {
+        // if we own the memory, we must:
+        // a) NOT be pointing to the shared global string
+        ASSERT( contents != s_EmptyString );
+        // b) NOT be pointing to different places in memory
+        ASSERT( (void *)contents == (void *)( (char *)referenceCount + sizeof( uint32_t ) ) );
+        // c) NOT be pointing to an internal buffer
+        // Depending on the memory allocator, it could be valid to have an allocation
+        // immediately after the string itself, so we can't have an assert for this
+
+        // Memory is on the heap, but may be shared with others.
+        const uint32_t remainingReferenceCount = --(*referenceCount);
+        if ( remainingReferenceCount == 0 )
+        {
+            // We were the last remaining string owning this memory, so it must be freed
+            FREE( (void *)referenceCount );
+        }
+    }
+    else
+    {
+        // if we don't own the memory, either:
+        // a) We are an empty string, pointing to the special global empty string
+        // OR:
+        // b) We are a StackString, and we should point to our internal buffer
+        ASSERT( ( contents == s_EmptyString ) ||
+                ( (void *)contents == (void *)( (char *)string + sizeof( AString ) ) ) );
+    }
+}
+
+// UnsafeInitAsEmpty
+//------------------------------------------------------------------------------
+void AString::UnsafeInitAsEmpty( uint32_t reserve )
+{
+    UnsafeAllocateSharedMemory( reserve );
+    m_Contents[ 0 ] = '\000';
+    m_Length = 0;
+}
+
+// UnsafeAssignSharingWith
+//------------------------------------------------------------------------------
+void AString::UnsafeAssignSharingWith( const AString & string )
+{
+    m_ReferenceCount = string.m_Contents != s_EmptyString ? const_cast<uint32_t *>( string.m_ReferenceCount ) : nullptr; // special value for the empty string
+    m_Contents = const_cast<char *>( string.m_Contents );
+    m_Length = string.m_Length;
+    m_Reserved = string.m_Reserved;
+    ASSERT( ( m_ReferenceCount != nullptr ) || ( m_Contents == s_EmptyString ) ); // consistency check: shouldn't be using this on self-managed memory
+}
+
+// EnsureOnlyOwner
+//------------------------------------------------------------------------------
+void AString::EnsureOnlyOwner()
+{
+    if ( ( !IsOnlyOwner() ) && ( m_Reserved > 0 ) )
+    {
+        ASSERT( m_Contents != AString::s_EmptyString ); // prevent calling this on s_EmptyAString
+
+        Grow( m_Reserved ); // reuse Grow's solid logic
+    }
+}
+
+// ToMutableContentPtr
+//------------------------------------------------------------------------------
+char * AString::ToMutableContentPtr( const char * pos )
+{
+    if ( pos == nullptr )
+    {
+        return nullptr;
+    }
+    ASSERT( ( pos >= m_Contents ) );
+    ASSERT( ( pos <= m_Contents + GetLength() ) );
+    const size_t offset = ( pos - m_Contents );
+    EnsureOnlyOwner();
+    return m_Contents + offset;
 }
 
 //------------------------------------------------------------------------------

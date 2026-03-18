@@ -62,9 +62,9 @@ AStackString( const AStackString<> & ) -> AStackString<RESERVED>;
 template <int RESERVED>
 AStackString<RESERVED>::AStackString()
 {
-    static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
-    SetReserved( RESERVED, false );
+    SetReserved( RESERVED );
+    ASSERT( !IsUsingSharedMemory() );
     m_Storage[ 0 ] = '\0';
 }
 
@@ -73,9 +73,9 @@ AStackString<RESERVED>::AStackString()
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const AString & string )
 {
-    static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
-    SetReserved( RESERVED, false );
+    SetReserved( RESERVED );
+    ASSERT( !IsUsingSharedMemory() );
     Assign( string );
 }
 
@@ -83,11 +83,10 @@ AStackString<RESERVED>::AStackString( const AString & string )
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( AString && string )
-    : AString()
 {
-    static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
-    SetReserved( RESERVED, false );
+    SetReserved( RESERVED );
+    ASSERT( !IsUsingSharedMemory() );
     Assign( Move( string ) );
 }
 
@@ -95,11 +94,10 @@ AStackString<RESERVED>::AStackString( AString && string )
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const AStackString & string )
-    : AString()
 {
-    static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
-    SetReserved( RESERVED, false );
+    SetReserved( RESERVED );
+    ASSERT( !IsUsingSharedMemory() );
     Assign( string );
 }
 
@@ -107,11 +105,10 @@ AStackString<RESERVED>::AStackString( const AStackString & string )
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( AStackString && string )
-    : AString()
 {
-    static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
-    SetReserved( RESERVED, false );
+    SetReserved( RESERVED );
+    ASSERT( !IsUsingSharedMemory() );
     Assign( Move( string ) );
 }
 
@@ -120,9 +117,9 @@ AStackString<RESERVED>::AStackString( AStackString && string )
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const char * string )
 {
-    static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
-    SetReserved( RESERVED, false );
+    SetReserved( RESERVED );
+    ASSERT( !IsUsingSharedMemory() );
     Assign( string );
 }
 
@@ -131,9 +128,9 @@ AStackString<RESERVED>::AStackString( const char * string )
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const char * start, const char * end )
 {
-    static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
-    SetReserved( RESERVED, false );
+    SetReserved( RESERVED );
+    ASSERT( !IsUsingSharedMemory() );
     Assign( start, end );
 }
 
