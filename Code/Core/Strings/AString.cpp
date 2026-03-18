@@ -54,7 +54,7 @@ AString::AString( const AString & string )
 
         if ( m_ReferenceCount )
         {
-            *m_ReferenceCount += 1;
+            m_ReferenceCount->Increment();
         }
     }
     else
@@ -492,7 +492,7 @@ void AString::Assign( const AString & string )
         UnsafeAssignSharingWith( string );
         if ( m_ReferenceCount )
         {
-            *m_ReferenceCount += 1;
+            m_ReferenceCount->Increment();
         }
         return;
     }
@@ -531,7 +531,7 @@ void AString::Assign( AString && string )
         UnsafeReleaseSharedMemory();
         UnsafeAssignSharingWith( string );
         string.UnsafeAssignSharingWith( s_EmptyAString );
-        ASSERT( ( m_ReferenceCount != nullptr ) || ( *m_ReferenceCount != 0 ) );
+        ASSERT( ( m_ReferenceCount != nullptr ) || ( m_ReferenceCount->Load() != 0 ) );
         return;
     }
 
@@ -1634,7 +1634,7 @@ test_match:
 //------------------------------------------------------------------------------
 void AString::Grow( uint32_t newLength )
 {
-    uint32_t * const oldReferenceCount = m_ReferenceCount;
+    Atomic<uint32_t> * const oldReferenceCount = m_ReferenceCount;
     const char * const oldContents = m_Contents;
 
     UnsafeAllocateSharedMemory( newLength );
@@ -1659,7 +1659,6 @@ void AString::UnsafeAllocateSharedMemory( uint32_t reserve )
 {
     AString::AllocateSharedMemory( m_ReferenceCount, m_Contents, reserve );
     m_Reserved = reserve;
-    *m_ReferenceCount = 1;
 }
 
 // UnsafeReleaseSharedMemory
@@ -1671,16 +1670,19 @@ void AString::UnsafeReleaseSharedMemory()
     AString::ReleaseSharedMemory( this, m_ReferenceCount, m_Contents );
 }
 
-/*static*/ void AString::AllocateSharedMemory( uint32_t * & referenceCount, char * & contents, uint32_t reserve )
+// AllocateSharedMemory
+//------------------------------------------------------------------------------
+/*static*/ void AString::AllocateSharedMemory( Atomic<uint32_t> * & referenceCount, char * & contents, uint32_t reserve )
 {
-    void * const newMem = ALLOC( sizeof(uint32_t) + reserve + 1 ); // also allocate for \0 terminator
-    referenceCount = (uint32_t *)newMem;
-    contents = (char *)newMem + sizeof( uint32_t );
+    void * const newMem = ALLOC( sizeof(Atomic<uint32_t>) + reserve + 1 ); // also allocate for \0 terminator
+    referenceCount = (Atomic<uint32_t> *)newMem;
+    contents = (char *)newMem + sizeof( Atomic<uint32_t> );
+    INPLACE_NEW( referenceCount ) Atomic<uint32_t>( 1 );
 }
 
 // ReleaseSharedMemory
 //------------------------------------------------------------------------------
-/*static*/ void AString::ReleaseSharedMemory( const AString* string, uint32_t * referenceCount, const char * contents )
+/*static*/ void AString::ReleaseSharedMemory( const AString* string, Atomic<uint32_t> * referenceCount, const char * contents )
 {
     (void) contents;
     (void) string;
@@ -1690,16 +1692,17 @@ void AString::UnsafeReleaseSharedMemory()
         // a) NOT be pointing to the shared global string
         ASSERT( contents != s_EmptyString );
         // b) NOT be pointing to different places in memory
-        ASSERT( (void *)contents == (void *)( (char *)referenceCount + sizeof( uint32_t ) ) );
+        ASSERT( (void *)contents == (void *)( (char *)referenceCount + sizeof( Atomic<uint32_t> ) ) );
         // c) NOT be pointing to an internal buffer
         // Depending on the memory allocator, it could be valid to have an allocation
         // immediately after the string itself, so we can't have an assert for this
 
         // Memory is on the heap, but may be shared with others.
-        const uint32_t remainingReferenceCount = --(*referenceCount);
+        const uint32_t remainingReferenceCount = referenceCount->Decrement();
         if ( remainingReferenceCount == 0 )
         {
             // We were the last remaining string owning this memory, so it must be freed
+            referenceCount->~Atomic<uint32_t>();
             FREE( (void *)referenceCount );
         }
     }
@@ -1727,7 +1730,7 @@ void AString::UnsafeInitAsEmpty( uint32_t reserve )
 //------------------------------------------------------------------------------
 void AString::UnsafeAssignSharingWith( const AString & string )
 {
-    m_ReferenceCount = string.m_Contents != s_EmptyString ? const_cast<uint32_t *>( string.m_ReferenceCount ) : nullptr; // special value for the empty string
+    m_ReferenceCount = string.m_Contents != s_EmptyString ? const_cast<Atomic<uint32_t> *>( string.m_ReferenceCount ) : nullptr; // special value for the empty string
     m_Contents = const_cast<char *>( string.m_Contents );
     m_Length = string.m_Length;
     m_Reserved = string.m_Reserved;

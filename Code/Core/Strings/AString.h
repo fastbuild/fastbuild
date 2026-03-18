@@ -9,6 +9,7 @@
 #include "Core/Env/Assert.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
+#include "Core/Process/Atomic.h"
 
 // Typedefs
 //------------------------------------------------------------------------------
@@ -116,7 +117,7 @@ public:
     [[nodiscard]] bool IsUsingSharedMemory() const { return ( m_ReferenceCount != nullptr ) || ( m_Contents != s_EmptyString ); }
     [[nodiscard]] bool IsOnlyOwner() const
     {
-        return ( ( m_ReferenceCount != nullptr ) && ( *m_ReferenceCount == 1 ) ) ||
+        return ( ( m_ReferenceCount != nullptr ) && ( m_ReferenceCount->Load() == 1 ) ) ||
                ( ( m_ReferenceCount == nullptr ) && ( m_Contents != s_EmptyString ) );
     }
 
@@ -223,8 +224,8 @@ public:
 private:
     void UnsafeAllocateSharedMemory( uint32_t reserve );
     void UnsafeReleaseSharedMemory();
-    static void AllocateSharedMemory( uint32_t * & referenceCount, char * & contents, uint32_t reserve );
-    static void ReleaseSharedMemory( const AString * string, uint32_t * referenceCount, const char * contents );
+    static void AllocateSharedMemory( Atomic<uint32_t> * & referenceCount, char * & contents, uint32_t reserve );
+    static void ReleaseSharedMemory( const AString * string, Atomic<uint32_t> * referenceCount, const char * contents );
     void UnsafeInitAsEmpty( uint32_t reserve );
     void UnsafeAssignSharingWith( const AString& string );
 
@@ -235,7 +236,7 @@ protected:
     NO_INLINE void Grow( uint32_t newLen );     // Grow capacity, transferring existing string data (for concatenation)
     NO_INLINE void GrowNoCopy( uint32_t newLen ); // Grow capacity, discarding existing string data (for assignment/construction)
 
-    uint32_t * m_ReferenceCount; // number of AStrings that share ownership of m_Contents, or nullptr if the empty string or m_Contents is not shared
+    Atomic<uint32_t> * m_ReferenceCount; // number of AStrings that share ownership of m_Contents, or nullptr if the empty string or m_Contents is not shared
     char * m_Contents; // always points to valid null terminated string (even when empty)
     uint32_t m_Length; // length in characters
     uint32_t m_Reserved; // reserved space in characters
