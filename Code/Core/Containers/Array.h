@@ -11,6 +11,7 @@
 #include "Core/Env/Types.h"
 #include "Core/Math/Conversions.h"
 #include "Core/Mem/Mem.h"
+#include "Core/Process/Atomic.h"
 
 // Array
 //------------------------------------------------------------------------------
@@ -32,11 +33,12 @@ public:
     typedef const T * ConstIter;
     [[nodiscard]] ConstIter Begin() const { return m_Begin; }
     [[nodiscard]] ConstIter End() const { return m_Begin + m_Size; }
-    [[nodiscard]] Iter Begin() { return m_Begin; }
-    [[nodiscard]] Iter End() { return m_Begin + m_Size; }
+    [[nodiscard]] Iter Begin() { EnsureIsOnlyOwner(); return m_Begin; }
+    [[nodiscard]] Iter End() { EnsureIsOnlyOwner(); return m_Begin + m_Size; }
     [[nodiscard]] T & operator[]( size_t index )
     {
         ASSERT( index < m_Size );
+        EnsureIsOnlyOwner();
         return m_Begin[ index ];
     }
     [[nodiscard]] const T & operator[]( size_t index ) const
@@ -48,6 +50,7 @@ public:
     [[nodiscard]] T & Top()
     {
         ASSERT( m_Size );
+        EnsureIsOnlyOwner();
         return *( m_Begin + m_Size - 1 );
     }
     [[nodiscard]] const T & Top() const
@@ -57,10 +60,10 @@ public:
     }
 
     // C++11 style for range based for
-    [[nodiscard]] Iter begin() { return m_Begin; }
+    [[nodiscard]] Iter begin() { EnsureIsOnlyOwner(); return m_Begin; }
     [[nodiscard]] ConstIter begin() const { return m_Begin; }
     [[nodiscard]] ConstIter cbegin() const { return m_Begin; }
-    [[nodiscard]] Iter end() { return m_Begin + m_Size; }
+    [[nodiscard]] Iter end() { EnsureIsOnlyOwner(); return m_Begin + m_Size; }
     [[nodiscard]] ConstIter end() const { return m_Begin + m_Size; }
     [[nodiscard]] ConstIter cend() const { return m_Begin + m_Size; }
 
@@ -71,19 +74,24 @@ public:
     void Swap( Array<T> & other );
 
     // sorting
-    void Sort() { ShellSort( m_Begin, m_Begin + m_Size, AscendingCompare() ); }
-    void SortDeref() { ShellSort( m_Begin, m_Begin + m_Size, AscendingCompareDeref() ); }
+    void Sort() { EnsureIsOnlyOwner(); ShellSort( m_Begin, m_Begin + m_Size, AscendingCompare() ); }
+    void SortDeref() { EnsureIsOnlyOwner(); ShellSort( m_Begin, m_Begin + m_Size, AscendingCompareDeref() ); }
     template <class COMPARER>
     void Sort( const COMPARER & comp )
     {
+        EnsureIsOnlyOwner();
         ShellSort( m_Begin, m_Begin + m_Size, comp );
     }
 
     // find
     template <class U>
-    [[nodiscard]] T * Find( const U & obj ) const;
+    [[nodiscard]] const T * Find( const U & obj ) const;
     template <class U>
-    [[nodiscard]] T * FindDeref( const U & obj ) const;
+    [[nodiscard]] T * Find( const U & obj ) { return ToMutableContentPtr( const_cast<const Array<T> *>( this )->Find( obj ) ); }
+    template <class U>
+    [[nodiscard]] const T * FindDeref( const U & obj ) const;
+    template <class U>
+    [[nodiscard]] T * FindDeref( const U & obj ) { return ToMutableContentPtr( const_cast<const Array<T> *>( this )->FindDeref( obj ) ); }
 
     // find and erase
     template <class U>
@@ -97,10 +105,21 @@ public:
     template <class U>
     void Append( const Array<U> & other );
     template <class U>
+    void Append( Array<U> && other );
+    template <class U>
     void Append( const U * otherBegin, const U * otherEnd );
+private:
+    enum class Strategy
+    {
+        Copy,
+        Move,
+    };
+    template <class U, Strategy S>
+    void AppendInternal( U * otherBegin, U * otherEnd );
+public:
     void Pop();
     void PopFront(); // expensive - shuffles everything in the array!
-    void Erase( T * const iter );
+    void Erase( const T * const iter );
     void EraseIndex( size_t index ) { Erase( m_Begin + index ); }
     template <class... ARGS>
     T & EmplaceBack( ARGS &&... args );
@@ -109,36 +128,44 @@ public:
     Array & operator=( Array<T> && other );
 
     // query state
-    [[nodiscard]] bool IsAtCapacity() const { return ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) ); }
-    [[nodiscard]] size_t GetCapacity() const { return ( m_CapacityAndFlags & CAPACITY_MASK ); }
+    [[nodiscard]] bool IsAtCapacity() const { return ( m_Size == m_Capacity ); }
+    [[nodiscard]] size_t GetCapacity() const { return m_Capacity; }
     [[nodiscard]] size_t GetSize() const { return m_Size; }
     [[nodiscard]] bool IsEmpty() const { return ( m_Size == 0 ); }
 
+private:
+    T * ToMutableContentPtr( const T * ptr );
+    void EnsureIsOnlyOwner();
+    void EnsureIsOnlyOwner( size_t capacity );
+    void CopyToSharedData( size_t capacity );
+
+    static constexpr size_t s_Align = Math::Max( __alignof( T ), sizeof( void * ) );
+    static constexpr size_t s_BeginOffset = Math::RoundUp( sizeof( Atomic<uint32_t> ), Array<T>::s_Align );
+
 protected:
+    bool IsOnlyOwner() const { return ( m_ReferenceCount == nullptr ) || ( m_ReferenceCount->Load() == 1 ); }
+    bool IsUsingSharedMemory() const { return ( m_ReferenceCount != nullptr ) || ( m_Begin == nullptr ); }
+
     void Grow();
-    [[nodiscard]] T * Allocate( size_t numElements ) const;
-    void Deallocate( T * ptr ) const;
+    void Grow( size_t minimumSize );
+    static void Allocate( Atomic<uint32_t> * & referenceCount, T * & begin, size_t numElements );
+    static void Release( Atomic<uint32_t> * referenceCount, const T * begin, const T * end );
+    static void Delete( const T * begin, const T * end );
 
-    // High bit of Capacity is set when memory should not be freed
-    // (allocated on the stack for example)
-    enum : uint32_t
-    {
-        DO_NOT_FREE_MEMORY_FLAG = 0x80000000,
-        CAPACITY_MASK = 0x7FFFFFFF,
-    };
-
+    Atomic<uint32_t> * m_ReferenceCount;
     T * m_Begin;
     uint32_t m_Size;
-    uint32_t m_CapacityAndFlags;
+    uint32_t m_Capacity;
 };
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 template <class T>
 Array<T>::Array()
-    : m_Begin( nullptr )
+    : m_ReferenceCount( nullptr )
+    , m_Begin( nullptr )
     , m_Size( 0 )
-    , m_CapacityAndFlags( 0 )
+    , m_Capacity( 0 )
 {
 }
 
@@ -146,9 +173,7 @@ Array<T>::Array()
 //------------------------------------------------------------------------------
 template <class T>
 Array<T>::Array( const Array<T> & other )
-    : m_Begin( nullptr )
-    , m_Size( 0 )
-    , m_CapacityAndFlags( 0 )
+    : Array()
 {
     *this = other;
 }
@@ -157,39 +182,17 @@ Array<T>::Array( const Array<T> & other )
 //------------------------------------------------------------------------------
 template <class T>
 Array<T>::Array( Array<T> && other )
+    : Array()
 {
-    // If memory cannot be freed it cannot be moved
-    if ( other.m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG )
-    {
-        // Copy
-        m_Begin = nullptr;
-        m_Size = 0;
-        m_CapacityAndFlags = 0;
-        operator=( Move( other ) );
-    }
-    else
-    {
-        // Move
-        m_Begin = other.m_Begin;
-        m_Size = other.m_Size;
-        m_CapacityAndFlags = other.m_CapacityAndFlags;
-
-        // Clear other
-        other.m_Begin = nullptr;
-        other.m_Size = 0;
-        other.m_CapacityAndFlags = 0;
-    }
+    *this = Move( other );
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 template <class T>
 Array<T>::Array( const T * otherBegin, const T * otherEnd )
-    : m_Begin( nullptr )
-    , m_Size( 0 )
-    , m_CapacityAndFlags( 0 )
+    : Array()
 {
-    SetCapacity( (size_t)( otherEnd - otherBegin ) );
     Append( otherBegin, otherEnd );
 }
 
@@ -198,14 +201,7 @@ Array<T>::Array( const T * otherBegin, const T * otherEnd )
 template <class T>
 Array<T>::~Array()
 {
-    T * iter = m_Begin;
-    T * endIter = m_Begin + m_Size;
-    while ( iter < endIter )
-    {
-        iter->~T();
-        iter++;
-    }
-    Deallocate( m_Begin );
+    Array<T>::Release( m_ReferenceCount, m_Begin, m_Begin + m_Size );
 }
 
 // Destruct
@@ -213,17 +209,14 @@ Array<T>::~Array()
 template <class T>
 void Array<T>::Destruct()
 {
-    T * iter = m_Begin;
-    T * endIter = m_Begin + m_Size;
-    while ( iter < endIter )
+    Array<T>::Release( m_ReferenceCount, m_Begin, m_Begin + m_Size );
+    if ( m_ReferenceCount )
     {
-        iter->~T();
-        iter++;
+        m_ReferenceCount = nullptr;
+        m_Begin = nullptr;
     }
-    Deallocate( m_Begin );
-    m_Begin = nullptr;
     m_Size = 0;
-    m_CapacityAndFlags = 0;
+    m_Capacity = 0;
 }
 
 // GetIndexOf
@@ -245,29 +238,7 @@ void Array<T>::SetCapacity( size_t capacity )
     {
         return;
     }
-
-    T * newMem = Allocate( capacity );
-
-    // transfer and items across and destroy all the originals
-    T * src = m_Begin;
-    T * endIter = src + m_Size;
-    T * dst = newMem;
-    while ( src < endIter )
-    {
-        INPLACE_NEW( dst ) T( Move( *src ) );
-        PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate/necessary
-        src->~T();
-        PRAGMA_DISABLE_POP_MSVC
-        src++;
-        dst++;
-    }
-
-    // free old memory
-    Deallocate( m_Begin );
-
-    // hook up to new memory
-    m_Begin = newMem;
-    m_CapacityAndFlags = (uint32_t)capacity;
+    CopyToSharedData( capacity );
 }
 
 // SetSize
@@ -286,14 +257,19 @@ void Array<T>::SetSize( size_t size )
     // shrink
     if ( size < oldSize )
     {
+        if ( !IsOnlyOwner() )
+        {
+            // if data is shared with other arrays, create a copy excluding the excess items
+            CopyToSharedData( size );
+            return;
+        }
+
         // destroy excess items
         T * item = m_Begin + size;
         T * endItem = m_Begin + m_Size;
-        while ( item < endItem )
-        {
-            item->~T();
-            item++;
-        }
+        Array<T>::Delete( item, endItem );
+
+        // reduce size without reducing capacity
         m_Size = (uint32_t)size;
         return;
     }
@@ -301,18 +277,14 @@ void Array<T>::SetSize( size_t size )
     // grow
 
     // ensure there is enough capacity
-    if ( size > GetCapacity() )
-    {
-        SetCapacity( size );
-    }
+    SetCapacity( size );
+    EnsureIsOnlyOwner();
 
     // create additional new items
-    T * item = m_Begin + m_Size;
-    T * newEnd = m_Begin + size;
-    while ( item < newEnd )
+    T * const newEnd = m_Begin + size;
+    for ( T * item = m_Begin + oldSize; item < newEnd; ++item )
     {
         INPLACE_NEW( item ) T;
-        item++;
     }
     m_Size = (uint32_t)size;
 }
@@ -322,46 +294,40 @@ void Array<T>::SetSize( size_t size )
 template <class T>
 void Array<T>::Clear()
 {
-    // destroy all items
-    T * src = m_Begin;
-    T * endIter = src + m_Size;
-    while ( src < endIter )
-    {
-        src->~T();
-        src++;
-    }
-
-    // set to empty, but do not free memory
-    m_Size = 0;
+    SetSize( 0 );
 }
 
-// Find
+// Swap
 //------------------------------------------------------------------------------
 template <class T>
 void Array<T>::Swap( Array<T> & other )
 {
     // Neither array can be on the stack
-    ASSERT( ( m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 );
-    ASSERT( ( other.m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 );
+    ASSERT( IsUsingSharedMemory() && other.IsUsingSharedMemory() );
 
-    T * tmpBegin = m_Begin;
+    Atomic<uint32_t> * const tmpReferenceCount = m_ReferenceCount;
+    T * const tmpBegin = m_Begin;
     const uint32_t tmpSize = m_Size;
-    const uint32_t tmpCapacityAndFlags = m_CapacityAndFlags;
+    const uint32_t tmpCapacityAndFlags = m_Capacity;
+
+    m_ReferenceCount = other.m_ReferenceCount;
     m_Begin = other.m_Begin;
     m_Size = other.m_Size;
-    m_CapacityAndFlags = other.m_CapacityAndFlags;
+    m_Capacity = other.m_Capacity;
+
+    other.m_ReferenceCount = tmpReferenceCount;
     other.m_Begin = tmpBegin;
     other.m_Size = tmpSize;
-    other.m_CapacityAndFlags = tmpCapacityAndFlags;
+    other.m_Capacity = tmpCapacityAndFlags;
 }
 
 // Find
 //------------------------------------------------------------------------------
 template <class T>
 template <class U>
-T * Array<T>::Find( const U & obj ) const
+const T * Array<T>::Find( const U & obj ) const
 {
-    T * pos = m_Begin;
+    const T * pos = m_Begin;
     const T * endPos = pos + m_Size;
     while ( pos < endPos )
     {
@@ -378,7 +344,7 @@ T * Array<T>::Find( const U & obj ) const
 //------------------------------------------------------------------------------
 template <class T>
 template <class U>
-T * Array<T>::FindDeref( const U & obj ) const
+const T * Array<T>::FindDeref( const U & obj ) const
 {
     T * pos = m_Begin;
     T * endPos = pos + m_Size;
@@ -399,7 +365,7 @@ template <class T>
 template <class U>
 bool Array<T>::FindAndErase( const U & obj )
 {
-    T * iter = Find( obj );
+    const T * iter = const_cast<const Array<T> *>( this )->Find( obj );
     if ( iter )
     {
         Erase( iter );
@@ -414,7 +380,7 @@ template <class T>
 template <class U>
 bool Array<T>::FindDerefAndErase( const U & obj )
 {
-    T * iter = FindDeref( obj );
+    const T * iter = const_cast<const Array<T> *>( this )->FindDeref( obj );
     if ( iter )
     {
         Erase( iter );
@@ -428,9 +394,13 @@ bool Array<T>::FindDerefAndErase( const U & obj )
 template <class T>
 void Array<T>::Append( const T & item )
 {
-    if ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) )
+    if ( m_Size == m_Capacity )
     {
         Grow();
+    }
+    else
+    {
+        EnsureIsOnlyOwner( m_Capacity );
     }
     T * pos = m_Begin + m_Size;
     INPLACE_NEW( pos ) T( item );
@@ -442,9 +412,13 @@ void Array<T>::Append( const T & item )
 template <class T>
 void Array<T>::Append( T && item )
 {
-    if ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) )
+    if ( m_Size == m_Capacity )
     {
         Grow();
+    }
+    else
+    {
+        EnsureIsOnlyOwner( m_Capacity );
     }
     T * pos = m_Begin + m_Size;
     INPLACE_NEW( pos ) T( Move( item ) );
@@ -457,11 +431,26 @@ template <class T>
 template <class U>
 void Array<T>::Append( const Array<U> & other )
 {
-    const U * endPos = other.End();
-    for ( const U * it = other.Begin(); it != endPos; ++it )
+    if ( IsEmpty() )
     {
-        Append( *it );
+        (*this) = other;
+        return;
     }
+    AppendInternal<const U, Strategy::Copy>( other.Begin(), other.End() );
+}
+
+// Append
+//------------------------------------------------------------------------------
+template <class T>
+template <class U>
+void Array<T>::Append( Array<U> && other )
+{
+    if ( IsEmpty() )
+    {
+        (*this) = Move( other );
+        return;
+    }
+    AppendInternal<U, Strategy::Move>( other.Begin(), other.End() );
 }
 
 // Append
@@ -470,9 +459,45 @@ template <class T>
 template <class U>
 void Array<T>::Append( const U * otherBegin, const U * otherEnd )
 {
-    for ( const U * it = otherBegin; it != otherEnd; ++it )
+    AppendInternal<const U, Strategy::Copy>( otherBegin, otherEnd );
+}
+
+// Append
+//------------------------------------------------------------------------------
+template <class T>
+template <class U, typename Array<T>::Strategy S>
+void Array<T>::AppendInternal( U * otherBegin, U * otherEnd )
+{
+    const size_t otherSize = static_cast<size_t>( otherEnd - otherBegin );
+    const size_t newSize = m_Size + otherSize;
+    if ( otherSize == 0)
     {
-        Append( *it );
+        return; // nothing to append
+    }
+    if ( newSize > m_Capacity )
+    {
+        Grow( newSize );
+    }
+    else
+    {
+        EnsureIsOnlyOwner( m_Capacity );
+    }
+
+    T * dest = m_Begin + m_Size;
+    for ( U * it = otherBegin; it != otherEnd; ++it, ++dest)
+    {
+        if constexpr ( S == Strategy::Copy )
+        {
+            INPLACE_NEW( dest ) T( *it );
+        }
+        else if constexpr ( S == Strategy::Move )
+        {
+            INPLACE_NEW( dest ) T( MOVE ( *it ) );
+        }
+        else
+        {
+            static_assert( sizeof(S) == 0, "Append strategy case not implemented" );
+        }
     }
 }
 
@@ -482,6 +507,12 @@ template <class T>
 void Array<T>::Pop()
 {
     ASSERT( m_Size ); // something must be in the array
+
+    if ( !IsOnlyOwner() )
+    {
+        CopyToSharedData( m_Size - 1 );
+        return;
+    }
 
     --m_Size;
     T * it = m_Begin + m_Size;
@@ -494,33 +525,61 @@ void Array<T>::Pop()
 template <class T>
 void Array<T>::PopFront()
 {
-    ASSERT( m_Size ); // something must be in the array
-
-    // shuffle everything backwards 1 element, overwriting the top elem
-    T * dst = m_Begin;
-    T * src = m_Begin + 1;
-    T * endIter = m_Begin + m_Size;
-    while ( src < endIter )
-    {
-        *dst = Move( *src );
-        dst++;
-        src++;
-    }
-
-    // free last element (which is now a dupe)
-    dst->~T();
-
-    --m_Size;
+    Erase( m_Begin );
 }
 
 // Erase (iter)
 //------------------------------------------------------------------------------
 template <class T>
-void Array<T>::Erase( T * const iter )
+void Array<T>::Erase( const T * const iter )
 {
+    ASSERT( iter >= m_Begin ); // iter must be in the array
     ASSERT( iter < ( m_Begin + m_Size ) );
 
-    T * dst = iter;
+    if ( !IsOnlyOwner() )
+    {
+        Atomic<uint32_t> * const oldReferenceCount = m_ReferenceCount;
+        T * const oldBegin = m_Begin;
+        T * const oldEnd = m_Begin + m_Size;
+
+        // hook up to new memory
+        size_t newCapacity = m_Size - 1;
+        Array<T>::Allocate( m_ReferenceCount, m_Begin, newCapacity );
+        m_Capacity = newCapacity;
+        m_Size = newCapacity;
+
+        T * const newBegin = m_Begin;
+
+        // copy remaining items in new location
+        const bool doMove = ( oldReferenceCount == nullptr ) || ( oldReferenceCount->Load() == 1 );
+        T * src = oldBegin;
+        T * dst = newBegin;
+        while (src < oldEnd )
+        {
+            if ( doMove )
+            {
+                // this array is the last owner of the heap data, so move the items
+                INPLACE_NEW( dst ) T( Move( *src ) );
+            }
+            else
+            {
+                // this array shares data with other arrays, so copy the items
+                INPLACE_NEW( dst ) T( *src );
+            }
+            src++;
+            dst++;
+            if ( src == iter )
+            {
+                src++; // skip the item we're erasing
+            }
+        }
+
+        // release old memory and maybe free and destroy the old items
+        Array<T>::Release( oldReferenceCount, oldBegin, oldEnd );
+        return;
+    }
+
+    T * dst = const_cast<T *>( iter );
     T * endIter = m_Begin + m_Size;
     T * last = ( endIter - 1 );
     while ( dst < last )
@@ -538,9 +597,13 @@ template <class T>
 template <class... ARGS>
 T & Array<T>::EmplaceBack( ARGS &&... args )
 {
-    if ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) )
+    if ( m_Size == m_Capacity )
     {
         Grow();
+    }
+    else
+    {
+        EnsureIsOnlyOwner( m_Capacity );
     }
     T * pos = m_Begin + m_Size;
     INPLACE_NEW( pos ) T( Forward( ARGS, args )... );
@@ -554,22 +617,35 @@ template <class T>
 Array<T> & Array<T>::operator=( const Array<T> & other )
 {
     ASSERT( &other != this ); // Invalid to assign to self
+    if ( &other == this )
+    {
+        return *this;
+    }
 
+    // Use shallow copy if both are using shared memory or current should switch to shared memory
+    if ( other.IsUsingSharedMemory() && ( IsUsingSharedMemory() || ( other.GetSize() > GetCapacity() ) ) )
+    {
+        // If both arrays are using heap-allocated data, just copy the pointers and increment the counter.
+        Array<T>::Release( m_ReferenceCount, m_Begin, m_Begin + m_Size );
+        m_ReferenceCount = other.m_ReferenceCount;
+        m_Begin = other.m_Begin;
+        m_Size = other.m_Size;
+        m_Capacity = other.m_Capacity;
+        m_ReferenceCount->Increment();
+        return *this;
+    }
+
+    // Destruct existing elements
     Clear();
 
     // need to reallocate?
     const size_t otherSize = other.GetSize();
-    if ( GetCapacity() < otherSize )
-    {
-        Deallocate( m_Begin );
-        m_Begin = Allocate( otherSize );
-        m_CapacityAndFlags = (uint32_t)otherSize;
-    }
+    SetCapacity( otherSize );
 
     m_Size = (uint32_t)otherSize;
     T * dst = m_Begin;
     const T * endPos = dst + otherSize;
-    T * src = other.m_Begin;
+    const T * src = other.m_Begin;
     while ( dst < endPos )
     {
         INPLACE_NEW( dst ) T( *src );
@@ -587,57 +663,56 @@ Array<T> & Array<T>::operator=( Array<T> && other )
 {
     ASSERT( &other != this ); // Invalid to assign to self
 
+    // Use shallow copy if both are using shared memory or current should switch to shared memory
+    if ( other.IsUsingSharedMemory() && ( IsUsingSharedMemory() || ( other.GetSize() > GetCapacity() ) ) )
+    {
+        // If both arrays are using heap-allocated data, just copy the pointers and increment the counter.
+        Array<T>::Release( m_ReferenceCount, m_Begin, m_Begin + m_Size );
+        m_ReferenceCount = other.m_ReferenceCount;
+        m_Begin = other.m_Begin;
+        m_Size = other.m_Size;
+        m_Capacity = other.m_Capacity;
+        other.m_ReferenceCount = nullptr;
+        other.m_Begin = nullptr;
+        other.m_Size = 0;
+        other.m_Capacity = 0;
+        return *this;
+    }
+
     // Destruct existing elements
     Clear();
 
-    // If memory cannot be freed it cannot be moved
-    if ( other.m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG )
+    // need to reallocate?
+    const size_t otherSize = other.GetSize();
+    SetCapacity( otherSize );
+
+    m_Size = (uint32_t)otherSize;
+    T * dst = m_Begin;
+    const T * endPos = dst + otherSize;
+    T * src = other.m_Begin;
+    while ( dst < endPos )
     {
-        // Cannot move array, but can move elements
-
-        // need to reallocate storage?
-        const uint32_t otherSize = (uint32_t)other.GetSize();
-        if ( GetCapacity() < otherSize )
-        {
-            Deallocate( m_Begin );
-            m_Begin = Allocate( otherSize );
-            m_CapacityAndFlags = (uint32_t)otherSize;
-        }
-
-        // Move elements
-        T * src = other.m_Begin;
-        const T * const srcEnd = other.m_Begin + other.m_Size;
-        T * dst = m_Begin;
-        while ( src < srcEnd )
-        {
-            INPLACE_NEW( dst ) T( Move( *src ) );
-            ++src;
-            ++dst;
-        }
-        m_Size = otherSize;
-
-        // Elements are moved, but they still need to be destructed
-        // and all memory freed
-        other.Destruct();
-    }
-    else
-    {
-        // Move
-        if ( ( m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 )
-        {
-            Destruct(); // Free our own memory
-        }
-        m_Begin = other.m_Begin;
-        m_Size = other.m_Size;
-        m_CapacityAndFlags = other.m_CapacityAndFlags;
-
-        // Clear other as we now own the memory
-        other.m_Begin = nullptr;
-        other.m_Size = 0;
-        other.m_CapacityAndFlags = 0;
+        INPLACE_NEW( dst ) T( Move( *src ) );
+        dst++;
+        src++;
     }
 
+    other.Clear();
     return *this;
+}
+
+// ToMutableContentPtr (const T *)
+//------------------------------------------------------------------------------
+template <class T>
+T * Array<T>::ToMutableContentPtr( const T * ptr )
+{
+    if ( ptr == nullptr )
+    {
+        return nullptr;
+    }
+    const size_t offset = GetIndexOf( ptr );
+    EnsureIsOnlyOwner();
+    return ( m_Begin + offset );
 }
 
 // Grow
@@ -645,48 +720,140 @@ Array<T> & Array<T>::operator=( Array<T> && other )
 template <class T>
 void Array<T>::Grow()
 {
+    Grow( GetCapacity() + 1 );
+}
+
+// Grow (size_t)
+//------------------------------------------------------------------------------
+template <class T>
+void Array<T>::Grow( size_t minimumSize )
+{
     // grow by 1.5 times (but at least by one)
     const size_t currentCapacity = GetCapacity();
-    const size_t size = GetSize();
-    const size_t newCapacity = ( currentCapacity + ( currentCapacity >> 1 ) + 1 );
-    ASSERT( newCapacity <= CAPACITY_MASK );
-    T * newMem = Allocate( newCapacity );
-
-    T * src = m_Begin;
-    T * dst = newMem;
-    T * endIter = m_Begin + m_Size;
-    while ( src < endIter )
+    size_t newCapacity = currentCapacity;
+    do
     {
-        INPLACE_NEW( dst ) T( Move( *src ) );
-        src->~T();
-        dst++;
-        src++;
+        newCapacity = ( newCapacity + ( newCapacity >> 1 ) + 1 );
+        ASSERT( newCapacity > currentCapacity ); // detect overflow
     }
-    Deallocate( m_Begin );
-    m_Begin = newMem;
-    m_Size = (uint32_t)size;
-    m_CapacityAndFlags = (uint32_t)newCapacity;
+    while ( newCapacity < minimumSize );
+    SetCapacity( newCapacity );
 }
 
 // Allocate
 //------------------------------------------------------------------------------
 template <class T>
-T * Array<T>::Allocate( size_t numElements ) const
+/*static*/ void Array<T>::Allocate( Atomic<uint32_t> * & referenceCount, T * & begin, size_t numElements )
 {
-    ASSERT( numElements <= CAPACITY_MASK );
-    constexpr size_t align = __alignof( T ) > sizeof( void * ) ? __alignof( T ) : sizeof( void * );
-    return static_cast<T *>( ALLOC( sizeof( T ) * numElements, align ) );
+    if ( numElements == 0 )
+    {
+        referenceCount = nullptr;
+        begin = nullptr;
+    }
+
+    constexpr size_t align = Array<T>::s_Align;
+    constexpr size_t beginOffset = Array<T>::s_BeginOffset;
+    void * const mem = ALLOC( beginOffset + sizeof( T ) * numElements, align );
+    referenceCount = reinterpret_cast<Atomic<uint32_t> *>( mem );
+    begin = reinterpret_cast<T *>( (char *)mem + beginOffset );
+    INPLACE_NEW( referenceCount ) Atomic<uint32_t>( 1 );
 }
 
 // Deallocate
 //------------------------------------------------------------------------------
 template <class T>
-void Array<T>::Deallocate( T * ptr ) const
+/*static*/ void Array<T>::Release( Atomic<uint32_t> * referenceCount, const T * begin, const T * end )
 {
-    if ( ( m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 )
+    ASSERT( begin <= end );
+    if ( referenceCount )
     {
-        FREE( ptr );
+        // If we share the memory with other arrays, we must NOT be pointing to different places in memory
+        ASSERT( (void *)begin == (void *)( (char *)referenceCount + Array<T>::s_BeginOffset ) );
+
+        // Memory is on the heap, but may be shared with others
+        const uint32_t remainingReferenceCount = referenceCount->Decrement();
+        if ( remainingReferenceCount == 0 )
+        {
+            // We were the last remaining string owning this memory, so it must be freed
+            referenceCount->~Atomic<uint32_t>();
+
+            // Destroy all items
+            Array<T>::Delete( begin, end );
+
+            FREE( (void *)referenceCount );
+        }
     }
+    else
+    {
+        Array<T>::Delete( begin, end );
+    }
+}
+
+// Delete
+//------------------------------------------------------------------------------
+template <class T>
+/*static*/ void Array<T>::Delete( const T * begin, const T * end )
+{
+    ASSERT( begin <= end );
+    for ( const T * it = begin; it < end; ++it )
+    {
+        it->~T();
+    }
+}
+
+// EnsureIsOnlyOwner
+//------------------------------------------------------------------------------
+template <class T>
+void Array<T>::EnsureIsOnlyOwner()
+{
+    EnsureIsOnlyOwner( GetSize() );
+}
+
+// EnsureIsOnlyOwner (size_t)
+//------------------------------------------------------------------------------
+template <class T>
+void Array<T>::EnsureIsOnlyOwner( size_t capacity )
+{
+    if ( !IsOnlyOwner() )
+    {
+        // This array's data is shared with another array. Create a copy.
+        CopyToSharedData( capacity );
+    }
+}
+
+// CopyToSharedData
+//------------------------------------------------------------------------------
+template <class T>
+void Array<T>::CopyToSharedData( size_t capacity )
+{
+    Atomic<uint32_t> * const oldReferenceCount = m_ReferenceCount;
+    T * const oldBegin = m_Begin;
+    T * const oldEnd = m_Begin + m_Size;
+
+    // hook up to new memory
+    Array<T>::Allocate( m_ReferenceCount, m_Begin, capacity );
+    m_Capacity = capacity;
+    T * const newBegin = m_Begin;
+    T * const newEnd = m_Begin + m_Capacity;
+
+    // initialize items in new location
+    const bool doMove = ( oldReferenceCount == nullptr ) || ( oldReferenceCount->Load() == 1 );
+    for ( T * src = oldBegin, * dst = newBegin; src < oldEnd && dst < newEnd; ++src, ++dst )
+    {
+        if ( doMove )
+        {
+            // this array is the last owner, so move the items
+            INPLACE_NEW( dst ) T( Move( *src ) );
+        }
+        else
+        {
+            // this array shares data with other arrays, so copy the items
+            INPLACE_NEW( dst ) T( *src );
+        }
+    }
+
+    // release old memory and maybe free and destroy the old items
+    Array<T>::Release( oldReferenceCount, oldBegin, oldEnd );
 }
 
 // StackArray
@@ -694,43 +861,60 @@ void Array<T>::Deallocate( T * ptr ) const
 template <class T, uint32_t RESERVED = 32>
 class StackArray : public Array<T>
 {
+    static_assert( RESERVED > 0, "StackArray must have a non-zero reserved size" );
 public:
-    StackArray()
-    {
-        Array<T>::m_Begin = (T *)&m_Storage;
-        Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
-    }
-    StackArray( const StackArray<T> & other )
-    {
-        Array<T>::m_Begin = (T *)&m_Storage;
-        Array<T>::m_Size = 0;
-        Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
-        Array<T>::operator=( Move( other ) );
-    }
-    StackArray( Array<T> && other )
-    {
-        Array<T>::m_Begin = (T *)&m_Storage;
-        Array<T>::m_Size = 0;
-        Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
-        Array<T>::operator=( Move( other ) );
-    }
-    StackArray( StackArray<T> && other )
-    {
-        Array<T>::m_Begin = (T *)&m_Storage;
-        Array<T>::m_Size = 0;
-        Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
-        Array<T>::operator=( Move( other ) );
-    }
-
-    void operator=( const Array<T> & other ) { Array<T>::operator=( other ); }
-    void operator=( const StackArray<T> & other ) { Array<T>::operator=( other ); }
-    void operator=( Array<T> && other ) { Array<T>::operator=( Move( other ) ); }
-    void operator=( StackArray<T> && other ) { Array<T>::operator=( Move( other ) ); }
+    StackArray();
+    StackArray( const StackArray<T> & other );
+    StackArray( Array<T> && other );
+    StackArray( StackArray<T> && other );
+    ~StackArray() = default;
 
 private:
     PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
     alignas( __alignof( T ) ) uint8_t m_Storage[ RESERVED * sizeof( T ) ];
     PRAGMA_DISABLE_POP_MSVC // 4324
 };
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED>::StackArray()
+{
+    ASSERT( Array<T>::m_ReferenceCount == nullptr );
+    ASSERT( Array<T>::m_Begin == nullptr );
+    ASSERT( Array<T>::m_Size == 0 );
+    ASSERT( Array<T>::m_Capacity == 0 );
+    Array<T>::m_Begin = reinterpret_cast<T *>( &m_Storage );
+    Array<T>::m_Capacity = RESERVED;
+    ASSERT( !Array<T>::IsUsingSharedMemory() );
+}
+
+// CONSTRUCTOR (const StackArray &)
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED>::StackArray( const StackArray<T> & other )
+    : StackArray()
+{
+    (*this) = other;
+}
+
+// CONSTRUCTOR (Array &&)
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED>::StackArray( Array<T> && other )
+    : StackArray()
+{
+    (*this) = Move( other );
+}
+
+// CONSTRUCTOR (StackArray &&)
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED>::StackArray( StackArray<T> && other )
+    : StackArray()
+{
+    (*this) = Move( other );
+}
+
 
 //------------------------------------------------------------------------------
