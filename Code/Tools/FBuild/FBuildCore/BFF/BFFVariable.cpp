@@ -267,11 +267,11 @@ void BFFVariable::SetValueArrayOfStructs( const Array<const BFFVariable *> & val
 
 // GetMemberByName
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable ** BFFVariable::GetMemberByName( const AString & name, const Array<const BFFVariable *> & members )
+/*static*/ const BFFVariable * const * BFFVariable::GetMemberByName( const AString & name, const Array<const BFFVariable *> & members )
 {
     ASSERT( !name.IsEmpty() );
 
-    for ( const BFFVariable ** it = members.Begin(); it != members.End(); ++it )
+    for ( const BFFVariable * const * it = members.Begin(); it != members.End(); ++it )
     {
         if ( ( *it )->GetName() == name )
         {
@@ -426,7 +426,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
 
             // keep original (dst) members where member is only present in original (dst)
             // or concatenate recursively members where the name exists in both
-            for ( const BFFVariable ** it = dstMembers.Begin(); it != dstMembers.End(); ++it )
+            for ( const BFFVariable * const * it = dstMembers.Begin(); it != dstMembers.End(); ++it )
             {
                 const BFFVariable * const * it2 = GetMemberByName( ( *it )->GetName(), srcMembers );
 
@@ -449,7 +449,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             }
 
             // and add members only present in the src
-            for ( const BFFVariable ** it = srcMembers.Begin(); it != srcMembers.End(); ++it )
+            for ( const BFFVariable * const * it = srcMembers.Begin(); it != srcMembers.End(); ++it )
             {
                 const BFFVariable * const * it2 = GetMemberByName( ( *it )->GetName(), result->GetStructMembers() );
                 if ( nullptr == it2 )

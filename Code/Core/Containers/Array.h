@@ -30,8 +30,10 @@ public:
     using ValueType = T;
     typedef T * Iter;
     typedef const T * ConstIter;
-    [[nodiscard]] Iter Begin() const { return m_Begin; }
-    [[nodiscard]] Iter End() const { return m_Begin + m_Size; }
+    [[nodiscard]] ConstIter Begin() const { return m_Begin; }
+    [[nodiscard]] ConstIter End() const { return m_Begin + m_Size; }
+    [[nodiscard]] Iter Begin() { return m_Begin; }
+    [[nodiscard]] Iter End() { return m_Begin + m_Size; }
     [[nodiscard]] T & operator[]( size_t index )
     {
         ASSERT( index < m_Size );
@@ -456,7 +458,7 @@ template <class U>
 void Array<T>::Append( const Array<U> & other )
 {
     const U * endPos = other.End();
-    for ( U * it = other.Begin(); it != endPos; ++it )
+    for ( const U * it = other.Begin(); it != endPos; ++it )
     {
         Append( *it );
     }

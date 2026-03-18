@@ -65,7 +65,7 @@ protected:
     {
     public:
         UnityFileAndOrigin();
-        UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin );
+        UnityFileAndOrigin( const FileIO::FileInfo * info, DirectoryListNode * dirListOrigin );
 
         const AString & GetName() const { return m_Info->m_Name; }
         bool IsReadOnly() const { return m_Info->IsReadOnly(); }
@@ -77,7 +77,7 @@ protected:
         bool operator<( const UnityFileAndOrigin & other ) const;
 
     protected:
-        FileIO::FileInfo * m_Info = nullptr;
+        const FileIO::FileInfo * m_Info = nullptr;
         DirectoryListNode * m_DirListOrigin = nullptr;
         uint32_t m_LastSlashIndex = 0;
         bool m_Isolated = false;

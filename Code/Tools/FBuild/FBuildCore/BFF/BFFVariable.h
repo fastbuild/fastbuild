@@ -94,7 +94,7 @@ public:
 
     BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFToken * operatorIter ) const;
 
-    static const BFFVariable ** GetMemberByName( const AString & name, const Array<const BFFVariable *> & members );
+    static const BFFVariable * const * GetMemberByName( const AString & name, const Array<const BFFVariable *> & members );
 
     const BFFToken & GetToken() const { return m_Token; }
 
