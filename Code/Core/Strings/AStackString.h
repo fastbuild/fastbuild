@@ -62,6 +62,8 @@ AStackString( const AStackString<> & ) -> AStackString<RESERVED>;
 template <int RESERVED>
 AStackString<RESERVED>::AStackString()
 {
+    ASSERT( m_ReferenceCount == nullptr );
+    m_ReferenceCount = nullptr;
     m_Contents = m_Storage;
     SetReserved( RESERVED );
     ASSERT( !IsUsingSharedMemory() );
@@ -72,10 +74,8 @@ AStackString<RESERVED>::AStackString()
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const AString & string )
+    : AStackString()
 {
-    m_Contents = m_Storage;
-    SetReserved( RESERVED );
-    ASSERT( !IsUsingSharedMemory() );
     Assign( string );
 }
 
@@ -83,10 +83,8 @@ AStackString<RESERVED>::AStackString( const AString & string )
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( AString && string )
+    : AStackString()
 {
-    m_Contents = m_Storage;
-    SetReserved( RESERVED );
-    ASSERT( !IsUsingSharedMemory() );
     Assign( Move( string ) );
 }
 
@@ -94,10 +92,8 @@ AStackString<RESERVED>::AStackString( AString && string )
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const AStackString & string )
+    : AStackString()
 {
-    m_Contents = m_Storage;
-    SetReserved( RESERVED );
-    ASSERT( !IsUsingSharedMemory() );
     Assign( string );
 }
 
@@ -105,10 +101,8 @@ AStackString<RESERVED>::AStackString( const AStackString & string )
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( AStackString && string )
+    : AStackString()
 {
-    m_Contents = m_Storage;
-    SetReserved( RESERVED );
-    ASSERT( !IsUsingSharedMemory() );
     Assign( Move( string ) );
 }
 
@@ -116,10 +110,8 @@ AStackString<RESERVED>::AStackString( AStackString && string )
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const char * string )
+    : AStackString()
 {
-    m_Contents = m_Storage;
-    SetReserved( RESERVED );
-    ASSERT( !IsUsingSharedMemory() );
     Assign( string );
 }
 
@@ -127,10 +119,8 @@ AStackString<RESERVED>::AStackString( const char * string )
 //------------------------------------------------------------------------------
 template <int RESERVED>
 AStackString<RESERVED>::AStackString( const char * start, const char * end )
+    : AStackString()
 {
-    m_Contents = m_Storage;
-    SetReserved( RESERVED );
-    ASSERT( !IsUsingSharedMemory() );
     Assign( start, end );
 }
 
