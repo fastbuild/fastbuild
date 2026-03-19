@@ -72,8 +72,13 @@ FunctionCopy::FunctionCopy()
     }
 
     // Pre-build dependencies
+    GetNodeListOptions options;
+    options.m_AllowCopyDirNodes = true;
+    options.m_AllowUnityNodes = true;
+    options.m_AllowRemoveDirNodes = true;
+    options.m_AllowCompilerNodes = true;
     Dependencies preBuildDependencies;
-    if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
+    if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false, options ) )
     {
         return false; // GetNodeList will have emitted an error
     }
