@@ -9,6 +9,8 @@
 
 #include "Core/Mem/Mem.h"
 
+#include <type_traits>
+
 // Static Data
 //------------------------------------------------------------------------------
 // clang-format off
@@ -342,8 +344,53 @@ void BFFVariable::SetType( VarType type )
 //------------------------------------------------------------------------------
 bool BFFVariable::Concat( const BFFVariable & src, const BFFToken * operatorIter )
 {
+    switch ( src.GetType() )
+    {
+        case VAR_ANY: ASSERT( false ); return false;
+        case VAR_STRING: return ConcatValue<BFFVariable::VAR_STRING, const AString &>( src.GetString(), operatorIter );
+        case VAR_BOOL: return ConcatValue<BFFVariable::VAR_BOOL, bool>( src.GetBool(), operatorIter );
+        case VAR_ARRAY_OF_STRINGS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRINGS, const Array<AString> &>( src.GetArrayOfStrings(), operatorIter );
+        case VAR_INT: return ConcatValue<BFFVariable::VAR_INT, int32_t>( src.GetInt(), operatorIter );
+        case VAR_STRUCT: return ConcatValue<BFFVariable::VAR_STRUCT, const Array<BFFVariable> &>( src.GetStructMembers(), operatorIter );
+        case VAR_ARRAY_OF_STRUCTS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariable> &>( src.GetArrayOfStructs(), operatorIter );
+        case MAX_VAR_TYPES: ASSERT( false ); return false;
+    }
+
+    ASSERT( false );
+    return false;
+}
+
+// Concat
+//------------------------------------------------------------------------------
+bool BFFVariable::Concat( BFFVariable && src, const BFFToken * operatorIter )
+{
+    switch ( src.GetType() )
+    {
+        case VAR_ANY: ASSERT( false ); return false;
+        case VAR_STRING: return ConcatValue<BFFVariable::VAR_STRING, AString &&>( Move( src.m_StringValue ), operatorIter );
+        case VAR_BOOL: return ConcatValue<BFFVariable::VAR_BOOL, bool>( src.GetBool(), operatorIter );
+        case VAR_ARRAY_OF_STRINGS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRINGS, Array<AString> &&>( Move( src.m_ArrayValues ), operatorIter );
+        case VAR_INT: return ConcatValue<BFFVariable::VAR_INT, int32_t>( src.GetInt(), operatorIter );
+        case VAR_STRUCT: return ConcatValue<BFFVariable::VAR_STRUCT, Array<BFFVariable> &&>( Move( src.m_SubVariables ), operatorIter );
+        case VAR_ARRAY_OF_STRUCTS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, Array<BFFVariable> &&>( Move( src.m_SubVariables ), operatorIter );
+        case MAX_VAR_TYPES: ASSERT( false ); return false;
+    }
+
+    ASSERT( false );
+    return false;
+}
+
+// ConcatValue
+//------------------------------------------------------------------------------
+template <BFFVariable::VarType SrcType, class V>
+bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
+{
+    static_assert( ( std::is_reference_v<V> && std::is_const_v<std::remove_reference_t<V>> ) ||
+                   std::is_integral_v<V> ||
+                   std::is_rvalue_reference_v<V> );
+
     const VarType dstType = m_Type;
-    const VarType srcType = src.m_Type;
+    constexpr VarType srcType = SrcType;
 
     // handle supported types
 
@@ -353,88 +400,70 @@ bool BFFVariable::Concat( const BFFVariable & src, const BFFToken * operatorIter
 
         const bool dstIsEmpty = ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && GetArrayOfStrings().IsEmpty() ) ||
                                 ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) && GetArrayOfStructs().IsEmpty() );
-        const bool srcIsEmpty = ( ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && src.GetArrayOfStrings().IsEmpty() ) ||
-                                ( ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) && src.GetArrayOfStructs().IsEmpty() );
 
-        switch ( srcType )
+        if constexpr ( srcType == VAR_STRING )
         {
-            case VAR_ANY: ASSERT( false ); break;
-
-            case VAR_STRING:
-                if ( dstType == VAR_ARRAY_OF_STRINGS )
+            if ( dstType == VAR_ARRAY_OF_STRINGS )
+            {
+                // String to ArrayOfStrings
+                m_ArrayValues.Append( Forward( V, srcValue ) );
+                return true;
+            }
+            else if ( dstType == VAR_ARRAY_OF_STRUCTS && dstIsEmpty )
+            {
+                // String to empty ArrayOfStructs
+                SetValueArrayOfStrings( Forward( V, srcValue ) );
+                return true;
+            }
+        }
+        else if constexpr ( srcType == VAR_ARRAY_OF_STRINGS )
+        {
+            if ( dstType == VAR_ARRAY_OF_STRUCTS )
+            {
+                if ( srcValue.IsEmpty() )
                 {
-                    // String to ArrayOfStrings
-                    m_ArrayValues.Append( src.GetString() );
+                    // Empty ArrayOfStrings to ArrayOfStructs
                     return true;
                 }
-                else if ( dstType == VAR_ARRAY_OF_STRUCTS )
+                if ( dstIsEmpty )
                 {
-                    if ( dstIsEmpty )
-                    {
-                        // String to empty ArrayOfStructs
-                        SetValueArrayOfStrings( src.GetString() );
-                        return true;
-                    }
-                }
-                break;
-
-            case VAR_BOOL: break;
-
-            case VAR_ARRAY_OF_STRINGS:
-                if ( dstType == VAR_ARRAY_OF_STRUCTS )
-                {
-                    if ( srcIsEmpty )
-                    {
-                        // Empty ArrayOfStrings to ArrayOfStructs
-                        return true;
-                    }
-                    if ( dstIsEmpty )
-                    {
-                        // ArrayOfStrings to empty ArrayOfStructs
-                        SetValueArrayOfStrings( src.GetArrayOfStrings() );
-                        return true;
-                    }
-                }
-                break;
-
-            case VAR_INT: break;
-
-            case VAR_STRUCT:
-                if ( dstType == VAR_ARRAY_OF_STRINGS )
-                {
-                    if ( dstIsEmpty )
-                    {
-                        // Struct to empty ArrayOfStrings
-                        SetValueArrayOfStructs( src );
-                        return true;
-                    }
-                }
-                else if ( dstType == VAR_ARRAY_OF_STRUCTS )
-                {
-                    // Struct to ArrayOfStructs
-                    m_SubVariables.Append( src );
+                    // ArrayOfStrings to empty ArrayOfStructs
+                    SetValueArrayOfStrings( Forward( V, srcValue ) );
                     return true;
                 }
-                break;
-
-            case VAR_ARRAY_OF_STRUCTS:
-                if ( dstType == VAR_ARRAY_OF_STRINGS )
+            }
+        }
+        else if constexpr ( srcType == VAR_STRUCT )
+        {
+            if ( dstType == VAR_ARRAY_OF_STRINGS && dstIsEmpty )
+            {
+                // Struct to empty ArrayOfStrings
+                SetValueArrayOfStructs( Forward( V, srcValue ) );
+                return true;
+            }
+            else if ( dstType == VAR_ARRAY_OF_STRUCTS )
+            {
+                // Struct to ArrayOfStructs
+                m_SubVariables.Append( Forward( V, srcValue ) );
+                return true;
+            }
+        }
+        else if constexpr ( srcType == VAR_ARRAY_OF_STRUCTS )
+        {
+            if ( dstType == VAR_ARRAY_OF_STRINGS )
+            {
+                if ( srcValue.IsEmpty() )
                 {
-                    if ( srcIsEmpty )
-                    {
-                        // Empty ArrayOfStructs to ArrayOfStrings
-                        return true;
-                    }
-                    if ( dstIsEmpty )
-                    {
-                        // ArrayOfStructs to empty ArrayOfStrings
-                        SetValueArrayOfStructs( src.GetArrayOfStructs() );
-                        return true;
-                    }
+                    // Empty ArrayOfStructs to ArrayOfStrings
+                    return true;
                 }
-                break;
-
-            case MAX_VAR_TYPES: ASSERT( false ); break;
+                if ( dstIsEmpty )
+                {
+                    // ArrayOfStructs to empty ArrayOfStrings
+                    SetValueArrayOfStructs( Forward( V, srcValue ) );
+                    return true;
+                }
+            }
         }
 
         // Incompatible types
@@ -447,55 +476,70 @@ bool BFFVariable::Concat( const BFFVariable & src, const BFFToken * operatorIter
 
     // Matching Src and Dst
 
-    switch ( srcType )
+    if constexpr ( srcType == VAR_STRING )
     {
-        case VAR_ANY: ASSERT( false ); return false;
-
-        case VAR_STRING:
-            m_StringValue.Append( src.GetString() );
-            return true;
-
-        case VAR_BOOL:
-            // Assume + <=> OR
-            m_BoolValue |= src.GetBool();
-            return true;
-
-        case VAR_ARRAY_OF_STRINGS:
-            m_ArrayValues.Append( src.GetArrayOfStrings() );
-            return true;
-
-        case VAR_INT:
-            m_IntValue += src.GetInt();
-            return true;
-
-        case VAR_STRUCT:
+        m_StringValue.Append( Forward( V, srcValue ) );
+        return true;
+    }
+    else if constexpr ( srcType == VAR_BOOL )
+    {
+        m_BoolValue |= srcValue;
+        return true;
+    }
+    else if constexpr ( srcType == VAR_ARRAY_OF_STRINGS )
+    {
+        m_ArrayValues.Append( Forward( V, srcValue ) );
+        return true;
+    }
+    else if constexpr ( srcType == VAR_INT )
+    {
+        m_IntValue += srcValue;
+        return true;
+    }
+    else if constexpr ( srcType == VAR_STRUCT )
+    {
+        for ( auto & srcMember : srcValue )
         {
-            for ( const BFFVariable & srcMember : src.GetStructMembers() )
+            if ( BFFVariable * dstMember = GetMemberByName( srcMember.GetName(), m_SubVariables ) )
             {
-                if ( BFFVariable * dstMember = GetMemberByName( srcMember.GetName(), m_SubVariables ) )
+                // keep original (dst) members where member is only present in original (dst)
+                // or concatenate recursively members where the name exists in both
+                const bool result = std::is_rvalue_reference_v<V> ?
+                                    dstMember->Concat( Move( srcMember ), operatorIter ) :
+                                    dstMember->Concat( srcMember, operatorIter );
+                if ( result == false )
                 {
-                    // keep original (dst) members where member is only present in original (dst)
-                    // or concatenate recursively members where the name exists in both
-                    if ( dstMember->Concat( srcMember, operatorIter ) == false )
-                    {
-                        // ConcatVarsRecurse will have emitted an error
-                        return false;
-                    }
+                    // Concat will have emitted an error
+                    return false;
+                }
+            }
+            else
+            {
+                // and add members only present in the src
+                if constexpr ( std::is_rvalue_reference_v<V> )
+                {
+                    m_SubVariables.Append( Move( srcMember ) );
                 }
                 else
                 {
-                    // and add members only present in the src
                     m_SubVariables.Append( srcMember );
                 }
             }
-            return true;
         }
-
-        case VAR_ARRAY_OF_STRUCTS:
-            m_SubVariables.Append( src.GetArrayOfStructs() );
-            return true;
-
-        case MAX_VAR_TYPES: ASSERT( false ); return false;
+        if constexpr ( std::is_rvalue_reference_v<V> )
+        {
+            srcValue.Clear();
+        }
+        return true;
+    }
+    else if constexpr ( srcType == VAR_ARRAY_OF_STRUCTS )
+    {
+        m_SubVariables.Append( Forward( V, srcValue ) );
+        return true;
+    }
+    else
+    {
+        static_assert( sizeof( srcType ) == 0, "Unsupported type" );
     }
 
     ASSERT( false ); // Should never get here

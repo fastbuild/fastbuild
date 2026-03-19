@@ -117,6 +117,10 @@ private:
     void SetValueArrayOfStructs( const BFFVariable & value );
 
     bool Concat( const BFFVariable & src, const BFFToken * operatorIter );
+    bool Concat( BFFVariable && src, const BFFToken * operatorIter );
+
+    template <BFFVariable::VarType SrcType, class V>
+    bool ConcatValue( V value, const BFFToken * operatorIter );
 
     void SetType( VarType type );
 
