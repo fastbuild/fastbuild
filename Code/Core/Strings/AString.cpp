@@ -757,6 +757,18 @@ AString & AString::AppendList( const Array<AString> & list, char separator )
     // Determine how many separators will be needed
     size_t numSeparatorsRemaining = ( list.GetSize() - 1 );
 
+    size_t sumStringLengths = 0;
+    for ( const AString & string : list )
+    {
+        sumStringLengths += string.GetLength();
+    }
+
+    const uint32_t newLength = GetLength() + (uint32_t)numSeparatorsRemaining + (uint32_t)sumStringLengths;
+    if ( newLength > GetReserved() )
+    {
+        Grow( newLength );
+    }
+
     // Append items with separators
     for ( const AString & item : list )
     {
