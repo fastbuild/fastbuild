@@ -11,19 +11,6 @@
 //------------------------------------------------------------------------------
 class BFFToken;
 
-// Helpers
-//------------------------------------------------------------------------------
-// Used to avoid aliasing when const casting (can't use const_cast due to the
-// desired const being part of the template type)
-#define RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( input )       \
-    union                                                   \
-    {                                                       \
-        const Array<BFFVariable *> *          normal;       \
-        const Array<const BFFVariable *> *    constified;   \
-    };                                                      \
-    normal = &input;                                        \
-    return *constified
-
 // BFFVariable
 //------------------------------------------------------------------------------
 class BFFVariable
@@ -51,15 +38,15 @@ public:
         ASSERT( IsBool() );
         return m_BoolValue;
     }
-    const Array<const BFFVariable *> & GetStructMembers() const
+    const Array<BFFVariable> & GetStructMembers() const
     {
         ASSERT( IsStruct() );
-        RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables );
+        return m_SubVariables;
     }
-    const Array<const BFFVariable *> & GetArrayOfStructs() const
+    const Array<BFFVariable> & GetArrayOfStructs() const
     {
         ASSERT( IsArrayOfStructs() );
-        RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables );
+        return m_SubVariables;
     }
 
     enum VarType : uint8_t
@@ -92,36 +79,46 @@ public:
         --m_FreezeCount;
     }
 
-    BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFToken * operatorIter ) const;
+    static const BFFVariable * GetMemberByName( const AString & name, const Array<BFFVariable> & members );
+private:
+    static BFFVariable * GetMemberByName( const AString & name, Array<BFFVariable> & members );
 
-    static const BFFVariable * const * GetMemberByName( const AString & name, const Array<const BFFVariable *> & members );
-
+public:
     const BFFToken & GetToken() const { return m_Token; }
+
+    explicit BFFVariable( const BFFVariable & other );
+    explicit BFFVariable( BFFVariable && other );
+    ~BFFVariable() = default;
 
 private:
     friend class BFFStackFrame;
-
-    explicit BFFVariable( const BFFVariable & other );
 
     explicit BFFVariable( const AString & name, const BFFToken & token, VarType type );
     explicit BFFVariable( const AString & name, const BFFToken & token, const AString & value );
     explicit BFFVariable( const AString & name, const BFFToken & token, bool value );
     explicit BFFVariable( const AString & name, const BFFToken & token, const Array<AString> & values );
     explicit BFFVariable( const AString & name, const BFFToken & token, int32_t i );
-    explicit BFFVariable( const AString & name, const BFFToken & token, const Array<const BFFVariable *> & values );
-    explicit BFFVariable( const AString & name, const BFFToken & token, Array<BFFVariable *> && values );
-    explicit BFFVariable( const AString & name, const BFFToken & token, const Array<const BFFVariable *> & structs, VarType type ); // type for disambiguation
-    ~BFFVariable();
+    explicit BFFVariable( const AString & name, const BFFToken & token, const Array<BFFVariable> & values );
+    explicit BFFVariable( const AString & name, const BFFToken & token, Array<BFFVariable> && values );
+    explicit BFFVariable( const AString & name, const BFFToken & token, const Array<BFFVariable> & structs, VarType type ); // type for disambiguation
 
     BFFVariable & operator=( const BFFVariable & other ) = delete;
 
     void SetValueString( const AString & value );
     void SetValueBool( bool value );
     void SetValueArrayOfStrings( const Array<AString> & values );
+    void SetValueArrayOfStrings( Array<AString> && values );
+    void SetValueArrayOfStrings( const AString & value );
     void SetValueInt( int i );
-    void SetValueStruct( const Array<const BFFVariable *> & members );
-    void SetValueStruct( Array<BFFVariable *> && members );
-    void SetValueArrayOfStructs( const Array<const BFFVariable *> & values );
+    void SetValueStruct( const Array<BFFVariable> & members );
+    void SetValueStruct( Array<BFFVariable> && members );
+    void SetValueArrayOfStructs( const Array<BFFVariable> & values );
+    void SetValueArrayOfStructs( Array<BFFVariable> && values );
+    void SetValueArrayOfStructs( const BFFVariable & value );
+
+    bool Concat( const BFFVariable & src, const BFFToken * operatorIter );
+
+    void SetType( VarType type );
 
     AString m_Name;
     VarType m_Type;
@@ -133,7 +130,7 @@ private:
     int32_t m_IntValue = 0;
     AString m_StringValue;
     Array<AString> m_ArrayValues;
-    Array<BFFVariable *> m_SubVariables; // Used for struct members of arrays of structs
+    Array<BFFVariable> m_SubVariables; // Used for struct members of arrays of structs
     const BFFToken & m_Token;
 
     static const char * s_TypeNames[ MAX_VAR_TYPES ];
