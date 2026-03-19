@@ -547,6 +547,7 @@ void Array<T>::AppendInternal( U * otherBegin, U * otherEnd )
             static_assert( sizeof(S) == 0, "Append strategy case not implemented" );
         }
     }
+    m_Size = (uint32_t)newSize;
 }
 
 // Pop
@@ -682,7 +683,10 @@ Array<T> & Array<T>::operator=( const Array<T> & other )
         m_Begin = other.m_Begin;
         m_Size = other.m_Size;
         m_Capacity = other.m_Capacity;
-        m_ReferenceCount->Increment();
+        if ( m_ReferenceCount )
+        {
+            m_ReferenceCount->Increment();
+        }
         return *this;
     }
 
@@ -804,7 +808,8 @@ template <class T>
 
     constexpr size_t align = Array<T>::s_Align;
     constexpr size_t beginOffset = Array<T>::s_BeginOffset;
-    void * const mem = ALLOC( beginOffset + sizeof( T ) * numElements, align );
+    const size_t size = beginOffset + sizeof( T ) * numElements;
+    void * const mem = ALLOC( size, align );
     referenceCount = reinterpret_cast<Atomic<uint32_t> *>( mem );
     begin = reinterpret_cast<T *>( (char *)mem + beginOffset );
     if constexpr ( Array<T>::s_TIsShareable )
@@ -929,10 +934,14 @@ class StackArray : public Array<T>
     static_assert( RESERVED > 0, "StackArray must have a non-zero reserved size" );
 public:
     StackArray();
+    StackArray( const StackArray<T> & other );
+    StackArray( StackArray<T> && other );
     StackArray( const Array<T> & other );
     StackArray( Array<T> && other );
     ~StackArray() = default;
 
+    StackArray& operator=( const StackArray<T> & other );
+    StackArray& operator=( StackArray<T> && other );
     StackArray& operator=( const Array<T> & other );
     StackArray& operator=( Array<T> && other );
 
@@ -956,22 +965,58 @@ StackArray<T, RESERVED>::StackArray()
     ASSERT( !Array<T>::IsUsingSharedMemory() );
 }
 
-// CONSTRUCTOR (const Array &)
+// CONSTRUCTOR (const StackArray &)
 //------------------------------------------------------------------------------
 template <class T, uint32_t RESERVED>
 StackArray<T, RESERVED>::StackArray( const Array<T> & other )
     : StackArray()
 {
-    this->Array<T>::operator=( other );
+    Array<T>::operator=( other );
 }
 
-// CONSTRUCTOR (Array &&)
+// CONSTRUCTOR (StackArray &&)
 //------------------------------------------------------------------------------
 template <class T, uint32_t RESERVED>
 StackArray<T, RESERVED>::StackArray( Array<T> && other )
     : StackArray()
 {
-    this->Array<T>::operator=( Move( other ) );
+    Array<T>::operator=( Move( other ) );
+}
+
+// CONSTRUCTOR (const Array &)
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED>::StackArray( const StackArray<T> & other )
+    : StackArray()
+{
+    Array<T>::operator=( other );
+}
+
+// CONSTRUCTOR (Array &&)
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED>::StackArray( StackArray<T> && other )
+    : StackArray()
+{
+    Array<T>::operator=( Move( other ) );
+}
+
+// operator = (const StackArray &)
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED> & StackArray<T, RESERVED>::operator=( const StackArray<T> & other )
+{
+    Array<T>::operator=( other );
+    return *this;
+}
+
+// operator = (StackArray &&)
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED> & StackArray<T, RESERVED>::operator=( StackArray<T> && other )
+{
+    Array<T>::operator=( Move( other ) );
+    return *this;
 }
 
 // operator = (const Array &)
@@ -979,7 +1024,8 @@ StackArray<T, RESERVED>::StackArray( Array<T> && other )
 template <class T, uint32_t RESERVED>
 StackArray<T, RESERVED> & StackArray<T, RESERVED>::operator=( const Array<T> & other )
 {
-    this->Array<T>::operator=( other );
+    Array<T>::operator=( other );
+    return *this;
 }
 
 // operator = (Array &&)
@@ -987,7 +1033,8 @@ StackArray<T, RESERVED> & StackArray<T, RESERVED>::operator=( const Array<T> & o
 template <class T, uint32_t RESERVED>
 StackArray<T, RESERVED> & StackArray<T, RESERVED>::operator=( Array<T> && other )
 {
-    this->Array<T>::operator=( Move( other ) );
+    Array<T>::operator=( Move( other ) );
+    return *this;
 }
 
 //------------------------------------------------------------------------------

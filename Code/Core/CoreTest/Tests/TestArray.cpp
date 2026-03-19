@@ -1926,7 +1926,7 @@ void TestArray::MoveConstructorHelper() const
 
     // Move construct destination. SRC_CAST allows us to check Array/StackArray
     // behave the same
-    DST arrayB( Move( (SRC_CAST &)( arrayA ) ) );
+    DST arrayB( Move( arrayA ) );
 
     // Check expected amount of allocs occurred
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
