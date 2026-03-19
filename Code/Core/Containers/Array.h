@@ -540,7 +540,7 @@ void Array<T>::AppendInternal( U * otherBegin, U * otherEnd )
         }
         else if constexpr ( S == Strategy::Move )
         {
-            INPLACE_NEW( dest ) T( MOVE ( *it ) );
+            INPLACE_NEW( dest ) T( Move ( *it ) );
         }
         else
         {
