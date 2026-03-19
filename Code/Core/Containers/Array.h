@@ -784,14 +784,9 @@ template <class T>
 void Array<T>::Grow( size_t minimumSize )
 {
     // grow by 1.5 times (but at least by one)
-    const size_t currentCapacity = GetCapacity();
-    size_t newCapacity = currentCapacity;
-    do
-    {
-        newCapacity = ( newCapacity + ( newCapacity >> 1 ) + 1 );
-        ASSERT( newCapacity > currentCapacity ); // detect overflow
-    }
-    while ( newCapacity < minimumSize );
+    const size_t oldCapacity = (size_t)m_Capacity;
+    const size_t newCapacity = Math::Max( minimumSize, ( oldCapacity + ( oldCapacity >> 1 ) + 1 ) );
+    ASSERT( newCapacity > oldCapacity ); // detect overflow
     SetCapacity( newCapacity );
 }
 
