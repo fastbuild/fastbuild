@@ -13,11 +13,14 @@
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Atomic.h"
 
+#include <type_traits>
+
 // Array
 //------------------------------------------------------------------------------
 template <class T>
 class Array
 {
+    static constexpr bool s_TIsShareable = std::is_copy_constructible_v<T>;
 public:
     explicit Array();
     explicit Array( const Array<T> & other );
@@ -140,11 +143,25 @@ private:
     void CopyToSharedData( size_t capacity );
 
     static constexpr size_t s_Align = Math::Max( __alignof( T ), sizeof( void * ) );
-    static constexpr size_t s_BeginOffset = Math::RoundUp( sizeof( Atomic<uint32_t> ), Array<T>::s_Align );
+    static constexpr size_t s_BeginOffset = s_TIsShareable ? Math::RoundUp( sizeof( Atomic<uint32_t> ), Array<T>::s_Align ) : 0;
 
 protected:
-    bool IsOnlyOwner() const { return ( m_ReferenceCount == nullptr ) || ( m_ReferenceCount->Load() == 1 ); }
-    bool IsUsingSharedMemory() const { return ( m_ReferenceCount != nullptr ) || ( m_Begin == nullptr ); }
+    bool IsOnlyOwner() const
+    {
+        if constexpr ( !s_TIsShareable )
+        {
+            return true;
+        }
+        return ( m_ReferenceCount == nullptr ) || ( m_ReferenceCount->Load() == 1 );
+    }
+    bool IsUsingSharedMemory() const
+    {
+        if constexpr ( !s_TIsShareable )
+        {
+            return false;
+        }
+        return ( m_ReferenceCount != nullptr ) || ( m_Begin == nullptr );
+    }
 
     void Grow();
     void Grow( size_t minimumSize );
@@ -567,47 +584,50 @@ void Array<T>::Erase( const T * const iter )
     ASSERT( iter >= m_Begin ); // iter must be in the array
     ASSERT( iter < ( m_Begin + m_Size ) );
 
-    if ( !IsOnlyOwner() )
+    if constexpr ( Array<T>::s_TIsShareable )
     {
-        Atomic<uint32_t> * const oldReferenceCount = m_ReferenceCount;
-        T * const oldBegin = m_Begin;
-        T * const oldEnd = m_Begin + m_Size;
-
-        // hook up to new memory
-        size_t newCapacity = m_Size - 1;
-        Array<T>::Allocate( m_ReferenceCount, m_Begin, newCapacity );
-        m_Capacity = newCapacity;
-        m_Size = newCapacity;
-
-        T * const newBegin = m_Begin;
-
-        // copy remaining items in new location
-        const bool doMove = ( oldReferenceCount == nullptr ) || ( oldReferenceCount->Load() == 1 );
-        T * src = oldBegin;
-        T * dst = newBegin;
-        while (src < oldEnd )
+        if ( !IsOnlyOwner() )
         {
-            if ( doMove )
-            {
-                // this array is the last owner of the heap data, so move the items
-                INPLACE_NEW( dst ) T( Move( *src ) );
-            }
-            else
-            {
-                // this array shares data with other arrays, so copy the items
-                INPLACE_NEW( dst ) T( *src );
-            }
-            src++;
-            dst++;
-            if ( src == iter )
-            {
-                src++; // skip the item we're erasing
-            }
-        }
+            Atomic<uint32_t> * const oldReferenceCount = m_ReferenceCount;
+            T * const oldBegin = m_Begin;
+            T * const oldEnd = m_Begin + m_Size;
 
-        // release old memory and maybe free and destroy the old items
-        Array<T>::Release( oldReferenceCount, oldBegin, oldEnd );
-        return;
+            // hook up to new memory
+            size_t newCapacity = m_Size - 1;
+            Array<T>::Allocate( m_ReferenceCount, m_Begin, newCapacity );
+            m_Capacity = newCapacity;
+            m_Size = newCapacity;
+
+            T * const newBegin = m_Begin;
+
+            // copy remaining items in new location
+            const bool doMove = ( oldReferenceCount == nullptr ) || ( oldReferenceCount->Load() == 1 );
+            T * src = oldBegin;
+            T * dst = newBegin;
+            while (src < oldEnd )
+            {
+                if ( doMove )
+                {
+                    // this array is the last owner of the heap data, so move the items
+                    INPLACE_NEW( dst ) T( Move( *src ) );
+                }
+                else
+                {
+                    // this array shares data with other arrays, so copy the items
+                    INPLACE_NEW( dst ) T( *src );
+                }
+                src++;
+                dst++;
+                if ( src == iter )
+                {
+                    src++; // skip the item we're erasing
+                }
+            }
+
+            // release old memory and maybe free and destroy the old items
+            Array<T>::Release( oldReferenceCount, oldBegin, oldEnd );
+            return;
+        }
     }
 
     T * dst = const_cast<T *>( iter );
@@ -787,7 +807,10 @@ template <class T>
     void * const mem = ALLOC( beginOffset + sizeof( T ) * numElements, align );
     referenceCount = reinterpret_cast<Atomic<uint32_t> *>( mem );
     begin = reinterpret_cast<T *>( (char *)mem + beginOffset );
-    INPLACE_NEW( referenceCount ) Atomic<uint32_t>( 1 );
+    if constexpr ( Array<T>::s_TIsShareable )
+    {
+        INPLACE_NEW( referenceCount ) Atomic<uint32_t>( 1 );
+    }
 }
 
 // Deallocate
@@ -802,11 +825,14 @@ template <class T>
         ASSERT( (void *)begin == (void *)( (char *)referenceCount + Array<T>::s_BeginOffset ) );
 
         // Memory is on the heap, but may be shared with others
-        const uint32_t remainingReferenceCount = referenceCount->Decrement();
+        const uint32_t remainingReferenceCount = Array<T>::s_TIsShareable ? referenceCount->Decrement() : 0;
         if ( remainingReferenceCount == 0 )
         {
             // We were the last remaining string owning this memory, so it must be freed
-            referenceCount->~Atomic<uint32_t>();
+            if constexpr ( Array<T>::s_TIsShareable )
+            {
+                referenceCount->~Atomic<uint32_t>();
+            }
 
             // Destroy all items
             Array<T>::Delete( begin, end );
@@ -871,15 +897,23 @@ void Array<T>::CopyToSharedData( size_t capacity )
     const bool doMove = ( oldReferenceCount == nullptr ) || ( oldReferenceCount->Load() == 1 );
     for ( T * src = oldBegin, * dst = newBegin; src < oldEnd && dst < newEnd; ++src, ++dst )
     {
-        if ( doMove )
+        if constexpr ( !s_TIsShareable )
         {
             // this array is the last owner, so move the items
             INPLACE_NEW( dst ) T( Move( *src ) );
         }
         else
         {
-            // this array shares data with other arrays, so copy the items
-            INPLACE_NEW( dst ) T( *src );
+            if ( doMove )
+            {
+                // this array is the last owner, so move the items
+                INPLACE_NEW( dst ) T( Move( *src ) );
+            }
+            else
+            {
+                // this array shares data with other arrays, so copy the items
+                INPLACE_NEW( dst ) T( *src );
+            }
         }
     }
 
@@ -895,10 +929,12 @@ class StackArray : public Array<T>
     static_assert( RESERVED > 0, "StackArray must have a non-zero reserved size" );
 public:
     StackArray();
-    StackArray( const StackArray<T> & other );
+    StackArray( const Array<T> & other );
     StackArray( Array<T> && other );
-    StackArray( StackArray<T> && other );
     ~StackArray() = default;
+
+    StackArray& operator=( const Array<T> & other );
+    StackArray& operator=( Array<T> && other );
 
 private:
     PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
@@ -920,13 +956,13 @@ StackArray<T, RESERVED>::StackArray()
     ASSERT( !Array<T>::IsUsingSharedMemory() );
 }
 
-// CONSTRUCTOR (const StackArray &)
+// CONSTRUCTOR (const Array &)
 //------------------------------------------------------------------------------
 template <class T, uint32_t RESERVED>
-StackArray<T, RESERVED>::StackArray( const StackArray<T> & other )
+StackArray<T, RESERVED>::StackArray( const Array<T> & other )
     : StackArray()
 {
-    (*this) = other;
+    this->Array<T>::operator=( other );
 }
 
 // CONSTRUCTOR (Array &&)
@@ -935,17 +971,23 @@ template <class T, uint32_t RESERVED>
 StackArray<T, RESERVED>::StackArray( Array<T> && other )
     : StackArray()
 {
-    (*this) = Move( other );
+    this->Array<T>::operator=( Move( other ) );
 }
 
-// CONSTRUCTOR (StackArray &&)
+// operator = (const Array &)
 //------------------------------------------------------------------------------
 template <class T, uint32_t RESERVED>
-StackArray<T, RESERVED>::StackArray( StackArray<T> && other )
-    : StackArray()
+StackArray<T, RESERVED> & StackArray<T, RESERVED>::operator=( const Array<T> & other )
 {
-    (*this) = Move( other );
+    this->Array<T>::operator=( other );
 }
 
+// operator = (Array &&)
+//------------------------------------------------------------------------------
+template <class T, uint32_t RESERVED>
+StackArray<T, RESERVED> & StackArray<T, RESERVED>::operator=( Array<T> && other )
+{
+    this->Array<T>::operator=( Move( other ) );
+}
 
 //------------------------------------------------------------------------------
