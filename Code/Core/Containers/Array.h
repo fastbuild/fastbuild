@@ -246,6 +246,13 @@ void Array<T>::SetCapacity( size_t capacity )
 template <class T>
 void Array<T>::SetSize( size_t size )
 {
+    // clear
+    if ( size == 0 )
+    {
+        Clear();
+        return;
+    }
+
     const size_t oldSize = m_Size;
 
     // no change
@@ -284,7 +291,7 @@ void Array<T>::SetSize( size_t size )
     T * const newEnd = m_Begin + size;
     for ( T * item = m_Begin + oldSize; item < newEnd; ++item )
     {
-        INPLACE_NEW( item ) T;
+        INPLACE_NEW( item ) T();
     }
     m_Size = (uint32_t)size;
 }
@@ -294,7 +301,31 @@ void Array<T>::SetSize( size_t size )
 template <class T>
 void Array<T>::Clear()
 {
-    SetSize( 0 );
+    // no change
+    if ( m_Size == 0 )
+    {
+        return;
+    }
+
+    if ( !IsOnlyOwner() )
+    {
+        Array<T>::Release( m_ReferenceCount, m_Begin, m_Begin + m_Size );
+        m_ReferenceCount = nullptr;
+        m_Begin = nullptr;
+        m_Size = 0;
+        m_Capacity = 0;
+        return;
+    }
+
+    // destroy all contents
+    const T * const end = m_Begin + m_Size;
+    for ( T * item = m_Begin; item < end; ++item )
+    {
+        item->~T();
+    }
+
+    // continue to hold on to the memory
+    m_Size = 0;
 }
 
 // Swap
