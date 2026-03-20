@@ -525,6 +525,11 @@ void AString::Assign( const AString & string )
 //------------------------------------------------------------------------------
 void AString::Assign( AString && string )
 {
+    if ( &string == this )
+    {
+        return; // self-assignmet is a no-op
+    }
+
     if ( IsUsingSharedMemory() && string.IsUsingSharedMemory() )
     {
         // Other string supports shared memory, so we don't need to perform a deep copy.
