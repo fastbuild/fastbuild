@@ -140,6 +140,14 @@ loop:
 //------------------------------------------------------------------------------
 bool AString::operator==( const AString & other ) const
 {
+    if ( ( other.m_ReferenceCount == m_ReferenceCount ) &&
+         ( other.m_Contents == m_Contents ) &&
+         ( other.m_Length == m_Length ) &&
+         ( other.m_Reserved == m_Reserved ) )
+    {
+        return true;
+    }
+
     if ( other.GetLength() != GetLength() )
     {
         return false;
