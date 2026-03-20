@@ -102,6 +102,8 @@ public:
     bool FindAndErase( const U & obj );
     template <class U>
     bool FindDerefAndErase( const U & obj );
+    template <class U>
+    size_t FindAndEraseAll( const U & obj );
 
     // add/remove items
     void Append( const T & item );
@@ -445,6 +447,82 @@ bool Array<T>::FindDerefAndErase( const U & obj )
         return true;
     }
     return false;
+}
+
+// FindAndEraseAll
+//------------------------------------------------------------------------------
+template <class T>
+template <class U>
+size_t Array<T>::FindAndEraseAll( const U & obj )
+{
+    const T * firstMatch = Find( obj );
+
+    if ( !firstMatch )
+    {
+        // avoid eager copies if nothing in the array matches
+        return 0;
+    }
+
+    if constexpr ( Array<T>::s_TIsShareable )
+    {
+        if ( !IsOnlyOwner() )
+        {
+            // copy non-erased items and leave the erased items behind
+            Atomic<uint32_t> * const oldReferenceCount = m_ReferenceCount;
+            const T * const oldBegin = m_Begin;
+            const T * const oldEnd = m_Begin + m_Size;
+            const size_t oldSize = m_Size;
+
+            // hook up to new memory
+            const size_t newCapacity = oldSize - 1; // we know that at least 1 item is going to be erased.
+            Array<T>::Allocate( m_ReferenceCount, m_Begin, newCapacity );
+            m_Capacity = newCapacity;
+
+            const T * src = oldBegin;
+            T * dst = m_Begin;
+
+            for ( ; src < firstMatch ; ++src, ++dst )
+            {
+                INPLACE_NEW( dst ) T( *src );
+            }
+            ++src; // avoid comparing firstMatch twice
+            for ( ; src < oldEnd ; ++src )
+            {
+                if ( *src == obj )
+                {
+                    INPLACE_NEW( dst ) T( *src );
+                    ++dst;
+                }
+            }
+            m_Size = (uint32_t)( dst - m_Begin );
+
+            // release old memory. should just decrement the reference count.
+            Array<T>::Release( oldReferenceCount, oldBegin, oldEnd );
+            return ( oldSize - (size_t)m_Size );
+        }
+    }
+
+    // operate on the data in-place
+    T * src = const_cast<T *>( firstMatch );
+    T * dst = src;
+    T * end = m_Begin + m_Size;
+
+    // avoid comparing firstMatch twice by deleting immediately
+    src->~T();
+    ++src;
+
+    for ( ; src < end ; ++src )
+    {
+        if ( *src == obj )
+        {
+            INPLACE_NEW( dst ) T( MOVE ( *src ) );
+            ++dst;
+        }
+        src->~T();
+    }
+
+    m_Size = (uint32_t)( dst - m_Begin );
+    return (size_t)( src - dst );
 }
 
 // Append
