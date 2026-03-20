@@ -25,50 +25,50 @@ public:
     void DisconnectStackChain();
 
     // set the value of a variable
-    static void SetVarString( const AString & name,
-                              const BFFToken & token,
-                              const AString & value,
-                              BFFStackFrame * frame );
-    static void SetVarArrayOfStrings( const AString & name,
-                                      const BFFToken & token,
-                                      const Array<AString> & values,
-                                      BFFStackFrame * frame );
-    static void SetVarBool( const AString & name,
-                            const BFFToken & token,
-                            bool value,
-                            BFFStackFrame * frame );
-    static void SetVarInt( const AString & name,
-                           const BFFToken & token,
-                           int value,
-                           BFFStackFrame * frame );
-    static void SetVarStruct( const AString & name,
-                              const BFFToken & token,
-                              const Array<const BFFVariable *> & members,
-                              BFFStackFrame * frame );
-    static void SetVarStruct( const AString & name,
-                              const BFFToken & token,
-                              Array<BFFVariable *> && members,
-                              BFFStackFrame * frame );
-    static void SetVarArrayOfStructs( const AString & name,
-                                      const BFFToken & token,
-                                      const Array<const BFFVariable *> & structs,
-                                      BFFStackFrame * frame );
+    static const BFFVariable * SetVarString( const AString & name,
+                                             const BFFToken & token,
+                                             const AString & value,
+                                             BFFStackFrame * frame );
+    static const BFFVariable * SetVarArrayOfStrings( const AString & name,
+                                                     const BFFToken & token,
+                                                     const Array<AString> & values,
+                                                     BFFStackFrame * frame );
+    static const BFFVariable * SetVarBool( const AString & name,
+                                           const BFFToken & token,
+                                           bool value,
+                                           BFFStackFrame * frame );
+    static const BFFVariable * SetVarInt( const AString & name,
+                                          const BFFToken & token,
+                                          int value,
+                                          BFFStackFrame * frame );
+    static const BFFVariable * SetVarStruct( const AString & name,
+                                             const BFFToken & token,
+                                             const Array<BFFVariable> & members,
+                                             BFFStackFrame * frame );
+    static const BFFVariable * SetVarStruct( const AString & name,
+                                             const BFFToken & token,
+                                             Array<BFFVariable> && members,
+                                             BFFStackFrame * frame );
+    static const BFFVariable * SetVarArrayOfStructs( const AString & name,
+                                                     const BFFToken & token,
+                                                     const Array<BFFVariable> & structs,
+                                                     BFFStackFrame * frame );
 
     // set from an existing variable
-    static void SetVar( const BFFVariable * var,
-                        const BFFToken & token,
-                        BFFStackFrame * frame );
-    static void SetVar( const BFFVariable * srcVar,
-                        const BFFToken & token,
-                        const AString & dstName,
-                        BFFStackFrame * frame );
+    static const BFFVariable * SetVar( const BFFVariable * var,
+                                       const BFFToken & token,
+                                       BFFStackFrame * frame );
+    static const BFFVariable * SetVar( const BFFVariable * srcVar,
+                                       const BFFToken & token,
+                                       const AString & dstName,
+                                       BFFStackFrame * frame );
 
     // set from two existing variable
-    static BFFVariable * ConcatVars( const AString & name,
-                                     const BFFVariable * lhs,
-                                     const BFFVariable * rhs,
-                                     BFFStackFrame * frame,
-                                     const BFFToken * operatorIter );
+    static const BFFVariable * ConcatVars( const AString & name,
+                                           const BFFVariable * lhs,
+                                           const BFFVariable * rhs,
+                                           BFFStackFrame * frame,
+                                           const BFFToken * operatorIter );
 
     // get a variable (caller passes complete name indicating type (user vs system))
     static const BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
@@ -78,8 +78,8 @@ public:
     static const BFFVariable * GetVarAny( const AString & nameOnly );
 
     // get all variables at this stack level only
-    const Array<const BFFVariable *> & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ); }
-    Array<BFFVariable *> & GetLocalVariables() { return m_Variables; }
+    const Array<BFFVariable> & GetLocalVariables() const { return m_Variables; }
+    Array<BFFVariable> & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only
     const BFFVariable * GetLocalVar( const AString & name ) const;
@@ -109,10 +109,8 @@ private:
     const BFFVariable * GetVarNoRecurse( const AString & name ) const;
     BFFVariable * GetVarMutableNoRecurse( const AString & name );
 
-    void CreateOrReplaceVarMutableNoRecurse( BFFVariable * var );
-
     // variables at current scope
-    Array<BFFVariable *> m_Variables;
+    Array<BFFVariable> m_Variables;
 
     // pointer to parent scope
     BFFStackFrame * m_Next;

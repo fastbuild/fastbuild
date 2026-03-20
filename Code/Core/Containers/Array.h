@@ -49,6 +49,7 @@ public:
         ASSERT( index < m_Size );
         return m_Begin[ index ];
     }
+    [[nodiscard]] bool Contains( const T * it ) const;
     [[nodiscard]] size_t GetIndexOf( const T * it ) const;
     [[nodiscard]] T & Top()
     {
@@ -234,6 +235,15 @@ void Array<T>::Destruct()
     }
     m_Size = 0;
     m_Capacity = 0;
+}
+
+// Contains
+//------------------------------------------------------------------------------
+template <class T>
+bool Array<T>::Contains( const T * it ) const
+{
+    const size_t index = static_cast<size_t>( it - m_Begin );
+    return ( index < m_Size ); // out of bounds pointer will result in invalid index
 }
 
 // GetIndexOf
