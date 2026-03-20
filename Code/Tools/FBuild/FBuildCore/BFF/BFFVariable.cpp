@@ -45,12 +45,12 @@ BFFVariable::BFFVariable( const BFFVariable & other )
     switch ( m_Type )
     {
         case VAR_ANY: ASSERT( false ); break;
-        case VAR_STRING: SetValueString( other.GetString() ); break;
-        case VAR_BOOL: SetValueBool( other.GetBool() ); break;
-        case VAR_ARRAY_OF_STRINGS: SetValueArrayOfStrings( other.GetArrayOfStrings() ); break;
-        case VAR_INT: SetValueInt( other.GetInt() ); break;
-        case VAR_STRUCT: SetValueStruct( other.GetStructMembers() ); break;
-        case VAR_ARRAY_OF_STRUCTS: SetValueArrayOfStructs( other.GetArrayOfStructs() ); break;
+        case VAR_STRING: ForceSetValueString( other.GetString() ); break;
+        case VAR_BOOL: ForceSetValueBool( other.GetBool() ); break;
+        case VAR_ARRAY_OF_STRINGS: ForceSetValueArrayOfStrings( other.GetArrayOfStrings() ); break;
+        case VAR_INT: ForceSetValueInt( other.GetInt() ); break;
+        case VAR_STRUCT: ForceSetValueStruct( other.GetStructMembers() ); break;
+        case VAR_ARRAY_OF_STRUCTS: ForceSetValueArrayOfStructs( other.GetArrayOfStructs() ); break;
         case MAX_VAR_TYPES: ASSERT( false ); break;
     }
 }
@@ -66,9 +66,9 @@ BFFVariable::BFFVariable( BFFVariable && other )
     {
         case VAR_ANY: ASSERT( false ); break;
         case VAR_STRING: m_StringValue = Move( other.m_StringValue ); break;
-        case VAR_BOOL: SetValueBool( other.GetBool() ); break;
+        case VAR_BOOL: ForceSetValueBool( other.GetBool() ); break;
         case VAR_ARRAY_OF_STRINGS: m_ArrayValues = Move( other.m_ArrayValues ); break;
-        case VAR_INT: SetValueInt( other.GetInt() ); break;
+        case VAR_INT: ForceSetValueInt( other.GetInt() ); break;
         case VAR_STRUCT: m_SubVariables = Move( other.m_SubVariables ); break;
         case VAR_ARRAY_OF_STRUCTS: m_SubVariables = Move( other.m_SubVariables ); break;
         case MAX_VAR_TYPES: ASSERT( false ); break;
@@ -163,45 +163,45 @@ BFFVariable::BFFVariable( const AString & name,
     (void)type;
 }
 
-// SetValueString
+// ForceSetValueString
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueString( const AString & value )
+void BFFVariable::ForceSetValueString( const AString & value )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_STRING );
     m_StringValue = value;
 }
 
-// SetValueBool
+// ForceSetValueBool
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueBool( bool value )
+void BFFVariable::ForceSetValueBool( bool value )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_BOOL );
     m_BoolValue = value;
 }
 
-// SetValueArrayOfStrings
+// ForceSetValueArrayOfStrings
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueArrayOfStrings( const Array<AString> & values )
+void BFFVariable::ForceSetValueArrayOfStrings( const Array<AString> & values )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRINGS );
     m_ArrayValues = values;
 }
 
-// SetValueArrayOfStrings
+// ForceSetValueArrayOfStrings
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueArrayOfStrings( Array<AString> && values )
+void BFFVariable::ForceSetValueArrayOfStrings( Array<AString> && values )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRINGS );
     m_ArrayValues = Move( values );
 }
 
-// SetValueArrayOfStrings
+// ForceSetValueArrayOfStrings
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueArrayOfStrings( const AString & value )
+void BFFVariable::ForceSetValueArrayOfStrings( const AString & value )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRINGS );
@@ -209,54 +209,54 @@ void BFFVariable::SetValueArrayOfStrings( const AString & value )
     m_ArrayValues.Append( value );
 }
 
-// SetValueInt
+// ForceSetValueInt
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueInt( int i )
+void BFFVariable::ForceSetValueInt( int i )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_INT );
     m_IntValue = i;
 }
 
-// SetValueStruct
+// ForceSetValueStruct
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueStruct( const Array<BFFVariable> & values )
+void BFFVariable::ForceSetValueStruct( const Array<BFFVariable> & values )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_STRUCT );
     m_SubVariables = values;
 }
 
-// SetValueStruct
+// ForceSetValueStruct
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueStruct( Array<BFFVariable> && values )
+void BFFVariable::ForceSetValueStruct( Array<BFFVariable> && values )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_STRUCT );
     m_SubVariables = Move( values );
 }
 
-// SetValueArrayOfStructs
+// ForceSetValueArrayOfStructs
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueArrayOfStructs( const Array<BFFVariable> & values )
+void BFFVariable::ForceSetValueArrayOfStructs( const Array<BFFVariable> & values )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRUCTS );
     m_SubVariables = values;
 }
 
-// SetValueArrayOfStructs
+// ForceSetValueArrayOfStructs
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueArrayOfStructs( Array<BFFVariable> && values )
+void BFFVariable::ForceSetValueArrayOfStructs( Array<BFFVariable> && values )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRUCTS );
     m_SubVariables = Move( values );
 }
 
-// SetValueArrayOfStructs
+// ForceSetValueArrayOfStructs
 //------------------------------------------------------------------------------
-void BFFVariable::SetValueArrayOfStructs( const BFFVariable & value )
+void BFFVariable::ForceSetValueArrayOfStructs( const BFFVariable & value )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRUCTS );
@@ -340,6 +340,109 @@ void BFFVariable::SetType( VarType type )
     return nullptr;
 }
 
+// Set
+//------------------------------------------------------------------------------
+bool BFFVariable::Set( const BFFVariable & src, const BFFToken * operatorIter )
+{
+    switch ( src.GetType() )
+    {
+        case VAR_ANY: ASSERT( false ); return false;
+        case VAR_STRING: return SetValue<BFFVariable::VAR_STRING, const AString &>( src.GetString(), operatorIter );
+        case VAR_BOOL: return SetValue<BFFVariable::VAR_BOOL, bool>( src.GetBool(), operatorIter );
+        case VAR_ARRAY_OF_STRINGS: return SetValue<BFFVariable::VAR_ARRAY_OF_STRINGS, const Array<AString> &>( src.GetArrayOfStrings(), operatorIter );
+        case VAR_INT: return SetValue<BFFVariable::VAR_INT, int32_t>( src.GetInt(), operatorIter );
+        case VAR_STRUCT: return SetValue<BFFVariable::VAR_STRUCT, const Array<BFFVariable> &>( src.GetStructMembers(), operatorIter );
+        case VAR_ARRAY_OF_STRUCTS: return SetValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariable> &>( src.GetArrayOfStructs(), operatorIter );
+        case MAX_VAR_TYPES: ASSERT( false ); return false;
+    }
+
+    ASSERT( false );
+    return false;
+}
+
+// SetValue
+//------------------------------------------------------------------------------
+template <BFFVariable::VarType SrcType, class V>
+bool BFFVariable::SetValue( V value, const BFFToken * operatorIter )
+{
+    const VarType dstType = m_Type;
+    constexpr VarType srcType = SrcType;
+
+    const bool dstIsEmpty = ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && GetArrayOfStrings().IsEmpty() ) ||
+                            ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) && GetArrayOfStructs().IsEmpty() );
+
+    // make sure types are compatible
+    if constexpr ( srcType == VAR_STRING )
+    {
+        if ( dstType == VAR_STRING )
+        {
+            // OK - assigning to a new variable or to a string
+            m_String = FORWARD( V, value );
+            return true;
+        }
+        else if ( dstType == VAR_ARRAY_OF_STRINGS || dstIsEmpty )
+        {
+            // OK - store new string as the single element of array
+            SetType( VAR_ARRAY_OF_STRINGS );
+            m_ArrayValues.Clear()
+            m_ArrayValues.Append( FORWARD( V, value ) );
+            return true;
+        }
+    }
+    else if constexpr ( srcType == VAR_BOOL )
+    {
+        if ( dstType == VAR_BOOL )
+        {
+            m_BoolValue = FORWARD( V, value );
+            return true;
+        }
+    }
+    else if constexpr ( srcType == VAR_ARRAY_OF_STRINGS )
+    {
+        if ( dstType == VAR_ARRAY_OF_STRINGS || dstIsEmpty )
+        {
+            SetType( VAR_ARRAY_OF_STRINGS );
+            m_ArrayValues = FORWARD( V, value );
+            return true;
+        }
+    }
+    else if constexpr ( srcType == VAR_INT )
+    {
+        if ( dstType == VAR_INT )
+        {
+            m_IntValue = FORWARD( V, value );
+            return true;
+        }
+    }
+    else if constexpr ( srcType == VAR_STRUCT )
+    {
+        if ( dstType == VAR_STRUCT )
+        {
+            m_SubVariables = FORWARD( V, value );
+        }
+        else if ( dstType == VAR_ARRAY_OF_STRUCTS || dstIsEmpty )
+        {
+            // OK - store struct as the single element of array
+            SetType( VAR_ARRAY_OF_STRUCTS );
+            m_SubVariables.Clear()
+            m_SubVariables.Append( FORWARD( V, value ) );
+            return true;
+        }
+    }
+    else if constexpr ( srcType == VAR_ARRAY_OF_STRUCTS )
+    {
+        if ( dstType == VAR_ARRAY_OF_STRUCTS || dstIsEmpty )
+        {
+            SetType( VAR_ARRAY_OF_STRUCTS );
+            m_SubVariables = FORWARD( V, value );
+            return true;
+        }
+    }
+
+    Error::Error_1034_OperationNotSupported( operatorIter, dstType, srcType, operatorIter );
+    return false;
+}
+
 // Concat
 //------------------------------------------------------------------------------
 bool BFFVariable::Concat( const BFFVariable & src, const BFFToken * operatorIter )
@@ -412,7 +515,7 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
             else if ( dstType == VAR_ARRAY_OF_STRUCTS && dstIsEmpty )
             {
                 // String to empty ArrayOfStructs
-                SetValueArrayOfStrings( Forward( V, srcValue ) );
+                ForceSetValueArrayOfStrings( Forward( V, srcValue ) );
                 return true;
             }
         }
@@ -428,7 +531,7 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
                 if ( dstIsEmpty )
                 {
                     // ArrayOfStrings to empty ArrayOfStructs
-                    SetValueArrayOfStrings( Forward( V, srcValue ) );
+                    ForceSetValueArrayOfStrings( Forward( V, srcValue ) );
                     return true;
                 }
             }
@@ -438,7 +541,7 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
             if ( dstType == VAR_ARRAY_OF_STRINGS && dstIsEmpty )
             {
                 // Struct to empty ArrayOfStrings
-                SetValueArrayOfStructs( Forward( V, srcValue ) );
+                ForceSetValueArrayOfStructs( Forward( V, srcValue ) );
                 return true;
             }
             else if ( dstType == VAR_ARRAY_OF_STRUCTS )
@@ -460,7 +563,7 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
                 if ( dstIsEmpty )
                 {
                     // ArrayOfStructs to empty ArrayOfStrings
-                    SetValueArrayOfStructs( Forward( V, srcValue ) );
+                    ForceSetValueArrayOfStructs( Forward( V, srcValue ) );
                     return true;
                 }
             }
@@ -543,6 +646,71 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
     }
 
     ASSERT( false ); // Should never get here
+    return false;
+}
+
+// Subtract
+//------------------------------------------------------------------------------
+bool BFFVariable::Subtract( const BFFVariable & src, const BFFToken * operatorIter )
+{
+    switch ( src.GetType() )
+    {
+        case VAR_ANY: ASSERT( false ); return false;
+        case VAR_STRING: return SubtractValue<BFFVariable::VAR_STRING, const AString &>( src.GetString(), operatorIter );
+        case VAR_BOOL: return SubtractValue<BFFVariable::VAR_BOOL, bool>( src.GetBool(), operatorIter );
+        case VAR_ARRAY_OF_STRINGS: return SubtractValue<BFFVariable::VAR_ARRAY_OF_STRINGS, const Array<AString> &>( src.GetArrayOfStrings(), operatorIter );
+        case VAR_INT: return SubtractValue<BFFVariable::VAR_INT, int32_t>( src.GetInt(), operatorIter );
+        case VAR_STRUCT: return SubtractValue<BFFVariable::VAR_STRUCT, const Array<BFFVariable> &>( src.GetStructMembers(), operatorIter );
+        case VAR_ARRAY_OF_STRUCTS: return SubtractValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariable> &>( src.GetArrayOfStructs(), operatorIter );
+        case MAX_VAR_TYPES: ASSERT( false ); return false;
+    }
+
+    ASSERT( false );
+    return false;
+}
+
+// SubtractValue
+//------------------------------------------------------------------------------
+template <BFFVariable::VarType SrcType, class V>
+bool BFFVariable::SubtractValue( const V & value, const BFFToken * operatorIter )
+{
+    const VarType dstType = m_Type;
+    constexpr VarType srcType = SrcType;
+
+    if constexpr ( srcType == VAR_STRING )
+    {
+        if ( dstType == VAR_STRING )
+        {
+            m_StringValue.Replace( value.Get(), "" );
+            return true;
+        }
+        else if ( dstType == VAR_ARRAY_OF_STRINGS )
+        {
+            m_ArrayValues.FindAndEraseAll( value );
+            return true;
+        }
+    }
+    else if constexpr ( srcType == VAR_ARRAY_OF_STRINGS || srcType == VAR_ARRAY_OF_STRUCTS )
+    {
+        // Only allow subtraction of arrays if the subtracted value is empty (the no-op case).
+        if ( ( dstType == VAR_ARRAY_OF_STRINGS || dstType == VAR_ARRAY_OF_STRUCTS ) && value.IsEmpty() )
+        {
+            return true;
+        }
+    }
+    else if constexpr ( srcType == VAR_INT )
+    {
+        if ( dstType == VAR_INT )
+        {
+            m_IntValue -= value;
+            return true;
+        }
+    }
+
+    Error::Error_1034_OperationNotSupported( operatorIter,
+                                             varType,
+                                             srcType,
+                                             operatorIter );
     return false;
 }
 

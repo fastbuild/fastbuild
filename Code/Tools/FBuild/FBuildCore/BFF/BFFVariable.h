@@ -104,23 +104,33 @@ private:
 
     BFFVariable & operator=( const BFFVariable & other ) = delete;
 
-    void SetValueString( const AString & value );
-    void SetValueBool( bool value );
-    void SetValueArrayOfStrings( const Array<AString> & values );
-    void SetValueArrayOfStrings( Array<AString> && values );
-    void SetValueArrayOfStrings( const AString & value );
-    void SetValueInt( int i );
-    void SetValueStruct( const Array<BFFVariable> & members );
-    void SetValueStruct( Array<BFFVariable> && members );
-    void SetValueArrayOfStructs( const Array<BFFVariable> & values );
-    void SetValueArrayOfStructs( Array<BFFVariable> && values );
-    void SetValueArrayOfStructs( const BFFVariable & value );
+    void ForceSetValueString( const AString & value );
+    void ForceSetValueBool( bool value );
+    void ForceSetValueArrayOfStrings( const Array<AString> & values );
+    void ForceSetValueArrayOfStrings( Array<AString> && values );
+    void ForceSetValueArrayOfStrings( const AString & value );
+    void ForceSetValueInt( int i );
+    void ForceSetValueStruct( const Array<BFFVariable> & members );
+    void ForceSetValueStruct( Array<BFFVariable> && members );
+    void ForceSetValueArrayOfStructs( const Array<BFFVariable> & values );
+    void ForceSetValueArrayOfStructs( Array<BFFVariable> && values );
+    void ForceSetValueArrayOfStructs( const BFFVariable & value );
+
+    bool Set( const BFFVariable & src, const BFFToken * operatorIter );
+
+    template <BFFVariable::VarType SrcType, class V>
+    bool SetValue( V value, const BFFToken * operatorIter );
 
     bool Concat( const BFFVariable & src, const BFFToken * operatorIter );
     bool Concat( BFFVariable && src, const BFFToken * operatorIter );
 
     template <BFFVariable::VarType SrcType, class V>
     bool ConcatValue( V value, const BFFToken * operatorIter );
+
+    bool Subtract( const BFFVariable & src, const BFFToken * operatorIter );
+
+    template <BFFVariable::VarType SrcType, class V>
+    bool SubtractValue( const V & value, const BFFToken * operatorIter );
 
     void SetType( VarType type );
 

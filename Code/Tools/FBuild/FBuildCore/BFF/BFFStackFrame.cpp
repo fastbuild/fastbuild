@@ -78,7 +78,7 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
-        var->SetValueString( value );
+        var->ForceSetValueString( value );
         return var;
     }
 
@@ -99,7 +99,7 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
-        var->SetValueArrayOfStrings( values );
+        var->ForceSetValueArrayOfStrings( values );
         return var;
     }
 
@@ -120,7 +120,7 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
-        var->SetValueBool( value );
+        var->ForceSetValueBool( value );
         return var;
     }
 
@@ -141,7 +141,7 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
-        var->SetValueInt( value );
+        var->ForceSetValueInt( value );
         return var;
     }
 
@@ -162,7 +162,7 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
-        var->SetValueStruct( members );
+        var->ForceSetValueStruct( members );
         return var;
     }
 
@@ -183,7 +183,7 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
-        var->SetValueStruct( Move( members ) );
+        var->ForceSetValueStruct( Move( members ) );
         return var;
     }
 
@@ -204,7 +204,7 @@ void BFFStackFrame::DisconnectStackChain()
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
     {
-        var->SetValueArrayOfStructs( structs );
+        var->ForceSetValueArrayOfStructs( structs );
         return var;
     }
 
