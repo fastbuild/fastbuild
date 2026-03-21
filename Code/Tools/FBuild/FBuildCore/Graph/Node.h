@@ -265,10 +265,6 @@ protected:
 
     virtual void Migrate( const Node & oldNode );
 
-    bool InitializePreBuildDependencies( NodeGraph & nodeGraph,
-                                         const BFFToken * iter,
-                                         const Function * function,
-                                         const Array<AString> & preBuildDependencyNames );
     bool InitializeConcurrencyGroup( NodeGraph & nodeGraph,
                                      const BFFToken * iter,
                                      const Function * function,

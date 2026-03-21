@@ -129,7 +129,7 @@ XCodeProjectNode::XCodeProjectNode()
     }
 
     // .ProjectFiles
-    Dependencies fileNodes( m_ProjectFiles.GetSize() );
+    Dependencies fileNodes;
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".ProjectFiles", m_ProjectFiles, fileNodes ) )
     {
         return false; // GetNodeList will have emitted an error
