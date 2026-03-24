@@ -515,7 +515,7 @@ size_t Array<T>::FindAndEraseAll( const U & obj )
     {
         if ( *src == obj )
         {
-            INPLACE_NEW( dst ) T( MOVE ( *src ) );
+            INPLACE_NEW( dst ) T( Move ( *src ) );
             ++dst;
         }
         src->~T();

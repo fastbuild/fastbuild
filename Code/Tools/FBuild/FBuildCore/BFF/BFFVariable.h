@@ -90,7 +90,6 @@ public:
     explicit BFFVariable( BFFVariable && other );
     ~BFFVariable() = default;
 
-private:
     friend class BFFStackFrame;
 
     explicit BFFVariable( const AString & name, const BFFToken & token, VarType type );
@@ -104,6 +103,7 @@ private:
 
     BFFVariable & operator=( const BFFVariable & other ) = delete;
 
+private:
     void ForceSetValueString( const AString & value );
     void ForceSetValueBool( bool value );
     void ForceSetValueArrayOfStrings( const Array<AString> & values );
