@@ -25,64 +25,64 @@ public:
     void DisconnectStackChain();
 
     // set the value of a variable
-    static const BFFVariable * SetVarString( const AString & name,
+    static BFFVariable * SetVarString( const AString & name,
                                              const BFFToken & token,
                                              const AString & value,
                                              BFFStackFrame * frame );
-    static const BFFVariable * SetVarArrayOfStrings( const AString & name,
+    static BFFVariable * SetVarArrayOfStrings( const AString & name,
                                                      const BFFToken & token,
                                                      const Array<AString> & values,
                                                      BFFStackFrame * frame );
-    static const BFFVariable * SetVarBool( const AString & name,
+    static BFFVariable * SetVarBool( const AString & name,
                                            const BFFToken & token,
                                            bool value,
                                            BFFStackFrame * frame );
-    static const BFFVariable * SetVarInt( const AString & name,
+    static BFFVariable * SetVarInt( const AString & name,
                                           const BFFToken & token,
                                           int value,
                                           BFFStackFrame * frame );
-    static const BFFVariable * SetVarStruct( const AString & name,
+    static BFFVariable * SetVarStruct( const AString & name,
                                              const BFFToken & token,
                                              const Array<BFFVariable> & members,
                                              BFFStackFrame * frame );
-    static const BFFVariable * SetVarStruct( const AString & name,
+    static BFFVariable * SetVarStruct( const AString & name,
                                              const BFFToken & token,
                                              Array<BFFVariable> && members,
                                              BFFStackFrame * frame );
-    static const BFFVariable * SetVarArrayOfStructs( const AString & name,
+    static BFFVariable * SetVarArrayOfStructs( const AString & name,
                                                      const BFFToken & token,
                                                      const Array<BFFVariable> & structs,
                                                      BFFStackFrame * frame );
 
     // set from an existing variable
-    static const BFFVariable * SetVar( const BFFVariable * var,
+    static BFFVariable * SetVar( const BFFVariable * var,
                                        const BFFToken & token,
                                        BFFStackFrame * frame );
-    static const BFFVariable * SetVar( const BFFVariable * srcVar,
+    static BFFVariable * SetVar( const BFFVariable * srcVar,
                                        const BFFToken & token,
                                        const AString & dstName,
                                        BFFStackFrame * frame );
 
     // set from two existing variable
-    static const BFFVariable * ConcatVars( const AString & name,
-                                           const BFFVariable * lhs,
+    static BFFVariable * ConcatVars( const AString & name,
+                                           BFFVariable * lhs,
                                            const BFFVariable * rhs,
                                            BFFStackFrame * frame,
                                            const BFFToken * operatorIter );
 
     // get a variable (caller passes complete name indicating type (user vs system))
-    static const BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
-    static const BFFVariable * GetVar( const AString & name, BFFStackFrame * frame = nullptr );
+    static BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
+    static BFFVariable * GetVar( const AString & name, BFFStackFrame * frame = nullptr );
 
     // get a variable by name, either user or system
-    static const BFFVariable * GetVarAny( const AString & nameOnly );
+    static BFFVariable * GetVarAny( const AString & nameOnly );
 
     // get all variables at this stack level only
     const Array<BFFVariable> & GetLocalVariables() const { return m_Variables; }
     Array<BFFVariable> & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only
-    const BFFVariable * GetLocalVar( const AString & name ) const;
+    BFFVariable * GetLocalVar( const AString & name );
 
     static BFFStackFrame * GetCurrent() { return s_StackHead; }
     static uint32_t GetDepth() { return s_StackHead ? s_StackHead->m_Depth : 1; }
@@ -92,7 +92,7 @@ public:
 
     BFFStackFrame * GetParent() const { return m_Next; }
 
-    const BFFVariable * GetVariableRecurse( const AString & name ) const;
+    BFFVariable * GetVariableRecurse( const AString & name ) const;
 
     const AString & GetLastVariableSeen() const { return m_LastVariableSeen; }
     BFFStackFrame * GetLastVariableSeenFrame() const { return m_LastVariableSeenFrame; }
@@ -103,10 +103,10 @@ public:
     }
 
 private:
-    const BFFVariable * GetVariableRecurse( const AString & nameOnly,
+    BFFVariable * GetVariableRecurse( const AString & nameOnly,
                                             BFFVariable::VarType type ) const;
 
-    const BFFVariable * GetVarNoRecurse( const AString & name ) const;
+    BFFVariable * GetVarNoRecurse( const AString & name ) const;
     BFFVariable * GetVarMutableNoRecurse( const AString & name );
 
     // variables at current scope

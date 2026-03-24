@@ -214,7 +214,7 @@ void BFFStackFrame::DisconnectStackChain()
 
 // SetVar
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable * BFFStackFrame::SetVar( const BFFVariable * var,
+/*static*/ BFFVariable * BFFStackFrame::SetVar( const BFFVariable * var,
                                                       const BFFToken & token,
                                                       BFFStackFrame * frame )
 {
@@ -223,7 +223,7 @@ void BFFStackFrame::DisconnectStackChain()
 
 // SetVar
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable * BFFStackFrame::SetVar( const BFFVariable * srcVar,
+/*static*/ BFFVariable * BFFStackFrame::SetVar( const BFFVariable * srcVar,
                                                       const BFFToken & token,
                                                       const AString & dstName,
                                                       BFFStackFrame * frame )
@@ -254,8 +254,8 @@ void BFFStackFrame::DisconnectStackChain()
 
 // ConcatVars
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
-                                                          const BFFVariable * lhs,
+/*static*/ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
+                                                          BFFVariable * lhs,
                                                           const BFFVariable * rhs,
                                                           BFFStackFrame * frame,
                                                           const BFFToken * operatorIter )
@@ -272,7 +272,7 @@ void BFFStackFrame::DisconnectStackChain()
     // make doubly sure that it is safe to do a const cast
     ASSERT( m_Variables.Contains( lhs ) );
 
-    const bool result = const_cast<BFFVariable *>( lhs )->Concatenate( rhs, operatorIter );
+    const bool result = lhs->Concatenate( rhs, operatorIter );
     if ( !result )
     {
         // Concat would have emitted an error
@@ -283,7 +283,7 @@ void BFFStackFrame::DisconnectStackChain()
 
 // GetVar
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable * BFFStackFrame::GetVar( const char * name, BFFStackFrame * frame )
+/*static*/ BFFVariable * BFFStackFrame::GetVar( const char * name, BFFStackFrame * frame )
 {
     AStackString strName( name );
     return GetVar( strName, frame );
@@ -291,7 +291,7 @@ void BFFStackFrame::DisconnectStackChain()
 
 // GetVar
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable * BFFStackFrame::GetVar( const AString & name, BFFStackFrame * frame )
+/*static*/ BFFVariable * BFFStackFrame::GetVar( const AString & name, BFFStackFrame * frame )
 {
     // we shouldn't be calling this if there aren't any stack frames
     ASSERT( s_StackHead );
@@ -310,10 +310,10 @@ void BFFStackFrame::DisconnectStackChain()
 
 // GetVariableRecurse
 //------------------------------------------------------------------------------
-const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & name ) const
+BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & name ) const
 {
     // look at this scope level
-    for ( const BFFVariable & var : m_Variables )
+    for ( BFFVariable & var : m_Variables )
     {
         if ( var->GetName() == name )
         {
@@ -333,7 +333,7 @@ const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & name ) co
 
 // GetLocalVar
 //------------------------------------------------------------------------------
-const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
+BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 {
     // look at this scope level
     return GetVarNoRecurse( name );
@@ -373,7 +373,7 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 
 // GetVarAny
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable * BFFStackFrame::GetVarAny( const AString & nameOnly )
+/*static*/ BFFVariable * BFFStackFrame::GetVarAny( const AString & nameOnly )
 {
     ASSERT( nameOnly.BeginsWith( '.' ) == false ); // Should not include . : TODO:C Resolve the inconsistency
 
@@ -386,13 +386,13 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 
 // GetVariableRecurse
 //------------------------------------------------------------------------------
-const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
+BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
                                                        BFFVariable::VarType type ) const
 {
     ASSERT( nameOnly.BeginsWith( '.' ) == false ); // Should not include . : TODO:C Resolve the inconsistency
 
     // look at this scope level
-    for ( const BFFVariable * var : m_Variables )
+    for ( BFFVariable * var : m_Variables )
     {
         // if name only (minus type prefix) length matches
         if ( var->GetName().GetLength() == ( nameOnly.GetLength() + 1 ) )
@@ -422,12 +422,12 @@ const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
 
 // GetVarNoRecurse
 //------------------------------------------------------------------------------
-const BFFVariable * BFFStackFrame::GetVarNoRecurse( const AString & name ) const
+BFFVariable * BFFStackFrame::GetVarNoRecurse( const AString & name ) const
 {
     ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
 
     // look at this scope level
-    for ( const BFFVariable * var : m_Variables )
+    for ( BFFVariable * var : m_Variables )
     {
         if ( var->GetName() == name )
         {
