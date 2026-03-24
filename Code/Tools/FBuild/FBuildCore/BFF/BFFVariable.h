@@ -116,6 +116,7 @@ private:
     void ForceSetValueArrayOfStructs( Array<BFFVariable> && values );
     void ForceSetValueArrayOfStructs( const BFFVariable & value );
 
+public:
     bool Set( const BFFVariable & src, const BFFToken * operatorIter );
 
     template <BFFVariable::VarType SrcType, class V>
@@ -132,6 +133,7 @@ private:
     template <BFFVariable::VarType SrcType, class V>
     bool SubtractValue( const V & value, const BFFToken * operatorIter );
 
+private:
     void SetType( VarType type );
 
     AString m_Name;

@@ -65,24 +65,24 @@ public:
 
     // set from two existing variable
     static BFFVariable * ConcatVars( const AString & name,
-                                           BFFVariable * lhs,
+                                           const BFFVariable * lhs,
                                            const BFFVariable * rhs,
                                            BFFStackFrame * frame,
                                            const BFFToken * operatorIter );
 
     // get a variable (caller passes complete name indicating type (user vs system))
-    static BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
-    static BFFVariable * GetVar( const AString & name, BFFStackFrame * frame = nullptr );
+    static const BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
+    static const BFFVariable * GetVar( const AString & name, BFFStackFrame * frame = nullptr );
 
     // get a variable by name, either user or system
-    static BFFVariable * GetVarAny( const AString & nameOnly );
+    static const BFFVariable * GetVarAny( const AString & nameOnly );
 
     // get all variables at this stack level only
     const Array<BFFVariable> & GetLocalVariables() const { return m_Variables; }
     Array<BFFVariable> & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only
-    BFFVariable * GetLocalVar( const AString & name );
+    const BFFVariable * GetLocalVar( const AString & name ) const;
 
     static BFFStackFrame * GetCurrent() { return s_StackHead; }
     static uint32_t GetDepth() { return s_StackHead ? s_StackHead->m_Depth : 1; }
@@ -92,7 +92,7 @@ public:
 
     BFFStackFrame * GetParent() const { return m_Next; }
 
-    BFFVariable * GetVariableRecurse( const AString & name ) const;
+    const BFFVariable * GetVariableRecurse( const AString & name ) const;
 
     const AString & GetLastVariableSeen() const { return m_LastVariableSeen; }
     BFFStackFrame * GetLastVariableSeenFrame() const { return m_LastVariableSeenFrame; }
@@ -103,10 +103,10 @@ public:
     }
 
 private:
-    BFFVariable * GetVariableRecurse( const AString & nameOnly,
+    const BFFVariable * GetVariableRecurse( const AString & nameOnly,
                                             BFFVariable::VarType type ) const;
 
-    BFFVariable * GetVarNoRecurse( const AString & name ) const;
+    const BFFVariable * GetVarNoRecurse( const AString & name ) const;
     BFFVariable * GetVarMutableNoRecurse( const AString & name );
 
     // variables at current scope

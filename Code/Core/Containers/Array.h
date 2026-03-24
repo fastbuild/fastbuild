@@ -765,7 +765,7 @@ Array<T> & Array<T>::operator=( const Array<T> & other )
     {
         // Already pointing to the same shared memory. Nothing to do.
         ASSERT( ( (void *)m_ReferenceCount == (void *)other.m_ReferenceCount ) && ( m_Size == other.m_Size ) && ( m_Capacity == other.m_Capacity ) );
-        return;
+        return *this;
     }
 
     // Use shallow copy if both are using shared memory or current should switch to shared memory

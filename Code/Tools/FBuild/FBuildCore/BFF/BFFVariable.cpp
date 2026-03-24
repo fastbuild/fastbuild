@@ -377,15 +377,15 @@ bool BFFVariable::SetValue( V value, const BFFToken * operatorIter )
         if ( dstType == VAR_STRING )
         {
             // OK - assigning to a new variable or to a string
-            m_String = FORWARD( V, value );
+            m_StringValue = Forward( V, value );
             return true;
         }
         else if ( dstType == VAR_ARRAY_OF_STRINGS || dstIsEmpty )
         {
             // OK - store new string as the single element of array
             SetType( VAR_ARRAY_OF_STRINGS );
-            m_ArrayValues.Clear()
-            m_ArrayValues.Append( FORWARD( V, value ) );
+            m_ArrayValues.Clear();
+            m_ArrayValues.Append( Forward( V, value ) );
             return true;
         }
     }
@@ -393,7 +393,7 @@ bool BFFVariable::SetValue( V value, const BFFToken * operatorIter )
     {
         if ( dstType == VAR_BOOL )
         {
-            m_BoolValue = FORWARD( V, value );
+            m_BoolValue = Forward( V, value );
             return true;
         }
     }
@@ -402,7 +402,7 @@ bool BFFVariable::SetValue( V value, const BFFToken * operatorIter )
         if ( dstType == VAR_ARRAY_OF_STRINGS || dstIsEmpty )
         {
             SetType( VAR_ARRAY_OF_STRINGS );
-            m_ArrayValues = FORWARD( V, value );
+            m_ArrayValues = Forward( V, value );
             return true;
         }
     }
@@ -410,7 +410,7 @@ bool BFFVariable::SetValue( V value, const BFFToken * operatorIter )
     {
         if ( dstType == VAR_INT )
         {
-            m_IntValue = FORWARD( V, value );
+            m_IntValue = Forward( V, value );
             return true;
         }
     }
@@ -418,14 +418,14 @@ bool BFFVariable::SetValue( V value, const BFFToken * operatorIter )
     {
         if ( dstType == VAR_STRUCT )
         {
-            m_SubVariables = FORWARD( V, value );
+            m_SubVariables = Forward( V, value );
         }
         else if ( dstType == VAR_ARRAY_OF_STRUCTS || dstIsEmpty )
         {
             // OK - store struct as the single element of array
             SetType( VAR_ARRAY_OF_STRUCTS );
-            m_SubVariables.Clear()
-            m_SubVariables.Append( FORWARD( V, value ) );
+            m_SubVariables.Clear();
+            m_SubVariables.Append( Forward( V, value ) );
             return true;
         }
     }
@@ -434,7 +434,7 @@ bool BFFVariable::SetValue( V value, const BFFToken * operatorIter )
         if ( dstType == VAR_ARRAY_OF_STRUCTS || dstIsEmpty )
         {
             SetType( VAR_ARRAY_OF_STRUCTS );
-            m_SubVariables = FORWARD( V, value );
+            m_SubVariables = Forward( V, value );
             return true;
         }
     }
@@ -708,7 +708,7 @@ bool BFFVariable::SubtractValue( const V & value, const BFFToken * operatorIter 
     }
 
     Error::Error_1034_OperationNotSupported( operatorIter,
-                                             varType,
+                                             dstType,
                                              srcType,
                                              operatorIter );
     return false;
