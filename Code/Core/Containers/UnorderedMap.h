@@ -57,14 +57,55 @@ public:
 
     // Check if an item exists in the map
     [[nodiscard]] KeyValue * Find( const KEY & key );
+    [[nodiscard]] const KeyValue * Find( const KEY & key ) const;
 
     // Add items to the map
     KeyValue & Insert( const KEY & key, const VALUE & value );
 
+    template <class KEYVALUE>
+    class IteratorTemplate
+    {
+    private:
+        IteratorTemplate( KEYVALUE * const * bucket, uint32_t bucketIndex, KEYVALUE * keyValue )
+            : m_Bucket( bucket )
+            , m_BucketIndex( bucketIndex )
+            , m_KeyValue( keyValue )
+        {
+        }
+
+    public:
+        IteratorTemplate( const IteratorTemplate & other ) = default;
+        IteratorTemplate( IteratorTemplate && other ) = default;
+        IteratorTemplate& operator=( const IteratorTemplate & other ) = default;
+        IteratorTemplate& operator=( IteratorTemplate && other ) = default;
+
+        KEYVALUE & operator*() const;
+        IteratorTemplate operator++( int );
+        IteratorTemplate& operator++();
+
+        bool operator==( const IteratorTemplate & other ) const;
+
+    private:
+        static IteratorTemplate<KEYVALUE> BeginningOf( KEYVALUE * const * buckets );
+        static IteratorTemplate<KEYVALUE> EndOf( KEYVALUE * const * buckets );
+
+        KEYVALUE * const * m_Bucket;
+        uint32_t m_BucketIndex;
+        KEYVALUE * m_KeyValue;
+    };
+
+    using Iterator = IteratorTemplate<KeyValue>;
+    using ConstIterator = IteratorTemplate<const KeyValue>;
+
+    Iterator Begin() { return Iterator::BeginningOf( m_Buckets ); }
+    Iterator End() { return Iterator::EndOf( m_Buckets ); }
+    ConstIterator Begin() const { return ConstIterator::BeginningOf( m_Buckets ); }
+    ConstIterator End() const { return ConstIterator::EndOf( m_Buckets ); }
+
 protected:
-    inline static const uint32_t kTableSizePower = 16;
-    inline static const uint32_t kTableSize = ( 1 << kTableSizePower );
-    inline static const uint32_t kTableSizeMask = ( kTableSize - 1 );
+    inline static constexpr uint32_t kTableSizePower = 16;
+    inline static constexpr uint32_t kTableSize = ( 1 << kTableSizePower );
+    inline static constexpr uint32_t kTableSizeMask = ( kTableSize - 1 );
 
     KeyValue ** m_Buckets = nullptr;
     uint32_t m_Count = 0;
@@ -112,6 +153,14 @@ void UnorderedMap<KEY, VALUE>::Destruct()
 template <class KEY, class VALUE>
 typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Find( const KEY & key )
 {
+    return const_cast<KeyValue *>( const_cast<const UnorderedMap<KEY, VALUE> *>( this )->Find( key ) );
+}
+
+// Find
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+const typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Find( const KEY & key ) const
+{
     // Handle empty
     if ( m_Buckets == nullptr )
     {
@@ -123,7 +172,7 @@ typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Find( co
 
     // Find the bucket
     const uint32_t bucketId = ( hash & kTableSizeMask );
-    KeyValue * keyValue = m_Buckets[ bucketId ];
+    const KeyValue * keyValue = m_Buckets[ bucketId ];
 
     // Check entries in the bucket for exact key match
     while ( keyValue )
@@ -178,6 +227,87 @@ typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Insert( 
 
     // Return new item
     return *newKeyValue;
+}
+
+// Iterator operator *
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+template <class KEYVALUE>
+KEYVALUE & UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator*() const
+{
+    ASSERT( m_KeyValue != nullptr );
+    return *m_KeyValue;
+}
+
+// Iterator postfix increment
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+template <class KEYVALUE>
+typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator++( int )
+{
+    IteratorTemplate<KEYVALUE> copy( *this );
+    ++( *this );
+    return copy;
+}
+
+// Iterator prefix increment
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+template <class KEYVALUE>
+typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> & UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator++()
+{
+    if ( m_KeyValue == nullptr )
+    {
+        // No where safe to go, so do nothing and return
+        ASSERT( m_BucketIndex == kTableSize );
+        return *this;
+    }
+
+    m_KeyValue = m_KeyValue->m_Next;
+    while ( ( m_KeyValue == nullptr ) && ( m_BucketIndex < kTableSize ) )
+    {
+        ++m_BucketIndex;
+        m_KeyValue = m_BucketIndex < kTableSize ? m_Bucket[ m_BucketIndex ] : nullptr;
+    }
+
+    ASSERT( ( m_KeyValue != nullptr ) || ( m_BucketIndex == kTableSize ) );
+    return *this;
+}
+
+// Iterator operator *
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+template <class KEYVALUE>
+bool UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator==( const IteratorTemplate<KEYVALUE> & other ) const
+{
+    return ( ( m_Bucket == other.m_Bucket ) &&
+             ( m_BucketIndex == other.m_BucketIndex ) &&
+             ( m_KeyValue == other.m_KeyValue ) );
+}
+
+// Iterator begin
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+template <class KEYVALUE>
+/*static*/ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::BeginningOf( KEYVALUE * const * buckets )
+{
+    for ( uint32_t i = 0; i < kTableSize; ++i )
+    {
+        if ( ( buckets[ i ] ) != nullptr )
+        {
+            return IteratorTemplate<KEYVALUE>( buckets, i, buckets[ i ] );
+        }
+    }
+    return IteratorTemplate<KEYVALUE>::EndOf( buckets );
+}
+
+// Iterator end
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+template <class KEYVALUE>
+/*static*/ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::EndOf( KEYVALUE * const * buckets )
+{
+    return IteratorTemplate<KEYVALUE>( buckets, kTableSize, nullptr );
 }
 
 //------------------------------------------------------------------------------
