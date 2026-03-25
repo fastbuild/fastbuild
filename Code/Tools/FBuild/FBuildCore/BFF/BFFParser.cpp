@@ -1369,7 +1369,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
         if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
              ( srcType == BFFVariable::VAR_STRING ) )
         {
-			if ( concat && !dstIsEmpty)
+			if ( concat )
 			{
 				ASSERT( varDst != nullptr );
 				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
