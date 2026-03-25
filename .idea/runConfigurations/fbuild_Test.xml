@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="fbuild Test" type="CLionExternalRunConfiguration" factoryName="Application" PROGRAM_PARAMS="Test" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="fastbuild" TARGET_NAME="fbuild" CONFIG_NAME="fbuild" RUN_PATH="$PROJECT_DIR$/tmp/ARMOSX-Debug/Tools/FBuild/FBuildTest/FBuildTest">
+  <configuration default="false" name="fbuild Test" type="CLionExternalRunConfiguration" factoryName="Application" PROGRAM_PARAMS="Tests" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://$PROJECT_DIR$/Code" PASS_PARENT_ENVS_2="true" PROJECT_NAME="fastbuild" TARGET_NAME="fbuild" CONFIG_NAME="fbuild" RUN_PATH="$PROJECT_DIR$/tmp/ARMOSX-Debug/Tools/FBuild/FBuild/FBuild">
     <method v="2">
       <option name="CLION.EXTERNAL.BUILD" enabled="true" />
     </method>

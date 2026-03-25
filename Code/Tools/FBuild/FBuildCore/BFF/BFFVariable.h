@@ -105,16 +105,19 @@ public:
 
 private:
     void ForceSetValueString( const AString & value );
+    void ForceSetValueString( AString && value );
     void ForceSetValueBool( bool value );
     void ForceSetValueArrayOfStrings( const Array<AString> & values );
     void ForceSetValueArrayOfStrings( Array<AString> && values );
     void ForceSetValueArrayOfStrings( const AString & value );
+    void ForceSetValueArrayOfStrings( AString && value );
     void ForceSetValueInt( int i );
     void ForceSetValueStruct( const Array<BFFVariable> & members );
     void ForceSetValueStruct( Array<BFFVariable> && members );
     void ForceSetValueArrayOfStructs( const Array<BFFVariable> & values );
     void ForceSetValueArrayOfStructs( Array<BFFVariable> && values );
     void ForceSetValueArrayOfStructs( const BFFVariable & value );
+    void ForceSetValueArrayOfStructs( BFFVariable && value );
 
 public:
     bool Set( const BFFVariable & src, const BFFToken * operatorIter );
