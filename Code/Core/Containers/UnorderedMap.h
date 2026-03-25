@@ -24,7 +24,7 @@ class UnorderedMap
 {
 public:
     UnorderedMap();
-    UnorderedMap( UnorderedMap<KEY, VALUE> && other ) = delete;
+    UnorderedMap( UnorderedMap<KEY, VALUE> && other );
     ~UnorderedMap();
 
     void Destruct();
@@ -66,8 +66,8 @@ public:
     class IteratorTemplate
     {
     private:
-        IteratorTemplate( KEYVALUE * const * bucket, uint32_t bucketIndex, KEYVALUE * keyValue )
-            : m_Bucket( bucket )
+        IteratorTemplate( KEYVALUE * const * buckets, uint32_t bucketIndex, KEYVALUE * keyValue )
+            : m_Buckets( buckets )
             , m_BucketIndex( bucketIndex )
             , m_KeyValue( keyValue )
         {
@@ -89,7 +89,7 @@ public:
         static IteratorTemplate<KEYVALUE> BeginningOf( KEYVALUE * const * buckets );
         static IteratorTemplate<KEYVALUE> EndOf( KEYVALUE * const * buckets );
 
-        KEYVALUE * const * m_Bucket;
+        KEYVALUE * const * m_Buckets;
         uint32_t m_BucketIndex;
         KEYVALUE * m_KeyValue;
     };
@@ -115,6 +115,17 @@ protected:
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
 UnorderedMap<KEY, VALUE>::UnorderedMap() = default;
+
+// CONSTRUCTOR (move)
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+UnorderedMap<KEY, VALUE>::UnorderedMap( UnorderedMap && other )
+    : m_Buckets( other.m_Buckets )
+    , m_Count( other.m_Count )
+{
+    other.m_Buckets = nullptr;
+    other.m_Count = 0;
+}
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
@@ -256,6 +267,10 @@ template <class KEY, class VALUE>
 template <class KEYVALUE>
 typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> & UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator++()
 {
+    if ( m_Buckets == nullptr )
+    {
+        return *this;
+    }
     if ( m_KeyValue == nullptr )
     {
         // No where safe to go, so do nothing and return
@@ -267,7 +282,7 @@ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> & Unorder
     while ( ( m_KeyValue == nullptr ) && ( m_BucketIndex < kTableSize ) )
     {
         ++m_BucketIndex;
-        m_KeyValue = m_BucketIndex < kTableSize ? m_Bucket[ m_BucketIndex ] : nullptr;
+        m_KeyValue = m_BucketIndex < kTableSize ? m_Buckets[ m_BucketIndex ] : nullptr;
     }
 
     ASSERT( ( m_KeyValue != nullptr ) || ( m_BucketIndex == kTableSize ) );
@@ -280,7 +295,7 @@ template <class KEY, class VALUE>
 template <class KEYVALUE>
 bool UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator==( const IteratorTemplate<KEYVALUE> & other ) const
 {
-    return ( ( m_Bucket == other.m_Bucket ) &&
+    return ( ( m_Buckets == other.m_Buckets ) &&
              ( m_BucketIndex == other.m_BucketIndex ) &&
              ( m_KeyValue == other.m_KeyValue ) );
 }
@@ -291,6 +306,10 @@ template <class KEY, class VALUE>
 template <class KEYVALUE>
 /*static*/ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::BeginningOf( KEYVALUE * const * buckets )
 {
+    if ( buckets == nullptr )
+    {
+        return IteratorTemplate<KEYVALUE>( nullptr, 0, nullptr );
+    }
     for ( uint32_t i = 0; i < kTableSize; ++i )
     {
         if ( ( buckets[ i ] ) != nullptr )
@@ -307,6 +326,10 @@ template <class KEY, class VALUE>
 template <class KEYVALUE>
 /*static*/ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::EndOf( KEYVALUE * const * buckets )
 {
+    if ( buckets == nullptr )
+    {
+        return IteratorTemplate<KEYVALUE>( nullptr, 0, nullptr );
+    }
     return IteratorTemplate<KEYVALUE>( buckets, kTableSize, nullptr );
 }
 
