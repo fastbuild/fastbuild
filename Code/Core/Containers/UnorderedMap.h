@@ -28,6 +28,7 @@ public:
     ~UnorderedMap();
 
     void Destruct();
+    void Clear() { Destruct(); }
 
     [[nodiscard]] bool IsEmpty() const { return ( m_Count == 0 ); }
     [[nodiscard]] size_t GetSize() const { return m_Count; }
@@ -38,9 +39,10 @@ public:
     class KeyValue
     {
     public:
-        KeyValue( const KEY & key, const VALUE & value, KeyValue * next )
+        template <class... ARGS>
+        KeyValue( const KEY & key, KeyValue * next, ARGS &&... args )
             : m_Key( key )
-            , m_Value( value )
+            , m_Value( Forward( ARGS, args )... )
             , m_Next( next )
         {
         }
@@ -61,6 +63,8 @@ public:
 
     // Add items to the map
     KeyValue & Insert( const KEY & key, const VALUE & value );
+    template <class... ARGS>
+    KeyValue & Emplace( const KEY & key, ARGS &&... args );
 
     template <class KEYVALUE>
     class IteratorTemplate
@@ -205,6 +209,15 @@ const typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Fi
 template <class KEY, class VALUE>
 typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Insert( const KEY & key, const VALUE & value )
 {
+    Emplace( key, value );
+}
+
+// Emplace
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+template <class... ARGS>
+typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Emplace( const KEY & key, ARGS &&... args )
+{
     // Handle empty
     if ( m_Buckets == nullptr )
     {
@@ -229,7 +242,7 @@ typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Insert( 
 #endif
 
     // Create storage for new item
-    KeyValue * newKeyValue = FNEW( KeyValue( key, value, keyValue ) );
+    KeyValue * newKeyValue = FNEW( KeyValue( key, keyValue, Forward( ARGS, args )...) );
 
     // Link into head of bucket
     m_Buckets[ bucketId ] = newKeyValue;
