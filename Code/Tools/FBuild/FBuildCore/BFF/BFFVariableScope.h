@@ -12,4 +12,4 @@
 
 // BFFVariableScope
 //------------------------------------------------------------------------------
-using BFFVariableScope = UnorderedMap<const AString, BFFVariable>;
+using BFFVariableScope = UnorderedMap<AString, BFFVariable>;
