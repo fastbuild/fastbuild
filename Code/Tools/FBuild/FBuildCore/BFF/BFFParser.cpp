@@ -991,7 +991,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
 
     // Parse array of variables
     StackArray<AString> values;
-    StackArray<BFFVariable> structValues;
+    StackArray<BFFVariableScope> structValues;
     BFFTokenRange iter( tokenRange );
     while ( iter.IsAtEnd() == false )
     {
@@ -1118,7 +1118,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
                 varType = BFFVariable::VAR_ARRAY_OF_STRUCTS;
                 if ( varSrc->IsStruct() )
                 {
-                    structValues.Append( *varSrc );
+                    structValues.Append( varSrc->GetStruct() );
                 }
                 else
                 {
@@ -1180,7 +1180,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
 		{
 			ASSERT( var );
 			BFFVariable * mutableVar = BFFStackFrame::SetVar( var, *opToken, name, frame );
-			mutableVar->ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, Array<BFFVariable> &&>( Move( structValues ), opToken );
+			mutableVar->ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, Array<BFFVariableScope> &&>( Move( structValues ), opToken );
 		}
 		else
 		{
@@ -1249,7 +1249,7 @@ bool BFFParser::StoreVariableStruct( const AString & name,
     }
 
     // get variables defined in the scope
-    Array<BFFVariable> & structMembers = stackFrame.GetLocalVariables();
+    BFFVariableScope & structMembers = stackFrame.GetLocalVariables();
 
     // Register this variable
     BFFStackFrame::SetVarStruct( name, *operatorToken, Move( structMembers ), frame ? frame : stackFrame.GetParent() );
@@ -1429,7 +1429,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
             }
             else
             {
-                BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), Array<BFFVariable>(), dstFrame );
+                BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), Array<BFFVariableScope>(), dstFrame );
             }
             return true;
         }

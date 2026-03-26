@@ -49,7 +49,7 @@ BFFVariable::BFFVariable( const BFFVariable & other )
         case VAR_BOOL: ForceSetValueBool( other.GetBool() ); break;
         case VAR_ARRAY_OF_STRINGS: ForceSetValueArrayOfStrings( other.GetArrayOfStrings() ); break;
         case VAR_INT: ForceSetValueInt( other.GetInt() ); break;
-        case VAR_STRUCT: ForceSetValueStruct( other.GetStructMembers() ); break;
+        case VAR_STRUCT: ForceSetValueStruct( other.GetStruct() ); break;
         case VAR_ARRAY_OF_STRUCTS: ForceSetValueArrayOfStructs( other.GetArrayOfStructs() ); break;
         case MAX_VAR_TYPES: ASSERT( false ); break;
     }
@@ -69,8 +69,8 @@ BFFVariable::BFFVariable( BFFVariable && other )
         case VAR_BOOL: ForceSetValueBool( other.GetBool() ); break;
         case VAR_ARRAY_OF_STRINGS: m_ArrayValues = Move( other.m_ArrayValues ); break;
         case VAR_INT: ForceSetValueInt( other.GetInt() ); break;
-        case VAR_STRUCT: m_SubVariables = Move( other.m_SubVariables ); break;
-        case VAR_ARRAY_OF_STRUCTS: m_SubVariables = Move( other.m_SubVariables ); break;
+        case VAR_STRUCT: m_StructValue = Move( other.m_StructValue ); break;
+        case VAR_ARRAY_OF_STRUCTS: m_StructArrayValues = Move( other.m_StructArrayValues ); break;
         case MAX_VAR_TYPES: ASSERT( false ); break;
     }
 }
@@ -127,10 +127,10 @@ BFFVariable::BFFVariable( const AString & name,
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name,
                           const BFFToken & token,
-                          const Array<BFFVariable> & values )
+                          const BFFVariableScope & value )
     : m_Name( name )
     , m_Type( VAR_STRUCT )
-    , m_SubVariables( values )
+    , m_StructValue( value )
     , m_Token( token )
 {
 }
@@ -139,10 +139,10 @@ BFFVariable::BFFVariable( const AString & name,
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name,
                           const BFFToken & token,
-                          Array<BFFVariable> && values )
+                          BFFVariableScope && value )
     : m_Name( name )
     , m_Type( VAR_STRUCT )
-    , m_SubVariables( Move( values ) )
+    , m_StructValue( Move( value ) )
     , m_Token( token )
 {
 }
@@ -151,16 +151,12 @@ BFFVariable::BFFVariable( const AString & name,
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name,
                           const BFFToken & token,
-                          const Array<BFFVariable> & structs,
-                          VarType type ) // type for disambiguation
+                          const Array<BFFVariableScope> & structs )
     : m_Name( name )
     , m_Type( VAR_ARRAY_OF_STRUCTS )
-    , m_SubVariables( structs )
+    , m_StructArrayValues( structs )
     , m_Token( token )
 {
-    // type for disambiguation only - sanity check it's the right type
-    ASSERT( type == VAR_ARRAY_OF_STRUCTS );
-    (void)type;
 }
 
 // ForceSetValueString
@@ -239,58 +235,58 @@ void BFFVariable::ForceSetValueInt( int i )
 
 // ForceSetValueStruct
 //------------------------------------------------------------------------------
-void BFFVariable::ForceSetValueStruct( const Array<BFFVariable> & values )
+void BFFVariable::ForceSetValueStruct( const BFFVariableScope & value )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_STRUCT );
-    m_SubVariables = values;
+    m_StructValue = value;
 }
 
 // ForceSetValueStruct
 //------------------------------------------------------------------------------
-void BFFVariable::ForceSetValueStruct( Array<BFFVariable> && values )
+void BFFVariable::ForceSetValueStruct( BFFVariableScope && value )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_STRUCT );
-    m_SubVariables = Move( values );
+    m_StructValue = Move( value );
 }
 
 // ForceSetValueArrayOfStructs
 //------------------------------------------------------------------------------
-void BFFVariable::ForceSetValueArrayOfStructs( const Array<BFFVariable> & values )
+void BFFVariable::ForceSetValueArrayOfStructs( const Array<BFFVariableScope> & values )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRUCTS );
-    m_SubVariables = values;
+    m_StructArrayValues = values;
 }
 
 // ForceSetValueArrayOfStructs
 //------------------------------------------------------------------------------
-void BFFVariable::ForceSetValueArrayOfStructs( Array<BFFVariable> && values )
+void BFFVariable::ForceSetValueArrayOfStructs( Array<BFFVariableScope> && values )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRUCTS );
-    m_SubVariables = Move( values );
+    m_StructArrayValues = Move( values );
 }
 
 // ForceSetValueArrayOfStructs
 //------------------------------------------------------------------------------
-void BFFVariable::ForceSetValueArrayOfStructs( const BFFVariable & value )
+void BFFVariable::ForceSetValueArrayOfStructs( const BFFVariableScope & value )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRUCTS );
-    m_SubVariables.Clear();
-    m_SubVariables.Append( value );
+    m_StructArrayValues.Clear();
+    m_StructArrayValues.Append( value );
 }
 
 // ForceSetValueArrayOfStructs
 //------------------------------------------------------------------------------
-void BFFVariable::ForceSetValueArrayOfStructs( BFFVariable && value )
+void BFFVariable::ForceSetValueArrayOfStructs( BFFVariableScope && value )
 {
     ASSERT( 0 == m_FreezeCount );
     SetType( VAR_ARRAY_OF_STRUCTS );
-    m_SubVariables.Clear();
-    m_SubVariables.Append( Move( value ) );
+    m_StructArrayValues.Clear();
+    m_StructArrayValues.Append( Move( value ) );
 }
 
 // SetType
@@ -308,28 +304,8 @@ void BFFVariable::SetType( VarType type )
         case VAR_BOOL: break;
         case VAR_ARRAY_OF_STRINGS: m_ArrayValues.Destruct(); break;
         case VAR_INT: break;
-        case VAR_STRUCT:
-            if ( type == VAR_ARRAY_OF_STRUCTS )
-            {
-                // Don't release the memory just yet in case it is about to be reused.
-                m_SubVariables.Clear();
-            }
-            else
-            {
-                m_SubVariables.Destruct();
-            }
-            break;
-        case VAR_ARRAY_OF_STRUCTS:
-            if ( type == VAR_STRUCT )
-            {
-                // Don't release the memory just yet in case it is about to be reused.
-                m_SubVariables.Clear();
-            }
-            else
-            {
-                m_SubVariables.Destruct();
-            }
-            break;
+        case VAR_STRUCT: m_StructValue.Destruct(); break;
+        case VAR_ARRAY_OF_STRUCTS: m_StructArrayValues.Destruct(); break;
         case MAX_VAR_TYPES: ASSERT( false ); break;
     }
     m_Type = type;
@@ -337,16 +313,14 @@ void BFFVariable::SetType( VarType type )
 
 // GetMemberByName
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable * BFFVariable::GetMemberByName( const AString & name, const Array<BFFVariable> & members )
+/*static*/ const BFFVariable * BFFVariable::GetMemberByName( const AString & name, const BFFVariableScope & members )
 {
     ASSERT( !name.IsEmpty() );
 
-    for ( const BFFVariable * it = members.Begin(); it != members.End(); ++it )
+    if ( const BFFVariableScope::KeyValue * var = members.Find( name ) )
     {
-        if ( it->GetName() == name )
-        {
-            return it;
-        }
+        ASSERT( var->m_Value.GetName() == name );
+        return &var->m_Value;
     }
 
     return nullptr;
@@ -354,16 +328,14 @@ void BFFVariable::SetType( VarType type )
 
 // GetMemberByName
 //------------------------------------------------------------------------------
-/*static*/ BFFVariable * BFFVariable::GetMemberByName( const AString & name, Array<BFFVariable> & members )
+/*static*/ BFFVariable * BFFVariable::GetMemberByName( const AString & name, BFFVariableScope & members )
 {
     ASSERT( !name.IsEmpty() );
 
-    for ( BFFVariable * it = members.Begin(); it != members.End(); ++it )
+    if ( BFFVariableScope::KeyValue * var = members.Find( name ) )
     {
-        if ( it->GetName() == name )
-        {
-            return it;
-        }
+        ASSERT( var->m_Value.GetName() == name );
+        return &var->m_Value;
     }
 
     return nullptr;
@@ -380,8 +352,8 @@ bool BFFVariable::Set( const BFFVariable & src, const BFFToken * operatorIter )
         case VAR_BOOL: return SetValue<BFFVariable::VAR_BOOL, bool>( src.GetBool(), operatorIter );
         case VAR_ARRAY_OF_STRINGS: return SetValue<BFFVariable::VAR_ARRAY_OF_STRINGS, const Array<AString> &>( src.GetArrayOfStrings(), operatorIter );
         case VAR_INT: return SetValue<BFFVariable::VAR_INT, int32_t>( src.GetInt(), operatorIter );
-        case VAR_STRUCT: return SetValue<BFFVariable::VAR_STRUCT, const Array<BFFVariable> &>( src.GetStructMembers(), operatorIter );
-        case VAR_ARRAY_OF_STRUCTS: return SetValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariable> &>( src.GetArrayOfStructs(), operatorIter );
+        case VAR_STRUCT: return SetValue<BFFVariable::VAR_STRUCT, const BFFVariableScope &>( src.GetStruct(), operatorIter );
+        case VAR_ARRAY_OF_STRUCTS: return SetValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariableScope> &>( src.GetArrayOfStructs(), operatorIter );
         case MAX_VAR_TYPES: ASSERT( false ); return false;
     }
 
@@ -478,8 +450,8 @@ bool BFFVariable::Concat( const BFFVariable & src, const BFFToken * operatorIter
         case VAR_BOOL: return ConcatValue<BFFVariable::VAR_BOOL, bool>( src.GetBool(), operatorIter );
         case VAR_ARRAY_OF_STRINGS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRINGS, const Array<AString> &>( src.GetArrayOfStrings(), operatorIter );
         case VAR_INT: return ConcatValue<BFFVariable::VAR_INT, int32_t>( src.GetInt(), operatorIter );
-        case VAR_STRUCT: return ConcatValue<BFFVariable::VAR_STRUCT, const BFFVariable &>( src, operatorIter );
-        case VAR_ARRAY_OF_STRUCTS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariable> &>( src.GetArrayOfStructs(), operatorIter );
+        case VAR_STRUCT: return ConcatValue<BFFVariable::VAR_STRUCT, const BFFVariableScope &>( src.GetStruct(), operatorIter );
+        case VAR_ARRAY_OF_STRUCTS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariableScope> &>( src.GetArrayOfStructs(), operatorIter );
         case MAX_VAR_TYPES: ASSERT( false ); return false;
     }
 
@@ -498,8 +470,8 @@ bool BFFVariable::Concat( BFFVariable && src, const BFFToken * operatorIter )
         case VAR_BOOL: return ConcatValue<BFFVariable::VAR_BOOL, bool>( src.GetBool(), operatorIter );
         case VAR_ARRAY_OF_STRINGS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRINGS, Array<AString> &&>( Move( src.m_ArrayValues ), operatorIter );
         case VAR_INT: return ConcatValue<BFFVariable::VAR_INT, int32_t>( src.GetInt(), operatorIter );
-        case VAR_STRUCT: return ConcatValue<BFFVariable::VAR_STRUCT, BFFVariable &&>( Move( src ), operatorIter );
-        case VAR_ARRAY_OF_STRUCTS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, Array<BFFVariable> &&>( Move( src.m_SubVariables ), operatorIter );
+        case VAR_STRUCT: return ConcatValue<BFFVariable::VAR_STRUCT, BFFVariableScope &&>( Move( src.m_StructValue ), operatorIter );
+        case VAR_ARRAY_OF_STRUCTS: return ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, Array<BFFVariableScope> &&>( Move( src.m_StructArrayValues ), operatorIter );
         case MAX_VAR_TYPES: ASSERT( false ); return false;
     }
 
@@ -571,7 +543,7 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
             else if ( dstType == VAR_ARRAY_OF_STRUCTS )
             {
                 // Struct to ArrayOfStructs
-                m_SubVariables.Append( Forward( V, srcValue ) );
+                m_StructArrayValues.Append( Forward( V, srcValue ) );
                 return true;
             }
         }
@@ -627,15 +599,21 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
     }
     else if constexpr ( srcType == VAR_STRUCT )
     {
-        for ( auto & srcMember : srcValue.GetStructMembers() )
+        for ( auto & srcMember : srcValue )
         {
-            if ( BFFVariable * dstMember = GetMemberByName( srcMember.GetName(), m_SubVariables ) )
+            if ( auto * dstMember = GetMemberByName( srcMember.m_Value.GetName(), m_StructValue ) )
             {
                 // keep original (dst) members where member is only present in original (dst)
                 // or concatenate recursively members where the name exists in both
-                const bool result = std::is_rvalue_reference_v<V> ?
-                                    dstMember->Concat( Move( srcMember ), operatorIter ) :
-                                    dstMember->Concat( srcMember, operatorIter );
+                bool result;
+                if constexpr ( std::is_rvalue_reference_v<V> )
+                {
+                    result = dstMember->Concat( Move( srcMember.m_Value ), operatorIter );
+                }
+                else
+                {
+                    result = dstMember->Concat( srcMember.m_Value, operatorIter );
+                }
                 if ( result == false )
                 {
                     // Concat will have emitted an error
@@ -647,23 +625,23 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
                 // and add members only present in the src
                 if constexpr ( std::is_rvalue_reference_v<V> )
                 {
-                    m_SubVariables.Append( Move( srcMember ) );
+                    m_StructValue.Emplace( srcMember.m_Value.GetName(), Move( srcMember.m_Value ) );
                 }
                 else
                 {
-                    m_SubVariables.Append( srcMember );
+                    m_StructValue.Emplace( srcMember.m_Value.GetName(), srcMember.m_Value );
                 }
             }
         }
         if constexpr ( std::is_rvalue_reference_v<V> )
         {
-            srcValue.m_SubVariables.Clear();
+            srcValue.Clear();
         }
         return true;
     }
     else if constexpr ( srcType == VAR_ARRAY_OF_STRUCTS )
     {
-        m_SubVariables.Append( Forward( V, srcValue ) );
+        m_StructArrayValues.Append( Forward( V, srcValue ) );
         return true;
     }
     else
@@ -686,8 +664,8 @@ bool BFFVariable::Subtract( const BFFVariable & src, const BFFToken * operatorIt
         case VAR_BOOL: return SubtractValue<BFFVariable::VAR_BOOL, bool>( src.GetBool(), operatorIter );
         case VAR_ARRAY_OF_STRINGS: return SubtractValue<BFFVariable::VAR_ARRAY_OF_STRINGS, const Array<AString> &>( src.GetArrayOfStrings(), operatorIter );
         case VAR_INT: return SubtractValue<BFFVariable::VAR_INT, int32_t>( src.GetInt(), operatorIter );
-        case VAR_STRUCT: return SubtractValue<BFFVariable::VAR_STRUCT, const Array<BFFVariable> &>( src.GetStructMembers(), operatorIter );
-        case VAR_ARRAY_OF_STRUCTS: return SubtractValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariable> &>( src.GetArrayOfStructs(), operatorIter );
+        case VAR_STRUCT: return SubtractValue<BFFVariable::VAR_STRUCT, const BFFVariableScope &>( src.GetStruct(), operatorIter );
+        case VAR_ARRAY_OF_STRUCTS: return SubtractValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, const Array<BFFVariableScope> &>( src.GetArrayOfStructs(), operatorIter );
         case MAX_VAR_TYPES: ASSERT( false ); return false;
     }
 

@@ -193,7 +193,7 @@ FunctionForEach::FunctionForEach()
             }
             else if ( arrayVars[ j ]->GetType() == BFFVariable::VAR_ARRAY_OF_STRUCTS )
             {
-                BFFStackFrame::SetVar( &arrayVars[ j ]->GetArrayOfStructs()[ i ], *functionNameStart, localNames[ j ], &loopStackFrame );
+                BFFStackFrame::SetVarStruct( localNames[ j ], *functionNameStart, arrayVars[ j ]->GetArrayOfStructs()[ i ], &loopStackFrame );
             }
             else
             {

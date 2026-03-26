@@ -24,6 +24,7 @@ class UnorderedMap
 {
 public:
     UnorderedMap();
+    UnorderedMap( const UnorderedMap<KEY, VALUE> & other );
     UnorderedMap( UnorderedMap<KEY, VALUE> && other );
     ~UnorderedMap();
 
@@ -33,8 +34,8 @@ public:
     [[nodiscard]] bool IsEmpty() const { return ( m_Count == 0 ); }
     [[nodiscard]] size_t GetSize() const { return m_Count; }
 
-    UnorderedMap<KEY, VALUE> & operator=( const UnorderedMap<KEY, VALUE> & other ) = delete;
-    UnorderedMap<KEY, VALUE> & operator=( UnorderedMap<KEY, VALUE> && other ) = delete;
+    UnorderedMap<KEY, VALUE> & operator=( const UnorderedMap<KEY, VALUE> & other );
+    UnorderedMap<KEY, VALUE> & operator=( UnorderedMap<KEY, VALUE> && other );
 
     class KeyValue
     {
@@ -88,11 +89,12 @@ public:
         IteratorTemplate& operator++();
 
         bool operator==( const IteratorTemplate & other ) const;
+        bool operator!=( const IteratorTemplate & other ) const { return !( ( *this ) == other ); }
 
-    private:
         static IteratorTemplate<KEYVALUE> BeginningOf( KEYVALUE * const * buckets );
         static IteratorTemplate<KEYVALUE> EndOf( KEYVALUE * const * buckets );
 
+    private:
         KEYVALUE * const * m_Buckets;
         uint32_t m_BucketIndex;
         KEYVALUE * m_KeyValue;
@@ -106,7 +108,14 @@ public:
     ConstIterator Begin() const { return ConstIterator::BeginningOf( m_Buckets ); }
     ConstIterator End() const { return ConstIterator::EndOf( m_Buckets ); }
 
+    Iterator begin() { return Iterator::BeginningOf( m_Buckets ); }
+    Iterator end() { return Iterator::EndOf( m_Buckets ); }
+    ConstIterator begin() const { return ConstIterator::BeginningOf( m_Buckets ); }
+    ConstIterator end() const { return ConstIterator::EndOf( m_Buckets ); }
+
 protected:
+    void EnsureBucketsAllocated();
+
     inline static constexpr uint32_t kTableSizePower = 16;
     inline static constexpr uint32_t kTableSize = ( 1 << kTableSizePower );
     inline static constexpr uint32_t kTableSizeMask = ( kTableSize - 1 );
@@ -119,6 +128,15 @@ protected:
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
 UnorderedMap<KEY, VALUE>::UnorderedMap() = default;
+
+// CONSTRUCTOR (copy)
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+UnorderedMap<KEY, VALUE>::UnorderedMap( const UnorderedMap & other )
+    : UnorderedMap()
+{
+    ( *this ) = other;
+}
 
 // CONSTRUCTOR (move)
 //------------------------------------------------------------------------------
@@ -161,6 +179,86 @@ void UnorderedMap<KEY, VALUE>::Destruct()
         m_Buckets = nullptr;
     }
     m_Count = 0;
+}
+
+// Copy assign
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+UnorderedMap<KEY, VALUE> & UnorderedMap<KEY, VALUE>::operator=( const UnorderedMap<KEY, VALUE> & other )
+{
+    // self-assignment should be a no-op.
+    if ( &other == this )
+    {
+        return *this;
+    }
+
+    Destruct();
+    if ( !other.m_Buckets )
+    {
+        return *this;
+    }
+
+    EnsureBucketsAllocated();
+
+    for ( uint32_t i = 0; i < kTableSize; ++i )
+    {
+        KeyValue ** previousNextPtr = &m_Buckets[ i ];
+        const KeyValue * otherKeyValue = other.m_Buckets[ i ];
+
+        while ( otherKeyValue != nullptr )
+        {
+
+            // Create storage for new item
+            KeyValue * newKeyValue = FNEW( KeyValue( otherKeyValue->m_Key, nullptr, otherKeyValue->m_Value ) );
+
+            // Link into head of bucket
+            ( *previousNextPtr ) = newKeyValue;
+
+            // Debug check that the original map is consistent
+#if defined( ASSERTS_ENABLED )
+            // Hash the keys
+            const uint32_t oldKeyHash = UnorderedMapKeyHashingFunctions::Hash( otherKeyValue->m_Key );
+            const uint32_t newKeyHash = UnorderedMapKeyHashingFunctions::Hash( newKeyValue->m_Key );
+
+            // They should at least be equal
+            ASSERT( oldKeyHash == newKeyHash );
+
+            // Find the new entry's bucket
+            const uint32_t newBucketId = ( newKeyHash & kTableSizeMask );
+
+            // Check that the copied key belongs in the current bucket
+            ASSERT( i == newBucketId );
+#endif
+
+            previousNextPtr = &newKeyValue->m_Next;
+            otherKeyValue = otherKeyValue->m_Next;
+        }
+    }
+
+    m_Count = other.m_Count;
+    return *this;
+}
+
+// Move assign
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+UnorderedMap<KEY, VALUE> & UnorderedMap<KEY, VALUE>::operator=( UnorderedMap<KEY, VALUE> && other )
+{
+    // self-assignment should be a no-op.
+    if ( &other == this )
+    {
+        return *this;
+    }
+
+    Destruct();
+
+    m_Buckets = other.m_Buckets;
+    m_Count = other.m_Count;
+
+    other.m_Buckets = nullptr;
+    other.m_Count = 0;
+
+    return *this;
 }
 
 // Find
@@ -209,7 +307,7 @@ const typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Fi
 template <class KEY, class VALUE>
 typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Insert( const KEY & key, const VALUE & value )
 {
-    Emplace( key, value );
+    return Emplace( key, value );
 }
 
 // Emplace
@@ -219,10 +317,7 @@ template <class... ARGS>
 typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Emplace( const KEY & key, ARGS &&... args )
 {
     // Handle empty
-    if ( m_Buckets == nullptr )
-    {
-        m_Buckets = FNEW( KeyValue * [kTableSize]() ); // NOTE: zero initialized
-    }
+    EnsureBucketsAllocated();
 
     // Hash the key
     const uint32_t hash = UnorderedMapKeyHashingFunctions::Hash( key );
@@ -242,7 +337,7 @@ typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Emplace(
 #endif
 
     // Create storage for new item
-    KeyValue * newKeyValue = FNEW( KeyValue( key, keyValue, Forward( ARGS, args )...) );
+    KeyValue * newKeyValue = FNEW( KeyValue( key, keyValue, Forward( ARGS, args )... ) );
 
     // Link into head of bucket
     m_Buckets[ bucketId ] = newKeyValue;
@@ -251,6 +346,17 @@ typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Emplace(
 
     // Return new item
     return *newKeyValue;
+}
+
+// EnsureBucketsAllocated
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+void UnorderedMap<KEY, VALUE>::EnsureBucketsAllocated()
+{
+    if ( m_Buckets == nullptr )
+    {
+        m_Buckets = FNEW( KeyValue * [kTableSize]() ); // NOTE: zero initialized
+    }
 }
 
 // Iterator operator *

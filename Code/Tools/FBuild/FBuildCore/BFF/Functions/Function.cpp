@@ -1487,12 +1487,12 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
     if ( variable->IsArrayOfStructs() )
     {
         // pre-size the destination
-        const Array<BFFVariable> & srcStructs = variable->GetArrayOfStructs();
+        const Array<BFFVariableScope> & srcStructs = variable->GetArrayOfStructs();
         dstStructs.ResizeArrayOfStruct( base, srcStructs.GetSize() );
 
         // Set the properties of each struct
         size_t index( 0 );
-        for ( const BFFVariable & s : srcStructs )
+        for ( const BFFVariableScope & s : srcStructs )
         {
             // Calculate the base for this struct in the array
             void * structBase = dstStructs.GetStructInArray( base, index );
@@ -1517,7 +1517,7 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
         void * structBase = dstStructs.GetStructInArray( base, 0 );
 
         const ReflectionInfo * ri = dstStructs.GetStructReflectionInfo();
-        return PopulateArrayOfStructsElement( nodeGraph, iter, structBase, ri, *variable ); // Will emit error if needed
+        return PopulateArrayOfStructsElement( nodeGraph, iter, structBase, ri, variable->GetStruct() ); // Will emit error if needed
     }
 
     Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRUCT, BFFVariable::VAR_ARRAY_OF_STRUCTS );
@@ -1596,10 +1596,9 @@ bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
                                               const BFFToken * iter,
                                               void * structBase,
                                               const ReflectionInfo * structRI,
-                                              const BFFVariable & srcVariable ) const
+                                              const BFFVariableScope & value ) const
 {
     ASSERT( structRI ); // Must be at least one level of reflection
-    ASSERT( srcVariable.IsStruct() );
 
     do
     {
@@ -1618,7 +1617,7 @@ bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
             propertyName += property.GetName();
 
             // Try to find property in BFF
-            const BFFVariable * var = BFFVariable::GetMemberByName( propertyName, srcVariable.GetStructMembers() );
+            const BFFVariable * var = BFFVariable::GetMemberByName( propertyName, value );
             if ( !var )
             {
                 // If not found, check for inheritance from containing frame

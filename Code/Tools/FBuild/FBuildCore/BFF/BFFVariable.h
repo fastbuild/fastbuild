@@ -4,6 +4,9 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Tools/FBuild/FBuildCore/BFF/BFFVariableScope.h"
+
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
 
@@ -38,15 +41,15 @@ public:
         ASSERT( IsBool() );
         return m_BoolValue;
     }
-    const Array<BFFVariable> & GetStructMembers() const
+    const BFFVariableScope & GetStruct() const
     {
         ASSERT( IsStruct() );
-        return m_SubVariables;
+        return m_StructValue;
     }
-    const Array<BFFVariable> & GetArrayOfStructs() const
+    const Array<BFFVariableScope> & GetArrayOfStructs() const
     {
         ASSERT( IsArrayOfStructs() );
-        return m_SubVariables;
+        return m_StructArrayValues;
     }
 
     enum VarType : uint8_t
@@ -79,9 +82,9 @@ public:
         --m_FreezeCount;
     }
 
-    static const BFFVariable * GetMemberByName( const AString & name, const Array<BFFVariable> & members );
+    static const BFFVariable * GetMemberByName( const AString & name, const BFFVariableScope & members );
 private:
-    static BFFVariable * GetMemberByName( const AString & name, Array<BFFVariable> & members );
+    static BFFVariable * GetMemberByName( const AString & name, BFFVariableScope & members );
 
 public:
     const BFFToken & GetToken() const { return m_Token; }
@@ -97,9 +100,10 @@ public:
     explicit BFFVariable( const AString & name, const BFFToken & token, bool value );
     explicit BFFVariable( const AString & name, const BFFToken & token, const Array<AString> & values );
     explicit BFFVariable( const AString & name, const BFFToken & token, int32_t i );
-    explicit BFFVariable( const AString & name, const BFFToken & token, const Array<BFFVariable> & values );
-    explicit BFFVariable( const AString & name, const BFFToken & token, Array<BFFVariable> && values );
-    explicit BFFVariable( const AString & name, const BFFToken & token, const Array<BFFVariable> & structs, VarType type ); // type for disambiguation
+    explicit BFFVariable( const AString & name, const BFFToken & token, const BFFVariableScope & value );
+    explicit BFFVariable( const AString & name, const BFFToken & token, BFFVariableScope && value );
+    explicit BFFVariable( const AString & name, const BFFToken & token, const Array<BFFVariableScope> & values);
+    explicit BFFVariable( const AString & name, const BFFToken & token, Array<BFFVariableScope> && values);
 
     BFFVariable & operator=( const BFFVariable & other ) = delete;
 
@@ -112,12 +116,12 @@ private:
     void ForceSetValueArrayOfStrings( const AString & value );
     void ForceSetValueArrayOfStrings( AString && value );
     void ForceSetValueInt( int i );
-    void ForceSetValueStruct( const Array<BFFVariable> & members );
-    void ForceSetValueStruct( Array<BFFVariable> && members );
-    void ForceSetValueArrayOfStructs( const Array<BFFVariable> & values );
-    void ForceSetValueArrayOfStructs( Array<BFFVariable> && values );
-    void ForceSetValueArrayOfStructs( const BFFVariable & value );
-    void ForceSetValueArrayOfStructs( BFFVariable && value );
+    void ForceSetValueStruct( const BFFVariableScope & value );
+    void ForceSetValueStruct( BFFVariableScope && value );
+    void ForceSetValueArrayOfStructs( const Array<BFFVariableScope> & values );
+    void ForceSetValueArrayOfStructs( Array<BFFVariableScope> && values );
+    void ForceSetValueArrayOfStructs( const BFFVariableScope & value );
+    void ForceSetValueArrayOfStructs( BFFVariableScope && value );
 
 public:
     bool Set( const BFFVariable & src, const BFFToken * operatorIter );
@@ -149,7 +153,8 @@ private:
     int32_t m_IntValue = 0;
     AString m_StringValue;
     Array<AString> m_ArrayValues;
-    Array<BFFVariable> m_SubVariables; // Used for struct members of arrays of structs
+    BFFVariableScope m_StructValue;
+    Array<BFFVariableScope> m_StructArrayValues; // Used for struct members of arrays of structs
     const BFFToken & m_Token;
 
     static const char * s_TypeNames[ MAX_VAR_TYPES ];

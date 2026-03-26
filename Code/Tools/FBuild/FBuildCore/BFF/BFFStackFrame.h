@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFVariableScope.h"
 
 // Core
 #include "Core/Containers/Array.h"
@@ -43,15 +44,15 @@ public:
                                           BFFStackFrame * frame );
     static BFFVariable * SetVarStruct( const AString & name,
                                              const BFFToken & token,
-                                             const Array<BFFVariable> & members,
+                                             const BFFVariableScope & members,
                                              BFFStackFrame * frame );
     static BFFVariable * SetVarStruct( const AString & name,
                                              const BFFToken & token,
-                                             Array<BFFVariable> && members,
+                                             BFFVariableScope && members,
                                              BFFStackFrame * frame );
     static BFFVariable * SetVarArrayOfStructs( const AString & name,
                                                      const BFFToken & token,
-                                                     const Array<BFFVariable> & structs,
+                                                     const Array<BFFVariableScope> & structs,
                                                      BFFStackFrame * frame );
 
     // set from an existing variable
@@ -78,8 +79,8 @@ public:
     static const BFFVariable * GetVarAny( const AString & nameOnly );
 
     // get all variables at this stack level only
-    const Array<BFFVariable> & GetLocalVariables() const { return m_Variables; }
-    Array<BFFVariable> & GetLocalVariables() { return m_Variables; }
+    const BFFVariableScope & GetLocalVariables() const { return m_Variables; }
+    BFFVariableScope & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only
     const BFFVariable * GetLocalVar( const AString & name ) const;
@@ -110,7 +111,7 @@ private:
     BFFVariable * GetVarMutableNoRecurse( const AString & name );
 
     // variables at current scope
-    Array<BFFVariable> m_Variables;
+    BFFVariableScope m_Variables;
 
     // pointer to parent scope
     BFFStackFrame * m_Next;

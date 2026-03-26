@@ -2,9 +2,9 @@
 //------------------------------------------------------------------------------
 #pragma once
 
-// Includes
+// Forward Declarations
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+class BFFVariable;
 
 // Core
 #include "Core/Containers/UnorderedMap.h"
