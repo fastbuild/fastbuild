@@ -233,15 +233,15 @@ void BFFStackFrame::DisconnectStackChain()
 
     BFFVariable srcVarCopy( *srcVar ); // Local copy in case a variable is begin overwritten with one of its sub-variables.
 
-    switch ( srcVar->GetType() )
+    switch ( srcVarCopy.GetType() )
     {
         case BFFVariable::VAR_ANY: ASSERT( false ); return nullptr; break;
-        case BFFVariable::VAR_STRING: return SetVarString( dstName, token, srcVarCopy.GetString(), frame ); break;
-        case BFFVariable::VAR_BOOL: return SetVarBool( dstName, token, srcVarCopy.GetBool(), frame ); break;
-        case BFFVariable::VAR_ARRAY_OF_STRINGS: return SetVarArrayOfStrings( dstName, token, srcVarCopy.GetArrayOfStrings(), frame ); break;
-        case BFFVariable::VAR_INT: return SetVarInt( dstName, token, srcVarCopy.GetInt(), frame ); break;
-        case BFFVariable::VAR_STRUCT: return SetVarStruct( dstName, token, srcVarCopy.GetStruct(), frame ); break;
-        case BFFVariable::VAR_ARRAY_OF_STRUCTS: return SetVarArrayOfStructs( dstName, token, srcVarCopy.GetArrayOfStructs(), frame ); break;
+        case BFFVariable::VAR_STRING: return SetVarString( dstName, token, Move( srcVarCopy.m_StringValue ), frame ); break;
+        case BFFVariable::VAR_BOOL: return SetVarBool( dstName, token, Move( srcVarCopy.m_BoolValue ), frame ); break;
+        case BFFVariable::VAR_ARRAY_OF_STRINGS: return SetVarArrayOfStrings( dstName, token, Move( srcVarCopy.m_ArrayValues ), frame ); break;
+        case BFFVariable::VAR_INT: return SetVarInt( dstName, token, Move( srcVarCopy.m_IntValue ), frame ); break;
+        case BFFVariable::VAR_STRUCT: return SetVarStruct( dstName, token, Move( srcVarCopy.m_StructValue ), frame ); break;
+        case BFFVariable::VAR_ARRAY_OF_STRUCTS: return SetVarArrayOfStructs( dstName, token, Move( srcVarCopy.m_StructArrayValues ), frame ); break;
         case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); return nullptr; break;
     }
 }
