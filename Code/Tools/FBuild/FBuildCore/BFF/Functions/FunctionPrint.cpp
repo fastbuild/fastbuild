@@ -197,9 +197,9 @@ FunctionPrint::FunctionPrint()
 //------------------------------------------------------------------------------
 /*static*/ void FunctionPrint::PrintVarRecurse( const BFFVariableScope & vars, uint32_t indent )
 {
-    for ( const BFFVariableScope::KeyValue & var : vars )
+    for ( const BFFVariable & var : vars )
     {
-        PrintVarRecurse( var.m_Value, indent );
+        PrintVarRecurse( var, indent );
     }
 }
 

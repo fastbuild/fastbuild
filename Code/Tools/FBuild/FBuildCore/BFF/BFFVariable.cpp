@@ -304,7 +304,7 @@ void BFFVariable::SetType( VarType type )
         case VAR_BOOL: break;
         case VAR_ARRAY_OF_STRINGS: m_ArrayValues.Destruct(); break;
         case VAR_INT: break;
-        case VAR_STRUCT: m_StructValue.Destruct(); break;
+        case VAR_STRUCT: m_StructValue = BFFVariableScope(); break;
         case VAR_ARRAY_OF_STRUCTS: m_StructArrayValues.Destruct(); break;
         case MAX_VAR_TYPES: ASSERT( false ); break;
     }
@@ -317,10 +317,10 @@ void BFFVariable::SetType( VarType type )
 {
     ASSERT( !name.IsEmpty() );
 
-    if ( const BFFVariableScope::KeyValue * var = members.Find( name ) )
+    if ( const BFFVariable * var = members.Find( name ) )
     {
-        ASSERT( var->m_Value.GetName() == name );
-        return &var->m_Value;
+        ASSERT( var->GetName() == name );
+        return var;
     }
 
     return nullptr;
@@ -332,10 +332,10 @@ void BFFVariable::SetType( VarType type )
 {
     ASSERT( !name.IsEmpty() );
 
-    if ( BFFVariableScope::KeyValue * var = members.Find( name ) )
+    if ( BFFVariable * var = members.Find( name ) )
     {
-        ASSERT( var->m_Value.GetName() == name );
-        return &var->m_Value;
+        ASSERT( var->GetName() == name );
+        return var;
     }
 
     return nullptr;
@@ -601,18 +601,18 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
     {
         for ( auto & srcMember : srcValue )
         {
-            if ( auto * dstMember = GetMemberByName( srcMember.m_Value.GetName(), m_StructValue ) )
+            if ( auto * dstMember = GetMemberByName( srcMember.GetName(), m_StructValue ) )
             {
                 // keep original (dst) members where member is only present in original (dst)
                 // or concatenate recursively members where the name exists in both
                 bool result;
                 if constexpr ( std::is_rvalue_reference_v<V> )
                 {
-                    result = dstMember->Concat( Move( srcMember.m_Value ), operatorIter );
+                    result = dstMember->Concat( Move( srcMember ), operatorIter );
                 }
                 else
                 {
-                    result = dstMember->Concat( srcMember.m_Value, operatorIter );
+                    result = dstMember->Concat( srcMember, operatorIter );
                 }
                 if ( result == false )
                 {
@@ -625,11 +625,11 @@ bool BFFVariable::ConcatValue( V srcValue, const BFFToken * operatorIter )
                 // and add members only present in the src
                 if constexpr ( std::is_rvalue_reference_v<V> )
                 {
-                    m_StructValue.Emplace( srcMember.m_Value.GetName(), Move( srcMember.m_Value ) );
+                    m_StructValue.Emplace( srcMember.GetName(), Move( srcMember ) );
                 }
                 else
                 {
-                    m_StructValue.Emplace( srcMember.m_Value.GetName(), srcMember.m_Value );
+                    m_StructValue.Emplace( srcMember.GetName(), srcMember );
                 }
             }
         }
