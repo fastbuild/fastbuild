@@ -116,7 +116,7 @@ public:
 protected:
     void EnsureBucketsAllocated();
 
-    inline static constexpr uint32_t kTableSizePower = 16;
+    inline static constexpr uint32_t kTableSizePower = 8;
     inline static constexpr uint32_t kTableSize = ( 1 << kTableSizePower );
     inline static constexpr uint32_t kTableSizeMask = ( kTableSize - 1 );
 
