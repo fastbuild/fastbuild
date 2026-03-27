@@ -800,7 +800,7 @@ AString & AString::AppendList( const Array<AString> & list, char separator )
 //------------------------------------------------------------------------------
 uint32_t AString::Replace( char from, char to, uint32_t maxReplaces )
 {
-    if ( from == to || maxReplaces == 0 )
+    if ( from == to )
     {
         return 0;
     }
@@ -919,7 +919,7 @@ void AString::TrimEnd( char charToTrimFromEnd )
 uint32_t AString::Replace( const char * from, const char * to, uint32_t maxReplaces )
 {
     const size_t fromLength = StrLen( from );
-    if ( fromLength == 0 || maxReplaces == 0 || StrNCmp( from, to, fromLength ) == 0 )
+    if ( fromLength == 0 || StrNCmp( from, to, fromLength ) == 0 )
     {
         // string to replace can't be empty, otherwise replace operation doesn't make sense
         return 0;
