@@ -812,6 +812,13 @@ Array<T> & Array<T>::operator=( Array<T> && other )
 {
     ASSERT( &other != this ); // Invalid to assign to self
 
+    if ( other.IsUsingSharedMemory() && IsUsingSharedMemory() && ( (void *)m_Begin == (void *)other.m_Begin ) )
+    {
+        // Already pointing to the same shared memory. Nothing to do.
+        ASSERT( ( (void *)m_ReferenceCount == (void *)other.m_ReferenceCount ) && ( m_Size == other.m_Size ) && ( m_Capacity == other.m_Capacity ) );
+        return *this;
+    }
+
     // Use shallow copy if both are using shared memory or current should switch to shared memory
     if ( other.IsUsingSharedMemory() && ( IsUsingSharedMemory() || ( other.GetSize() > GetCapacity() ) ) )
     {
