@@ -1381,6 +1381,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
 				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
 				return mutableDst->Subtract( *varSrc, operatorToken );
 			}
+			else if ( varDst )
+			{
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Set( *varSrc, operatorToken );
+			}
 			else
 			{
             	BFFStackFrame::SetVar( varSrc, varSrc->GetToken(), dstName, dstFrame );
@@ -1399,6 +1404,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
 				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
 				return mutableDst->Concat( *varSrc, operatorToken );
 			}
+			else if ( varDst )
+			{
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Set( *varSrc, operatorToken );
+			}
 			else
 			{
 				BFFStackFrame::SetVar( varSrc, varSrc->GetToken(), dstName, dstFrame );
@@ -1413,6 +1423,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
             {
 				BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
             }
+			else if ( varDst )
+			{
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Set( *varSrc, operatorToken );
+			}
             else
             {
                 BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), Array<AString>(), dstFrame );
@@ -1463,6 +1478,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
             ASSERT( varDst != nullptr );
             BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
             return mutableDst->Subtract( *varSrc, operatorToken );
+		}
+		else if ( varDst )
+		{
+			BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+			return mutableDst->Set( *varSrc, operatorToken );
 		}
 		else
 		{
