@@ -179,7 +179,7 @@ FunctionPrint::FunctionPrint()
             for ( const BFFVariableScope & subVar : structs )
             {
                 FLOG_OUTPUT( "%s    [\n", indentStr.Get() );
-                PrintVarRecurse( subVar, indent + 1 );
+                PrintVarRecurse( subVar, indent );
                 FLOG_OUTPUT( "%s    ]\n", indentStr.Get() );
             }
             FLOG_OUTPUT( "%s}\n", indentStr.Get() );
@@ -197,14 +197,7 @@ FunctionPrint::FunctionPrint()
 //------------------------------------------------------------------------------
 /*static*/ void FunctionPrint::PrintVarRecurse( const BFFVariableScope & vars, uint32_t indent )
 {
-    AStackString indentStr;
-    for ( uint32_t i = 0; i < indent; ++i )
-    {
-        indentStr += "    ";
-    }
     ++indent;
-    FLOG_OUTPUT( "%s", indentStr.Get() );
-
     for ( const BFFVariableScope::KeyValue & var : vars )
     {
         PrintVarRecurse( var.m_Value, indent );
