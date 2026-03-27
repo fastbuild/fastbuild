@@ -919,7 +919,8 @@ void AString::TrimEnd( char charToTrimFromEnd )
 uint32_t AString::Replace( const char * from, const char * to, uint32_t maxReplaces )
 {
     const size_t fromLength = StrLen( from );
-    if ( fromLength == 0 || StrNCmp( from, to, fromLength ) == 0 )
+    const size_t toLength = StrLen( to );
+    if ( fromLength == 0 || StrNCmp( from, to, Math::Max( fromLength, toLength ) ) == 0 )
     {
         // string to replace can't be empty, otherwise replace operation doesn't make sense
         return 0;
