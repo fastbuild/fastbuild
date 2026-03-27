@@ -148,7 +148,11 @@ protected:
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
-UnorderedMap<KEY, VALUE>::UnorderedMap() = default;
+UnorderedMap<KEY, VALUE>::UnorderedMap()
+  : m_Buckets()
+  , m_Count( 0 )
+{
+}
 
 // CONSTRUCTOR (copy)
 //------------------------------------------------------------------------------
