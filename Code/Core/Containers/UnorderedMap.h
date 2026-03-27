@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Array.h"
 #include "Core/Env/Types.h"
 #include "Core/Math/xxHash.h"
 
@@ -26,7 +27,7 @@ public:
     UnorderedMap();
     UnorderedMap( const UnorderedMap<KEY, VALUE> & other );
     UnorderedMap( UnorderedMap<KEY, VALUE> && other );
-    ~UnorderedMap();
+    ~UnorderedMap() = default;
 
     void Destruct();
     void Clear() { Destruct(); }
@@ -41,21 +42,33 @@ public:
     {
     public:
         template <class... ARGS>
-        KeyValue( const KEY & key, KeyValue * next, ARGS &&... args )
+        KeyValue( const KEY & key, ARGS &&... args )
             : m_Key( key )
             , m_Value( Forward( ARGS, args )... )
-            , m_Next( next )
+        {
+        }
+
+        KeyValue( const KeyValue & other )
+            : m_Key( other.m_Key )
+            , m_Value( other.m_Value )
+        {
+        }
+
+        KeyValue( KeyValue && other )
+            : m_Key( Move( other.m_Key ) )
+            , m_Value( Move( other.m_Value ) )
         {
         }
 
         KeyValue & operator=( const KeyValue & other ) = delete;
+
+        bool operator==( const KEY & other ) const { return ( m_Key == other ); }
 
         const KEY m_Key;
         VALUE m_Value;
 
     protected:
         friend class UnorderedMap<KEY, VALUE>;
-        KeyValue * m_Next; // In-place linked list for each bucket
     };
 
     // Check if an item exists in the map
@@ -67,14 +80,21 @@ public:
     template <class... ARGS>
     KeyValue & Emplace( const KEY & key, ARGS &&... args );
 
-    template <class KEYVALUE>
+    template <class ARRAY>
     class IteratorTemplate
     {
+    public:
+        using BaseValueType = typename ARRAY::ValueType::ValueType;
+        using ValueType = std::conditional_t<std::is_const_v<ARRAY>, std::add_const_t<BaseValueType>, BaseValueType>;
+        using OuterIterator = std::conditional_t<std::is_const_v<ARRAY>, typename ARRAY::ConstIter, typename ARRAY::Iter>;
+        using InnerIterator = std::conditional_t<std::is_const_v<ARRAY>, typename ARRAY::ValueType::ConstIter, typename ARRAY::ValueType::Iter>;
+
     private:
-        IteratorTemplate( KEYVALUE * const * buckets, uint32_t bucketIndex, KEYVALUE * keyValue )
-            : m_Buckets( buckets )
-            , m_BucketIndex( bucketIndex )
-            , m_KeyValue( keyValue )
+        IteratorTemplate( OuterIterator outerIter, OuterIterator outerIterEnd )
+            : m_OuterIter( outerIter )
+            , m_OuterIterEnd( outerIterEnd )
+            , m_InnerIter( outerIter != outerIterEnd ? outerIter->Begin() : InnerIterator() )
+            , m_InnerIterEnd( outerIter != outerIterEnd ? outerIter->End() : InnerIterator() )
         {
         }
 
@@ -84,24 +104,25 @@ public:
         IteratorTemplate& operator=( const IteratorTemplate & other ) = default;
         IteratorTemplate& operator=( IteratorTemplate && other ) = default;
 
-        KEYVALUE & operator*() const;
+        ValueType & operator*() const;
         IteratorTemplate operator++( int );
         IteratorTemplate& operator++();
 
         bool operator==( const IteratorTemplate & other ) const;
         bool operator!=( const IteratorTemplate & other ) const { return !( ( *this ) == other ); }
 
-        static IteratorTemplate<KEYVALUE> BeginningOf( KEYVALUE * const * buckets );
-        static IteratorTemplate<KEYVALUE> EndOf( KEYVALUE * const * buckets );
+        static IteratorTemplate<ARRAY> BeginningOf( ARRAY & buckets );
+        static IteratorTemplate<ARRAY> EndOf( ARRAY & buckets );
 
     private:
-        KEYVALUE * const * m_Buckets;
-        uint32_t m_BucketIndex;
-        KEYVALUE * m_KeyValue;
+        OuterIterator m_OuterIter;
+        OuterIterator m_OuterIterEnd;
+        InnerIterator m_InnerIter;
+        InnerIterator m_InnerIterEnd;
     };
 
-    using Iterator = IteratorTemplate<KeyValue>;
-    using ConstIterator = IteratorTemplate<const KeyValue>;
+    using Iterator = IteratorTemplate<Array<Array<KeyValue>>>;
+    using ConstIterator = IteratorTemplate<const Array<Array<KeyValue>>>;
 
     Iterator Begin() { return Iterator::BeginningOf( m_Buckets ); }
     Iterator End() { return Iterator::EndOf( m_Buckets ); }
@@ -120,7 +141,7 @@ protected:
     inline static constexpr uint32_t kTableSize = ( 1 << kTableSizePower );
     inline static constexpr uint32_t kTableSizeMask = ( kTableSize - 1 );
 
-    KeyValue ** m_Buckets = nullptr;
+    Array<Array<KeyValue>> m_Buckets;
     uint32_t m_Count = 0;
 };
 
@@ -133,51 +154,27 @@ UnorderedMap<KEY, VALUE>::UnorderedMap() = default;
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
 UnorderedMap<KEY, VALUE>::UnorderedMap( const UnorderedMap & other )
-    : UnorderedMap()
+    : m_Buckets( other.m_Buckets )
+    , m_Count( other.m_Count )
 {
-    ( *this ) = other;
 }
 
 // CONSTRUCTOR (move)
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
 UnorderedMap<KEY, VALUE>::UnorderedMap( UnorderedMap && other )
-    : m_Buckets( other.m_Buckets )
-    , m_Count( other.m_Count )
+    : m_Buckets( Move( other.m_Buckets ) )
+    , m_Count( Move( other.m_Count ) )
 {
-    other.m_Buckets = nullptr;
-    other.m_Count = 0;
+    other.Destruct();
 }
 
-// DESTRUCTOR
-//------------------------------------------------------------------------------
-template <class KEY, class VALUE>
-UnorderedMap<KEY, VALUE>::~UnorderedMap()
-{
-    Destruct();
-}
-
-// Destruct
+// DESTRUCT
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
 void UnorderedMap<KEY, VALUE>::Destruct()
 {
-    if ( m_Buckets )
-    {
-        for ( uint32_t i = 0; i < kTableSize; ++i )
-        {
-            KeyValue * existingKeyValue = m_Buckets[ i ];
-            while ( existingKeyValue )
-            {
-                KeyValue * next = existingKeyValue->m_Next;
-                FDELETE existingKeyValue;
-                existingKeyValue = next;
-            }
-        }
-
-        FDELETE[] m_Buckets;
-        m_Buckets = nullptr;
-    }
+    m_Buckets.Destruct();
     m_Count = 0;
 }
 
@@ -192,49 +189,7 @@ UnorderedMap<KEY, VALUE> & UnorderedMap<KEY, VALUE>::operator=( const UnorderedM
         return *this;
     }
 
-    Destruct();
-    if ( !other.m_Buckets )
-    {
-        return *this;
-    }
-
-    EnsureBucketsAllocated();
-
-    for ( uint32_t i = 0; i < kTableSize; ++i )
-    {
-        KeyValue ** previousNextPtr = &m_Buckets[ i ];
-        const KeyValue * otherKeyValue = other.m_Buckets[ i ];
-
-        while ( otherKeyValue != nullptr )
-        {
-
-            // Create storage for new item
-            KeyValue * newKeyValue = FNEW( KeyValue( otherKeyValue->m_Key, nullptr, otherKeyValue->m_Value ) );
-
-            // Link into head of bucket
-            ( *previousNextPtr ) = newKeyValue;
-
-            // Debug check that the original map is consistent
-#if defined( ASSERTS_ENABLED )
-            // Hash the keys
-            const uint32_t oldKeyHash = UnorderedMapKeyHashingFunctions::Hash( otherKeyValue->m_Key );
-            const uint32_t newKeyHash = UnorderedMapKeyHashingFunctions::Hash( newKeyValue->m_Key );
-
-            // They should at least be equal
-            ASSERT( oldKeyHash == newKeyHash );
-
-            // Find the new entry's bucket
-            const uint32_t newBucketId = ( newKeyHash & kTableSizeMask );
-
-            // Check that the copied key belongs in the current bucket
-            ASSERT( i == newBucketId );
-#endif
-
-            previousNextPtr = &newKeyValue->m_Next;
-            otherKeyValue = otherKeyValue->m_Next;
-        }
-    }
-
+    m_Buckets = other.m_Buckets;
     m_Count = other.m_Count;
     return *this;
 }
@@ -250,13 +205,9 @@ UnorderedMap<KEY, VALUE> & UnorderedMap<KEY, VALUE>::operator=( UnorderedMap<KEY
         return *this;
     }
 
-    Destruct();
-
-    m_Buckets = other.m_Buckets;
-    m_Count = other.m_Count;
-
-    other.m_Buckets = nullptr;
-    other.m_Count = 0;
+    m_Buckets = Move( other.m_Buckets );
+    m_Count = Move( other.m_Count );
+    other.Destruct();
 
     return *this;
 }
@@ -266,16 +217,8 @@ UnorderedMap<KEY, VALUE> & UnorderedMap<KEY, VALUE>::operator=( UnorderedMap<KEY
 template <class KEY, class VALUE>
 typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Find( const KEY & key )
 {
-    return const_cast<KeyValue *>( const_cast<const UnorderedMap<KEY, VALUE> *>( this )->Find( key ) );
-}
-
-// Find
-//------------------------------------------------------------------------------
-template <class KEY, class VALUE>
-const typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Find( const KEY & key ) const
-{
     // Handle empty
-    if ( m_Buckets == nullptr )
+    if ( m_Buckets.IsEmpty() )
     {
         return nullptr;
     }
@@ -285,21 +228,35 @@ const typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Fi
 
     // Find the bucket
     const uint32_t bucketId = ( hash & kTableSizeMask );
-    const KeyValue * keyValue = m_Buckets[ bucketId ];
-
-    // Check entries in the bucket for exact key match
-    while ( keyValue )
+    // Search using const so we avoid creating unnecessary eager copies
+    const Array<KeyValue> & bucket = const_cast<const UnorderedMap *>( this )->m_Buckets[ bucketId ];
+    const KeyValue * keyValue = bucket.Find( key );
+    if ( keyValue )
     {
-        if ( keyValue->m_Key == key )
-        {
-            // Found
-            return keyValue;
-        }
-        keyValue = keyValue->m_Next;
+        const size_t index = const_cast<const UnorderedMap *>( this )->m_Buckets[ bucketId ].GetIndexOf( keyValue );
+        return &m_Buckets[ bucketId ][ index ];
+    }
+    return nullptr;
+}
+
+// Find
+//------------------------------------------------------------------------------
+template <class KEY, class VALUE>
+const typename UnorderedMap<KEY, VALUE>::KeyValue * UnorderedMap<KEY, VALUE>::Find( const KEY & key ) const
+{
+    // Handle empty
+    if ( m_Buckets.IsEmpty() )
+    {
+        return nullptr;
     }
 
-    // Not found
-    return nullptr;
+    // Hash the key
+    const uint32_t hash = UnorderedMapKeyHashingFunctions::Hash( key );
+
+    // Find the bucket
+    const uint32_t bucketId = ( hash & kTableSizeMask );
+    const Array<KeyValue> & bucket = m_Buckets[ bucketId ];
+    return bucket.Find( key );
 }
 
 // Insert
@@ -324,28 +281,19 @@ typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Emplace(
 
     // Find the bucket
     const uint32_t bucketId = ( hash & kTableSizeMask );
-    KeyValue * keyValue = m_Buckets[ bucketId ];
+    Array<KeyValue> & bucket = m_Buckets[ bucketId ];
 
     // Debug check item doesn't already exist
 #if defined( ASSERTS_ENABLED )
-    KeyValue * existingKeyValue = keyValue;
-    while ( existingKeyValue )
+    for ( const KeyValue & existingKeyValue : bucket )
     {
-        ASSERT( existingKeyValue->m_Key != key );
-        existingKeyValue = existingKeyValue->m_Next;
+        ASSERT( existingKeyValue.m_Key != key );
     }
 #endif
 
     // Create storage for new item
-    KeyValue * newKeyValue = FNEW( KeyValue( key, keyValue, Forward( ARGS, args )... ) );
-
-    // Link into head of bucket
-    m_Buckets[ bucketId ] = newKeyValue;
-
     m_Count++;
-
-    // Return new item
-    return *newKeyValue;
+    return bucket.EmplaceBack( key, Forward( ARGS, args )... );
 }
 
 // EnsureBucketsAllocated
@@ -353,29 +301,25 @@ typename UnorderedMap<KEY, VALUE>::KeyValue & UnorderedMap<KEY, VALUE>::Emplace(
 template <class KEY, class VALUE>
 void UnorderedMap<KEY, VALUE>::EnsureBucketsAllocated()
 {
-    if ( m_Buckets == nullptr )
-    {
-        m_Buckets = FNEW( KeyValue * [kTableSize]() ); // NOTE: zero initialized
-    }
+    m_Buckets.SetSize( kTableSize );
 }
 
 // Iterator operator *
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
-template <class KEYVALUE>
-KEYVALUE & UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator*() const
+template <class ARRAY>
+typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<ARRAY>::ValueType & UnorderedMap<KEY, VALUE>::IteratorTemplate<ARRAY>::operator*() const
 {
-    ASSERT( m_KeyValue != nullptr );
-    return *m_KeyValue;
+    return *m_InnerIter;
 }
 
 // Iterator postfix increment
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
-template <class KEYVALUE>
-typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator++( int )
+template <class ARRAY>
+typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<ARRAY> UnorderedMap<KEY, VALUE>::IteratorTemplate<ARRAY>::operator++( int )
 {
-    IteratorTemplate<KEYVALUE> copy( *this );
+    IteratorTemplate<ARRAY> copy( *this );
     ++( *this );
     return copy;
 }
@@ -383,73 +327,72 @@ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> Unordered
 // Iterator prefix increment
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
-template <class KEYVALUE>
-typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> & UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator++()
+template <class ARRAY>
+typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<ARRAY> & UnorderedMap<KEY, VALUE>::IteratorTemplate<ARRAY>::operator++()
 {
-    if ( m_Buckets == nullptr )
-    {
-        return *this;
-    }
-    if ( m_KeyValue == nullptr )
+    if ( m_InnerIter == m_InnerIterEnd )
     {
         // No where safe to go, so do nothing and return
-        ASSERT( m_BucketIndex == kTableSize );
         return *this;
     }
 
-    m_KeyValue = m_KeyValue->m_Next;
-    while ( ( m_KeyValue == nullptr ) && ( m_BucketIndex < kTableSize ) )
+    ++m_InnerIter;
+    while ( ( m_InnerIter == m_InnerIterEnd ) && ( m_OuterIter != m_OuterIterEnd ) )
     {
-        ++m_BucketIndex;
-        m_KeyValue = m_BucketIndex < kTableSize ? m_Buckets[ m_BucketIndex ] : nullptr;
+        ++m_OuterIter;
+        if ( m_OuterIter != m_OuterIterEnd )
+        {
+            m_InnerIter = ( *m_OuterIter ).Begin();
+            m_InnerIterEnd = ( *m_OuterIter ).End();
+        }
+        else
+        {
+            m_InnerIter = InnerIterator();
+            m_InnerIterEnd = InnerIterator();
+        }
     }
 
-    ASSERT( ( m_KeyValue != nullptr ) || ( m_BucketIndex == kTableSize ) );
+    ASSERT( ( m_InnerIter != m_InnerIterEnd ) || ( m_OuterIter == m_OuterIterEnd ) );
     return *this;
 }
 
 // Iterator operator *
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
-template <class KEYVALUE>
-bool UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::operator==( const IteratorTemplate<KEYVALUE> & other ) const
+template <class ARRAY>
+bool UnorderedMap<KEY, VALUE>::IteratorTemplate<ARRAY>::operator==( const IteratorTemplate<ARRAY> & other ) const
 {
-    return ( ( m_Buckets == other.m_Buckets ) &&
-             ( m_BucketIndex == other.m_BucketIndex ) &&
-             ( m_KeyValue == other.m_KeyValue ) );
+    return ( ( m_OuterIter == other.m_OuterIter ) && ( m_InnerIter == other.m_InnerIter ) );
 }
 
 // Iterator begin
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
-template <class KEYVALUE>
-/*static*/ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::BeginningOf( KEYVALUE * const * buckets )
+template <class ARRAY>
+/*static*/ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<ARRAY> UnorderedMap<KEY, VALUE>::IteratorTemplate<ARRAY>::BeginningOf( ARRAY & buckets )
 {
-    if ( buckets == nullptr )
+    if ( buckets.IsEmpty() )
     {
-        return IteratorTemplate<KEYVALUE>( nullptr, 0, nullptr );
+        return IteratorTemplate<ARRAY>( buckets.Begin(), buckets.End() );
     }
-    for ( uint32_t i = 0; i < kTableSize; ++i )
+
+    const OuterIterator end = buckets.End();
+    OuterIterator iter = buckets.Begin();
+    while ( ( iter != end ) && ( *iter ).IsEmpty() )
     {
-        if ( ( buckets[ i ] ) != nullptr )
-        {
-            return IteratorTemplate<KEYVALUE>( buckets, i, buckets[ i ] );
-        }
+        ++iter;
     }
-    return IteratorTemplate<KEYVALUE>::EndOf( buckets );
+
+    return IteratorTemplate<ARRAY>( iter, end );
 }
 
 // Iterator end
 //------------------------------------------------------------------------------
 template <class KEY, class VALUE>
-template <class KEYVALUE>
-/*static*/ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<KEYVALUE> UnorderedMap<KEY, VALUE>::IteratorTemplate<KEYVALUE>::EndOf( KEYVALUE * const * buckets )
+template <class ARRAY>
+/*static*/ typename UnorderedMap<KEY, VALUE>::template IteratorTemplate<ARRAY> UnorderedMap<KEY, VALUE>::IteratorTemplate<ARRAY>::EndOf( ARRAY & buckets )
 {
-    if ( buckets == nullptr )
-    {
-        return IteratorTemplate<KEYVALUE>( nullptr, 0, nullptr );
-    }
-    return IteratorTemplate<KEYVALUE>( buckets, kTableSize, nullptr );
+    return IteratorTemplate<ARRAY>( buckets.End(), buckets.End() );
 }
 
 //------------------------------------------------------------------------------
