@@ -65,8 +65,9 @@ bool SystemMutex::TryLock()
     int rc = flock( handle, LOCK_EX | LOCK_NB );
     if ( rc )
     {
+        const int flockErrno = errno;
         VERIFY( close( handle ) == 0 );
-        if ( errno == EWOULDBLOCK || errno == EAGAIN )
+        if ( flockErrno == EWOULDBLOCK || flockErrno == EAGAIN )
         {
             return false; // locked by another process
         }
