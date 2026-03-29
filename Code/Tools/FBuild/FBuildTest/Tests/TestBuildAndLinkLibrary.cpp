@@ -240,6 +240,7 @@ void TestBuildAndLinkLibrary::DeleteFile() const
     const char * fileA = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileA.cpp";
     const char * fileB = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileB.cpp";
     const char * database = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/fbuild.fdb";
+    const char * const configFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/DeleteFile/fbuild.bff";
 
     // Create two empty files
     {
@@ -256,7 +257,7 @@ void TestBuildAndLinkLibrary::DeleteFile() const
     {
         // Init
         FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/DeleteFile/fbuild.bff";
+        options.m_ConfigFile = configFile;
         options.m_ForceCleanBuild = true;
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -281,7 +282,7 @@ void TestBuildAndLinkLibrary::DeleteFile() const
     {
         // Init
         FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
+        options.m_ConfigFile = configFile;
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
