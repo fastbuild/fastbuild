@@ -482,7 +482,7 @@ namespace
         {
             return true;
         }
-        return endsOnCloseBracket && iter.GetCurrent()->IsRoundBracket( ')' );
+        return endsOnCloseBracket && iter.GetCurrent()->IsRoundRightBracket();
     }
 
     // ExpectExpEnd
@@ -519,54 +519,54 @@ namespace
         op = BoolOperator::OP_UNKNOWN;
 
         // in
-        if ( iter->IsKeyword( BFF_KEYWORD_IN ) )
+        if ( iter->IsKeyword( BFFKeyword::Type::eIn ) )
         {
             op = BoolOperator::OP_IN;
         }
         // not in
-        else if ( iter->IsKeyword( BFF_KEYWORD_NOT ) )
+        else if ( iter->IsKeyword( BFFKeyword::Type::eNot ) )
         {
             iter++; // Consume additional keyword
-            if ( iter->IsKeyword( BFF_KEYWORD_IN ) )
+            if ( iter->IsKeyword( BFFKeyword::Type::eIn ) )
             {
                 op = BoolOperator::OP_NOT_IN;
             }
         }
         // ==
-        else if ( iter->IsOperator( "==" ) )
+        else if ( iter->IsOperator( BFFOperator::Type::eEqual ) )
         {
             op = BoolOperator::OP_EQUAL;
         }
         // !=
-        else if ( iter->IsOperator( "!=" ) )
+        else if ( iter->IsOperator( BFFOperator::Type::eNotEqual ) )
         {
             op = BoolOperator::OP_NOT_EQUAL;
         }
         // <=
-        else if ( iter->IsOperator( "<=" ) )
+        else if ( iter->IsOperator( BFFOperator::Type::eLessThanOrEqual ) )
         {
             op = BoolOperator::OP_LESS_THAN_OR_EQUAL;
         }
         // <  (must be checked after <=)
-        else if ( iter->IsOperator( '<' ) )
+        else if ( iter->IsOperator( BFFOperator::Type::eLessThan ) )
         {
             op = BoolOperator::OP_LESS_THAN;
         }
         // >=
-        else if ( iter->IsOperator( ">=" ) )
+        else if ( iter->IsOperator( BFFOperator::Type::eGreaterThanOrEqual ) )
         {
             op = BoolOperator::OP_GREATER_THAN_OR_EQUAL;
         }
         // >  (must be checked after >=)
-        else if ( iter->IsOperator( '>' ) )
+        else if ( iter->IsOperator( BFFOperator::Type::eGreaterThan ) )
         {
             op = BoolOperator::OP_GREATER_THAN;
         }
-        else if ( iter->IsOperator( "&&" ) )
+        else if ( iter->IsOperator( BFFOperator::Type::eAnd ) )
         {
             op = BoolOperator::OP_AND;
         }
-        else if ( iter->IsOperator( "||" ) )
+        else if ( iter->IsOperator( BFFOperator::Type::eOr ) )
         {
             op = BoolOperator::OP_OR;
         }
@@ -726,9 +726,14 @@ namespace
             {
                 return ParseUnaryBooleanExp( function, iter, expResult );
             }
-            case BFFTokenType::RoundBracket:   // ( or )
+            case BFFTokenType::Brace:
             {
-                return ParseSubBooleanExp( function, iter, expResult );
+                if ( iter.GetCurrent()->IsRoundLeftBracket() ||
+                     iter.GetCurrent()->IsRoundRightBracket() )
+                {
+                    return ParseSubBooleanExp( function, iter, expResult );
+                }
+                [[fallthrough]]; // Error
             }
             default:
             {
@@ -751,7 +756,7 @@ namespace
     //--------------------------------------------------------------------------
     static bool ParseUnaryBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
     {
-        if ( !iter->IsOperator( '!' ) )
+        if ( !iter->IsOperator( BFFOperator::Type::eNot ) )
         {
             Error::Error_1070_UnexpectedOperator( iter.GetCurrent(), function );
             return false;
@@ -809,13 +814,18 @@ namespace
                 }
                 break;
             }
-            case BFFTokenType::RoundBracket:
+            case BFFTokenType::Brace:
             {
-                if ( !ParseSubBooleanExp( function, iter, rhs ) )
+                if ( iter.GetCurrent()->IsRoundLeftBracket() ||
+                     iter.GetCurrent()->IsRoundRightBracket() )
                 {
-                    return false;
+                    if ( !ParseSubBooleanExp( function, iter, rhs ) )
+                    {
+                        return false;
+                    }
+                    break;
                 }
-                break;
+                [[fallthrough]]; // Error
             }
             default:
             {
@@ -912,14 +922,14 @@ namespace
     //--------------------------------------------------------------------------
     static bool ParseSubBooleanExp( const Function * function, BFFTokenRange & iter, bool & expResult )
     {
-        ASSERT( iter->IsRoundBracket( '(' ) );
+        ASSERT( iter->IsRoundLeftBracket() );
         iter++;
 
         if ( !ParseBooleanExp( function, iter, true, expResult ) )
         {
             return false;
         }
-        if ( !iter->IsRoundBracket( ')' ) )
+        if ( !iter->IsRoundRightBracket() )
         {
             Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), function, ')' );
             return false;
@@ -1029,22 +1039,27 @@ namespace
                 }
                 return true;
             }
-            case BFFTokenType::RoundBracket: // ( or )
+            case BFFTokenType::Brace:
             {
-                // Expect: (bool-exp) [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
-                if ( !ParseSubBooleanExp( function, iter, expResult ) )
+                if ( iter.GetCurrent()->IsRoundLeftBracket() ||
+                     iter.GetCurrent()->IsRoundRightBracket() )
                 {
-                    return false;
-                }
-
-                while ( !IsExpEnd( iter, true ) )
-                {
-                    if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
+                    // Expect: (bool-exp) [ ||/&& bool-exp ] [ ||/&& bool-exp ] ...
+                    if ( !ParseSubBooleanExp( function, iter, expResult ) )
                     {
                         return false;
                     }
+
+                    while ( !IsExpEnd( iter, true ) )
+                    {
+                        if ( !ParseBinaryBooleanExp( function, expResult, iter, expResult ) )
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
                 }
-                return true;
+                break; // Error
             }
             default:
             {

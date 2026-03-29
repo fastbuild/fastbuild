@@ -125,6 +125,7 @@ Compiler( 'Compiler-Clang19-NonCL' )
                                     + ' -Wno-global-constructors'       // declaration requires a global destructor
                                     + ' -Wno-gnu-zero-variadic-macro-arguments' // Allow empty variadic args
                                     + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
+                                    + ' -Wno-language-extension-token'  // Don't warn about FORCE_INLINE
                                     + ' -Wno-missing-prototypes'        // no previous prototype for function '%s'
                                     + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s'
                                     + ' -Wno-gnu-line-marker'           // Clang complains about directives its own preprocessor generated

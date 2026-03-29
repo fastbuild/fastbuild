@@ -79,7 +79,7 @@ FunctionForEach::FunctionForEach()
         {
             const BFFToken * inToken = headerIter.GetCurrent();
             headerIter++;
-            if ( ( inToken->IsKeyword() == false ) || ( inToken->GetValueString() != "in" ) )
+            if ( !inToken->IsKeyword( BFFKeyword::Type::eIn ) )
             {
                 Error::Error_1201_MissingIn( inToken, this );
                 return false;
