@@ -77,7 +77,7 @@ CompilerNode::CompilerNode()
     ASSERT( compilerExeFile.GetSize() == 1 ); // Should not be possible to expand to > 1 thing
 
     // .ExtraFiles
-    Dependencies extraFiles( 32 );
+    Dependencies extraFiles;
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".ExtraFiles", m_ExtraFiles, extraFiles ) )
     {
         return false; // GetNodeList will have emitted an error

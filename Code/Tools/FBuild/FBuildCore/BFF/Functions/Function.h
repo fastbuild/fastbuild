@@ -122,8 +122,22 @@ public:
                              const BFFToken * iter,
                              const Function * function,
                              const char * propertyName,
+                             const Array<AString> & nodeNames,
+                             Array<Node *> & nodes,
+                             const GetNodeListOptions & options = GetNodeListOptions() );
+    static bool GetNodeList( NodeGraph & nodeGraph,
+                             const BFFToken * iter,
+                             const Function * function,
+                             const char * propertyName,
                              const AString & nodeName,
                              Dependencies & nodes,
+                             const GetNodeListOptions & options = GetNodeListOptions() );
+    static bool GetNodeList( NodeGraph & nodeGraph,
+                             const BFFToken * iter,
+                             const Function * function,
+                             const char * propertyName,
+                             const AString & nodeName,
+                             Array<Node *> & nodes,
                              const GetNodeListOptions & options = GetNodeListOptions() );
 
 protected:
@@ -132,14 +146,14 @@ protected:
                                      const Function * function,
                                      const char * propertyName,
                                      const AString & nodeName,
-                                     Dependencies & nodes,
+                                     Array<Node *> & nodes,
                                      const GetNodeListOptions & options );
     static bool GetNodeListInternal( NodeGraph & nodeGraph,
                                      const BFFToken * iter,
                                      const Function * function,
                                      const char * propertyName,
                                      Node * node,
-                                     Dependencies & nodes,
+                                     Array<Node *> & nodes,
                                      const GetNodeListOptions & options );
 
     AString m_Name;
@@ -155,6 +169,12 @@ protected:
                       const BFFToken * iter,
                       const char * name,
                       Dependencies & nodes,
+                      bool required = false,
+                      const GetNodeListOptions & options = GetNodeListOptions() ) const;
+    bool GetNodeList( NodeGraph & nodeGraph,
+                      const BFFToken * iter,
+                      const char * name,
+                      Array<Node *> & nodes,
                       bool required = false,
                       const GetNodeListOptions & options = GetNodeListOptions() ) const;
 

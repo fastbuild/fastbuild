@@ -1202,33 +1202,6 @@ void Node::ReplaceDummyName( const AString & newName )
     }
 }
 
-// InitializePreBuildDependencies
-//------------------------------------------------------------------------------
-bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const Array<AString> & preBuildDependencyNames )
-{
-    if ( preBuildDependencyNames.IsEmpty() )
-    {
-        return true;
-    }
-
-    // Pre-size hint
-    m_PreBuildDependencies.SetCapacity( preBuildDependencyNames.GetSize() );
-
-    // Expand
-    GetNodeListOptions options;
-    options.m_AllowCopyDirNodes = true;
-    options.m_AllowUnityNodes = true;
-    options.m_AllowRemoveDirNodes = true;
-    options.m_AllowCompilerNodes = true;
-    options.m_RemoveDuplicates = true;
-    if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preBuildDependencyNames, m_PreBuildDependencies, options ) )
-    {
-        return false; // GetNodeList will have emitted an error
-    }
-
-    return true;
-}
-
 // InitializeConcurrencyGroup
 //------------------------------------------------------------------------------
 bool Node::InitializeConcurrencyGroup( NodeGraph & nodeGraph,
