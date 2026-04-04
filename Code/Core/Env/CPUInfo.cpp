@@ -78,12 +78,18 @@ namespace
     uint64_t GetCurrentThreadAffinityMask()
     {
     #if defined( __WINDOWS__ )
+        // Querying the thread affinity mask requires a valid mask, so we use
+        // the process mask
+        uint64_t processMask = 0;
+        uint64_t systemMaskUnused = 0;
+        VERIFY( GetProcessAffinityMask( GetCurrentProcess(), &processMask, &systemMaskUnused ) );
+
         // Query requires we set it and it returns the old value
-        const uint64_t mask = SetThreadAffinityMask( GetCurrentThread(), 0xFFFFFFFFFFFFFFFFULL );
+        const uint64_t mask = SetThreadAffinityMask( GetCurrentThread(), processMask );
         ASSERT( mask );
 
         // Restore the original mask
-        SetThreadAffinityMask( GetCurrentThread(), mask );
+        VERIFY( SetThreadAffinityMask( GetCurrentThread(), mask ) != 0 );
     #else
         // Query the affinity via the cpu_set_t and build a mask
         uint64_t mask = 0;
