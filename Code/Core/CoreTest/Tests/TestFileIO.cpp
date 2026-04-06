@@ -24,53 +24,17 @@
     #include <unistd.h>
 #endif
 
-// TestFileIO
 //------------------------------------------------------------------------------
-class TestFileIO : public TestGroup
+TEST_GROUP( TestFileIO, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void FileExists() const;
-    void FileDelete() const;
-    void FileCopy() const;
-    void FileCopySymlink() const;
-    void FileMove() const;
-    void ReadOnly() const;
-    void FileTime() const;
-    void LongPaths() const;
-#if defined( __WINDOWS__ )
-    void NormalizeWindowsPathCasing() const;
-#endif
-    void CreateOrOpenReadWrite() const;
-    void CreateOrOpenReadWritePerf() const;
-
+public:
     // Helpers
     mutable Random m_Random;
     void GenerateTempFileName( AString & tmpFileName ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestFileIO )
-    REGISTER_TEST( FileExists )
-    REGISTER_TEST( FileDelete )
-    REGISTER_TEST( FileCopy )
-    REGISTER_TEST( FileCopySymlink )
-    REGISTER_TEST( FileMove )
-    REGISTER_TEST( ReadOnly )
-    REGISTER_TEST( FileTime )
-    REGISTER_TEST( LongPaths )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( NormalizeWindowsPathCasing )
-#endif
-    REGISTER_TEST( CreateOrOpenReadWrite )
-    REGISTER_TEST( CreateOrOpenReadWritePerf )
-REGISTER_TESTS_END
-
-// FileExists
-//------------------------------------------------------------------------------
-void TestFileIO::FileExists() const
+TEST_CASE( TestFileIO, FileExists )
 {
     // generate a process unique file path
     AStackString path;
@@ -108,9 +72,8 @@ void TestFileIO::FileExists() const
     }
 }
 
-// FileDelete
 //------------------------------------------------------------------------------
-void TestFileIO::FileDelete() const
+TEST_CASE( TestFileIO, FileDelete )
 {
     // generate a process unique file path
     AStackString path;
@@ -129,9 +92,8 @@ void TestFileIO::FileDelete() const
     TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
 }
 
-// FileCopy
 //------------------------------------------------------------------------------
-void TestFileIO::FileCopy() const
+TEST_CASE( TestFileIO, FileCopy )
 {
     // generate a process unique file path
     AStackString path;
@@ -172,9 +134,8 @@ void TestFileIO::FileCopy() const
     VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
 }
 
-// FileCopySymlink
 //------------------------------------------------------------------------------
-void TestFileIO::FileCopySymlink() const
+TEST_CASE( TestFileIO, FileCopySymlink )
 {
 #if defined( __WINDOWS__ ) || defined( __APPLE__ )
     // Not tested on Windows/MacOS as symlinks are directly supported
@@ -230,9 +191,8 @@ void TestFileIO::FileCopySymlink() const
 #endif
 }
 
-// FileMove
 //------------------------------------------------------------------------------
-void TestFileIO::FileMove() const
+TEST_CASE( TestFileIO, FileMove )
 {
     // generate a process unique file path
     AStackString path;
@@ -260,9 +220,8 @@ void TestFileIO::FileMove() const
     VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
 }
 
-// ReadOnly
 //------------------------------------------------------------------------------
-void TestFileIO::ReadOnly() const
+TEST_CASE( TestFileIO, ReadOnly )
 {
     // generate a process unique file path
     AStackString path;
@@ -291,9 +250,8 @@ void TestFileIO::ReadOnly() const
     TEST_ASSERT( FileIO::FileDelete( path.Get() ) == true );
 }
 
-// FileTime
 //------------------------------------------------------------------------------
-void TestFileIO::FileTime() const
+TEST_CASE( TestFileIO, FileTime )
 {
     // generate a process unique file path
     AStackString path;
@@ -335,9 +293,8 @@ void TestFileIO::FileTime() const
     TEST_ASSERT( timeNow == oldTime );
 }
 
-// LongPaths
 //------------------------------------------------------------------------------
-void TestFileIO::LongPaths() const
+TEST_CASE( TestFileIO, LongPaths )
 {
     //
     // Ensure long paths are correctly handled by various functions
@@ -502,10 +459,9 @@ void TestFileIO::GenerateTempFileName( AString & tmpFileName ) const
     tmpFileName += buffer;
 }
 
-// NormalizeWindowsPathCasing
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-void TestFileIO::NormalizeWindowsPathCasing() const
+TEST_CASE( TestFileIO, NormalizeWindowsPathCasing )
 {
     #define CHECK_NORMALIZATION( badPath, expectedPath ) \
             do \
@@ -541,7 +497,7 @@ void TestFileIO::NormalizeWindowsPathCasing() const
 #endif
 
 //------------------------------------------------------------------------------
-void TestFileIO::CreateOrOpenReadWrite() const
+TEST_CASE( TestFileIO, CreateOrOpenReadWrite )
 {
     // generate a process unique file path
     AStackString path;
@@ -616,7 +572,7 @@ void TestFileIO::CreateOrOpenReadWrite() const
 }
 
 //------------------------------------------------------------------------------
-void TestFileIO::CreateOrOpenReadWritePerf() const
+TEST_CASE( TestFileIO, CreateOrOpenReadWritePerf )
 {
     // generate a process unique file path
     AStackString path;

@@ -17,51 +17,17 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
-// TestCache
 //------------------------------------------------------------------------------
-class TestCache : public FBuildTest
+TEST_GROUP( TestCache, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Write() const;
-    void Read() const;
-    void ReadWrite() const;
-    void ConsistentCacheKeysWithDist() const;
-
-    void LightCache_IncludeUsingMacro() const;
-    void LightCache_IncludeUsingMacro2() const;
-    void LightCache_IncludeUsingMacro3() const;
-    void LightCache_IncludeUsingUndefinedMacros1() const;
-    void LightCache_IncludeUsingUndefinedMacros2() const;
-    void LightCache_IncludeUsingUndefinedMacros3() const;
-    void LightCache_IncludeHierarchy() const;
-    void LightCache_CyclicInclude() const;
-    void LightCache_ImportDirective() const;
-    void LightCache_ForceInclude() const;
-    void LightCache_SourceDependencies() const;
-    void LightCache_ResponseFile() const;
-    void LightCache_LibraryNoFiles() const;
-    void LightCache_NoStdInc() const;
-    void LightCache_NoRebuild() const;
-    void LightCache_MissingInclude() const;
-    void LightCache_CommentInDirective() const;
-
+public:
     // MSVC Static Analysis tests
     const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
     const char * const mAnalyzeMSVCXMLFile1 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file1.nativecodeanalysis.xml";
     const char * const mAnalyzeMSVCXMLFile2 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file2.nativecodeanalysis.xml";
-    void Analyze_MSVC_WarningsOnly_Write() const;
-    void Analyze_MSVC_WarningsOnly_Read() const;
-    void Analyze_MSVC_WarningsOnly_WriteFromDist() const;
-    void Analyze_MSVC_WarningsOnly_ReadFromDist() const;
-
-    void ExtraFiles( const char * bffPath, const char * extraFilePath ) const;
-    void ExtraFiles_DynamicDeopt() const;
-    void ExtraFiles_NativeCodeAnalysisXML() const;
-    void ExtraFiles_GCNO() const;
 
     // Helpers
+    void ExtraFiles( const char * bffPath, const char * extraFilePath ) const;
     void CheckForDependencies( const FBuildForTest & fBuild, const char * const files[], size_t numFiles ) const;
     void CheckLightCacheHits( FBuild & fBuild, uint32_t numHits ) const;
     void CheckLightCacheStores( FBuild & fBuild, uint32_t numStores ) const;
@@ -73,50 +39,8 @@ private:
     TestCache & operator=( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCache )
-    REGISTER_TEST( Write )
-    REGISTER_TEST( Read )
-    REGISTER_TEST( ReadWrite )
-    REGISTER_TEST( ConsistentCacheKeysWithDist )
-    REGISTER_TEST( ExtraFiles_GCNO )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( ExtraFiles_DynamicDeopt )
-    REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
-#endif
-    REGISTER_TEST( LightCache_IncludeUsingMacro )
-    REGISTER_TEST( LightCache_IncludeUsingMacro2 )
-    REGISTER_TEST( LightCache_IncludeUsingMacro3 )
-    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros1 )
-    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros2 )
-    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros3 )
-    REGISTER_TEST( LightCache_IncludeHierarchy )
-    REGISTER_TEST( LightCache_CyclicInclude )
-    REGISTER_TEST( LightCache_ImportDirective )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( LightCache_ForceInclude ) // TODO:B Add coverage for GCC/Clang with (-include)
-    REGISTER_TEST( LightCache_SourceDependencies )
-#endif
-    REGISTER_TEST( LightCache_ResponseFile )
-    REGISTER_TEST( LightCache_LibraryNoFiles )
-    REGISTER_TEST( LightCache_NoStdInc )
-    REGISTER_TEST( LightCache_NoRebuild )
-    REGISTER_TEST( LightCache_MissingInclude )
-    REGISTER_TEST( LightCache_CommentInDirective )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
-    REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
-
-    // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
-    //REGISTER_TEST( Analyze_MSVC_WarningsOnly_WriteFromDist )
-    //REGISTER_TEST( Analyze_MSVC_WarningsOnly_ReadFromDist )
-#endif
-REGISTER_TESTS_END
-
-// Write
-//------------------------------------------------------------------------------
-void TestCache::Write() const
+TEST_CASE( TestCache, Write )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -173,9 +97,8 @@ void TestCache::Write() const
 #endif
 }
 
-// Read
 //------------------------------------------------------------------------------
-void TestCache::Read() const
+TEST_CASE( TestCache, Read )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -232,9 +155,8 @@ void TestCache::Read() const
 #endif
 }
 
-// ReadWrite
 //------------------------------------------------------------------------------
-void TestCache::ReadWrite() const
+TEST_CASE( TestCache, ReadWrite )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -291,9 +213,8 @@ void TestCache::ReadWrite() const
 #endif
 }
 
-// ConsistentCacheKeysWithDist
 //------------------------------------------------------------------------------
-void TestCache::ConsistentCacheKeysWithDist() const
+TEST_CASE( TestCache, ConsistentCacheKeysWithDist )
 {
     FBuildTestOptions options;
     options.m_CacheVerbose = true;
@@ -357,9 +278,8 @@ void TestCache::ConsistentCacheKeysWithDist() const
     TEST_ASSERT( storeKey == hitKey );
 }
 
-// LightCache_IncludeUsingMacro
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingMacro() const
+TEST_CASE( TestCache, LightCache_IncludeUsingMacro )
 {
     // Files can be included via macros and those macros can result in different
     // includes for a given header:
@@ -452,9 +372,8 @@ void TestCache::LightCache_IncludeUsingMacro() const
     }
 }
 
-// LightCache_IncludeUsingMacro2
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingMacro2() const
+TEST_CASE( TestCache, LightCache_IncludeUsingMacro2 )
 {
     // Defines found while parsing must be stored for re-use along with discovered
     // includes.
@@ -544,9 +463,8 @@ void TestCache::LightCache_IncludeUsingMacro2() const
     }
 }
 
-// LightCache_IncludeUsingMacro3
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingMacro3() const
+TEST_CASE( TestCache, LightCache_IncludeUsingMacro3 )
 {
     // Defines are accumulated during traversal, resulting in the main defines
     // vector vector being resized while being iterated. This needs to be handled
@@ -578,9 +496,8 @@ void TestCache::LightCache_IncludeUsingMacro3() const
     }
 }
 
-// LightCache_IncludeUsingUndefinedMacros1
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingUndefinedMacros1() const
+TEST_CASE( TestCache, LightCache_IncludeUsingUndefinedMacros1 )
 {
     // An include using a macro which is not defined, but guarded so unused
     //
@@ -594,9 +511,8 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros1() const
                                             nullptr );  // No error
 }
 
-// LightCache_IncludeUsingUndefinedMacros2
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingUndefinedMacros2() const
+TEST_CASE( TestCache, LightCache_IncludeUsingUndefinedMacros2 )
 {
     // An include using a macro which is not defined, but is used
     //
@@ -608,9 +524,8 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros2() const
                                             nullptr );  // No LightCache error
 }
 
-// LightCache_IncludeUsingUndefinedMacros3
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingUndefinedMacros3() const
+TEST_CASE( TestCache, LightCache_IncludeUsingUndefinedMacros3 )
 {
     // An include using a macro which is defined, but is not a direct include
     // We don't support that, but we must detect and disable the LightCache to
@@ -626,7 +541,6 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros3() const
                                             "Could not resolve macro 'COMPLEX_MACRO'" ); // Expected error
 }
 
-// LightCache_IncludeUsingUndefinedMacros
 //------------------------------------------------------------------------------
 void TestCache::LightCache_IncludeUsingUndefinedMacros( const char * configFile,
                                                         bool expectedBuildResult,
@@ -668,9 +582,8 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros( const char * configFile,
     }
 }
 
-// LightCache_IncludeHierarchy
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeHierarchy() const
+TEST_CASE( TestCache, LightCache_IncludeHierarchy )
 {
     // Two files can include "common.h" in such a way that common.h includes a
     // different file because of the rules about which directories are searched
@@ -760,9 +673,8 @@ void TestCache::LightCache_IncludeHierarchy() const
     }
 }
 
-// LightCache_CyclicInclude
 //------------------------------------------------------------------------------
-void TestCache::LightCache_CyclicInclude() const
+TEST_CASE( TestCache, LightCache_CyclicInclude )
 {
     FBuildTestOptions options;
     options.m_CacheVerbose = true;
@@ -801,9 +713,8 @@ void TestCache::LightCache_CyclicInclude() const
     }
 }
 
-// LightCache_ImportDirective
 //------------------------------------------------------------------------------
-void TestCache::LightCache_ImportDirective() const
+TEST_CASE( TestCache, LightCache_ImportDirective )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -827,9 +738,9 @@ void TestCache::LightCache_ImportDirective() const
     TEST_ASSERT( GetRecordedOutput().Find( "#import is unsupported." ) );
 }
 
-// LightCache_ForceInclude
 //------------------------------------------------------------------------------
-void TestCache::LightCache_ForceInclude() const
+#if defined( __WINDOWS__ ) // TODO:B Add coverage for GCC/Clang with (-include)
+TEST_CASE( TestCache, LightCache_ForceInclude )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -849,10 +760,11 @@ void TestCache::LightCache_ForceInclude() const
 
     CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
 }
+#endif
 
-// LightCache_SourceDependencies
 //------------------------------------------------------------------------------
-void TestCache::LightCache_SourceDependencies() const
+#if defined( __WINDOWS__ ) // TODO:B Add coverage for GCC/Clang with (-include)
+TEST_CASE( TestCache, LightCache_SourceDependencies )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -875,10 +787,10 @@ void TestCache::LightCache_SourceDependencies() const
     // Check for expected error in output (from -cacheverbose)
     TEST_ASSERT( GetRecordedOutput().Find( "LightCache is incompatible with -sourceDependencies" ) );
 }
+#endif
 
-// LightCache_ResponseFile
 //------------------------------------------------------------------------------
-void TestCache::LightCache_ResponseFile() const
+TEST_CASE( TestCache, LightCache_ResponseFile )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -905,7 +817,7 @@ void TestCache::LightCache_ResponseFile() const
 }
 
 //------------------------------------------------------------------------------
-void TestCache::LightCache_LibraryNoFiles() const
+TEST_CASE( TestCache, LightCache_LibraryNoFiles )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -917,7 +829,7 @@ void TestCache::LightCache_LibraryNoFiles() const
 }
 
 //------------------------------------------------------------------------------
-void TestCache::LightCache_NoStdInc() const
+TEST_CASE( TestCache, LightCache_NoStdInc )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -934,7 +846,7 @@ void TestCache::LightCache_NoStdInc() const
 }
 
 //------------------------------------------------------------------------------
-void TestCache::LightCache_NoRebuild() const
+TEST_CASE( TestCache, LightCache_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -991,7 +903,7 @@ void TestCache::LightCache_NoRebuild() const
 }
 
 //------------------------------------------------------------------------------
-void TestCache::LightCache_MissingInclude() const
+TEST_CASE( TestCache, LightCache_MissingInclude )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -1031,7 +943,7 @@ void TestCache::LightCache_MissingInclude() const
 }
 
 //------------------------------------------------------------------------------
-void TestCache::LightCache_CommentInDirective() const
+TEST_CASE( TestCache, LightCache_CommentInDirective )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -1052,9 +964,9 @@ void TestCache::LightCache_CommentInDirective() const
     }
 }
 
-// Analyze_MSVC_WarningsOnly_Write
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_Write() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCache, Analyze_MSVC_WarningsOnly_Write )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -1089,10 +1001,11 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
 }
+#endif
 
-// Analyze_MSVC_WarningsOnly_Read
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_Read() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCache, Analyze_MSVC_WarningsOnly_Read )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -1121,10 +1034,11 @@ void TestCache::Analyze_MSVC_WarningsOnly_Read() const
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
 }
+#endif
 
-// Analyze_MSVC_WarningsOnly_WriteFromDist
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
+#if 0 // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
+TEST_CASE( TestCache, Analyze_MSVC_WarningsOnly_WriteFromDist )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -1168,10 +1082,11 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
 }
+#endif
 
-// Analyze_MSVC_WarningsOnly_ReadFromDist
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
+#if 0 // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
+TEST_CASE( TestCache, Analyze_MSVC_WarningsOnly_ReadFromDist )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -1209,8 +1124,8 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
 }
+#endif
 
-// ExtraFiles
 //------------------------------------------------------------------------------
 void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) const
 {
@@ -1258,29 +1173,30 @@ void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) c
     TEST_ASSERT( FileIO::FileExists( extraFilePath ) );
 }
 
-// ExtraFiles_DynamicDeopt
 //------------------------------------------------------------------------------
-void TestCache::ExtraFiles_DynamicDeopt() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCache, ExtraFiles_DynamicDeopt )
 {
-#if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
     ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_DynamicDeopt/fbuild.bff",
                 "../tmp/Test/Cache/ExtraFiles_DynamicDeopt/file.alt.obj" );
-#else
+    #else
     OUTPUT( "[SKIP] ExtraFiles_DynamicDeopt - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
-#endif
+    #endif
 }
+#endif
 
-// ExtraFiles_NativeCodeAnalysisXML
 //------------------------------------------------------------------------------
-void TestCache::ExtraFiles_NativeCodeAnalysisXML() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCache, ExtraFiles_NativeCodeAnalysisXML )
 {
     ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_NativeCodeAnalysisXML/fbuild.bff",
                 "../tmp/Test/Cache/ExtraFiles_NativeCodeAnalysisXML/file.nativecodeanalysis.xml" );
 }
+#endif
 
-// ExtraFiles_GCNO
 //------------------------------------------------------------------------------
-void TestCache::ExtraFiles_GCNO() const
+TEST_CASE( TestCache, ExtraFiles_GCNO )
 {
     ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_GCNO/fbuild.bff",
                 "../tmp/Test/Cache/ExtraFiles_GCNO/file.gcno" );

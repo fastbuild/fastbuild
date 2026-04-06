@@ -11,31 +11,17 @@
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
-// TestFileStream
 //------------------------------------------------------------------------------
-class TestFileStream : public TestGroup
+TEST_GROUP( TestFileStream, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void WriteOnly() const;
-    void ReadOnly() const;
-
+public:
     // Helpers
     mutable uint32_t m_TempFileId = 0;
     void GenerateTempFileName( AString & outTempFileName ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestFileStream )
-    REGISTER_TEST( WriteOnly )
-    REGISTER_TEST( ReadOnly )
-REGISTER_TESTS_END
-
-// WriteOnly
-//------------------------------------------------------------------------------
-void TestFileStream::WriteOnly() const
+TEST_CASE( TestFileStream, WriteOnly )
 {
     AStackString fileName;
     GenerateTempFileName( fileName );
@@ -73,9 +59,8 @@ void TestFileStream::WriteOnly() const
     TEST_ASSERT( FileIO::FileDelete( fileName.Get() ) );
 }
 
-// ReadOnly
 //------------------------------------------------------------------------------
-void TestFileStream::ReadOnly() const
+TEST_CASE( TestFileStream, ReadOnly )
 {
     AStackString fileName;
     GenerateTempFileName( fileName );
@@ -111,7 +96,6 @@ void TestFileStream::ReadOnly() const
     TEST_ASSERT( FileIO::FileDelete( fileName.Get() ) );
 }
 
-// GenerateTempFileName
 //------------------------------------------------------------------------------
 void TestFileStream::GenerateTempFileName( AString & outTempFileName ) const
 {

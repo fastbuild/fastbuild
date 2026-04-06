@@ -11,38 +11,22 @@
 #include <Core/Strings/AStackString.h>
 #include <Core/Tracing/Tracing.h>
 
-// TestEnv
 //------------------------------------------------------------------------------
-class TestEnv : public TestGroup
+TEST_GROUP( TestEnv, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void GetCommandLine() const;
-    void GetCPUInfo() const;
-    void GetExePath() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestEnv )
-    REGISTER_TEST( GetCommandLine )
-    REGISTER_TEST( GetCPUInfo )
-    REGISTER_TEST( GetExePath )
-REGISTER_TESTS_END
-
-// GetCommandLine
-//------------------------------------------------------------------------------
-void TestEnv::GetCommandLine() const
+TEST_CASE( TestEnv, GetCommandLine )
 {
     AStackString cmdLine;
     Env::GetCmdLine( cmdLine );
     TEST_ASSERT( cmdLine.FindI( "CoreTest" ) );
 }
 
-// GetExePath
 //------------------------------------------------------------------------------
-void TestEnv::GetExePath() const
+TEST_CASE( TestEnv, GetExePath )
 {
     AStackString cmdLine;
     Env::GetExePath( cmdLine );
@@ -54,7 +38,7 @@ void TestEnv::GetExePath() const
 }
 
 //------------------------------------------------------------------------------
-void TestEnv::GetCPUInfo() const
+TEST_CASE( TestEnv, GetCPUInfo )
 {
     const CPUInfo & info = CPUInfo::Get();
 

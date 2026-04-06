@@ -11,23 +11,12 @@
 #include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
 
-// TestMutex
 //------------------------------------------------------------------------------
-class TestMutex : public TestGroup
+TEST_GROUP( TestMutex, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestConstruct() const;
-    void TestLockUnlock() const;
-    void TestMultiLockUnlock() const;
-    void TryLock() const;
-    void TryLockMultiple() const;
-    void TryLockMixed() const;
-    void TryLockFail() const;
+public:
     static uint32_t TestLockFailThreadEntryFunction( void * data );
 
-    void TestExclusivity() const;
     struct TestExclusivityUserData
     {
         Mutex m_Mutex;
@@ -43,45 +32,25 @@ private:
         uint8_t m_Padding;
         Mutex m_Mutex2;
     };
-    void TestAlignment() const;
 #endif
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestMutex )
-    REGISTER_TEST( TestConstruct )
-    REGISTER_TEST( TestLockUnlock )
-    REGISTER_TEST( TestMultiLockUnlock )
-    REGISTER_TEST( TryLock )
-    REGISTER_TEST( TryLockMultiple )
-    REGISTER_TEST( TryLockMixed )
-    REGISTER_TEST( TryLockFail )
-    REGISTER_TEST( TestExclusivity )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( TestAlignment )
-#endif
-REGISTER_TESTS_END
-
-// TestConstruct
-//------------------------------------------------------------------------------
-void TestMutex::TestConstruct() const
+TEST_CASE( TestMutex, TestConstruct )
 {
     Mutex m;
 }
 
-// TestLockUnlock
 //------------------------------------------------------------------------------
-void TestMutex::TestLockUnlock() const
+TEST_CASE( TestMutex, TestLockUnlock )
 {
     Mutex m;
     m.Lock();
     m.Unlock();
 }
 
-// TestMutex
 //------------------------------------------------------------------------------
-void TestMutex::TestMultiLockUnlock() const
+TEST_CASE( TestMutex, TestMultiLockUnlock )
 {
     Mutex m;
     m.Lock();
@@ -90,9 +59,8 @@ void TestMutex::TestMultiLockUnlock() const
     m.Unlock();
 }
 
-// TryLock
 //------------------------------------------------------------------------------
-void TestMutex::TryLock() const
+TEST_CASE( TestMutex, TryLock )
 {
     // Ensure lock can be acquired
     Mutex m;
@@ -100,9 +68,8 @@ void TestMutex::TryLock() const
     m.Unlock();
 }
 
-// TryLockMultiple
 //------------------------------------------------------------------------------
-void TestMutex::TryLockMultiple() const
+TEST_CASE( TestMutex, TryLockMultiple )
 {
     // Ensure lock can be acquired multiple times
     Mutex m;
@@ -127,9 +94,8 @@ void TestMutex::TryLockMultiple() const
     }
 }
 
-// TryLockMixed
 //------------------------------------------------------------------------------
-void TestMutex::TryLockMixed() const
+TEST_CASE( TestMutex, TryLockMixed )
 {
     Mutex m;
     // Lock then TryLock
@@ -148,9 +114,8 @@ void TestMutex::TryLockMixed() const
     }
 }
 
-// TryLockFail
 //------------------------------------------------------------------------------
-void TestMutex::TryLockFail() const
+TEST_CASE( TestMutex, TryLockFail )
 {
     Mutex m;
     MutexHolder mh( m ); // Hold lock so thread cannot acquire it
@@ -170,9 +135,8 @@ void TestMutex::TryLockFail() const
     return 0;
 }
 
-// TestExclusivity
 //------------------------------------------------------------------------------
-void TestMutex::TestExclusivity() const
+TEST_CASE( TestMutex, TestExclusivity )
 {
     TestExclusivityUserData data;
     data.m_Count = 0;
@@ -223,10 +187,9 @@ void TestMutex::TestExclusivity() const
     return 0;
 }
 
-// TestAlignment
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-void TestMutex::TestAlignment() const
+TEST_CASE( TestMutex, TestAlignment )
 {
     // Check that alignment on stack and heap is correct
     PaddingStruct ps1;

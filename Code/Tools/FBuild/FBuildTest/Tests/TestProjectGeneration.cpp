@@ -22,86 +22,17 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
-// TestProjectGeneration
 //------------------------------------------------------------------------------
-class TestProjectGeneration : public FBuildTest
+TEST_GROUP( TestProjectGeneration, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void Test() const;
-    void TestFunction() const;
-    void TestFunction_NoRebuild() const;
-    void TestFunction_Speed() const;
-    void FindExecutableTarget() const;
-
-    // VCXProj
-    void VCXProj_DefaultConfigs() const;
-    void VCXProj_PerConfigOverrides() const;
-    void VCXProj_HandleDuplicateFiles() const;
-    void VCXProj_Folders() const;
-    void VCXProj_ProjectRelativePaths() const;
-    void VCXProj_ProjectRelativePaths2() const;
-    void VCXProj_InputPaths() const;
-
-    // Solution
-    void Solution_Empty() const;
-    void Solution_SolutionRelativePaths() const;
-    void Solution_BuildAndDeploy_None() const;
-    void Solution_BuildAndDeploy_Project() const;
-    void Solution_BuildAndDeploy_PerSolutionConfig() const;
-    void Solution_Items() const;
-
-    // VSExternalProj
-    void VSExternalProj_ExternalProject() const;
-    void VSExternalProj_ExternalProjectWrongData() const;
-    void VSExternalProj_ExternalProject_MissingProjectGUID() const;
-
-    // XCode
-    void XCode() const;
-
-    // Intellisense/CodeSense
-    void IntellisenseAndCodeSense() const;
-
+public:
     // Helpers
     void VCXProj_Intellisense_Check( const char * projectFile ) const;
     void XCodeProj_CodeSense_Check( const char * projectFile ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestProjectGeneration )
-    REGISTER_TEST( Test )
-    REGISTER_TEST( TestFunction )
-    REGISTER_TEST( TestFunction_NoRebuild )
-    REGISTER_TEST( TestFunction_Speed )
-    REGISTER_TEST( FindExecutableTarget )
-    REGISTER_TEST( VCXProj_DefaultConfigs )
-    REGISTER_TEST( VCXProj_PerConfigOverrides )
-    REGISTER_TEST( VCXProj_HandleDuplicateFiles )
-    REGISTER_TEST( VCXProj_Folders )
-    REGISTER_TEST( VCXProj_ProjectRelativePaths )
-    REGISTER_TEST( VCXProj_ProjectRelativePaths2 )
-    REGISTER_TEST( VCXProj_InputPaths )
-    REGISTER_TEST( Solution_Empty )
-    REGISTER_TEST( Solution_SolutionRelativePaths )
-    REGISTER_TEST( Solution_BuildAndDeploy_None )
-    REGISTER_TEST( Solution_BuildAndDeploy_Project )
-    REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
-    REGISTER_TEST( Solution_Items )
-    REGISTER_TEST( VSExternalProj_ExternalProject )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( VSExternalProj_ExternalProjectWrongData )
-#endif
-    REGISTER_TEST( VSExternalProj_ExternalProject_MissingProjectGUID )
-    REGISTER_TEST( XCode )
-    REGISTER_TEST( IntellisenseAndCodeSense )
-REGISTER_TESTS_END
-
-// Test
-//------------------------------------------------------------------------------
-void TestProjectGeneration::Test() const
+TEST_CASE( TestProjectGeneration, Test )
 {
     // work out where we are running, and find "Core"
     AStackString baseDir;
@@ -190,9 +121,8 @@ void TestProjectGeneration::Test() const
     TEST_ASSERT( f.Write( filters.Get(), filters.GetLength() ) == filters.GetLength() );
 }
 
-// TestFunction
 //------------------------------------------------------------------------------
-void TestProjectGeneration::TestFunction() const
+TEST_CASE( TestProjectGeneration, TestFunction )
 {
     AStackString project( "../tmp/Test/ProjectGeneration/testproj.vcxproj" );
     AStackString solution( "../tmp/Test/ProjectGeneration/testsln.sln" );
@@ -243,9 +173,8 @@ void TestProjectGeneration::TestFunction() const
     CheckStatsTotal( 4, 4 );
 }
 
-// TestFunction_NoRebuild
 //------------------------------------------------------------------------------
-void TestProjectGeneration::TestFunction_NoRebuild() const
+TEST_CASE( TestProjectGeneration, TestFunction_NoRebuild )
 {
     AStackString project( "../tmp/Test/ProjectGeneration/testproj.vcxproj" );
     AStackString filters( "../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
@@ -289,9 +218,8 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
     CheckStatsTotal( 3, 3 );
 }
 
-// TestFunction_Speed
 //------------------------------------------------------------------------------
-void TestProjectGeneration::TestFunction_Speed() const
+TEST_CASE( TestProjectGeneration, TestFunction_Speed )
 {
     VSProjectGenerator pg;
     AStackString baseDir;
@@ -387,13 +315,11 @@ void TestProjectGeneration::TestFunction_Speed() const
     }
 }
 
-// FindExecutableTarget
-//
-// When generating projects we sometimes need the path executable related to
-// the project in a given config (to set the executable to debug for example)
 //------------------------------------------------------------------------------
-void TestProjectGeneration::FindExecutableTarget() const
+TEST_CASE( TestProjectGeneration, FindExecutableTarget )
 {
+    // When generating projects we sometimes need the path executable related to
+    // the project in a given config (to set the executable to debug for example)
     // Parse bff
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/FindExecutableTarget/fbuild.bff";
@@ -423,9 +349,8 @@ void TestProjectGeneration::FindExecutableTarget() const
     }
 }
 
-// IntellisenseAndCodeSense
 //------------------------------------------------------------------------------
-void TestProjectGeneration::IntellisenseAndCodeSense() const
+TEST_CASE( TestProjectGeneration, IntellisenseAndCodeSense )
 {
     // Parse bff
     FBuildTestOptions options;
@@ -451,7 +376,6 @@ void TestProjectGeneration::IntellisenseAndCodeSense() const
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Copy.xcodeproj/project.pbxproj" );
 }
 
-// VCXProj_Intellisense_Check
 //------------------------------------------------------------------------------
 void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile ) const
 {
@@ -786,14 +710,12 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     TEST_ASSERT( includes[ 40 ] == "Intellisense/MSVCExternalInclude/Quoted/Slash/Space/Path" );
 }
 
-// VCXProj_DefaultConfigs
-//
-//  - If no projects are specified, then some default configs should be created.
-//  - And properties set at the project level should be present in each default
-//    config
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VCXProj_DefaultConfigs() const
+TEST_CASE( TestProjectGeneration, VCXProj_DefaultConfigs )
 {
+    //  - If no projects are specified, then some default configs should be created.
+    //  - And properties set at the project level should be present in each default
+    //    config
     AStackString project( "../tmp/Test/ProjectGeneration/VCXProj_DefaultConfigs/DefaultConfigs.vcxproj" );
 
     // Initialize
@@ -831,13 +753,11 @@ void TestProjectGeneration::VCXProj_DefaultConfigs() const
     TEST_ASSERT( rebuildCmdCount == numConfigs );
 }
 
-// VCXProj_PerConfigOverrides
-//
-//  - Settings not set at the config level should be inherited from the project
-//  - Settings set at the config level should override those set on the project
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VCXProj_PerConfigOverrides() const
+TEST_CASE( TestProjectGeneration, VCXProj_PerConfigOverrides )
 {
+    //  - Settings not set at the config level should be inherited from the project
+    //  - Settings set at the config level should override those set on the project
     AStackString project( "../tmp/Test/ProjectGeneration/VCXProj_PerConfigOverrides/PerConfigOverrides.vcxproj" );
 
     // Initialize
@@ -878,9 +798,8 @@ void TestProjectGeneration::VCXProj_PerConfigOverrides() const
     TEST_ASSERT( cleanCmdCount == numConfigs );
 }
 
-// VCXProj_HandleDuplicateFiles
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
+TEST_CASE( TestProjectGeneration, VCXProj_HandleDuplicateFiles )
 {
     FBuild fb; // For CleanPath
 
@@ -936,9 +855,8 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
     }
 }
 
-// VCXProj_Folders
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VCXProj_Folders() const
+TEST_CASE( TestProjectGeneration, VCXProj_Folders )
 {
 #if defined( __WINDOWS__ )
     AStackString basePath( "C:\\" );
@@ -1041,9 +959,8 @@ void TestProjectGeneration::VCXProj_Folders() const
     }
 }
 
-// VCXProj_ProjectRelativePaths
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
+TEST_CASE( TestProjectGeneration, VCXProj_ProjectRelativePaths )
 {
     // Overlapping input and output directories, with common substring in dir names
 #if defined( __WINDOWS__ )
@@ -1111,9 +1028,8 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
     }
 }
 
-// VCXProj_ProjectRelativePaths2
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
+TEST_CASE( TestProjectGeneration, VCXProj_ProjectRelativePaths2 )
 {
     // Overlapping input and output directories, with source files in same
     // dir as .vcxproject which is a sub-dir of a basepath
@@ -1185,9 +1101,8 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
     }
 }
 
-// VCXProj_InputPaths
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VCXProj_InputPaths() const
+TEST_CASE( TestProjectGeneration, VCXProj_InputPaths )
 {
     // Initialize
     FBuildTestOptions options;
@@ -1238,9 +1153,8 @@ void TestProjectGeneration::VCXProj_InputPaths() const
     }
 }
 
-// Solution_Empty
 //------------------------------------------------------------------------------
-void TestProjectGeneration::Solution_Empty() const
+TEST_CASE( TestProjectGeneration, Solution_Empty )
 {
     AStackString solution( "../tmp/Test/ProjectGeneration/Solution_Empty/empty.sln" );
 
@@ -1266,9 +1180,8 @@ void TestProjectGeneration::Solution_Empty() const
     CheckStatsTotal( 2, 2 );
 }
 
-// Solution_SolutionRelativePaths
 //------------------------------------------------------------------------------
-void TestProjectGeneration::Solution_SolutionRelativePaths() const
+TEST_CASE( TestProjectGeneration, Solution_SolutionRelativePaths )
 {
     AStackString solution( "../tmp/Test/ProjectGeneration/Solution_SolutionRelativePaths/SubDir2/solution.sln" );
 
@@ -1305,9 +1218,8 @@ void TestProjectGeneration::Solution_SolutionRelativePaths() const
     CheckStatsTotal( 3, 3 );
 }
 
-// Solution_BuildAndDeploy_None
 //------------------------------------------------------------------------------
-void TestProjectGeneration::Solution_BuildAndDeploy_None() const
+TEST_CASE( TestProjectGeneration, Solution_BuildAndDeploy_None )
 {
     AStackString solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_None/solution.sln" );
 
@@ -1339,9 +1251,8 @@ void TestProjectGeneration::Solution_BuildAndDeploy_None() const
     TEST_ASSERT( solutionData.Find( ".Deploy" ) == nullptr );
 }
 
-// Solution_BuildAndDeploy_Project
 //------------------------------------------------------------------------------
-void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
+TEST_CASE( TestProjectGeneration, Solution_BuildAndDeploy_Project )
 {
     AStackString solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_Project/solution.sln" );
 
@@ -1385,9 +1296,8 @@ void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
     TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
 }
 
-// Solution_BuildAndDeploy_PerSolutionConfig
 //------------------------------------------------------------------------------
-void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
+TEST_CASE( TestProjectGeneration, Solution_BuildAndDeploy_PerSolutionConfig )
 {
     AStackString solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_PerSolutionConfig/solution.sln" );
 
@@ -1425,9 +1335,8 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
 }
 
-// Solution_Items
 //------------------------------------------------------------------------------
-void TestProjectGeneration::Solution_Items() const
+TEST_CASE( TestProjectGeneration, Solution_Items )
 {
     const AStackString solution( "../tmp/Test/ProjectGeneration/Solution_Items/solution_with_items.sln" );
 
@@ -1452,9 +1361,8 @@ void TestProjectGeneration::Solution_Items() const
     CheckStatsTotal( 6, 6 );
 }
 
-// VSExternalProj_ExternalProject
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VSExternalProj_ExternalProject() const
+TEST_CASE( TestProjectGeneration, VSExternalProj_ExternalProject )
 {
     AStackString solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/External.sln" );
 
@@ -1488,9 +1396,9 @@ void TestProjectGeneration::VSExternalProj_ExternalProject() const
     CheckStatsTotal( 4 + actualNumExtSeen, 4 + actualNumExtBuilt );
 }
 
-// VSExternalProj_ExternalProjectWrongData
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VSExternalProj_ExternalProjectWrongData() const
+#if defined( __WINDOWS__ ) // TODO:C Why is this test Windows only?
+TEST_CASE( TestProjectGeneration, VSExternalProj_ExternalProjectWrongData )
 {
     // this test really needs to use the external module on a wrong project, in order to validate a failure scenario
     // therefore it should only be ever run on windows, with properly installed VS
@@ -1512,10 +1420,10 @@ void TestProjectGeneration::VSExternalProj_ExternalProjectWrongData() const
 
     CheckStatsTotal( 5, 2 );
 }
+#endif
 
-// VSExternalProj_ExternalProject_MissingProjectGUID
 //------------------------------------------------------------------------------
-void TestProjectGeneration::VSExternalProj_ExternalProject_MissingProjectGUID() const
+TEST_CASE( TestProjectGeneration, VSExternalProj_ExternalProject_MissingProjectGUID )
 {
     // Initialize
     FBuildTestOptions options;
@@ -1529,9 +1437,8 @@ void TestProjectGeneration::VSExternalProj_ExternalProject_MissingProjectGUID() 
     TEST_ASSERT( GetRecordedOutput().Find( "Failed to extract <ProjectGuid>" ) );
 }
 
-// XCode
 //------------------------------------------------------------------------------
-void TestProjectGeneration::XCode() const
+TEST_CASE( TestProjectGeneration, XCode )
 {
     AStackString project( "../tmp/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj" );
 

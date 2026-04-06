@@ -1,58 +1,32 @@
 // TestCLR.cpp
 //------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FBuildTest.h"
+    #include "FBuildTest.h"
 
 // FBuildCore
-#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+    #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+    #include "Tools/FBuild/FBuildCore/FBuild.h"
+    #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
-#include "Core/FileIO/FileIO.h"
-#include "Core/Process/Process.h"
-#include "Core/Strings/AStackString.h"
+    #include "Core/FileIO/FileIO.h"
+    #include "Core/Process/Process.h"
+    #include "Core/Strings/AStackString.h"
 
-// TestCLR
 //------------------------------------------------------------------------------
-class TestCLR : public FBuildTest
+TEST_GROUP( TestCLR, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
+public:
     // Helpers
     FBuildStats Build( FBuildTestOptions options, bool useDB, const char * target ) const;
-    const char * GetTestDBFileName() const { return "../tmp/Test/CLR/test.fdb"; }
-
-    // Tests
-    void CLRDetection() const;
-    void Test() const;
-    void Test_NoBuild() const;
-    void TestCache() const;
-
-    void TestParallelBuild() const;
-    void TestParallelBuild_NoBuild() const;
-
-    void TestCLRToCPPBridge() const;
+    const char * GetTestDBFileName() const
+    {
+        return "../tmp/Test/CLR/test.fdb";
+    }
 };
 
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCLR )
-    REGISTER_TEST( CLRDetection )
-    REGISTER_TEST( Test )           // clean build, populate cache
-    REGISTER_TEST( Test_NoBuild )   // check nothing rebuilds
-    REGISTER_TEST( TestCache )      // clean build, read from cache
-    REGISTER_TEST( Test_NoBuild )   // check nothing rebuilds (again)
-
-    REGISTER_TEST( TestParallelBuild ) // build several clr files in parallel
-    REGISTER_TEST( TestParallelBuild_NoBuild ) // check nothing rebuilds
-
-    REGISTER_TEST( TestCLRToCPPBridge ) // Linking C++ and CLR
-REGISTER_TESTS_END
-
-// Test
 //------------------------------------------------------------------------------
 FBuildStats TestCLR::Build( FBuildTestOptions options, bool useDB, const char * target ) const
 {
@@ -68,9 +42,8 @@ FBuildStats TestCLR::Build( FBuildTestOptions options, bool useDB, const char * 
     return fBuild.GetStats();
 }
 
-// CLRDetection
 //------------------------------------------------------------------------------
-void TestCLR::CLRDetection() const
+TEST_CASE( TestCLR, CLRDetection )
 {
     // CLR code cannot be distributed or cached. Check the compiler args to determine
     // if CLR is used.
@@ -104,9 +77,8 @@ void TestCLR::CLRDetection() const
     }
 }
 
-// Test
 //------------------------------------------------------------------------------
-void TestCLR::Test() const
+TEST_CASE( TestCLR, Test )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -129,9 +101,8 @@ void TestCLR::Test() const
     TEST_ASSERT( stats.GetCacheStores() == 0 ); // cache not supported due to compiler bug
 }
 
-// Test_NoBuild
 //------------------------------------------------------------------------------
-void TestCLR::Test_NoBuild() const
+TEST_CASE( TestCLR, Test_NoBuild )
 {
     FBuildTestOptions options;
     FBuildStats stats = Build( options, true, "CLR-Target" );
@@ -145,9 +116,8 @@ void TestCLR::Test_NoBuild() const
     CheckStatsTotal( stats, 8, 5 );
 }
 
-// TestCache
 //------------------------------------------------------------------------------
-void TestCLR::TestCache() const
+TEST_CASE( TestCLR, TestCache )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -170,9 +140,8 @@ void TestCLR::TestCache() const
     TEST_ASSERT( stats.GetCacheHits() == 0 ); // cache not supported dur to compiler bug
 }
 
-// TestParallelBuild
 //------------------------------------------------------------------------------
-void TestCLR::TestParallelBuild() const
+TEST_CASE( TestCLR, TestParallelBuild )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -193,9 +162,8 @@ void TestCLR::TestParallelBuild() const
     CheckStatsTotal( stats, 13, 11 );
 }
 
-// TestParallelBuild_NoBuild
 //------------------------------------------------------------------------------
-void TestCLR::TestParallelBuild_NoBuild() const
+TEST_CASE( TestCLR, TestParallelBuild_NoBuild )
 {
     FBuildTestOptions options;
 
@@ -211,12 +179,10 @@ void TestCLR::TestParallelBuild_NoBuild() const
     CheckStatsTotal( stats, 13, 8 );
 }
 
-// TestCLRToCPPBridge
 //------------------------------------------------------------------------------
-void TestCLR::TestCLRToCPPBridge() const
+    #if 0 // TODO:B FIX this test
+TEST_CASE( TestCLR, TestCLRToCPPBridge )
 {
-    // TODO:B FIX this test
-#if 0
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
 
@@ -226,7 +192,8 @@ void TestCLR::TestCLRToCPPBridge() const
     p.Spawn( "../tmp/Test/CLR/Bridge/Bridge.exe", nullptr, nullptr, nullptr );
     int ret = p.WaitForExit();
     TEST_ASSERT( ret == 15613223 ); // verify expected ret code
-#endif
 }
+    #endif
 
 //------------------------------------------------------------------------------
+#endif

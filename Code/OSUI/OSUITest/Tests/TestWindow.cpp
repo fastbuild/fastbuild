@@ -11,39 +11,21 @@
 #include "OSUI/OSFont.h"
 #include "OSUI/OSWindow.h"
 
-// TestWindow
 //------------------------------------------------------------------------------
-class TestWindow : public TestGroup
+TEST_GROUP( TestWindow, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void Init() const;
-    void SetTitle() const;
-    void SetMinimized() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestWindow )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( Init )
-    REGISTER_TEST( SetTitle )
-    REGISTER_TEST( SetMinimized )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestWindow::Empty() const
+TEST_CASE( TestWindow, Empty )
 {
     // base Create/destroy without initialization
     OSWindow window;
 }
 
-// Init
 //------------------------------------------------------------------------------
-void TestWindow::Init() const
+TEST_CASE( TestWindow, Init )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -56,7 +38,7 @@ void TestWindow::Init() const
 }
 
 //------------------------------------------------------------------------------
-void TestWindow::SetTitle() const
+TEST_CASE( TestWindow, SetTitle )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -69,7 +51,7 @@ void TestWindow::SetTitle() const
 }
 
 //------------------------------------------------------------------------------
-void TestWindow::SetMinimized() const
+TEST_CASE( TestWindow, SetMinimized )
 {
     // TODO:B Windows functionality doesn't match OSX
 #if defined( __OSX__ )

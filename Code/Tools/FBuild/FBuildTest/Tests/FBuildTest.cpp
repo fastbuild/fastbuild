@@ -23,9 +23,9 @@
 /*static*/ Mutex FBuildTest::s_OutputMutex;
 /*static*/ AString FBuildTest::s_RecordedOutput( 1024 * 1024 );
 
-// CONSTRUCTOR (FBuildTest)
 //------------------------------------------------------------------------------
-FBuildTest::FBuildTest()
+FBuildTest::FBuildTest( TestGroup * testGroup )
+    : TestGroupTest( testGroup )
 {
     s_DebuggerAttached = IsDebuggerAttached();
     m_OriginalWorkingDir.SetReserved( 512 );

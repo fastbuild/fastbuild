@@ -12,29 +12,14 @@
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
-// TestExe
 //------------------------------------------------------------------------------
-class TestExe : public FBuildTest
+TEST_GROUP( TestExe, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Build() const;
-    void CheckValidExe() const;
-    void Build_NoRebuild() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestExe )
-    REGISTER_TEST( Build )
-    REGISTER_TEST( CheckValidExe )
-    REGISTER_TEST( Build_NoRebuild )
-REGISTER_TESTS_END
-
-// Build
-//------------------------------------------------------------------------------
-void TestExe::Build() const
+TEST_CASE( TestExe, Build )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExe/exe.bff";
@@ -64,9 +49,8 @@ void TestExe::Build() const
     CheckStatsTotal( 7, 7 );
 }
 
-// CheckValidExe
 //------------------------------------------------------------------------------
-void TestExe::CheckValidExe() const
+TEST_CASE( TestExe, CheckValidExe )
 {
     Process p;
     TEST_ASSERT( p.Spawn( "../tmp/Test/Exe/exe.exe", nullptr, nullptr, nullptr ) );
@@ -74,9 +58,8 @@ void TestExe::CheckValidExe() const
     TEST_ASSERT( ret == 99 ); // verify expected ret code
 }
 
-// Build_NoRebuild
 //------------------------------------------------------------------------------
-void TestExe::Build_NoRebuild() const
+TEST_CASE( TestExe, Build_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExe/exe.bff";

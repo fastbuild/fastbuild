@@ -48,6 +48,8 @@ public:
 
     static bool IsStartOfLinkerArg( const AString & token, const char * arg );
 
+    static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
+
 protected:
     friend class TestLinker;
 
@@ -72,7 +74,6 @@ protected:
 
     void GetImportLibName( const AString & args, AString & importLibName ) const;
 
-    static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const Array<AString> & paths, const AString & lib );
     static bool GetOtherLibsArg( const char * arg,

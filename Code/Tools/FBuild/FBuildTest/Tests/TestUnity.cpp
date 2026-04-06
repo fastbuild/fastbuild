@@ -16,68 +16,23 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
-// TestUnity
 //------------------------------------------------------------------------------
-class TestUnity : public FBuildTest
+TEST_GROUP( TestUnity, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
+public:
     // Helpers
     FBuildStats BuildGenerate( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetTestGenerateDBFileName() const { return "../tmp/Test/Unity/generate.fdb"; }
+    const char * GetTestGenerateDBFileName() const
+    {
+        return "../tmp/Test/Unity/generate.fdb";
+    }
     FBuildStats BuildCompile( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetTestCompileDBFileName() const { return "../tmp/Test/Unity/compile.fdb"; }
-
-    // Tests
-    void TestGenerate() const;
-    void TestGenerate_NoRebuild() const;
-    void TestGenerate_NoRebuild_BFFChange() const;
-    void DetectDeletedUnityFiles() const;
-    void TestCompile() const;
-    void TestCompile_NoRebuild() const;
-    void TestCompile_NoRebuild_BFFChange() const;
-    void TestGenerateFromExplicitList() const;
-    void TestExcludedFiles() const;
-    void IsolateFromUnity_Regression() const;
-    void UnityInputIsolatedFiles() const;
-    void IsolateListFile() const;
-    void ClangStaticAnalysis() const;
-    void ClangStaticAnalysis_InjectHeader() const;
-    void LinkMultiple() const;
-    void LinkMultiple_InputFiles() const;
-    void SortFiles() const;
-    void CacheUsingRelativePaths() const;
-    void NoUnityCommandLineOption() const;
-    void NoUnityCache() const;
+    const char * GetTestCompileDBFileName() const
+    {
+        return "../tmp/Test/Unity/compile.fdb";
+    }
 };
 
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestUnity )
-    REGISTER_TEST( TestGenerate )           // clean build of unity files
-    REGISTER_TEST( TestGenerate_NoRebuild ) // check nothing rebuilds
-    REGISTER_TEST( TestGenerate_NoRebuild_BFFChange ) // check nothing rebuilds after a BFF change
-    REGISTER_TEST( DetectDeletedUnityFiles )
-    REGISTER_TEST( TestCompile )            // compile a library using unity inputs
-    REGISTER_TEST( TestCompile_NoRebuild )  // check nothing rebuilds
-    REGISTER_TEST( TestCompile_NoRebuild_BFFChange )  // check nothing rebuilds after a BFF change
-    REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
-    REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
-    REGISTER_TEST( IsolateFromUnity_Regression )
-    REGISTER_TEST( UnityInputIsolatedFiles )
-    REGISTER_TEST( IsolateListFile )
-    REGISTER_TEST( ClangStaticAnalysis )
-    REGISTER_TEST( ClangStaticAnalysis_InjectHeader )
-    REGISTER_TEST( LinkMultiple )
-    REGISTER_TEST( LinkMultiple_InputFiles )
-    REGISTER_TEST( SortFiles )
-    REGISTER_TEST( CacheUsingRelativePaths )
-    REGISTER_TEST( NoUnityCommandLineOption )
-    REGISTER_TEST( NoUnityCache )
-REGISTER_TESTS_END
-
-// BuildGenerate
 //------------------------------------------------------------------------------
 FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, bool forceMigration ) const
 {
@@ -95,9 +50,8 @@ FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, boo
     return fBuild.GetStats();
 }
 
-// TestGenerate
 //------------------------------------------------------------------------------
-void TestUnity::TestGenerate() const
+TEST_CASE( TestUnity, TestGenerate )
 {
     FBuildTestOptions options;
     options.m_ShowSummary = true; // required to generate stats for node count checks
@@ -117,9 +71,8 @@ void TestUnity::TestGenerate() const
     CheckStatsTotal( stats, 2, 2 );
 }
 
-// TestGenerate_NoRebuild
 //------------------------------------------------------------------------------
-void TestUnity::TestGenerate_NoRebuild() const
+TEST_CASE( TestUnity, TestGenerate_NoRebuild )
 {
     AStackString unity1( "../tmp/Test/Unity/Unity1.cpp" );
     AStackString unity2( "../tmp/Test/Unity/Unity2.cpp" );
@@ -154,9 +107,8 @@ void TestUnity::TestGenerate_NoRebuild() const
     CheckStatsTotal( stats, 2, 1 );
 }
 
-// TestGenerate_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestUnity::TestGenerate_NoRebuild_BFFChange() const
+TEST_CASE( TestUnity, TestGenerate_NoRebuild_BFFChange )
 {
     AStackString unity1( "../tmp/Test/Unity/Unity1.cpp" );
     AStackString unity2( "../tmp/Test/Unity/Unity2.cpp" );
@@ -188,9 +140,8 @@ void TestUnity::TestGenerate_NoRebuild_BFFChange() const
     CheckStatsTotal( stats, 2, 1 );
 }
 
-// DetectDeletedUnityFiles
 //------------------------------------------------------------------------------
-void TestUnity::DetectDeletedUnityFiles() const
+TEST_CASE( TestUnity, DetectDeletedUnityFiles )
 {
     // Ensure that a generated Unity file that has been deleted is
     // detected and regenerated
@@ -244,9 +195,8 @@ FBuildStats TestUnity::BuildCompile( FBuildTestOptions options, bool useDB, bool
     return fBuild.GetStats();
 }
 
-// TestCompile
 //------------------------------------------------------------------------------
-void TestUnity::TestCompile() const
+TEST_CASE( TestUnity, TestCompile )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -273,9 +223,8 @@ void TestUnity::TestCompile() const
     CheckStatsTotal( stats, 8 + numF, 12 );
 }
 
-// TestCompile_NoRebuild
 //------------------------------------------------------------------------------
-void TestUnity::TestCompile_NoRebuild() const
+TEST_CASE( TestUnity, TestCompile_NoRebuild )
 {
     FBuildStats stats = BuildCompile();
 
@@ -294,9 +243,8 @@ void TestUnity::TestCompile_NoRebuild() const
     CheckStatsTotal( stats, 8 + numF, 2 + numF );
 }
 
-// TestCompile_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestUnity::TestCompile_NoRebuild_BFFChange() const
+TEST_CASE( TestUnity, TestCompile_NoRebuild_BFFChange )
 {
     FBuildTestOptions options;
     const bool useDB = true;
@@ -318,9 +266,8 @@ void TestUnity::TestCompile_NoRebuild_BFFChange() const
     CheckStatsTotal( stats, 8 + numF, 2 + numF );
 }
 
-// TestGenerateFromExplicitList
 //------------------------------------------------------------------------------
-void TestUnity::TestGenerateFromExplicitList() const
+TEST_CASE( TestUnity, TestGenerateFromExplicitList )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/unity.bff";
@@ -335,9 +282,8 @@ void TestUnity::TestGenerateFromExplicitList() const
     CheckStatsTotal( 4, 4 );
 }
 
-// TestExcludedFiles
 //------------------------------------------------------------------------------
-void TestUnity::TestExcludedFiles() const
+TEST_CASE( TestUnity, TestExcludedFiles )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/Exclusions/fbuild.bff";
@@ -371,9 +317,8 @@ void TestUnity::TestExcludedFiles() const
     }
 }
 
-// IsolateFromUnity_Regression
 //------------------------------------------------------------------------------
-void TestUnity::IsolateFromUnity_Regression() const
+TEST_CASE( TestUnity, IsolateFromUnity_Regression )
 {
     // There was a crash when a Unity was:
     // - Using an explicit list of files
@@ -387,9 +332,8 @@ void TestUnity::IsolateFromUnity_Regression() const
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 }
 
-// UnityInputIsolatedFiles
 //------------------------------------------------------------------------------
-void TestUnity::UnityInputIsolatedFiles() const
+TEST_CASE( TestUnity, UnityInputIsolatedFiles )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/UnityInputIsolatedFiles/fbuild.bff";
@@ -403,9 +347,8 @@ void TestUnity::UnityInputIsolatedFiles() const
     CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
 }
 
-// IsolateListFile
 //------------------------------------------------------------------------------
-void TestUnity::IsolateListFile() const
+TEST_CASE( TestUnity, IsolateListFile )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateListFile/fbuild.bff";
@@ -419,9 +362,8 @@ void TestUnity::IsolateListFile() const
     CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
 }
 
-// ClangStaticAnalysis
 //------------------------------------------------------------------------------
-void TestUnity::ClangStaticAnalysis() const
+TEST_CASE( TestUnity, ClangStaticAnalysis )
 {
     //
     // Ensure that use of Unity doesn't suppress static analysis warnings with Clang
@@ -437,9 +379,8 @@ void TestUnity::ClangStaticAnalysis() const
     TEST_ASSERT( GetRecordedOutput().Find( "Address of stack memory" ) );
 }
 
-// ClangStaticAnalysis_InjectHeader
 //------------------------------------------------------------------------------
-void TestUnity::ClangStaticAnalysis_InjectHeader() const
+TEST_CASE( TestUnity, ClangStaticAnalysis_InjectHeader )
 {
     //
     // Ensure headers injected with -include don't prevent fixup from working
@@ -455,9 +396,8 @@ void TestUnity::ClangStaticAnalysis_InjectHeader() const
     TEST_ASSERT( GetRecordedOutput().Find( "Address of stack memory" ) );
 }
 
-// LinkMultiple
 //------------------------------------------------------------------------------
-void TestUnity::LinkMultiple() const
+TEST_CASE( TestUnity, LinkMultiple )
 {
     // Test multiple Unity items with an additional loose file.
     // Ensure that builds occur as expected when items are isolated, and
@@ -577,9 +517,8 @@ void TestUnity::LinkMultiple() const
     }
 }
 
-// LinkMultiple_InputFiles
 //------------------------------------------------------------------------------
-void TestUnity::LinkMultiple_InputFiles() const
+TEST_CASE( TestUnity, LinkMultiple_InputFiles )
 {
     // Same as LinkMultiple but with files explicitly specified instead o
     // discovering them via directory listings
@@ -698,9 +637,8 @@ void TestUnity::LinkMultiple_InputFiles() const
     }
 }
 
-// SortFiles
 //------------------------------------------------------------------------------
-void TestUnity::SortFiles() const
+TEST_CASE( TestUnity, SortFiles )
 {
     // Ensure sorting logic works as expected:
     //  - case insensitive (consistent regardless of file system or OS)
@@ -848,9 +786,8 @@ void TestUnity::SortFiles() const
 #undef CHECK
 }
 
-// CacheUsingRelativePaths
 //------------------------------------------------------------------------------
-void TestUnity::CacheUsingRelativePaths() const
+TEST_CASE( TestUnity, CacheUsingRelativePaths )
 {
     // Source files
     const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestUnity/CacheUsingRelativePaths/";
@@ -948,9 +885,8 @@ void TestUnity::CacheUsingRelativePaths() const
     }
 }
 
-// NoUnityCommandLineOption
 //------------------------------------------------------------------------------
-void TestUnity::NoUnityCommandLineOption() const
+TEST_CASE( TestUnity, NoUnityCommandLineOption )
 {
     //
     // Ensure toggling -nounity results in expected rebuilding
@@ -1050,9 +986,8 @@ void TestUnity::NoUnityCommandLineOption() const
     }
 }
 
-// NoUnityCache
 //------------------------------------------------------------------------------
-void TestUnity::NoUnityCache() const
+TEST_CASE( TestUnity, NoUnityCache )
 {
     // Files isolated from Unity don't get caching, but when -nounity is used
     // they should behave as if they are being compiled via an ObjectList

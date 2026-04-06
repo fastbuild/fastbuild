@@ -13,40 +13,18 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
-// TestBuildFBuild
 //------------------------------------------------------------------------------
-class TestBuildFBuild : public FBuildTest
+TEST_GROUP( TestBuildFBuild, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
+public:
     // Helpers
     FBuildStats BuildInternal( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetDBFile() const { return "../tmp/Test/BuildFBuild/TestFBuild.db"; }
-
-    // Tests
-    void BuildClean() const;
-    void Build_NoRebuild() const;
-    void Build_NoRebuild_BFFChange() const;
-    void BuildCleanWithCache() const;
-
-    void DBSavePerformance() const;
+    const char * GetDBFile() const
+    {
+        return "../tmp/Test/BuildFBuild/TestFBuild.db";
+    }
 };
 
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestBuildFBuild )
-    REGISTER_TEST( BuildClean )             // clean build (populating cache)
-    REGISTER_TEST( Build_NoRebuild )        // check no rebuild
-    REGISTER_TEST( Build_NoRebuild_BFFChange ) // check no rebuild (bff change)
-    REGISTER_TEST( BuildCleanWithCache )    // clean, reading from cache
-    REGISTER_TEST( Build_NoRebuild )        // check no rebuild again
-    REGISTER_TEST( Build_NoRebuild_BFFChange ) // check no rebuild again (bff change)
-
-    REGISTER_TEST( DBSavePerformance )      // Time to save a non-trivial DB
-REGISTER_TESTS_END
-
-// BuildInternal
 //------------------------------------------------------------------------------
 FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useDB, bool forceMigration ) const
 {
@@ -80,9 +58,8 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     return fBuild.GetStats();
 }
 
-// BuildClean
 //------------------------------------------------------------------------------
-void TestBuildFBuild::BuildClean() const
+TEST_CASE( TestBuildFBuild, BuildClean )
 {
     // delete files from previous runs
     Array<AString> files;
@@ -112,9 +89,8 @@ void TestBuildFBuild::BuildClean() const
 #endif
 }
 
-// Build_NoRebuild
 //------------------------------------------------------------------------------
-void TestBuildFBuild::Build_NoRebuild() const
+TEST_CASE( TestBuildFBuild, Build_NoRebuild )
 {
     // ensure nothing is rebuilt
     FBuildStats stats = BuildInternal();
@@ -125,9 +101,8 @@ void TestBuildFBuild::Build_NoRebuild() const
     TEST_ASSERT( stats.GetStatsFor( Node::EXE_NODE ).m_NumBuilt == 0 );
 }
 
-// Build_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestBuildFBuild::Build_NoRebuild_BFFChange() const
+TEST_CASE( TestBuildFBuild, Build_NoRebuild_BFFChange )
 {
     // ensure nothing is rebuilt
     const bool forceMigration = true;
@@ -139,9 +114,8 @@ void TestBuildFBuild::Build_NoRebuild_BFFChange() const
     TEST_ASSERT( stats.GetStatsFor( Node::EXE_NODE ).m_NumBuilt == 0 );
 }
 
-// BuildCleanWithCache
 //------------------------------------------------------------------------------
-void TestBuildFBuild::BuildCleanWithCache() const
+TEST_CASE( TestBuildFBuild, BuildCleanWithCache )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -161,9 +135,8 @@ void TestBuildFBuild::BuildCleanWithCache() const
 #endif
 }
 
-// DBSavePerformance
 //------------------------------------------------------------------------------
-void TestBuildFBuild::DBSavePerformance() const
+TEST_CASE( TestBuildFBuild, DBSavePerformance )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildFBuild/fbuild.bff";

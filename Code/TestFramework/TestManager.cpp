@@ -42,31 +42,13 @@ TestManager::TestManager()
 TestManager::~TestManager() = default;
 
 //------------------------------------------------------------------------------
-/*static*/ void TestManager::FreeRegisteredTests()
+/*static*/ void TestManager::RegisterTestGroup( TestGroup * testGroup )
 {
-    // free all registered tests
-    TestGroup * testGroup = s_FirstTest;
-    while ( testGroup )
-    {
-        TestGroup * next = testGroup->m_NextTestGroup;
-        FDELETE testGroup;
-        testGroup = next;
-    }
-}
-
-//------------------------------------------------------------------------------
-/*static*/ bool TestManager::RegisterTestGroup( TestGroup * testGroup )
-{
-    // Once any  test is registered, set shutdown cleanup function
-    static int32_t sAtExitRegistered = atexit( TestManager::FreeRegisteredTests );
-    ASSERT( sAtExitRegistered == 0 );
-    (void)sAtExitRegistered;
-
     // first ever test? place as head of list
     if ( s_FirstTest == nullptr )
     {
         s_FirstTest = testGroup;
-        return true;
+        return;
     }
 
     // link to end of list
@@ -77,7 +59,7 @@ TestManager::~TestManager() = default;
         if ( thisGroup->m_NextTestGroup == nullptr )
         {
             thisGroup->m_NextTestGroup = testGroup;
-            return true;
+            return;
         }
         thisGroup = thisGroup->m_NextTestGroup;
     }
@@ -194,8 +176,6 @@ void TestManager::TestBegin( TestGroup * testGroup, const char * testName )
 #ifdef PROFILING_ENABLED
     ProfileManager::Start( testName );
 #endif
-
-    testGroup->PreTest();
 }
 
 // TestEnd
@@ -203,8 +183,6 @@ void TestManager::TestBegin( TestGroup * testGroup, const char * testName )
 void TestManager::TestEnd()
 {
     TestInfo & info = s_TestInfos[ s_NumTests - 1 ];
-
-    info.m_TestGroup->PostTest();
 
 #ifdef MEMTRACKER_ENABLED
     // Get allocation state here (before profiling, which can cause allocations)

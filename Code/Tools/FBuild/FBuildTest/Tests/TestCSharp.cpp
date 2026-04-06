@@ -1,61 +1,26 @@
 // TestCSharp.cpp
 //------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FBuildTest.h"
+    #include "FBuildTest.h"
 
 // FBuildCore
-#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+    #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+    #include "Tools/FBuild/FBuildCore/FBuild.h"
 
-#include "Core/FileIO/FileIO.h"
-#include "Core/Strings/AStackString.h"
+    #include "Core/FileIO/FileIO.h"
+    #include "Core/Strings/AStackString.h"
 
-// TestCSharp
 //------------------------------------------------------------------------------
-class TestCSharp : public FBuildTest
+TEST_GROUP( TestCSharp, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void TestSingleFile() const;
-    void TestSingleFile_NoRebuild() const;
-    void TestSingleFile_NoRebuild_BFFChange() const;
-    void TestMultipleFiles() const;
-    void TestMultipleFiles_NoRebuild() const;
-    void TestMultipleFiles_NoRebuild_BFFChange() const;
-    void TestMultipleAssemblies() const;
-    void TestMultipleAssemblies_NoRebuild() const;
-    void TestMultipleAssemblies_NoRebuild_BFFChange() const;
-    void TestMixedAssemblyWithCPP() const;
-    void CSharpWithObjectListFails() const;
-    void UsingNonCSharpCompilerFails() const;
-    void Exclusions() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCSharp )
-    REGISTER_TEST( TestSingleFile )
-    REGISTER_TEST( TestSingleFile_NoRebuild )
-    REGISTER_TEST( TestSingleFile_NoRebuild_BFFChange )
-    REGISTER_TEST( TestMultipleFiles )
-    REGISTER_TEST( TestMultipleFiles_NoRebuild )
-    REGISTER_TEST( TestMultipleFiles_NoRebuild_BFFChange )
-    REGISTER_TEST( TestMultipleAssemblies )
-    REGISTER_TEST( TestMultipleAssemblies_NoRebuild )
-    REGISTER_TEST( TestMultipleAssemblies_NoRebuild_BFFChange )
-    //REGISTER_TEST( TestMixedAssemblyWithCPP ) // TODO:A Enable
-    REGISTER_TEST( CSharpWithObjectListFails )
-    REGISTER_TEST( UsingNonCSharpCompilerFails )
-    REGISTER_TEST( Exclusions )
-REGISTER_TESTS_END
-
-// TestSingleFile
-//------------------------------------------------------------------------------
-void TestCSharp::TestSingleFile() const
+TEST_CASE( TestCSharp, TestSingleFile )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
@@ -82,9 +47,8 @@ void TestCSharp::TestSingleFile() const
     CheckStatsTotal( 4, 4 );
 }
 
-// TestSingleFile_NoRebuild
 //------------------------------------------------------------------------------
-void TestCSharp::TestSingleFile_NoRebuild() const
+TEST_CASE( TestCSharp, TestSingleFile_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
@@ -104,9 +68,8 @@ void TestCSharp::TestSingleFile_NoRebuild() const
     CheckStatsTotal( 4, 2 );
 }
 
-// TestSingleFile_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestCSharp::TestSingleFile_NoRebuild_BFFChange() const
+TEST_CASE( TestCSharp, TestSingleFile_NoRebuild_BFFChange )
 {
     FBuildOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest//Data/TestCSharp/csharp.bff";
@@ -127,9 +90,8 @@ void TestCSharp::TestSingleFile_NoRebuild_BFFChange() const
     CheckStatsTotal( 4, 2 );
 }
 
-// TestMultipleFiles
 //------------------------------------------------------------------------------
-void TestCSharp::TestMultipleFiles() const
+TEST_CASE( TestCSharp, TestMultipleFiles )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
@@ -157,9 +119,8 @@ void TestCSharp::TestMultipleFiles() const
     CheckStatsTotal( 7, 7 );
 }
 
-// TestMultipleFiles_NoRebuild
 //------------------------------------------------------------------------------
-void TestCSharp::TestMultipleFiles_NoRebuild() const
+TEST_CASE( TestCSharp, TestMultipleFiles_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
@@ -179,9 +140,8 @@ void TestCSharp::TestMultipleFiles_NoRebuild() const
     CheckStatsTotal( 7, 5 );
 }
 
-// TestMultipleFiles_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestCSharp::TestMultipleFiles_NoRebuild_BFFChange() const
+TEST_CASE( TestCSharp, TestMultipleFiles_NoRebuild_BFFChange )
 {
     FBuildOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
@@ -203,9 +163,8 @@ void TestCSharp::TestMultipleFiles_NoRebuild_BFFChange() const
     CheckStatsTotal( 7, 5 );
 }
 
-// TestMultipleAssemblies
 //------------------------------------------------------------------------------
-void TestCSharp::TestMultipleAssemblies() const
+TEST_CASE( TestCSharp, TestMultipleAssemblies )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
@@ -236,9 +195,8 @@ void TestCSharp::TestMultipleAssemblies() const
     CheckStatsTotal( 8, 8 );
 }
 
-// TestMultipleAssemblies_NoRebuild
 //------------------------------------------------------------------------------
-void TestCSharp::TestMultipleAssemblies_NoRebuild() const
+TEST_CASE( TestCSharp, TestMultipleAssemblies_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
@@ -257,9 +215,8 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
     CheckStatsTotal( 8, 4 );
 }
 
-// TestMultipleAssemblies_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestCSharp::TestMultipleAssemblies_NoRebuild_BFFChange() const
+TEST_CASE( TestCSharp, TestMultipleAssemblies_NoRebuild_BFFChange )
 {
     FBuildOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
@@ -280,16 +237,14 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild_BFFChange() const
     CheckStatsTotal( 8, 4 );
 }
 
-// TestMixedAssemblyWithCPP
 //------------------------------------------------------------------------------
-void TestCSharp::TestMixedAssemblyWithCPP() const
+TEST_CASE( TestCSharp, TestMixedAssemblyWithCPP )
 {
     // TODO:A Implement functionality and tests
 }
 
-// CSharpWithObjectListFails
 //------------------------------------------------------------------------------
-void TestCSharp::CSharpWithObjectListFails() const
+TEST_CASE( TestCSharp, CSharpWithObjectListFails )
 {
     //
     // The C# compiler should only be used with CSAssembly
@@ -305,9 +260,8 @@ void TestCSharp::CSharpWithObjectListFails() const
     TEST_ASSERT( GetRecordedOutput().Find( "#1503 - ObjectList() - C# compiler should use CSAssembly." ) );
 }
 
-// UsingNonCSharpCompilerFails
 //------------------------------------------------------------------------------
-void TestCSharp::UsingNonCSharpCompilerFails() const
+TEST_CASE( TestCSharp, UsingNonCSharpCompilerFails )
 {
     //
     // CSAssembly should only use the C# Compiler
@@ -323,9 +277,8 @@ void TestCSharp::UsingNonCSharpCompilerFails() const
     TEST_ASSERT( GetRecordedOutput().Find( "#1504 - CSAssembly() - CSAssembly requires a C# Compiler." ) );
 }
 
-// Exclusions
 //------------------------------------------------------------------------------
-void TestCSharp::Exclusions() const
+TEST_CASE( TestCSharp, Exclusions )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/Exclusions/fbuild.bff";
@@ -363,3 +316,4 @@ void TestCSharp::Exclusions() const
 }
 
 //------------------------------------------------------------------------------
+#endif

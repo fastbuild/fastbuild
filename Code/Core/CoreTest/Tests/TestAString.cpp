@@ -12,41 +12,10 @@
 
 #include <memory.h>
 
-// TestAString
 //------------------------------------------------------------------------------
-class TestAString : public TestGroup
+TEST_GROUP( TestAString, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void AStringConstructors() const;
-    void AStringAssignment() const;
-    void AStackStringConstructors() const;
-    void AStackStringOverflow() const;
-    void BigString() const;
-    void CharacterHelpers() const;
-    void Clear() const;
-    void ClearAndFreeMemory() const;
-    void Compare() const;
-    void Concatenation() const;
-    void EmbeddedNuls() const;
-    void EndsWithI() const;
-    void Equals() const;
-    void Find() const;
-    void FindI() const;
-    void FindLast() const;
-    void FindLastI() const;
-    void Format() const;
-    void Tokenize() const;
-    void PatternMatch() const;
-    void PatternMatchI() const;
-    void Replace() const;
-    void Trim() const;
-    void TrimStart() const;
-    void TrimEnd() const;
-    void MoveConstructor() const;
-    void MoveAssignment() const;
-
+public:
     // Helpers
     template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class SRC_CAST = SRC>
     void MoveConstructorHelper() const;
@@ -67,41 +36,8 @@ private:
                         const char * expectedToken4 = nullptr ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestAString )
-    REGISTER_TEST( AStringConstructors )
-    REGISTER_TEST( AStringAssignment )
-    REGISTER_TEST( AStackStringConstructors )
-    REGISTER_TEST( AStackStringOverflow )
-    REGISTER_TEST( BigString )
-    REGISTER_TEST( CharacterHelpers )
-    REGISTER_TEST( Clear )
-    REGISTER_TEST( ClearAndFreeMemory )
-    REGISTER_TEST( Compare )
-    REGISTER_TEST( Concatenation )
-    REGISTER_TEST( EmbeddedNuls )
-    REGISTER_TEST( EndsWithI )
-    REGISTER_TEST( Equals )
-    REGISTER_TEST( Find )
-    REGISTER_TEST( FindI )
-    REGISTER_TEST( FindLast )
-    REGISTER_TEST( FindLastI )
-    REGISTER_TEST( Format )
-    REGISTER_TEST( Tokenize )
-    REGISTER_TEST( PatternMatch )
-    REGISTER_TEST( PatternMatchI )
-    REGISTER_TEST( Replace )
-    REGISTER_TEST( Trim )
-    REGISTER_TEST( TrimStart )
-    REGISTER_TEST( TrimEnd )
-    REGISTER_TEST( MoveConstructor )
-    REGISTER_TEST( MoveAssignment )
-REGISTER_TESTS_END
-
-// AStringConstructors
-//------------------------------------------------------------------------------
-void TestAString::AStringConstructors() const
+TEST_CASE( TestAString, AStringConstructors )
 {
     {
         // AString with no arguments
@@ -144,9 +80,8 @@ void TestAString::AStringConstructors() const
     }
 }
 
-// AStringAssignment
 //------------------------------------------------------------------------------
-void TestAString::AStringAssignment() const
+TEST_CASE( TestAString, AStringAssignment )
 {
     AString str;
     str = "test";
@@ -181,9 +116,8 @@ void TestAString::AStringAssignment() const
     }
 }
 
-// AStackStringConstructors
 //------------------------------------------------------------------------------
-void TestAString::AStackStringConstructors() const
+TEST_CASE( TestAString, AStackStringConstructors )
 {
     {
         // AStackString with no arguments
@@ -227,9 +161,8 @@ void TestAString::AStackStringConstructors() const
     }
 }
 
-// AStackStringOverflow
 //------------------------------------------------------------------------------
-void TestAString::AStackStringOverflow() const
+TEST_CASE( TestAString, AStackStringOverflow )
 {
     {
         // constructor with string longer than buffer
@@ -253,9 +186,8 @@ void TestAString::AStackStringOverflow() const
     }
 }
 
-// BigString
 //------------------------------------------------------------------------------
-void TestAString::BigString() const
+TEST_CASE( TestAString, BigString )
 {
     // create a massive string
     UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( ( 10 * MEGABYTE ) + 1 ) );
@@ -273,9 +205,8 @@ void TestAString::BigString() const
     TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
 }
 
-// CharacterHelpers
 //------------------------------------------------------------------------------
-void TestAString::CharacterHelpers() const
+TEST_CASE( TestAString, CharacterHelpers )
 {
     const AStackString lowerLetters( "abcdefghijklmnopqrstuvwxyz" );
     const AStackString upperLetters( "ABCDEFGHIJKLMNOPQRSTUZWXYZ" );
@@ -362,9 +293,8 @@ void TestAString::CharacterHelpers() const
     }
 }
 
-// Clear
 //------------------------------------------------------------------------------
-void TestAString::Clear() const
+TEST_CASE( TestAString, Clear )
 {
     {
         AString str( "String" );
@@ -380,9 +310,8 @@ void TestAString::Clear() const
     }
 }
 
-// ClearAndFreeMemory
 //------------------------------------------------------------------------------
-void TestAString::ClearAndFreeMemory() const
+TEST_CASE( TestAString, ClearAndFreeMemory )
 {
     // AString
     {
@@ -455,9 +384,8 @@ void TestAString::ClearAndFreeMemory() const
     }
 }
 
-// Compare
 //------------------------------------------------------------------------------
-void TestAString::Compare() const
+TEST_CASE( TestAString, Compare )
 {
     AStackString str( "hello" );
 
@@ -474,9 +402,8 @@ void TestAString::Compare() const
     TEST_ASSERT( 0 != str.CompareI( AStackString( "goodbye" ) ) );
 }
 
-// Concatenation
 //------------------------------------------------------------------------------
-void TestAString::Concatenation() const
+TEST_CASE( TestAString, Concatenation )
 {
     // Ensure empty strings are correctly handled
     // Because an empty AString is a special case pointer to a global empty
@@ -541,9 +468,8 @@ void TestAString::Concatenation() const
     }
 }
 
-// EmbeddedNuls
 //------------------------------------------------------------------------------
-void TestAString::EmbeddedNuls() const
+TEST_CASE( TestAString, EmbeddedNuls )
 {
     // Create a string with an embedded nul and check various behaviours
     AStackString string( "0123456789" );
@@ -649,9 +575,8 @@ void TestAString::EmbeddedNuls() const
     }
 }
 
-// EndsWithI
 //------------------------------------------------------------------------------
-void TestAString::EndsWithI() const
+TEST_CASE( TestAString, EndsWithI )
 {
     // empty string is handled
     {
@@ -685,9 +610,8 @@ void TestAString::EndsWithI() const
     }
 }
 
-// Equals
 //------------------------------------------------------------------------------
-void TestAString::Equals() const
+TEST_CASE( TestAString, Equals )
 {
     AStackString str( "hello" );
 
@@ -704,9 +628,8 @@ void TestAString::Equals() const
     TEST_ASSERT( false == str.EqualsI( AStackString( "goodbye" ) ) );
 }
 
-// Find
 //------------------------------------------------------------------------------
-void TestAString::Find() const
+TEST_CASE( TestAString, Find )
 {
     {
         AStackString str( "the quick brown fox jumps over the lazy dog" );
@@ -733,9 +656,8 @@ void TestAString::Find() const
     }
 }
 
-// FindI
 //------------------------------------------------------------------------------
-void TestAString::FindI() const
+TEST_CASE( TestAString, FindI )
 {
     AStackString str( "ThE qUiCk BrOwN fOx JuMpS oVeR tHe LaZy DoG" );
 
@@ -752,9 +674,8 @@ void TestAString::FindI() const
     TEST_ASSERT( str.FindI( AStackString( "the" ), str.Get() + 1, str.Get() + 31 ) == nullptr );
 }
 
-// FindLast
 //------------------------------------------------------------------------------
-void TestAString::FindLast() const
+TEST_CASE( TestAString, FindLast )
 {
     {
         AStackString str( "the quick brown fox jumps over the lazy dog" );
@@ -781,9 +702,8 @@ void TestAString::FindLast() const
     }
 }
 
-// FindLastI
 //------------------------------------------------------------------------------
-void TestAString::FindLastI() const
+TEST_CASE( TestAString, FindLastI )
 {
     AStackString str( "ThE qUiCk BrOwN fOx JuMpS oVeR tHe LaZy DoG" );
 
@@ -800,9 +720,8 @@ void TestAString::FindLastI() const
     TEST_ASSERT( str.FindLastI( AStackString( "the" ), str.Get() + 30, str.Get() + 1 ) == nullptr );
 }
 
-// Format
 //------------------------------------------------------------------------------
-void TestAString::Format() const
+TEST_CASE( TestAString, Format )
 {
     // Create a really long input string
     AStackString longInput;
@@ -819,9 +738,8 @@ void TestAString::Format() const
     TEST_ASSERT( AString::StrLen( buffer.Get() ) == longStringLen );
 }
 
-// Tokenize
 //------------------------------------------------------------------------------
-void TestAString::Tokenize() const
+TEST_CASE( TestAString, Tokenize )
 {
     // empty
     CheckTokenize( "" );
@@ -865,9 +783,8 @@ void TestAString::Tokenize() const
     CheckTokenize( "c:\\path\\path;d:\\path;e:\\", ';', "c:\\path\\path", "d:\\path", "e:\\" );
 }
 
-// PatternMatch
 //------------------------------------------------------------------------------
-void TestAString::PatternMatch() const
+TEST_CASE( TestAString, PatternMatch )
 {
 #define CHECK_MATCH( pat, str, match )              \
     do                                                  \
@@ -900,9 +817,8 @@ void TestAString::PatternMatch() const
 #undef CHECK_MATCH
 }
 
-// PatternMatchI
 //------------------------------------------------------------------------------
-void TestAString::PatternMatchI() const
+TEST_CASE( TestAString, PatternMatchI )
 {
 #define CHECK_MATCH( pat, str, match )              \
     do                                                  \
@@ -931,16 +847,15 @@ void TestAString::PatternMatchI() const
 }
 
 //------------------------------------------------------------------------------
-void TestAString::Replace() const
+TEST_CASE( TestAString, Replace )
 {
     // Replace empty - make sure this is correctly handled
     AStackString test( "Test" );
     test.Replace( "", "" );
 }
 
-// Trim
 //------------------------------------------------------------------------------
-void TestAString::Trim() const
+TEST_CASE( TestAString, Trim )
 {
     {
         // No trim
@@ -973,9 +888,8 @@ void TestAString::Trim() const
     }
 }
 
-// TrimStart
 //------------------------------------------------------------------------------
-void TestAString::TrimStart() const
+TEST_CASE( TestAString, TrimStart )
 {
     {
         // No trim (empty)
@@ -1013,9 +927,8 @@ void TestAString::TrimStart() const
     }
 }
 
-// TrimEnd
 //------------------------------------------------------------------------------
-void TestAString::TrimEnd() const
+TEST_CASE( TestAString, TrimEnd )
 {
     {
         // No trim (empty)
@@ -1077,9 +990,8 @@ void TestAString::MoveConstructorHelper() const
     PRAGMA_DISABLE_POP_MSVC
 }
 
-// MoveConstructor
 //------------------------------------------------------------------------------
-void TestAString::MoveConstructor() const
+TEST_CASE( TestAString, MoveConstructor )
 {
     //                    Src, Dest, Allocs, SrcCast
     //----------------------------------------------------------------------
@@ -1151,9 +1063,8 @@ void TestAString::MoveAssignmentHelper() const
     }
 }
 
-// MoveAssignment
 //------------------------------------------------------------------------------
-void TestAString::MoveAssignment() const
+TEST_CASE( TestAString, MoveAssignment )
 {
     //                   Src             Dest            Allocs SrcCast
     //------------------------------------------------------------------

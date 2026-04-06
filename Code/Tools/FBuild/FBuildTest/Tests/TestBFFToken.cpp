@@ -13,55 +13,23 @@
 #include "Core/Strings/AStackString.h"
 
 //------------------------------------------------------------------------------
-class TestBFFToken : public FBuildTest
+TEST_GROUP( TestBFFToken, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Invalid() const;
-    void String() const;
-    void Int() const;
-    void Bool() const;
-    void Identifier() const;
-    void Function() const;
-    void Variable() const;
-    void Keyword() const;
-    void Operator() const;
-    void Brace() const;
-    void Comma() const;
-    void EndOfFile() const;
-
+public:
     TestBFFToken & operator=( const TestBFFToken & other ) = delete;
 
     const BFFFile m_File{ "filename.bff", AString::GetEmpty() };
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestBFFToken )
-    REGISTER_TEST( Invalid )
-    REGISTER_TEST( String )
-    REGISTER_TEST( Int )
-    REGISTER_TEST( Bool )
-    REGISTER_TEST( Identifier )
-    REGISTER_TEST( Function )
-    REGISTER_TEST( Variable )
-    REGISTER_TEST( Keyword )
-    REGISTER_TEST( Operator )
-    REGISTER_TEST( Brace )
-    REGISTER_TEST( Comma )
-    REGISTER_TEST( EndOfFile )
-REGISTER_TESTS_END
-
-//------------------------------------------------------------------------------
-void TestBFFToken::Invalid() const
+TEST_CASE( TestBFFToken, Invalid )
 {
     BFFToken token( BFFToken::InvalidType::eInvalid, m_File, "" );
     TEST_ASSERT( token.GetType() == BFFTokenType::Invalid );
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::String() const
+TEST_CASE( TestBFFToken, String )
 {
     const AStackString stringValue( "string" );
     const BFFToken token( stringValue, m_File, "" );
@@ -71,7 +39,7 @@ void TestBFFToken::String() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Int() const
+TEST_CASE( TestBFFToken, Int )
 {
     const int32_t intValue = 99;
     const BFFToken token( intValue, m_File, "" );
@@ -82,7 +50,7 @@ void TestBFFToken::Int() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Bool() const
+TEST_CASE( TestBFFToken, Bool )
 {
     const bool boolValue = true;
     const BFFToken token( boolValue, m_File, "" );
@@ -93,7 +61,7 @@ void TestBFFToken::Bool() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Identifier() const
+TEST_CASE( TestBFFToken, Identifier )
 {
     const AStackString identifierName( "identifier" );
     const BFFToken token( BFFToken::IdentifierType::eIdentifier, m_File, "", identifierName );
@@ -103,7 +71,7 @@ void TestBFFToken::Identifier() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Function() const
+TEST_CASE( TestBFFToken, Function )
 {
     const AStackString functionName( "Function" );
     const BFFToken token( BFFToken::FunctionType::eFunction, m_File, "", functionName );
@@ -113,7 +81,7 @@ void TestBFFToken::Function() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Variable() const
+TEST_CASE( TestBFFToken, Variable )
 {
     const AStackString variableName( ".Variable" );
     const BFFToken token( BFFToken::VariableType::eVariable, m_File, "", variableName );
@@ -123,7 +91,7 @@ void TestBFFToken::Variable() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Keyword() const
+TEST_CASE( TestBFFToken, Keyword )
 {
     // Check mapping is correct and bi-directional
 #define CHECK( keywordString, type ) \
@@ -166,7 +134,7 @@ void TestBFFToken::Keyword() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Operator() const
+TEST_CASE( TestBFFToken, Operator )
 {
     // Check mapping is correct and bi-directional
 #define CHECK( operatorString, type ) \
@@ -205,7 +173,7 @@ void TestBFFToken::Operator() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Brace() const
+TEST_CASE( TestBFFToken, Brace )
 {
 #define CHECK( braceType, braceTypeString ) \
     do { \
@@ -228,7 +196,7 @@ void TestBFFToken::Brace() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::Comma() const
+TEST_CASE( TestBFFToken, Comma )
 {
     const BFFToken token( BFFToken::CommaType::eComma, m_File, "" );
     TEST_ASSERT( token.GetType() == BFFTokenType::Comma );
@@ -236,7 +204,7 @@ void TestBFFToken::Comma() const
 }
 
 //------------------------------------------------------------------------------
-void TestBFFToken::EndOfFile() const
+TEST_CASE( TestBFFToken, EndOfFile )
 {
     const BFFToken token( BFFToken::EndOfFileType::eEndOfFile, m_File, "" );
     TEST_ASSERT( token.GetType() == BFFTokenType::EndOfFile );

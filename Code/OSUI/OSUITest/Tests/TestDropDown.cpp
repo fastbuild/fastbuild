@@ -11,31 +11,14 @@
 #include "OSUI/OSFont.h"
 #include "OSUI/OSWindow.h"
 
-// TestDropDown
 //------------------------------------------------------------------------------
-class TestDropDown : public TestGroup
+TEST_GROUP( TestDropDown, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void Init() const;
-    void Items() const;
-    void EnableDisable() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestDropDown )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( Init )
-    REGISTER_TEST( Items )
-    REGISTER_TEST( EnableDisable )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestDropDown::Empty() const
+TEST_CASE( TestDropDown, Empty )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -48,9 +31,8 @@ void TestDropDown::Empty() const
     OSDropDown dropDown( &window );
 }
 
-// Init
 //------------------------------------------------------------------------------
-void TestDropDown::Init() const
+TEST_CASE( TestDropDown, Init )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -67,9 +49,8 @@ void TestDropDown::Init() const
     dropDown.Init( 32, 32, 200, 100 );
 }
 
-// Items
 //------------------------------------------------------------------------------
-void TestDropDown::Items() const
+TEST_CASE( TestDropDown, Items )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -112,9 +93,8 @@ void TestDropDown::Items() const
     TEST_ASSERT( dropDown.GetSelectedItem() == size_t( -1 ) );
 }
 
-// EnableDisable
 //------------------------------------------------------------------------------
-void TestDropDown::EnableDisable() const
+TEST_CASE( TestDropDown, EnableDisable )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS

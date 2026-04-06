@@ -12,36 +12,14 @@
 
 #include "Core/Strings/AStackString.h"
 
-// TestAlias
 //------------------------------------------------------------------------------
-class TestAlias : public FBuildTest
+TEST_GROUP( TestAlias, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void MissingAliasTarget() const;
-    void ReflectionAliasResolution_Case1() const;
-    void ReflectionAliasResolution_Case2() const;
-    void ReflectionAliasResolution_Case3() const;
-    void ReflectionAliasResolution_Case4() const;
-    void NonFileNodes() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestAlias )
-    REGISTER_TEST( MissingAliasTarget )
-    REGISTER_TEST( ReflectionAliasResolution_Case1 )
-    REGISTER_TEST( ReflectionAliasResolution_Case2 )
-    REGISTER_TEST( ReflectionAliasResolution_Case3 )
-    REGISTER_TEST( ReflectionAliasResolution_Case4 )
-    REGISTER_TEST( NonFileNodes )
-REGISTER_TESTS_END
-
-// MissingAliasTarget
-//------------------------------------------------------------------------------
-void TestAlias::MissingAliasTarget() const
+TEST_CASE( TestAlias, MissingAliasTarget )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/alias.bff";
@@ -55,9 +33,8 @@ void TestAlias::MissingAliasTarget() const
     TEST_ASSERT( fBuild.Build( "alias" ) == false );
 }
 
-// ReflectionAliasResolution_Case1
 //------------------------------------------------------------------------------
-void TestAlias::ReflectionAliasResolution_Case1() const
+TEST_CASE( TestAlias, ReflectionAliasResolution_Case1 )
 {
     // FAIL Case 1: An Alias to >1 item
     {
@@ -73,7 +50,7 @@ void TestAlias::ReflectionAliasResolution_Case1() const
 
 // ReflectionAliasResolution_Case2
 //------------------------------------------------------------------------------
-void TestAlias::ReflectionAliasResolution_Case2() const
+TEST_CASE( TestAlias, ReflectionAliasResolution_Case2 )
 {
     // FAIL Case 2: An Alias to >1 item (indirectly via another alias)
     {
@@ -87,9 +64,8 @@ void TestAlias::ReflectionAliasResolution_Case2() const
     }
 }
 
-// ReflectionAliasResolution_Case3
 //------------------------------------------------------------------------------
-void TestAlias::ReflectionAliasResolution_Case3() const
+TEST_CASE( TestAlias, ReflectionAliasResolution_Case3 )
 {
     // OK Case 1: An alias to single item
     {
@@ -102,9 +78,8 @@ void TestAlias::ReflectionAliasResolution_Case3() const
     }
 }
 
-// ReflectionAliasResolution_Case4
 //------------------------------------------------------------------------------
-void TestAlias::ReflectionAliasResolution_Case4() const
+TEST_CASE( TestAlias, ReflectionAliasResolution_Case4 )
 {
     // OK Case 2: An alias to single item (indirectly via another alias)
     {
@@ -117,9 +92,8 @@ void TestAlias::ReflectionAliasResolution_Case4() const
     }
 }
 
-// NonFileNodes
 //------------------------------------------------------------------------------
-void TestAlias::NonFileNodes() const
+TEST_CASE( TestAlias, NonFileNodes )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/ok_to_non_filenode.bff";
