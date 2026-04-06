@@ -11,7 +11,7 @@
 
 // StaticData
 //------------------------------------------------------------------------------
-/*static*/ bool TestGroup::sMemoryLeakCheckEnabled = false;
+/*static*/ bool TestGroupTest::sMemoryLeakCheckEnabled = false;
 
 //------------------------------------------------------------------------------
 void TestGroup::RunTests( bool listOnly, const Array<AString> & filters )

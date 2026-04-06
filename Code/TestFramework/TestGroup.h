@@ -21,10 +21,6 @@ protected:
 
     virtual const char * GetName() const = 0;
 
-    // Memory Leak checks can be disabled for individual tests
-    static void SetMemoryLeakCheckEnabled( bool enabled ) { sMemoryLeakCheckEnabled = enabled; }
-    static bool IsMemoryLeakCheckEnabled() { return sMemoryLeakCheckEnabled; }
-
 private:
     // Test filtering
     [[nodiscard]] bool ShouldRun( const char * test, const Array<AString> & filters ) const;
@@ -34,8 +30,6 @@ private:
     friend class TestGroupTest;
     TestGroup * m_NextTestGroup;
     TestGroupTest * m_TestsHead = nullptr;
-
-    static bool sMemoryLeakCheckEnabled;
 };
 
 //------------------------------------------------------------------------------
@@ -45,6 +39,10 @@ public:
     TestGroupTest( TestGroup * testGroup );
     virtual ~TestGroupTest() {}
 
+    // Memory Leak checks can be disabled for individual tests
+    static void SetMemoryLeakCheckEnabled( bool enabled ) { sMemoryLeakCheckEnabled = enabled; }
+    static bool IsMemoryLeakCheckEnabled() { return sMemoryLeakCheckEnabled; }
+
 protected:
     virtual const char * GetName() const = 0;
     virtual void Run() const = 0;
@@ -53,6 +51,8 @@ protected:
 
     friend TestGroup;
     TestGroupTest * m_NextTest = nullptr;
+
+    static bool sMemoryLeakCheckEnabled;
 };
 
 // Create a no-return helper to improve static analysis
