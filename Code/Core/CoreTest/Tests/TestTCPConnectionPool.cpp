@@ -36,22 +36,12 @@
         #define TEST_PORT uint16_t( 24941 ) // arbitrarily chosen
     #endif
 #endif
-// TestTestTCPConnectionPool
+
 //------------------------------------------------------------------------------
-class TestTestTCPConnectionPool : public TestGroup
+TEST_GROUP( TestTCPConnectionPool, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestOneServerMultipleClients() const;
-    void TestMultipleServersOneClient() const;
-    void TestConnectionCount() const;
-    void TestDataTransfer() const;
-
-    void TestConnectionStuckDuringSend() const;
+public:
     static uint32_t TestConnectionStuckDuringSend_ThreadFunc( void * userData );
-
-    void TestConnectionFailure() const;
 };
 
 // Helper Macros
@@ -67,20 +57,8 @@ private:
         }                                           \
     } while ( false )
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestTestTCPConnectionPool )
-    REGISTER_TEST( TestOneServerMultipleClients )
-    REGISTER_TEST( TestMultipleServersOneClient )
-    REGISTER_TEST( TestConnectionCount )
-    REGISTER_TEST( TestDataTransfer )
-    REGISTER_TEST( TestConnectionStuckDuringSend )
-    REGISTER_TEST( TestConnectionFailure )
-REGISTER_TESTS_END
-
-// TestOneServerMultipleClients
-//------------------------------------------------------------------------------
-void TestTestTCPConnectionPool::TestOneServerMultipleClients() const
+TEST_CASE( TestTCPConnectionPool, OneServerMultipleClients )
 {
     const uint16_t testPort( TEST_PORT );
 
@@ -110,9 +88,8 @@ void TestTestTCPConnectionPool::TestOneServerMultipleClients() const
     }
 }
 
-// TestMultipleServersOneClient
 //------------------------------------------------------------------------------
-void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
+TEST_CASE( TestTCPConnectionPool, MultipleServersOneClient )
 {
     const uint16_t testPort( TEST_PORT );
 
@@ -150,9 +127,8 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
     }
 }
 
-// TestConnectionCount
 //------------------------------------------------------------------------------
-void TestTestTCPConnectionPool::TestConnectionCount() const
+TEST_CASE( TestTCPConnectionPool, ConnectionCount )
 {
     const uint16_t testPort( TEST_PORT );
 
@@ -193,9 +169,8 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
     }
 }
 
-// TestDataTransfer
 //------------------------------------------------------------------------------
-void TestTestTCPConnectionPool::TestDataTransfer() const
+TEST_CASE( TestTCPConnectionPool, DataTransfer )
 {
     // a special server which will assert that it receives some expected data
     class TestServer : public TCPConnectionPool
@@ -264,9 +239,8 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     client.ShutdownAllConnections();
 }
 
-// TestConnectionStuckDuringSend
 //------------------------------------------------------------------------------
-void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
+TEST_CASE( TestTCPConnectionPool, ConnectionStuckDuringSend )
 {
     // create a slow server
     class SlowServer : public TCPConnectionPool
@@ -306,7 +280,9 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 
     client.ShutdownAllConnections();
 }
-/*static*/ uint32_t TestTestTCPConnectionPool::TestConnectionStuckDuringSend_ThreadFunc( void * userData )
+
+//------------------------------------------------------------------------------
+/*static*/ uint32_t TestTCPConnectionPool::TestConnectionStuckDuringSend_ThreadFunc( void * userData )
 {
     PROFILE_SET_THREAD_NAME( "ConnectionStuckSend" );
 
@@ -325,9 +301,8 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     return 0;
 }
 
-// TestConnectionFailure
 //------------------------------------------------------------------------------
-void TestTestTCPConnectionPool::TestConnectionFailure() const
+TEST_CASE( TestTCPConnectionPool, ConnectionFailure )
 {
     const uint16_t testPort( TEST_PORT );
     const uint32_t timeoutMS( 100 );

@@ -23,70 +23,16 @@
     #define __has_feature( ... ) 0
 #endif
 
-// TestDistributed
 //------------------------------------------------------------------------------
-class TestDistributed : public FBuildTest
+TEST_GROUP( TestDistributed, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestWith1RemoteWorkerThread() const;
-    void TestWith4RemoteWorkerThreads() const;
-    void WithPCH() const;
-    void RegressionTest_RemoteCrashOnErrorFormatting();
-    void TestLocalRace();
-    void RemoteRaceWinRemote();
-#if defined( DEBUG )
-    void RemoteRaceSystemFailure();
-#endif
-    void AnonymousNamespaces();
-    void ErrorsAreCorrectlyReported_MSVC() const;
-    void ErrorsAreCorrectlyReported_Clang() const;
-    void WarningsAreCorrectlyReported_MSVC() const;
-    void WarningsAreCorrectlyReported_Clang() const;
-    void ShutdownMemoryLeak() const;
-    void TestForceInclude() const;
-    void TestZiDebugFormat() const;
-    void TestZiDebugFormat_Local() const;
-    void D8049_ToolLongDebugRecord() const;
-    void DynamicDeoptimization() const;
-    void CleanMessageToPreventMSBuildFailure() const;
-
+public:
     void TestHelper( const char * target,
                      uint32_t numRemoteWorkers,
                      bool shouldFail = false,
                      bool allowRace = false ) const;
 };
 
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestDistributed )
-    REGISTER_TEST( TestWith1RemoteWorkerThread )
-    REGISTER_TEST( TestWith4RemoteWorkerThreads )
-    REGISTER_TEST( WithPCH )
-    REGISTER_TEST( RegressionTest_RemoteCrashOnErrorFormatting )
-    REGISTER_TEST( TestLocalRace )
-    REGISTER_TEST( RemoteRaceWinRemote )
-#if defined( DEBUG )
-    REGISTER_TEST( RemoteRaceSystemFailure )
-#endif
-    REGISTER_TEST( AnonymousNamespaces )
-    REGISTER_TEST( ShutdownMemoryLeak )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( ErrorsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
-    REGISTER_TEST( ErrorsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
-    REGISTER_TEST( WarningsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
-    REGISTER_TEST( WarningsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
-    REGISTER_TEST( TestForceInclude )
-    REGISTER_TEST( TestZiDebugFormat )
-    REGISTER_TEST( TestZiDebugFormat_Local )
-    REGISTER_TEST( D8049_ToolLongDebugRecord )
-    REGISTER_TEST( DynamicDeoptimization )
-#endif
-    REGISTER_TEST( CleanMessageToPreventMSBuildFailure )
-REGISTER_TESTS_END
-
-// Test
 //------------------------------------------------------------------------------
 void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers, bool shouldFail, bool allowRace ) const
 {
@@ -127,40 +73,36 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     }
 }
 
-// TestWith1RemoteWorkerThread
 //------------------------------------------------------------------------------
-void TestDistributed::TestWith1RemoteWorkerThread() const
+TEST_CASE( TestDistributed, TestWith1RemoteWorkerThread )
 {
     const char * target( "../tmp/Test/Distributed/dist.lib" );
     TestHelper( target, 1 );
 }
 
-// TestWith4RemoteWorkerThreads
 //------------------------------------------------------------------------------
-void TestDistributed::TestWith4RemoteWorkerThreads() const
+TEST_CASE( TestDistributed, TestWith4RemoteWorkerThreads )
 {
     const char * target( "../tmp/Test/Distributed/dist.lib" );
     TestHelper( target, 4 );
 }
 
-// WithPCH
 //------------------------------------------------------------------------------
-void TestDistributed::WithPCH() const
+TEST_CASE( TestDistributed, WithPCH )
 {
     const char * target( "../tmp/Test/Distributed/distpch.lib" );
     TestHelper( target, 4 );
 }
 
-// RegressionTest_RemoteCrashOnErrorFormatting
 //------------------------------------------------------------------------------
-void TestDistributed::RegressionTest_RemoteCrashOnErrorFormatting()
+TEST_CASE( TestDistributed, RegressionTest_RemoteCrashOnErrorFormatting )
 {
     const char * target( "badcode" );
     TestHelper( target, 1, true ); // compilation should fail
 }
 
 //------------------------------------------------------------------------------
-void TestDistributed::TestLocalRace()
+TEST_CASE( TestDistributed, TestLocalRace )
 {
     {
         const char * target( "../tmp/Test/Distributed/dist.lib" );
@@ -180,9 +122,8 @@ void TestDistributed::TestLocalRace()
     }
 }
 
-// RemoteRaceWinRemote
 //------------------------------------------------------------------------------
-void TestDistributed::RemoteRaceWinRemote()
+TEST_CASE( TestDistributed, RemoteRaceWinRemote )
 {
     // Check that a remote race that is won remotely is correctly handled
     FBuildTestOptions options;
@@ -202,10 +143,9 @@ void TestDistributed::RemoteRaceWinRemote()
     TEST_ASSERT( fBuild.Build( "RemoteRaceWinRemote" ) );
 }
 
-// RemoteRaceSystemFailure
 //------------------------------------------------------------------------------
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
-void TestDistributed::RemoteRaceSystemFailure()
+TEST_CASE( TestDistributed, RemoteRaceSystemFailure )
 {
     // NOTE: Test only available in DEBUG due to SetFakeSystemFailure
 
@@ -237,9 +177,8 @@ void TestDistributed::RemoteRaceSystemFailure()
 }
 #endif
 
-// AnonymousNamespaces
 //------------------------------------------------------------------------------
-void TestDistributed::AnonymousNamespaces()
+TEST_CASE( TestDistributed, AnonymousNamespaces )
 {
     // Check that compiling multiple objects with identically named symbols
     // in anonymous namespaces don't cause link errors.  This is because
@@ -249,17 +188,18 @@ void TestDistributed::AnonymousNamespaces()
     TestHelper( target, 1 );
 }
 
-// TestForceInclude
 //------------------------------------------------------------------------------
-void TestDistributed::TestForceInclude() const
+#if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
+TEST_CASE( TestDistributed, TestForceInclude )
 {
     const char * target( "../tmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
     TestHelper( target, 1 );
 }
+#endif
 
-// ErrorsAreCorrectlyReported_MSVC
 //------------------------------------------------------------------------------
-void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
+#if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
+TEST_CASE( TestDistributed, ErrorsAreCorrectlyReported_MSVC )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
@@ -282,10 +222,11 @@ void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
 }
+#endif
 
-// ErrorsAreCorrectlyReported_Clang
 //------------------------------------------------------------------------------
-void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
+#if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
+TEST_CASE( TestDistributed, ErrorsAreCorrectlyReported_Clang )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
@@ -308,10 +249,11 @@ void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "error: expected ';' at end of declaration" ) );
 }
+#endif
 
-// WarningsAreCorrectlyReported_MSVC
 //------------------------------------------------------------------------------
-void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
+#if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
+TEST_CASE( TestDistributed, WarningsAreCorrectlyReported_MSVC )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
@@ -334,10 +276,11 @@ void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
 }
+#endif
 
-// WarningsAreCorrectlyReported_Clang
 //------------------------------------------------------------------------------
-void TestDistributed::WarningsAreCorrectlyReported_Clang() const
+#if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
+TEST_CASE( TestDistributed, WarningsAreCorrectlyReported_Clang )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
@@ -360,10 +303,10 @@ void TestDistributed::WarningsAreCorrectlyReported_Clang() const
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
 }
+#endif
 
-// ShutdownMemoryLeak
 //------------------------------------------------------------------------------
-void TestDistributed::ShutdownMemoryLeak() const
+TEST_CASE( TestDistributed, ShutdownMemoryLeak )
 {
     // Ensure clean shutdown (no leaks) if the build is aborted and there are
     // available distributable jobs
@@ -424,9 +367,9 @@ void TestDistributed::ShutdownMemoryLeak() const
     TEST_ASSERT( detectedDistributedJobs );
 }
 
-// TestZiDebugFormat
 //------------------------------------------------------------------------------
-void TestDistributed::TestZiDebugFormat() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestDistributed, TestZiDebugFormat )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
@@ -445,10 +388,11 @@ void TestDistributed::TestZiDebugFormat() const
 
     TEST_ASSERT( fBuild.Build( "remoteZi" ) );
 }
+#endif
 
-// TestZiDebugFormat_Local
 //------------------------------------------------------------------------------
-void TestDistributed::TestZiDebugFormat_Local() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestDistributed, TestZiDebugFormat_Local )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
@@ -464,10 +408,11 @@ void TestDistributed::TestZiDebugFormat_Local() const
 
     TEST_ASSERT( fBuild.Build( "remoteZi" ) );
 }
+#endif
 
-// D8049_ToolLongDebugRecord
 //------------------------------------------------------------------------------
-void TestDistributed::D8049_ToolLongDebugRecord() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestDistributed, D8049_ToolLongDebugRecord )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/D8049_ToolLongDebugRecord/fbuild.bff";
@@ -486,12 +431,13 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
 
     TEST_ASSERT( fBuild.Build( "D8049" ) );
 }
+#endif
 
-// DynamicDeoptimization
 //------------------------------------------------------------------------------
-void TestDistributed::DynamicDeoptimization() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestDistributed, DynamicDeoptimization )
 {
-#if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/MSVCDynamicDeoptimization/fbuild.bff";
     options.m_AllowDistributed = true;
@@ -517,13 +463,14 @@ void TestDistributed::DynamicDeoptimization() const
 
     // Ensure extra file was returned by worker
     EnsureFileExists( extraObjFile );
-#else
+    #else
     OUTPUT( "[SKIP] DynamicDeoptimization - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
-#endif
+    #endif
 }
+#endif
 
 //------------------------------------------------------------------------------
-void TestDistributed::CleanMessageToPreventMSBuildFailure() const
+TEST_CASE( TestDistributed, CleanMessageToPreventMSBuildFailure )
 {
     // Error should be identical except for a single remove colon
     {

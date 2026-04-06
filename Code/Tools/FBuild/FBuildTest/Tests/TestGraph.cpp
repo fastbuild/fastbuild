@@ -37,51 +37,11 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 
-// TestGraph
 //------------------------------------------------------------------------------
-class TestGraph : public FBuildTest
+TEST_GROUP( TestGraph, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void EmptyGraph() const;
-    void TestNodeTypes() const;
-    void TestCleanPath() const;
-    void TestCleanPathPartial() const;
-    void SingleFileNode() const;
-    void SingleFileNodeMissing() const;
-    void TestSerialization() const;
-    void TestDeepGraph() const;
-    void TestNoStopOnFirstError() const;
-    void DBLocationChanged() const;
-    void DBCorrupt() const;
-    void BFFDirtied() const;
-    void DBVersionChanged() const;
-    void FixupErrorPaths() const;
-    void CyclicDependency() const;
-    void DBLocation() const;
+public:
 };
-
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestGraph )
-    REGISTER_TEST( EmptyGraph )
-    REGISTER_TEST( TestNodeTypes )
-    REGISTER_TEST( TestCleanPath )
-    REGISTER_TEST( TestCleanPathPartial )
-    REGISTER_TEST( SingleFileNode )
-    REGISTER_TEST( SingleFileNodeMissing )
-    REGISTER_TEST( TestSerialization )
-    REGISTER_TEST( TestDeepGraph )
-    REGISTER_TEST( TestNoStopOnFirstError )
-    REGISTER_TEST( DBLocationChanged )
-    REGISTER_TEST( DBCorrupt )
-    REGISTER_TEST( BFFDirtied )
-    REGISTER_TEST( DBVersionChanged )
-    REGISTER_TEST( FixupErrorPaths )
-    REGISTER_TEST( CyclicDependency )
-    REGISTER_TEST( DBLocation )
-REGISTER_TESTS_END
 
 // NodeTestHelper
 //------------------------------------------------------------------------------
@@ -115,16 +75,14 @@ public:
     using FileNode::DoBuild;
 };
 
-// EmptyGraph
 //------------------------------------------------------------------------------
-void TestGraph::EmptyGraph() const
+TEST_CASE( TestGraph, EmptyGraph )
 {
     NodeGraph ng;
 }
 
-// TestNodeTypes
 //------------------------------------------------------------------------------
-void TestGraph::TestNodeTypes() const
+TEST_CASE( TestGraph, TestNodeTypes )
 {
     FBuild fb;
     NodeGraph ng;
@@ -167,9 +125,8 @@ void TestGraph::TestNodeTypes() const
 #undef CHOOSE_NAME
 }
 
-// FileNode
 //------------------------------------------------------------------------------
-void TestGraph::SingleFileNode() const
+TEST_CASE( TestGraph, SingleFileNode )
 {
     NodeGraph ng;
 
@@ -192,9 +149,8 @@ void TestGraph::SingleFileNode() const
     TEST_ASSERT( node->GetStamp() != 0 );
 }
 
-// FileNode
 //------------------------------------------------------------------------------
-void TestGraph::SingleFileNodeMissing() const
+TEST_CASE( TestGraph, SingleFileNodeMissing )
 {
     NodeGraph ng;
 
@@ -213,9 +169,8 @@ void TestGraph::SingleFileNodeMissing() const
     TEST_ASSERT( node->GetStamp() == 0 );
 }
 
-// TestSerialization
 //------------------------------------------------------------------------------
-void TestGraph::TestSerialization() const
+TEST_CASE( TestGraph, TestSerialization )
 {
     const char * dbFile1 = "../tmp/Test/Graph/fbuild.db.1";
     const char * dbFile2 = "../tmp/Test/Graph/fbuild.db.2";
@@ -266,9 +221,8 @@ void TestGraph::TestSerialization() const
     }
 }
 
-// TestCleanPath
 //------------------------------------------------------------------------------
-void TestGraph::TestCleanPath() const
+TEST_CASE( TestGraph, TestCleanPath )
 {
     // Change current dir to a known location that exists on all windows machines
     FBuildOptions fo;
@@ -364,9 +318,8 @@ void TestGraph::TestCleanPath() const
 #undef CHECK
 }
 
-// TestPartialCleanPath
 //------------------------------------------------------------------------------
-void TestGraph::TestCleanPathPartial() const
+TEST_CASE( TestGraph, TestCleanPathPartial )
 {
     // Change current dir to a known location that exists on all windows machines
     FBuildOptions fo;
@@ -468,9 +421,8 @@ void TestGraph::TestCleanPathPartial() const
 #undef CHECK
 }
 
-// TestDeepGraph
 //------------------------------------------------------------------------------
-void TestGraph::TestDeepGraph() const
+TEST_CASE( TestGraph, TestDeepGraph )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DeepGraph.bff";
@@ -504,9 +456,8 @@ void TestGraph::TestDeepGraph() const
     }
 }
 
-// TestNoStopOnFirstError
 //------------------------------------------------------------------------------
-void TestGraph::TestNoStopOnFirstError() const
+TEST_CASE( TestGraph, TestNoStopOnFirstError )
 {
     FBuildTestOptions options;
     options.m_NumWorkerThreads = 0; // ensure test behaves deterministically
@@ -546,9 +497,8 @@ void TestGraph::TestNoStopOnFirstError() const
     }
 }
 
-// DBLocationChanged
 //------------------------------------------------------------------------------
-void TestGraph::DBLocationChanged() const
+TEST_CASE( TestGraph, DBLocationChanged )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseMoved/fbuild.bff";
@@ -588,9 +538,8 @@ void TestGraph::DBLocationChanged() const
     }
 }
 
-// DBCorrupt
 //------------------------------------------------------------------------------
-void TestGraph::DBCorrupt() const
+TEST_CASE( TestGraph, DBCorrupt )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseCorrupt/fbuild.bff";
@@ -655,9 +604,8 @@ void TestGraph::DBCorrupt() const
     }
 }
 
-// BFFDirtied
 //------------------------------------------------------------------------------
-void TestGraph::BFFDirtied() const
+TEST_CASE( TestGraph, BFFDirtied )
 {
     const char * originalBFF = "Tools/FBuild/FBuildTest/Data/TestGraph/BFFDirtied/fbuild.bff";
     const char * copyOfBFF = "../tmp/Test/Graph/BFFDirtied/fbuild.bff";
@@ -745,9 +693,8 @@ void TestGraph::BFFDirtied() const
     }
 }
 
-// DBVersionChanged
 //------------------------------------------------------------------------------
-void TestGraph::DBVersionChanged() const
+TEST_CASE( TestGraph, DBVersionChanged )
 {
     // Generate a fake old version headers
     NodeGraphHeader header;
@@ -791,9 +738,8 @@ void TestGraph::DBVersionChanged() const
     TEST_ASSERT( GetRecordedOutput().Find( "Database version has changed" ) );
 }
 
-// FixupErrorPaths
 //------------------------------------------------------------------------------
-void TestGraph::FixupErrorPaths() const
+TEST_CASE( TestGraph, FixupErrorPaths )
 {
     // Use a known location we can test for
 #if defined( __WINDOWS__ )
@@ -854,9 +800,8 @@ void TestGraph::FixupErrorPaths() const
 #undef TEST_FIXUP
 }
 
-// CyclicDependency
 //------------------------------------------------------------------------------
-void TestGraph::CyclicDependency() const
+TEST_CASE( TestGraph, CyclicDependency )
 {
     // Statically defined cyclic dependencies are detected at BFF parse time,
     // but additional ones can be created at build time, so have to be detected
@@ -899,9 +844,8 @@ void TestGraph::CyclicDependency() const
     }
 }
 
-// DBLocation
 //------------------------------------------------------------------------------
-void TestGraph::DBLocation() const
+TEST_CASE( TestGraph, DBLocation )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseLocation/fbuild.bff";

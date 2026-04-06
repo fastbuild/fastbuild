@@ -10,7 +10,8 @@
 #include "Core/Mem/MemTracker.h" // For MEMTRACKER_ENABLED
 #include "Core/Tracing/Tracing.h"
 
-// TestGroup - Tests derive from this interface
+class TestGroupTest;
+
 //------------------------------------------------------------------------------
 class TestGroup
 {
@@ -18,23 +19,38 @@ protected:
     explicit TestGroup() { m_NextTestGroup = nullptr; }
     virtual ~TestGroup() = default;
 
-    virtual void RunTests( bool listOnly, const Array<AString> & filters ) = 0;
     virtual const char * GetName() const = 0;
 
-    // Run before and after each test
-    virtual void PreTest() const {}
-    virtual void PostTest() const {}
+private:
+    // Test filtering
+    [[nodiscard]] bool ShouldRun( const char * test, const Array<AString> & filters ) const;
+    void RunTests( bool listOnly, const Array<AString> & filters );
+
+    friend class TestManager;
+    friend class TestGroupTest;
+    TestGroup * m_NextTestGroup;
+    TestGroupTest * m_TestsHead = nullptr;
+};
+
+//------------------------------------------------------------------------------
+class TestGroupTest
+{
+public:
+    TestGroupTest( TestGroup * testGroup );
+    virtual ~TestGroupTest() {}
 
     // Memory Leak checks can be disabled for individual tests
     static void SetMemoryLeakCheckEnabled( bool enabled ) { sMemoryLeakCheckEnabled = enabled; }
     static bool IsMemoryLeakCheckEnabled() { return sMemoryLeakCheckEnabled; }
 
-    // Test filtering
-    [[nodiscard]] bool ShouldRun( const char * test, const Array<AString> & filters ) const;
+protected:
+    virtual const char * GetName() const = 0;
+    virtual void Run() const = 0;
+    virtual void PreTest() const {}
+    virtual void PostTest() const {}
 
-private:
-    friend class TestManager;
-    TestGroup * m_NextTestGroup;
+    friend TestGroup;
+    TestGroupTest * m_NextTest = nullptr;
 
     static bool sMemoryLeakCheckEnabled;
 };
@@ -83,50 +99,38 @@ __declspec( noreturn ) void TestNoReturn();
     PRAGMA_DISABLE_POP_CLANG_WINDOWS                                \
     PRAGMA_DISABLE_POP_MSVC
 
-// Test Declarations
-//------------------------------------------------------------------------------
-#define DECLARE_TESTS                                               \
-    virtual void RunTests( bool listOnly, const Array<AString> & filters ) override; \
-    virtual const char * GetName() const override;
+#define TEST_GROUP( testGroup, testGroupTestBaseClass ) \
+    class testGroup##_Group : public TestGroup \
+    { \
+    public: \
+        testGroup##_Group() \
+        { \
+            sTestGroup = this; \
+            TestManager::RegisterTestGroup( this ); \
+        } \
+        ~testGroup##_Group() override { sTestGroup = nullptr; } \
+        virtual const char * GetName() const override { return #testGroup; } \
+        inline static testGroup##_Group * sTestGroup = nullptr; \
+    } \
+    gTestRegister_##testGroup##_Instance; \
+    class testGroup##_TestCase_Base : public testGroupTestBaseClass \
+    { \
+    public: \
+        testGroup##_TestCase_Base() \
+            : testGroupTestBaseClass( testGroup##_Group::sTestGroup ) \
+        {} \
+    }; \
+    class testGroup : public testGroup##_TestCase_Base
 
-#define REGISTER_TESTS_BEGIN( testGroupName )                       \
-    void testGroupName##Register()                                  \
-    {                                                               \
-        static bool registered = TestManager::RegisterTestGroup( new testGroupName ); \
-        (void)registered;                                           \
-    }                                                               \
-    const char * testGroupName::GetName() const                     \
-    {                                                               \
-        return #testGroupName;                                      \
-    }                                                               \
-    void testGroupName::RunTests( bool listOnly, const Array<AString> & filters ) \
-    {                                                               \
-        (void)listOnly;                                             \
-        (void)filters;                                              \
-        TestManager & utm = TestManager::Get();                     \
-        (void)utm;
-
-#define REGISTER_TEST( testFunction )                               \
-        if ( listOnly )                                                \
-        {                                                           \
-            OUTPUT( "  %s\n", #testFunction ); /*Note gtest indent format*/ \
-        }                                                           \
-        else                                                        \
-        {                                                           \
-            if ( ShouldRun( #testFunction, filters ) )              \
-            {                                                       \
-                utm.TestBegin( this, #testFunction );               \
-                testFunction();                                     \
-                utm.TestEnd();                                      \
-            }                                                       \
-        }
-
-#define REGISTER_TESTS_END                                          \
-    }
-
-#define REGISTER_TESTGROUP( testGroupName )                         \
-        extern void testGroupName##Register();                      \
-        testGroupName##Register();
+#define TEST_CASE( testGroup, test ) \
+    class TestRegister_##testGroup##_##test : public testGroup \
+    { \
+    public: \
+        virtual const char * GetName() const override { return #test; } \
+        virtual void Run() const override; \
+        void operator=( TestRegister_##testGroup##_##test & ) = delete; \
+    } gTestRegister_##testGroup##_##test##_Instance; \
+    /*virtual*/ void TestRegister_##testGroup##_##test::Run() const
 
 // Memory snapshots
 //------------------------------------------------------------------------------

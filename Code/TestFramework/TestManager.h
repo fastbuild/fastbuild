@@ -34,7 +34,7 @@ public:
     bool RunTests( uint32_t runCount = 1 );
 
     // tests register (using the test declaration macros) via this interface
-    [[nodiscard]] static bool RegisterTestGroup( TestGroup * testGroup );
+    static void RegisterTestGroup( TestGroup * testGroup );
 
     // When tests are being executed, they are wrapped with these
     void TestBegin( TestGroup * testGroup, const char * testName );
@@ -50,7 +50,6 @@ public:
                                 ... ) FORMAT_STRING( 4, 5 );
 
 private:
-    static void FreeRegisteredTests();
     [[nodiscard]] bool RunTestsInternal();
     void ParseCommandLineArgs();
 

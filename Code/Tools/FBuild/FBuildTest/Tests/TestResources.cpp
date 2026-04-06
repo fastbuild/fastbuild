@@ -1,37 +1,25 @@
 // TestResources.cpp
 //------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
+    #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+    #include "Tools/FBuild/FBuildCore/FBuild.h"
 
-#include "Core/FileIO/FileIO.h"
-#include "Core/Process/Process.h"
-#include "Core/Strings/AStackString.h"
+    #include "Core/FileIO/FileIO.h"
+    #include "Core/Process/Process.h"
+    #include "Core/Strings/AStackString.h"
 
-// TestResources
 //------------------------------------------------------------------------------
-class TestResources : public FBuildTest
+TEST_GROUP( TestResources, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void BuildResource() const;
-    void BuildResource_NoRebuild() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestResources )
-    REGISTER_TEST( BuildResource )
-    REGISTER_TEST( BuildResource_NoRebuild )
-REGISTER_TESTS_END
-
-// BuildResource
-//------------------------------------------------------------------------------
-void TestResources::BuildResource() const
+TEST_CASE( TestResources, BuildResource )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestResources/fbuild.bff";
@@ -66,9 +54,8 @@ void TestResources::BuildResource() const
     CheckStatsNode( 1, 1, Node::EXE_NODE );
 }
 
-// BuildResource_NoRebuild
 //------------------------------------------------------------------------------
-void TestResources::BuildResource_NoRebuild() const
+TEST_CASE( TestResources, BuildResource_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestResources/fbuild.bff";
@@ -88,3 +75,4 @@ void TestResources::BuildResource_NoRebuild() const
 }
 
 //------------------------------------------------------------------------------
+#endif

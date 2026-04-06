@@ -14,45 +14,15 @@
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
-// TestIncludeParser
 //------------------------------------------------------------------------------
-class TestIncludeParser : public FBuildTest
+TEST_GROUP( TestIncludeParser, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestMSVCPreprocessedOutput() const;
-    void TestMSVCPreprocessedOutput_Indent() const;
-    void TestMSVCShowIncludesOutput() const;
-    void TestMSVC_P() const;
-    void TestMSVC_ShowIncludesWithWarnings() const;
-    void TestGCCPreprocessedOutput() const;
-    void TestClangPreprocessedOutput() const;
-    void TestClangMSExtensionsPreprocessedOutput() const;
-    void TestEdgeCases() const;
-    void ClangLineEndings() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestIncludeParser )
 #if defined( __WINDOWS__ )
-    REGISTER_TEST( TestMSVCPreprocessedOutput )
-    REGISTER_TEST( TestMSVCPreprocessedOutput_Indent )
-    REGISTER_TEST( TestMSVCShowIncludesOutput )
-    REGISTER_TEST( TestMSVC_P )
-    REGISTER_TEST( TestMSVC_ShowIncludesWithWarnings )
-#endif
-    REGISTER_TEST( TestGCCPreprocessedOutput )
-    REGISTER_TEST( TestClangPreprocessedOutput )
-    REGISTER_TEST( TestClangMSExtensionsPreprocessedOutput )
-    REGISTER_TEST( TestEdgeCases )
-    REGISTER_TEST( ClangLineEndings )
-REGISTER_TESTS_END
-
-// TestMSVCPreprocessedOutput
-//------------------------------------------------------------------------------
-void TestIncludeParser::TestMSVCPreprocessedOutput() const
+TEST_CASE( TestIncludeParser, TestMSVCPreprocessedOutput )
 {
     FileStream f;
     TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.msvc.ii", FileStream::READ_ONLY ) );
@@ -94,10 +64,11 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
     const float time = t.GetElapsed();
     OUTPUT( "MSVC                 : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
+#endif
 
-// TestMSVCPreprocessedOutput_Indent
 //------------------------------------------------------------------------------
-void TestIncludeParser::TestMSVCPreprocessedOutput_Indent() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestIncludeParser, TestMSVCPreprocessedOutput_Indent )
 {
     // Test line starting with various tabs/spaces
     const char * testData = "#line 1 \"C:\\fileA.cpp\"\r\n"
@@ -116,10 +87,11 @@ void TestIncludeParser::TestMSVCPreprocessedOutput_Indent() const
     TEST_ASSERT( includes.GetSize() == 6 );
     ASSERT( parser.GetNonUniqueCount() == 6 );
 }
+#endif
 
-// TestMSVCShowIncludesOutput
 //------------------------------------------------------------------------------
-void TestIncludeParser::TestMSVCShowIncludesOutput() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestIncludeParser, TestMSVCShowIncludesOutput )
 {
     FileStream f;
     TEST_ASSERT( f.Open( "Tools/FBuild/FBuildTest/Data/TestIncludeParser/fbuildcore.msvc.showincludes", FileStream::READ_ONLY ) );
@@ -161,10 +133,11 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
     const float time = t.GetElapsed();
     OUTPUT( "MSVC /showincludes   : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
+#endif
 
-// TestMSVC_P
 //------------------------------------------------------------------------------
-void TestIncludeParser::TestMSVC_P() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestIncludeParser, TestMSVC_P )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestIncludeParser/MSVC-P/fbuild.bff";
@@ -190,10 +163,11 @@ void TestIncludeParser::TestMSVC_P() const
     CheckStatsNode( 1, 1, Node::OBJECT_NODE );
     CheckStatsTotal( 4, 4 );
 }
+#endif
 
-// TestMSVC_ShowIncludesWithWarnings
 //------------------------------------------------------------------------------
-void TestIncludeParser::TestMSVC_ShowIncludesWithWarnings() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestIncludeParser, TestMSVC_ShowIncludesWithWarnings )
 {
     FBuild fb; // needed for CleanPath
 
@@ -228,10 +202,10 @@ void TestIncludeParser::TestMSVC_ShowIncludesWithWarnings() const
         ASSERT( parser.GetNonUniqueCount() == 0 );
     }
 }
+#endif
 
-// TestGCCPreprocessedOutput
 //------------------------------------------------------------------------------
-void TestIncludeParser::TestGCCPreprocessedOutput() const
+TEST_CASE( TestIncludeParser, TestGCCPreprocessedOutput )
 {
     FBuild fBuild; // needed fer CleanPath for relative dirs
 
@@ -276,9 +250,8 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
     OUTPUT( "GCC                  : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
-// TestClangPreprocessedOutput
 //------------------------------------------------------------------------------
-void TestIncludeParser::TestClangPreprocessedOutput() const
+TEST_CASE( TestIncludeParser, TestClangPreprocessedOutput )
 {
     FBuild fBuild; // needed fer CleanPath for relative dirs
 
@@ -324,9 +297,8 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
     OUTPUT( "Clang                : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
-// TestClangMSExtensionsPreprocessedOutput
 //------------------------------------------------------------------------------
-void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
+TEST_CASE( TestIncludeParser, TestClangMSExtensionsPreprocessedOutput )
 {
     FBuild fBuild; // needed fer CleanPath for relative dirs
 
@@ -371,9 +343,8 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
     OUTPUT( "Clang (ms-extensions): %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount ) / ( 1024.0f * 1024.0f ) / time ) );
 }
 
-//
 //------------------------------------------------------------------------------
-void TestIncludeParser::TestEdgeCases() const
+TEST_CASE( TestIncludeParser, TestEdgeCases )
 {
     FBuild fBuild; // needed fer CleanPath for relative dirs
 
@@ -416,9 +387,8 @@ void TestIncludeParser::TestEdgeCases() const
     }
 }
 
-// ClangLineEndings
 //------------------------------------------------------------------------------
-void TestIncludeParser::ClangLineEndings() const
+TEST_CASE( TestIncludeParser, ClangLineEndings )
 {
     // Depending on the line endings of the source file and files being included
     // it's possible to end up with a variety of line ending types in the preprocessed

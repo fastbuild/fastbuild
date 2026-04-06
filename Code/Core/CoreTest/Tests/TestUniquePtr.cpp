@@ -10,61 +10,37 @@
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Strings/AString.h"
 
-// TestUniquePtr
 //------------------------------------------------------------------------------
-class TestUniquePtr : public TestGroup
+TEST_GROUP( TestUniquePtr, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void FreeMemory() const;
-    void Destroy() const;
-    void ReleaseOwnership() const;
-    void Replace() const;
-    void ArrayOf() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestUniquePtr )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( FreeMemory )
-    REGISTER_TEST( Destroy )
-    REGISTER_TEST( ReleaseOwnership )
-    REGISTER_TEST( Replace )
-    REGISTER_TEST( ArrayOf )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestUniquePtr::Empty() const
+TEST_CASE( TestUniquePtr, Empty )
 {
     UniquePtr<uint32_t> u;
     TEST_ASSERT( u.Get() == nullptr );
 }
 
-// FreeMemory
 //------------------------------------------------------------------------------
-void TestUniquePtr::FreeMemory() const
+TEST_CASE( TestUniquePtr, FreeMemory )
 {
     UniquePtr<AString> u( FNEW( AString( "str" ) ) );
     TEST_ASSERT( u.Get() != nullptr );
     TEST_ASSERT( u->Equals( "str" ) );
 }
 
-// Destroy
 //------------------------------------------------------------------------------
-void TestUniquePtr::Destroy() const
+TEST_CASE( TestUniquePtr, Destroy )
 {
     UniquePtr<AString> u( FNEW( AString( "str" ) ) );
     u.Destroy(); // Manually free
     TEST_ASSERT( u.Get() == nullptr );
 }
 
-// ReleaseOwnership
 //------------------------------------------------------------------------------
-void TestUniquePtr::ReleaseOwnership() const
+TEST_CASE( TestUniquePtr, ReleaseOwnership )
 {
     UniquePtr<AString> u( FNEW( AString( "str" ) ) );
     AString * str = u.ReleaseOwnership();
@@ -72,9 +48,8 @@ void TestUniquePtr::ReleaseOwnership() const
     FDELETE( str );
 }
 
-// Replace
 //------------------------------------------------------------------------------
-void TestUniquePtr::Replace() const
+TEST_CASE( TestUniquePtr, Replace )
 {
     UniquePtr<AString> u( FNEW( AString( "str1" ) ) );
     u.Replace( FNEW( AString( "str2" ) ) );
@@ -82,9 +57,8 @@ void TestUniquePtr::Replace() const
     TEST_ASSERT( u->Equals( "str2" ) );
 }
 
-// Array
 //------------------------------------------------------------------------------
-void TestUniquePtr::ArrayOf() const
+TEST_CASE( TestUniquePtr, ArrayOf )
 {
     Array<UniquePtr<AString>> a;
     a.EmplaceBack( FNEW( AString( "str1" ) ) );

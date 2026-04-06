@@ -13,41 +13,12 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
-// TestExec
 //------------------------------------------------------------------------------
-class TestExec : public FBuildTest
+TEST_GROUP( TestExec, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void BuildHelperExe() const;
-    void Build_ExecCommand_ExpectedSuccesses() const;
-    void Build_ExecCommand_NoRebuild() const;
-    void Build_ExecCommand_SingleInputChange() const;
-    void Build_ExecCommand_MultipleInputChange() const;
-    void Build_ExecCommand_UseStdOut() const;
-    void Build_ExecCommand_ExpectedFailures() const;
-    void Build_ExecEnvCommand() const;
-    void Exclusions() const;
-    void PreBuildDependencies() const;
+public:
 };
 
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestExec )
-    REGISTER_TEST( BuildHelperExe )
-    REGISTER_TEST( Build_ExecCommand_ExpectedSuccesses )
-    REGISTER_TEST( Build_ExecCommand_NoRebuild )
-    REGISTER_TEST( Build_ExecCommand_SingleInputChange )
-    REGISTER_TEST( Build_ExecCommand_MultipleInputChange )
-    REGISTER_TEST( Build_ExecCommand_UseStdOut )
-    REGISTER_TEST( Build_ExecCommand_ExpectedFailures )
-    REGISTER_TEST( Build_ExecEnvCommand )
-    REGISTER_TEST( Exclusions )
-    REGISTER_TEST( PreBuildDependencies )
-REGISTER_TESTS_END
-
-// Helpers
 //------------------------------------------------------------------------------
 void CreateInputFile( const AString & target )
 {
@@ -57,9 +28,8 @@ void CreateInputFile( const AString & target )
     f.Close();
 }
 
-// BuildResource
 //------------------------------------------------------------------------------
-void TestExec::BuildHelperExe() const
+TEST_CASE( TestExec, BuildHelperExe )
 {
     // Make sure the helper executable will build properly
 
@@ -90,7 +60,7 @@ void TestExec::BuildHelperExe() const
 }
 
 //------------------------------------------------------------------------------
-void TestExec::Build_ExecCommand_ExpectedSuccesses() const
+TEST_CASE( TestExec, Build_ExecCommand_ExpectedSuccesses )
 {
     // Build all the exec commands that are expected to be successes
 
@@ -146,7 +116,7 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
 }
 
 //------------------------------------------------------------------------------
-void TestExec::Build_ExecCommand_NoRebuild() const
+TEST_CASE( TestExec, Build_ExecCommand_NoRebuild )
 {
     // Rebuild the exec commands
     // - Only the command with a non-existant inputfile should rebuild
@@ -172,7 +142,7 @@ void TestExec::Build_ExecCommand_NoRebuild() const
 }
 
 //------------------------------------------------------------------------------
-void TestExec::Build_ExecCommand_SingleInputChange() const
+TEST_CASE( TestExec, Build_ExecCommand_SingleInputChange )
 {
     // Rebuild one of the commands after a file has changed
     // - 1 execs should run this time (only asking one directly to run)
@@ -208,7 +178,7 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
 }
 
 //------------------------------------------------------------------------------
-void TestExec::Build_ExecCommand_MultipleInputChange() const
+TEST_CASE( TestExec, Build_ExecCommand_MultipleInputChange )
 {
     // Rebuild one of the commands after a file has changed
     // - 1 execs should run this time (only asking one directly to run)
@@ -264,7 +234,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
 }
 
 //------------------------------------------------------------------------------
-void TestExec::Build_ExecCommand_UseStdOut() const
+TEST_CASE( TestExec, Build_ExecCommand_UseStdOut )
 {
     // Make sure the stdout from the executable
     // did actually make it into the stdout file
@@ -287,7 +257,7 @@ void TestExec::Build_ExecCommand_UseStdOut() const
 }
 
 //------------------------------------------------------------------------------
-void TestExec::Build_ExecCommand_ExpectedFailures() const
+TEST_CASE( TestExec, Build_ExecCommand_ExpectedFailures )
 {
     // Build all the exec commands that are expected to be failures
     // - Output file not getting written should error
@@ -308,7 +278,7 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
 }
 
 //------------------------------------------------------------------------------
-void TestExec::Build_ExecEnvCommand() const
+TEST_CASE( TestExec, Build_ExecEnvCommand )
 {
     // Build execenv.exe
     FBuildTestOptions options;
@@ -327,9 +297,8 @@ void TestExec::Build_ExecEnvCommand() const
     CheckStatsNode( 1, 1, Node::EXEC_NODE );
 }
 
-// Exclusions
 //------------------------------------------------------------------------------
-void TestExec::Exclusions() const
+TEST_CASE( TestExec, Exclusions )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/Exclusions/fbuild.bff";
@@ -367,7 +336,7 @@ void TestExec::Exclusions() const
 }
 
 //------------------------------------------------------------------------------
-void TestExec::PreBuildDependencies() const
+TEST_CASE( TestExec, PreBuildDependencies )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/PreBuildDependencies/prebuilddependencies.bff";

@@ -9,45 +9,22 @@
 #include <Core/Process/Semaphore.h>
 #include <Core/Process/Thread.h>
 
-// TestSemaphore
 //------------------------------------------------------------------------------
-class TestSemaphore : public TestGroup
+TEST_GROUP( TestSemaphore, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void CreateDestroy() const;
-    void WaitForSignal() const;
-    void WaitTimeout() const;
-#if defined( __WINDOWS__ )
-    void MaxCount() const;
-#endif
-
+public:
     // Internal helpers
     static uint32_t WaitForSignal_Thread( void * userData );
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestSemaphore )
-    REGISTER_TEST( CreateDestroy )
-    REGISTER_TEST( WaitForSignal )
-    REGISTER_TEST( WaitTimeout )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( MaxCount )
-#endif
-REGISTER_TESTS_END
-
-// CreateDestroy
-//------------------------------------------------------------------------------
-void TestSemaphore::CreateDestroy() const
+TEST_CASE( TestSemaphore, CreateDestroy )
 {
     Semaphore s;
 }
 
-// WaitForSignal
 //------------------------------------------------------------------------------
-void TestSemaphore::WaitForSignal() const
+TEST_CASE( TestSemaphore, WaitForSignal )
 {
     Semaphore s;
 
@@ -65,7 +42,6 @@ void TestSemaphore::WaitForSignal() const
     t.Join();
 }
 
-// WaitForSignal_Thread
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestSemaphore::WaitForSignal_Thread( void * userData )
 {
@@ -74,9 +50,8 @@ void TestSemaphore::WaitForSignal() const
     return 0;
 }
 
-// WaitTimeout
 //------------------------------------------------------------------------------
-void TestSemaphore::WaitTimeout() const
+TEST_CASE( TestSemaphore, WaitTimeout )
 {
     const Timer t;
 
@@ -99,10 +74,9 @@ void TestSemaphore::WaitTimeout() const
     TEST_ASSERT( t.GetElapsed() > 0.025f ); // 25ms (allow wide margin of error)
 }
 
-// MaxCount
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-void TestSemaphore::MaxCount() const
+TEST_CASE( TestSemaphore, MaxCount )
 {
     // Only Windows supports a signal count limit for Semaphores
 

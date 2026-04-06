@@ -10,29 +10,14 @@
 #include "OSUI/OSMenu.h"
 #include "OSUI/OSWindow.h"
 
-// TestMenu
 //------------------------------------------------------------------------------
-class TestMenu : public TestGroup
+TEST_GROUP( TestMenu, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void Init() const;
-    void Items() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestMenu )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( Init )
-    REGISTER_TEST( Items )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestMenu::Empty() const
+TEST_CASE( TestMenu, Empty )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -45,9 +30,8 @@ void TestMenu::Empty() const
     OSMenu menu( &window );
 }
 
-// Init
 //------------------------------------------------------------------------------
-void TestMenu::Init() const
+TEST_CASE( TestMenu, Init )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -61,9 +45,8 @@ void TestMenu::Init() const
     menu.Init();
 }
 
-// Items
 //------------------------------------------------------------------------------
-void TestMenu::Items() const
+TEST_CASE( TestMenu, Items )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
