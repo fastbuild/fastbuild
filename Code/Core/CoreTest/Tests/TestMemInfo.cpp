@@ -30,7 +30,10 @@ TEST_CASE( TestMemInfo, GetSystemInfo )
     // Available can't be more than physical and should never be equal
     // as that would assume the OS and all running processes use zero
     // memory
-    TEST_ASSERT( info.m_AvailPhysMiB < info.m_TotalPhysMiB );
+    TEST_ASSERTM( info.m_AvailPhysMiB < info.m_TotalPhysMiB,
+                  "Avail %u, Total: %u",
+                  info.m_AvailPhysMiB,
+                  info.m_TotalPhysMiB );
 }
 
 //------------------------------------------------------------------------------
