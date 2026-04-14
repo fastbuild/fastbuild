@@ -45,7 +45,7 @@ AString::AString( uint32_t reserve )
 //------------------------------------------------------------------------------
 AString::AString( const AString & string )
 {
-    if ( string.m_ReferenceCount )
+    if ( string.m_ReferenceCount || string.m_Contents == s_EmptyString )
     {
         m_ReferenceCount = string.m_Contents != s_EmptyString ? string.m_ReferenceCount : nullptr;
         m_Contents = string.m_Contents;
@@ -60,7 +60,7 @@ AString::AString( const AString & string )
     else
     {
         // Source string doesn't support reference counting, so copy
-        UnsafeInitAsEmpty( string.GetLength() );
+        UnsafeInitAsEmpty( string.GetReserved() );
         Assign( string );
     }
 
@@ -475,6 +475,10 @@ void AString::Assign( const char * start, const char * end )
     ASSERT( start );
     ASSERT( end >= start );
     const uint32_t len = uint32_t( end - start );
+	if ( !IsOnlyOwner() )
+	{
+		ClearAndFreeMemory();
+	}
     if ( len > GetReserved() )
     {
         GrowNoCopy( len );
@@ -545,7 +549,7 @@ void AString::Assign( AString && string )
     if ( IsUsingSharedMemory() && string.IsUsingSharedMemory() )
     {
         // Other string supports shared memory, so we don't need to perform a deep copy.
-        if ( (void *)m_Contents == (void *)string.Get() )
+        if ( (void *)m_Contents == (void *)const_cast<const AString &>(string).Get() )
         {
             // Already pointing to the same shared memory. Just clear the other.
             ASSERT( ( m_ReferenceCount == string.m_ReferenceCount ) && ( m_Length == string.m_Length ) && ( m_Reserved == string.m_Reserved ) );
