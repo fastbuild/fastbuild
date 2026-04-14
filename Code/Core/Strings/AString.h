@@ -9,6 +9,7 @@
 #include "Core/Env/Assert.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
+#include "Core/Process/Atomic.h"
 
 // Typedefs
 //------------------------------------------------------------------------------
@@ -34,17 +35,18 @@ public:
     ~AString();
 
     [[nodiscard]] uint32_t GetLength() const { return m_Length; }
-    [[nodiscard]] uint32_t GetReserved() const { return ( m_ReservedAndFlags & kReservedMask ); }
+    [[nodiscard]] uint32_t GetReserved() const { return m_Reserved; }
     [[nodiscard]] bool IsEmpty() const { return ( m_Length == 0 ); }
 
     // C-style compatibility
-    [[nodiscard]] char * Get() { return m_Contents; }
+    [[nodiscard]] char * Get() { EnsureOnlyOwner(); return m_Contents; }
     [[nodiscard]] const char * Get() const { return m_Contents; }
-    [[nodiscard]] char * GetEnd() { return ( m_Contents + m_Length ); }
+    [[nodiscard]] char * GetEnd() { EnsureOnlyOwner(); return ( m_Contents + m_Length ); }
     [[nodiscard]] const char * GetEnd() const { return ( m_Contents + m_Length ); }
     [[nodiscard]] char & operator[]( size_t index )
     {
         ASSERT( index < m_Length );
+        EnsureOnlyOwner();
         return m_Contents[ index ];
     }
     [[nodiscard]] const char & operator[]( size_t index ) const
@@ -111,7 +113,13 @@ public:
     [[nodiscard]] bool operator<( const AString & other ) const { return ( Compare( other ) < 0 ); }
     [[nodiscard]] bool operator>( const AString & other ) const { return ( Compare( other ) > 0 ); }
 
-    [[nodiscard]] bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & kMemMustBeFreedFlag ) == kMemMustBeFreedFlag ); }
+    [[nodiscard]] bool MemoryMustBeFreed() const { return ( m_ReferenceCount != nullptr ); }
+    [[nodiscard]] bool IsUsingSharedMemory() const { return ( m_ReferenceCount != nullptr ) || ( m_Contents == s_EmptyString ); }
+    [[nodiscard]] bool IsOnlyOwner() const
+    {
+        return ( ( m_ReferenceCount != nullptr ) && ( m_ReferenceCount->Load() == 1 ) ) ||
+               ( ( m_ReferenceCount == nullptr ) && ( m_Contents != s_EmptyString ) );
+    }
 
     // Format
     AString & Format( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
@@ -146,32 +154,32 @@ public:
 
     // searching
     [[nodiscard]] const char * Find( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * Find( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->Find( c, startPos, endPos ) ); }
+    [[nodiscard]] char * Find( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->Find( c, startPos, endPos ) ); }
     [[nodiscard]] const char * Find( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * Find( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->Find( subString, startPos, endPos ) ); }
+    [[nodiscard]] char * Find( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->Find( subString, startPos, endPos ) ); }
     [[nodiscard]] const char * Find( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * Find( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->Find( subString, startPos, endPos ) ); }
+    [[nodiscard]] char * Find( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->Find( subString, startPos, endPos ) ); }
 
     [[nodiscard]] const char * FindI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindI( c, startPos, endPos ) ); }
+    [[nodiscard]] char * FindI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindI( c, startPos, endPos ) ); }
     [[nodiscard]] const char * FindI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindI( subString, startPos, endPos ) ); }
+    [[nodiscard]] char * FindI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindI( subString, startPos, endPos ) ); }
     [[nodiscard]] const char * FindI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindI( subString, startPos, endPos ) ); }
+    [[nodiscard]] char * FindI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindI( subString, startPos, endPos ) ); }
 
     [[nodiscard]] const char * FindLast( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindLast( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindLast( c, startPos, endPos ) ); }
+    [[nodiscard]] char * FindLast( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindLast( c, startPos, endPos ) ); }
     [[nodiscard]] const char * FindLast( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindLast( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindLast( subString, startPos, endPos ) ); }
+    [[nodiscard]] char * FindLast( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindLast( subString, startPos, endPos ) ); }
     [[nodiscard]] const char * FindLast( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindLast( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindLast( subString, startPos, endPos ) ); }
+    [[nodiscard]] char * FindLast( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindLast( subString, startPos, endPos ) ); }
 
     [[nodiscard]] const char * FindLastI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindLastI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindLastI( c, startPos, endPos ) ); }
+    [[nodiscard]] char * FindLastI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindLastI( c, startPos, endPos ) ); }
     [[nodiscard]] const char * FindLastI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindLastI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindLastI( subString, startPos, endPos ) ); }
+    [[nodiscard]] char * FindLastI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindLastI( subString, startPos, endPos ) ); }
     [[nodiscard]] const char * FindLastI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
-    [[nodiscard]] char * FindLastI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast<char *>( ( (const AString *)this )->FindLastI( subString, startPos, endPos ) ); }
+    [[nodiscard]] char * FindLastI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return ToMutableContentPtr( ( (const AString *)this )->FindLastI( subString, startPos, endPos ) ); }
 
     [[nodiscard]] bool EndsWith( char c ) const;
     [[nodiscard]] bool EndsWith( const char * string ) const;
@@ -208,26 +216,30 @@ public:
     [[nodiscard]] static bool IsNumber( char c ) { return ( ( c >= '0' ) && ( c <= '9' ) ); }
 
     // range iteration
-    [[nodiscard]] char * begin() { return m_Contents; }
-    [[nodiscard]] char * end() { return m_Contents + m_Length; }
+    [[nodiscard]] char * begin() { EnsureOnlyOwner(); return m_Contents; }
+    [[nodiscard]] char * end() { EnsureOnlyOwner(); return m_Contents + m_Length; }
     [[nodiscard]] const char * begin() const { return m_Contents; }
     [[nodiscard]] const char * end() const { return m_Contents + m_Length; }
 
-protected:
-    inline static const uint32_t kMemMustBeFreedFlag = 0x00000001;
-    inline static const uint32_t kReservedMask = 0xFFFFFFFE;
+private:
+    void UnsafeAllocateSharedMemory( uint32_t reserve );
+    void UnsafeReleaseSharedMemory();
+    static void AllocateSharedMemory( Atomic<uint32_t> * & referenceCount, char * & contents, uint32_t reserve );
+    static void ReleaseSharedMemory( const AString * string, Atomic<uint32_t> * referenceCount, const char * contents );
+    void UnsafeInitAsEmpty( uint32_t reserve );
+    void UnsafeAssignSharingWith( const AString& string );
 
-    void SetReserved( uint32_t reserved, bool mustFreeMemory )
-    {
-        ASSERT( ( reserved & kMemMustBeFreedFlag ) == 0 ); // ensure reserved does not use lower bit
-        m_ReservedAndFlags = ( reserved ^ ( mustFreeMemory ? (uint32_t)kMemMustBeFreedFlag : 0 ) );
-    }
+    void EnsureOnlyOwner();
+    char * ToMutableContentPtr( const char * pos );
+
+protected:
     NO_INLINE void Grow( uint32_t newLen );     // Grow capacity, transferring existing string data (for concatenation)
     NO_INLINE void GrowNoCopy( uint32_t newLen ); // Grow capacity, discarding existing string data (for assignment/construction)
 
+    Atomic<uint32_t> * m_ReferenceCount; // number of AStrings that share ownership of m_Contents, or nullptr if the empty string or m_Contents is not shared
     char * m_Contents; // always points to valid null terminated string (even when empty)
     uint32_t m_Length; // length in characters
-    uint32_t m_ReservedAndFlags; // reserved space in characters (even) and least significant bit used for static flag
+    uint32_t m_Reserved; // reserved space in characters
 
     static const char * const s_EmptyString;
     static const AString s_EmptyAString;

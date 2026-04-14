@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CLionExternalBuildManager">
+    <target id="0c8706e8-11ce-42ed-afb1-fe9d5eb0f7a8" name="fbuild CoreTest" defaultType="TOOL">
+      <configuration id="2f558642-76b9-4ec8-bf63-26d40ab2c85e" name="fbuild CoreTest">
+        <build type="TOOL">
+          <tool actionId="Tool_External Tools_fbuild CoreTest" />
+        </build>
+      </configuration>
+    </target>
+    <target id="bccd6642-1b6c-432a-a905-81a0397af4a4" name="fbuild" defaultType="TOOL">
+      <configuration id="08f47f9d-e73b-4a24-b229-7f2cdc6bb4ce" name="fbuild">
+        <build type="TOOL">
+          <tool actionId="Tool_External Tools_fbuild" />
+        </build>
+      </configuration>
+    </target>
+  </component>
+</project>

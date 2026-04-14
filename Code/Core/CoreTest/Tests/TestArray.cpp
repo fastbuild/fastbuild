@@ -1770,7 +1770,7 @@ void TestArray::MoveConstructorHelper() const
 
     // Move construct destination. SRC_CAST allows us to check Array/StackArray
     // behave the same
-    DST arrayB( Move( (SRC_CAST &)( arrayA ) ) );
+    DST arrayB( Move( arrayA ) );
 
     // Check expected amount of allocs occurred
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
@@ -1954,9 +1954,9 @@ TEST_CASE( TestArray, MoveWhenGrowing )
     // array will need to reallocate
     array.Append( string5 );
 
-    // Should be 2 allocs: one for resize and one for new string
+    // Should be 1 allocs: one for resize, but not for new string because unchanged strings share underlying data
     // but existing strings should have been moved
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 2u )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u )
 
     CheckConsistency( array );
 }

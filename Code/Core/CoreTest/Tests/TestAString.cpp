@@ -724,8 +724,8 @@ TEST_CASE( TestAString, FindLastI )
 TEST_CASE( TestAString, Format )
 {
     // Create a really long input string
-    AStackString longInput;
     const size_t longStringLen( 1024 * 1024 );
+    AStackString longInput( longStringLen );
     for ( size_t i = 0; i < longStringLen; ++i )
     {
         longInput += 'A';

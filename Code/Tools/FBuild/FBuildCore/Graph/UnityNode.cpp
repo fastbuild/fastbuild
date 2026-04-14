@@ -78,7 +78,7 @@ UnityNode::UnityFileAndOrigin::UnityFileAndOrigin() = default;
 
 // CONSTRUCTOR (UnityFileAndOrigin)
 //------------------------------------------------------------------------------
-UnityNode::UnityFileAndOrigin::UnityFileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
+UnityNode::UnityFileAndOrigin::UnityFileAndOrigin( const FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
     : m_Info( info )
     , m_DirListOrigin( dirListOrigin )
 {
@@ -654,7 +654,7 @@ bool UnityNode::GetFiles( Array<UnityFileAndOrigin> & files )
             const FileIO::FileInfo * const filesEnd = dirNode->GetFiles().End();
 
             // filter files in the dir list
-            for ( FileIO::FileInfo * filesIt = dirNode->GetFiles().Begin(); filesIt != filesEnd; ++filesIt )
+            for ( const FileIO::FileInfo * filesIt = dirNode->GetFiles().Begin(); filesIt != filesEnd; ++filesIt )
             {
                 bool keep = true;
 

@@ -933,9 +933,6 @@ bool BFFParser::StoreVariableArray( const AString & name,
             opToken->IsOperator( BFFOperator::Type::ePlus ) ||
             opToken->IsOperator( BFFOperator::Type::eMinus ) );
 
-    StackArray<AString> values;
-    StackArray<const BFFVariable *> structValues;
-
     // find existing
     const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
 
@@ -951,17 +948,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
         }
 
         // make sure existing is an array
-        if ( var->IsArrayOfStrings() )
-        {
-            // get values to start with
-            values = var->GetArrayOfStrings();
-        }
-        else if ( var->IsArrayOfStructs() )
-        {
-            // get values to start with
-            structValues = var->GetArrayOfStructs();
-        }
-        else
+        if ( !( var->IsArrayOfStrings() || var->IsArrayOfStructs() ) )
         {
             // TODO:B Improve this error to handle ArrayOfStructs case
             Error::Error_1027_CannotModify( opToken, name, var->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
@@ -987,6 +974,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
     }
 
     // Parse array of variables
+    StackArray<AString> values;
+    StackArray<BFFVariableScope> structValues;
     BFFTokenRange iter( tokenRange );
     while ( iter.IsAtEnd() == false )
     {
@@ -1113,7 +1102,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
                 varType = BFFVariable::VAR_ARRAY_OF_STRUCTS;
                 if ( varSrc->IsStruct() )
                 {
-                    structValues.Append( varSrc );
+                    structValues.Append( varSrc->GetStruct() );
                 }
                 else
                 {
@@ -1147,6 +1136,16 @@ bool BFFParser::StoreVariableArray( const AString & name,
         // continue looking for more vars...
     }
 
+	if ( ( opToken->IsOperator( kBFFVariableConcatenation ) || opToken->IsOperator( kBFFVariableSubtraction ) ) &&
+         ( values.IsEmpty() && structValues.IsEmpty() ) )
+	{
+		// no new values to append or subtract, so just copy the existing variable into the current stack frame.
+		BFFStackFrame::SetVar( var, *opToken, name, frame );
+		return true;
+	}
+
+	ASSERT( !opToken->IsOperator( kBFFVariableSubtraction ) );
+
     // should only have one populated array
     ASSERT( values.IsEmpty() || structValues.IsEmpty() );
 
@@ -1160,14 +1159,34 @@ bool BFFParser::StoreVariableArray( const AString & name,
     // Register this variable
     if ( varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
     {
-        // structs
-        BFFStackFrame::SetVarArrayOfStructs( name, *opToken, structValues, frame );
+		// structs
+		if ( opToken->IsOperator( kBFFVariableConcatenation ) )
+		{
+			ASSERT( var );
+			BFFVariable * mutableVar = BFFStackFrame::SetVar( var, *opToken, name, frame );
+			mutableVar->ConcatValue<BFFVariable::VAR_ARRAY_OF_STRUCTS, Array<BFFVariableScope> &&>( Move( structValues ), opToken );
+		}
+		else
+		{
+	        ASSERT( opToken->IsOperator( kBFFVariableAssignment ) );
+			BFFStackFrame::SetVarArrayOfStructs( name, *opToken, structValues, frame );
+		}
     }
     else
     {
         ASSERT( varType == BFFVariable::VAR_ARRAY_OF_STRINGS );
         // strings
-        BFFStackFrame::SetVarArrayOfStrings( name, *opToken, values, frame );
+		if ( opToken->IsOperator( kBFFVariableConcatenation ) )
+		{
+			ASSERT( var );
+			BFFVariable * mutableVar = BFFStackFrame::SetVar( var, *opToken, name, frame );
+			mutableVar->ConcatValue<BFFVariable::VAR_ARRAY_OF_STRINGS, Array<AString> &&>( Move( values ), opToken );
+		}
+		else
+		{
+	        ASSERT( opToken->IsOperator( kBFFVariableAssignment ) );
+        	BFFStackFrame::SetVarArrayOfStrings( name, *opToken, values, frame );
+        }
     }
 
     return true;
@@ -1213,7 +1232,7 @@ bool BFFParser::StoreVariableStruct( const AString & name,
     }
 
     // get variables defined in the scope
-    Array<BFFVariable *> & structMembers = stackFrame.GetLocalVariables();
+    BFFVariableScope & structMembers = stackFrame.GetLocalVariables();
 
     // Register this variable
     BFFStackFrame::SetVarStruct( name, *operatorToken, Move( structMembers ), frame ? frame : stackFrame.GetParent() );
@@ -1332,36 +1351,28 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
         if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
              ( srcType == BFFVariable::VAR_STRING ) )
         {
-            StackArray<AString> values;
-            values.SetCapacity( varDst->GetArrayOfStrings().GetSize() + 1 );
-            if ( concat )
-            {
-                if ( !dstIsEmpty )
-                {
-                    values.Append( varDst->GetArrayOfStrings() );
-                }
-                values.Append( varSrc->GetString() );
-            }
-            else if ( subtract )
-            {
-                if ( dstIsEmpty == false )
-                {
-                    for ( const AString & it : varDst->GetArrayOfStrings() )
-                    {
-                        if ( it != varSrc->GetString() ) // remove equal strings
-                        {
-                            values.Append( it );
-                        }
-                    }
-                }
-            }
-            else
-            {
-                values.Append( varSrc->GetString() );
-            }
-
-            BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), values, dstFrame );
-            return true;
+			if ( concat )
+			{
+				ASSERT( varDst != nullptr );
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Concat( *varSrc, operatorToken );
+			}
+			else if ( subtract )
+			{
+				ASSERT( varDst != nullptr );
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Subtract( *varSrc, operatorToken );
+			}
+			else if ( varDst )
+			{
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Set( *varSrc, operatorToken );
+			}
+			else
+			{
+            	BFFStackFrame::SetVar( varSrc, varSrc->GetToken(), dstName, dstFrame );
+	            return true;
+			}
         }
 
         // Struct to ArrayOfStructs or empty array, assignment or concatenation
@@ -1369,17 +1380,22 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
              ( srcType == BFFVariable::VAR_STRUCT ) &&
              !subtract )
         {
-            const uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStructs().GetSize() : 0 ) );
-            StackArray<const BFFVariable *> values;
-            values.SetCapacity( num );
-            if ( concat && !dstIsEmpty )
-            {
-                values.Append( varDst->GetArrayOfStructs() );
-            }
-            values.Append( varSrc );
-
-            BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), values, dstFrame );
-            return true;
+			if ( concat )
+			{
+				ASSERT( varDst != nullptr );
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Concat( *varSrc, operatorToken );
+			}
+			else if ( varDst )
+			{
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Set( *varSrc, operatorToken );
+			}
+			else
+			{
+				BFFStackFrame::SetVar( varSrc, varSrc->GetToken(), dstName, dstFrame );
+			}
+			return true;
         }
 
         // Empty array to ArrayOfStrings, assignment or concatenation
@@ -1387,13 +1403,13 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
         {
             if ( concat )
             {
-                // Avoid self-assignment by checking that the destination variable is not in destination scope.
-                const BFFVariable * var = ( dstFrame ? dstFrame : BFFStackFrame::GetCurrent() )->GetLocalVar( dstName );
-                if ( varDst != var )
-                {
-                    BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), varDst->GetArrayOfStrings(), dstFrame );
-                }
+				BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
             }
+			else if ( varDst )
+			{
+				BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+				return mutableDst->Set( *varSrc, operatorToken );
+			}
             else
             {
                 BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), Array<AString>(), dstFrame );
@@ -1406,16 +1422,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
         {
             if ( concat )
             {
-                // Avoid self-assignment by checking that the destination variable is not in destination scope.
-                const BFFVariable * var = ( dstFrame ? dstFrame : BFFStackFrame::GetCurrent() )->GetLocalVar( dstName );
-                if ( varDst != var )
-                {
-                    BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), varDst->GetArrayOfStructs(), dstFrame );
-                }
+				BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
             }
             else
             {
-                BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), Array<const BFFVariable *>(), dstFrame );
+                BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), Array<BFFVariableScope>(), dstFrame );
             }
             return true;
         }
@@ -1423,14 +1434,14 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
         // ArrayOfStrings to empty array, assignment or concatenation
         if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && !subtract )
         {
-            BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), varSrc->GetArrayOfStrings(), dstFrame );
+            BFFStackFrame::SetVar( varSrc, varSrc->GetToken(), dstName, dstFrame );
             return true;
         }
 
         // ArrayOfStructs to empty array, assignment or concatenation
         if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && !subtract )
         {
-            BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), varSrc->GetArrayOfStructs(), dstFrame );
+            BFFStackFrame::SetVar( varSrc, varSrc->GetToken(), dstName, dstFrame );
             return true;
         }
     }
@@ -1438,104 +1449,28 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
     {
         // Matching Src and Dst
 
-        if ( srcType == BFFVariable::VAR_STRING )
-        {
-            if ( concat )
-            {
-                AStackString<2048> finalValue( varDst->GetString() );
-                finalValue += varSrc->GetString();
-                BFFStackFrame::SetVarString( dstName, varSrc->GetToken(), finalValue, dstFrame );
-            }
-            else if ( subtract )
-            {
-                AStackString<2048> finalValue( varDst->GetString() );
-                finalValue.Replace( varSrc->GetString().Get(), "" );
-                BFFStackFrame::SetVarString( dstName, varSrc->GetToken(), finalValue, dstFrame );
-            }
-            else
-            {
-                BFFStackFrame::SetVarString( dstName, varSrc->GetToken(), varSrc->GetString(), dstFrame );
-            }
-            return true;
-        }
-
-        if ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && !subtract )
-        {
-            if ( concat )
-            {
-                const unsigned int num = (unsigned int)( varSrc->GetArrayOfStrings().GetSize() + varDst->GetArrayOfStrings().GetSize() );
-                StackArray<AString> values;
-                values.SetCapacity( num );
-                values.Append( varDst->GetArrayOfStrings() );
-                values.Append( varSrc->GetArrayOfStrings() );
-                BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), values, dstFrame );
-            }
-            else
-            {
-                BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), varSrc->GetArrayOfStrings(), dstFrame );
-            }
-            return true;
-        }
-
-        if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && !subtract )
-        {
-            if ( concat )
-            {
-                const unsigned int num = (unsigned int)( varSrc->GetArrayOfStructs().GetSize() + varDst->GetArrayOfStructs().GetSize() );
-                StackArray<const BFFVariable *> values;
-                values.SetCapacity( num );
-                values.Append( varDst->GetArrayOfStructs() );
-                values.Append( varSrc->GetArrayOfStructs() );
-                BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), values, dstFrame );
-            }
-            else
-            {
-                BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetToken(), varSrc->GetArrayOfStructs(), dstFrame );
-            }
-            return true;
-        }
-
-        if ( srcType == BFFVariable::VAR_INT )
-        {
-            int32_t newVal;
-            if ( concat )
-            {
-                newVal = varDst->GetInt() + varSrc->GetInt();
-            }
-            else if ( subtract )
-            {
-                newVal = varDst->GetInt() - varSrc->GetInt();
-            }
-            else
-            {
-                newVal = varSrc->GetInt();
-            }
-            return StoreVariableInt( dstName, &varSrc->GetToken(), newVal, dstFrame );
-        }
-
-        if ( ( srcType == BFFVariable::VAR_BOOL ) && !concat && !subtract )
-        {
-            return StoreVariableBool( dstName, &varSrc->GetToken(), varSrc->GetBool(), dstFrame );
-        }
-
-        if ( ( srcType == BFFVariable::VAR_STRUCT ) && !subtract )
-        {
-            const Array<const BFFVariable *> & srcMembers = varSrc->GetStructMembers();
-            if ( concat )
-            {
-                const BFFVariable * const newVar = BFFStackFrame::ConcatVars( dstName, varDst, varSrc, dstFrame, operatorToken );
-                if ( newVar == nullptr )
-                {
-                    return false; // ConcatVars will have emitted an error
-                }
-            }
-            else
-            {
-                // Register this variable
-                BFFStackFrame::SetVarStruct( dstName, varSrc->GetToken(), srcMembers, dstFrame );
-            }
-            return true;
-        }
+		if ( concat )
+		{
+            ASSERT( varDst != nullptr );
+            BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+            return mutableDst->Concat( *varSrc, operatorToken );
+		}
+		else if ( subtract )
+		{
+            ASSERT( varDst != nullptr );
+            BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+            return mutableDst->Subtract( *varSrc, operatorToken );
+		}
+		else if ( varDst )
+		{
+			BFFVariable * mutableDst = BFFStackFrame::SetVar( varDst, varSrc->GetToken(), dstName, dstFrame );
+			return mutableDst->Set( *varSrc, operatorToken );
+		}
+		else
+		{
+			BFFStackFrame::SetVar( varSrc, varSrc->GetToken(), dstName, dstFrame );
+		}
+		return true;
     }
 
     Error::Error_1034_OperationNotSupported( rhsToken,

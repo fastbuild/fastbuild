@@ -201,8 +201,8 @@ Struct * ReflectedPropertyStruct::GetStructInArray( void * object, size_t index 
 
     // get the array
     const size_t elementSize = GetPropertySize();
-    const void * arrayBase = (const void *)( (size_t)object + m_Offset );
-    const Array<char> * array = static_cast<const Array<char> *>( arrayBase );
+    void * arrayBase = (void *)( (size_t)object + m_Offset );
+    Array<char> * array = static_cast<Array<char> *>( arrayBase );
 
     // calculate the element offset
     const size_t offset = ( index * elementSize );
@@ -224,7 +224,7 @@ const Struct * ReflectedPropertyStruct::GetStructInArray( const void * object, s
 
     // calculate the element offset
     const size_t offset = ( index * elementSize );
-    return reinterpret_cast<Struct *>( array->Begin() + offset );
+    return reinterpret_cast<const Struct *>( array->Begin() + offset );
 }
 
 //------------------------------------------------------------------------------
