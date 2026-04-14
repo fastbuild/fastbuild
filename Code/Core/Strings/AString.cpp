@@ -1667,7 +1667,11 @@ void AString::Grow( uint32_t newLength )
     Atomic<uint32_t> * const oldReferenceCount = m_ReferenceCount;
     const char * const oldContents = m_Contents;
 
-    UnsafeAllocateSharedMemory( newLength );
+    // allocate space, rounded up to multiple of 2
+    const uint32_t amortizedReserve = ( GetReserved() * 2 );
+    const uint32_t reserve = Math::Max( amortizedReserve, newLength );
+
+    UnsafeAllocateSharedMemory( reserve );
 
     // transfer existing string data
     Copy( oldContents, m_Contents, m_Length ); // copy handles terminator
