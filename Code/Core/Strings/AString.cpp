@@ -63,8 +63,6 @@ AString::AString( const AString & string )
         UnsafeInitAsEmpty( string.GetReserved() );
         Assign( string );
     }
-
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 }
 
 // CONSTRUCTOR (AString &&)
@@ -85,8 +83,6 @@ AString::AString( AString && string )
         // Clear other string
         string.Assign( s_EmptyAString );
     }
-
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 }
 
 // CONSTRUCTOR (const char *)
@@ -97,8 +93,6 @@ AString::AString( const char * string )
     const uint32_t len = (uint32_t)StrLen( string );
     UnsafeInitAsEmpty( len );
     Assign( string, string + len );
-
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 }
 
 // CONSTRUCTOR (const char *, const char *)
@@ -110,8 +104,6 @@ AString::AString( const char * start, const char * end )
     const uint32_t len = uint32_t( end - start );
     UnsafeInitAsEmpty( len );
     Assign( start, end );
-
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 }
 
 // DESTRUCTOR
@@ -491,8 +483,6 @@ void AString::Assign( const char * start, const char * end )
     }
     Copy( start, m_Contents, len ); // handles terminator
     m_Length = len;
-
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 }
 
 // Assign (const AString &)
@@ -533,8 +523,6 @@ void AString::Assign( const AString & string )
     EnsureOnlyOwner(); // should do nothing if grew
     Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
     m_Length = len;
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
-
 }
 
 // Assign (AString &&)
@@ -582,7 +570,6 @@ void AString::Assign( AString && string )
 
     // Clear other string
     string.Clear();
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 }
 
 // Clear
@@ -690,7 +677,6 @@ AString & AString::operator+=( char c )
     EnsureOnlyOwner();
     m_Contents[ m_Length++ ] = c;
     m_Contents[ m_Length ] = '\000';
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 
     return *this;
 }
@@ -712,8 +698,6 @@ AString & AString::operator+=( const char * string )
         Copy( string, m_Contents + m_Length ); // handles terminator
         m_Length += suffixLen;
     }
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
-
     return *this;
 }
 
@@ -739,8 +723,6 @@ AString & AString::operator+=( const AString & string )
         Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator (NOTE: Using suffixLen to support embedded nuls)
         m_Length += suffixLen;
     }
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
-
     return *this;
 }
 
@@ -760,7 +742,6 @@ AString & AString::Append( const char * string, size_t len )
         Copy( string, m_Contents + m_Length, len ); // handles terminator
         m_Length = newLen;
     }
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 
     return *this;
 }
@@ -776,7 +757,6 @@ AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
     va_end( args );
 
     Append( buffer );
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 
     return *this;
 }
@@ -816,7 +796,6 @@ AString & AString::AppendList( const Array<AString> & list, char separator )
             --numSeparatorsRemaining;
         }
     }
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
 
     return *this;
 }
@@ -847,7 +826,6 @@ uint32_t AString::Replace( char from, char to, uint32_t maxReplaces )
         }
         pos++;
     }
-    ASSERT( ( StrNCmp( m_Contents, "x64", 4 ) != 0 ) || ( m_Length == 3 ) );
     return replaceCount;
 }
 
