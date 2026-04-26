@@ -27,6 +27,7 @@ private:
     virtual bool IsAFile() const override;
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual Node::BuildResult DoBuild( Job * job ) override;
+    virtual void Migrate( const Node & oldNode ) override;
 
     void EmitCompilationMessage( const AString & args ) const;
 

@@ -118,7 +118,8 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // + or - operator
-        if ( token->IsOperator( '+' ) || token->IsOperator( '-' ) )
+        if ( token->IsOperator( BFFOperator::Type::ePlus ) ||
+             token->IsOperator( BFFOperator::Type::eMinus ) )
         {
             // concatenation to/subtraction from last used variable
             if ( ParseUnnamedVariableModification( iter ) == false )
@@ -129,7 +130,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // New scope
-        if ( token->IsCurlyBracket( '{' ) )
+        if ( token->IsCurlyLeftBracket() )
         {
             // start an unnamed scope
             if ( ParseUnnamedScope( iter ) == false )
@@ -150,7 +151,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // User-defined function (declaration)
-        if ( token->IsKeyword( BFF_KEYWORD_FUNCTION ) )
+        if ( token->IsKeyword( BFFKeyword::Type::eFunction ) )
         {
             if ( ParseUserFunctionDeclaration( iter ) == false )
             {
@@ -319,17 +320,17 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
     iter++; // Consume operator
 
     // Check this is an operator we support
-    if ( ( opToken->IsOperator( kBFFVariableAssignment ) == false ) &&
-         ( opToken->IsOperator( kBFFVariableConcatenation ) == false ) &&
-         ( opToken->IsOperator( kBFFVariableSubtraction ) == false ) )
+    if ( ( opToken->IsOperator( BFFOperator::Type::eAssign ) == false ) &&
+         ( opToken->IsOperator( BFFOperator::Type::ePlus ) == false ) &&
+         ( opToken->IsOperator( BFFOperator::Type::eMinus ) == false ) )
     {
         Error::Error_1034_OperationNotSupported( opToken, BFFVariable::VAR_ANY, BFFVariable::VAR_ANY, opToken );
         return false;
     }
 
     // What operator type is this?
-    const bool concat = opToken->IsOperator( kBFFVariableConcatenation );
-    const bool subtract = opToken->IsOperator( kBFFVariableSubtraction );
+    const bool concat = opToken->IsOperator( BFFOperator::Type::ePlus );
+    const bool subtract = opToken->IsOperator( BFFOperator::Type::eMinus );
 
     const BFFToken * rhsToken = iter.GetCurrent();
     if ( rhsToken->IsString() )
@@ -337,7 +338,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         iter++; // Consume the rhs
         return StoreVariableString( varName, rhsToken, opToken, frame );
     }
-    else if ( rhsToken->IsCurlyBracket( '{' ) ) // Open Scope
+    else if ( rhsToken->IsCurlyLeftBracket() ) // Open Scope
     {
         BFFTokenRange bracedRange;
         if ( FindBracedRange( iter, bracedRange ) == false )
@@ -346,7 +347,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         }
         return StoreVariableArray( varName, bracedRange, opToken, frame );
     }
-    else if ( rhsToken->IsSquareBracket( '[' ) ) // Open Struct
+    else if ( rhsToken->IsSquareLeftBracket() ) // Open Struct
     {
         BFFTokenRange bracedRange;
         if ( FindBracedRange( iter, bracedRange ) == false )
@@ -456,7 +457,7 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
 
     // Is there a header?
     BFFTokenRange headerRange;
-    if ( iter->IsRoundBracket( '(' ) )
+    if ( iter->IsRoundLeftBracket() )
     {
         // Check if this function can have a header
         if ( func->AcceptsHeader() == false )
@@ -484,7 +485,7 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
     if ( func->NeedsBody() )
     {
         // Check for body start
-        if ( iter->IsCurlyBracket( '{' ) == false )
+        if ( iter->IsCurlyLeftBracket() == false )
         {
             Error::Error_1024_FunctionRequiresABody( iter.GetCurrent(), func );
             return false;
@@ -508,7 +509,7 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseUnnamedScope( BFFTokenRange & iter )
 {
-    ASSERT( iter->IsCurlyBracket( '{' ) );
+    ASSERT( iter->IsCurlyLeftBracket() );
 
     // create stack for scope
     BFFStackFrame stackFrame;
@@ -533,7 +534,7 @@ bool BFFParser::ParseUnnamedScope( BFFTokenRange & iter )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseUserFunctionDeclaration( BFFTokenRange & iter )
 {
-    ASSERT( iter->IsKeyword( BFF_KEYWORD_FUNCTION ) );
+    ASSERT( iter->IsKeyword( BFFKeyword::Type::eFunction ) );
     iter++;
 
     // Get function name
@@ -553,7 +554,7 @@ bool BFFParser::ParseUserFunctionDeclaration( BFFTokenRange & iter )
     }
 
     // Find parameter declaration range
-    if ( iter->IsRoundBracket( '(' ) == false )
+    if ( iter->IsRoundLeftBracket() == false )
     {
         Error::Error_1023_FunctionRequiresAHeader( iter.GetCurrent(), nullptr );
         return false;
@@ -600,7 +601,7 @@ bool BFFParser::ParseUserFunctionDeclaration( BFFTokenRange & iter )
     }
 
     // Find body
-    if ( iter->IsCurlyBracket( '{' ) == false )
+    if ( iter->IsCurlyLeftBracket() == false )
     {
         Error::Error_1024_FunctionRequiresABody( iter.GetCurrent(), nullptr );
         return false;
@@ -625,7 +626,7 @@ bool BFFParser::ParseUserFunctionCall( BFFTokenRange & iter, const BFFUserFuncti
     iter++;
 
     // Find arguments block
-    if ( iter->IsRoundBracket( '(' ) == false )
+    if ( iter->IsRoundLeftBracket() == false )
     {
         Error::Error_1110_ExpectedArgumentBlockForFunctionCall( iter.GetCurrent() );
         return false;
@@ -758,20 +759,13 @@ bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBraced
 {
     // Determine the matching close character
     const BFFToken * openToken = iter.GetCurrent();
-    char closeTokenChar;
-    switch ( openToken->GetType() )
-    {
-        case BFFTokenType::CurlyBracket: closeTokenChar = '}'; break;
-        case BFFTokenType::RoundBracket: closeTokenChar = ')'; break;
-        case BFFTokenType::SquareBracket: closeTokenChar = ']'; break;
-        default: ASSERT( false ); return false;
-    }
-
+    ASSERT( openToken->IsBrace() );
     // Take note of range begin
     const BFFToken * begin = iter.GetCurrent() + 1; // First token after brace
     if ( FindBracedRangeRecurse( iter ) == false )
     {
-        Error::Error_1002_MatchingClosingTokenNotFound( openToken, function, closeTokenChar );
+        const BFFToken::BraceType closeTokenChar = openToken->GetMatchingClosingBracketType();
+        Error::Error_1002_MatchingClosingTokenNotFound( openToken, function, static_cast<char>( closeTokenChar ) );
         return false;
     }
 
@@ -787,27 +781,17 @@ bool BFFParser::FindBracedRangeRecurse( BFFTokenRange & iter ) const
 {
     // Determine the matching close character
     const BFFToken * openToken = iter.GetCurrent();
-    char closeTokenChar;
-    switch ( openToken->GetType() )
-    {
-        case BFFTokenType::CurlyBracket: closeTokenChar = '}'; break;
-        case BFFTokenType::RoundBracket: closeTokenChar = ')'; break;
-        case BFFTokenType::SquareBracket: closeTokenChar = ']'; break;
-        default:
-        {
-            ASSERT( false );
-            return false;
-        }
-    }
+    ASSERT( openToken->IsBrace() );
+    const BFFToken::BraceType closeTokenChar = openToken->GetMatchingClosingBracketType();
     iter++;
 
     while ( iter.IsAtEnd() == false )
     {
         // found bracket?
-        if ( iter.GetCurrent()->GetType() == openToken->GetType() )
+        if ( iter.GetCurrent()->GetType() == BFFTokenType::Brace )
         {
             // Is it a close bracket?
-            if ( iter.GetCurrent()->GetValueString()[ 0 ] == closeTokenChar )
+            if ( iter.GetCurrent()->GetBraceType() == closeTokenChar )
             {
                 return true;
             }
@@ -851,8 +835,8 @@ bool BFFParser::StoreVariableString( const AString & name,
                             ( var->IsArrayOfStructs() && var->GetArrayOfStructs().IsEmpty() );
 
     // are we concatenating?
-    if ( opToken->IsOperator( kBFFVariableConcatenation ) ||
-         opToken->IsOperator( kBFFVariableSubtraction ) )
+    if ( opToken->IsOperator( BFFOperator::Type::ePlus ) ||
+         opToken->IsOperator( BFFOperator::Type::eMinus ) )
     {
         // variable must exist
         if ( var == nullptr )
@@ -866,7 +850,7 @@ bool BFFParser::StoreVariableString( const AString & name,
         {
             // OK - can concat String to String
             AStackString<1024> finalValue( var->GetString() );
-            if ( opToken->IsOperator( kBFFVariableConcatenation ) )
+            if ( opToken->IsOperator( BFFOperator::Type::ePlus ) )
             {
                 finalValue += value;
             }
@@ -883,7 +867,7 @@ bool BFFParser::StoreVariableString( const AString & name,
             // OK - can concat String to ArrayOfStrings or to empty array
             StackArray<AString> finalValues;
             finalValues.SetCapacity( var->GetArrayOfStrings().GetSize() + 1 );
-            if ( opToken->IsOperator( kBFFVariableConcatenation ) )
+            if ( opToken->IsOperator( BFFOperator::Type::ePlus ) )
             {
                 if ( !dstIsEmpty )
                 {
@@ -945,9 +929,9 @@ bool BFFParser::StoreVariableArray( const AString & name,
                                     const BFFToken * opToken,
                                     BFFStackFrame * frame )
 {
-    ASSERT( opToken->IsOperator( kBFFVariableAssignment ) ||
-            opToken->IsOperator( kBFFVariableConcatenation ) ||
-            opToken->IsOperator( kBFFVariableSubtraction ) );
+    ASSERT( opToken->IsOperator( BFFOperator::Type::eAssign ) ||
+            opToken->IsOperator( BFFOperator::Type::ePlus ) ||
+            opToken->IsOperator( BFFOperator::Type::eMinus ) );
 
     StackArray<AString> values;
     StackArray<const BFFVariable *> structValues;
@@ -956,8 +940,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
     const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
 
     // are we concatenating?
-    if ( opToken->IsOperator( kBFFVariableConcatenation ) ||
-         opToken->IsOperator( kBFFVariableSubtraction ) )
+    if ( opToken->IsOperator( BFFOperator::Type::ePlus ) ||
+         opToken->IsOperator( BFFOperator::Type::eMinus ) )
     {
         // variable must exist
         if ( var == nullptr )
@@ -1023,7 +1007,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             }
 
             // subtraction not supported on arrays
-            if ( opToken->IsOperator( kBFFVariableSubtraction ) )
+            if ( opToken->IsOperator( BFFOperator::Type::eMinus ) )
             {
                 Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                          varType,
@@ -1071,7 +1055,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             }
 
             // subtraction not supported on arrays
-            if ( opToken->IsOperator( kBFFVariableSubtraction ) )
+            if ( opToken->IsOperator( BFFOperator::Type::eMinus ) )
             {
                 Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                          varType,
@@ -1201,9 +1185,8 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 
     // are we concatenating?
     ASSERT( operatorToken->IsOperator() );
-    const char opChar = operatorToken->GetValueString()[ 0 ];
-    if ( ( opChar == kBFFVariableConcatenation ) ||
-         ( opChar == kBFFVariableSubtraction ) )
+    if ( operatorToken->IsOperator( BFFOperator::Type::ePlus ) ||
+         operatorToken->IsOperator( BFFOperator::Type::eMinus ) )
     {
         // concatenation of structs not supported
         Error::Error_1027_CannotModify( operatorToken, name, BFFVariable::VAR_STRUCT, BFFVariable::VAR_ANY );
@@ -1289,9 +1272,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
     // find dst var
     const BFFVariable * varDst = BFFStackFrame::GetVar( dstName, dstFrame );
 
-    const char opChar = operatorToken->GetValueString()[ 0 ];
-    const bool concat = ( opChar == kBFFVariableConcatenation );
-    const bool subtract = ( opChar == kBFFVariableSubtraction );
+    const bool concat = operatorToken->IsOperator( BFFOperator::Type::ePlus );
+    const bool subtract = operatorToken->IsOperator( BFFOperator::Type::eMinus );
 
     // concatenation?
     if ( concat || subtract )

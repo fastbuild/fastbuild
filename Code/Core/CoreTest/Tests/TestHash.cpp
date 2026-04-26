@@ -16,16 +16,10 @@
 
 #include <memory.h>
 
-// TestHash
 //------------------------------------------------------------------------------
-class TestHash : public TestGroup
+TEST_GROUP( TestHash, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void CompareHashTimes_Large() const;
-    void CompareHashTimes_Small() const;
-    void Accumulator() const;
+public:
 };
 
 //------------------------------------------------------------------------------
@@ -39,17 +33,8 @@ public:
 #endif
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestHash )
-    REGISTER_TEST( CompareHashTimes_Large )
-    REGISTER_TEST( CompareHashTimes_Small )
-    REGISTER_TEST( Accumulator )
-REGISTER_TESTS_END
-
-// CompareHashTimes_Large
-//------------------------------------------------------------------------------
-void TestHash::CompareHashTimes_Large() const
+TEST_CASE( TestHash, CompareHashTimes_Large )
 {
     // use pseudo-random (but deterministic) data
     const uint32_t seed = 0xB1234567;
@@ -169,9 +154,8 @@ void TestHash::CompareHashTimes_Large() const
     }
 }
 
-// CompareHashTimes_Small
 //------------------------------------------------------------------------------
-void TestHash::CompareHashTimes_Small() const
+TEST_CASE( TestHash, CompareHashTimes_Small )
 {
     // some different strings to hash
     const size_t numStrings = 1024 * 1024;
@@ -328,7 +312,7 @@ void TestHash::CompareHashTimes_Small() const
 }
 
 //------------------------------------------------------------------------------
-void TestHash::Accumulator() const
+TEST_CASE( TestHash, Accumulator )
 {
     const volatile uint64_t sentinel1 = 0xBAADF00D;
     xxHash3Accumulator accumulator;

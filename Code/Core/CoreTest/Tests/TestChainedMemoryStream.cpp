@@ -9,35 +9,14 @@
 #include "Core/FileIO/ChainedMemoryStream.h"
 #include "Core/Strings/AStackString.h"
 
-// TestChainedMemoryStream
 //------------------------------------------------------------------------------
-class TestChainedMemoryStream : public TestGroup
+TEST_GROUP( TestChainedMemoryStream, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void WriteOnePartialPage() const;
-    void WriteOneFullPage() const;
-    void WriteSeveralFullPages() const;
-    void WriteAcrossPageBoundary() const;
-    void WriteLargerThanPage() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestChainedMemoryStream )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( WriteOnePartialPage )
-    REGISTER_TEST( WriteOneFullPage )
-    REGISTER_TEST( WriteSeveralFullPages )
-    REGISTER_TEST( WriteAcrossPageBoundary )
-    REGISTER_TEST( WriteLargerThanPage )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestChainedMemoryStream::Empty() const
+TEST_CASE( TestChainedMemoryStream, Empty )
 {
     ChainedMemoryStream ms( 1024 );
     TEST_ASSERT( ms.GetFileSize() == 0 );
@@ -45,9 +24,8 @@ void TestChainedMemoryStream::Empty() const
     TEST_ASSERT( ms.GetNumPages() == 0 );
 }
 
-// WriteOnePartialPage
 //------------------------------------------------------------------------------
-void TestChainedMemoryStream::WriteOnePartialPage() const
+TEST_CASE( TestChainedMemoryStream, WriteOnePartialPage )
 {
     ChainedMemoryStream ms( 1024 );
     const uint64_t value = 0;
@@ -57,9 +35,8 @@ void TestChainedMemoryStream::WriteOnePartialPage() const
     TEST_ASSERT( ms.GetNumPages() == 1 );
 }
 
-// WriteBoundary
 //------------------------------------------------------------------------------
-void TestChainedMemoryStream::WriteOneFullPage() const
+TEST_CASE( TestChainedMemoryStream, WriteOneFullPage )
 {
     // Perform several writes that to fill exactly one page
     ChainedMemoryStream ms( 32 );
@@ -81,9 +58,8 @@ void TestChainedMemoryStream::WriteOneFullPage() const
     TEST_ASSERT( buffer == "ABCD1234zxcvbnm,zxcvbnm,QWERTYUI" );
 }
 
-// WriteSeveralPages
 //------------------------------------------------------------------------------
-void TestChainedMemoryStream::WriteSeveralFullPages() const
+TEST_CASE( TestChainedMemoryStream, WriteSeveralFullPages )
 {
     // Perform several writes that to fill several pages
     ChainedMemoryStream ms( 16 );
@@ -109,9 +85,8 @@ void TestChainedMemoryStream::WriteSeveralFullPages() const
     TEST_ASSERT( buffer == "ABCDEFGHxxxx----12345678qwertyui" );
 }
 
-// WriteAcrossPageBoundary
 //------------------------------------------------------------------------------
-void TestChainedMemoryStream::WriteAcrossPageBoundary() const
+TEST_CASE( TestChainedMemoryStream, WriteAcrossPageBoundary )
 {
     // Partially fill the first page
     ChainedMemoryStream ms( 32 );
@@ -143,9 +118,8 @@ void TestChainedMemoryStream::WriteAcrossPageBoundary() const
     TEST_ASSERT( buffer == "ABCDabcd12345678901234567890123456789012" );
 }
 
-// WriteLargerThanPage
 //------------------------------------------------------------------------------
-void TestChainedMemoryStream::WriteLargerThanPage() const
+TEST_CASE( TestChainedMemoryStream, WriteLargerThanPage )
 {
     // Perform a write that spans several pages
     const AStackString payload( "0123456789abcdef----QWERTYUIASDFGHJKZXCVBNM," );

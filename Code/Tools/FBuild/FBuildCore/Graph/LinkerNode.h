@@ -48,6 +48,8 @@ public:
 
     static bool IsStartOfLinkerArg( const AString & token, const char * arg );
 
+    static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
+
 protected:
     friend class TestLinker;
 
@@ -72,7 +74,6 @@ protected:
 
     void GetImportLibName( const AString & args, AString & importLibName ) const;
 
-    static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const Array<AString> & paths, const AString & lib );
     static bool GetOtherLibsArg( const char * arg,
@@ -111,7 +112,7 @@ protected:
     uint8_t m_ConcurrencyGroupIndex = 0; // Internal; placed here to use padding
     AString m_LinkerStampExe;
     AString m_LinkerStampExeArgs;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
     Array<AString> m_Environment;
     AString m_ConcurrencyGroupName;
 

@@ -9,17 +9,10 @@
 // Core
 #include "Core/Process/Thread.h"
 
-// TestThread
 //------------------------------------------------------------------------------
-class TestThread : public TestGroup
+TEST_GROUP( TestThread, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void Unused() const;
-    void StartAndJoin() const;
-
+public:
     // Helpers
     static uint32_t ThreadFunc( void * userData )
     {
@@ -28,25 +21,16 @@ private:
     }
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestThread )
-    REGISTER_TEST( Unused )
-    REGISTER_TEST( StartAndJoin )
-REGISTER_TESTS_END
-
-// Unused
-//------------------------------------------------------------------------------
-void TestThread::Unused() const
+TEST_CASE( TestThread, Unused )
 {
     // A thread object never used to create a thread
     Thread t;
     TEST_ASSERT( t.IsRunning() == false );
 }
 
-// StartAndJoin
 //------------------------------------------------------------------------------
-void TestThread::StartAndJoin() const
+TEST_CASE( TestThread, StartAndJoin )
 {
     // Test thread will return user data as return value
     const uint32_t userData = 99;

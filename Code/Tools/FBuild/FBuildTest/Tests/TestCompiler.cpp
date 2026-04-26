@@ -12,43 +12,15 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ToolManifest.h"
 
-// TestCompiler
 //------------------------------------------------------------------------------
-class TestCompiler : public FBuildTest
+TEST_GROUP( TestCompiler, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void BuildCompiler_Explicit() const;
-    void BuildCompiler_Implicit() const;
-    void ConflictingFiles1() const;
-    void ConflictingFiles2() const;
-    void ConflictingFiles3() const;
-    void ConflictingFiles4() const;
-    void CompilerExecutableAsDependency() const;
-    void CompilerExecutableAsDependency_NoRebuild() const;
-    void MultipleImplicitCompilers() const;
-
+public:
     uint64_t GetToolId( const FBuildForTest & fBuild ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCompiler )
-    REGISTER_TEST( BuildCompiler_Explicit )
-    REGISTER_TEST( BuildCompiler_Implicit )
-    REGISTER_TEST( ConflictingFiles1 )
-    REGISTER_TEST( ConflictingFiles2 )
-    REGISTER_TEST( ConflictingFiles3 )
-    REGISTER_TEST( ConflictingFiles4 )
-    REGISTER_TEST( CompilerExecutableAsDependency )
-    REGISTER_TEST( CompilerExecutableAsDependency_NoRebuild )
-    REGISTER_TEST( MultipleImplicitCompilers )
-REGISTER_TESTS_END
-
-// BuildCompiler_Explicit
-//------------------------------------------------------------------------------
-void TestCompiler::BuildCompiler_Explicit() const
+TEST_CASE( TestCompiler, BuildCompiler_Explicit )
 {
     uint64_t toolIdA;
     uint64_t toolIdB;
@@ -115,9 +87,8 @@ void TestCompiler::BuildCompiler_Explicit() const
     TEST_ASSERT( toolIdA == toolIdC );
 }
 
-// BuildCompiler_Implicit
 //------------------------------------------------------------------------------
-void TestCompiler::BuildCompiler_Implicit() const
+TEST_CASE( TestCompiler, BuildCompiler_Implicit )
 {
     uint64_t toolIdA;
     uint64_t toolIdB;
@@ -222,41 +193,36 @@ void TestCompiler::BuildCompiler_Implicit() const
     TEST_ASSERT( toolIdA == toolIdC );
 }
 
-// ConflictingFiles1
 //------------------------------------------------------------------------------
-void TestCompiler::ConflictingFiles1() const
+TEST_CASE( TestCompiler, ConflictingFiles1 )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict1.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Error #1100" ) );
 }
 
-// ConflictingFiles2
 //------------------------------------------------------------------------------
-void TestCompiler::ConflictingFiles2() const
+TEST_CASE( TestCompiler, ConflictingFiles2 )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict2.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Error #1100" ) );
 }
 
-// ConflictingFiles3
 //------------------------------------------------------------------------------
-void TestCompiler::ConflictingFiles3() const
+TEST_CASE( TestCompiler, ConflictingFiles3 )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict3.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Error #1100" ) );
 }
 
-// ConflictingFiles4
 //------------------------------------------------------------------------------
-void TestCompiler::ConflictingFiles4() const
+TEST_CASE( TestCompiler, ConflictingFiles4 )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict4.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Error #1100" ) );
 }
 
-// CompilerExecutableAsDependency
 //------------------------------------------------------------------------------
-void TestCompiler::CompilerExecutableAsDependency() const
+TEST_CASE( TestCompiler, CompilerExecutableAsDependency )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -274,9 +240,8 @@ void TestCompiler::CompilerExecutableAsDependency() const
     CheckStatsNode( 1, 1, Node::COMPILER_NODE );
 }
 
-// CompilerExecutableAsDependency_NoRebuild
 //------------------------------------------------------------------------------
-void TestCompiler::CompilerExecutableAsDependency_NoRebuild() const
+TEST_CASE( TestCompiler, CompilerExecutableAsDependency_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/compile.bff";
@@ -290,9 +255,8 @@ void TestCompiler::CompilerExecutableAsDependency_NoRebuild() const
     CheckStatsNode( 1, 0, Node::COMPILER_NODE );
 }
 
-// MultipleImplicitCompilers
 //------------------------------------------------------------------------------
-void TestCompiler::MultipleImplicitCompilers() const
+TEST_CASE( TestCompiler, MultipleImplicitCompilers )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/multipleimplicitcompilers.bff" );
 }

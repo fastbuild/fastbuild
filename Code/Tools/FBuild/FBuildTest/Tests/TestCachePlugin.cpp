@@ -12,39 +12,14 @@
 // Core
 #include "Core/Strings/AStackString.h"
 
-// TestCachePlugin
 //------------------------------------------------------------------------------
-class TestCachePlugin : public FBuildTest
+TEST_GROUP( TestCachePlugin, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void BuildPlugin() const;
-    void UsePlugin() const;
-    void PluginOptionsSavedToDB() const;
-
-    // Ensure old plugins with only mangled names on Windows continue to work)
-    void BuildPlugin_Old() const;
-    void UsePlugin_Old() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCachePlugin )
-    REGISTER_TEST( BuildPlugin )
-    REGISTER_TEST( UsePlugin )
-    REGISTER_TEST( PluginOptionsSavedToDB )
-
-    // Ensure old plugins with only mangled names on Windows continue to work)
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( BuildPlugin_Old )
-    REGISTER_TEST( UsePlugin_Old )
-#endif
-REGISTER_TESTS_END
-
-// BuildPlugin
-//------------------------------------------------------------------------------
-void TestCachePlugin::BuildPlugin() const
+TEST_CASE( TestCachePlugin, BuildPlugin )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -56,9 +31,8 @@ void TestCachePlugin::BuildPlugin() const
     TEST_ASSERT( fBuild.Build( "Plugin-DLL-X64" ) );
 }
 
-// UsePlugin
 //------------------------------------------------------------------------------
-void TestCachePlugin::UsePlugin() const
+TEST_CASE( TestCachePlugin, UsePlugin )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -117,9 +91,8 @@ void TestCachePlugin::UsePlugin() const
     }
 }
 
-// PluginOptionsSavedToDB
 //------------------------------------------------------------------------------
-void TestCachePlugin::PluginOptionsSavedToDB() const
+TEST_CASE( TestCachePlugin, PluginOptionsSavedToDB )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/OldInterface/useplugin.bff";
@@ -153,9 +126,9 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
     }
 }
 
-// BuildPlugin_Old
 //------------------------------------------------------------------------------
-void TestCachePlugin::BuildPlugin_Old() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCachePlugin, BuildPlugin_Old )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -166,10 +139,11 @@ void TestCachePlugin::BuildPlugin_Old() const
 
     TEST_ASSERT( fBuild.Build( "Plugin-DLL-X64" ) );
 }
+#endif
 
-// UsePlugin_Old
 //------------------------------------------------------------------------------
-void TestCachePlugin::UsePlugin_Old() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCachePlugin, UsePlugin_Old )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -214,5 +188,6 @@ void TestCachePlugin::UsePlugin_Old() const
         TEST_ASSERT( fBuild.CacheTrim() );
     }
 }
+#endif
 
 //------------------------------------------------------------------------------

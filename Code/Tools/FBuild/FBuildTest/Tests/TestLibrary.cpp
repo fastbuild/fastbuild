@@ -11,26 +11,14 @@
 // Core
 #include <Core/Strings/AStackString.h>
 
-// TestLibrary
 //------------------------------------------------------------------------------
-class TestLibrary : public FBuildTest
+TEST_GROUP( TestLibrary, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void LibraryType() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestLibrary )
-    REGISTER_TEST( LibraryType )    // Test library detection code
-REGISTER_TESTS_END
-
-// LibraryType
-//------------------------------------------------------------------------------
-void TestLibrary::LibraryType() const
+TEST_CASE( TestLibrary, LibraryType )
 {
 #define TEST_LIBRARYTYPE( exeName, expectedFlag ) \
     do \

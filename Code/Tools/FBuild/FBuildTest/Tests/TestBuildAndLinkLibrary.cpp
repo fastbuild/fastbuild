@@ -10,42 +10,22 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
 
-// TestBuildAndLinkLibrary
 //------------------------------------------------------------------------------
-class TestBuildAndLinkLibrary : public FBuildTest
+TEST_GROUP( TestBuildAndLinkLibrary, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestParseBFF() const;
-    void TestBuildLib() const;
-    void TestBuildLib_NoRebuild() const;
-    void TestBuildLib_NoRebuild_BFFChange() const;
-    void TestLibMerge() const;
-    void TestLibMerge_NoRebuild() const;
-    void TestLibMerge_NoRebuild_BFFChange() const;
-    void DeleteFile() const;
-
-    const char * GetBuildLibDBFileName() const { return "../tmp/Test/BuildAndLinkLibrary/buildlib.fdb"; }
-    const char * GetMergeLibDBFileName() const { return "../tmp/Test/BuildAndLinkLibrary/mergelib.fdb"; }
+public:
+    const char * GetBuildLibDBFileName() const
+    {
+        return "../tmp/Test/BuildAndLinkLibrary/buildlib.fdb";
+    }
+    const char * GetMergeLibDBFileName() const
+    {
+        return "../tmp/Test/BuildAndLinkLibrary/mergelib.fdb";
+    }
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestBuildAndLinkLibrary )
-    REGISTER_TEST( TestParseBFF )
-    REGISTER_TEST( TestBuildLib )
-    REGISTER_TEST( TestBuildLib_NoRebuild )
-    REGISTER_TEST( TestBuildLib_NoRebuild_BFFChange )
-    REGISTER_TEST( TestLibMerge )
-    REGISTER_TEST( TestLibMerge_NoRebuild )
-    REGISTER_TEST( TestLibMerge_NoRebuild_BFFChange )
-    REGISTER_TEST( DeleteFile )
-REGISTER_TESTS_END
-
-// TestStackFramesEmpty
-//------------------------------------------------------------------------------
-void TestBuildAndLinkLibrary::TestParseBFF() const
+TEST_CASE( TestBuildAndLinkLibrary, TestParseBFF )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
@@ -54,9 +34,8 @@ void TestBuildAndLinkLibrary::TestParseBFF() const
     TEST_ASSERT( fBuild.Initialize() );
 }
 
-// TestBuildLib
 //------------------------------------------------------------------------------
-void TestBuildAndLinkLibrary::TestBuildLib() const
+TEST_CASE( TestBuildAndLinkLibrary, TestBuildLib )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
@@ -100,9 +79,8 @@ void TestBuildAndLinkLibrary::TestBuildLib() const
     CheckStatsTotal( 13, 10 );
 }
 
-// TestBuildLib_NoRebuild
 //------------------------------------------------------------------------------
-void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild() const
+TEST_CASE( TestBuildAndLinkLibrary, TestBuildLib_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
@@ -124,9 +102,8 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild() const
     CheckStatsTotal( 13, 8 );
 }
 
-// TestBuildLib_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild_BFFChange() const
+TEST_CASE( TestBuildAndLinkLibrary, TestBuildLib_NoRebuild_BFFChange )
 {
     FBuildOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
@@ -150,9 +127,8 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild_BFFChange() const
     CheckStatsTotal( 13, 8 );
 }
 
-// TestLibMerge
 //------------------------------------------------------------------------------
-void TestBuildAndLinkLibrary::TestLibMerge() const
+TEST_CASE( TestBuildAndLinkLibrary, TestLibMerge )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -182,9 +158,8 @@ void TestBuildAndLinkLibrary::TestLibMerge() const
     CheckStatsTotal( 15, 12 );
 }
 
-// TestLibMerge_NoRebuild
 //------------------------------------------------------------------------------
-void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild() const
+TEST_CASE( TestBuildAndLinkLibrary, TestLibMerge_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
@@ -206,9 +181,8 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild() const
     CheckStatsTotal( 15, 7 );
 }
 
-// TestLibMerge_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild_BFFChange() const
+TEST_CASE( TestBuildAndLinkLibrary, TestLibMerge_NoRebuild_BFFChange )
 {
     FBuildOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
@@ -232,14 +206,14 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild_BFFChange() const
     CheckStatsTotal( 15, 7 );
 }
 
-// DeleteFile
 //------------------------------------------------------------------------------
-//  - Ensure that libraries are rebuilt when files are deleted
-void TestBuildAndLinkLibrary::DeleteFile() const
+TEST_CASE( TestBuildAndLinkLibrary, DeleteFile )
 {
+    //  - Ensure that libraries are rebuilt when files are deleted
     const char * fileA = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileA.cpp";
     const char * fileB = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileB.cpp";
     const char * database = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/fbuild.fdb";
+    const char * const configFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/DeleteFile/fbuild.bff";
 
     // Create two empty files
     {
@@ -256,7 +230,7 @@ void TestBuildAndLinkLibrary::DeleteFile() const
     {
         // Init
         FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/DeleteFile/fbuild.bff";
+        options.m_ConfigFile = configFile;
         options.m_ForceCleanBuild = true;
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -281,7 +255,7 @@ void TestBuildAndLinkLibrary::DeleteFile() const
     {
         // Init
         FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
+        options.m_ConfigFile = configFile;
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 

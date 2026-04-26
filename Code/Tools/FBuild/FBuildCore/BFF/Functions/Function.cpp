@@ -456,6 +456,24 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                             bool required,
                             const GetNodeListOptions & options ) const
 {
+    StackArray<Node *, 128> nodePointers;
+    if ( !GetNodeList( nodeGraph, iter, propertyName, nodePointers, required, options ) )
+    {
+        return false;
+    }
+
+    nodes.Add( nodePointers );
+    return true;
+}
+
+//------------------------------------------------------------------------------
+bool Function::GetNodeList( NodeGraph & nodeGraph,
+                            const BFFToken * iter,
+                            const char * propertyName,
+                            Array<Node *> & nodes,
+                            bool required,
+                            const GetNodeListOptions & options ) const
+{
     ASSERT( propertyName );
 
     const BFFVariable * var = BFFStackFrame::GetVar( propertyName );
@@ -749,6 +767,25 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                        Dependencies & nodes,
                                        const GetNodeListOptions & options )
 {
+    StackArray<Node *, 128> nodePointers;
+    if ( !GetNodeList( nodeGraph, iter, function, propertyName, nodeNames, nodePointers, options ) )
+    {
+        return false;
+    }
+
+    nodes.Add( nodePointers );
+    return true;
+}
+
+//------------------------------------------------------------------------------
+/*static*/ bool Function::GetNodeList( NodeGraph & nodeGraph,
+                                       const BFFToken * iter,
+                                       const Function * function,
+                                       const char * propertyName,
+                                       const Array<AString> & nodeNames,
+                                       Array<Node *> & nodes,
+                                       const GetNodeListOptions & options )
+{
     // Start a fresh pass operation so we can see which nodes we already visited
     Node::StartSecondaryTagSweep();
 
@@ -779,6 +816,28 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     // Start a fresh pass operation so we can see which nodes we already visited
     Node::StartSecondaryTagSweep();
 
+    StackArray<Node *> nodePointers;
+    if ( !GetNodeListInternal( nodeGraph, iter, function, propertyName, nodeName, nodePointers, options ) )
+    {
+        return false;
+    }
+
+    nodes.Add( nodePointers );
+    return true;
+}
+
+//------------------------------------------------------------------------------
+/*static*/ bool Function::GetNodeList( NodeGraph & nodeGraph,
+                                       const BFFToken * iter,
+                                       const Function * function,
+                                       const char * propertyName,
+                                       const AString & nodeName,
+                                       Array<Node *> & nodes,
+                                       const GetNodeListOptions & options )
+{
+    // Start a fresh pass operation so we can see which nodes we already visited
+    Node::StartSecondaryTagSweep();
+
     return GetNodeListInternal( nodeGraph, iter, function, propertyName, nodeName, nodes, options );
 }
 
@@ -788,7 +847,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                                const Function * function,
                                                const char * propertyName,
                                                const AString & nodeName,
-                                               Dependencies & nodes,
+                                               Array<Node *> & nodes,
                                                const GetNodeListOptions & options )
 {
     // get node
@@ -797,7 +856,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     {
         // not found - create a new file node
         n = nodeGraph.CreateNode<FileNode>( nodeName, iter );
-        nodes.Add( n );
+        nodes.Append( n );
         n->SetSecondaryTag();
         return true;
     }
@@ -811,7 +870,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
                                                const Function * function,
                                                const char * propertyName,
                                                Node * n,
-                                               Dependencies & nodes,
+                                               Array<Node *> & nodes,
                                                const GetNodeListOptions & options )
 {
     ASSERT( n );
@@ -830,7 +889,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     if ( n->IsAFile() )
     {
         // found file - just use as is
-        nodes.Add( n );
+        nodes.Append( n );
         return true;
     }
 
@@ -838,7 +897,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     if ( n->GetType() == Node::OBJECT_LIST_NODE )
     {
         // use as-is
-        nodes.Add( n );
+        nodes.Append( n );
         return true;
     }
 
@@ -849,7 +908,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( n->GetType() == Node::COPY_DIR_NODE )
         {
             // use as-is
-            nodes.Add( n );
+            nodes.Append( n );
             return true;
         }
     }
@@ -859,7 +918,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( n->GetType() == Node::REMOVE_DIR_NODE )
         {
             // use as-is
-            nodes.Add( n );
+            nodes.Append( n );
             return true;
         }
     }
@@ -869,7 +928,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( n->GetType() == Node::UNITY_NODE )
         {
             // use as-is
-            nodes.Add( n );
+            nodes.Append( n );
             return true;
         }
     }
@@ -879,7 +938,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( n->GetType() == Node::COMPILER_NODE )
         {
             // use as-is
-            nodes.Add( n );
+            nodes.Append( n );
             return true;
         }
     }
@@ -1145,6 +1204,10 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
                 return PopulateArrayOfStructs( nodeGraph, iter, base, property, variable );
             }
             break;
+        }
+        case PT_CUSTOM_1:
+        {
+            return PopulateCustom( nodeGraph, iter, base, property, variable );
         }
         default:
         {
@@ -1518,6 +1581,69 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
 
     Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRUCT, BFFVariable::VAR_ARRAY_OF_STRUCTS );
     return false;
+}
+
+//------------------------------------------------------------------------------
+bool Function::PopulateCustom( NodeGraph & nodeGraph,
+                               const BFFToken * iter,
+                               void * base,
+                               const ReflectedProperty & property,
+                               const BFFVariable * variable ) const
+{
+    AStackString propertyName;
+    propertyName += '.';
+    propertyName += property.GetName();
+
+    // Get list of nodes
+    const bool required = ( property.HasMetaData<Meta_Required>() != nullptr );
+    StackArray<Node *, 128> nodes;
+    GetNodeListOptions options;
+    options.m_AllowCopyDirNodes = true;
+    options.m_AllowUnityNodes = true;
+    options.m_AllowRemoveDirNodes = true;
+    options.m_AllowCompilerNodes = true;
+    options.m_RemoveDuplicates = true;
+    if ( !GetNodeList( nodeGraph,
+                       iter,
+                       propertyName.Get(),
+                       nodes,
+                       required,
+                       options ) )
+    {
+        return false; // GetNodeList will have emitted an error
+    }
+
+    if ( property.IsArray() )
+    {
+        Array<Node *> * dst = property.GetPtrToArray<Node *>( base );
+        dst->Clear();
+        dst->SetCapacity( nodes.GetSize() );
+        dst->Append( nodes );
+    }
+    else
+    {
+        Node ** dst = property.GetPtrToPropertyCustom<Node *>( base );
+        if ( nodes.IsEmpty() )
+        {
+            // If not required, can be not set
+            *dst = nullptr;
+        }
+        else if ( nodes.GetSize() == 1 )
+        {
+            *dst = nodes[ 0 ];
+        }
+        else
+        {
+            // Property supports a single item, but an Array was provided
+            Error::Error_1050_PropertyMustBeOfType( iter,
+                                                    this,
+                                                    variable->GetName().Get(),
+                                                    BFFVariable::VAR_ARRAY_OF_STRINGS,
+                                                    BFFVariable::VAR_STRING );
+            return false;
+        }
+    }
+    return true;
 }
 
 // PopulateArrayOfStructsElement

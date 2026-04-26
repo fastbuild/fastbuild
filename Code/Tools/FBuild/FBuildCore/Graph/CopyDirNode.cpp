@@ -38,10 +38,7 @@ CopyDirNode::CopyDirNode()
 /*virtual*/ bool CopyDirNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // .CompilerInputPath
     Dependencies sourcePaths;
@@ -89,13 +86,6 @@ CopyDirNode::~CopyDirNode() = default;
 
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
-    Array<AString> preBuildDependencyNames;
-    preBuildDependencyNames.SetCapacity( m_PreBuildDependencies.GetSize() );
-    for ( const Dependency & dep : m_PreBuildDependencies )
-    {
-        preBuildDependencyNames.Append( dep.GetNode()->GetName() );
-    }
-
     // Iterate all the DirectoryListNodes
     for ( const Dependency & dep : m_StaticDependencies )
     {
@@ -133,7 +123,7 @@ CopyDirNode::~CopyDirNode() = default;
             {
                 CopyFileNode * copyFileNode = nodeGraph.CreateNode<CopyFileNode>( dstFile );
                 copyFileNode->m_Source = srcFileNode->GetName();
-                copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames; // inherit PreBuildDependencies
+                copyFileNode->m_PreBuildDependencyNames = m_PreBuildDependencyNames; // inherit PreBuildDependencies
                 const BFFToken * token = nullptr;
                 if ( !copyFileNode->Initialize( nodeGraph, token, nullptr ) )
                 {

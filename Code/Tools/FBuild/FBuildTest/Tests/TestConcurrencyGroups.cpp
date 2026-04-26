@@ -11,33 +11,14 @@
 // Core
 #include "Core/Strings/AStackString.h"
 
-// TestConcurrencyGroups
 //------------------------------------------------------------------------------
-class TestConcurrencyGroups : public FBuildTest
+TEST_GROUP( TestConcurrencyGroups, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TooManyGroups() const;
-    void DuplicateGroupName() const;
-    void NoLimitsSet() const;
-    void UndefinedGroup() const;
-    void EnforceLimit() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestConcurrencyGroups )
-    REGISTER_TEST( TooManyGroups )
-    REGISTER_TEST( DuplicateGroupName )
-    REGISTER_TEST( NoLimitsSet )
-    REGISTER_TEST( UndefinedGroup )
-    REGISTER_TEST( EnforceLimit )
-REGISTER_TESTS_END
-
-// TooManyGroups
-//------------------------------------------------------------------------------
-void TestConcurrencyGroups::TooManyGroups() const
+TEST_CASE( TestConcurrencyGroups, TooManyGroups )
 {
     // Generate a BFF with too many Concurrency Groups and verify the correct
     // error is reported.
@@ -62,9 +43,8 @@ void TestConcurrencyGroups::TooManyGroups() const
     TEST_PARSE_FAIL( bff.Get(), "Error #1600" );
 }
 
-// DuplicateGroupName
 //------------------------------------------------------------------------------
-void TestConcurrencyGroups::DuplicateGroupName() const
+TEST_CASE( TestConcurrencyGroups, DuplicateGroupName )
 {
     // Ensure duplicate/conflicting Concurrency Group names report an
     // appropriate error.
@@ -77,9 +57,8 @@ void TestConcurrencyGroups::DuplicateGroupName() const
                      "Error #1601" );
 }
 
-// NoLimitsSet
 //------------------------------------------------------------------------------
-void TestConcurrencyGroups::NoLimitsSet() const
+TEST_CASE( TestConcurrencyGroups, NoLimitsSet )
 {
     // Ensure Concurrency Groups that don't properly define a concurrency limit
     // report an appropriate error.
@@ -103,9 +82,8 @@ void TestConcurrencyGroups::NoLimitsSet() const
                    "}" );
 }
 
-// UndefinedGroup
 //------------------------------------------------------------------------------
-void TestConcurrencyGroups::UndefinedGroup() const
+TEST_CASE( TestConcurrencyGroups, UndefinedGroup )
 {
     // Ensure references to an undefined Concurrency Group give an explicit
     // error.
@@ -118,9 +96,8 @@ void TestConcurrencyGroups::UndefinedGroup() const
                      "Error #1603" );
 }
 
-// EnforceLimit
 //------------------------------------------------------------------------------
-void TestConcurrencyGroups::EnforceLimit() const
+TEST_CASE( TestConcurrencyGroups, EnforceLimit )
 {
     // Perform a build that would fail if concurrency limits were not properly
     // enforced.

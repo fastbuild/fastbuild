@@ -13,29 +13,14 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
 
-// TestTextFile
 //------------------------------------------------------------------------------
-class TestTextFile : public FBuildTest
+TEST_GROUP( TestTextFile, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Build() const;
-    void Build_NoRebuild() const;
-    void Build_NoRebuild_BFFChange() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestTextFile )
-    REGISTER_TEST( Build )
-    REGISTER_TEST( Build_NoRebuild )
-    REGISTER_TEST( Build_NoRebuild_BFFChange )
-REGISTER_TESTS_END
-
-// Build
-//------------------------------------------------------------------------------
-void TestTextFile::Build() const
+TEST_CASE( TestTextFile, Build )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTextFile/fbuild.bff";
@@ -53,9 +38,8 @@ void TestTextFile::Build() const
     CheckStatsTotal( 2, 2 );
 }
 
-// Build_NoRebuild
 //------------------------------------------------------------------------------
-void TestTextFile::Build_NoRebuild() const
+TEST_CASE( TestTextFile, Build_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTextFile/fbuild.bff";
@@ -71,9 +55,8 @@ void TestTextFile::Build_NoRebuild() const
     CheckStatsTotal( 2, 1 );
 }
 
-// Build_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestTextFile::Build_NoRebuild_BFFChange() const
+TEST_CASE( TestTextFile, Build_NoRebuild_BFFChange )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTextFile/fbuild.bff";

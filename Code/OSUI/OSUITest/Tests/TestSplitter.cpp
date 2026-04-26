@@ -10,27 +10,14 @@
 #include "OSUI/OSSplitter.h"
 #include "OSUI/OSWindow.h"
 
-// TestSplitter
 //------------------------------------------------------------------------------
-class TestSplitter : public TestGroup
+TEST_GROUP( TestSplitter, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void Init() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestSplitter )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( Init )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestSplitter::Empty() const
+TEST_CASE( TestSplitter, Empty )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -43,9 +30,8 @@ void TestSplitter::Empty() const
     OSSplitter splitter( &window );
 }
 
-// Init
 //------------------------------------------------------------------------------
-void TestSplitter::Init() const
+TEST_CASE( TestSplitter, Init )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS

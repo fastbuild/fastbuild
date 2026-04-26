@@ -9,35 +9,14 @@
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Strings/AStackString.h"
 
-// TestMemoryStream
 //------------------------------------------------------------------------------
-class TestMemoryStream : public TestGroup
+TEST_GROUP( TestMemoryStream, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void InitiallyEmpty() const;
-    void InitialBuffer() const;
-    void Reset() const;
-    void MoveConstructor() const;
-    void MoveAssignment() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestMemoryStream )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( InitiallyEmpty )
-    REGISTER_TEST( InitialBuffer )
-    REGISTER_TEST( Reset )
-    REGISTER_TEST( MoveConstructor )
-    REGISTER_TEST( MoveAssignment )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestMemoryStream::Empty() const
+TEST_CASE( TestMemoryStream, Empty )
 {
     MemoryStream ms;
     TEST_ASSERT( ms.GetData() == nullptr );
@@ -47,7 +26,7 @@ void TestMemoryStream::Empty() const
 }
 
 //------------------------------------------------------------------------------
-void TestMemoryStream::InitiallyEmpty() const
+TEST_CASE( TestMemoryStream, InitiallyEmpty )
 {
     // Start empty and write ensure growth from no initial buffer is handled
     // correctly
@@ -60,9 +39,8 @@ void TestMemoryStream::InitiallyEmpty() const
     TEST_ASSERT( ms.GetSize() == ms.GetFileSize() );
 }
 
-// InitialBuffer
 //------------------------------------------------------------------------------
-void TestMemoryStream::InitialBuffer() const
+TEST_CASE( TestMemoryStream, InitialBuffer )
 {
     MemoryStream ms( 1024 );
     TEST_ASSERT( ms.GetData() != nullptr );
@@ -71,9 +49,8 @@ void TestMemoryStream::InitialBuffer() const
     TEST_ASSERT( ms.GetSize() == ms.GetFileSize() );
 }
 
-// Reset
 //------------------------------------------------------------------------------
-void TestMemoryStream::Reset() const
+TEST_CASE( TestMemoryStream, Reset )
 {
     MemoryStream ms;
     ms.Write( static_cast<uint32_t>( 1u ) );
@@ -89,9 +66,8 @@ void TestMemoryStream::Reset() const
     TEST_ASSERT( ms.GetSize() == ms.GetFileSize() );
 }
 
-// MoveConstructor
 //------------------------------------------------------------------------------
-void TestMemoryStream::MoveConstructor() const
+TEST_CASE( TestMemoryStream, MoveConstructor )
 {
     MemoryStream ms1;
     ms1.Write( static_cast<uint32_t>( 1u ) );
@@ -113,9 +89,8 @@ void TestMemoryStream::MoveConstructor() const
     PRAGMA_DISABLE_POP_MSVC
 }
 
-// MoveAssignment
 //------------------------------------------------------------------------------
-void TestMemoryStream::MoveAssignment() const
+TEST_CASE( TestMemoryStream, MoveAssignment )
 {
     MemoryStream ms1;
     ms1.Write( static_cast<uint32_t>( 1u ) );

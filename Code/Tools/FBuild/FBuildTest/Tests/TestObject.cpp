@@ -20,48 +20,14 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
-// TestObject
 //------------------------------------------------------------------------------
-class TestObject : public FBuildTest
+TEST_GROUP( TestObject, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void MSVCArgHelpers() const;
-    void Preprocessor() const;
-    void TestStaleDynamicDeps() const;
-    void ModTimeChangeBackwards() const;
-    void CacheUsingRelativePaths() const;
-    void SourceMapping() const;
-    void ClangExplicitLanguageType() const;
-    void ClangDependencyArgs() const;
-    void CLDependencyArgs() const;
-    void OwnerObjectList() const;
-    void OwnerObjectListPCH() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestObject )
-    REGISTER_TEST( MSVCArgHelpers )             // Test functions that check for MSVC args
-    REGISTER_TEST( Preprocessor )
-    REGISTER_TEST( TestStaleDynamicDeps )       // Test dynamic deps are cleared when necessary
-    REGISTER_TEST( ModTimeChangeBackwards )
-    REGISTER_TEST( CacheUsingRelativePaths )
-    REGISTER_TEST( SourceMapping )
-    REGISTER_TEST( ClangExplicitLanguageType )
-    REGISTER_TEST( ClangDependencyArgs )
-#if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
-    REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
-#endif
-    REGISTER_TEST( OwnerObjectList )
-    REGISTER_TEST( OwnerObjectListPCH )
-REGISTER_TESTS_END
-
-// MSVCArgHelpers
-//------------------------------------------------------------------------------
-void TestObject::MSVCArgHelpers() const
+TEST_CASE( TestObject, MSVCArgHelpers )
 {
     // Exact match args, using /
     {
@@ -88,9 +54,8 @@ void TestObject::MSVCArgHelpers() const
     }
 }
 
-// Preprocessor
 //------------------------------------------------------------------------------
-void TestObject::Preprocessor() const
+TEST_CASE( TestObject, Preprocessor )
 {
     const char * configFile = "Tools/FBuild/FBuildTest/Data/TestObject/CustomPreprocessor/custompreprocessor.bff";
     const char * database = "../tmp/Test/Object/CustomPreprocessor/fbuild.fdb";
@@ -130,9 +95,8 @@ void TestObject::Preprocessor() const
     }
 }
 
-// TestStaleDynamicDeps
 //------------------------------------------------------------------------------
-void TestObject::TestStaleDynamicDeps() const
+TEST_CASE( TestObject, TestStaleDynamicDeps )
 {
     const char * fileA = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
     const char * fileB = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
@@ -209,11 +173,10 @@ void TestObject::TestStaleDynamicDeps() const
     }
 }
 
-// ModTimeChangeBackwards
 //------------------------------------------------------------------------------
-//  - Ensure a file rebuilds if the time changes into the past
-void TestObject::ModTimeChangeBackwards() const
+TEST_CASE( TestObject, ModTimeChangeBackwards )
 {
+    //  - Ensure a file rebuilds if the time changes into the past
     const AStackString fileA( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileA.cpp" );
     const AStackString fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
     const char * database = "../tmp/Test/Object/ModTimeChangeBackwards/fbuild.fdb";
@@ -330,9 +293,8 @@ void TestObject::ModTimeChangeBackwards() const
     }
 }
 
-// CacheUsingRelativePaths
 //------------------------------------------------------------------------------
-void TestObject::CacheUsingRelativePaths() const
+TEST_CASE( TestObject, CacheUsingRelativePaths )
 {
     // Source files
     const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestObject/CacheUsingRelativePaths/";
@@ -435,9 +397,8 @@ void TestObject::CacheUsingRelativePaths() const
     }
 }
 
-// SourceMapping
 //------------------------------------------------------------------------------
-void TestObject::SourceMapping() const
+TEST_CASE( TestObject, SourceMapping )
 {
     // Source files
     const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestObject/SourceMapping/";
@@ -498,9 +459,8 @@ void TestObject::SourceMapping() const
     }
 }
 
-// ClangExplicitLanguageType
 //------------------------------------------------------------------------------
-void TestObject::ClangExplicitLanguageType() const
+TEST_CASE( TestObject, ClangExplicitLanguageType )
 {
     // Ensure explicitly set language args ("-x c++" etc) are replaced with the
     // correct equivalent for preprocessed code ("-x c++-cpp-output" etc)
@@ -541,9 +501,8 @@ void TestObject::ClangExplicitLanguageType() const
     }
 }
 
-// ClangDependencyArgs
 //------------------------------------------------------------------------------
-void TestObject::ClangDependencyArgs() const
+TEST_CASE( TestObject, ClangDependencyArgs )
 {
     // Ensure explicitly dependency options are removed from the second pass of
     // compilation. Some integrations (like Unreal) use these commands and process
@@ -585,9 +544,9 @@ void TestObject::ClangDependencyArgs() const
     }
 }
 
-// CLDependencyArgs
 //------------------------------------------------------------------------------
-void TestObject::CLDependencyArgs() const
+#if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
+TEST_CASE( TestObject, CLDependencyArgs )
 {
     // Ensure explicit dependency options are removed from the second pass of
     // compilation. Some integrations (like Unreal) use these commands and process
@@ -680,9 +639,10 @@ void TestObject::CLDependencyArgs() const
         TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
     }
 }
+#endif
 
 //------------------------------------------------------------------------------
-void TestObject::OwnerObjectList() const
+TEST_CASE( TestObject, OwnerObjectList )
 {
     // Check behavior of properties stored in OwnerObjectList
 
@@ -787,7 +747,7 @@ void TestObject::OwnerObjectList() const
 }
 
 //------------------------------------------------------------------------------
-void TestObject::OwnerObjectListPCH() const
+TEST_CASE( TestObject, OwnerObjectListPCH )
 {
     // Check behavior of properties stored in OwnerObjectList
 

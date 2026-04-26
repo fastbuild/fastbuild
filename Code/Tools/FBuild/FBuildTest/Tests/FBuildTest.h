@@ -18,10 +18,10 @@ struct FBuildStats;
 
 // FBuildTest
 //------------------------------------------------------------------------------
-class FBuildTest : public TestGroup
+class FBuildTest : public TestGroupTest
 {
 protected:
-    FBuildTest();
+    explicit FBuildTest( TestGroup * testGroup );
 
     virtual void PreTest() const override;
     virtual void PostTest() const override;

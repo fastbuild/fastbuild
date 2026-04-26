@@ -58,6 +58,10 @@ inline constexpr PropertyType GetPropertyType( CompilerInfoNode * const * )
 {
     return PT_CUSTOM_1;
 }
+inline constexpr PropertyType GetPropertyType( Node * const * )
+{
+    return PT_CUSTOM_1;
+}
 
 // FBuild
 //------------------------------------------------------------------------------
@@ -261,10 +265,6 @@ protected:
 
     virtual void Migrate( const Node & oldNode );
 
-    bool InitializePreBuildDependencies( NodeGraph & nodeGraph,
-                                         const BFFToken * iter,
-                                         const Function * function,
-                                         const Array<AString> & preBuildDependencyNames );
     bool InitializeConcurrencyGroup( NodeGraph & nodeGraph,
                                      const BFFToken * iter,
                                      const Function * function,

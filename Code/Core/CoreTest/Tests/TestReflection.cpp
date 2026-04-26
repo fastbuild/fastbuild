@@ -18,33 +18,11 @@
 // system
 #include <memory.h>
 
-// TestReflection
 //------------------------------------------------------------------------------
-class TestReflection : public TestGroup
+TEST_GROUP( TestReflection, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void IsArrayProperty() const;
-    void IsStruct() const;
-    void GetStructType() const;
-    void TestGetSet() const;
-    void TestInheritance() const;
-    void MetaData() const;
-    void ArraySize() const;
+public:
 };
-
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestReflection )
-    REGISTER_TEST( IsArrayProperty )
-    REGISTER_TEST( IsStruct )
-    REGISTER_TEST( GetStructType )
-    REGISTER_TEST( TestGetSet )
-    REGISTER_TEST( TestInheritance )
-    REGISTER_TEST( MetaData )
-    REGISTER_TEST( ArraySize )
-REGISTER_TESTS_END
 
 // TestStruct
 //------------------------------------------------------------------------------
@@ -106,9 +84,6 @@ public:
         m_StructArray.SetSize( 3 );
     }
 
-private: // ensure reflection can set private members
-    friend class TestReflection;
-
     float m_Float;
     uint8_t m_UInt8;
     uint16_t m_UInt16;
@@ -146,7 +121,7 @@ REFLECT_BEGIN( TestObject, Object )
 REFLECT_END( TestObject )
 
 //------------------------------------------------------------------------------
-void TestReflection::IsArrayProperty() const
+TEST_CASE( TestReflection, IsArrayProperty )
 {
     const float singleFloat = 0.0f;
     const TestStruct singleStruct;
@@ -160,7 +135,7 @@ void TestReflection::IsArrayProperty() const
 }
 
 //------------------------------------------------------------------------------
-void TestReflection::IsStruct() const
+TEST_CASE( TestReflection, IsStruct )
 {
     // Structures (alone or in Arrays)
     const TestStruct singleStruct;
@@ -182,7 +157,7 @@ void TestReflection::IsStruct() const
 }
 
 //------------------------------------------------------------------------------
-void TestReflection::GetStructType() const
+TEST_CASE( TestReflection, GetStructType )
 {
     // Anything that derives from Struct should return valid ReflectionInfo
     const TestStruct singleStruct;
@@ -197,9 +172,8 @@ void TestReflection::GetStructType() const
     TEST_ASSERT( ::GetStructType( &arrayFloats ) == nullptr );
 }
 
-// TestGetSet
 //------------------------------------------------------------------------------
-void TestReflection::TestGetSet() const
+TEST_CASE( TestReflection, TestGetSet )
 {
     TestObject o;
     const ReflectionInfo * info = o.GetReflectionInfoV();
@@ -260,7 +234,8 @@ REFLECT_BEGIN( DerivedClass, BaseClass )
     REFLECT( m_B )
 REFLECT_END( DerivedClass )
 
-void TestReflection::TestInheritance() const
+//------------------------------------------------------------------------------
+TEST_CASE( TestReflection, TestInheritance )
 {
     // Create an object with inheritance
     DerivedClass obj;
@@ -294,7 +269,8 @@ REFLECT_BEGIN( ObjectWithMetaData, Object, MetaFile() + MetaPath() )
     REFLECT( m_Property, MetaFile() + MetaPath() )
 REFLECT_END( ObjectWithMetaData )
 
-void TestReflection::MetaData() const
+//------------------------------------------------------------------------------
+TEST_CASE( TestReflection, MetaData )
 {
     ObjectWithMetaData obj;
     const ReflectionInfo * ri = obj.GetReflectionInfoV();
@@ -309,9 +285,8 @@ void TestReflection::MetaData() const
     TEST_ASSERT( rp->HasMetaData<Meta_Path>() );
 }
 
-// ArraySize
 //------------------------------------------------------------------------------
-void TestReflection::ArraySize() const
+TEST_CASE( TestReflection, ArraySize )
 {
     // The reflection system makes assumptions about Array's implementation
     // (how it records the array size) which need to be updated if changed.

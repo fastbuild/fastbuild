@@ -73,10 +73,7 @@ LinkerNode::LinkerNode()
 /*virtual*/ bool LinkerNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // .ConcurrencyGroupName
     if ( !InitializeConcurrencyGroup( nodeGraph,
@@ -139,7 +136,7 @@ LinkerNode::LinkerNode()
     }
 
     // Assembly Resources
-    Dependencies assemblyResources( 32 );
+    Dependencies assemblyResources;
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".LinkerAssemblyResources", m_LinkerAssemblyResources, assemblyResources ) )
     {
         return false; // GetNodeList will have emitted error

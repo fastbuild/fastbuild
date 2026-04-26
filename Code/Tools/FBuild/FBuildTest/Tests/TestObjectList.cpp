@@ -13,44 +13,14 @@
 // Core
 #include "Core/Strings/AStackString.h"
 
-// TestObjectList
 //------------------------------------------------------------------------------
-class TestObjectList : public FBuildTest
+TEST_GROUP( TestObjectList, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void Exclusions() const;
-    void CompilerInputFilesRoot() const;
-    void ConflictingObjects1() const;
-    void ConflictingObjects2() const;
-    void ExtraOutputFolders_PathExtraction() const;
-    void ObjectListChaining() const;
-    void ObjectListChaining_Bad() const;
-#if defined( __WINDOWS__ )
-    void ExtraOutputFolders_Build() const;
-#endif
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestObjectList )
-    REGISTER_TEST( Exclusions )
-    REGISTER_TEST( CompilerInputFilesRoot )
-    REGISTER_TEST( ConflictingObjects1 )
-    REGISTER_TEST( ConflictingObjects2 )
-    REGISTER_TEST( ExtraOutputFolders_PathExtraction )
-    REGISTER_TEST( ObjectListChaining )
-    REGISTER_TEST( ObjectListChaining_Bad )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( ExtraOutputFolders_Build )
-#endif
-REGISTER_TESTS_END
-
-// Exclusions
-//------------------------------------------------------------------------------
-void TestObjectList::Exclusions() const
+TEST_CASE( TestObjectList, Exclusions )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/Exclusions/fbuild.bff";
@@ -91,9 +61,8 @@ void TestObjectList::Exclusions() const
     }
 }
 
-// CompilerInputFilesRoot
 //------------------------------------------------------------------------------
-void TestObjectList::CompilerInputFilesRoot() const
+TEST_CASE( TestObjectList, CompilerInputFilesRoot )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/CompilerInputFilesRoot/fbuild.bff";
@@ -103,9 +72,8 @@ void TestObjectList::CompilerInputFilesRoot() const
     TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 }
 
-// ConflictingObjects1
 //------------------------------------------------------------------------------
-void TestObjectList::ConflictingObjects1() const
+TEST_CASE( TestObjectList, ConflictingObjects1 )
 {
     //
     // An ObjectList that builds two different files to the same location
@@ -119,9 +87,8 @@ void TestObjectList::ConflictingObjects1() const
     TEST_ASSERT( GetRecordedOutput().Find( "Conflicting objects found" ) );
 }
 
-// ConflictingObjects2
 //------------------------------------------------------------------------------
-void TestObjectList::ConflictingObjects2() const
+TEST_CASE( TestObjectList, ConflictingObjects2 )
 {
     //
     // Two ObjectLists that build the same file with different settings to the same location
@@ -135,9 +102,8 @@ void TestObjectList::ConflictingObjects2() const
     TEST_ASSERT( GetRecordedOutput().Find( "Conflicting objects found" ) );
 }
 
-// ExtraOutputFolders_PathExtraction
 //------------------------------------------------------------------------------
-void TestObjectList::ExtraOutputFolders_PathExtraction() const
+TEST_CASE( TestObjectList, ExtraOutputFolders_PathExtraction )
 {
     // Check that these cases are handled:
     // - mixed slashes
@@ -162,12 +128,11 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
     TEST_ASSERT( sourceDependenciesPath.EndsWith( "srcDeps" ) && !sourceDependenciesPath.EndsWith( ".json" ) );
 }
 
-// ObjectListChaining
-//  - Ensure that an ObjectList consuming the output of another ObjectList
-//    is managed correctly
 //------------------------------------------------------------------------------
-void TestObjectList::ObjectListChaining() const
+TEST_CASE( TestObjectList, ObjectListChaining )
 {
+    //  - Ensure that an ObjectList consuming the output of another ObjectList
+    //    is managed correctly
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ObjectListChaining/fbuild.bff";
     const char * dbFile = "../tmp/Test/TestObjectList/ObjectListChaining/fbuild.fdb";
@@ -224,9 +189,8 @@ void TestObjectList::ObjectListChaining() const
     TEST_ASSERT( depGraphText1 == depGraphText2 );
 }
 
-// ObjectListChaining_Bad
 //------------------------------------------------------------------------------
-void TestObjectList::ObjectListChaining_Bad() const
+TEST_CASE( TestObjectList, ObjectListChaining_Bad )
 {
     // Ensure that an ObjectList consuming the output of another ObjectList
     // is managed correctly when using PreBuildDependencies and dynamic discovery
@@ -299,10 +263,9 @@ void TestObjectList::ObjectListChaining_Bad() const
     TEST_ASSERT( depGraphText1 == depGraphText2 );
 }
 
-// ExtraOutputFolders_Build
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-void TestObjectList::ExtraOutputFolders_Build() const
+TEST_CASE( TestObjectList, ExtraOutputFolders_Build )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ExtraOutputPaths/fbuild.bff";

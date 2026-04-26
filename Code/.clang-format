@@ -95,6 +95,8 @@ REFLECT,
 REFLECT_ARRAY,
 REFLECT_ARRAY_OF_STRUCT,
 REFLECT_STRUCT,
+TEST_CASE,
+TEST_GROUP,
 TEST_PARSE_FAIL,
 TEST_PARSE_OK]
 
@@ -116,6 +118,9 @@ Macros:
 - INPLACE_NEW=new
 - FDELETE=delete
 
+ForEachMacros:
+[TEST_GROUP]
+
 # when macros provide snippets of code to be uses together, it
 # doesn't make sense to try and format the incomplete snippets
 # and doing so results in the macros being mangled
@@ -127,6 +132,7 @@ SkipMacroDefinitionBody: true
 # This could be changed in the future if a more compace style is desired.
 PointerAlignment: Middle
 ReferenceAlignment: Middle
+SpaceBeforeParens: ControlStatementsExceptControlMacros
 SpacesInParens: Custom
 SpacesInParensOptions:
   ExceptDoubleParentheses: false

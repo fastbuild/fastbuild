@@ -9,33 +9,14 @@
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
 
-// TestConstMemoryStream
 //------------------------------------------------------------------------------
-class TestConstMemoryStream : public TestGroup
+TEST_GROUP( TestConstMemoryStream, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void MemoryNotOwned() const;
-    void MemoryOwned() const;
-    void MoveConstructor() const;
-    void MoveAssignment() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestConstMemoryStream )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( MemoryNotOwned )
-    REGISTER_TEST( MemoryOwned )
-    REGISTER_TEST( MoveConstructor )
-    REGISTER_TEST( MoveAssignment )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestConstMemoryStream::Empty() const
+TEST_CASE( TestConstMemoryStream, Empty )
 {
     ConstMemoryStream ms;
     TEST_ASSERT( ms.GetData() == nullptr );
@@ -44,9 +25,8 @@ void TestConstMemoryStream::Empty() const
     TEST_ASSERT( ms.GetSize() == ms.GetFileSize() );
 }
 
-// MemoryNotOwned
 //------------------------------------------------------------------------------
-void TestConstMemoryStream::MemoryNotOwned() const
+TEST_CASE( TestConstMemoryStream, MemoryNotOwned )
 {
     // Buffer on stack
     const size_t bufferSize = 1024;
@@ -72,9 +52,8 @@ void TestConstMemoryStream::MemoryNotOwned() const
     }
 }
 
-// MemoryOwned
 //------------------------------------------------------------------------------
-void TestConstMemoryStream::MemoryOwned() const
+TEST_CASE( TestConstMemoryStream, MemoryOwned )
 {
     // Buffer on heap
     const size_t bufferSize = 1024;
@@ -91,9 +70,8 @@ void TestConstMemoryStream::MemoryOwned() const
     }
 }
 
-// MoveConstructor
 //------------------------------------------------------------------------------
-void TestConstMemoryStream::MoveConstructor() const
+TEST_CASE( TestConstMemoryStream, MoveConstructor )
 {
     // From ConstMemoryStream
     {
@@ -146,9 +124,8 @@ void TestConstMemoryStream::MoveConstructor() const
     }
 }
 
-// MoveAssignment
 //------------------------------------------------------------------------------
-void TestConstMemoryStream::MoveAssignment() const
+TEST_CASE( TestConstMemoryStream, MoveAssignment )
 {
     // Buffer on stack (unowned)
     {
