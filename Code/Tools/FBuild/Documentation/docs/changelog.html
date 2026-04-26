@@ -26,6 +26,37 @@
 
 <h1>Changelog</h1>
 
+
+<div class='newsitemheader'>
+    v1.20&nbsp;<font color='#bbbbbb'>(26th-Apr-2026)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>FBuildWorker <a href="options.html#console">-console</a> on Windows no longer forces <a href="options.html#nosubprocess">-nosubprocess</a></li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Correctly detect corrupt cache items when &lt; 12 bytes in size</li>
+        <li>Avoid unnecessary rebuilds after bff edits when using Clang & LightCache</li>
+        <li>[Windows] Improve CPU core type detection on some systems</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>BFF Parsing</li>
+        <ul>
+            <li>Improve BFF tokenizing performance</li>
+            <li>BFF parsing time reduced for complex Aliases and PreBuildDependencies</li>
+            <li>BFF parsing performance improved slightly</li>
+        </ul>
+        <li>Reduce directory list node fdb costs for complex directory listings</li>
+        <li>DB load/save time improved for complex Aliases and PreBuildDependencies</li>
+        <li>Memory usage reduced for complex Aliases and PreBuildDependencies</li>
+        <li>FBuildWorker will self-restart on Windows when updated even if <a href="options.html#console">-console</a> mode is used</li>
+    </ul>
+</div>
+
 <div class='newsitemheader'>
     v1.19&nbsp;<font color='#bbbbbb'>(22nd-Feb-2026)</font>
 </div>
