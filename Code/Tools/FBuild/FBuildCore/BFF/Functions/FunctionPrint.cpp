@@ -168,20 +168,19 @@ FunctionPrint::FunctionPrint()
         case BFFVariable::VAR_STRUCT:
         {
             FLOG_OUTPUT( "%s = // Struct\n%s[\n", var.GetName().Get(), indentStr.Get() );
-            for ( const BFFVariable * subVar : var.GetStructMembers() )
-            {
-                PrintVarRecurse( *subVar, indent );
-            }
+            PrintVarRecurse( var.GetStruct(), indent );
             FLOG_OUTPUT( "%s]\n", indentStr.Get() );
             break;
         }
         case BFFVariable::VAR_ARRAY_OF_STRUCTS:
         {
-            const Array<const BFFVariable *> & structs = var.GetArrayOfStructs();
+            const Array<BFFVariableScope> & structs = var.GetArrayOfStructs();
             FLOG_OUTPUT( "%s = // ArrayOfStructs, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)structs.GetSize(), indentStr.Get() );
-            for ( const BFFVariable * subVar : structs )
+            for ( const BFFVariableScope & subVar : structs )
             {
-                PrintVarRecurse( *subVar, indent );
+                FLOG_OUTPUT( "%s    [\n", indentStr.Get() );
+                PrintVarRecurse( subVar, indent );
+                FLOG_OUTPUT( "%s    ]\n", indentStr.Get() );
             }
             FLOG_OUTPUT( "%s}\n", indentStr.Get() );
             break;
@@ -191,6 +190,16 @@ FunctionPrint::FunctionPrint()
             ASSERT( false );
             break; // Something is terribly wrong
         }
+    }
+}
+
+// PrintVarRecurse
+//------------------------------------------------------------------------------
+/*static*/ void FunctionPrint::PrintVarRecurse( const BFFVariableScope & vars, uint32_t indent )
+{
+    for ( const BFFVariable & var : vars )
+    {
+        PrintVarRecurse( var, indent );
     }
 }
 

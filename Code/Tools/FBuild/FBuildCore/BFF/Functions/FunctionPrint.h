@@ -26,6 +26,7 @@ protected:
                                 const BFFTokenRange & bodyRange ) const override;
 
     static void PrintVarRecurse( const BFFVariable & var, uint32_t indent );
+    static void PrintVarRecurse( const BFFVariableScope & vars, uint32_t indent );
 };
 
 //------------------------------------------------------------------------------

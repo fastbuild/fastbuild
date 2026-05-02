@@ -100,7 +100,7 @@ void Dependencies::Add( const Array<Node *> & nodes )
         }
 
         // Add elements
-        Node ** srcPos = nodes.Begin();
+        Node * const * srcPos = nodes.Begin();
         Dependency * dstPos = GetDependencies( m_DependencyList ) + GetSize();
         for ( size_t i = 0; i < numDepsToAdd; ++i )
         {

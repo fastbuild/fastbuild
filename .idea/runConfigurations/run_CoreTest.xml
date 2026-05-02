@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="run CoreTest" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="fastbuild" TARGET_NAME="fbuild CoreTest" CONFIG_NAME="fbuild CoreTest" RUN_PATH="$PROJECT_DIR$/tmp/ARMOSX-Debug/Core/CoreTest/CoreTest">
+    <method v="2">
+      <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+    </method>
+  </configuration>
+</component>

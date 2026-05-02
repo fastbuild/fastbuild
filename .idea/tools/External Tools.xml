@@ -1,0 +1,16 @@
+<toolSet name="External Tools">
+  <tool name="fbuild CoreTest" showInMainMenu="false" showInEditor="false" showInProject="false" showInSearchPopup="false" disabled="false" useConsole="true" showConsoleOnStdOut="false" showConsoleOnStdErr="false" synchronizeAfterRun="true">
+    <exec>
+      <option name="COMMAND" value="/opt/homebrew/bin/fbuild" />
+      <option name="PARAMETERS" value="../tmp/ARMOSX-Debug/Core/CoreTest/CoreTest" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/Developer/fastbuild/Code" />
+    </exec>
+  </tool>
+  <tool name="fbuild" showInMainMenu="false" showInEditor="false" showInProject="false" showInSearchPopup="false" disabled="false" useConsole="true" showConsoleOnStdOut="false" showConsoleOnStdErr="false" synchronizeAfterRun="true">
+    <exec>
+      <option name="COMMAND" value="/opt/homebrew/bin/fbuild" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/Developer/fastbuild/Code" />
+    </exec>
+  </tool>
+</toolSet>

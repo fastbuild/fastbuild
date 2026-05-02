@@ -11,32 +11,32 @@
 namespace Math
 {
     template <class T>
-    static inline T RoundUp( T value, T alignment )
+    static constexpr inline T RoundUp( T value, T alignment )
     {
         return ( value + alignment - 1 ) & ~( alignment - 1 );
     }
     template <class T>
-    static inline T Max( T a, T b )
+    static constexpr inline T Max( T a, T b )
     {
         return ( a > b ) ? a : b;
     }
     template <class T>
-    static inline T Min( T a, T b )
+    static constexpr inline T Min( T a, T b )
     {
         return ( a < b ) ? a : b;
     }
     template <class T>
-    static inline T Clamp( T a, T b, T c )
+    static constexpr inline T Clamp( T a, T b, T c )
     {
         return Min( Max( a, b ), c );
     }
     template <typename T>
-    static inline bool IsPowerOf2( T value )
+    static constexpr inline bool IsPowerOf2( T value )
     {
         return ( ( ( value - 1 ) & value ) == 0 );
     }
     template <typename T>
-    static inline uint32_t PopCount( T value )
+    static constexpr inline uint32_t PopCount( T value )
     {
         uint32_t count = 0;
 

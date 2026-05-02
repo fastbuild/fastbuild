@@ -199,7 +199,7 @@ protected:
     bool PopulateInt32( const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
     bool PopulateUInt32( const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
     bool PopulateArrayOfStructs( NodeGraph & nodeGraph, const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
-    bool PopulateArrayOfStructsElement( NodeGraph & nodeGraph, const BFFToken * iter, void * structBase, const ReflectionInfo * structRI, const BFFVariable * srcVariable ) const;
+    bool PopulateArrayOfStructsElement( NodeGraph & nodeGraph, const BFFToken * iter, void * structBase, const ReflectionInfo * structRI, const BFFVariableScope & value ) const;
     bool PopulateCustom( NodeGraph & nodeGraph, const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
 
     bool PopulateStringHelper( NodeGraph & nodeGraph, const BFFToken * iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, Array<AString> & outStrings ) const;
