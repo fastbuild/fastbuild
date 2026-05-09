@@ -865,7 +865,7 @@ bool BFFParser::StoreVariableString( const AString & name,
         else if ( var->IsArrayOfStrings() || dstIsEmpty )
         {
             // OK - can concat String to ArrayOfStrings or to empty array
-            StackArray<AString> finalValues;
+            Array<AString> finalValues; // Will be moved
             finalValues.SetCapacity( var->GetArrayOfStrings().GetSize() + 1 );
             if ( opToken->IsOperator( BFFOperator::Type::ePlus ) )
             {
@@ -886,7 +886,7 @@ bool BFFParser::StoreVariableString( const AString & name,
                 }
             }
 
-            BFFStackFrame::SetVarArrayOfStrings( name, *opToken, finalValues, frame );
+            BFFStackFrame::SetVarArrayOfStrings( name, *opToken, Move( finalValues ), frame );
             return true;
         }
         else
@@ -907,9 +907,9 @@ bool BFFParser::StoreVariableString( const AString & name,
         else if ( var->IsArrayOfStrings() || dstIsEmpty )
         {
             // OK - store new string as the single element of array
-            StackArray<AString> values;
+            Array<AString> values;
             values.Append( value );
-            BFFStackFrame::SetVarArrayOfStrings( name, *opToken, values, frame );
+            BFFStackFrame::SetVarArrayOfStrings( name, *opToken, Move( values ), frame );
             return true;
         }
         else
@@ -1167,7 +1167,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
     {
         ASSERT( varType == BFFVariable::VAR_ARRAY_OF_STRINGS );
         // strings
-        BFFStackFrame::SetVarArrayOfStrings( name, *opToken, values, frame );
+        BFFStackFrame::SetVarArrayOfStrings( name, *opToken, Move( values ), frame );
     }
 
     return true;
@@ -1332,7 +1332,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
         if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
              ( srcType == BFFVariable::VAR_STRING ) )
         {
-            StackArray<AString> values;
+            Array<AString> values; // Will be moved
             values.SetCapacity( varDst->GetArrayOfStrings().GetSize() + 1 );
             if ( concat )
             {
@@ -1360,7 +1360,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
                 values.Append( varSrc->GetString() );
             }
 
-            BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), values, dstFrame );
+            BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), Move( values ), dstFrame );
             return true;
         }
 
@@ -1464,11 +1464,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
             if ( concat )
             {
                 const unsigned int num = (unsigned int)( varSrc->GetArrayOfStrings().GetSize() + varDst->GetArrayOfStrings().GetSize() );
-                StackArray<AString> values;
+                Array<AString> values; // Will be moved
                 values.SetCapacity( num );
                 values.Append( varDst->GetArrayOfStrings() );
                 values.Append( varSrc->GetArrayOfStrings() );
-                BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), values, dstFrame );
+                BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetToken(), Move( values ), dstFrame );
             }
             else
             {
