@@ -91,6 +91,7 @@ public:
     FORCE_INLINE BFFToken( FunctionType functionType, const BFFFile & file, const char * sourcePos, const AString & name );
     FORCE_INLINE BFFToken( IdentifierType identifierType, const BFFFile & file, const char * sourcePos, const AString & name );
     FORCE_INLINE BFFToken( const AString & string, const BFFFile & file, const char * sourcePos );
+    FORCE_INLINE BFFToken( AString && string, const BFFFile & file, const char * sourcePos );
     FORCE_INLINE BFFToken( bool b, const BFFFile & file, const char * sourcePos );
     FORCE_INLINE BFFToken( int32_t i, const BFFFile & file, const char * sourcePos );
 
@@ -272,6 +273,15 @@ inline BFFToken::BFFToken( IdentifierType /*identifierType*/, const BFFFile & fi
 inline BFFToken::BFFToken( const AString & string, const BFFFile & file, const char * sourcePos )
     : m_Type( BFFTokenType::String )
     , m_String( string )
+    , m_BFFFile( file )
+    , m_SourcePos( sourcePos )
+{
+}
+
+//------------------------------------------------------------------------------
+inline BFFToken::BFFToken( AString && string, const BFFFile & file, const char * sourcePos )
+    : m_Type( BFFTokenType::String )
+    , m_String( Move( string ) )
     , m_BFFFile( file )
     , m_SourcePos( sourcePos )
 {

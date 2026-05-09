@@ -307,12 +307,12 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         // String
         if ( IsStringStart( c ) )
         {
-            AStackString string;
+            AString string;
             if ( GetQuotedString( file, pos, string ) == false )
             {
                 return false; // GetQuotedString will have emitted an error
             }
-            m_Tokens.EmplaceBack( string, file, tokenStart );
+            m_Tokens.EmplaceBack( Move( string ), file, tokenStart );
             continue;
         }
 

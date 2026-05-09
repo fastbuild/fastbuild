@@ -1378,7 +1378,7 @@ bool Function::PopulatePathAndFileHelper( const BFFToken * iter,
 //------------------------------------------------------------------------------
 bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFToken * iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
-    StackArray<AString> strings;
+    StackArray<AString, 128> strings;
     if ( !PopulateStringHelper( nodeGraph,
                                 iter,
                                 property.HasMetaData<Meta_Path>(),

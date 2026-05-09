@@ -33,6 +33,10 @@ public:
                                       const BFFToken & token,
                                       const Array<AString> & values,
                                       BFFStackFrame * frame );
+    static void SetVarArrayOfStrings( const AString & name,
+                                      const BFFToken & token,
+                                      Array<AString> && values,
+                                      BFFStackFrame * frame );
     static void SetVarBool( const AString & name,
                             const BFFToken & token,
                             bool value,

@@ -89,6 +89,17 @@ BFFVariable::BFFVariable( const AString & name,
 {
 }
 
+//------------------------------------------------------------------------------
+BFFVariable::BFFVariable( const AString & name,
+                          const BFFToken & token,
+                          Array<AString> && values )
+    : m_Name( name )
+    , m_Type( VAR_ARRAY_OF_STRINGS )
+    , m_ArrayValues( Move( values ) )
+    , m_Token( token )
+{
+}
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name,
@@ -181,6 +192,14 @@ void BFFVariable::SetValueArrayOfStrings( const Array<AString> & values )
     ASSERT( 0 == m_FreezeCount );
     m_Type = VAR_ARRAY_OF_STRINGS;
     m_ArrayValues = values;
+}
+
+//------------------------------------------------------------------------------
+void BFFVariable::SetValueArrayOfStrings( Array<AString> && values )
+{
+    ASSERT( 0 == m_FreezeCount );
+    m_Type = VAR_ARRAY_OF_STRINGS;
+    m_ArrayValues = Move( values );
 }
 
 // SetValueInt

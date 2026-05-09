@@ -107,6 +107,7 @@ private:
     explicit BFFVariable( const AString & name, const BFFToken & token, const AString & value );
     explicit BFFVariable( const AString & name, const BFFToken & token, bool value );
     explicit BFFVariable( const AString & name, const BFFToken & token, const Array<AString> & values );
+    explicit BFFVariable( const AString & name, const BFFToken & token, Array<AString> && values );
     explicit BFFVariable( const AString & name, const BFFToken & token, int32_t i );
     explicit BFFVariable( const AString & name, const BFFToken & token, const Array<const BFFVariable *> & values );
     explicit BFFVariable( const AString & name, const BFFToken & token, Array<BFFVariable *> && values );
@@ -118,6 +119,7 @@ private:
     void SetValueString( const AString & value );
     void SetValueBool( bool value );
     void SetValueArrayOfStrings( const Array<AString> & values );
+    void SetValueArrayOfStrings( Array<AString> && values );
     void SetValueInt( int i );
     void SetValueStruct( const Array<const BFFVariable *> & members );
     void SetValueStruct( Array<BFFVariable *> && members );
