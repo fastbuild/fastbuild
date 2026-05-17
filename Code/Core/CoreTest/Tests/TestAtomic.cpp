@@ -8,7 +8,6 @@
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 
-// Macros
 //------------------------------------------------------------------------------
 template <typename T>
 class AtomicTestHelper
@@ -96,49 +95,62 @@ protected:
     Atomic<T> m_Count2; // Via Atomic<> helper
 };
 
-// TestAtomic
 //------------------------------------------------------------------------------
-class TestAtomic : public TestGroup
+TEST_GROUP( TestAtomic, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Basic types
-    template <typename T>
-    void DoAtomicTestsForType()
-    {
-        const AtomicTestHelper<T> helper;
-    }
-
-    // Boolean
-    void Boolean() const;
-
-    // Pointer
-    void Pointer() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestAtomic )
-    REGISTER_TEST( DoAtomicTestsForType<uint8_t> )
-    REGISTER_TEST( DoAtomicTestsForType<uint16_t> )
-    REGISTER_TEST( DoAtomicTestsForType<uint32_t> )
-    REGISTER_TEST( DoAtomicTestsForType<uint64_t> )
-    REGISTER_TEST( DoAtomicTestsForType<int8_t> )
-    REGISTER_TEST( DoAtomicTestsForType<int16_t> )
-    REGISTER_TEST( DoAtomicTestsForType<int32_t> )
-    REGISTER_TEST( DoAtomicTestsForType<int64_t> )
+TEST_CASE( TestAtomic, AtomicOps_U8 )
+{
+    const AtomicTestHelper<uint8_t> helper;
+}
 
-    // Boolean
-    REGISTER_TEST( Boolean )
-
-    // Pointer
-    REGISTER_TEST( Pointer )
-REGISTER_TESTS_END
-
-// Boolean
 //------------------------------------------------------------------------------
-void TestAtomic::Boolean() const
+TEST_CASE( TestAtomic, AtomicOps_U16 )
+{
+    const AtomicTestHelper<uint16_t> helper;
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestAtomic, AtomicOps_U32 )
+{
+    const AtomicTestHelper<uint32_t> helper;
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestAtomic, AtomicOps_U64 )
+{
+    const AtomicTestHelper<uint64_t> helper;
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestAtomic, AtomicOps_I8 )
+{
+    const AtomicTestHelper<int8_t> helper;
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestAtomic, AtomicOps_I16 )
+{
+    const AtomicTestHelper<int16_t> helper;
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestAtomic, AtomicOps_I32 )
+{
+    const AtomicTestHelper<int32_t> helper;
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestAtomic, AtomicOps_I64 )
+{
+    const AtomicTestHelper<int64_t> helper;
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestAtomic, Boolean )
 {
     // Direct member
     {
@@ -155,20 +167,19 @@ void TestAtomic::Boolean() const
     }
 }
 
-// Pointer
 //------------------------------------------------------------------------------
-void TestAtomic::Pointer() const
+TEST_CASE( TestAtomic, Pointer )
 {
     // Direct member
     {
-        const TestAtomic * volatile pointer;
+        const auto * volatile pointer = this;
         AtomicStoreRelease( &pointer, this );
         TEST_ASSERT( AtomicLoadAcquire( &pointer ) == this );
     }
 
     // Atomic
     {
-        Atomic<const TestAtomic *> pointer( nullptr );
+        Atomic<const void *> pointer( nullptr );
         pointer.Store( this );
         TEST_ASSERT( pointer.Load() == this );
     }

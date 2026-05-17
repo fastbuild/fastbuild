@@ -14,7 +14,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( DLLNode, LinkerNode, MetaNone() )
+REFLECT_NODE_BEGIN( DLLNode, LinkerNode )
 REFLECT_END( DLLNode )
 
 // CONSTRUCTOR

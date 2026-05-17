@@ -29,27 +29,14 @@ namespace
 }
 #endif
 
-// TestTrayIcon
 //------------------------------------------------------------------------------
-class TestTrayIcon : public TestGroup
+TEST_GROUP( TestTrayIcon, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Init() const;
-    void SetMenu() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestTrayIcon )
-    REGISTER_TEST( Init )
-    REGISTER_TEST( SetMenu )
-REGISTER_TESTS_END
-
-// Init
-//------------------------------------------------------------------------------
-void TestTrayIcon::Init() const
+TEST_CASE( TestTrayIcon, Init )
 {
     // TODO:B Fix hard coded assumptions about resource name on Windows
 #if defined( __WINDOWS__ )
@@ -74,9 +61,8 @@ void TestTrayIcon::Init() const
 #endif
 }
 
-// SetMenu
 //------------------------------------------------------------------------------
-void TestTrayIcon::SetMenu() const
+TEST_CASE( TestTrayIcon, SetMenu )
 {
     // TODO:B Fix hard coded assumptions about resource name on Windows
 #if defined( __WINDOWS__ )

@@ -9,26 +9,14 @@
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Mem/MemInfo.h"
 
-// TestMemInfo
 //------------------------------------------------------------------------------
-class TestMemInfo : public TestGroup
+TEST_GROUP( TestMemInfo, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void GetSystemInfo() const;
-    void GetProcessInfo() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestMemInfo )
-    REGISTER_TEST( GetSystemInfo )
-    REGISTER_TEST( GetProcessInfo )
-REGISTER_TESTS_END
-
-//------------------------------------------------------------------------------
-void TestMemInfo::GetSystemInfo() const
+TEST_CASE( TestMemInfo, GetSystemInfo )
 {
     SystemMemInfo info;
     MemInfo::GetSystemInfo( info );
@@ -42,11 +30,14 @@ void TestMemInfo::GetSystemInfo() const
     // Available can't be more than physical and should never be equal
     // as that would assume the OS and all running processes use zero
     // memory
-    TEST_ASSERT( info.m_AvailPhysMiB < info.m_TotalPhysMiB );
+    TEST_ASSERTM( info.m_AvailPhysMiB < info.m_TotalPhysMiB,
+                  "Avail %u, Total: %u",
+                  info.m_AvailPhysMiB,
+                  info.m_TotalPhysMiB );
 }
 
 //------------------------------------------------------------------------------
-void TestMemInfo::GetProcessInfo() const
+TEST_CASE( TestMemInfo, GetProcessInfo )
 {
     static const size_t sizesInBytes[] = { 1 * 1024 * 1024,
                                            16 * 1024 * 1024,

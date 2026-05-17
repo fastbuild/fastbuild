@@ -5,41 +5,14 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-// TestUserFunctions
 //------------------------------------------------------------------------------
-class TestUserFunctions : public FBuildTest
+TEST_GROUP( TestUserFunctions, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Declare() const;
-    void DeclareWithArgs() const;
-    void Invoke() const;
-    void InvokeWithArgs() const;
-    void InvokeWithArgsLiteralHandling() const;
-    void Scope() const;
-    void DeferredEvaluation() const;
-    void NestedFunctionCalls() const;
-    void Recursion() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestUserFunctions )
-    REGISTER_TEST( Declare )
-    REGISTER_TEST( DeclareWithArgs )
-    REGISTER_TEST( Invoke )
-    REGISTER_TEST( InvokeWithArgs )
-    REGISTER_TEST( InvokeWithArgsLiteralHandling )
-    REGISTER_TEST( Scope )
-    REGISTER_TEST( DeferredEvaluation )
-    REGISTER_TEST( NestedFunctionCalls )
-    REGISTER_TEST( Recursion )
-REGISTER_TESTS_END
-
-// Declare
-//------------------------------------------------------------------------------
-void TestUserFunctions::Declare() const
+TEST_CASE( TestUserFunctions, Declare )
 {
     // Error cases: Malformed functions
     TEST_PARSE_FAIL( "function",            "#1107 - Expected function name following 'function' keyword");
@@ -57,9 +30,8 @@ void TestUserFunctions::Declare() const
     TEST_PARSE_OK( "function Func(){ Print( 'X' ) }" );
 }
 
-// DeclareWithArgs
 //------------------------------------------------------------------------------
-void TestUserFunctions::DeclareWithArgs() const
+TEST_CASE( TestUserFunctions, DeclareWithArgs )
 {
     // Functions can take multiple args
     TEST_PARSE_OK( "function Func( .Arg ){}" );
@@ -75,9 +47,8 @@ void TestUserFunctions::DeclareWithArgs() const
     TEST_PARSE_FAIL( "function Func( in out .ArgA ){}",         "#1007 - Expected a variable at this location." );
 }
 
-// Invoke
 //------------------------------------------------------------------------------
-void TestUserFunctions::Invoke() const
+TEST_CASE( TestUserFunctions, Invoke )
 {
     // Error case: Malformed invocation
     TEST_PARSE_FAIL( "function Func(){}\n"
@@ -93,9 +64,8 @@ void TestUserFunctions::Invoke() const
                    "Func()",                            "Called" );
 }
 
-// InvokeWithArgs
 //------------------------------------------------------------------------------
-void TestUserFunctions::InvokeWithArgs() const
+TEST_CASE( TestUserFunctions, InvokeWithArgs )
 {
     // Cannot pass args to functions that don't take args
     TEST_PARSE_FAIL( "function Func(){}\n"
@@ -202,9 +172,8 @@ void TestUserFunctions::InvokeWithArgs() const
                    "Func( 'String', true, 99 )\n",     "A = String\nB = true\nC = 99" );
 }
 
-// InvokeWithArgsLiteralHandling
 //------------------------------------------------------------------------------
-void TestUserFunctions::InvokeWithArgsLiteralHandling() const
+TEST_CASE( TestUserFunctions, InvokeWithArgsLiteralHandling )
 {
     // Literal
     TEST_PARSE_OK( "function Func( .ArgA ){ Print( 'A = $ArgA$' ) }\n"
@@ -243,9 +212,8 @@ void TestUserFunctions::InvokeWithArgsLiteralHandling() const
                                                         ".ArgB = '^^'\n" );
 }
 
-// Scope
 //------------------------------------------------------------------------------
-void TestUserFunctions::Scope() const
+TEST_CASE( TestUserFunctions, Scope )
 {
     // Functions can only see passed in arguments
 
@@ -254,9 +222,8 @@ void TestUserFunctions::Scope() const
                      "Func()",                          "#1009 - Print() - Unknown variable '.Var'." );
 }
 
-// DeferredEvaluation
 //------------------------------------------------------------------------------
-void TestUserFunctions::DeferredEvaluation() const
+TEST_CASE( TestUserFunctions, DeferredEvaluation )
 {
     // Function evaluation is deferred until invocation
 
@@ -268,9 +235,8 @@ void TestUserFunctions::DeferredEvaluation() const
                      "Func()",                          "#1009 - Print() - Unknown variable '.Var'." );
 }
 
-// NestedFunctionCalls
 //------------------------------------------------------------------------------
-void TestUserFunctions::NestedFunctionCalls() const
+TEST_CASE( TestUserFunctions, NestedFunctionCalls )
 {
     // Functions may call other functions
 
@@ -279,9 +245,8 @@ void TestUserFunctions::NestedFunctionCalls() const
                    "FuncB()",                           "CalledA" );
 }
 
-// Recursion
 //------------------------------------------------------------------------------
-void TestUserFunctions::Recursion() const
+TEST_CASE( TestUserFunctions, Recursion )
 {
     // Recursion is supported, and a general cap on depth complexity prevents
     // stack overflows.

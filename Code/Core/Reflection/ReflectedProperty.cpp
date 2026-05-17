@@ -17,7 +17,7 @@
 //------------------------------------------------------------------------------
 ReflectedProperty::ReflectedProperty( const char * name, uint32_t offset, PropertyType type, bool isArray )
 {
-    m_NameCRC = xxHash::Calc32( name, AString::StrLen( name ) );
+    m_NameCRC = xxHash3::Calc32( name, AString::StrLen( name ) );
 
     ASSERT( offset < kMaxOffset );
     m_Offset = (uint16_t)offset;

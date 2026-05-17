@@ -11,27 +11,14 @@
 #include "OSUI/OSLabel.h"
 #include "OSUI/OSWindow.h"
 
-// TestDropDown
 //------------------------------------------------------------------------------
-class TestLabel : public TestGroup
+TEST_GROUP( TestLabel, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void Init() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestLabel )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( Init )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestLabel::Empty() const
+TEST_CASE( TestLabel, Empty )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -44,9 +31,8 @@ void TestLabel::Empty() const
     OSLabel label( &window );
 }
 
-// Init
 //------------------------------------------------------------------------------
-void TestLabel::Init() const
+TEST_CASE( TestLabel, Init )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS

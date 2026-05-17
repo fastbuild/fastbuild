@@ -11,29 +11,14 @@
 #include "OSUI/OSListView.h"
 #include "OSUI/OSWindow.h"
 
-// TestListView
 //------------------------------------------------------------------------------
-class TestListView : public TestGroup
+TEST_GROUP( TestListView, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void Init() const;
-    void Items() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestListView )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( Init )
-    REGISTER_TEST( Items )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestListView::Empty() const
+TEST_CASE( TestListView, Empty )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -46,9 +31,8 @@ void TestListView::Empty() const
     OSListView listView( &window );
 }
 
-// Init
 //------------------------------------------------------------------------------
-void TestListView::Init() const
+TEST_CASE( TestListView, Init )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS
@@ -65,9 +49,8 @@ void TestListView::Init() const
     listView.Init( 32, 32, 200, 100 );
 }
 
-// Items
 //------------------------------------------------------------------------------
-void TestListView::Items() const
+TEST_CASE( TestListView, Items )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS

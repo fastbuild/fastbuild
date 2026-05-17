@@ -77,7 +77,9 @@ public:
     void Add( Node * node );
     void Add( Node * node, uint64_t stamp, bool isWeak );
     void Add( const Dependencies & deps );
+    void Add( const Array<Node *> & nodes );
     Dependencies & operator=( const Dependencies & other );
+    Dependencies & operator=( Dependencies && other );
 
     void Save( IOStream & stream ) const;
     void Load( NodeGraph & nodeGraph, uint32_t numDeps, ConstMemoryStream & stream );
@@ -214,6 +216,15 @@ inline Dependencies & Dependencies::operator=( const Dependencies & other )
 {
     Clear();
     Add( other );
+    return *this;
+}
+
+//------------------------------------------------------------------------------
+inline Dependencies & Dependencies::operator=( Dependencies && other )
+{
+    Clear();
+    m_DependencyList = other.m_DependencyList;
+    other.m_DependencyList = nullptr;
     return *this;
 }
 

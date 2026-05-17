@@ -37,15 +37,11 @@ class ReflectionInfo;
     const baseClass * b = static_cast<const baseClass *>( c ); \
     (void)b;
 
-#define ADD_METADATA( metaData ) \
-    AddMetaData( metaData );
-
-#define ADD_PROPERTY_METADATA( metaData ) \
-    AddPropertyMetaData( metaData );
+#define MEMBER_PTR( member ) static_cast<decltype( objectType::member ) *>( nullptr )
 
 // BEGIN
 //------------------------------------------------------------------------------
-#define REFLECT_BEGIN_COMMON( className, baseClass, metaData, structSize, isAbstract ) \
+#define REFLECT_BEGIN_COMMON( className, baseClass, structSize, isAbstract, ... ) \
     class baseClass##_ReflectionInfo; \
     extern baseClass##_ReflectionInfo g_##baseClass##_ReflectionInfo; \
     class className##_ReflectionInfo; \
@@ -69,35 +65,35 @@ class ReflectionInfo;
             m_StructSize = structSize; \
             m_IsAbstract = isAbstract; \
             m_SuperClass = reinterpret_cast<const ReflectionInfo *>( &g_##baseClass##_ReflectionInfo ); \
-            ADD_METADATA( metaData ) \
+            AddMetaData( __VA_ARGS__ ); \
         } \
         virtual ~className##_ReflectionInfo() override\
         { \
             className::s_ReflectionInfo = nullptr; \
         }
 
-#define REFLECT_BEGIN_ABSTRACT( className, baseClass, metaData ) \
+#define REFLECT_BEGIN_ABSTRACT( className, baseClass, ... ) \
     const ReflectionInfo * className::GetReflectionInfoV() const \
     { \
         return className::GetReflectionInfoS(); \
     } \
-    REFLECT_BEGIN_COMMON( className, baseClass, metaData, 0, true ) \
+    REFLECT_BEGIN_COMMON( className, baseClass, 0, true, __VA_ARGS__ ) \
     void AddProperties() \
     { \
         CHECK_BASE_CLASS( className, baseClass )
 
-#define REFLECT_BEGIN( className, baseClass, metaData ) \
+#define REFLECT_BEGIN( className, baseClass, ... ) \
     const ReflectionInfo * className::GetReflectionInfoV() const \
     { \
         return className::GetReflectionInfoS(); \
     } \
-    REFLECT_BEGIN_COMMON( className, baseClass, metaData, 0, false ) \
+    REFLECT_BEGIN_COMMON( className, baseClass, 0, false, __VA_ARGS__ ) \
         void AddProperties() \
         { \
             CHECK_BASE_CLASS( className, baseClass )
 
-#define REFLECT_STRUCT_BEGIN( structName, baseStruct, metaData ) \
-    REFLECT_BEGIN_COMMON( structName, baseStruct, metaData, sizeof( structName ), false ) \
+#define REFLECT_STRUCT_BEGIN( structName, baseStruct, ... ) \
+    REFLECT_BEGIN_COMMON( structName, baseStruct, sizeof( structName ), false, __VA_ARGS__ ) \
         virtual void SetArraySizeV( void * array, size_t size ) const override \
         { \
             Array<structName> * realArray = static_cast<Array<structName> *>( array ); \
@@ -107,14 +103,14 @@ class ReflectionInfo;
         { \
             CHECK_BASE_CLASS( structName, baseStruct )
 
-#define REFLECT_STRUCT_BEGIN_ABSTRACT( structName, baseStruct, metaData ) \
-    REFLECT_BEGIN_COMMON( structName, baseStruct, metaData, sizeof( structName ), false ) \
+#define REFLECT_STRUCT_BEGIN_ABSTRACT( structName, baseStruct, ... ) \
+    REFLECT_BEGIN_COMMON( structName, baseStruct, sizeof( structName ), false, __VA_ARGS__ ) \
         void AddProperties() \
         { \
             CHECK_BASE_CLASS( structName, baseStruct )
 
 #define REFLECT_STRUCT_BEGIN_BASE( structName ) \
-    REFLECT_BEGIN_COMMON( structName, Struct, MetaNone(), sizeof( structName ), false ) \
+    REFLECT_BEGIN_COMMON( structName, Struct, sizeof( structName ), false ) \
         virtual void SetArraySizeV( void * array, size_t size ) const override \
         { \
             Array<structName> * realArray = static_cast<Array<structName> *>( array ); \
@@ -125,21 +121,27 @@ class ReflectionInfo;
 
 // MEMBERS
 //------------------------------------------------------------------------------
-#define REFLECT( member, memberName, metaData ) \
-            AddProperty( offsetof( objectType, member ), memberName, GetPropertyType( static_cast<decltype( objectType::member ) *>( nullptr ) ) ); \
-            ADD_PROPERTY_METADATA( metaData )
+#define REFLECT( member, ... ) \
+            { \
+                constexpr auto memberName = #member; \
+                static_assert( ( memberName[ 0 ] == 'm' ) && ( memberName[ 1 ] == '_' ) ); \
+                AddProperty( offsetof( objectType, member ), \
+                             ( memberName + 2 ), \
+                             ::GetPropertyType( MEMBER_PTR( member ) ), \
+                             ::IsArrayProperty( MEMBER_PTR( member ) ), \
+                             ::GetStructType( MEMBER_PTR( member ) ) ); \
+                AddPropertyMetaData( __VA_ARGS__ ); \
+            }
 
-#define REFLECT_ARRAY( member, memberName, metaData ) \
-            AddPropertyArray( offsetof( objectType, member ), memberName, GetPropertyType( static_cast<decltype( objectType::member ) *>( nullptr ) ) ); \
-            ADD_PROPERTY_METADATA( metaData )
-
-#define REFLECT_STRUCT( member, memberName, structType, metaData ) \
-            AddPropertyStruct( offsetof( objectType, member ), memberName, structType::GetReflectionInfoS() ); \
-            ADD_PROPERTY_METADATA( metaData )
-
-#define REFLECT_ARRAY_OF_STRUCT( member, memberName, structType, metaData ) \
-            AddPropertyArrayOfStruct( offsetof( objectType, member ), memberName, structType::GetReflectionInfoS() ); \
-            ADD_PROPERTY_METADATA( metaData )
+#define REFLECT_RENAME( member, memberName, ... ) \
+            { \
+                AddProperty( offsetof( objectType, member ), \
+                             memberName, \
+                             ::GetPropertyType( MEMBER_PTR( member ) ), \
+                             ::IsArrayProperty( MEMBER_PTR( member ) ), \
+                             ::GetStructType( MEMBER_PTR( member ) ) ); \
+                AddPropertyMetaData( __VA_ARGS__ ); \
+            }
 
 // END
 //------------------------------------------------------------------------------

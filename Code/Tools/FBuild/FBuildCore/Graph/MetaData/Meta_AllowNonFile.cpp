@@ -7,7 +7,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( Meta_AllowNonFile, IMetaData, MetaNone() )
+REFLECT_BEGIN( Meta_AllowNonFile, IMetaData )
 REFLECT_END( Meta_AllowNonFile )
 
 // CONSTRUCTOR

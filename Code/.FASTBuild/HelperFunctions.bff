@@ -163,7 +163,8 @@ function CreateVCXProject_Exe( .Name
                                .Configs )
 {
     .ExtraOptions   = [
-                        .LocalDebuggerCommand           = '^$(SolutionDir)..\^$(Configuration)\$Path$\$Name$.exe'
+                        .Output                         = '^$(SolutionDir)..\^$(Configuration)\$Path$\$Name$.exe'
+                        .LocalDebuggerCommand           = .Output
                         .LocalDebuggerWorkingDirectory  = '^$(SolutionDir)..\..\Code\$Path$'
                       ]
     CreateVCXProject_Lib( .Name, .Path, .Configs, .ExtraOptions )

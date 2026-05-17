@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
+#include "Core/Env/CPUInfo.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
@@ -28,8 +29,8 @@ FBuildOptions::FBuildOptions()
     //m_ShowInfo = true; // uncomment this to enable spam when debugging
 #endif
 
-    // Default to NUMBER_OF_PROCESSORS
-    m_NumWorkerThreads = Env::GetNumProcessors();
+    // Default to number of useful processors in the system
+    m_NumWorkerThreads = CPUInfo::Get().GetNumUsefulCores();
 
     // Default working dir is the system working dir
     AStackString workingDir;
@@ -418,6 +419,27 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowHiddenTargets = true;
                 continue;
             }
+            else if ( thisArg == "-sourcefile" )
+            {
+                const int32_t pathIndex = ( i + 1 );
+                if ( pathIndex < argc )
+                {
+                    const AStackString pathArg( argv[ pathIndex ] );
+                    pathArg.Tokenize( m_SourceFiles, ';' );
+                    ++i;
+
+                    // add to args we might pass to subprocess
+                    m_Args += ' ';
+                    m_Args += argv[ i ];
+                }
+                if ( m_SourceFiles.IsEmpty() )
+                {
+                    OUTPUT( "FBuild: Error: Missing <path> for '-sourcefile' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                continue;
+            }
             else if ( thisArg == "-summary" )
             {
                 m_ShowSummary = true;
@@ -661,7 +683,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -nofastcancel     Disable aborting other tasks as soon any task fails.\n"
             " -nolocalrace      Disable local race of remotely started jobs.\n"
             " -noprogress       Don't show the progress bar while building.\n"
-            " -nounity          (Experimental) Build files individually, ignoring Unity.\n"
+            " -nounity          Build files individually, ignoring Unity.\n"
             " -nostoponerror    On error, favor building as much as possible.\n"
             " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"
             " -profile          Output an fbuild_profiling.json describing the build.\n"
@@ -676,6 +698,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -showdeps         Show known dependency tree for specified targets.\n"
             " -showtargets      Display primary targets, excluding those marked \"Hidden\".\n"
             " -showalltargets   Display primary targets, including those marked \"Hidden\".\n"
+            " -sourcefile <path[s]>\n"
+            "                   Reduce targets to attempt minimal source file builds.\n"
             " -summary          Show a summary at the end of the build.\n"
             " -verbose          Show detailed diagnostic info. (Increases built time)\n"
             " -version          Print version and exit.\n"
@@ -699,8 +723,9 @@ void FBuildOptions::DisplayVersion() const
 #else
     #define VERSION_CONFIG ""
 #endif
-    OUTPUT( "FASTBuild " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
-            "Copyright 2012-2025 Franta Fulin - https://www.fastbuild.org\n" );
+    OUTPUT( "FASTBuild %s " VERSION_CONFIG "- "
+            "Copyright 2012-2026 Franta Fulin - https://www.fastbuild.org\n",
+            GetVersionString() );
 #undef VERSION_CONFIG
 }
 

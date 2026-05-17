@@ -17,47 +17,20 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
-// TestCache
 //------------------------------------------------------------------------------
-class TestCache : public FBuildTest
+TEST_GROUP( TestCache, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Write() const;
-    void Read() const;
-    void ReadWrite() const;
-    void ConsistentCacheKeysWithDist() const;
-
-    void LightCache_IncludeUsingMacro() const;
-    void LightCache_IncludeUsingMacro2() const;
-    void LightCache_IncludeUsingMacro3() const;
-    void LightCache_IncludeUsingUndefinedMacros1() const;
-    void LightCache_IncludeUsingUndefinedMacros2() const;
-    void LightCache_IncludeUsingUndefinedMacros3() const;
-    void LightCache_IncludeHierarchy() const;
-    void LightCache_CyclicInclude() const;
-    void LightCache_ImportDirective() const;
-    void LightCache_ForceInclude() const;
-    void LightCache_SourceDependencies() const;
-    void LightCache_ResponseFile() const;
-
+public:
     // MSVC Static Analysis tests
     const char * const mAnalyzeMSVCBFFPath = "Tools/FBuild/FBuildTest/Data/TestCache/Analyze_MSVC/fbuild.bff";
     const char * const mAnalyzeMSVCXMLFile1 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file1.nativecodeanalysis.xml";
     const char * const mAnalyzeMSVCXMLFile2 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file2.nativecodeanalysis.xml";
-    void Analyze_MSVC_WarningsOnly_Write() const;
-    void Analyze_MSVC_WarningsOnly_Read() const;
-    void Analyze_MSVC_WarningsOnly_WriteFromDist() const;
-    void Analyze_MSVC_WarningsOnly_ReadFromDist() const;
-
-    void ExtraFiles( const char * bffPath, const char * extraFilePath ) const;
-    void ExtraFiles_DynamicDeopt() const;
-    void ExtraFiles_NativeCodeAnalysisXML() const;
-    void ExtraFiles_GCNO() const;
 
     // Helpers
+    void ExtraFiles( const char * bffPath, const char * extraFilePath ) const;
     void CheckForDependencies( const FBuildForTest & fBuild, const char * const files[], size_t numFiles ) const;
+    void CheckLightCacheHits( FBuild & fBuild, uint32_t numHits ) const;
+    void CheckLightCacheStores( FBuild & fBuild, uint32_t numStores ) const;
     void LightCache_IncludeUsingUndefinedMacros( const char * consfigFile,
                                                  bool expectedBuildResult,
                                                  bool expectedLightCacheUsage,
@@ -66,41 +39,8 @@ private:
     TestCache & operator=( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCache )
-    REGISTER_TEST( Write )
-    REGISTER_TEST( Read )
-    REGISTER_TEST( ReadWrite )
-    REGISTER_TEST( ConsistentCacheKeysWithDist )
-    REGISTER_TEST( ExtraFiles_GCNO )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( ExtraFiles_DynamicDeopt )
-    REGISTER_TEST( ExtraFiles_NativeCodeAnalysisXML )
-    REGISTER_TEST( LightCache_IncludeUsingMacro )
-    REGISTER_TEST( LightCache_IncludeUsingMacro2 )
-    REGISTER_TEST( LightCache_IncludeUsingMacro3 )
-    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros1 )
-    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros2 )
-    REGISTER_TEST( LightCache_IncludeUsingUndefinedMacros3 )
-    REGISTER_TEST( LightCache_IncludeHierarchy )
-    REGISTER_TEST( LightCache_CyclicInclude )
-    REGISTER_TEST( LightCache_ImportDirective )
-    REGISTER_TEST( LightCache_ForceInclude )
-    REGISTER_TEST( LightCache_SourceDependencies )
-    REGISTER_TEST( LightCache_ResponseFile )
-    REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
-    REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
-
-    // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
-    //REGISTER_TEST( Analyze_MSVC_WarningsOnly_WriteFromDist )
-    //REGISTER_TEST( Analyze_MSVC_WarningsOnly_ReadFromDist )
-#endif
-REGISTER_TESTS_END
-
-// Write
-//------------------------------------------------------------------------------
-void TestCache::Write() const
+TEST_CASE( TestCache, Write )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -147,7 +87,7 @@ void TestCache::Write() const
         TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed );
 
         // Ensure LightCache was used
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheStoreCount() == objStats.m_NumCacheStores );
 
         numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
         TEST_ASSERT( numDepsB > 0 );
@@ -157,9 +97,8 @@ void TestCache::Write() const
 #endif
 }
 
-// Read
 //------------------------------------------------------------------------------
-void TestCache::Read() const
+TEST_CASE( TestCache, Read )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -206,7 +145,7 @@ void TestCache::Read() const
         TEST_ASSERT( objStats.m_NumBuilt == 0 );
 
         // Ensure LightCache was used
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheHitCount() == objStats.m_NumCacheHits );
 
         numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
         TEST_ASSERT( numDepsB > 0 );
@@ -216,9 +155,8 @@ void TestCache::Read() const
 #endif
 }
 
-// ReadWrite
 //------------------------------------------------------------------------------
-void TestCache::ReadWrite() const
+TEST_CASE( TestCache, ReadWrite )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -265,7 +203,7 @@ void TestCache::ReadWrite() const
         TEST_ASSERT( objStats.m_NumBuilt == 0 );
 
         // Ensure LightCache was used
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        TEST_ASSERT( fBuild.GetStats().GetLightCacheHitCount() == objStats.m_NumCacheHits );
 
         numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
         TEST_ASSERT( numDepsB > 0 );
@@ -275,9 +213,8 @@ void TestCache::ReadWrite() const
 #endif
 }
 
-// ConsistentCacheKeysWithDist
 //------------------------------------------------------------------------------
-void TestCache::ConsistentCacheKeysWithDist() const
+TEST_CASE( TestCache, ConsistentCacheKeysWithDist )
 {
     FBuildTestOptions options;
     options.m_CacheVerbose = true;
@@ -341,9 +278,8 @@ void TestCache::ConsistentCacheKeysWithDist() const
     TEST_ASSERT( storeKey == hitKey );
 }
 
-// LightCache_IncludeUsingMacro
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingMacro() const
+TEST_CASE( TestCache, LightCache_IncludeUsingMacro )
 {
     // Files can be included via macros and those macros can result in different
     // includes for a given header:
@@ -379,9 +315,7 @@ void TestCache::LightCache_IncludeUsingMacro() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        CheckLightCacheStores( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -397,9 +331,7 @@ void TestCache::LightCache_IncludeUsingMacro() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        CheckLightCacheHits( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -418,9 +350,7 @@ void TestCache::LightCache_IncludeUsingMacro() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        CheckLightCacheStores( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -436,17 +366,14 @@ void TestCache::LightCache_IncludeUsingMacro() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        CheckLightCacheHits( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
 }
 
-// LightCache_IncludeUsingMacro2
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingMacro2() const
+TEST_CASE( TestCache, LightCache_IncludeUsingMacro2 )
 {
     // Defines found while parsing must be stored for re-use along with discovered
     // includes.
@@ -479,9 +406,7 @@ void TestCache::LightCache_IncludeUsingMacro2() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        CheckLightCacheStores( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -497,9 +422,7 @@ void TestCache::LightCache_IncludeUsingMacro2() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        CheckLightCacheHits( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -518,9 +441,7 @@ void TestCache::LightCache_IncludeUsingMacro2() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        CheckLightCacheStores( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -536,17 +457,14 @@ void TestCache::LightCache_IncludeUsingMacro2() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        CheckLightCacheHits( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
 }
 
-// LightCache_IncludeUsingMacro3
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingMacro3() const
+TEST_CASE( TestCache, LightCache_IncludeUsingMacro3 )
 {
     // Defines are accumulated during traversal, resulting in the main defines
     // vector vector being resized while being iterated. This needs to be handled
@@ -572,17 +490,14 @@ void TestCache::LightCache_IncludeUsingMacro3() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 1 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        CheckLightCacheStores( fBuild, 1 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
 }
 
-// LightCache_IncludeUsingUndefinedMacros1
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingUndefinedMacros1() const
+TEST_CASE( TestCache, LightCache_IncludeUsingUndefinedMacros1 )
 {
     // An include using a macro which is not defined, but guarded so unused
     //
@@ -596,9 +511,8 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros1() const
                                             nullptr );  // No error
 }
 
-// LightCache_IncludeUsingUndefinedMacros2
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingUndefinedMacros2() const
+TEST_CASE( TestCache, LightCache_IncludeUsingUndefinedMacros2 )
 {
     // An include using a macro which is not defined, but is used
     //
@@ -610,9 +524,8 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros2() const
                                             nullptr );  // No LightCache error
 }
 
-// LightCache_IncludeUsingUndefinedMacros3
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeUsingUndefinedMacros3() const
+TEST_CASE( TestCache, LightCache_IncludeUsingUndefinedMacros3 )
 {
     // An include using a macro which is defined, but is not a direct include
     // We don't support that, but we must detect and disable the LightCache to
@@ -628,7 +541,6 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros3() const
                                             "Could not resolve macro 'COMPLEX_MACRO'" ); // Expected error
 }
 
-// LightCache_IncludeUsingUndefinedMacros
 //------------------------------------------------------------------------------
 void TestCache::LightCache_IncludeUsingUndefinedMacros( const char * configFile,
                                                         bool expectedBuildResult,
@@ -650,13 +562,16 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros( const char * configFile,
 
     // Check LightCache compatibility
     // (can be compatible even if compilation fails)
+    const uint32_t lightCacheTotalCount = fBuild.GetStats().GetLightCacheHitCount() +
+                                          fBuild.GetStats().GetLightCacheMissCount() +
+                                          fBuild.GetStats().GetLightCacheStoreCount();
     if ( lightCacheCompatible )
     {
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == 1 );
+        TEST_ASSERT( lightCacheTotalCount == 1 );
     }
     else
     {
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == 0 );
+        TEST_ASSERT( lightCacheTotalCount == 0 );
         TEST_ASSERT( GetRecordedOutput().Find( "LightCache cannot be used" ) );
     }
 
@@ -667,9 +582,8 @@ void TestCache::LightCache_IncludeUsingUndefinedMacros( const char * configFile,
     }
 }
 
-// LightCache_IncludeHierarchy
 //------------------------------------------------------------------------------
-void TestCache::LightCache_IncludeHierarchy() const
+TEST_CASE( TestCache, LightCache_IncludeHierarchy )
 {
     // Two files can include "common.h" in such a way that common.h includes a
     // different file because of the rules about which directories are searched
@@ -702,9 +616,7 @@ void TestCache::LightCache_IncludeHierarchy() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        CheckLightCacheStores( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -721,9 +633,7 @@ void TestCache::LightCache_IncludeHierarchy() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        CheckLightCacheHits( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -740,9 +650,7 @@ void TestCache::LightCache_IncludeHierarchy() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
+        CheckLightCacheStores( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
@@ -759,17 +667,14 @@ void TestCache::LightCache_IncludeHierarchy() const
         TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure we that we used the LightCache
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
+        CheckLightCacheHits( fBuild, 2 );
 
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
 }
 
-// LightCache_CyclicInclude
 //------------------------------------------------------------------------------
-void TestCache::LightCache_CyclicInclude() const
+TEST_CASE( TestCache, LightCache_CyclicInclude )
 {
     FBuildTestOptions options;
     options.m_CacheVerbose = true;
@@ -787,9 +692,8 @@ void TestCache::LightCache_CyclicInclude() const
 
         // Ensure everything was stored to the cache using the LightCache
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumProcessed );
+        CheckLightCacheStores( fBuild, objStats.m_NumProcessed );
         TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheStores );
     }
 
     // Read
@@ -804,15 +708,13 @@ void TestCache::LightCache_CyclicInclude() const
 
         // Ensure everything came from the cache using the LightCache
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
+        CheckLightCacheHits( fBuild, objStats.m_NumProcessed );
         TEST_ASSERT( objStats.m_NumBuilt == 0 );
-        TEST_ASSERT( fBuild.GetStats().GetLightCacheCount() == objStats.m_NumCacheHits );
     }
 }
 
-// LightCache_ImportDirective
 //------------------------------------------------------------------------------
-void TestCache::LightCache_ImportDirective() const
+TEST_CASE( TestCache, LightCache_ImportDirective )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -830,15 +732,15 @@ void TestCache::LightCache_ImportDirective() const
     TEST_ASSERT( objStats.m_NumCacheStores == 1 );
 
     // Ensure we detected that we could not use the LightCache
-    TEST_ASSERT( objStats.m_NumLightCache == 0 );
+    CheckLightCacheStores( fBuild, 0 );
 
     // Check for expected error in output (from -cacheverbose)
     TEST_ASSERT( GetRecordedOutput().Find( "#import is unsupported." ) );
 }
 
-// LightCache_ForceInclude
 //------------------------------------------------------------------------------
-void TestCache::LightCache_ForceInclude() const
+#if defined( __WINDOWS__ ) // TODO:B Add coverage for GCC/Clang with (-include)
+TEST_CASE( TestCache, LightCache_ForceInclude )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -853,16 +755,16 @@ void TestCache::LightCache_ForceInclude() const
     TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Ensure cache was used in LightCache mode
-    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-    TEST_ASSERT( objStats.m_NumCacheStores == 1 );
-    TEST_ASSERT( objStats.m_NumLightCache == 1 );
+    CheckLightCacheStores( fBuild, 1 );
+    CheckLightCacheHits( fBuild, 0 );
 
     CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
 }
+#endif
 
-// LightCache_SourceDependencies
 //------------------------------------------------------------------------------
-void TestCache::LightCache_SourceDependencies() const
+#if defined( __WINDOWS__ ) // TODO:B Add coverage for GCC/Clang with (-include)
+TEST_CASE( TestCache, LightCache_SourceDependencies )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -880,15 +782,15 @@ void TestCache::LightCache_SourceDependencies() const
     TEST_ASSERT( objStats.m_NumCacheStores == 1 );
 
     // Ensure we detected that we could not use the LightCache
-    TEST_ASSERT( objStats.m_NumLightCache == 0 );
+    CheckLightCacheStores( fBuild, 0 );
 
     // Check for expected error in output (from -cacheverbose)
     TEST_ASSERT( GetRecordedOutput().Find( "LightCache is incompatible with -sourceDependencies" ) );
 }
+#endif
 
-// LightCache_ResponseFile
 //------------------------------------------------------------------------------
-void TestCache::LightCache_ResponseFile() const
+TEST_CASE( TestCache, LightCache_ResponseFile )
 {
     FBuildTestOptions options;
     options.m_UseCacheWrite = true;
@@ -900,9 +802,8 @@ void TestCache::LightCache_ResponseFile() const
     TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Ensure cache we stored using the LightCache
-    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-    TEST_ASSERT( objStats.m_NumCacheStores == 1 );
-    TEST_ASSERT( objStats.m_NumLightCache == 1 );
+    CheckLightCacheStores( fBuild, 1 );
+    CheckLightCacheHits( fBuild, 0 );
 
     // Get the discovered dependencies and ensure the include was found
     // This ensures that the include paths in the args are correctly processed
@@ -915,9 +816,157 @@ void TestCache::LightCache_ResponseFile() const
     TEST_ASSERT( deps[ 1 ].GetNode()->GetName().EndsWith( "include.h" ) );
 }
 
-// Analyze_MSVC_WarningsOnly_Write
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_Write() const
+TEST_CASE( TestCache, LightCache_LibraryNoFiles )
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_LibraryNoFiles/fbuild.bff";
+
+    // Initialize (parsing the BFF is enough to ensure we had no errors)
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestCache, LightCache_NoStdInc )
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_NoStdInc/fbuild.bff";
+
+    // Initialize
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Build - Ensure CompilerInfo is built
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+    CheckLightCacheStores( fBuild, 1 );
+    CheckLightCacheHits( fBuild, 0 );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestCache, LightCache_NoRebuild )
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_NoRebuild/fbuild.bff";
+
+    const char * const dbFile = "../tmp/Test/Cache/NoRebuild/fbuild.fdb";
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckLightCacheStores( fBuild, 1 );
+    }
+
+    // Build again
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckLightCacheStores( fBuild, 0 );
+        CheckLightCacheHits( fBuild, 0 );
+    }
+
+    // BFF edit no rebuild
+    {
+        FBuildTestOptions optionsCopy( options );
+        optionsCopy.m_ForceDBMigration_Debug = true;
+        FBuildForTest fBuild( optionsCopy );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckLightCacheStores( fBuild, 0 );
+        CheckLightCacheHits( fBuild, 0 );
+    }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestCache, LightCache_MissingInclude )
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_MissingInclude/fbuild.bff";
+
+    const char * const dbFile = "../tmp/Test/Cache/MissingInclude/fbuild.fdb";
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckLightCacheStores( fBuild, 1 );
+    }
+
+    // Build again
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 0, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE );
+        CheckLightCacheStores( fBuild, 0 );
+        CheckLightCacheHits( fBuild, 0 );
+    }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestCache, LightCache_CommentInDirective )
+{
+    FBuildTestOptions options;
+    options.m_UseCacheWrite = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_CommentInDirective/fbuild.bff";
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Build - Ensure CompilerInfo is built
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::COMPILER_INFO_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckLightCacheStores( fBuild, 1 );
+    }
+}
+
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCache, Analyze_MSVC_WarningsOnly_Write )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -952,10 +1001,11 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
 }
+#endif
 
-// Analyze_MSVC_WarningsOnly_Read
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_Read() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCache, Analyze_MSVC_WarningsOnly_Read )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -984,10 +1034,11 @@ void TestCache::Analyze_MSVC_WarningsOnly_Read() const
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
 }
+#endif
 
-// Analyze_MSVC_WarningsOnly_WriteFromDist
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
+#if 0 // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
+TEST_CASE( TestCache, Analyze_MSVC_WarningsOnly_WriteFromDist )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -1031,10 +1082,11 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
 }
+#endif
 
-// Analyze_MSVC_WarningsOnly_ReadFromDist
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
+#if 0 // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
+TEST_CASE( TestCache, Analyze_MSVC_WarningsOnly_ReadFromDist )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -1072,8 +1124,8 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
 }
+#endif
 
-// ExtraFiles
 //------------------------------------------------------------------------------
 void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) const
 {
@@ -1121,29 +1173,30 @@ void TestCache::ExtraFiles( const char * bffPath, const char * extraFilePath ) c
     TEST_ASSERT( FileIO::FileExists( extraFilePath ) );
 }
 
-// ExtraFiles_DynamicDeopt
 //------------------------------------------------------------------------------
-void TestCache::ExtraFiles_DynamicDeopt() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCache, ExtraFiles_DynamicDeopt )
 {
-#if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
     ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_DynamicDeopt/fbuild.bff",
                 "../tmp/Test/Cache/ExtraFiles_DynamicDeopt/file.alt.obj" );
-#else
+    #else
     OUTPUT( "[SKIP] ExtraFiles_DynamicDeopt - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
-#endif
+    #endif
 }
+#endif
 
-// ExtraFiles_NativeCodeAnalysisXML
 //------------------------------------------------------------------------------
-void TestCache::ExtraFiles_NativeCodeAnalysisXML() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCache, ExtraFiles_NativeCodeAnalysisXML )
 {
     ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_NativeCodeAnalysisXML/fbuild.bff",
                 "../tmp/Test/Cache/ExtraFiles_NativeCodeAnalysisXML/file.nativecodeanalysis.xml" );
 }
+#endif
 
-// ExtraFiles_GCNO
 //------------------------------------------------------------------------------
-void TestCache::ExtraFiles_GCNO() const
+TEST_CASE( TestCache, ExtraFiles_GCNO )
 {
     ExtraFiles( "Tools/FBuild/FBuildTest/Data/TestCache/ExtraFiles_GCNO/fbuild.bff",
                 "../tmp/Test/Cache/ExtraFiles_GCNO/file.gcno" );
@@ -1172,6 +1225,20 @@ void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char *
         }
         TEST_ASSERTM( found, "Missing dependency: %s", files[ i ] );
     }
+}
+
+//------------------------------------------------------------------------------
+void TestCache::CheckLightCacheHits( FBuild & fBuild, uint32_t numHits ) const
+{
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumLightCacheHits == numHits );
+}
+
+//------------------------------------------------------------------------------
+void TestCache::CheckLightCacheStores( FBuild & fBuild, uint32_t numStores ) const
+{
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumLightCacheStores == numStores );
 }
 
 //------------------------------------------------------------------------------

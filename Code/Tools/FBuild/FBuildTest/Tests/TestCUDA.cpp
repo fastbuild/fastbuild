@@ -12,29 +12,14 @@
 // Core
 #include "Core/Strings/AStackString.h"
 
-// TestCUDA
 //------------------------------------------------------------------------------
-class TestCUDA : public FBuildTest
+TEST_GROUP( TestCUDA, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Build() const;
-    void Build_NoRebuild() const;
-    void Build_CacheHit() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCUDA )
-    REGISTER_TEST( Build )
-    REGISTER_TEST( Build_NoRebuild )
-    REGISTER_TEST( Build_CacheHit )
-REGISTER_TESTS_END
-
-// Build
-//------------------------------------------------------------------------------
-void TestCUDA::Build() const
+TEST_CASE( TestCUDA, Build )
 {
     // TODO: Get a newer version of CUDA that supports > VS 2013
 #if defined( _MSC_VER ) && ( _MSC_VER <= 1800 )
@@ -42,7 +27,7 @@ void TestCUDA::Build() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCUDA/cuda.bff";
     options.m_ForceCleanBuild = true;
     options.m_UseCacheWrite = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString obj( "../tmp/Test/CUDA/test.obj" );
@@ -70,15 +55,14 @@ void TestCUDA::Build() const
 #endif
 }
 
-// Build_NoRebuild
 //------------------------------------------------------------------------------
-void TestCUDA::Build_NoRebuild() const
+TEST_CASE( TestCUDA, Build_NoRebuild )
 {
     // TODO: Get a newer version of CUDA that supports > VS 2013
 #if defined( _MSC_VER ) && ( _MSC_VER <= 1800 )
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCUDA/cuda.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CUDA/cuda.fdb" ) );
 
     const AStackString obj( "../tmp/Test/CUDA/test.obj" );
@@ -98,16 +82,15 @@ void TestCUDA::Build_NoRebuild() const
 #endif
 }
 
-// Build_CacheHit
 //------------------------------------------------------------------------------
-void TestCUDA::Build_CacheHit() const
+TEST_CASE( TestCUDA, Build_CacheHit )
 {
     // TODO: Get a newer version of CUDA that supports > VS 2013
 #if defined( _MSC_VER ) && ( _MSC_VER <= 1800 )
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCUDA/cuda.bff";
     options.m_UseCacheRead = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CUDA/cuda.fdb" ) );
 
     const AStackString obj( "../tmp/Test/CUDA/test.obj" );

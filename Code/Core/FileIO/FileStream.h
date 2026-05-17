@@ -44,6 +44,9 @@ public:
 #endif
     bool Truncate();
 
+    bool ReadIntoString( AString & outString );
+    bool WriteFromString( const AString & string );
+
 private:
 #if defined( __WINDOWS__ )
     void * m_Handle;

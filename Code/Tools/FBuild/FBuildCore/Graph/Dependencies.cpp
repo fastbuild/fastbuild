@@ -86,6 +86,30 @@ void Dependencies::Load( NodeGraph & nodeGraph, uint32_t numDeps, ConstMemoryStr
     }
 }
 
+//------------------------------------------------------------------------------
+void Dependencies::Add( const Array<Node *> & nodes )
+{
+    const size_t numDepsToAdd = nodes.GetSize();
+    if ( numDepsToAdd > 0 )
+    {
+        // Expand capacity if needed
+        const size_t requiredCapacity = ( GetSize() + numDepsToAdd );
+        if ( requiredCapacity > GetCapacity() )
+        {
+            GrowCapacity( requiredCapacity ); // Expand to exact capacity
+        }
+
+        // Add elements
+        Node ** srcPos = nodes.Begin();
+        Dependency * dstPos = GetDependencies( m_DependencyList ) + GetSize();
+        for ( size_t i = 0; i < numDepsToAdd; ++i )
+        {
+            INPLACE_NEW( dstPos++ ) Dependency( *srcPos++ );
+        }
+        m_DependencyList->m_Size += static_cast<uint32_t>( numDepsToAdd );
+    }
+}
+
 // GrowCapacity
 //------------------------------------------------------------------------------
 void Dependencies::GrowCapacity( size_t newCapacity )
@@ -96,6 +120,12 @@ void Dependencies::GrowCapacity( size_t newCapacity )
         newCapacity = m_DependencyList ? ( m_DependencyList->m_Capacity * 2 )
                                        : 1;
         ASSERT( newCapacity > 0 );
+    }
+
+    // Ensure the current list will fit in the newCapacity
+    if ( m_DependencyList != nullptr )
+    {
+        newCapacity = Math::Max<size_t>( m_DependencyList->m_Size, newCapacity );
     }
 
     // Allocate space for new list

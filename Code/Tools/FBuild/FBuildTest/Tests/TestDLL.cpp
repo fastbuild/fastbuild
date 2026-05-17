@@ -11,55 +11,34 @@
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
-// TestBuildAndLinkLibrary
 //------------------------------------------------------------------------------
-class TestDLL : public FBuildTest
+TEST_GROUP( TestDLL, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestSingleDLL() const;
-    void TestSingleDLL_NoRebuild() const;
-    void TestTwoDLLs() const;
-    void TestTwoDLLs_NoRebuild() const;
-    void TestTwoDLLs_NoUnnecessaryRelink() const;
-    void TestDLLWithPCH() const;
-    void TestDLLWithPCH_NoRebuild() const;
-    void TestExeWithDLL() const;
-    void TestExeWithDLL_NoRebuild() const;
-    void TestValidExeWithDLL() const;
-
-    void TestLinkWithCopy() const;
-
-    const char * GetSingleDLLDBFileName() const { return "../tmp/Test/DLL/singledll.fdb"; }
-    const char * GetTwoDLLsDBFileName() const { return "../tmp/Test/DLL/twodlls.fdb"; }
-    const char * GetDLLWithPCHDBFileName() const { return "../tmp/Test/DLL/dllwithpch.fdb"; }
-    const char * GetExeWithDLLDBFileName() const { return "../tmp/Test/DLL/dllwithexe.fdb"; }
+public:
+    const char * GetSingleDLLDBFileName() const
+    {
+        return "../tmp/Test/DLL/singledll.fdb";
+    }
+    const char * GetTwoDLLsDBFileName() const
+    {
+        return "../tmp/Test/DLL/twodlls.fdb";
+    }
+    const char * GetDLLWithPCHDBFileName() const
+    {
+        return "../tmp/Test/DLL/dllwithpch.fdb";
+    }
+    const char * GetExeWithDLLDBFileName() const
+    {
+        return "../tmp/Test/DLL/dllwithexe.fdb";
+    }
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestDLL )
-    REGISTER_TEST( TestSingleDLL )
-    REGISTER_TEST( TestSingleDLL_NoRebuild )
-    REGISTER_TEST( TestTwoDLLs )
-    REGISTER_TEST( TestTwoDLLs_NoRebuild )
-    REGISTER_TEST( TestTwoDLLs_NoUnnecessaryRelink )
-    REGISTER_TEST( TestDLLWithPCH )
-    REGISTER_TEST( TestDLLWithPCH_NoRebuild )
-    REGISTER_TEST( TestExeWithDLL )
-    REGISTER_TEST( TestExeWithDLL_NoRebuild )
-    REGISTER_TEST( TestValidExeWithDLL )
-    REGISTER_TEST( TestLinkWithCopy )
-REGISTER_TESTS_END
-
-// TestSingleDLL
-//------------------------------------------------------------------------------
-void TestDLL::TestSingleDLL() const
+TEST_CASE( TestDLL, TestSingleDLL )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dll( "../tmp/Test/DLL/dll.dll" );
@@ -80,13 +59,12 @@ void TestDLL::TestSingleDLL() const
     CheckStatsNode( 1, 1, Node::DLL_NODE );
 }
 
-// TestSingleDLL_NoRebuild
 //------------------------------------------------------------------------------
-void TestDLL::TestSingleDLL_NoRebuild() const
+TEST_CASE( TestDLL, TestSingleDLL_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetSingleDLLDBFileName() ) );
 
     const AStackString dll( "../tmp/Test/DLL/dll.dll" );
@@ -100,13 +78,12 @@ void TestDLL::TestSingleDLL_NoRebuild() const
     CheckStatsNode( 1, 0, Node::DLL_NODE );
 }
 
-// TestTwoDLLs
 //------------------------------------------------------------------------------
-void TestDLL::TestTwoDLLs() const
+TEST_CASE( TestDLL, TestTwoDLLs )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest//Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dllA( "../tmp/Test/DLL/dllA.dll" );
@@ -131,13 +108,12 @@ void TestDLL::TestTwoDLLs() const
     CheckStatsNode( 2, 2, Node::DLL_NODE );
 }
 
-// TestTwoDLLs_NoRebuild
 //------------------------------------------------------------------------------
-void TestDLL::TestTwoDLLs_NoRebuild() const
+TEST_CASE( TestDLL, TestTwoDLLs_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
     // build again
@@ -152,15 +128,14 @@ void TestDLL::TestTwoDLLs_NoRebuild() const
     CheckStatsNode( 2, 0, Node::DLL_NODE );
 }
 
-// TestTwoDLLs_NoUnnecessaryRelink
 //------------------------------------------------------------------------------
-void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
+TEST_CASE( TestDLL, TestTwoDLLs_NoUnnecessaryRelink )
 {
     // 1) Force DLL A to build
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
         const AStackString dllA( "../tmp/Test/DLL/dllA.dll" );
@@ -182,7 +157,7 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
         // build again
@@ -198,13 +173,12 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
     }
 }
 
-// TestDLLWithPCH
 //------------------------------------------------------------------------------
-void TestDLL::TestDLLWithPCH() const
+TEST_CASE( TestDLL, TestDLLWithPCH )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
@@ -226,14 +200,13 @@ void TestDLL::TestDLLWithPCH() const
     CheckStatsNode( 1, 1, Node::DLL_NODE );
 }
 
-// TestDLLWithPCH_NoRebuild
 //------------------------------------------------------------------------------
-void TestDLL::TestDLLWithPCH_NoRebuild() const
+TEST_CASE( TestDLL, TestDLLWithPCH_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetDLLWithPCHDBFileName() ) );
 
     const AStackString dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
@@ -249,13 +222,12 @@ void TestDLL::TestDLLWithPCH_NoRebuild() const
     CheckStatsNode( 1, 0, Node::DLL_NODE );
 }
 
-// TestExeWithDLL
 //------------------------------------------------------------------------------
-void TestDLL::TestExeWithDLL() const
+TEST_CASE( TestDLL, TestExeWithDLL )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString exe( "../tmp/Test/DLL/exe.exe" );
@@ -278,13 +250,12 @@ void TestDLL::TestExeWithDLL() const
     CheckStatsNode( 1, 1, Node::EXE_NODE );
 }
 
-// TestExeWithDLL_NoRebuild
 //------------------------------------------------------------------------------
-void TestDLL::TestExeWithDLL_NoRebuild() const
+TEST_CASE( TestDLL, TestExeWithDLL_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetExeWithDLLDBFileName() ) );
 
     // build executable with depends on DLLA
@@ -298,9 +269,8 @@ void TestDLL::TestExeWithDLL_NoRebuild() const
     CheckStatsNode( 1, 0, Node::EXE_NODE );
 }
 
-// TestValidExeWithDLL
 //------------------------------------------------------------------------------
-void TestDLL::TestValidExeWithDLL() const
+TEST_CASE( TestDLL, TestValidExeWithDLL )
 {
     const AStackString exe( "../tmp/Test/DLL/exe.exe" );
 
@@ -310,14 +280,13 @@ void TestDLL::TestValidExeWithDLL() const
     TEST_ASSERT( ret == 99 );
 }
 
-// TestLinkWithCopy
 //------------------------------------------------------------------------------
-void TestDLL::TestLinkWithCopy() const
+TEST_CASE( TestDLL, TestLinkWithCopy )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build executable with depends on DLLA

@@ -126,7 +126,7 @@ Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )
 //------------------------------------------------------------------------------
 Protocol::MsgConnectionAck::MsgConnectionAck()
     : Protocol::IMessage( Protocol::MSG_CONNECTION_ACK, sizeof( MsgConnectionAck ), false )
-    , m_WorkerVersion( static_cast<uint16_t>( FBUILD_VERSION ) )
+    , m_WorkerVersion( static_cast<uint16_t>( GetVersionIdentifier() ) )
     , m_ProtocolVersionMajor( kVersionMajor )
     , m_ProtocolVersionMinor( kVersionMinor )
 {

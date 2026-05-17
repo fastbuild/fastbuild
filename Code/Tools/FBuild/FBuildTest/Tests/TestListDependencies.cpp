@@ -15,35 +15,19 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
-// TestListDependencies
 //------------------------------------------------------------------------------
-class TestListDependencies : public FBuildTest
+TEST_GROUP( TestListDependencies, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Build() const;
-    void Build_NoRebuild() const;
-    void Build_NoRebuild_BFFChange() const;
-
+public:
     void Check_SourceResults( const FBuildTestOptions & options ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestListDependencies )
-    REGISTER_TEST( Build )
-    REGISTER_TEST( Build_NoRebuild )
-    REGISTER_TEST( Build_NoRebuild_BFFChange )
-REGISTER_TESTS_END
-
-// Build
-//------------------------------------------------------------------------------
-void TestListDependencies::Build() const
+TEST_CASE( TestListDependencies, Build )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestListDependencies/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
@@ -59,13 +43,12 @@ void TestListDependencies::Build() const
     Check_SourceResults( options );
 }
 
-// Build_NoRebuild
 //------------------------------------------------------------------------------
-void TestListDependencies::Build_NoRebuild() const
+TEST_CASE( TestListDependencies, Build_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestListDependencies/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/ListDependencies/fbuild.fdb" ) );
 
     // build (via alias)
@@ -80,15 +63,14 @@ void TestListDependencies::Build_NoRebuild() const
     Check_SourceResults( options );
 }
 
-// Build_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestListDependencies::Build_NoRebuild_BFFChange() const
+TEST_CASE( TestListDependencies, Build_NoRebuild_BFFChange )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestListDependencies/fbuild.bff";
     options.m_ForceDBMigration_Debug = true; // Force bff modified re-parse
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/ListDependencies/fbuild.fdb" ) );
 
     // build (via alias)
@@ -103,7 +85,6 @@ void TestListDependencies::Build_NoRebuild_BFFChange() const
     Check_SourceResults( options );
 }
 
-// Check_SourceResults
 //------------------------------------------------------------------------------
 void TestListDependencies::Check_SourceResults( const FBuildTestOptions & options ) const
 {

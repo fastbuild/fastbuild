@@ -1,23 +1,19 @@
-// Meta_Optional
+// Meta_Required
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Meta_Optional.h"
+#include "Meta_Required.h"
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( Meta_Optional, IMetaData, MetaNone() )
-REFLECT_END( Meta_Optional )
+REFLECT_BEGIN( Meta_Required, IMetaData )
+REFLECT_END( Meta_Required )
 
-// CONSTRUCTOR
 //------------------------------------------------------------------------------
-Meta_Optional::Meta_Optional()
-{
-}
+Meta_Required::Meta_Required() = default;
 
-// DESTRUCTOR
 //------------------------------------------------------------------------------
-Meta_Optional::~Meta_Optional() = default;
+Meta_Required::~Meta_Required() = default;
 
 //------------------------------------------------------------------------------

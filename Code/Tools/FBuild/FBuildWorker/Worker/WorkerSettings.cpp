@@ -6,6 +6,7 @@
 #include "WorkerSettings.h"
 
 // Core
+#include "Core/Env/CPUInfo.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -32,13 +33,13 @@ WorkerSettings::WorkerSettings()
     , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
 {
     // half CPUs available to use by default
-    const uint32_t numCPUs = Env::GetNumProcessors();
+    const uint32_t numCPUs = CPUInfo::Get().GetNumUsefulCores();
     m_NumCPUsToUse = Math::Max<uint32_t>( 1, numCPUs / 2 );
 
     Load();
 
     // handle CPU downgrade
-    m_NumCPUsToUse = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUse );
+    m_NumCPUsToUse = Math::Min( numCPUs, m_NumCPUsToUse );
 }
 
 // DESTRUCTOR

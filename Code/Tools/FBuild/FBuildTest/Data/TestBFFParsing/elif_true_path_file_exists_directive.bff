@@ -1,0 +1,11 @@
+//
+// #elif file_exists() directive (true path)
+//
+
+#if __UNDEFINED__
+    #error should not get here
+#elif file_exists("file.dat")
+    Print("File exists")
+#else
+    Print("File does not exist")
+#endif

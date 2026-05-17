@@ -104,7 +104,7 @@ protected:
     uint32_t m_MaxIsolatedFiles;
     AString m_IsolateListFile;
     Array<AString> m_ExcludePatterns;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
     bool m_UseRelativePaths_Experimental;
 
     // Temporary data

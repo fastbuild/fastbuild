@@ -25,7 +25,7 @@
 
 // Core
 #include "Core/Env/Assert.h"
-#include "Core/Env/Env.h"
+#include "Core/Env/CPUInfo.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
@@ -68,7 +68,7 @@ WorkerWindow::WorkerWindow()
 
     // Create the tray icon
     AStackString toolTip;
-    toolTip.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
+    toolTip.Format( "FBuildWorker %s", GetVersionString() );
 #if defined( __WINDOWS__ )
     m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
 #elif defined( __OSX__ )
@@ -145,7 +145,7 @@ WorkerWindow::WorkerWindow()
     m_ResourcesDropDown->Init( 498, 3, 150, 200 );
     {
         // add items
-        const uint32_t numProcessors = Env::GetNumProcessors();
+        const uint32_t numProcessors = CPUInfo::Get().GetNumUsefulCores();
         AStackString buffer;
         for ( uint32_t i = 0; i < numProcessors; ++i )
         {
@@ -210,7 +210,7 @@ WorkerWindow::~WorkerWindow()
 void WorkerWindow::SetStatus( const AString & hostName, const AString & statusText )
 {
     AStackString<512> text;
-    text.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
+    text.Format( "FBuildWorker %s", GetVersionString() );
     if ( !hostName.IsEmpty() )
     {
         text.AppendFormat( " | \"%s\"", hostName.Get() );

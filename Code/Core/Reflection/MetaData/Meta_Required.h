@@ -1,4 +1,4 @@
-// Meta_Optional.h
+// Meta_Required
 //------------------------------------------------------------------------------
 #pragma once
 
@@ -6,14 +6,13 @@
 //------------------------------------------------------------------------------
 #include "Core/Reflection/MetaData/MetaDataInterface.h"
 
-// Meta_Optional
 //------------------------------------------------------------------------------
-class Meta_Optional : public IMetaData
+class Meta_Required : public IMetaData
 {
-    REFLECT_DECLARE( Meta_Optional )
+    REFLECT_DECLARE( Meta_Required )
 public:
-    explicit Meta_Optional();
-    virtual ~Meta_Optional() override;
+    Meta_Required();
+    virtual ~Meta_Required() override;
 };
 
 //------------------------------------------------------------------------------

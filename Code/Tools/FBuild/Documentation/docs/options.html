@@ -180,6 +180,10 @@
     <td>Show primary build targets, including those marked "Hidden".</td>
   </tr>
   <tr>
+    <td><a href="#sourcefile">-sourcefile &lt;path[s]&gt;</a></td>
+    <td>Reduce targets to attempt minimal source file builds.</td>
+  </tr>
+  <tr>
     <td><a href="#summary">-summary</a></td>
     <td>Show a summary at the end of the build.</td>
   </tr>
@@ -611,6 +615,27 @@ those which have the .Hidden property set.</p>
 <p></p>
 </div>
 
+    <div class='newsitemheader' id="sourcefile">-sourcefile &lt;path[s]&gt;</div>
+    <div class='newsitembody'>
+<p>Reduce targets to attempt minimal source file builds.</p>
+<p>FASTBuild targets are outputs, usually specifying libraries or executables, but
+in some cases it can be useful to compile a subset of said targets, such as individual
+object files within a library. When specifying -sourceFile, FASTBuild will search
+the targets for dependencies on the specified soure file(s) and attempt to build a
+subset of the dependency graph.</p>
+<p>If a subset of the target(s) cannot be identified, the target(s) will be built
+in their entirety. As such, resolution works best when the targets have been
+previously built and the dependencies are known.<p>
+<p>Example:</p>
+<div class='code'>fbuild.exe Core-x64-Debug -sourceFile Core/Strings/AString.cpp</div>
+<p>In the example above, FASTBuild will attempt to find the object file(s) that compile
+AString.cpp within the specified library (Core-x64-Debug).</p>
+<p>This functionality is intended for use with Visual Studio's VCXProject "Compile File"
+functionality (usually Ctrl+F7). More than one source file can be specified as
+a ; delimited list. See <a href="functions/vcxproject.html">.CompileFileCommand</a> for
+details/examples.</p>
+
+</div>
 
     <div class='newsitemheader' id="summary">-summary</div>
     <div class='newsitembody'>
@@ -740,6 +765,6 @@ than this amount it will not accept work.</p>
 
 
 
-    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2026 Franta Fulin</div></div></div>
 </body>
 </html>

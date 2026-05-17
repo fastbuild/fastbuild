@@ -7,7 +7,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( Meta_InheritFromOwner, IMetaData, MetaNone() )
+REFLECT_BEGIN( Meta_InheritFromOwner, IMetaData )
 REFLECT_END( Meta_InheritFromOwner )
 
 // CONSTRUCTOR

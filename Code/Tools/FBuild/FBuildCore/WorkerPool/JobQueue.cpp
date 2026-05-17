@@ -827,7 +827,7 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
         // Cancelling?
         if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
         {
-            ASSERT( *( job->GetAbortFlagPointer() ) == true );
+            ASSERT( job->GetAbortFlagPointer()->Load() == true );
 
             // Did local job actually get cancelled?
             if ( result != Node::BuildResult::eOk )

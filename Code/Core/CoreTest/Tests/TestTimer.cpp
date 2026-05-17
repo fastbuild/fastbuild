@@ -9,25 +9,14 @@
 #include <Core/Process/Thread.h>
 #include <Core/Time/Timer.h>
 
-// TestTimer
 //------------------------------------------------------------------------------
-class TestTimer : public TestGroup
+TEST_GROUP( TestTimer, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Validate() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestTimer )
-    REGISTER_TEST( Validate )
-REGISTER_TESTS_END
-
-// Validate
-//------------------------------------------------------------------------------
-void TestTimer::Validate() const
+TEST_CASE( TestTimer, Validate )
 {
     const Timer t;
     const int64_t before = t.GetNow();

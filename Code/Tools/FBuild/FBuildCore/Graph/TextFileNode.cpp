@@ -23,10 +23,10 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TextFileNode, Node, MetaName( "TextFileOutput" ) + MetaFile() )
-    REFLECT_ARRAY( m_TextFileInputStrings, "TextFileInputStrings", MetaNone() )
-    REFLECT( m_TextFileAlways, "TextFileAlways", MetaOptional() )
-    REFLECT( m_Hidden, "Hidden", MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_TextFileInputStrings, MetaRequired() )
+    REFLECT( m_TextFileAlways )
+    REFLECT( m_Hidden )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 REFLECT_END( TextFileNode )
 
 // CONSTRUCTOR
@@ -41,13 +41,10 @@ TextFileNode::TextFileNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool TextFileNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
+/*virtual*/ bool TextFileNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     return true;
 }

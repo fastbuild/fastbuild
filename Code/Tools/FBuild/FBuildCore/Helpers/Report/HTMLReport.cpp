@@ -43,6 +43,7 @@ namespace
         0xFFFFFF, // VSPROJEXTERNAL_NODE
         0xFFFFFF, // TEXT_FILE_NODE
         0xEBABCB, // DIRECTORY_LIST_NODE
+        0xDDA0DD, // COMPILER_INFO_NODE
     };
     // Ensure color vector is in sync
     static_assert( sizeof( g_ReportNodeColors ) / sizeof( uint32_t ) == Node::NUM_NODE_TYPES, "g_ReportNodeColors item count doesn't match NUM_NODE_TYPES" );
@@ -304,7 +305,7 @@ void HTMLReport::CreateOverview( const FBuildStats & stats )
     Write( "<tr><td>Remote CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)remoteRatio );
 
     // version info
-    Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", GetVersionString(), FBUILD_VERSION_PLATFORM );
 
     // report time
     AStackString reportDateTime;

@@ -1,39 +1,23 @@
 // TestZW.cpp
 //------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FBuildTest.h"
+    #include "FBuildTest.h"
 
-#include "Core/Strings/AStackString.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+    #include "Core/Strings/AStackString.h"
+    #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+    #include "Tools/FBuild/FBuildCore/FBuild.h"
 
-// TestZW
 //------------------------------------------------------------------------------
-class TestZW : public FBuildTest
+TEST_GROUP( TestZW, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-#if defined( __WINDOWS__ )
-    void Caching() const;
-#endif
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestZW )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( Caching )
-#endif
-REGISTER_TESTS_END
-
-// Caching
-//------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-void TestZW::Caching() const
+TEST_CASE( TestZW, Caching )
 {
     FBuildTestOptions baseOptions;
     baseOptions.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestZW/Caching/fbuild.bff";
@@ -47,7 +31,7 @@ void TestZW::Caching() const
         options.m_UseCacheWrite = true;
         options.m_ForceCleanBuild = true;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         EnsureFileDoesNotExist( objFile );
@@ -65,7 +49,7 @@ void TestZW::Caching() const
 
     // No op
     {
-        FBuild fBuild( baseOptions );
+        FBuildForTest fBuild( baseOptions );
         TEST_ASSERT( fBuild.Initialize( dbFileName ) );
         TEST_ASSERT( fBuild.Build( "Caching" ) );
 
@@ -83,7 +67,7 @@ void TestZW::Caching() const
         FBuildOptions options( baseOptions );
         options.m_UseCacheRead = true;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "Caching" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFileName ) );
@@ -99,7 +83,7 @@ void TestZW::Caching() const
 
     // No op (after cache retrieval)
     {
-        FBuild fBuild( baseOptions );
+        FBuildForTest fBuild( baseOptions );
         TEST_ASSERT( fBuild.Initialize( dbFileName ) );
         TEST_ASSERT( fBuild.Build( "Caching" ) );
 
@@ -110,6 +94,6 @@ void TestZW::Caching() const
         TEST_ASSERT( stats.GetCacheHits() == 0 );
     }
 }
-#endif
 
 //------------------------------------------------------------------------------
+#endif

@@ -20,44 +20,14 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
-// TestObject
 //------------------------------------------------------------------------------
-class TestObject : public FBuildTest
+TEST_GROUP( TestObject, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void MSVCArgHelpers() const;
-    void Preprocessor() const;
-    void TestStaleDynamicDeps() const;
-    void ModTimeChangeBackwards() const;
-    void CacheUsingRelativePaths() const;
-    void SourceMapping() const;
-    void ClangExplicitLanguageType() const;
-    void ClangDependencyArgs() const;
-    void CLDependencyArgs() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestObject )
-    REGISTER_TEST( MSVCArgHelpers )             // Test functions that check for MSVC args
-    REGISTER_TEST( Preprocessor )
-    REGISTER_TEST( TestStaleDynamicDeps )       // Test dynamic deps are cleared when necessary
-    REGISTER_TEST( ModTimeChangeBackwards )
-    REGISTER_TEST( CacheUsingRelativePaths )
-    REGISTER_TEST( SourceMapping )
-    REGISTER_TEST( ClangExplicitLanguageType )
-    REGISTER_TEST( ClangDependencyArgs )
-#if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
-    REGISTER_TEST( CLDependencyArgs ) // Available in VS2019 or later
-#endif
-REGISTER_TESTS_END
-
-// MSVCArgHelpers
-//------------------------------------------------------------------------------
-void TestObject::MSVCArgHelpers() const
+TEST_CASE( TestObject, MSVCArgHelpers )
 {
     // Exact match args, using /
     {
@@ -84,9 +54,8 @@ void TestObject::MSVCArgHelpers() const
     }
 }
 
-// Preprocessor
 //------------------------------------------------------------------------------
-void TestObject::Preprocessor() const
+TEST_CASE( TestObject, Preprocessor )
 {
     const char * configFile = "Tools/FBuild/FBuildTest/Data/TestObject/CustomPreprocessor/custompreprocessor.bff";
     const char * database = "../tmp/Test/Object/CustomPreprocessor/fbuild.fdb";
@@ -97,7 +66,7 @@ void TestObject::Preprocessor() const
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
         options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -114,7 +83,7 @@ void TestObject::Preprocessor() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
@@ -126,9 +95,8 @@ void TestObject::Preprocessor() const
     }
 }
 
-// TestStaleDynamicDeps
 //------------------------------------------------------------------------------
-void TestObject::TestStaleDynamicDeps() const
+TEST_CASE( TestObject, TestStaleDynamicDeps )
 {
     const char * fileA = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
     const char * fileB = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
@@ -141,7 +109,7 @@ void TestObject::TestStaleDynamicDeps() const
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/cppgenerator.bff";
         options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Generate some header files
@@ -164,7 +132,7 @@ void TestObject::TestStaleDynamicDeps() const
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/staledeps.bff";
         options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -192,7 +160,7 @@ void TestObject::TestStaleDynamicDeps() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/staledeps.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
@@ -205,11 +173,10 @@ void TestObject::TestStaleDynamicDeps() const
     }
 }
 
-// ModTimeChangeBackwards
 //------------------------------------------------------------------------------
-//  - Ensure a file rebuilds if the time changes into the past
-void TestObject::ModTimeChangeBackwards() const
+TEST_CASE( TestObject, ModTimeChangeBackwards )
 {
+    //  - Ensure a file rebuilds if the time changes into the past
     const AStackString fileA( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileA.cpp" );
     const AStackString fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
     const char * database = "../tmp/Test/Object/ModTimeChangeBackwards/fbuild.fdb";
@@ -259,7 +226,7 @@ void TestObject::ModTimeChangeBackwards() const
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/ModTimeChangeBackwards/fbuild.bff";
         options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -291,7 +258,7 @@ void TestObject::ModTimeChangeBackwards() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
@@ -312,7 +279,7 @@ void TestObject::ModTimeChangeBackwards() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
@@ -326,16 +293,16 @@ void TestObject::ModTimeChangeBackwards() const
     }
 }
 
-// CacheUsingRelativePaths
 //------------------------------------------------------------------------------
-void TestObject::CacheUsingRelativePaths() const
+TEST_CASE( TestObject, CacheUsingRelativePaths )
 {
     // Source files
     const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestObject/CacheUsingRelativePaths/";
     const char * fileA = "File.cpp";
     const char * fileB = "Subdir/Header.h";
     const char * fileC = "fbuild.bff";
-    const char * files[] = { fileA, fileB, fileC };
+    const char * fileD = "fbuild-lightcache.bff";
+    const char * files[] = { fileA, fileB, fileC, fileD };
 
     // Dest paths
     const char * dstPathA = "../tmp/Test/Object/CacheUsingRelativePaths/A/Code";
@@ -348,83 +315,90 @@ void TestObject::CacheUsingRelativePaths() const
     const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.o";
 #endif
 
-    // Copy file structure to both destinations
-    for ( const char * dstPath : dstPaths )
+    // Run twice, once for regular cache and once for LightCache
+    for ( uint32_t i = 0; i < 2; ++i )
     {
-        for ( const char * file : files )
+        const bool useLightCache = ( i == 1 );
+        const char * const bffFile = useLightCache ? "fbuild-lightcache.bff"
+                                                   : "fbuild.bff";
+
+        // Copy file structure to both destinations
+        for ( const char * dstPath : dstPaths )
         {
-            AStackString src;
-            AStackString dst;
-            src.Format( "%s/%s", srcPath, file );
-            dst.Format( "%s/%s", dstPath, file );
-            TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
-            TEST_ASSERT( FileIO::FileCopy( src.Get(), dst.Get() ) );
-        }
-    }
-
-    // Build in path A, writing to the cache
-    {
-        // Init
-        FBuildTestOptions options;
-        options.m_ConfigFile = "fbuild.bff";
-        options.m_UseCacheWrite = true;
-        AStackString codeDir;
-        GetCodeDir( codeDir );
-        codeDir.Trim( 0, 5 ); // Remove Code/
-        codeDir += "tmp/Test/Object/CacheUsingRelativePaths/A/Code/";
-        options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
-
-        // Compile
-        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
-
-        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
-    }
-
-    // Check some problematic cases in the object file
-    {
-        // Read obj file into memory
-        AString buffer;
-        {
-            FileStream f;
-            TEST_ASSERT( f.Open( objFileA ) );
-            buffer.SetLength( (uint32_t)f.GetFileSize() );
-            TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-            buffer.Replace( (char)0, ' ' ); // Make string searches simpler
+            for ( const char * file : files )
+            {
+                AStackString src;
+                AStackString dst;
+                src.Format( "%s/%s", srcPath, file );
+                dst.Format( "%s/%s", dstPath, file );
+                TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
+                TEST_ASSERT( FileIO::FileCopy( src.Get(), dst.Get() ) );
+            }
         }
 
-        // Check __FILE__ paths are relative
-        // Slash direction changed in Clang 18.x.x from forward slash to backslash
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) ||
-                     buffer.Find( "FILE_MACRO_START_1(.\\Subdir/Header.h)FILE_MACRO_END_1" ) );
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(File.cpp)FILE_MACRO_END_2" ) );
-    }
+        // Build in path A, writing to the cache
+        {
+            // Init
+            FBuildTestOptions options;
+            options.m_ConfigFile = bffFile;
+            options.m_UseCacheWrite = true;
+            AStackString codeDir;
+            GetCodeDir( codeDir );
+            codeDir.Trim( 0, 5 ); // Remove Code/
+            codeDir += "tmp/Test/Object/CacheUsingRelativePaths/A/Code/";
+            options.SetWorkingDir( codeDir );
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
 
-    // Build in path B, reading from the cache
-    {
-        // Init
-        FBuildTestOptions options;
-        options.m_ConfigFile = "fbuild.bff";
-        options.m_UseCacheRead = true;
-        AStackString codeDir;
-        GetCodeDir( codeDir );
-        codeDir.Trim( 0, 5 ); // Remove Code/
-        codeDir += "tmp/Test/Object/CacheUsingRelativePaths/B/Code/";
-        options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+            // Compile
+            TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
 
-        // Compile
-        TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
+        }
 
-        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
+        // Check some problematic cases in the object file
+        {
+            // Read obj file into memory
+            AString buffer;
+            {
+                FileStream f;
+                TEST_ASSERT( f.Open( objFileA ) );
+                buffer.SetLength( (uint32_t)f.GetFileSize() );
+                TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+                buffer.Replace( (char)0, ' ' ); // Make string searches simpler
+            }
+
+            // Check __FILE__ paths are relative
+            // Slash direction changed in Clang 18.x.x from forward slash to backslash
+            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) ||
+                         buffer.Find( "FILE_MACRO_START_1(.\\Subdir/Header.h)FILE_MACRO_END_1" ) );
+            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(File.cpp)FILE_MACRO_END_2" ) );
+        }
+
+        // Build in path B, reading from the cache
+        {
+            // Init
+            FBuildTestOptions options;
+            options.m_ConfigFile = bffFile;
+            options.m_UseCacheRead = true;
+            AStackString codeDir;
+            GetCodeDir( codeDir );
+            codeDir.Trim( 0, 5 ); // Remove Code/
+            codeDir += "tmp/Test/Object/CacheUsingRelativePaths/B/Code/";
+            options.SetWorkingDir( codeDir );
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+
+            // Compile
+            TEST_ASSERT( fBuild.Build( AStackString( "ObjectList" ) ) );
+
+            TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
+        }
     }
 }
 
-// SourceMapping
 //------------------------------------------------------------------------------
-void TestObject::SourceMapping() const
+TEST_CASE( TestObject, SourceMapping )
 {
     // Source files
     const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestObject/SourceMapping/";
@@ -462,7 +436,7 @@ void TestObject::SourceMapping() const
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Object/SourceMapping/Code/";
         options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -485,9 +459,8 @@ void TestObject::SourceMapping() const
     }
 }
 
-// ClangExplicitLanguageType
 //------------------------------------------------------------------------------
-void TestObject::ClangExplicitLanguageType() const
+TEST_CASE( TestObject, ClangExplicitLanguageType )
 {
     // Ensure explicitly set language args ("-x c++" etc) are replaced with the
     // correct equivalent for preprocessed code ("-x c++-cpp-output" etc)
@@ -498,7 +471,7 @@ void TestObject::ClangExplicitLanguageType() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -516,7 +489,7 @@ void TestObject::ClangExplicitLanguageType() const
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // start a client to emulate the other end
@@ -528,9 +501,8 @@ void TestObject::ClangExplicitLanguageType() const
     }
 }
 
-// ClangDependencyArgs
 //------------------------------------------------------------------------------
-void TestObject::ClangDependencyArgs() const
+TEST_CASE( TestObject, ClangDependencyArgs )
 {
     // Ensure explicitly dependency options are removed from the second pass of
     // compilation. Some integrations (like Unreal) use these commands and process
@@ -542,7 +514,7 @@ void TestObject::ClangDependencyArgs() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -560,7 +532,7 @@ void TestObject::ClangDependencyArgs() const
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // start a client to emulate the other end
@@ -572,9 +544,9 @@ void TestObject::ClangDependencyArgs() const
     }
 }
 
-// CLDependencyArgs
 //------------------------------------------------------------------------------
-void TestObject::CLDependencyArgs() const
+#if defined( __WINDOWS__ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1920 )
+TEST_CASE( TestObject, CLDependencyArgs )
 {
     // Ensure explicit dependency options are removed from the second pass of
     // compilation. Some integrations (like Unreal) use these commands and process
@@ -592,7 +564,7 @@ void TestObject::CLDependencyArgs() const
         // Init
         FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -619,7 +591,7 @@ void TestObject::CLDependencyArgs() const
         options.m_NoLocalConsumptionOfRemoteJobs = true;
         options.m_AllowLocalRace = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // start a client to emulate the other end
@@ -652,7 +624,7 @@ void TestObject::CLDependencyArgs() const
         options.m_NoLocalConsumptionOfRemoteJobs = false;
         options.m_AllowLocalRace = true;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -665,6 +637,211 @@ void TestObject::CLDependencyArgs() const
         AString depsFileContents;
         LoadFileContentsAsString( sourceDependenciesFile, depsFileContents );
         TEST_ASSERT( depsFileContents.FindI( "cldependencyargs\\\\file.cpp" ) );
+    }
+}
+#endif
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestObject, OwnerObjectList )
+{
+    // Check behavior of properties stored in OwnerObjectList
+
+    const char * const srcBFFFile = "Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectList/ownerobjectlist.bff";
+    const char * const dstBFFFile = "../tmp/Test/Object/OwnerObjectList/ownerobjectlist.bff";
+#if defined( __WINDOWS__ )
+    const char * const outputFile = "../tmp/Test/Object/OwnerObjectList/a.obj";
+#else
+    const char * const outputFile = "../tmp/Test/Object/OwnerObjectList/a.o";
+#endif
+    const char * const database = "../tmp/Test/Object/OwnerObjectList/fbuild.fdb";
+
+    // Read BFF file contents into string
+    AString bff;
+    {
+        FileStream f;
+        TEST_ASSERT( f.Open( srcBFFFile ) &&
+                     f.ReadIntoString( bff ) );
+    }
+
+    // Read config file into memory that modify and write
+    {
+        FileIO::EnsurePathExistsForFile( AStackString( dstBFFFile ) );
+        FileStream f;
+        TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
+                     f.WriteFromString( bff ) );
+    }
+
+    // Common options
+    FBuildTestOptions options;
+    options.m_ConfigFile = dstBFFFile;
+
+    // Clear output directory
+    EnsureFileDoesNotExist( outputFile );
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "OwnerObjectList" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+        CheckStatsNode( fBuild.GetStats(), 1, 1, Node::OBJECT_NODE );
+    }
+
+    EnsureFileExists( outputFile );
+
+    class BFFEdit
+    {
+    public:
+        BFFEdit( const char * from, bool shouldCauseRebuild )
+            : m_From( from )
+            , m_ShouldCauseRebuild( shouldCauseRebuild )
+        {
+        }
+        BFFEdit & operator=( const BFFEdit & other ) = delete;
+
+        const char * const m_From;
+        const bool m_ShouldCauseRebuild;
+    };
+    static const BFFEdit bffEdits[] =
+        {
+            { "// Comment", false },
+            { ".CompilerOptions +", true },
+            { ".CompilerOptionsDeoptimized +", true },
+            { ".PCHOptions +", true },
+            { ".PreprocessorOptions =", true },
+            { ".PreBuildDependencies =", true },
+            { ".CompilerForceUsing =", true },
+            { ".DeoptimizeWritableFiles =", true },
+            { ".DeoptimizeWritableFilesWithToken =", true },
+        };
+
+    for ( const BFFEdit & edit : bffEdits )
+    {
+        // First ensure no rebuilding without changes
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( database ) );
+            TEST_ASSERT( fBuild.Build( "OwnerObjectList" ) );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+            CheckStatsNode( fBuild.GetStats(), 1, 0, Node::OBJECT_NODE );
+        }
+
+        // Modify BFF
+        {
+            TEST_ASSERT( bff.Replace( edit.m_From, "//" ) == 1 );
+            FileStream f;
+            TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
+                         f.WriteFromString( bff ) );
+        }
+
+        // Ensure ObjectNode rebuilds after modifying ObjectListNode
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( database ) );
+            TEST_ASSERT( fBuild.Build( "OwnerObjectList" ) );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+            const uint32_t expectedBuild = edit.m_ShouldCauseRebuild ? 1 : 0;
+            CheckStatsNode( fBuild.GetStats(), 1, expectedBuild, Node::OBJECT_NODE );
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestObject, OwnerObjectListPCH )
+{
+    // Check behavior of properties stored in OwnerObjectList
+
+    const char * const srcBFFFile = "Tools/FBuild/FBuildTest/Data/TestObject/OwnerObjectListPCH/ownerobjectlistpch.bff";
+    const char * const dstBFFFile = "../tmp/Test/Object/OwnerObjectListPCH/ownerobjectlistpch.bff";
+#if defined( __WINDOWS__ )
+    const char * const outputFile = "../tmp/Test/Object/OwnerObjectListPCH/a.obj";
+#else
+    const char * const outputFile = "../tmp/Test/Object/OwnerObjectListPCH/a.o";
+#endif
+    const char * const database = "../tmp/Test/Object/OwnerObjectListPCH/fbuild.fdb";
+
+    // Read BFF file contents into string
+    AString bff;
+    {
+        FileStream f;
+        TEST_ASSERT( f.Open( srcBFFFile ) &&
+                     f.ReadIntoString( bff ) );
+    }
+
+    // Read config file into memory that modify and write
+    {
+        FileIO::EnsurePathExistsForFile( AStackString( dstBFFFile ) );
+        FileStream f;
+        TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
+                     f.WriteFromString( bff ) );
+    }
+
+    // Common options
+    FBuildTestOptions options;
+    options.m_ConfigFile = dstBFFFile;
+    options.m_ShowBuildReason = true;
+
+    // Clear output directory
+    EnsureFileDoesNotExist( outputFile );
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "OwnerObjectListPCH" ) );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+        CheckStatsNode( fBuild.GetStats(), 2, 2, Node::OBJECT_NODE );
+    }
+
+    EnsureFileExists( outputFile );
+
+    class BFFEdit
+    {
+    public:
+        BFFEdit( const char * from, const char * to )
+            : m_From( from )
+            , m_To( to )
+        {
+        }
+        BFFEdit & operator=( const BFFEdit & other ) = delete;
+
+        const char * const m_From;
+        const char * const m_To;
+    };
+    static const BFFEdit bffEdits[] =
+        {
+            { "+ ' -DD1'", "+ ' -DD1 -DNEW_OPTION'" }, // Add option
+            { "+ ' -DD2'", "+ ''" }, // Remove option
+            { "+ ' -IInclude1'", "+ ' -IInclude2'" }, // Modify option
+        };
+
+    for ( const BFFEdit & edit : bffEdits )
+    {
+        // First ensure no rebuilding without changes
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( database ) );
+            TEST_ASSERT( fBuild.Build( "OwnerObjectListPCH" ) );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+            CheckStatsNode( fBuild.GetStats(), 2, 0, Node::OBJECT_NODE );
+        }
+
+        // Modify BFF
+        {
+            TEST_ASSERT( bff.Replace( edit.m_From, edit.m_To ) == 1 );
+            FileStream f;
+            TEST_ASSERT( f.Open( dstBFFFile, FileStream::WRITE_ONLY ) &&
+                         f.WriteFromString( bff ) );
+        }
+
+        // Ensure ObjectNode rebuilds after modifying ObjectListNode
+        {
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize( database ) );
+            TEST_ASSERT( fBuild.Build( "OwnerObjectListPCH" ) );
+            TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+            CheckStatsNode( fBuild.GetStats(), 2, 2, Node::OBJECT_NODE );
+        }
     }
 }
 

@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/TestGroup.h"
+#include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
@@ -11,39 +11,21 @@
 
 #include "Core/Strings/AStackString.h"
 
-// TestVariableStack
 //------------------------------------------------------------------------------
-class TestVariableStack : public TestGroup
+TEST_GROUP( TestVariableStack, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestStackFramesEmpty() const;
-    void TestStackFramesAdditional() const;
-    void TestStackFramesOverride() const;
-    void TestStackFramesParent() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestVariableStack )
-    REGISTER_TEST( TestStackFramesEmpty )
-    REGISTER_TEST( TestStackFramesAdditional )
-    REGISTER_TEST( TestStackFramesOverride )
-    REGISTER_TEST( TestStackFramesParent )
-REGISTER_TESTS_END
-
-// TestStackFramesEmpty
-//------------------------------------------------------------------------------
-void TestVariableStack::TestStackFramesEmpty() const
+TEST_CASE( TestVariableStack, TestStackFramesEmpty )
 {
     BFFStackFrame sf;
     TEST_ASSERT( BFFStackFrame::GetVar( "shouldNotFind" ) == nullptr );
 }
 
-// TestStackFramesAdditional
 //------------------------------------------------------------------------------
-void TestVariableStack::TestStackFramesAdditional() const
+TEST_CASE( TestVariableStack, TestStackFramesAdditional )
 {
     // a stack frame with a variable
     BFFStackFrame sf1;
@@ -68,9 +50,8 @@ void TestVariableStack::TestStackFramesAdditional() const
     TEST_ASSERT( BFFStackFrame::GetVar( "myVarB" ) == nullptr );
 }
 
-// TestStackFramesOverride
 //------------------------------------------------------------------------------
-void TestVariableStack::TestStackFramesOverride() const
+TEST_CASE( TestVariableStack, TestStackFramesOverride )
 {
     // a stack frame with a variable
     BFFStackFrame sf1;
@@ -95,9 +76,8 @@ void TestVariableStack::TestStackFramesOverride() const
     TEST_ASSERT( BFFStackFrame::GetVar( "myVar" )->GetString() == "originalValue" );
 }
 
-// TestStackFramesParent
 //------------------------------------------------------------------------------
-void TestVariableStack::TestStackFramesParent() const
+TEST_CASE( TestVariableStack, TestStackFramesParent )
 {
     const BFFVariable * v = nullptr;
 

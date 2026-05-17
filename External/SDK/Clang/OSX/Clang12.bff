@@ -18,6 +18,9 @@ Compiler( 'Compiler-Clang12' )
     #if ENABLE_SOURCE_MAPPING
         .SourceMapping_Experimental = '/fastbuild-test-mapping'
     #endif
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
+    #endif
 }
 
 // ToolChain
@@ -46,10 +49,12 @@ Compiler( 'Compiler-Clang12' )
 
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
 
     // Librarian
     .Librarian                      = '$Clang12_BasePath$/ar'
@@ -64,9 +69,6 @@ Compiler( 'Compiler-Clang12' )
     // File Extensions
     .LibExtension                   = '.a'
     .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
 ]
 
 .ToolChain_Clang_OSX =
@@ -75,10 +77,10 @@ Compiler( 'Compiler-Clang12' )
 
     // Intel 64-bit
     .Platform                       = 'x64OSX'
-    .CompilerOptions                + ' -arch x86_64 -mmacosx-version-min=10.7'
-    .CompilerOptionsC               + ' -arch x86_64 -mmacosx-version-min=10.7'
-    .PCHOptions                     + ' -arch x86_64 -mmacosx-version-min=10.7'
-    .LinkerOptions                  + ' -arch x86_64 -mmacosx-version-min=10.7'
+    .CompilerOptions                + ' -arch x86_64 -mmacosx-version-min=10.13'
+    .CompilerOptionsC               + ' -arch x86_64 -mmacosx-version-min=10.13'
+    .PCHOptions                     + ' -arch x86_64 -mmacosx-version-min=10.13'
+    .LinkerOptions                  + ' -arch x86_64 -mmacosx-version-min=10.13'
 ]
 
 .ToolChain_Clang_ARMOSX =

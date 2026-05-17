@@ -51,7 +51,7 @@ private:
     Array<AString> m_CompilerInputExcludePattern;
     Array<AString> m_CompilerInputFiles;
     Array<AString> m_CompilerReferences;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
 
     // Internal State
     uint32_t m_NumCompilerInputFiles;

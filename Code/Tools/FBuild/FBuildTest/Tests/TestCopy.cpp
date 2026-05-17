@@ -11,69 +11,18 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
 
-// TestCopy
 //------------------------------------------------------------------------------
-class TestCopy : public FBuildTest
+TEST_GROUP( TestCopy, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestCopyFunction_FileToFile() const;
-    void TestCopyFunction_FileToFile_NoRebuild() const;
-    void TestCopyFunction_FileToFile_NoRebuild_BFFChange() const;
-    void TestCopyFunction_FileToDir() const;
-    void TestCopyFunction_FileToDir_NoRebuild() const;
-    void TestCopyFunction_FileToDir_NoRebuild_BFFChange() const;
-    void TestCopyFunction_MultiFileToDir() const;
-    void TestCopyFunction_MultiFileToDir_NoRebuild() const;
-    void TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange() const;
-    void TestCopyFunction_SourceBasePath() const;
-    void TestCopyFunction_SourceBasePath_NoRebuild() const;
-    void ChainedCopy() const;
-    void ChainedCopy_NoRebuild() const;
-    void CopyDir() const;
-    void CopyDir_NoRebuild() const;
-    void CopyDir_NoRebuild_BFFChange() const;
-    void CopyDirDeleteSrc() const;
-    void CopyEmpty() const;
-    void MissingTrailingSlash() const;
-    void ObjectListChaining() const;
-    void ObjectListChaining2() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCopy )
-    REGISTER_TEST( TestCopyFunction_FileToFile )
-    REGISTER_TEST( TestCopyFunction_FileToFile_NoRebuild )
-    REGISTER_TEST( TestCopyFunction_FileToFile_NoRebuild_BFFChange )
-    REGISTER_TEST( TestCopyFunction_FileToDir )
-    REGISTER_TEST( TestCopyFunction_FileToDir_NoRebuild )
-    REGISTER_TEST( TestCopyFunction_FileToDir_NoRebuild_BFFChange )
-    REGISTER_TEST( TestCopyFunction_MultiFileToDir )
-    REGISTER_TEST( TestCopyFunction_MultiFileToDir_NoRebuild )
-    REGISTER_TEST( TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange )
-    REGISTER_TEST( TestCopyFunction_SourceBasePath )
-    REGISTER_TEST( TestCopyFunction_SourceBasePath_NoRebuild )
-    REGISTER_TEST( ChainedCopy )
-    REGISTER_TEST( ChainedCopy_NoRebuild )
-    REGISTER_TEST( CopyDir )
-    REGISTER_TEST( CopyDir_NoRebuild )
-    REGISTER_TEST( CopyDir_NoRebuild_BFFChange )
-    REGISTER_TEST( CopyDirDeleteSrc )
-    REGISTER_TEST( CopyEmpty )
-    REGISTER_TEST( MissingTrailingSlash )
-    REGISTER_TEST( ObjectListChaining )
-    REGISTER_TEST( ObjectListChaining2 )
-REGISTER_TESTS_END
-
-// TestCopyFunction_FileToFile
-//------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_FileToFile() const
+TEST_CASE( TestCopy, TestCopyFunction_FileToFile )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     AStackString dst( "../tmp/Test/Copy/copy.bff.copy" );
@@ -95,13 +44,12 @@ void TestCopy::TestCopyFunction_FileToFile() const
     CheckStatsTotal( 3, 3 );
 }
 
-// TestCopyFunction_FileToFile_NoRebuild
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
+TEST_CASE( TestCopy, TestCopyFunction_FileToFile_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetofile.fdb" ) );
 
     // build (via alias)
@@ -114,15 +62,14 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
     CheckStatsTotal( 3, 2 );
 }
 
-// TestCopyFunction_FileToFile_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_FileToFile_NoRebuild_BFFChange() const
+TEST_CASE( TestCopy, TestCopyFunction_FileToFile_NoRebuild_BFFChange )
 {
     FBuildOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetofile.fdb" ) );
 
     // build (via alias)
@@ -135,13 +82,12 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild_BFFChange() const
     CheckStatsTotal( 3, 2 );
 }
 
-// TestCopyFunction_FileToDir
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_FileToDir() const
+TEST_CASE( TestCopy, TestCopyFunction_FileToDir )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dst( "../tmp/Test/Copy/copy.bff" );
@@ -162,13 +108,12 @@ void TestCopy::TestCopyFunction_FileToDir() const
     CheckStatsTotal( 3, 3 );
 }
 
-// TestCopyFunction_FileToDir_NoRebuild
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
+TEST_CASE( TestCopy, TestCopyFunction_FileToDir_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetodir.fdb" ) );
 
     // build (via alias)
@@ -181,15 +126,14 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
     CheckStatsTotal( 3, 2 );
 }
 
-// TestCopyFunction_FileToDir_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_FileToDir_NoRebuild_BFFChange() const
+TEST_CASE( TestCopy, TestCopyFunction_FileToDir_NoRebuild_BFFChange )
 {
     FBuildOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetodir.fdb" ) );
 
     // build (via alias)
@@ -202,13 +146,12 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild_BFFChange() const
     CheckStatsTotal( 3, 2 );
 }
 
-// TestCopyFunction_MultiFileToDir
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_MultiFileToDir() const
+TEST_CASE( TestCopy, TestCopyFunction_MultiFileToDir )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dst1( "../tmp/Test/Copy/a.txt" );
@@ -232,13 +175,12 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
     CheckStatsTotal( 5, 5 );
 }
 
-// TestCopyFunction_MultiFileToDir_NoRebuild
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
+TEST_CASE( TestCopy, TestCopyFunction_MultiFileToDir_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/multifiletodir.fdb" ) );
 
     // build (via alias)
@@ -251,15 +193,14 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
     CheckStatsTotal( 5, 3 );
 }
 
-// TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange() const
+TEST_CASE( TestCopy, TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange )
 {
     FBuildOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/multifiletodir.fdb" ) );
 
     // build (via alias)
@@ -272,13 +213,12 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange() const
     CheckStatsTotal( 5, 3 );
 }
 
-// TestCopyFunction_SourceBasePath
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_SourceBasePath() const
+TEST_CASE( TestCopy, TestCopyFunction_SourceBasePath )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString dst1( "../tmp/Test/Copy/SourceBasePath/TestCopy/a.txt" );
@@ -302,14 +242,13 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
     CheckStatsTotal( 5, 5 );
 }
 
-// TestCopyFunction_SourceBasePath_NoRebuild
 //------------------------------------------------------------------------------
-void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
+TEST_CASE( TestCopy, TestCopyFunction_SourceBasePath_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
 
     // build (via alias)
@@ -322,13 +261,12 @@ void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
     CheckStatsTotal( 5, 3 );
 }
 
-// ChainedCopy
 //------------------------------------------------------------------------------
-void TestCopy::ChainedCopy() const
+TEST_CASE( TestCopy, ChainedCopy )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     AStackString dst( "../tmp/Test/Copy/ChainedCopy/copy.copy3" );
@@ -350,13 +288,12 @@ void TestCopy::ChainedCopy() const
     CheckStatsTotal( 5, 5 );
 }
 
-// ChainedCopy_NoRebuild
 //------------------------------------------------------------------------------
-void TestCopy::ChainedCopy_NoRebuild() const
+TEST_CASE( TestCopy, ChainedCopy_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/ChainedCopy/chainedcopy.fdb" ) );
 
     // build (via alias)
@@ -369,13 +306,12 @@ void TestCopy::ChainedCopy_NoRebuild() const
     CheckStatsTotal( 5, 2 );
 }
 
-// CopyDir
 //------------------------------------------------------------------------------
-void TestCopy::CopyDir() const
+TEST_CASE( TestCopy, CopyDir )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     AStackString dstA( "../tmp/Test/Copy/CopyDir/a.txt" );
@@ -401,14 +337,13 @@ void TestCopy::CopyDir() const
     CheckStatsTotal( 6, 6 );
 }
 
-// CopyDir_NoRebuild
 //------------------------------------------------------------------------------
-void TestCopy::CopyDir_NoRebuild() const
+TEST_CASE( TestCopy, CopyDir_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
 
     // build (via alias)
@@ -422,15 +357,14 @@ void TestCopy::CopyDir_NoRebuild() const
     CheckStatsTotal( 6, 3 );
 }
 
-// CopyDir_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestCopy::CopyDir_NoRebuild_BFFChange() const
+TEST_CASE( TestCopy, CopyDir_NoRebuild_BFFChange )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
 
     // build (via alias)
@@ -444,9 +378,8 @@ void TestCopy::CopyDir_NoRebuild_BFFChange() const
     CheckStatsTotal( 6, 3 );
 }
 
-// CopyDirDeleteSrc
 //------------------------------------------------------------------------------
-void TestCopy::CopyDirDeleteSrc() const
+TEST_CASE( TestCopy, CopyDirDeleteSrc )
 {
     // We'll operate on copies of the source files so we can delete on of the src files
     AStackString srcA( "../tmp/Test/Copy/CopyDirDeleteSrc/Src/a.txt" );
@@ -458,7 +391,7 @@ void TestCopy::CopyDirDeleteSrc() const
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Set up the source
@@ -495,7 +428,7 @@ void TestCopy::CopyDirDeleteSrc() const
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydirdeletesrc.fdb" ) );
 
         // build (via alias)
@@ -513,28 +446,26 @@ void TestCopy::CopyDirDeleteSrc() const
     }
 }
 
-// CopyEmpty
 //------------------------------------------------------------------------------
-void TestCopy::CopyEmpty() const
+TEST_CASE( TestCopy, CopyEmpty )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( "CopyEmpty" ) );
 }
 
-// MissingTrailingSlash
 //------------------------------------------------------------------------------
-void TestCopy::MissingTrailingSlash() const
+TEST_CASE( TestCopy, MissingTrailingSlash )
 {
     // Ensure a copy of multiple files to destination that is not a path
     // is reported as an explicit error
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/MissingTrailingSlash/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
 
     // Parsing should fail
     TEST_ASSERT( fBuild.Initialize() == false );
@@ -544,12 +475,11 @@ void TestCopy::MissingTrailingSlash() const
     TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1400" ) );
 }
 
-// ObjectListChaining
-//  - Ensure that a CopyDir consuming the output of an ObjectList
-//    is managed correctly
 //------------------------------------------------------------------------------
-void TestCopy::ObjectListChaining() const
+TEST_CASE( TestCopy, ObjectListChaining )
 {
+    //  - Ensure that a CopyDir consuming the output of an ObjectList
+    //    is managed correctly
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/ObjectListChaining/fbuild.bff";
     const char * dbFile = "../tmp/Test/Copy/ObjectListChaining/fbuild.fdb";
@@ -613,18 +543,17 @@ void TestCopy::ObjectListChaining() const
     TEST_ASSERT( depGraphText1 == depGraphText2 );
 }
 
-// ObjectListChaining2
-//  - Ensure that a CopyDir consuming the output of an ObjectList
-//    is managed correctly
-//
-//  - This test explicitly checks that CopyFile node from a previous build
-//    are not migrated if the ObjectList it depends on is not migrated.
-//    When it was migrated in this situation, it causes a bug because the CopyFile
-//    node created a FileNode for the source, but that source was supposed to be an
-//    ObjectNode. This caused the build to fail and the DB to be unrecoverably corrupt.
 //------------------------------------------------------------------------------
-void TestCopy::ObjectListChaining2() const
+TEST_CASE( TestCopy, ObjectListChaining2 )
 {
+    //  - Ensure that a CopyDir consuming the output of an ObjectList
+    //    is managed correctly
+    //
+    //  - This test explicitly checks that CopyFile node from a previous build
+    //    are not migrated if the ObjectList it depends on is not migrated.
+    //    When it was migrated in this situation, it causes a bug because the CopyFile
+    //    node created a FileNode for the source, but that source was supposed to be an
+    //    ObjectNode. This caused the build to fail and the DB to be unrecoverably corrupt.
     const char * configFileOriginal = "Tools/FBuild/FBuildTest/Data/TestCopy/ObjectListChaining2/fbuild.bff";
     const char * configFileCopy = "../tmp/Test/Copy/ObjectListChaining2/fbuild.bff";
 

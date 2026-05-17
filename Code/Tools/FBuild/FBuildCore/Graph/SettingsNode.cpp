@@ -25,25 +25,25 @@
 
 // REFLECTION
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
-    REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
-    REFLECT(        m_CachePath,                "CachePath",                MetaOptional() )
-    REFLECT(        m_CachePathMountPoint,      "CachePathMountPoint",      MetaOptional() )
-    REFLECT(        m_CachePluginDLL,           "CachePluginDLL",           MetaOptional() )
-    REFLECT(        m_CachePluginDLLConfig,     "CachePluginDLLConfig",     MetaOptional() )
-    REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
-    REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
-    REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
-    REFLECT_ARRAY_OF_STRUCT( m_ConcurrencyGroups, "ConcurrencyGroups", ConcurrencyGroup, MetaOptional() )
+REFLECT_NODE_BEGIN( SettingsNode, Node )
+    REFLECT( m_Environment )
+    REFLECT( m_CachePath )
+    REFLECT( m_CachePathMountPoint )
+    REFLECT( m_CachePluginDLL )
+    REFLECT( m_CachePluginDLLConfig )
+    REFLECT( m_Workers )
+    REFLECT( m_WorkerConnectionLimit )
+    REFLECT( m_DistributableJobMemoryLimitMiB, MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
+    REFLECT( m_ConcurrencyGroups )
 REFLECT_END( SettingsNode )
 
 REFLECT_STRUCT_BEGIN_BASE( ConcurrencyGroup )
-    REFLECT(        m_ConcurrencyGroupName,     "ConcurrencyGroupName",     MetaNone() )
-    REFLECT(        m_ConcurrencyLimit,         "ConcurrencyLimit",         MetaOptional() )
-    REFLECT(        m_ConcurrencyPerJobMiB,     "ConcurrencyPerJobMiB",     MetaOptional() )
+    REFLECT( m_ConcurrencyGroupName, MetaRequired() )
+    REFLECT( m_ConcurrencyLimit )
+    REFLECT( m_ConcurrencyPerJobMiB )
 
-    REFLECT(        m_Index,                    "Index",                    MetaHidden() )
-    REFLECT(        m_Limit,                    "Limit",                    MetaHidden() )
+    REFLECT( m_Index, MetaHidden() )
+    REFLECT( m_Limit, MetaHidden() )
 REFLECT_END( ConcurrencyGroup )
 
 // CONSTRUCTOR

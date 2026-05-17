@@ -1,0 +1,32 @@
+//
+// Ensure args are correctly handled when response files are in use
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    // Ensure we're using Clang
+    #if __WINDOWS__
+        Using( .ToolChain_Clang_Windows )
+    #elif __LINUX__
+        Using( .ToolChain_Clang_Linux )
+    #elif __OSX__
+        #if __ARM64__
+            Using( .ToolChain_Clang_ARMOSX )
+        #else
+            Using( .ToolChain_Clang_OSX )
+        #endif
+    #endif
+
+    .CompilerInputFiles = '$TestRoot$/Data/TestCache/LightCache_NoRebuild/a.cpp'
+    .CompilerOutputPath = '$Out$/Test/Cache/LightCache_NoRebuild/'
+
+    .CompilerOptions    = ' -c %1'
+                        + ' -o %2'
+                        + ' -Werror -Wfatal-errors'
+}

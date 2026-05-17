@@ -12,19 +12,10 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
-// TestRemoveDir
 //------------------------------------------------------------------------------
-class TestRemoveDir : public FBuildTest
+TEST_GROUP( TestRemoveDir, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void RemoveDirRecurse() const;
-    void RemoveDirRecurseNoExist() const;
-    void RemoveDirNoRecurse() const;
-    void RemoveDirNoRemoveDirs() const;
-    void RemoveDirNoRemoveRootDir() const;
-
+public:
     // Helpers
     void CreateFiles() const;
 
@@ -45,24 +36,13 @@ private:
 /*static*/ const char * const TestRemoveDir::s_PathC = "../tmp/Test/RemoveDir/SubDir/SubDir/";
 /*static*/ const char * const TestRemoveDir::s_FileC = "../tmp/Test/RemoveDir/SubDir/SubDir/File";
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestRemoveDir )
-    REGISTER_TEST( RemoveDirRecurse )
-    REGISTER_TEST( RemoveDirRecurseNoExist )
-    REGISTER_TEST( RemoveDirNoRecurse )
-    REGISTER_TEST( RemoveDirNoRemoveDirs )
-    REGISTER_TEST( RemoveDirNoRemoveRootDir )
-REGISTER_TESTS_END
-
-// RemoveDirRecurse
-//------------------------------------------------------------------------------
-void TestRemoveDir::RemoveDirRecurse() const
+TEST_CASE( TestRemoveDir, RemoveDirRecurse )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     CreateFiles();
@@ -86,14 +66,13 @@ void TestRemoveDir::RemoveDirRecurse() const
     CheckStatsTotal( 2, 2 );
 }
 
-// RemoveDirRecurseNoExist
 //------------------------------------------------------------------------------
-void TestRemoveDir::RemoveDirRecurseNoExist() const
+TEST_CASE( TestRemoveDir, RemoveDirRecurseNoExist )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Ensure no files or directories exist
@@ -114,14 +93,13 @@ void TestRemoveDir::RemoveDirRecurseNoExist() const
     CheckStatsTotal( 2, 2 );
 }
 
-// RemoveDirNoRecurse
 //------------------------------------------------------------------------------
-void TestRemoveDir::RemoveDirNoRecurse() const
+TEST_CASE( TestRemoveDir, RemoveDirNoRecurse )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     CreateFiles();
@@ -149,14 +127,13 @@ void TestRemoveDir::RemoveDirNoRecurse() const
     CheckStatsTotal( 2, 2 );
 }
 
-// RemoveDirNoRemoveDirs
 //------------------------------------------------------------------------------
-void TestRemoveDir::RemoveDirNoRemoveDirs() const
+TEST_CASE( TestRemoveDir, RemoveDirNoRemoveDirs )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     CreateFiles();
@@ -180,14 +157,13 @@ void TestRemoveDir::RemoveDirNoRemoveDirs() const
     CheckStatsTotal( 2, 2 );
 }
 
-// RemoveDirNoRemoveRootDir
 //------------------------------------------------------------------------------
-void TestRemoveDir::RemoveDirNoRemoveRootDir() const
+TEST_CASE( TestRemoveDir, RemoveDirNoRemoveRootDir )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     CreateFiles();

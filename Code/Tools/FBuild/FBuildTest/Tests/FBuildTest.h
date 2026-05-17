@@ -18,13 +18,13 @@ struct FBuildStats;
 
 // FBuildTest
 //------------------------------------------------------------------------------
-class FBuildTest : public TestGroup
+class FBuildTest : public TestGroupTest
 {
 protected:
-    FBuildTest();
+    explicit FBuildTest( TestGroup * testGroup );
 
     virtual void PreTest() const override;
-    virtual void PostTest( bool pased ) const override;
+    virtual void PostTest() const override;
 
     // helpers to manage generated files
     void EnsureFileDoesNotExist( const char * fileName ) const;

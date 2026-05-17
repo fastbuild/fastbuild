@@ -22,39 +22,21 @@ void free( void * ptr );
 }
 #endif
 
-// TestMemPoolBlock
 //------------------------------------------------------------------------------
-class TestMemPoolBlock : public TestGroup
+TEST_GROUP( TestMemPoolBlock, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void TestUnused() const;
-    void TestAllocs() const;
-    void TestAllocsMultiplePages() const;
-    void TestSpeed();
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestMemPoolBlock )
-    REGISTER_TEST( TestUnused )
-    REGISTER_TEST( TestAllocs )
-    REGISTER_TEST( TestAllocsMultiplePages )
-    REGISTER_TEST( TestSpeed )
-REGISTER_TESTS_END
-
-// TestUnused
-//------------------------------------------------------------------------------
-void TestMemPoolBlock::TestUnused() const
+TEST_CASE( TestMemPoolBlock, TestUnused )
 {
     // Create a MemPoolBlock but don't do anything with it
     MemPoolBlock block( 32, 4 );
 }
 
-// TestAllocs
 //------------------------------------------------------------------------------
-void TestMemPoolBlock::TestAllocs() const
+TEST_CASE( TestMemPoolBlock, TestAllocs )
 {
     const size_t blockSize( 32 );
     const size_t blockAlignment( 4 );
@@ -78,9 +60,8 @@ void TestMemPoolBlock::TestAllocs() const
     }
 }
 
-// TestAllocsMultiplePages
 //------------------------------------------------------------------------------
-void TestMemPoolBlock::TestAllocsMultiplePages() const
+TEST_CASE( TestMemPoolBlock, TestAllocsMultiplePages )
 {
     const size_t blockSize( 32 * 1024 );
     const size_t blockAlignment( 4 );
@@ -94,9 +75,8 @@ void TestMemPoolBlock::TestAllocsMultiplePages() const
     block.Free( c );
 }
 
-// TestSpeed
 //------------------------------------------------------------------------------
-void TestMemPoolBlock::TestSpeed()
+TEST_CASE( TestMemPoolBlock, TestSpeed )
 {
 #if defined( DEBUG )
     const uint32_t numAllocs( 100 * 1000 );

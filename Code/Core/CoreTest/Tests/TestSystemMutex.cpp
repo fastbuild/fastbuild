@@ -12,25 +12,14 @@
     #define __has_feature( ... ) 0
 #endif
 
-// TestMutex
 //------------------------------------------------------------------------------
-class TestSystemMutex : public TestGroup
+TEST_GROUP( TestSystemMutex, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void LeakRegression() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestSystemMutex )
-    REGISTER_TEST( LeakRegression )
-REGISTER_TESTS_END
-
-// LeakRegression
-//------------------------------------------------------------------------------
-void TestSystemMutex::LeakRegression() const
+TEST_CASE( TestSystemMutex, LeakRegression )
 {
     const uint32_t testCount( 1024 * 20 );
 
