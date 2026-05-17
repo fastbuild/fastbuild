@@ -116,6 +116,7 @@ TEST_CASE( TestBFFToken, Keyword )
     CHECK( BFF_KEYWORD_INCLUDE, eInclude );
     CHECK( BFF_KEYWORD_NOT, eNot );
     CHECK( BFF_KEYWORD_ONCE, eOnce );
+    CHECK( BFF_KEYWORD_OUT, eOut );
     CHECK( BFF_KEYWORD_TRUE, eTrue );
     CHECK( BFF_KEYWORD_UNDEF, eUndef );
 

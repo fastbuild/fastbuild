@@ -26,6 +26,7 @@
     AString( BFF_KEYWORD_INCLUDE ),
     AString( BFF_KEYWORD_NOT ),
     AString( BFF_KEYWORD_ONCE ),
+    AString( BFF_KEYWORD_OUT ),
     AString( BFF_KEYWORD_TRUE ),
     AString( BFF_KEYWORD_UNDEF ),
 };

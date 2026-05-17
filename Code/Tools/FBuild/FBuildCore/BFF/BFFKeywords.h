@@ -26,6 +26,7 @@ class AString;
 #define BFF_KEYWORD_INCLUDE "include"
 #define BFF_KEYWORD_NOT     "not"
 #define BFF_KEYWORD_ONCE    "once"
+#define BFF_KEYWORD_OUT     "out"
 #define BFF_KEYWORD_TRUE    "true"
 #define BFF_KEYWORD_UNDEF   "undef"
 
@@ -48,6 +49,7 @@ public:
         eInclude,
         eNot,
         eOnce,
+        eOut,
         eTrue,
         eUndef,
 

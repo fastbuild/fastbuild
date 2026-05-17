@@ -501,6 +501,7 @@ bool BFFTokenizer::HandleIdentifier( const char *& pos, const char * /*end*/, co
     KEYWORD( BFF_KEYWORD_IN, eIn );
     KEYWORD( BFF_KEYWORD_NOT, eNot );
     KEYWORD( BFF_KEYWORD_ONCE, eOnce );
+    KEYWORD( BFF_KEYWORD_OUT, eOut );
     KEYWORD( BFF_KEYWORD_UNDEF, eUndef );
 #undef KEYWORD
 
