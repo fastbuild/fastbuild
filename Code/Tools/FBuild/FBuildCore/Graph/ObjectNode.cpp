@@ -2233,15 +2233,9 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     tmpFileName += fileName;
     if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
     {
-        FileIO::WorkAroundForWindowsFilePermissionProblem( tmpFileName, FileStream::WRITE_ONLY, 10 ); // 10s max wait
-
-        // Try again
-        if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
-        {
-            job->Error( "Failed to create temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
-            job->OnSystemError();
-            return false;
-        }
+        job->Error( "Failed to create temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
+        job->OnSystemError();
+        return false;
     }
     if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
     {

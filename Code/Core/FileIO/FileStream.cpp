@@ -9,6 +9,7 @@
 #include "Core/Env/Assert.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
+#include "Core/Time/Timer.h"
 
 // system
 #include <stdio.h>
@@ -54,7 +55,7 @@ FileStream::~FileStream()
 
 // Open
 //------------------------------------------------------------------------------
-bool FileStream::Open( const char * fileName, uint32_t fileMode )
+bool FileStream::Open( const char * fileName, uint32_t fileMode, uint32_t timeoutMilliSecs )
 {
     ASSERT( !IsOpen() );
 
@@ -95,9 +96,16 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
         flags |= FILE_ATTRIBUTE_TEMPORARY; // don't flush to disk if possible
     }
 
-    // for sharing violations, we'll retry a few times as per http://support.microsoft.com/kb/316609
-    size_t retryCount = 0;
-    while ( retryCount < 5 )
+    // for sharing violations, we'll retry a few times as per https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/316609
+    // On Windows, we can occasionally fail to open the file with error 128(SHARING_VIOLATION) but also sometimes on 1224 (ERROR_USER_MAPPED_FILE),
+    // due to things like anti-virus etc. Simply retry if that happens
+
+    const Timer timer;
+    DWORD sleepTime = 25; // Current sleep time when retrying
+    DWORD sleepTimeBackOffNextThreshold = 500; // Next time to increase the sleep time
+    const DWORD SLEEP_TIME_BACKOFF_INCREMENT = 500; // Increase the back-off threshold by 500ms each time we increase the sleep time
+    const DWORD MAX_SLEEP_TIME = 200; // Never more than 200 ms between each retry.
+    while ( true )
     {
         HANDLE h = CreateFile( fileName,            // _In_     LPCTSTR lpFileName,
                                desiredAccess,       // _In_     DWORD dwDesiredAccess,
@@ -117,22 +125,39 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
         // problem opening file...
 
         // was it a sharing violation?
-        if ( GetLastError() == ERROR_SHARING_VIOLATION )
+        const DWORD errorCode = GetLastError();
+        if ( ( errorCode == ERROR_SHARING_VIOLATION ) ||
+             ( errorCode == ERROR_USER_MAPPED_FILE ) )
         {
             if ( ( fileMode & NO_RETRY_ON_SHARING_VIOLATION ) != 0 )
             {
                 break; // just fail
             }
 
-            ++retryCount;
-            Sleep( 100 ); // sleep and
-            continue; // try again as per http://support.microsoft.com/kb/316609
+            if ( timer.GetElapsedMS() > (float)timeoutMilliSecs )
+            {
+                break;
+            }
+
+            // Adjust CPU friendly sleep time using a simple back-off algorithm when it takes a while to open the file.
+            // The idea is to attempt to give more time to anti-virus to complete its task when the scan takes more time than usual.
+            if ( sleepTime < MAX_SLEEP_TIME && timer.GetElapsedMS() > (float)sleepTimeBackOffNextThreshold )
+            {
+                sleepTime = Math::Min( sleepTime * 2, MAX_SLEEP_TIME );
+                sleepTimeBackOffNextThreshold += SLEEP_TIME_BACKOFF_INCREMENT;
+            }
+
+            // sleep and try again as per https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/316609
+            Sleep( sleepTime );
+            continue;
         }
 
         // some other kind of error...
         break;
     }
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
+    (void)timeoutMilliSecs;
+
     // Flags
     int32_t flags = O_CLOEXEC; // Ensure handles are not inherited by child processes
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions
