@@ -256,7 +256,12 @@ void WorkerThread::WaitForStop()
 {
     ASSERT( tmpFileName.IsEmpty() == false );
     ASSERT( PathUtils::IsFullPath( tmpFileName ) );
-    return file.Open( tmpFileName.Get(), FileStream::WRITE_ONLY );
+
+    // On Windows, work around issues caused by security software locking files
+    // by having an extended retry period
+    const uint32_t retryTimeMS = 15'000;
+
+    return file.Open( tmpFileName.Get(), FileStream::WRITE_ONLY, retryTimeMS );
 }
 
 // CreateThreadLocalTmpDir

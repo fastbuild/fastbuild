@@ -22,7 +22,7 @@ public:
         NO_RETRY_ON_SHARING_VIOLATION = 0x80,
     };
 
-    bool Open( const char * fileName, uint32_t mode = FileStream::READ_ONLY );
+    bool Open( const char * fileName, uint32_t mode = FileStream::READ_ONLY, uint32_t timeoutMilliSecs = 2000 );
     void Close();
 
     bool IsOpen() const;
