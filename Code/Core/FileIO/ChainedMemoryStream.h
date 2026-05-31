@@ -11,7 +11,7 @@
 
 // ChainedMemoryStream
 //------------------------------------------------------------------------------
-class ChainedMemoryStream : public IOStream
+class ChainedMemoryStream final : public IOStream
 {
 public:
     explicit ChainedMemoryStream( size_t pageSize );

@@ -7,7 +7,7 @@
 
 // FileStream
 //------------------------------------------------------------------------------
-class FileStream : public IOStream
+class FileStream final : public IOStream
 {
 public:
     explicit FileStream();
