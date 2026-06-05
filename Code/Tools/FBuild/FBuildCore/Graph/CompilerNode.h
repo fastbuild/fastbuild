@@ -35,6 +35,7 @@ public:
     bool CanBeCached() const { return m_AllowCaching; }
     bool CanUseResponseFile() const { return m_AllowResponseFile; }
     bool ShouldForceResponseFileUse() const { return m_ForceResponseFile; }
+    bool ShouldEscapeSlashesInResponseFile() const { return m_EscapeSlashesInResponseFile; }
 #if defined( __WINDOWS__ )
     bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
 #endif
@@ -78,6 +79,7 @@ private:
     bool m_AllowCaching = true;
     bool m_AllowResponseFile;
     bool m_ForceResponseFile;
+    bool m_EscapeSlashesInResponseFile;
     bool m_VS2012EnumBugFix;
     bool m_ClangRewriteIncludes;
     bool m_ClangGCCUpdateXLanguageArg;

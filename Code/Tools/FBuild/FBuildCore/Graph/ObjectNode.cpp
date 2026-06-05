@@ -1799,14 +1799,21 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     commandLine.Tokenize( tokens );
     fullArgs.Clear();
 
+    const CompilerNode * compilerNode = job->GetNode()->CastTo<ObjectNode>()->GetCompiler();
     // Get base path if needed
     AStackString basePath;
     const bool useRelativePaths = job->IsLocal() && // TODO:C We'd want to support this remotely as well
-                                  job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetUseRelativePaths();
+                                  compilerNode->GetUseRelativePaths();
     if ( useRelativePaths )
     {
         basePath = FBuild::Get().GetOptions().GetWorkingDir(); // NOTE: FBuild only valid locally
         PathUtils::EnsureTrailingSlash( basePath );
+    }
+
+    const bool escapeSlashesInResponseFile = compilerNode->ShouldEscapeSlashesInResponseFile();
+    if ( escapeSlashesInResponseFile )
+    {
+        fullArgs.SetEscapeSlashesInResponseFile();
     }
 
     const CompilerFlags & flags = useDedicatedPreprocessor ? m_PreprocessorFlags : m_CompilerFlags;

@@ -51,6 +51,7 @@ distribution, caching and more.
   .Environment                  // (optional) Environment variables to use for local build
   .AllowResponseFile            // (optional) Allow response files to be used if not auto-detected (default: false)
   .ForceResponseFile            // (optional) Force use of response files (default: false)
+  .EscapeSlashesInResponseFile  // (optional) Escape slashes in response files (default: false)
   
   // Temporary Options
   .UseLightCache_Experimental   // (optional) Enable experimental "light" caching mode (default: false)
@@ -198,6 +199,12 @@ Compiler( 'Test' )
     exceeds operating system limits). This is to limit the overhead of Response File creation to situations that
     require it.</p>
     <p>Use of Response Files in all cases can be forced with .ForceResponseFile if required.</p>
+
+    <p><hr></p>
+
+    <p><b>.EscapeSlashesInResponseFile</b> - Boolean - (Optional)</p>
+    <p>Enables slashes escaping in response file.</p>
+    <p>For compilers, like Android NDK Clang on Windows, which incorrectly handle non-escaped backslashes in response files.</p>
 
   	<p><hr></p>
 
