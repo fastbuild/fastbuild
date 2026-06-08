@@ -84,19 +84,17 @@ bool ResponseFile::CreateInternal( const AString & contents )
     // store in tmp folder, and give back to user
     WorkerThread::CreateTempFilePath( "args.rsp", m_ResponseFilePath );
 
+    // On Windows, work around issues caused by security software locking files
+    // by having an exctended retry period
+    const uint32_t extendedRetryTimeMS = 5'000;
+
     // write file to disk
     const uint32_t flags = FileStream::WRITE_ONLY | // we only want to write
                            FileStream::TEMP; // avoid flush to disk if possible
-    if ( !m_File.Open( m_ResponseFilePath.Get(), flags ) )
+    if ( !m_File.Open( m_ResponseFilePath.Get(), flags, extendedRetryTimeMS ) )
     {
-        FileIO::WorkAroundForWindowsFilePermissionProblem( m_ResponseFilePath, flags, 5 ); // 5s max wait
-
-        // Retry
-        if ( !m_File.Open( m_ResponseFilePath.Get(), flags ) )
-        {
-            FLOG_ERROR( "Failed to create response file '%s'", m_ResponseFilePath.Get() );
-            return false; // user must handle error
-        }
+        FLOG_ERROR( "Failed to create response file '%s'", m_ResponseFilePath.Get() );
+        return false; // user must handle error
     }
 
     const bool ok = ( m_File.Write( contents.Get(), contents.GetLength() ) == contents.GetLength() );

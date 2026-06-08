@@ -24,25 +24,14 @@
     #define __has_feature( ... ) 0
 #endif
 
-// TestSharedMemory
 //------------------------------------------------------------------------------
-class TestSharedMemory : public TestGroup
+TEST_GROUP( TestSharedMemory, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void CreateAccessDestroy() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestSharedMemory )
-    REGISTER_TEST( CreateAccessDestroy )
-REGISTER_TESTS_END
-
-// CreateAccessDestroy
-//------------------------------------------------------------------------------
-void TestSharedMemory::CreateAccessDestroy() const
+TEST_CASE( TestSharedMemory, CreateAccessDestroy )
 {
 
 #if defined( __WINDOWS__ )

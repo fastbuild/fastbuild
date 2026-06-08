@@ -41,7 +41,7 @@
 
 // Windows 10 SDK
 //------------------------------------------------------------------------------
-.Windows10_SDK_X64 =
+.Windows10_SDK =
 [
 #if USING_VS2022
     .WindowsSDK_IncludePaths        = ' "/external:I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
@@ -66,10 +66,23 @@
     .CompilerOptionsC               = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
     .PCHOptions                     = .CommonCompilerOptions
+]
+
+.Windows10_SDK_X64 =
+[
+    Using( .Windows10_SDK )
 
     .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/x64"'
                                     + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x64"'
                                     + ' /MACHINE:X64'
+]
+.Windows10_SDK_ARM64 =
+[
+    Using( .Windows10_SDK )
+
+    .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/arm64"'
+                                    + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/arm64"'
+                                    + ' /MACHINE:ARM64'
 ]
 .Windows10_SDK_X64_ClangCl =
 [

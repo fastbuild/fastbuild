@@ -9,27 +9,14 @@
 #include "Core/Strings/AString.h"
 #include "Core/Strings/LevenshteinDistance.h"
 
-// TestLevenshteinDistance
 //------------------------------------------------------------------------------
-class TestLevenshteinDistance : public TestGroup
+TEST_GROUP( TestLevenshteinDistance, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Distance() const;
-    void DistanceI() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestLevenshteinDistance )
-    REGISTER_TEST( Distance )
-    REGISTER_TEST( DistanceI )
-REGISTER_TESTS_END
-
-// Distance
-//------------------------------------------------------------------------------
-void TestLevenshteinDistance::Distance() const
+TEST_CASE( TestLevenshteinDistance, Distance )
 {
     {
         TEST_ASSERT( 0 == LevenshteinDistance::Distance( nullptr, nullptr ) );
@@ -73,9 +60,8 @@ void TestLevenshteinDistance::Distance() const
     }
 }
 
-// DistanceI
 //------------------------------------------------------------------------------
-void TestLevenshteinDistance::DistanceI() const
+TEST_CASE( TestLevenshteinDistance, DistanceI )
 {
     {
         TEST_ASSERT( 0 == LevenshteinDistance::DistanceI( nullptr, nullptr ) );

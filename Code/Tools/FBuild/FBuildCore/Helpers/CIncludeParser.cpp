@@ -374,7 +374,7 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
 #endif
 
     // quick check
-    const uint32_t crc1 = xxHash::Calc32( begin, (size_t)( end - begin ) );
+    const uint32_t crc1 = xxHash3::Calc32( begin, (size_t)( end - begin ) );
     if ( crc1 == m_LastCRC1 )
     {
         return;
@@ -394,10 +394,10 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
     // Windows and OSX are case-insensitive
     AStackString lowerCopy( cleanInclude );
     lowerCopy.ToLower();
-    const uint32_t crc2 = xxHash::Calc32( lowerCopy );
+    const uint32_t crc2 = xxHash3::Calc32( lowerCopy );
 #else
     // Linux is case-sensitive
-    const uint32_t crc2 = xxHash::Calc32( cleanInclude );
+    const uint32_t crc2 = xxHash3::Calc32( cleanInclude );
 #endif
     if ( crc2 == m_LastCRC2 )
     {

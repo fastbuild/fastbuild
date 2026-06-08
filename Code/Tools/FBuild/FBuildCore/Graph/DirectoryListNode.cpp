@@ -18,15 +18,15 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( DirectoryListNode, Node, MetaNone() )
-    REFLECT( m_Path,                    "Path",             MetaHidden() )
-    REFLECT_ARRAY( m_Patterns,          "Patterns",         MetaHidden() )
-    REFLECT_ARRAY( m_ExcludePaths,      "ExcludePaths",     MetaHidden() )
-    REFLECT_ARRAY( m_FilesToExclude,    "FilesToExclude",   MetaHidden() )
-    REFLECT_ARRAY( m_ExcludePatterns,   "ExcludePatterns",  MetaHidden() )
-    REFLECT( m_Recursive,               "Recursive",        MetaHidden() )
-    REFLECT( m_IncludeReadOnlyStatusInHash, "IncludeReadOnlyStatusInHash", MetaHidden() )
-    REFLECT( m_IncludeDirs,             "IncludeDirs",      MetaHidden() )
+REFLECT_NODE_BEGIN( DirectoryListNode, Node )
+    REFLECT( m_Path, MetaHidden() )
+    REFLECT( m_Patterns, MetaHidden() )
+    REFLECT( m_ExcludePaths, MetaHidden() )
+    REFLECT( m_FilesToExclude, MetaHidden() )
+    REFLECT( m_ExcludePatterns, MetaHidden() )
+    REFLECT( m_Recursive, MetaHidden() )
+    REFLECT( m_IncludeReadOnlyStatusInHash, MetaHidden() )
+    REFLECT( m_IncludeDirs, MetaHidden() )
 REFLECT_END( DirectoryListNode )
 
 // DirectoryListNodeGetFilesHelper
@@ -173,10 +173,17 @@ DirectoryListNode::~DirectoryListNode() = default;
     // Path and pattern
     result = path;
     result += '|';
-    if ( patterns )
+    if ( patterns && !patterns->IsEmpty() )
     {
-        result.AppendList( *patterns, '<' );
-        result += '|';
+        if ( patterns->GetSize() == 1 )
+        {
+            result += ( *patterns )[ 0 ];
+            result += '|';
+        }
+        else
+        {
+            result.AppendFormat( "%016" PRIx64 "|", xxHash3::Calc64( *patterns ) );
+        }
     }
 
     // Additional flags
@@ -196,22 +203,19 @@ DirectoryListNode::~DirectoryListNode() = default;
     // Excluded paths
     if ( !excludePaths.IsEmpty() )
     {
-        result += "|ePaths=";
-        result.AppendList( excludePaths, '<' );
+        result.AppendFormat( "|ePaths=%016" PRIx64 "|", xxHash3::Calc64( excludePaths ) );
     }
 
     // Excluded files
     if ( !excludeFiles.IsEmpty() )
     {
-        result += "|eFiles=";
-        result.AppendList( excludeFiles, '<' );
+        result.AppendFormat( "|eFiles=%016" PRIx64 "|", xxHash3::Calc64( excludeFiles ) );
     }
 
     // Excluded patterns
     if ( !excludePatterns.IsEmpty() )
     {
-        result += "|ePatterns=";
-        result.AppendList( excludePatterns, '<' );
+        result.AppendFormat( "|ePatterns=%016" PRIx64 "|", xxHash3::Calc64( excludePatterns ) );
     }
 }
 

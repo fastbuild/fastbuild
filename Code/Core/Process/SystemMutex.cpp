@@ -65,13 +65,10 @@ bool SystemMutex::TryLock()
     int rc = flock( handle, LOCK_EX | LOCK_NB );
     if ( rc )
     {
+        // flock should only fail due to failing to acquire the lock
+        ASSERT( ( errno == EWOULDBLOCK ) || ( errno == EAGAIN ) );
         VERIFY( close( handle ) == 0 );
-        if ( errno == EWOULDBLOCK || errno == EAGAIN )
-        {
-            return false; // locked by another process
-        }
-        ASSERT( false ); // Unexpected problem!
-        return false;
+        return false; // locked by another process
     }
     m_Handle = handle;
     return true; // we own it now

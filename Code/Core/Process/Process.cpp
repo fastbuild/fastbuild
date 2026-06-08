@@ -38,8 +38,8 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Process::Process( const volatile bool * mainAbortFlag,
-                  const volatile bool * abortFlag )
+Process::Process( const Atomic<bool> * mainAbortFlag,
+                  const Atomic<bool> * abortFlag )
     : m_Started( false )
 #if defined( __WINDOWS__ )
     , m_SharingHandles( false )
@@ -184,7 +184,7 @@ bool Process::Spawn( const char * executable,
     ASSERT( !m_Started );
     ASSERT( executable );
 
-    if ( m_MainAbortFlag && AtomicLoadRelaxed( m_MainAbortFlag ) )
+    if ( m_MainAbortFlag && m_MainAbortFlag->Load() )
     {
         // Once main process has aborted, we no longer permit spawning sub-processes.
         return false;
@@ -957,8 +957,8 @@ void Process::ReadCommon( int32_t handle, AString & buffer )
 //------------------------------------------------------------------------------
 bool Process::HasAborted() const
 {
-    return ( m_MainAbortFlag && AtomicLoadRelaxed( m_MainAbortFlag ) ) ||
-           ( m_AbortFlag && AtomicLoadRelaxed( m_AbortFlag ) );
+    return ( m_MainAbortFlag && m_MainAbortFlag->Load() ) ||
+           ( m_AbortFlag && m_AbortFlag->Load() );
 }
 
 // Terminate

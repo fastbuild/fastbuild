@@ -5,123 +5,74 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-// TestIf
 //------------------------------------------------------------------------------
-class TestIf : public FBuildTest
+TEST_GROUP( TestIf, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void IfFunctionTrue() const;
-    void IfNotFunctionTrue() const;
-    void IfSetFunctionTrue() const;
-    void IfNotSetFunctionTrue() const;
-    void IfFunctionFalse() const;
-    void IfNotFunctionFalse() const;
-    void IfSetFunctionFalse() const;
-    void IfNotSetFunctionFalse() const;
-    void IfFunctionBool() const;
-    void IfFunctionInt() const;
-    void IfFunctionStringCompare() const;
-    void IfFunctionSet() const;
-    void IfFunctionBracket() const;
-    void UsageError_ExtraTokensAfterExpression() const;
-    void UsageError_UnsupportedTypeForIn() const;
-    void UsageError_UnsupportedOperation() const;
+public:
 };
-
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestIf )
-    REGISTER_TEST( IfFunctionTrue )
-    REGISTER_TEST( IfNotFunctionTrue )
-    REGISTER_TEST( IfSetFunctionTrue )
-    REGISTER_TEST( IfNotSetFunctionTrue )
-    REGISTER_TEST( IfFunctionFalse )
-    REGISTER_TEST( IfNotFunctionFalse )
-    REGISTER_TEST( IfSetFunctionFalse )
-    REGISTER_TEST( IfNotSetFunctionFalse )
-    REGISTER_TEST( IfFunctionBool )
-    REGISTER_TEST( IfFunctionInt )
-    REGISTER_TEST( IfFunctionSet )
-    REGISTER_TEST( IfFunctionStringCompare )
-    REGISTER_TEST( IfFunctionBracket )
-    REGISTER_TEST( UsageError_ExtraTokensAfterExpression )
-    REGISTER_TEST( UsageError_UnsupportedTypeForIn )
-    REGISTER_TEST( UsageError_UnsupportedOperation )
-REGISTER_TESTS_END
 
 #define TEST_EXP_TRUE( vars, exp )        TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Success')\n}", "Success" ) )
 #define TEST_EXP_FALSE( vars, exp )       TEST_ASSERT( ParseFromString( true, vars "\nIf ( " exp " )\n{\nPrint('Failure')\n}", nullptr, "Failure" ) )
 #define TEST_EXP_FAIL( vars, exp, error ) TEST_ASSERT( ParseFromString( false, vars "\nIf ( " exp " )\n{\n}", error ) )
 
-// IfFunctionTrue
 //------------------------------------------------------------------------------
-void TestIf::IfFunctionTrue() const
+TEST_CASE( TestIf, IfFunctionTrue )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_true.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
-// IfNotFunctionTrue
 //------------------------------------------------------------------------------
-void TestIf::IfNotFunctionTrue() const
+TEST_CASE( TestIf, IfNotFunctionTrue )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_true.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
-// IfSetFunctionTrue
 //------------------------------------------------------------------------------
-void TestIf::IfSetFunctionTrue() const
+TEST_CASE( TestIf, IfSetFunctionTrue )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_set_function_true.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
-// IfNotSetFunctionTrue
 //------------------------------------------------------------------------------
-void TestIf::IfNotSetFunctionTrue() const
+TEST_CASE( TestIf, IfNotSetFunctionTrue )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_not_set_function_true.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
-// IfFunctionFalse
 //------------------------------------------------------------------------------
-void TestIf::IfFunctionFalse() const
+TEST_CASE( TestIf, IfFunctionFalse )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
 }
 
-// IfNotFunctionFalse
 //------------------------------------------------------------------------------
-void TestIf::IfNotFunctionFalse() const
+TEST_CASE( TestIf, IfNotFunctionFalse )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
 }
 
-// IfSetFunctionFalse
 //------------------------------------------------------------------------------
-void TestIf::IfSetFunctionFalse() const
+TEST_CASE( TestIf, IfSetFunctionFalse )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_set_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
 }
 
-// IfNotSetFunctionFalse
 //------------------------------------------------------------------------------
-void TestIf::IfNotSetFunctionFalse() const
+TEST_CASE( TestIf, IfNotSetFunctionFalse )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_not_set_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
 }
 
-// IfFunctionBool
 //------------------------------------------------------------------------------
-void TestIf::IfFunctionBool() const
+TEST_CASE( TestIf, IfFunctionBool )
 {
     // Literals
     TEST_EXP_TRUE( "", "true" );
@@ -168,9 +119,8 @@ void TestIf::IfFunctionBool() const
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
-// IfFunctionInt
 //------------------------------------------------------------------------------
-void TestIf::IfFunctionInt() const
+TEST_CASE( TestIf, IfFunctionInt )
 {
     // Literals vs Literals
     // Equality
@@ -247,9 +197,8 @@ void TestIf::IfFunctionInt() const
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
-// IfFunctionStringCompare
 //------------------------------------------------------------------------------
-void TestIf::IfFunctionStringCompare() const
+TEST_CASE( TestIf, IfFunctionStringCompare )
 {
     // Literals vs Literals
     TEST_EXP_TRUE( "", "'2' == '2'" );
@@ -324,9 +273,8 @@ void TestIf::IfFunctionStringCompare() const
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
-// IfFunctionSet
 //------------------------------------------------------------------------------
-void TestIf::IfFunctionSet() const
+TEST_CASE( TestIf, IfFunctionSet )
 {
 #define VARS \
     ".D = 'd'\n" \
@@ -355,7 +303,8 @@ void TestIf::IfFunctionSet() const
     TEST_EXP_FAIL( ".String = ''", ".String in 'xy'", "Property '<literal>' must be of type <ArrayOfStrings> (found <String>)" );
 }
 
-void TestIf::IfFunctionBracket() const
+//------------------------------------------------------------------------------
+TEST_CASE( TestIf, IfFunctionBracket )
 {
     TEST_EXP_TRUE( "", "(true)" );
     TEST_EXP_TRUE( "", "(!false)" );
@@ -397,25 +346,22 @@ void TestIf::IfFunctionBracket() const
 #undef TEST_EXP_FALSE
 #undef TEST_EXP_FAIL
 
-// UsageError_ExtraTokensAfterExpression
 //------------------------------------------------------------------------------
-void TestIf::UsageError_ExtraTokensAfterExpression() const
+TEST_CASE( TestIf, UsageError_ExtraTokensAfterExpression )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_extratokensafterexpression.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Unexpected token 'and'" ) );
 }
 
-// UsageError_UnsupportedTypeForIn
 //------------------------------------------------------------------------------
-void TestIf::UsageError_UnsupportedTypeForIn() const
+TEST_CASE( TestIf, UsageError_UnsupportedTypeForIn )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedtypeforin.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Unexpected operator 'in'" ) );
 }
 
-// UsageError_UnsupportedOperation
 //------------------------------------------------------------------------------
-void TestIf::UsageError_UnsupportedOperation() const
+TEST_CASE( TestIf, UsageError_UnsupportedOperation )
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedoperation.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Unexpected operator '>='" ) );

@@ -12,7 +12,7 @@ class MemoryStream;
 
 // ConstMemoryStream
 //------------------------------------------------------------------------------
-class ConstMemoryStream : public IOStream
+class ConstMemoryStream final : public IOStream
 {
 public:
     ConstMemoryStream();

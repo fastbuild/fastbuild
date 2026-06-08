@@ -15,6 +15,7 @@
 
 #include "AliasNode.h"
 #include "CSNode.h"
+#include "CompilerInfoNode.h"
 #include "CompilerNode.h"
 #include "CopyDirNode.h"
 #include "CopyFileNode.h"
@@ -57,8 +58,22 @@
 
 #include <string.h>
 
-// Defines
 //------------------------------------------------------------------------------
+class NodeGraphMigrationCache
+{
+public:
+    NodeGraphMigrationCache( NodeGraph & newNodeGraph,
+                             const Array<Node *> & oldNodes );
+
+    Node * FindNewNode( const Node * oldNode );
+
+    // Non-copyable
+    NodeGraphMigrationCache & operator=( const NodeGraphMigrationCache & other ) = delete;
+
+private:
+    Array<Node *> m_OldToNewNodeMapping;
+    NodeGraph & m_NewNodeGraph;
+};
 
 // Static Data
 //------------------------------------------------------------------------------
@@ -317,7 +332,7 @@ NodeGraph::LoadResult NodeGraph::Load( ConstMemoryStream & stream, const char * 
             return LoadResult::LOAD_ERROR; // error reading
         }
 
-        const uint64_t dataHash = xxHash3::Calc64( mem.Get(), size );
+        const uint64_t dataHash = xxHash3::Calc64Big( mem.Get(), size );
         if ( dataHash == usedFiles[ i ].m_DataHash )
         {
             // file didn't change, update stored timestamp to save time on the next run
@@ -562,7 +577,7 @@ void NodeGraph::Save( ChainedMemoryStream & stream, const char * nodeGraphDBFile
                 dataSize -= sizeof( NodeGraphHeader );
             }
 
-            accumulator.AddData( data, dataSize );
+            accumulator.AddDataBig( data, dataSize );
         }
         const uint64_t hash = accumulator.Finalize64();
 
@@ -896,6 +911,7 @@ Node * NodeGraph::CreateNode( Node::Type type, AString && name, uint32_t nameHas
         case Node::SETTINGS_NODE: node = FNEW( SettingsNode() ); break;
         case Node::TEXT_FILE_NODE: node = FNEW( TextFileNode() ); break;
         case Node::LIST_DEPENDENCIES_NODE: node = FNEW( ListDependenciesNode() ); break;
+        case Node::COMPILER_INFO_NODE: node = FNEW( CompilerInfoNode() ); break;
         case Node::NUM_NODE_TYPES: ASSERT( false ); return nullptr;
     }
 
@@ -1737,7 +1753,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( ConstMemoryStream & nodeGraphStream, con
         ASSERT( tell == sizeof( NodeGraphHeader ) ); // Stream should be after header
         const char * data = ( static_cast<const char *>( nodeGraphStream.GetData() ) + tell );
         const size_t remainingSize = ( nodeGraphStream.GetSize() - tell );
-        const uint64_t hash = xxHash3::Calc64( data, remainingSize );
+        const uint64_t hash = xxHash3::Calc64Big( data, remainingSize );
         if ( hash != ngh.GetContentHash() )
         {
             return false; // DB is corrupt
@@ -1830,6 +1846,9 @@ void NodeGraph::Migrate( const NodeGraph & oldNodeGraph )
 
     s_BuildPassTag++;
 
+    // Pre-resolve node mappings
+    NodeGraphMigrationCache migrationCache( *this, oldNodeGraph.m_AllNodes );
+
     // NOTE: m_AllNodes can change during recursion, so we must take care to
     // iterate by index (array might move due to resizing). Any newly added
     // nodes will already be traversed so we only need to check the original
@@ -1838,13 +1857,16 @@ void NodeGraph::Migrate( const NodeGraph & oldNodeGraph )
     for ( size_t i = 0; i < numNodes; ++i )
     {
         Node & newNode = *m_AllNodes[ i ];
-        MigrateNode( oldNodeGraph, newNode, nullptr );
+        MigrateNode( migrationCache, oldNodeGraph, newNode, nullptr );
     }
 }
 
 // MigrateNode
 //------------------------------------------------------------------------------
-void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, const Node * oldNodeHint )
+void NodeGraph::MigrateNode( NodeGraphMigrationCache & migrationCache,
+                             const NodeGraph & oldNodeGraph,
+                             Node & newNode,
+                             const Node * oldNodeHint )
 {
     // Prevent visiting the same node twice
     if ( newNode.GetBuildPassTag() == s_BuildPassTag )
@@ -1862,11 +1884,11 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     // Migrate children before parents
     for ( const Dependency & dep : newNode.m_PreBuildDependencies )
     {
-        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+        MigrateNode( migrationCache, oldNodeGraph, *dep.GetNode(), nullptr );
     }
     for ( const Dependency & dep : newNode.m_StaticDependencies )
     {
-        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+        MigrateNode( migrationCache, oldNodeGraph, *dep.GetNode(), nullptr );
     }
 
     // Get the matching node in the old DB
@@ -1901,7 +1923,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     }
 
     // Have the properties on the node changed?
-    if ( AreNodesTheSame( oldNode, &newNode, newNodeRI ) == false )
+    if ( AreNodesTheSame( migrationCache, oldNode, &newNode, newNodeRI ) == false )
     {
         // Properties have changed. We need to rebuild with the new
         // properties.
@@ -1909,13 +1931,13 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     }
 
     // PreBuildDependencies
-    if ( DoDependenciesMatch( oldNode->m_PreBuildDependencies, newNode.m_PreBuildDependencies ) == false )
+    if ( DoDependenciesMatch( migrationCache, oldNode->m_PreBuildDependencies, newNode.m_PreBuildDependencies ) == false )
     {
         return;
     }
 
     // StaticDependencies
-    if ( DoDependenciesMatch( oldNode->m_StaticDependencies, newNode.m_StaticDependencies ) == false )
+    if ( DoDependenciesMatch( migrationCache, oldNode->m_StaticDependencies, newNode.m_StaticDependencies ) == false )
     {
         return;
     }
@@ -1939,7 +1961,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         {
             // See if the dependency already exists in the new DB
             const Node * oldDepNode = oldDep.GetNode();
-            Node * newDepNode = FindNodeInternal( oldDepNode->GetName(), oldDepNode->GetNameHash() );
+            Node * newDepNode = migrationCache.FindNewNode( oldDepNode );
 
             // If the dependency exists, but has changed type, then dependencies
             // cannot be transferred.
@@ -1974,13 +1996,11 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
                 VERIFY( newDepNode->Initialize( *this, token, nullptr ) );
 
                 // Continue recursing
-                MigrateNode( oldNodeGraph, *newDepNode, oldDepNode );
+                MigrateNode( migrationCache, oldNodeGraph, *newDepNode, oldDepNode );
             }
         }
-        if ( newDeps.IsEmpty() == false )
-        {
-            newNode.m_DynamicDependencies.Add( newDeps );
-        }
+        ASSERT( newDeps.GetSize() == oldDeps.GetSize() );
+        newNode.m_DynamicDependencies = Move( newDeps );
     }
 
     // If we get here, then everything about the node is unchanged from the
@@ -2090,11 +2110,25 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
         }
         case PT_CUSTOM_1:
         {
-            ASSERT( property.IsArray() == false );
-            const Node * oldNode = *property.GetPtrToPropertyCustom<Node *>( oldBase );
-            Node * newNode = FindNodeInternal( oldNode->GetName(), oldNode->GetNameHash() );
-            Node ** newNodeProperty = property.GetPtrToPropertyCustom<Node *>( newBase );
-            *newNodeProperty = newNode;
+            if ( property.IsArray() )
+            {
+                const Array<Node *> & oldNodes = *property.GetPtrToArray<Node *>( oldBase );
+                Array<Node *> & newNodes = *property.GetPtrToArray<Node *>( newBase );
+                newNodes.SetCapacity( oldNodes.GetSize() );
+                for ( const Node * oldNode : oldNodes )
+                {
+                    Node * newNode = FindNodeInternal( oldNode->GetName(), oldNode->GetNameHash() );
+                    ASSERT( newNode );
+                    newNodes.EmplaceBack( newNode );
+                }
+            }
+            else
+            {
+                const Node * oldNode = *property.GetPtrToPropertyCustom<Node *>( oldBase );
+                Node * newNode = FindNodeInternal( oldNode->GetName(), oldNode->GetNameHash() );
+                Node ** newNodeProperty = property.GetPtrToPropertyCustom<Node *>( newBase );
+                *newNodeProperty = newNode;
+            }
             break;
         }
         default: ASSERT( false ); // Unhandled
@@ -2103,7 +2137,10 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
 
 // AreNodesTheSame
 //------------------------------------------------------------------------------
-/*static*/ bool NodeGraph::AreNodesTheSame( const void * baseA, const void * baseB, const ReflectionInfo * ri )
+/*static*/ bool NodeGraph::AreNodesTheSame( NodeGraphMigrationCache & migrationCache,
+                                            const void * baseA,
+                                            const void * baseB,
+                                            const ReflectionInfo * ri )
 {
     // Are all properties the same?
     do
@@ -2112,7 +2149,7 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
         for ( ReflectionIter it = ri->Begin(); it != end; ++it )
         {
             // Is this property the same?
-            if ( AreNodesTheSame( baseA, baseB, *it ) == false )
+            if ( AreNodesTheSame( migrationCache, baseA, baseB, *it ) == false )
             {
                 return false;
             }
@@ -2127,7 +2164,10 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
 
 // AreNodesTheSame
 //------------------------------------------------------------------------------
-/*static*/ bool NodeGraph::AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property )
+/*static*/ bool NodeGraph::AreNodesTheSame( NodeGraphMigrationCache & migrationCache,
+                                            const void * baseA,
+                                            const void * baseB,
+                                            const ReflectedProperty & property )
 {
     if ( property.HasMetaData<Meta_IgnoreForComparison>() )
     {
@@ -2238,7 +2278,10 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
                 }
                 for ( uint32_t i = 0; i < numElementsA; ++i )
                 {
-                    if ( AreNodesTheSame( propertyStruct.GetStructInArray( baseA, i ), propertyStruct.GetStructInArray( baseB, i ), propertyStruct.GetStructReflectionInfo() ) == false )
+                    if ( AreNodesTheSame( migrationCache,
+                                          propertyStruct.GetStructInArray( baseA, i ),
+                                          propertyStruct.GetStructInArray( baseB, i ),
+                                          propertyStruct.GetStructReflectionInfo() ) == false )
                     {
                         return false;
                     }
@@ -2246,7 +2289,10 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
             }
             else
             {
-                if ( AreNodesTheSame( propertyStruct.GetStructBase( baseA ), propertyStruct.GetStructBase( baseB ), propertyStruct.GetStructReflectionInfo() ) == false )
+                if ( AreNodesTheSame( migrationCache,
+                                      propertyStruct.GetStructBase( baseA ),
+                                      propertyStruct.GetStructBase( baseB ),
+                                      propertyStruct.GetStructReflectionInfo() ) == false )
                 {
                     return false;
                 }
@@ -2255,12 +2301,39 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
         }
         case PT_CUSTOM_1:
         {
-            ASSERT( property.IsArray() == false );
-            const Node * nodeA = *property.GetPtrToPropertyCustom<Node *>( baseA );
-            const Node * nodeB = *property.GetPtrToPropertyCustom<Node *>( baseB );
-            if ( nodeA->GetName() != nodeB->GetName() )
+            if ( property.IsArray() )
             {
-                return false;
+                const Array<Node *> & nodesA = *property.GetPtrToArray<Node *>( baseA );
+                const Array<Node *> & nodesB = *property.GetPtrToArray<Node *>( baseB );
+                if ( nodesA.GetSize() != nodesB.GetSize() )
+                {
+                    return false;
+                }
+                const size_t numNodes = nodesA.GetSize();
+                for ( size_t i = 0; i < numNodes; ++i )
+                {
+                    const Node * n = migrationCache.FindNewNode( nodesA[ i ] );
+                    if ( n == nodesB[ i ] )
+                    {
+                        continue; // Same
+                    }
+                    if ( nodesA[ i ]->GetName() != nodesB[ i ]->GetName() )
+                    {
+                        return false;
+                    }
+                }
+                break;
+            }
+            else
+            {
+                const Node * nodeA = *property.GetPtrToPropertyCustom<Node *>( baseA );
+                const Node * nodeB = *property.GetPtrToPropertyCustom<Node *>( baseB );
+                const bool same = ( nodeA && nodeB ) ? ( nodeA->GetName() == nodeB->GetName() )
+                                                     : ( ( nodeA == nullptr ) && ( nodeB == nullptr ) );
+                if ( !same )
+                {
+                    return false;
+                }
             }
             break;
         }
@@ -2272,7 +2345,9 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
 
 // DoDependenciesMatch
 //------------------------------------------------------------------------------
-bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB )
+bool NodeGraph::DoDependenciesMatch( NodeGraphMigrationCache & migrationCache,
+                                     const Dependencies & depsA,
+                                     const Dependencies & depsB )
 {
     if ( depsA.GetSize() != depsB.GetSize() )
     {
@@ -2292,6 +2367,11 @@ bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependenc
         {
             return false;
         }
+        const Node * node = migrationCache.FindNewNode( nodeA );
+        if ( node == nodeB )
+        {
+            continue;
+        }
         if ( nodeA->GetName() != nodeB->GetName() )
         {
             return false;
@@ -2299,6 +2379,44 @@ bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependenc
     }
 
     return true;
+}
+
+//------------------------------------------------------------------------------
+NodeGraphMigrationCache::NodeGraphMigrationCache( NodeGraph & newNodeGraph,
+                                                  const Array<Node *> & oldNodes )
+    : m_NewNodeGraph( newNodeGraph )
+{
+    // Init pointer table with nullptrs
+    const size_t numNodes = oldNodes.GetSize();
+    m_OldToNewNodeMapping.SetSize( numNodes );
+    memset( m_OldToNewNodeMapping.Begin(), 0, ( numNodes * sizeof( Node * ) ) );
+
+    // Set back indices into table
+    for ( uint32_t i = 0; i < numNodes; ++i )
+    {
+        oldNodes[ i ]->SetBuildPassTag( i );
+    }
+}
+
+//------------------------------------------------------------------------------
+Node * NodeGraphMigrationCache::FindNewNode( const Node * oldNode )
+{
+    // Lookup existing entry
+    const uint32_t index = oldNode->GetBuildPassTag();
+    Node * newNode = m_OldToNewNodeMapping[ index ];
+
+    // Already set?
+    if ( newNode )
+    {
+        ASSERT( oldNode->GetName() == newNode->GetName() );
+    }
+    else
+    {
+        // Init entry on first use
+        newNode = m_NewNodeGraph.FindNodeInternal( oldNode->GetName(), oldNode->GetNameHash() );
+        m_OldToNewNodeMapping[ index ] = newNode;
+    }
+    return newNode;
 }
 
 //------------------------------------------------------------------------------

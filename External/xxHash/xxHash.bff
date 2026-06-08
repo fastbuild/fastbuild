@@ -7,22 +7,17 @@
     .ProjectPath        = '$xxHashBasePath$'
 
     // Target/Compiler specific options
+    .xxHashOptions          = [ .xxHashCompilerOptions = ' -O2' ] // Compile with optimizations even in debug to improve performance
     .xxHashOptions_x64      = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
+                                Using( .xxHashOptions )
+                                .xxHashCompilerOptions + ' /wd4113' // Inconsisitent use of __restrict with function pointers
                               ]
-    .xxHashOptions_x64Clang = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
-    .xxHashOptions_x64Linux = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
+    .xxHashOptions_ARM64    = .xxHashOptions
+    .xxHashOptions_x64Clang = .xxHashOptions
+    .xxHashOptions_x64Linux = .xxHashOptions
     .xxHashOptions_x64ClangLinux  = .xxHashOptions_x64Linux
-    .xxHashOptions_x64OSX   = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
-    .xxHashOptions_ARMOSX   = [
-                                .xxHashCompilerOptions  = ' -O2'        // Compile with optimizations even in debug to improve performance
-                              ]
+    .xxHashOptions_x64OSX   = .xxHashOptions
+    .xxHashOptions_ARMOSX   = .xxHashOptions
 
     // Library
     //--------------------------------------------------------------------------
@@ -42,6 +37,13 @@
             .CompilerInputFiles         = {
                                             '$xxHashBasePath$\xxhash.c'
                                           }
+
+            // Add dynamic dispatch for x86_64 platforms
+            If( ( .Platform != 'ARMOSX' ) &&
+                ( .Platform != 'ARM64' ) )
+            {
+                ^CompilerInputFiles + '$xxHashBasePath$\xxh_x86dispatch.c'
+            }
 
             // Options
             .CompilerOptions            = .CompilerOptionsC

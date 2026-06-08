@@ -22,58 +22,36 @@
                            "\"-DSTRING_DEFINE=\\\"foobar\\\"\", " \
                            "\"-DSTRING_DEFINE_SPACES=\\\"foo bar\\\"\","
 
-// TestCompilationDatabase
 //------------------------------------------------------------------------------
-class TestCompilationDatabase : public FBuildTest
+TEST_GROUP( TestCompilationDatabase, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void JSONEscape() const;
-    void Unquote() const;
-    void TestObjectListInputFile() const;
-    void TestObjectListInputPath() const;
-    void TestUnityInputFile() const;
-    void TestUnityInputPath() const;
-
+public:
     void DoTest( const char * bffFile, const char * target, const char * result ) const;
     static void PrepareExpectedResult( AString & result );
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCompilationDatabase )
-    REGISTER_TEST( JSONEscape )
-    REGISTER_TEST( TestObjectListInputFile )
-    REGISTER_TEST( TestObjectListInputPath )
-    REGISTER_TEST( TestUnityInputFile )
-    REGISTER_TEST( TestUnityInputPath )
-REGISTER_TESTS_END
-
-// JSONEscape
-//------------------------------------------------------------------------------
-void TestCompilationDatabase::JSONEscape() const
+TEST_CASE( TestCompilationDatabase, JSONEscape )
 {
 #define CHECK_JSONESCAPE( str, result ) \
-    { \
+    do { \
         AStackString string( str ); \
         JSON::Escape( string ); \
         TEST_ASSERT( string == result ); \
-    }
+    } while ( false )
 
-    CHECK_JSONESCAPE( "", "" )
-    CHECK_JSONESCAPE( "foo", "foo" )
-    CHECK_JSONESCAPE( "\"bar\"", "\\\"bar\\\"" )
-    CHECK_JSONESCAPE( "first\\second\\third", "first\\\\second\\\\third" )
-    CHECK_JSONESCAPE( "\b \t \n \f \r \\ \"", "\\b \\t \\n \\f \\r \\\\ \\\"" )
-    CHECK_JSONESCAPE( "\x01 \x0B \x14 \x1E", "\\u0001 \\u000B \\u0014 \\u001E" )
+    CHECK_JSONESCAPE( "", "" );
+    CHECK_JSONESCAPE( "foo", "foo" );
+    CHECK_JSONESCAPE( "\"bar\"", "\\\"bar\\\"" );
+    CHECK_JSONESCAPE( "first\\second\\third", "first\\\\second\\\\third" );
+    CHECK_JSONESCAPE( "\b \t \n \f \r \\ \"", "\\b \\t \\n \\f \\r \\\\ \\\"" );
+    CHECK_JSONESCAPE( "\x01 \x0B \x14 \x1E", "\\u0001 \\u000B \\u0014 \\u001E" );
 
 #undef CHECK_JSONESCAPE
 }
 
-// TestObjectListInputFile
 //------------------------------------------------------------------------------
-void TestCompilationDatabase::TestObjectListInputFile() const
+TEST_CASE( TestCompilationDatabase, TestObjectListInputFile )
 {
     DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff",
             "ObjectList_InputFile",
@@ -88,9 +66,8 @@ void TestCompilationDatabase::TestObjectListInputFile() const
             "]\n" );
 }
 
-// TestObjectListInputPath
 //------------------------------------------------------------------------------
-void TestCompilationDatabase::TestObjectListInputPath() const
+TEST_CASE( TestCompilationDatabase, TestObjectListInputPath )
 {
     DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff",
             "ObjectList_InputPath",
@@ -104,9 +81,8 @@ void TestCompilationDatabase::TestObjectListInputPath() const
             "]\n" );
 }
 
-// TestUnityInputFile
 //------------------------------------------------------------------------------
-void TestCompilationDatabase::TestUnityInputFile() const
+TEST_CASE( TestCompilationDatabase, TestUnityInputFile )
 {
     DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff",
             "ObjectList_UnityInputFile",
@@ -121,9 +97,8 @@ void TestCompilationDatabase::TestUnityInputFile() const
             "]\n" );
 }
 
-// TestUnityInputPath
 //------------------------------------------------------------------------------
-void TestCompilationDatabase::TestUnityInputPath() const
+TEST_CASE( TestCompilationDatabase, TestUnityInputPath )
 {
     DoTest( "Tools/FBuild/FBuildTest/Data/TestCompilationDatabase/fbuild.bff",
             "ObjectList_UnityInputPath",

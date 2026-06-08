@@ -1,9 +1,19 @@
 // BFFKeywords
 //------------------------------------------------------------------------------
+#pragma once
+
+// Includes
+//------------------------------------------------------------------------------
+#include "Core/Env/Types.h"
+
+// Forward Declarations
+//------------------------------------------------------------------------------
+class AString;
 
 // Defines
 //------------------------------------------------------------------------------
 #define BFF_KEYWORD_DEFINE  "define"
+#define BFF_KEYWORD_ELIF    "elif"
 #define BFF_KEYWORD_ELSE    "else"
 #define BFF_KEYWORD_ENDIF   "endif"
 #define BFF_KEYWORD_EXISTS  "exists"
@@ -17,7 +27,44 @@
 #define BFF_KEYWORD_INCLUDE "include"
 #define BFF_KEYWORD_NOT     "not"
 #define BFF_KEYWORD_ONCE    "once"
+#define BFF_KEYWORD_OUT     "out"
 #define BFF_KEYWORD_TRUE    "true"
 #define BFF_KEYWORD_UNDEF   "undef"
+
+class BFFKeyword
+{
+public:
+    enum class Type : uint8_t
+    {
+        eDefine,
+        eElif,
+        eElse,
+        eEndIf,
+        eExists,
+        eFalse,
+        eFileExists,
+        eFunction,
+        eIf,
+        eImport,
+        eIn,
+        eInclude,
+        eNot,
+        eOnce,
+        eOut,
+        eTrue,
+        eUndef,
+
+        Count
+    };
+
+    // Map from string to enum
+    [[nodiscard]] static Type GetType( const AString & string );
+
+    // Map from enum to string
+    [[nodiscard]] static const AString & GetString( Type type );
+
+private:
+    static const AString sKeywordStringLookup[];
+};
 
 //------------------------------------------------------------------------------

@@ -10,35 +10,21 @@
 #include "OSUI/OSFont.h"
 #include "OSUI/OSWindow.h"
 
-// TestDropDown
 //------------------------------------------------------------------------------
-class TestFont : public TestGroup
+TEST_GROUP( TestFont, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void Init() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestFont )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( Init )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestFont::Empty() const
+TEST_CASE( TestFont, Empty )
 {
     // base Create/destroy without initialization
     OSFont font;
 }
 
-// Init
 //------------------------------------------------------------------------------
-void TestFont::Init() const
+TEST_CASE( TestFont, Init )
 {
 #if defined( __OSX__ )
     // OSX main window appears to be leaked by OS

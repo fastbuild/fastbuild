@@ -17,6 +17,9 @@ Compiler( 'Compiler-GCC' )
     #if ENABLE_SOURCE_MAPPING
         .SourceMapping_Experimental = '/fastbuild-test-mapping'
     #endif
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
+    #endif
 }
 
 // ToolChain
@@ -45,10 +48,14 @@ Compiler( 'Compiler-GCC' )
     .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
                                     + ' -fdiagnostics-color=auto'
+                                    + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
     .PCHOptions                     = ' -x c++-header'
                                     + ' -std=c++17 $CommonCompilerOptions$'
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+                                    + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
 
     // Librarian
     .Librarian                      = '/usr/bin/ar'
@@ -61,9 +68,6 @@ Compiler( 'Compiler-GCC' )
     // File Extensions
     .LibExtension                   = '.a'
     .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
 ]
 
 //------------------------------------------------------------------------------

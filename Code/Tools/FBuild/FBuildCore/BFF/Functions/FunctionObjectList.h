@@ -20,6 +20,11 @@ public:
     explicit FunctionObjectList();
     virtual ~FunctionObjectList() override = default;
 
+    static void GetExtraOutputPaths( const AString & args,
+                                     AString & outPDBPath,
+                                     AString & outASMPath,
+                                     AString & outSourceDependenciesPath );
+
 protected:
     virtual bool AcceptsHeader() const override;
     virtual bool NeedsHeader() const override;
@@ -38,11 +43,6 @@ protected:
                                 const AString & compilerOptions,
                                 ObjectNode::CompilerFlags objFlags ) const;
 
-    friend class TestObjectList;
-    static void GetExtraOutputPaths( const AString & args,
-                                     AString & outPDBPath,
-                                     AString & outASMPath,
-                                     AString & outSourceDependenciesPath );
     static void GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path );
 };
 

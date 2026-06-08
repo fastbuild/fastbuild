@@ -12,31 +12,13 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
-// TestFastCancel
 //------------------------------------------------------------------------------
-class TestFastCancel : public FBuildTest
+TEST_GROUP( TestFastCancel, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
+public:
     template <uint32_t SEED>
     void BuildFailure() const;
-    void Cancel() const;
 };
-
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestFastCancel )
-    REGISTER_TEST( BuildFailure<0> )
-    REGISTER_TEST( BuildFailure<1> )
-    REGISTER_TEST( BuildFailure<2> )
-    REGISTER_TEST( BuildFailure<3> )
-    REGISTER_TEST( BuildFailure<4> )
-    REGISTER_TEST( BuildFailure<5> )
-    REGISTER_TEST( BuildFailure<6> )
-    REGISTER_TEST( BuildFailure<7> )
-    REGISTER_TEST( Cancel )
-REGISTER_TESTS_END
 
 //------------------------------------------------------------------------------
 template <uint32_t SEED>
@@ -71,7 +53,7 @@ void TestFastCancel::BuildFailure() const
     }
 
     // Init
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Start build and check it failed as expected
@@ -96,6 +78,54 @@ void TestFastCancel::BuildFailure() const
         TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Incomplete: b" ) ||
                      GetRecordedOutput().Find( "FBuild: OK: b" ) );
     }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure0 )
+{
+    BuildFailure<0>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure1 )
+{
+    BuildFailure<1>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure2 )
+{
+    BuildFailure<2>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure3 )
+{
+    BuildFailure<3>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure4 )
+{
+    BuildFailure<4>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure5 )
+{
+    BuildFailure<5>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure6 )
+{
+    BuildFailure<6>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure7 )
+{
+    BuildFailure<7>();
 }
 
 // CancelHelperThread
@@ -129,9 +159,8 @@ static uint32_t CancelHelperThread( void * )
     return 0;
 }
 
-// Cancel
 //------------------------------------------------------------------------------
-void TestFastCancel::Cancel() const
+TEST_CASE( TestFastCancel, Cancel )
 {
     // Ensure a hierarchy of processes can be correctly aborted
     FBuildTestOptions options;
@@ -139,7 +168,7 @@ void TestFastCancel::Cancel() const
     options.m_ForceCleanBuild = true;
 
     // Init
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Create thread that will abort build once all processes are spawned

@@ -10,25 +10,14 @@
 #include "Core/Network/Network.h"
 #include "Core/Strings/AString.h"
 
-// TestNetwork
 //------------------------------------------------------------------------------
-class TestNetwork : public TestGroup
+TEST_GROUP( TestNetwork, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void GetIPv4Addresses() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestNetwork )
-    REGISTER_TEST( GetIPv4Addresses )
-REGISTER_TESTS_END
-
-// GetLocalIPv4Addresses
-//------------------------------------------------------------------------------
-void TestNetwork::GetIPv4Addresses() const
+TEST_CASE( TestNetwork, GetIPv4Addresses )
 {
     StackArray<AString> addresses;
     Network::GetIPv4Addresses( addresses );

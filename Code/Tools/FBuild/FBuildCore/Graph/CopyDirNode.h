@@ -35,7 +35,7 @@ private:
     Array<AString> m_SourceExcludePaths;
     bool m_SourcePathsRecurse = true;
 
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

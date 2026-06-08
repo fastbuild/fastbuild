@@ -36,7 +36,7 @@ private:
     Array<AString> m_RemovePatterns;
     Array<AString> m_RemoveExcludePaths;
     Array<AString> m_RemoveExcludeFiles;
-    Array<AString> m_PreBuildDependencyNames;
+    Array<Node *> m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

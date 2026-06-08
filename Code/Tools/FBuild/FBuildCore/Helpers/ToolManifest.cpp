@@ -28,20 +28,20 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
-    REFLECT(        m_ToolId,                       "ToolId",                       MetaHidden() )
-    REFLECT(        m_TimeStamp,                    "TimeStamp",                    MetaHidden() )
-    REFLECT(        m_MainExecutableRootPath,       "MainExecutableRootPath",       MetaHidden() )
-    REFLECT_ARRAY_OF_STRUCT( m_Files,               "Files",    ToolManifestFile,   MetaHidden() )
-    REFLECT_ARRAY(  m_CustomEnvironmentVariables,   "CustomEnvironmentVariables",   MetaHidden() )
+REFLECT_STRUCT_BEGIN( ToolManifest, Struct )
+    REFLECT( m_ToolId, MetaHidden() )
+    REFLECT( m_TimeStamp, MetaHidden() )
+    REFLECT( m_MainExecutableRootPath, MetaHidden() )
+    REFLECT( m_Files, MetaHidden() )
+    REFLECT( m_CustomEnvironmentVariables, MetaHidden() )
 REFLECT_END( ToolManifest )
 
-REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct, MetaNone() )
-    REFLECT( m_Name,        "Name",         MetaHidden() )
-    REFLECT( m_TimeStamp,   "TimeStamp",    MetaHidden() )
-    REFLECT( m_Hash,        "Hash",         MetaHidden() )
-    REFLECT( m_UncompressedContentSize, "UncompressedContentSize",  MetaHidden() )
-    REFLECT( m_CompressedContentSize, "CompressedContentSize",  MetaHidden() )
+REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct )
+    REFLECT( m_Name, MetaHidden() )
+    REFLECT( m_TimeStamp, MetaHidden() )
+    REFLECT( m_Hash, MetaHidden() )
+    REFLECT( m_UncompressedContentSize, MetaHidden() )
+    REFLECT( m_CompressedContentSize, MetaHidden() )
 REFLECT_END( ToolManifestFile )
 
 // CONSTRUCTOR (ToolManifestFile)
@@ -109,7 +109,7 @@ void ToolManifestFile::StoreCompressedContent( const void * uncompressedData, co
 
 // DoBuild
 //------------------------------------------------------------------------------
-bool ToolManifestFile::DoBuild()
+bool ToolManifestFile::DoBuild( bool skipHashing )
 {
     // Name should be set
     ASSERT( m_Name.IsEmpty() == false );
@@ -118,6 +118,23 @@ bool ToolManifestFile::DoBuild()
     ASSERT( m_CompressedContent == nullptr );
     ASSERT( m_CompressedContentSize == 0 );
 
+    if ( skipHashing )
+    {
+        // Get the file's timestamp (a fast 'stat' call)
+        const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
+
+        // File missing?
+        if ( lastWriteTime == 0 )
+        {
+            FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest. File not found.\n", m_Name.Get() );
+            return false;
+        }
+
+        // We hash the NAME instead of the CONTENT.
+        m_Hash = xxHash3::Calc32( m_Name );
+        m_TimeStamp = lastWriteTime;
+        return true; // We're done, skip the expensive file I/O below
+    }
     // Do we already have a hash?
     if ( m_Hash != 0 )
     {
@@ -182,7 +199,7 @@ void ToolManifest::Initialize( const AString & mainExecutableRoot, const Depende
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::DoBuild( const Dependencies & dependencies )
+bool ToolManifest::DoBuild( const Dependencies & dependencies, bool skipHashing )
 {
     ASSERT( m_Files.GetSize() == dependencies.GetSize() );
     (void)dependencies;
@@ -192,7 +209,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     // Get timestamps and hashes
     for ( ToolManifestFile & file : m_Files )
     {
-        if ( !file.DoBuild() )
+        if ( !file.DoBuild( skipHashing ) )
         {
             return false; // DoBuild will have emitted an error
         }

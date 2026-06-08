@@ -10,18 +10,10 @@
 #include "Core/Process/Atomic.h"
 #include "Core/Process/ThreadPool.h"
 
-// TestThread
 //------------------------------------------------------------------------------
-class TestThreadPool : public TestGroup
+TEST_GROUP( TestThreadPool, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void Unused() const;
-    void SingleJob() const;
-    void MultipleJobs() const;
-
+public:
     // Helpers
     static void Increment( void * userData )
     {
@@ -30,25 +22,15 @@ private:
     }
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestThreadPool )
-    REGISTER_TEST( Unused )
-    REGISTER_TEST( SingleJob )
-    REGISTER_TEST( MultipleJobs )
-REGISTER_TESTS_END
-
-// Unused
-//------------------------------------------------------------------------------
-void TestThreadPool::Unused() const
+TEST_CASE( TestThreadPool, Unused )
 {
     // A thread pool never used
     ThreadPool threadPool( 4 );
 }
 
-// SingleJob
 //------------------------------------------------------------------------------
-void TestThreadPool::SingleJob() const
+TEST_CASE( TestThreadPool, SingleJob )
 {
     Atomic<uint32_t> count;
 
@@ -64,9 +46,8 @@ void TestThreadPool::SingleJob() const
     TEST_ASSERT( count.Load() == 1 );
 }
 
-// MultipleJobs
 //------------------------------------------------------------------------------
-void TestThreadPool::MultipleJobs() const
+TEST_CASE( TestThreadPool, MultipleJobs )
 {
     Atomic<uint32_t> count;
 

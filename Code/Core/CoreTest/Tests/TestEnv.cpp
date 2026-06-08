@@ -6,42 +6,27 @@
 #include "TestFramework/TestGroup.h"
 
 // Core
+#include "Core/Env/CPUInfo.h"
 #include <Core/Env/Env.h>
 #include <Core/Strings/AStackString.h>
 #include <Core/Tracing/Tracing.h>
 
-// TestEnv
 //------------------------------------------------------------------------------
-class TestEnv : public TestGroup
+TEST_GROUP( TestEnv, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void GetCommandLine() const;
-    void GetProcessorInfo() const;
-    void GetExePath() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestEnv )
-    REGISTER_TEST( GetCommandLine )
-    REGISTER_TEST( GetProcessorInfo )
-    REGISTER_TEST( GetExePath )
-REGISTER_TESTS_END
-
-// GetCommandLine
-//------------------------------------------------------------------------------
-void TestEnv::GetCommandLine() const
+TEST_CASE( TestEnv, GetCommandLine )
 {
     AStackString cmdLine;
     Env::GetCmdLine( cmdLine );
     TEST_ASSERT( cmdLine.FindI( "CoreTest" ) );
 }
 
-// GetExePath
 //------------------------------------------------------------------------------
-void TestEnv::GetExePath() const
+TEST_CASE( TestEnv, GetExePath )
 {
     AStackString cmdLine;
     Env::GetExePath( cmdLine );
@@ -52,15 +37,17 @@ void TestEnv::GetExePath() const
 #endif
 }
 
-// GetProcessorInfo
 //------------------------------------------------------------------------------
-void TestEnv::GetProcessorInfo() const
+TEST_CASE( TestEnv, GetCPUInfo )
 {
-    const Env::ProcessorInfo & info = Env::GetProcessorInfo();
-    OUTPUT( "Num Cores: %u (PCores: %u + ECores: %u)\n",
-            info.mNumCores,
-            info.mNumPCores,
-            info.mNumECores );
+    const CPUInfo & info = CPUInfo::Get();
+
+    AStackString details;
+    info.GetCPUDetailsString( details );
+    OUTPUT( "CPU Info: %s\n", details.Get() );
+
+    TEST_ASSERT( info.m_NumCores > 0 );
+    TEST_ASSERT( info.m_NumCores == ( info.m_NumPCores + info.m_NumECores + info.m_NumLPECores ) );
 }
 
 //------------------------------------------------------------------------------

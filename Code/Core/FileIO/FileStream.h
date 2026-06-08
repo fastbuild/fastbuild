@@ -7,7 +7,7 @@
 
 // FileStream
 //------------------------------------------------------------------------------
-class FileStream : public IOStream
+class FileStream final : public IOStream
 {
 public:
     explicit FileStream();
@@ -22,7 +22,7 @@ public:
         NO_RETRY_ON_SHARING_VIOLATION = 0x80,
     };
 
-    bool Open( const char * fileName, uint32_t mode = FileStream::READ_ONLY );
+    bool Open( const char * fileName, uint32_t mode = FileStream::READ_ONLY, uint32_t timeoutMilliSecs = 2000 );
     void Close();
 
     bool IsOpen() const;
@@ -43,6 +43,9 @@ public:
     bool SetLastWriteTime( uint64_t lastWriteTime );
 #endif
     bool Truncate();
+
+    bool ReadIntoString( AString & outString );
+    bool WriteFromString( const AString & string );
 
 private:
 #if defined( __WINDOWS__ )

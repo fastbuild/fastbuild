@@ -10,70 +10,10 @@
 #include "Core/Strings/AString.h"
 #include "Core/Tracing/Tracing.h"
 
-// TestArray
 //------------------------------------------------------------------------------
-class TestArray : public TestGroup
+TEST_GROUP( TestArray, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Construct_Empty() const;
-    void Construct_OtherArray() const;
-    void Construct_Range() const;
-
-    void Destruct() const;
-
-    void BeginAndEnd() const;
-
-    void IndexOperator() const;
-    void GetIndexOf() const;
-    void Top() const;
-
-    void RangeBasedForLoop() const;
-
-    void SetCapacity() const;
-    void SetSize() const;
-    void Clear() const;
-    void Swap() const;
-
-    void Sort() const;
-    void SortDeref() const;
-    void SortBig() const;
-
-    void Find() const;
-    void FindDeref() const;
-    void FindAndErase() const;
-    void FindDerefAndErase() const;
-
-    void Append_Item() const;
-    void Append_OtherArray() const;
-    void Append_Range() const;
-
-    void Pop() const;
-    void PopFront() const;
-    void Erase() const;
-    void EraseIndex() const;
-    void EmplaceBack() const;
-
-    void AssignmentOperator_OtherArray() const;
-
-    void IsAtCapacity() const;
-    void GetCapacity() const;
-    void GetSize() const;
-    void IsEmpty() const;
-
-    void Alignment() const;
-
-    void MoveConstructor() const;
-    void MoveAssignment() const;
-    void MoveWhenGrowing() const;
-    void MoveAppend() const;
-    void MoveSetCapacity() const;
-    void MovePopFront() const;
-    void MoveErase() const;
-
-    void StackArrayOverflowToHeap() const;
-
+public:
     // Helper functions
     template <typename T>
     void CheckConsistency( const Array<T> & array ) const;
@@ -83,70 +23,8 @@ private:
     void MoveAssignmentHelper( const ELEM & value ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestArray )
-    REGISTER_TEST( Construct_Empty )
-    REGISTER_TEST( Construct_OtherArray )
-    REGISTER_TEST( Construct_Range )
-
-    REGISTER_TEST( Destruct )
-
-    REGISTER_TEST( BeginAndEnd )
-
-    REGISTER_TEST( IndexOperator )
-    REGISTER_TEST( GetIndexOf )
-    REGISTER_TEST( Top )
-
-    REGISTER_TEST( RangeBasedForLoop )
-
-    REGISTER_TEST( SetCapacity )
-    REGISTER_TEST( SetSize )
-    REGISTER_TEST( Clear )
-    REGISTER_TEST( Swap )
-
-    REGISTER_TEST( Sort )
-    REGISTER_TEST( SortDeref )
-    REGISTER_TEST( SortBig )
-
-    REGISTER_TEST( Find )
-    REGISTER_TEST( FindDeref )
-    REGISTER_TEST( FindAndErase )
-    REGISTER_TEST( FindDerefAndErase )
-
-    REGISTER_TEST( Append_Item )
-    REGISTER_TEST( Append_OtherArray )
-    REGISTER_TEST( Append_Range )
-
-    REGISTER_TEST( Pop )
-    REGISTER_TEST( PopFront )
-    REGISTER_TEST( Erase )
-    REGISTER_TEST( EraseIndex )
-    REGISTER_TEST( EmplaceBack )
-
-    REGISTER_TEST( AssignmentOperator_OtherArray )
-
-    REGISTER_TEST( IsAtCapacity )
-    REGISTER_TEST( GetCapacity )
-    REGISTER_TEST( GetSize )
-    REGISTER_TEST( IsEmpty )
-
-    REGISTER_TEST( Alignment )
-
-    REGISTER_TEST( MoveConstructor )
-    REGISTER_TEST( MoveAssignment )
-    REGISTER_TEST( MoveWhenGrowing )
-    REGISTER_TEST( MoveAppend )
-    REGISTER_TEST( MoveSetCapacity )
-    REGISTER_TEST( MovePopFront )
-    REGISTER_TEST( MoveErase )
-
-    REGISTER_TEST( StackArrayOverflowToHeap )
-REGISTER_TESTS_END
-
-// Construct_Empty
-//------------------------------------------------------------------------------
-void TestArray::Construct_Empty() const
+TEST_CASE( TestArray, Construct_Empty )
 {
     {
         Array<uint32_t> array;
@@ -158,9 +36,8 @@ void TestArray::Construct_Empty() const
     }
 }
 
-// Construct_OtherArray
 //------------------------------------------------------------------------------
-void TestArray::Construct_OtherArray() const
+TEST_CASE( TestArray, Construct_OtherArray )
 {
     {
         Array<uint32_t> array1;
@@ -192,9 +69,8 @@ void TestArray::Construct_OtherArray() const
     }
 }
 
-// Construct_Range
 //------------------------------------------------------------------------------
-void TestArray::Construct_Range() const
+TEST_CASE( TestArray, Construct_Range )
 {
     {
         const uint32_t u32s[ 4 ] = { 1, 2, 3, 4 };
@@ -223,9 +99,8 @@ void TestArray::Construct_Range() const
     }
 }
 
-// Destruct
 //------------------------------------------------------------------------------
-void TestArray::Destruct() const
+TEST_CASE( TestArray, Destruct )
 {
     // POD
     {
@@ -266,9 +141,8 @@ void TestArray::Destruct() const
     }
 }
 
-//  BeginAndEnd
 //------------------------------------------------------------------------------
-void TestArray::BeginAndEnd() const
+TEST_CASE( TestArray, BeginAndEnd )
 {
     // POD
     {
@@ -325,9 +199,8 @@ void TestArray::BeginAndEnd() const
     }
 }
 
-// IndexOperator
 //------------------------------------------------------------------------------
-void TestArray::IndexOperator() const
+TEST_CASE( TestArray, IndexOperator )
 {
     // POD
     {
@@ -350,9 +223,8 @@ void TestArray::IndexOperator() const
     }
 }
 
-// GetIndexOf
 //------------------------------------------------------------------------------
-void TestArray::GetIndexOf() const
+TEST_CASE( TestArray, GetIndexOf )
 {
     // POD
     {
@@ -373,9 +245,8 @@ void TestArray::GetIndexOf() const
     }
 }
 
-// Top
 //------------------------------------------------------------------------------
-void TestArray::Top() const
+TEST_CASE( TestArray, Top )
 {
     // POD
     {
@@ -396,9 +267,8 @@ void TestArray::Top() const
     }
 }
 
-// RangeBasedForLoop
 //------------------------------------------------------------------------------
-void TestArray::RangeBasedForLoop() const
+TEST_CASE( TestArray, RangeBasedForLoop )
 {
     // POD
     {
@@ -439,9 +309,8 @@ void TestArray::RangeBasedForLoop() const
     }
 }
 
-// SetCapacity
 //------------------------------------------------------------------------------
-void TestArray::SetCapacity() const
+TEST_CASE( TestArray, SetCapacity )
 {
     // POD
     {
@@ -461,9 +330,8 @@ void TestArray::SetCapacity() const
     }
 }
 
-// SetSize
 //------------------------------------------------------------------------------
-void TestArray::SetSize() const
+TEST_CASE( TestArray, SetSize )
 {
     // POD
     {
@@ -485,9 +353,8 @@ void TestArray::SetSize() const
     }
 }
 
-// Clear
 //------------------------------------------------------------------------------
-void TestArray::Clear() const
+TEST_CASE( TestArray, Clear )
 {
     // POD
     {
@@ -528,9 +395,8 @@ void TestArray::Clear() const
     }
 }
 
-// Swap
 //------------------------------------------------------------------------------
-void TestArray::Swap() const
+TEST_CASE( TestArray, Swap )
 {
     // POD
     {
@@ -580,9 +446,8 @@ void TestArray::Swap() const
     }
 }
 
-// Sort
 //------------------------------------------------------------------------------
-void TestArray::Sort() const
+TEST_CASE( TestArray, Sort )
 {
     // POD
     {
@@ -641,9 +506,8 @@ void TestArray::Sort() const
     }
 }
 
-// SortDeref
 //------------------------------------------------------------------------------
-void TestArray::SortDeref() const
+TEST_CASE( TestArray, SortDeref )
 {
     // POD
     {
@@ -710,9 +574,8 @@ void TestArray::SortDeref() const
     }
 }
 
-// SortBig
 //------------------------------------------------------------------------------
-void TestArray::SortBig() const
+TEST_CASE( TestArray, SortBig )
 {
     Random r;
 
@@ -779,9 +642,8 @@ void TestArray::SortBig() const
     }
 }
 
-// Find
 //------------------------------------------------------------------------------
-void TestArray::Find() const
+TEST_CASE( TestArray, Find )
 {
     // POD
     {
@@ -824,9 +686,8 @@ void TestArray::Find() const
     }
 }
 
-// FindDeref
 //------------------------------------------------------------------------------
-void TestArray::FindDeref() const
+TEST_CASE( TestArray, FindDeref )
 {
     // POD
     {
@@ -875,9 +736,8 @@ void TestArray::FindDeref() const
     }
 }
 
-// FindAndErase
 //------------------------------------------------------------------------------
-void TestArray::FindAndErase() const
+TEST_CASE( TestArray, FindAndErase )
 {
     // POD
     {
@@ -926,9 +786,8 @@ void TestArray::FindAndErase() const
     }
 }
 
-// FindDerefAndErase
 //------------------------------------------------------------------------------
-void TestArray::FindDerefAndErase() const
+TEST_CASE( TestArray, FindDerefAndErase )
 {
     // POD
     {
@@ -983,9 +842,8 @@ void TestArray::FindDerefAndErase() const
     }
 }
 
-// Append_Item
 //------------------------------------------------------------------------------
-void TestArray::Append_Item() const
+TEST_CASE( TestArray, Append_Item )
 {
     // POD
     {
@@ -1040,9 +898,8 @@ void TestArray::Append_Item() const
     }
 }
 
-// Append_OtherArray
 //------------------------------------------------------------------------------
-void TestArray::Append_OtherArray() const
+TEST_CASE( TestArray, Append_OtherArray )
 {
     // POD
     {
@@ -1099,9 +956,8 @@ void TestArray::Append_OtherArray() const
     }
 }
 
-// Append_Range
 //------------------------------------------------------------------------------
-void TestArray::Append_Range() const
+TEST_CASE( TestArray, Append_Range )
 {
     // POD
     {
@@ -1155,9 +1011,8 @@ void TestArray::Append_Range() const
     }
 }
 
-// Pop
 //------------------------------------------------------------------------------
-void TestArray::Pop() const
+TEST_CASE( TestArray, Pop )
 {
     // POD
     {
@@ -1211,9 +1066,8 @@ void TestArray::Pop() const
     }
 }
 
-// PopFront
 //------------------------------------------------------------------------------
-void TestArray::PopFront() const
+TEST_CASE( TestArray, PopFront )
 {
     // POD
     {
@@ -1267,9 +1121,8 @@ void TestArray::PopFront() const
     }
 }
 
-// Erase
 //------------------------------------------------------------------------------
-void TestArray::Erase() const
+TEST_CASE( TestArray, Erase )
 {
     // POD
     {
@@ -1323,9 +1176,8 @@ void TestArray::Erase() const
     }
 }
 
-// EraseIndex
 //------------------------------------------------------------------------------
-void TestArray::EraseIndex() const
+TEST_CASE( TestArray, EraseIndex )
 {
     // POD
     {
@@ -1379,9 +1231,8 @@ void TestArray::EraseIndex() const
     }
 }
 
-// EmplaceBack
 //------------------------------------------------------------------------------
-void TestArray::EmplaceBack() const
+TEST_CASE( TestArray, EmplaceBack )
 {
     // POD
     {
@@ -1465,9 +1316,8 @@ void TestArray::EmplaceBack() const
     }
 }
 
-// AssignmentOperator_OtherArray
 //------------------------------------------------------------------------------
-void TestArray::AssignmentOperator_OtherArray() const
+TEST_CASE( TestArray, AssignmentOperator_OtherArray )
 {
     // POD
     {
@@ -1580,9 +1430,8 @@ void TestArray::AssignmentOperator_OtherArray() const
     }
 }
 
-// IsAtCapacity
 //------------------------------------------------------------------------------
-void TestArray::IsAtCapacity() const
+TEST_CASE( TestArray, IsAtCapacity )
 {
     // POD
     {
@@ -1647,9 +1496,8 @@ void TestArray::IsAtCapacity() const
     }
 }
 
-// GetCapacity
 //------------------------------------------------------------------------------
-void TestArray::GetCapacity() const
+TEST_CASE( TestArray, GetCapacity )
 {
     // POD
     {
@@ -1698,9 +1546,8 @@ void TestArray::GetCapacity() const
     }
 }
 
-// GetSize
 //------------------------------------------------------------------------------
-void TestArray::GetSize() const
+TEST_CASE( TestArray, GetSize )
 {
     // POD
     {
@@ -1749,9 +1596,8 @@ void TestArray::GetSize() const
     }
 }
 
-// IsEmpty
 //------------------------------------------------------------------------------
-void TestArray::IsEmpty() const
+TEST_CASE( TestArray, IsEmpty )
 {
     // POD
     {
@@ -1800,9 +1646,8 @@ void TestArray::IsEmpty() const
     }
 }
 
-// Alignment
 //------------------------------------------------------------------------------
-void TestArray::Alignment() const
+TEST_CASE( TestArray, Alignment )
 {
     // Small
     {
@@ -1912,7 +1757,6 @@ void TestArray::Alignment() const
     }
 }
 
-// MoveConstructorHelper
 //------------------------------------------------------------------------------
 template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class SRC_CAST>
 void TestArray::MoveConstructorHelper() const
@@ -1940,9 +1784,8 @@ void TestArray::MoveConstructorHelper() const
     CheckConsistency( arrayB );
 }
 
-// MoveConstructor
 //------------------------------------------------------------------------------
-void TestArray::MoveConstructor() const
+TEST_CASE( TestArray, MoveConstructor )
 {
     // POD Data
     {
@@ -2055,9 +1898,8 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
     }
 }
 
-// MoveAssignment
 //------------------------------------------------------------------------------
-void TestArray::MoveAssignment() const
+TEST_CASE( TestArray, MoveAssignment )
 {
     // POD Data
     {
@@ -2094,9 +1936,8 @@ void TestArray::MoveAssignment() const
     }
 }
 
-// MoveWhenGrowing
 //------------------------------------------------------------------------------
-void TestArray::MoveWhenGrowing() const
+TEST_CASE( TestArray, MoveWhenGrowing )
 {
     Array<AString> array;
     array.SetCapacity( 4 );
@@ -2120,9 +1961,8 @@ void TestArray::MoveWhenGrowing() const
     CheckConsistency( array );
 }
 
-// MoveAppend
 //------------------------------------------------------------------------------
-void TestArray::MoveAppend() const
+TEST_CASE( TestArray, MoveAppend )
 {
     AString string( "string4" );
     Array<AString> array;
@@ -2139,9 +1979,8 @@ void TestArray::MoveAppend() const
     CheckConsistency( array );
 }
 
-// MoveSetCapacity
 //------------------------------------------------------------------------------
-void TestArray::MoveSetCapacity() const
+TEST_CASE( TestArray, MoveSetCapacity )
 {
     // Create array with something in it
     Array<AString> array;
@@ -2159,9 +1998,8 @@ void TestArray::MoveSetCapacity() const
     CheckConsistency( array );
 }
 
-// MovePopFront
 //------------------------------------------------------------------------------
-void TestArray::MovePopFront() const
+TEST_CASE( TestArray, MovePopFront )
 {
     // Create array with something in it
     Array<AString> array;
@@ -2180,9 +2018,8 @@ void TestArray::MovePopFront() const
     CheckConsistency( array );
 }
 
-// MoveErase
 //------------------------------------------------------------------------------
-void TestArray::MoveErase() const
+TEST_CASE( TestArray, MoveErase )
 {
     // Create array with something in it
     Array<AString> array;
@@ -2201,9 +2038,8 @@ void TestArray::MoveErase() const
     CheckConsistency( array );
 }
 
-// StackArrayOverflowToHeap
 //------------------------------------------------------------------------------
-void TestArray::StackArrayOverflowToHeap() const
+TEST_CASE( TestArray, StackArrayOverflowToHeap )
 {
     // POD
     {
@@ -2266,7 +2102,6 @@ void TestArray::StackArrayOverflowToHeap() const
     }
 }
 
-// CheckConsistency
 //------------------------------------------------------------------------------
 template <typename T>
 void TestArray::CheckConsistency( const Array<T> & array ) const

@@ -8,7 +8,7 @@
 
 // MemoryStream
 //------------------------------------------------------------------------------
-class MemoryStream : public IOStream
+class MemoryStream final : public IOStream
 {
 public:
     explicit MemoryStream();

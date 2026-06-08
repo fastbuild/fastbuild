@@ -16,18 +16,10 @@
 
 #include <memory.h>
 
-// TestCompressor
 //------------------------------------------------------------------------------
-class TestCompressor : public FBuildTest
+TEST_GROUP( TestCompressor, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void CompressSimple() const;
-    void CompressPreprocessedFile() const;
-    void CompressObjFile() const;
-    void TestHeaderValidity() const;
-
+public:
     void CompressSimpleHelper( const char * data,
                                size_t size,
                                size_t expectedCompressedSize,
@@ -36,18 +28,8 @@ private:
     void CompressHelper( const char * fileName ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCompressor )
-    REGISTER_TEST( CompressSimple )
-    REGISTER_TEST( CompressPreprocessedFile )
-    REGISTER_TEST( CompressObjFile )
-    REGISTER_TEST( TestHeaderValidity )
-REGISTER_TESTS_END
-
-// CompressSimple
-//------------------------------------------------------------------------------
-void TestCompressor::CompressSimple() const
+TEST_CASE( TestCompressor, CompressSimple )
 {
     CompressSimpleHelper( "AAAAAAAA",
                           8,
@@ -72,7 +54,6 @@ void TestCompressor::CompressSimple() const
     CompressSimpleHelper( "A", 1, 0, false );
 }
 
-// CompressSimpleHelper
 //------------------------------------------------------------------------------
 void TestCompressor::CompressSimpleHelper( const char * data,
                                            size_t size,
@@ -109,15 +90,14 @@ void TestCompressor::CompressSimpleHelper( const char * data,
     FDELETE_ARRAY( alignedData );
 }
 
-// CompressPreprocessedFile
 //------------------------------------------------------------------------------
-void TestCompressor::CompressPreprocessedFile() const
+TEST_CASE( TestCompressor, CompressPreprocessedFile )
 {
     CompressHelper( "Tools/FBuild/FBuildTest/Data/TestCompressor/TestPreprocessedFile.ii" );
 }
 
 //------------------------------------------------------------------------------
-void TestCompressor::CompressObjFile() const
+TEST_CASE( TestCompressor, CompressObjFile )
 {
     CompressHelper( "Tools/FBuild/FBuildTest/Data/TestCompressor/TestObjFile.o" );
 }
@@ -277,9 +257,8 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     OUTPUT( "------------------------------------------------\n" );
 }
 
-// TestHeaderValidity
 //------------------------------------------------------------------------------
-void TestCompressor::TestHeaderValidity() const
+TEST_CASE( TestCompressor, TestHeaderValidity )
 {
     UniquePtr<uint32_t, FreeDeletor> buffer( (uint32_t *)ALLOC( 1024 ) );
     memset( buffer.Get(), 0, 1024 );

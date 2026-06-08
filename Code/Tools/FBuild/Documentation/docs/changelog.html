@@ -28,6 +28,133 @@
 
 
 <div class='newsitemheader'>
+    v1.20&nbsp;<font color='#bbbbbb'>(26th-Apr-2026)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>FBuildWorker <a href="options.html#console">-console</a> on Windows no longer forces <a href="options.html#nosubprocess">-nosubprocess</a></li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Correctly detect corrupt cache items when &lt; 12 bytes in size</li>
+        <li>Avoid unnecessary rebuilds after bff edits when using Clang & LightCache</li>
+        <li>[Windows] Improve CPU core type detection on some systems</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>BFF Parsing</li>
+        <ul>
+            <li>Improve BFF tokenizing performance</li>
+            <li>BFF parsing time reduced for complex Aliases and PreBuildDependencies</li>
+            <li>BFF parsing performance improved slightly</li>
+        </ul>
+        <li>Reduce directory list node fdb costs for complex directory listings</li>
+        <li>DB load/save time improved for complex Aliases and PreBuildDependencies</li>
+        <li>Memory usage reduced for complex Aliases and PreBuildDependencies</li>
+        <li>FBuildWorker will self-restart on Windows when updated even if <a href="options.html#console">-console</a> mode is used</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.19&nbsp;<font color='#bbbbbb'>(22nd-Feb-2026)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>OSX version now requires at least OSX 10.13</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>Add <a href="options.html#sourcefile">-sourcefile</a> cmdline option to support .CompileFileCommand in <a href="functions/vcxproject.html">VCXProject</a></li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix precompiled headers not rebuilding after PCHOptions edited (v1.18 regression)</li>
+        <li>VCXProject documentation example fixes (Thanks to Léo Carnaut-Delord)</li>
+        <li>Stop altering normal remote errors and impacting the Visual Studio Error List</li>
+        <li>Prevent rebuilding when LightCache encouters missing full-path includes (Thanks to Antoine Vugliano)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>        
+        <li>Light Cache</li>
+        <ul>
+            <li>LightCache now supports Clang & GCC</li>
+            <li>LightCache respects UseRelativePath when generating cache keys</li>
+            <li>LightCache can process comments in the middle of include directives</li>
+            <li><a href="options.html#summary">-summary<a/> shows additional info relating to LightCache use</li>
+        </ul>
+        <li>Add #elif support to bff parsing (Thanks to Dan Andrus)</li>
+        <li>Support <a href="functions/vcxproject.html">CompileFileCommand</a> (Ctrl+F7) with VS2022 or later (Thanks to Léo Carnaut-Delord)</li>
+        <li>Add "FASTBuild Task Provider" VSCode ext as 3rd party (Thanks to SherAndrei)</li>
+        <li>Add retries to LNK1140 & LNK1158 to work around MSVC linker /dynamicdeopt bugs</li>
+        <li>Exec exposes then Hidden flag to allow hiding from <a href="options.html#showtargets">-showtargets<a/></li>
+        <li><a href="options.html#summary">-summary</a> omits distribution timing if not using distributed compilation</li>
+        <li>Reduce FBuild startup time slightly by avoiding redundant SetWorkingDir</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.18&nbsp;<font color='#bbbbbb'>(29th-Nov-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix Dependencies::GrowCapacity potential memory corruption (Thanks to Jean-Sebastien Pelletier)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>FBuild ignores Low Power E-Cores (Intel Meteor Lake)</li>
+        <li>FBuildWorker -cpus and UI ignores Low Power E-Cores (Intel Meteor Lake)</li>
+        <li>Worker brokerage tokens contain CPU information (vendor, model, family & core breakdown)</li>
+        <li>-profile output contains CPU information (vendor, model, family & core breakdown)</li>
+        <li>FBuild and FBuildWorker are no longer "below normal" priority</li>
+        <li>New AllowCaching option on Compiler() can be used to disable caching</li>
+        <li>Various operations use a more performant hash, improving performance slightly</li>
+        <li>Small fdb load/save performance gains on x86_64 with AVX2 support</li>
+        <li>Small VisualStudio and XCode project gen performance gains on x86_64 with AVX2 support</li>
+        <li>Cache performance improved slightly on x86_64 with AVX2</li>
+        <li>Improve performance of Unity generation slightly on x86_64 with AVX2 support</li>
+        <li>Improve BFF parsing performance slightly on x86_64 with AVX2 support</li>
+        <li>Compiler() file hashing is skipped when !AllowDistribution and !AllowCaching (Thanks to Bill Hoffman)</li>
+        <li>Reduce memory usage of dependency graph</li>
+        <li>Reduce cost of PreBuildDependencies processing for ObjectList & Library when parsing bff files</li>
+        <li>Reduce redundancy in .fdb, improving startup/shutdown times</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.17&nbsp;<font color='#bbbbbb'>(30th-Sep-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>[Note] -nounity command line is no longer considered experimental</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Unity generates correct paths when using UseRelativePaths_Experimental (Thanks to Eduard Voronkin)</li>
+        <li>Total build "Time: X.XXXs" captures missing shutdown costs</li>
+        <li>-profile option includes missing shutdown costs</li>
+        <li>-profile write failure return code correctly returned when using -wrapper mode</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Improve bff parsing performance by avoiding string copies</li>
+        <li>Improve bff parsing speed by eliminating redundant PreBuildDependencies and Alias Targets</li>
+        <li>Improve fbd load/save performance</li>
+        <li>Improve fdb load/save time slightly by removing redundant properties</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.16&nbsp;<font color='#bbbbbb'>(13th-Sep-2025)</font>
 </div>
 <div class='newsitembody'>
@@ -2653,6 +2780,6 @@ Fixes
     </div>
 
 
-    </div><div class='footer'>&copy; 2012-2025 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2026 Franta Fulin</div></div></div>
 </body>
 </html>

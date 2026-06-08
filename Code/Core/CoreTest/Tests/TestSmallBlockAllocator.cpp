@@ -26,17 +26,10 @@ void free( void * ptr );
 }
 #endif
 
-// TestSmallBlockAllocator
 //------------------------------------------------------------------------------
-class TestSmallBlockAllocator : public TestGroup
+TEST_GROUP( TestSmallBlockAllocator, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void SingleThreaded() const;
-    void MultiThreaded() const;
-    void MinNewAlignment() const;
-
+public:
     // struct for managing threads
     class ThreadInfo
     {
@@ -55,17 +48,8 @@ private:
     static uint32_t ThreadFunction_SmallBlock( void * userData );
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestSmallBlockAllocator )
-    REGISTER_TEST( SingleThreaded )
-    REGISTER_TEST( MultiThreaded )
-    REGISTER_TEST( MinNewAlignment )
-REGISTER_TESTS_END
-
-// SingleThreaded
-//------------------------------------------------------------------------------
-void TestSmallBlockAllocator::SingleThreaded() const
+TEST_CASE( TestSmallBlockAllocator, SingleThreaded )
 {
 #if defined( DEBUG )
     const uint32_t numAllocs( 10 * 1000 );
@@ -85,9 +69,8 @@ void TestSmallBlockAllocator::SingleThreaded() const
     OUTPUT( "SmallBlockAllocator : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time2, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time2 ) );
 }
 
-// MultiThreaded
 //------------------------------------------------------------------------------
-void TestSmallBlockAllocator::MultiThreaded() const
+TEST_CASE( TestSmallBlockAllocator, MultiThreaded )
 {
 #if defined( DEBUG )
     const uint32_t numAllocs( 10 * 1000 );
@@ -147,7 +130,6 @@ void TestSmallBlockAllocator::MultiThreaded() const
     OUTPUT( "SmallBlockAllocator    : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time2, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time2 ) );
 }
 
-// GetRandomAllocSizes
 //------------------------------------------------------------------------------
 /*static*/ void TestSmallBlockAllocator::GetRandomAllocSizes( const uint32_t numAllocs, Array<uint32_t> & allocSizes )
 {
@@ -251,7 +233,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
 }
 
 //------------------------------------------------------------------------------
-void TestSmallBlockAllocator::MinNewAlignment() const
+TEST_CASE( TestSmallBlockAllocator, MinNewAlignment )
 {
     // All platforms are 64bit and with C++17 or later we expect minimum of 16
     // byte alignment for new.

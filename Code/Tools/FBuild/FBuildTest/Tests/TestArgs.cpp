@@ -13,24 +13,10 @@
 // Core
 #include "Core/Process/Process.h"
 
-// TestArgs
 //------------------------------------------------------------------------------
-class TestArgs : public FBuildTest
+TEST_GROUP( TestArgs, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void Unused() const;
-    void ResponseFile_Never_Short() const;
-    void ResponseFile_Never_Long() const;
-    void ResponseFile_IfNeeded_Short() const;
-    void ResponseFile_IfNeeded_Long() const;
-    void ResponseFile_Always_Short() const;
-    void ResponseFile_Always_Long() const;
-    void ResponseFile_CommandLineQuoting() const;
-    void ArgumentParsing() const;
-
+public:
     // Helpers
     void Check( ArgsResponseFileMode mode,
                 bool longArgs,
@@ -48,37 +34,21 @@ private:
     void operator=( TestArgs & ) = delete;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestArgs )
-    REGISTER_TEST( ResponseFile_Never_Short )
-    REGISTER_TEST( ResponseFile_Never_Long )
-    REGISTER_TEST( ResponseFile_IfNeeded_Short )
-    REGISTER_TEST( ResponseFile_IfNeeded_Long )
-    REGISTER_TEST( ResponseFile_Always_Short )
-    REGISTER_TEST( ResponseFile_Always_Long )
-    REGISTER_TEST( ResponseFile_CommandLineQuoting )
-    REGISTER_TEST( ArgumentParsing )
-REGISTER_TESTS_END
-
-// Unused
-//------------------------------------------------------------------------------
-void TestArgs::Unused() const
+TEST_CASE( TestArgs, Unused )
 {
     Args args;
 }
 
-// ResponseFile_Never_Short
 //------------------------------------------------------------------------------
-void TestArgs::ResponseFile_Never_Short() const
+TEST_CASE( TestArgs, ResponseFile_Never_Short )
 {
     //     Mode                         LongArgs, Success, UseResponseFile
     Check( ArgsResponseFileMode::NEVER, false, true, false );
 }
 
-// ResponseFile_Never_Long
 //------------------------------------------------------------------------------
-void TestArgs::ResponseFile_Never_Long() const
+TEST_CASE( TestArgs, ResponseFile_Never_Long )
 {
     //     Mode                         LongArgs, Success, UseResponseFile
     Check( ArgsResponseFileMode::NEVER, true, false, false );
@@ -86,39 +56,35 @@ void TestArgs::ResponseFile_Never_Long() const
 
 // ResponseFile_IfNeeded_Short
 //------------------------------------------------------------------------------
-void TestArgs::ResponseFile_IfNeeded_Short() const
+TEST_CASE( TestArgs, ResponseFile_IfNeeded_Short )
 {
     //     Mode                             LongArgs, Success, UseResponseFile
     Check( ArgsResponseFileMode::IF_NEEDED, false, true, false );
 }
 
-// ResponseFile_IfNeeded_Long
 //------------------------------------------------------------------------------
-void TestArgs::ResponseFile_IfNeeded_Long() const
+TEST_CASE( TestArgs, ResponseFile_IfNeeded_Long )
 {
     //     Mode                             LongArgs, Success, UseResponseFile
     Check( ArgsResponseFileMode::IF_NEEDED, true, true, true );
 }
 
-// ResponseFile_Always_Short
 //------------------------------------------------------------------------------
-void TestArgs::ResponseFile_Always_Short() const
+TEST_CASE( TestArgs, ResponseFile_Always_Short )
 {
     //     Mode                             LongArgs, Success, UseResponseFile
     Check( ArgsResponseFileMode::ALWAYS, false, true, true );
 }
 
-// ResponseFile_Always_Long
 //------------------------------------------------------------------------------
-void TestArgs::ResponseFile_Always_Long() const
+TEST_CASE( TestArgs, ResponseFile_Always_Long )
 {
     //     Mode                             LongArgs, Success, UseResponseFile
     Check( ArgsResponseFileMode::ALWAYS, true, true, true );
 }
 
-// ResponseFile_CommandLineQuoting
 //------------------------------------------------------------------------------
-void TestArgs::ResponseFile_CommandLineQuoting() const
+TEST_CASE( TestArgs, ResponseFile_CommandLineQuoting )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/fbuild.bff";
@@ -187,7 +153,7 @@ void TestArgs::Check( ArgsResponseFileMode mode,
 }
 
 //------------------------------------------------------------------------------
-void TestArgs::ArgumentParsing() const
+TEST_CASE( TestArgs, ArgumentParsing )
 {
     // Build executable we'll invoke
     FBuildTestOptions options;
@@ -215,7 +181,6 @@ void TestArgs::ArgumentParsing() const
     CheckParsing( R"("-DTHING=\"   \"")", R"(-DTHING="   ")" );
 }
 
-// CheckParsing
 //------------------------------------------------------------------------------
 void TestArgs::CheckParsing( const char * commandLine,
                              const char * arg1,

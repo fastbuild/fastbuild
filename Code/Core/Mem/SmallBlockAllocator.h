@@ -47,7 +47,8 @@ protected:
     static const size_t BUCKET_NUM_PAGES = ( BUCKET_ADDRESSSPACE_SIZE / MemPoolBlock::kMemPoolBlockPageSize );
     static const size_t BUCKET_MAPPING_TABLE_SIZE = BUCKET_NUM_PAGES;
 
-    class MemBucket : public MemPoolBlock
+    PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
+    class alignas( 64 ) MemBucket : public MemPoolBlock
     {
     public:
         MemBucket( size_t size, size_t align )
@@ -61,13 +62,19 @@ protected:
         friend class SmallBlockAllocator;
         Mutex m_Mutex;
     };
+    PRAGMA_DISABLE_POP_MSVC
 
     // Address space used by allocators
     static void * s_BucketMemoryStart;
     static uint32_t s_BucketNextFreePageIndex; // Next free memory page to commit
 
     // The actual buckets (using this placeholder memory to avoid static init issues)
-    static uint64_t s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof( uint64_t ) ];
+    class alignas( alignof( MemBucket ) ) MemBucketStorage
+    {
+    public:
+        uint8_t m_Storage[ sizeof( MemBucket ) ] = { 0 };
+    };
+    static MemBucketStorage s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS ];
     static MemBucket * s_Buckets;
 
     // A table to allow 0(1) conversion of any address to the bucket that owns it

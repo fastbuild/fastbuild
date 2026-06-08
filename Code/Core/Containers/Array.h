@@ -27,6 +27,7 @@ public:
     void Destruct();
 
     // iterators and access
+    using ValueType = T;
     typedef T * Iter;
     typedef const T * ConstIter;
     [[nodiscard]] Iter Begin() const { return m_Begin; }

@@ -41,11 +41,6 @@ class ObjectNode : public FileNode
 public:
     ObjectNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
-    // simplified remote constructor
-    explicit ObjectNode( AString && objectName,
-                         NodeProxy * srcFile,
-                         const AString & compilerOptions,
-                         uint32_t flags );
     virtual ~ObjectNode() override;
 
     static Node::Type GetTypeS() { return Node::OBJECT_NODE; }
@@ -79,6 +74,8 @@ public:
         bool IsClangCl() const { return ( ( m_Flags & FLAG_CLANG_CL ) != 0 ); }
         bool IsUsingGcovCoverage() const { return ( ( m_Flags & FLAG_GCOV_COVERAGE ) != 0 ); }
         bool IsUsingDynamicDeopt() const { return ( ( m_Flags & FLAG_DYNAMIC_DEOPT ) != 0 ); }
+        [[nodiscard]] bool IsNoStdInc() const { return ( ( m_Flags & FLAG_NOSTDINC ) != 0 ); }
+        [[nodiscard]] bool IsNoStdIncPP() const { return ( ( m_Flags & FLAG_NOSTDINCPP ) != 0 ); }
 
         enum Flag : uint32_t
         {
@@ -108,6 +105,8 @@ public:
             FLAG_CLANG_CL = 0x2000000,
             FLAG_GCOV_COVERAGE = 0x4000000,
             FLAG_DYNAMIC_DEOPT = 0x8000000,
+            FLAG_NOSTDINC = 0x10000000,
+            FLAG_NOSTDINCPP = 0x20000000,
         };
 
         void Set( Flag flag ) { m_Flags |= flag; }
@@ -170,7 +169,8 @@ public:
     void GetGCNOPath( AString & gcnoFileName ) const;
     void GetAltObjPath( AString & altObjName ) const;
 
-    const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
+    const AString & GetPCHObjectName() const;
+    const AString & GetPrecompiledHeaderName() const;
     const ObjectListNode & GetOwnerObjectList() const { return *m_OwnerObjectList; }
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
@@ -187,7 +187,7 @@ public:
     static bool GetFakeSystemFailureForNextJob() { return ( sFakeSystemFailureState.Load() > DISABLED ); }
 #endif
 
-private:
+protected:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
     virtual bool Finalize( NodeGraph & nodeGraph ) override;
@@ -241,8 +241,11 @@ private:
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
     bool ShouldUseDeoptimization() const;
+    bool GetDeoptimizeWritableFiles() const;
+    bool GetDeoptimizeWritableFilesWithToken() const;
     friend class ClientToWorkerConnection;
     bool ShouldUseCache() const;
+    [[nodiscard]] bool IsDistributionAllowed() const;
     ArgsResponseFileMode GetResponseFileMode() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
@@ -252,12 +255,15 @@ private:
                        const AString & remoteSourceRoot,
                        UniquePtr<CompilerDriverBase> & outDriver ) const;
 
+    virtual const AString & GetCommandLine( bool useDedicatedPreprocessor,
+                                            bool useDeoptimization ) const;
+
     friend class FunctionObjectList;
 
     class CompileHelper
     {
     public:
-        explicit CompileHelper( bool handleOutput = true, const volatile bool * abort = nullptr );
+        explicit CompileHelper( bool handleOutput = true, const Atomic<bool> * abort = nullptr );
         ~CompileHelper();
 
         // start compilation
@@ -276,6 +282,10 @@ private:
         const AString & GetErr() const { return m_Err; }
         bool HasAborted() const { return m_Process.HasAborted(); }
 
+        // Copies not allowed
+        explicit CompileHelper( CompileHelper & other ) = delete;
+        CompileHelper & operator=( CompileHelper & other ) = delete;
+
     private:
         bool m_HandleOutput;
         Process m_Process;
@@ -286,36 +296,40 @@ private:
 
     // Exposed Properties
     friend class ObjectListNode;
-    AString m_Compiler;
-    AString m_CompilerOptions;
-    AString m_CompilerOptionsDeoptimized;
     AString m_CompilerInputFile;
-    AString m_PCHObjectFileName;
-    bool m_DeoptimizeWritableFiles = false;
-    bool m_DeoptimizeWritableFilesWithToken = false;
-    bool m_AllowDistribution = true;
-    bool m_AllowCaching = true;
-    Array<AString> m_CompilerForceUsing;
-    AString m_Preprocessor;
-    AString m_PreprocessorOptions;
-    Array<AString> m_PreBuildDependencyNames;
 
     // Internal State
-    AString m_PrecompiledHeader;
     CompilerFlags m_CompilerFlags;
     CompilerFlags m_PreprocessorFlags;
+    uint32_t m_OwnerObjectListHash = 0; // Hash of relevant options from OwnerObjectList
     uint64_t m_PCHCacheKey = 0;
     uint64_t m_LightCacheKey = 0;
     ObjectListNode * m_OwnerObjectList = nullptr;
 
     // Not serialized
     Array<AString> m_Includes;
-    bool m_Remote = false;
 
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
     // Fake system failure for tests
     static Atomic<uint32_t> sFakeSystemFailureState;
 #endif
+};
+
+//------------------------------------------------------------------------------
+class ObjectNodeRemote : public ObjectNode
+{
+public:
+    ObjectNodeRemote( AString && objectName,
+                      NodeProxy * srcFile,
+                      AString && compilerOptions,
+                      uint32_t flags );
+    virtual ~ObjectNodeRemote() override;
+
+protected:
+    virtual const AString & GetCommandLine( bool useDedicatedPreprocessor,
+                                            bool useDeoptimization ) const override;
+
+    AString m_CompilerOptions;
 };
 
 //------------------------------------------------------------------------------

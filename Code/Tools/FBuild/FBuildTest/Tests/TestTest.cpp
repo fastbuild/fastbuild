@@ -13,41 +13,20 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
 
-// TestTest
 //------------------------------------------------------------------------------
-class TestTest : public FBuildTest
+TEST_GROUP( TestTest, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Build() const;
-    void Build_NoRebuild() const;
-    void Fail_ReturnCode() const;
-    void Fail_Crash() const;
-    void TimeOut() const;
-    void Exclusions() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestTest )
-    REGISTER_TEST( Build )
-    REGISTER_TEST( Build_NoRebuild )
-    REGISTER_TEST( Fail_ReturnCode )
-    REGISTER_TEST( Fail_Crash )
-    REGISTER_TEST( TimeOut )
-    REGISTER_TEST( Exclusions )
-REGISTER_TESTS_END
-
-// Build
-//------------------------------------------------------------------------------
-void TestTest::Build() const
+TEST_CASE( TestTest, Build )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test.bff";
     options.m_ForceCleanBuild = true;
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     const AStackString testExe( "../tmp/Test/Test/test.exe" );
@@ -73,14 +52,13 @@ void TestTest::Build() const
     CheckStatsTotal( 8, 8 );
 }
 
-// Build_NoRebuild
 //------------------------------------------------------------------------------
-void TestTest::Build_NoRebuild() const
+TEST_CASE( TestTest, Build_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Test/test.fdb" ) );
 
     // build (via alias)
@@ -97,13 +75,12 @@ void TestTest::Build_NoRebuild() const
     CheckStatsTotal( 8, 3 );
 }
 
-// Fail_ReturnCode
 //------------------------------------------------------------------------------
-void TestTest::Fail_ReturnCode() const
+TEST_CASE( TestTest, Fail_ReturnCode )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/Fail_ReturnCode/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build and run test, expecting failure
@@ -113,13 +90,12 @@ void TestTest::Fail_ReturnCode() const
     TEST_ASSERT( GetRecordedOutput().Find( "Error: 1 (0x01)" ) );
 }
 
-// Fail_Crash
 //------------------------------------------------------------------------------
-void TestTest::Fail_Crash() const
+TEST_CASE( TestTest, Fail_Crash )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/Fail_Crash/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build and run test, expecting failure
@@ -129,13 +105,12 @@ void TestTest::Fail_Crash() const
     TEST_ASSERT( GetRecordedOutput().Find( "Test failed" ) );
 }
 
-// TimeOut
 //------------------------------------------------------------------------------
-void TestTest::TimeOut() const
+TEST_CASE( TestTest, TimeOut )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test_timeout.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
@@ -145,9 +120,8 @@ void TestTest::TimeOut() const
     TEST_ASSERT( GetRecordedOutput().Find( "Test timed out after" ) );
 }
 
-// Exclusions
 //------------------------------------------------------------------------------
-void TestTest::Exclusions() const
+TEST_CASE( TestTest, Exclusions )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/Exclusions/fbuild.bff";

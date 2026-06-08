@@ -17,6 +17,7 @@ class FBuildOptions
 {
 public:
     FBuildOptions();
+    explicit FBuildOptions( const FBuildOptions & other ) = default;
 
     enum OptionsResult
     {
@@ -48,6 +49,7 @@ public:
 
     // Targets
     Array<AString> m_Targets;
+    Array<AString> m_SourceFiles;
 
     // Build Behaviour
     bool m_ForceCleanBuild = false;

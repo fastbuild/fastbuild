@@ -14,27 +14,14 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
-// TestGraph
 //------------------------------------------------------------------------------
-class TestDirectoryList : public FBuildTest
+TEST_GROUP( TestDirectoryList, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Build() const;
-    void Names() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestDirectoryList )
-    REGISTER_TEST( Build )
-    REGISTER_TEST( Names )
-REGISTER_TESTS_END
-
-// Build
-//------------------------------------------------------------------------------
-void TestDirectoryList::Build() const
+TEST_CASE( TestDirectoryList, Build )
 {
     NodeGraph ng;
 
@@ -90,9 +77,8 @@ void TestDirectoryList::Build() const
     }
 }
 
-// Names
 //------------------------------------------------------------------------------
-void TestDirectoryList::Names() const
+TEST_CASE( TestDirectoryList, Names )
 {
     // Generate various directory list node names and ensure they are unique
     // given differing search params

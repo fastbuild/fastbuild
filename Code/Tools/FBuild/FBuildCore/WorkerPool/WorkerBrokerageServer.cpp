@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
 
 // Core
+#include "Core/Env/CPUInfo.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Network/Network.h"
@@ -126,7 +127,7 @@ void WorkerBrokerageServer::SetAvailability( bool available )
             {
                 // Version
                 AStackString buffer;
-                buffer.AppendFormat( "Version: %s\n", FBUILD_VERSION_STRING );
+                buffer.AppendFormat( "Version: %s\n", GetVersionString() );
 
                 // Username
                 AStackString userName;
@@ -149,8 +150,12 @@ void WorkerBrokerageServer::SetAvailability( bool available )
                 buffer.AppendFormat( "IPv4 Address: %s\n", m_IPAddress.Get() );
 
                 // CPU Thresholds
-                static const uint32_t numProcessors = Env::GetNumProcessors();
+                const CPUInfo & cpuInfo = CPUInfo::Get();
+                static const uint32_t numProcessors = cpuInfo.GetNumUsefulCores();
                 buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
+                AStackString cpuDetails;
+                cpuInfo.GetCPUDetailsString( cpuDetails );
+                buffer.AppendFormat( "CPUDetails: %s\n", cpuDetails.Get() );
 
                 // Memory Threshold
                 buffer.AppendFormat( "Memory: %u\n", workerSettings.GetMinimumFreeMemoryMiB() );

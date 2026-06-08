@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
+#include "Core/Reflection/Struct.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -17,7 +18,7 @@ class ObjectListNode;
 
 // ProjectGeneratorBaseConfig
 //------------------------------------------------------------------------------
-class ProjectGeneratorBaseConfig
+class ProjectGeneratorBaseConfig : public Struct
 {
 public:
     AString m_Config; // Config name (e.g. Debug, Release etc.)

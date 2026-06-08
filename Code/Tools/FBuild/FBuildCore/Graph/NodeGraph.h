@@ -36,6 +36,7 @@ class LibraryNode;
 class LinkerNode;
 class ListDependenciesNode;
 class Node;
+class NodeGraphMigrationCache;
 class ObjectListNode;
 class ObjectNode;
 class ReflectionInfo;
@@ -66,7 +67,7 @@ public:
     }
     ~NodeGraphHeader() = default;
 
-    inline static const uint8_t kCurrentVersion = 182;
+    inline static const uint8_t kCurrentVersion = 194;
 
     bool IsValid() const;
     bool IsCompatibleVersion() const { return m_Version == kCurrentVersion; }
@@ -150,6 +151,7 @@ public:
 
 private:
     friend class FBuild;
+    friend class NodeGraphMigrationCache;
 
     bool ParseFromRoot( const char * bffFile );
 
@@ -213,12 +215,23 @@ private:
 
     // DB Migration
     void Migrate( const NodeGraph & oldNodeGraph );
-    void MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, const Node * oldNode );
+    void MigrateNode( NodeGraphMigrationCache & migrationCache,
+                      const NodeGraph & oldNodeGraph,
+                      Node & newNode,
+                      const Node * oldNode );
     void MigrateProperties( const void * oldBase, void * newBase, const ReflectionInfo * ri );
     void MigrateProperty( const void * oldBase, void * newBase, const ReflectedProperty & property );
-    static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectionInfo * ri );
-    static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property );
-    static bool DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB );
+    static bool AreNodesTheSame( NodeGraphMigrationCache & migrationCache,
+                                 const void * baseA,
+                                 const void * baseB,
+                                 const ReflectionInfo * ri );
+    static bool AreNodesTheSame( NodeGraphMigrationCache & migrationCache,
+                                 const void * baseA,
+                                 const void * baseB,
+                                 const ReflectedProperty & property );
+    static bool DoDependenciesMatch( NodeGraphMigrationCache & migrationCache,
+                                     const Dependencies & depsA,
+                                     const Dependencies & depsB );
 
     Node ** m_NodeMap;
     uint32_t m_NodeMapMaxKey; // Always equals to some power of 2 minus 1, can be used as mask.

@@ -16,36 +16,14 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
 
-// TestLinker
 //------------------------------------------------------------------------------
-class TestLinker : public FBuildTest
+TEST_GROUP( TestLinker, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void ArgHelpers() const;
-    void ArgHelpers_MSVC() const;
-    void LibrariesOnCommandLine() const;
-    void IncrementalLinking_MSVC() const;
-    void LinkerType() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestLinker )
-    REGISTER_TEST( ArgHelpers )                 // Test functions that check for non-MSVC args
-    REGISTER_TEST( ArgHelpers_MSVC )            // Test functions that check for MSVC args
-    REGISTER_TEST( LibrariesOnCommandLine )     // Discovery of additional libraries on command line
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( IncrementalLinking_MSVC )
-#endif
-    REGISTER_TEST( LinkerType )                 // Test linker detection code
-REGISTER_TESTS_END
-
-// ArgHelpers
-//------------------------------------------------------------------------------
-void TestLinker::ArgHelpers() const
+TEST_CASE( TestLinker, ArgHelpers )
 {
     // Exact match
     {
@@ -66,9 +44,8 @@ void TestLinker::ArgHelpers() const
     }
 }
 
-// ArgHelpers_MSVC
 //------------------------------------------------------------------------------
-void TestLinker::ArgHelpers_MSVC() const
+TEST_CASE( TestLinker, ArgHelpers_MSVC )
 {
     // Exact match args, using /
     {
@@ -119,9 +96,8 @@ void TestLinker::ArgHelpers_MSVC() const
     }
 }
 
-// LibrariesOnCommandLine
 //------------------------------------------------------------------------------
-void TestLinker::LibrariesOnCommandLine() const
+TEST_CASE( TestLinker, LibrariesOnCommandLine )
 {
     FBuild fBuild;
     NodeGraph nodeGraph;
@@ -245,9 +221,9 @@ void TestLinker::LibrariesOnCommandLine() const
     }
 }
 
-// IncrementalLinking_MSVC
 //------------------------------------------------------------------------------
-void TestLinker::IncrementalLinking_MSVC() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestLinker, IncrementalLinking_MSVC )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestLinker/IncrementalLinking_MSVC/fbuild.bff";
@@ -320,8 +296,18 @@ void TestLinker::IncrementalLinking_MSVC() const
 
         const AStackString output( GetRecordedOutput().Get() + sizeOfRecordedOutput );
 
-        // Should see incremental linking messages..
-        TEST_ASSERT( output.Find( "modules have changed since prior linking" ) );
+        if ( output.Find( "FBuild: Warning: Linker crashed (LNK1000), retrying" ) )
+        {
+            // MSVC linker crashes as of v14.44.35207
+            // When we retry it works, but we don't get the normal output which means
+            // we can't test things as thoroughly as we'd like
+            // TODO:B - Re-instate this test when linker crash is fixed
+        }
+        else
+        {
+            // Should see incremental linking messages..
+            TEST_ASSERT( output.Find( "modules have changed since prior linking" ) );
+        }
 
         // .. but should not be a full link
         TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
@@ -353,10 +339,10 @@ void TestLinker::IncrementalLinking_MSVC() const
         TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
     }
 }
+#endif
 
-// LinkerType
 //------------------------------------------------------------------------------
-void TestLinker::LinkerType() const
+TEST_CASE( TestLinker, LinkerType )
 {
 #define TEST_LINKERTYPE( exeName, expectedFlag ) \
     do \

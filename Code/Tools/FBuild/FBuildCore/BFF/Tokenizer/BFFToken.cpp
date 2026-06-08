@@ -7,66 +7,108 @@
 
 #include <stdio.h>
 
+//------------------------------------------------------------------------------
+namespace
+{
+    static const AString sBoolTrueString( "true" );
+    static const AString sBoolFalseString( "false" );
+    static const AString sCommaString( "," );
+    static const AString sBraceStringRoundLeft( "(" );
+    static const AString sBraceStringRoundRight( ")" );
+    static const AString sBraceStringCurlyLeft( "{" );
+    static const AString sBraceStringCurlyRight( "}" );
+    static const AString sBraceStringSquareLeft( "[" );
+    static const AString sBraceStringSquareRight( "]" );
+}
+
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ const BFFFile BFFToken::s_BuiltInFile( "<builtin>", AString::GetEmpty() );
-/*static*/ const BFFToken BFFToken::s_BuiltInToken( s_BuiltInFile,
-                                                    s_BuiltInFile.GetSourceFileContents().Get(),
-                                                    BFFTokenType::Invalid,
-                                                    s_BuiltInFile.GetSourceFileContents().Get(),
+/*static*/ const BFFToken BFFToken::s_BuiltInToken( InvalidType::eInvalid,
+                                                    s_BuiltInFile,
                                                     s_BuiltInFile.GetSourceFileContents().Get() );
 
-// CONSTRUCTOR
 //------------------------------------------------------------------------------
-BFFToken::BFFToken( const BFFFile & file,
-                    const char * sourcePos,
-                    BFFTokenType type,
-                    const char * valueStart,
-                    const char * valueEnd )
-    : m_Type( type )
-    , m_Boolean( false )
-    , m_Integer( 0 )
-    , m_String( valueStart, valueEnd )
-    , m_BFFFile( file )
-    , m_SourcePos( sourcePos )
+const AString & BFFToken::GetValueString() const
 {
-    if ( type == BFFTokenType::Number )
+    // Return already available string for things that have unique string
+    // representations
+    if ( IsString() )
     {
-        VERIFY( m_String.Scan( "%i", &m_Integer ) == 1 );
+        return m_String; // String may be empty
     }
-}
 
-// CONSTRUCTOR
-//------------------------------------------------------------------------------
-BFFToken::BFFToken( const BFFFile & file, const char * sourcePos, BFFTokenType type, const AString & stringValue )
-    : m_Type( type )
-    , m_String( stringValue )
-    , m_BFFFile( file )
-    , m_SourcePos( sourcePos )
-{
-}
+    // Variables and Functions should always have a valid string
+    if ( IsVariable() || IsFunction() || IsIdentifier() )
+    {
+        ASSERT( m_String.IsEmpty() == false );
+        return m_String;
+    }
 
-// CONSTRUCTOR
-//------------------------------------------------------------------------------
-BFFToken::BFFToken( const BFFFile & file, const char * sourcePos, BFFTokenType type, const bool boolValue )
-    : m_Type( type )
-    , m_Boolean( boolValue )
-    , m_String( boolValue ? "true" : "false" )
-    , m_BFFFile( file )
-    , m_SourcePos( sourcePos )
-{
-}
+    // Anything below here should rarely (if ever) need to be retrieved as a
+    // string. The most common use-case would be for error reporting
 
-// CONSTRUCTOR (Move)
-//------------------------------------------------------------------------------
-BFFToken::BFFToken( BFFToken && other )
-    : m_Type( other.m_Type )
-    , m_Boolean( other.m_Boolean )
-    , m_Integer( other.m_Integer )
-    , m_String( Move( other.m_String ) )
-    , m_BFFFile( other.m_BFFFile )
-    , m_SourcePos( other.m_SourcePos )
-{
+    // If anything has a cached string, return that
+    if ( m_String.IsEmpty() == false )
+    {
+        return m_String;
+    }
+
+    // Use global keyword strings
+    if ( IsKeyword() )
+    {
+        return BFFKeyword::GetString( m_KeywordType );
+    }
+
+    // Bools use global strings to reduce overhead
+    if ( IsBoolean() )
+    {
+        return m_Boolean ? sBoolTrueString : sBoolFalseString;
+    }
+
+    // Format numbers on demand
+    if ( IsNumber() )
+    {
+        m_String.Format( "%i", m_Integer );
+        return m_String;
+    }
+
+    // Use global operator strings
+    if ( IsOperator() )
+    {
+        return BFFOperator::GetString( m_OperatorType );
+    }
+
+    // Use global comma string
+    if ( IsComma() )
+    {
+        return sCommaString;
+    }
+
+    // Use global brace strings
+    if ( IsBrace() )
+    {
+        switch ( GetBraceType() )
+        {
+            case BraceType::eRoundLeft: return sBraceStringRoundLeft;
+            case BraceType::eRoundRight: return sBraceStringRoundRight;
+            case BraceType::eCurlyLeft: return sBraceStringCurlyLeft;
+            case BraceType::eCurlyRight: return sBraceStringCurlyRight;
+            case BraceType::eSquareLeft: return sBraceStringSquareLeft;
+            case BraceType::eSquareRight: return sBraceStringSquareRight;
+        }
+        ASSERT( false );
+    }
+
+    // End of file
+    if ( GetType() == BFFTokenType::EndOfFile )
+    {
+        return AString::GetEmpty();
+    }
+
+    // Something is terribly wrong
+    ASSERT( false );
+    return m_String;
 }
 
 // GetPosInfo

@@ -24,30 +24,30 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN_BASE( XCodeProjectConfig )
-    REFLECT( m_Config,  "Config",   MetaNone() )
-    REFLECT( m_Target,  "Target",   MetaOptional() )
-    REFLECT( m_XCodeBaseSDK,            "XCodeBaseSDK",         MetaOptional() )
-    REFLECT( m_XCodeDebugWorkingDir,    "XCodeDebugWorkingDir", MetaOptional() )
-    REFLECT( m_XCodeIphoneOSDeploymentTarget, "XCodeIphoneOSDeploymentTarget", MetaOptional() )
+    REFLECT( m_Config, MetaRequired() )
+    REFLECT( m_Target )
+    REFLECT( m_XCodeBaseSDK )
+    REFLECT( m_XCodeDebugWorkingDir )
+    REFLECT( m_XCodeIphoneOSDeploymentTarget )
 REFLECT_END( XCodeProjectConfig )
 
 REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
-    REFLECT_ARRAY( m_ProjectInputPaths,             "ProjectInputPaths",            MetaOptional() + MetaPath() )
-    REFLECT_ARRAY( m_ProjectInputPathsExclude,      "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
-    REFLECT(       m_ProjectInputPathsRecurse,      "ProjectInputPathsRecurse",     MetaOptional() )
-    REFLECT_ARRAY( m_ProjectFiles,                  "ProjectFiles",                 MetaOptional() + MetaFile() )
-    REFLECT_ARRAY( m_ProjectFilesToExclude,         "ProjectFilesToExclude",        MetaOptional() + MetaFile() )
-    REFLECT_ARRAY( m_PatternToExclude,              "ProjectPatternToExclude",      MetaOptional() + MetaFile())
-    REFLECT_ARRAY( m_ProjectBasePath,               "ProjectBasePath",              MetaOptional() + MetaPath() )
-    REFLECT_ARRAY( m_ProjectAllowedFileExtensions,  "ProjectAllowedFileExtensions", MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_ProjectConfigs,      "ProjectConfigs",   XCodeProjectConfig,     MetaNone() )
-    REFLECT( m_XCodeOrganizationName,               "XCodeOrganizationName",        MetaOptional() )
-    REFLECT( m_XCodeBuildToolPath,                  "XCodeBuildToolPath",           MetaOptional() )
-    REFLECT( m_XCodeBuildToolArgs,                  "XCodeBuildToolArgs",           MetaOptional() )
-    REFLECT( m_XCodeBuildWorkingDir,                "XCodeBuildWorkingDir",         MetaOptional() )
-    REFLECT( m_XCodeDocumentVersioning,             "XCodeDocumentVersioning",      MetaOptional() )
-    REFLECT_ARRAY( m_XCodeCommandLineArguments,         "XCodeCommandLineArguments",            MetaOptional() )
-    REFLECT_ARRAY( m_XCodeCommandLineArgumentsDisabled, "XCodeCommandLineArgumentsDisabled",    MetaOptional() )
+    REFLECT( m_ProjectInputPaths, MetaPath() )
+    REFLECT( m_ProjectInputPathsExclude, MetaPath() )
+    REFLECT( m_ProjectInputPathsRecurse )
+    REFLECT( m_ProjectFiles, MetaFile() )
+    REFLECT( m_ProjectFilesToExclude, MetaFile() )
+    REFLECT_RENAME( m_PatternToExclude, "ProjectPatternToExclude", MetaFile() )
+    REFLECT( m_ProjectBasePath, MetaPath() )
+    REFLECT( m_ProjectAllowedFileExtensions )
+    REFLECT( m_ProjectConfigs, MetaRequired() )
+    REFLECT( m_XCodeOrganizationName )
+    REFLECT( m_XCodeBuildToolPath )
+    REFLECT( m_XCodeBuildToolArgs )
+    REFLECT( m_XCodeBuildWorkingDir )
+    REFLECT( m_XCodeDocumentVersioning )
+    REFLECT( m_XCodeCommandLineArguments )
+    REFLECT( m_XCodeCommandLineArgumentsDisabled )
 REFLECT_END( XCodeProjectNode )
 
 // XCodeProjectConfig::ResolveTargets
@@ -129,7 +129,7 @@ XCodeProjectNode::XCodeProjectNode()
     }
 
     // .ProjectFiles
-    Dependencies fileNodes( m_ProjectFiles.GetSize() );
+    Dependencies fileNodes;
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".ProjectFiles", m_ProjectFiles, fileNodes ) )
     {
         return false; // GetNodeList will have emitted an error
@@ -253,7 +253,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         }
 
         // Combine hash
-        stamp += xxHash3::Calc64( output );
+        stamp += xxHash3::Calc64Big( output );
     }
 
     // Get folder containing project.pbxproj
@@ -287,7 +287,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         }
 
         // Combine hash
-        stamp += xxHash3::Calc64( output );
+        stamp += xxHash3::Calc64Big( output );
     }
 
     // Generate .xcscheme file
@@ -308,7 +308,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         }
 
         // Combine hash
-        stamp += xxHash3::Calc64( output );
+        stamp += xxHash3::Calc64Big( output );
     }
 
     // Record stamp representing the contents of the files

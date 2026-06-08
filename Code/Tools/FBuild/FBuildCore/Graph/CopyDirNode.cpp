@@ -17,13 +17,13 @@
 
 // REFLECTION
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( CopyDirNode, Node, MetaNone() )
-    REFLECT_ARRAY(  m_SourcePaths,              "SourcePaths",              MetaPath() )
-    REFLECT(        m_Dest,                     "Dest",                     MetaPath() )
-    REFLECT_ARRAY(  m_SourcePathsPattern,       "SourcePathsPattern",       MetaOptional() )
-    REFLECT_ARRAY(  m_SourceExcludePaths,       "SourceExcludePaths",       MetaOptional() + MetaPath() )
-    REFLECT(        m_SourcePathsRecurse,       "SourcePathsRecurse",       MetaOptional() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+REFLECT_NODE_BEGIN( CopyDirNode, Node )
+    REFLECT( m_SourcePaths, MetaPath() + MetaRequired() )
+    REFLECT( m_Dest, MetaPath() + MetaRequired() )
+    REFLECT( m_SourcePathsPattern )
+    REFLECT( m_SourceExcludePaths, MetaPath() )
+    REFLECT( m_SourcePathsRecurse )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 REFLECT_END( CopyDirNode )
 
 // CONSTRUCTOR
@@ -38,10 +38,7 @@ CopyDirNode::CopyDirNode()
 /*virtual*/ bool CopyDirNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // .CompilerInputPath
     Dependencies sourcePaths;
@@ -89,13 +86,6 @@ CopyDirNode::~CopyDirNode() = default;
 
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
-    Array<AString> preBuildDependencyNames;
-    preBuildDependencyNames.SetCapacity( m_PreBuildDependencies.GetSize() );
-    for ( const Dependency & dep : m_PreBuildDependencies )
-    {
-        preBuildDependencyNames.Append( dep.GetNode()->GetName() );
-    }
-
     // Iterate all the DirectoryListNodes
     for ( const Dependency & dep : m_StaticDependencies )
     {
@@ -133,7 +123,7 @@ CopyDirNode::~CopyDirNode() = default;
             {
                 CopyFileNode * copyFileNode = nodeGraph.CreateNode<CopyFileNode>( dstFile );
                 copyFileNode->m_Source = srcFileNode->GetName();
-                copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames; // inherit PreBuildDependencies
+                copyFileNode->m_PreBuildDependencyNames = m_PreBuildDependencyNames; // inherit PreBuildDependencies
                 const BFFToken * token = nullptr;
                 if ( !copyFileNode->Initialize( nodeGraph, token, nullptr ) )
                 {

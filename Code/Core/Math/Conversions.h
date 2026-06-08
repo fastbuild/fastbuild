@@ -35,6 +35,19 @@ namespace Math
     {
         return ( ( ( value - 1 ) & value ) == 0 );
     }
+    template <typename T>
+    static inline uint32_t PopCount( T value )
+    {
+        uint32_t count = 0;
+
+        while ( value != 0 )
+        {
+            count += ( value & 1 );
+            value >>= 1;
+        }
+
+        return count;
+    }
 }
 
 //------------------------------------------------------------------------------

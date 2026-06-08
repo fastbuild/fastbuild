@@ -67,30 +67,15 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
-    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile())
-    REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
-    REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
-    REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
-    REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
-    REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
-    REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
-    REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
-    REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
-    REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
-
-    // Preprocessor
-    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
-    REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
-
-    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
+REFLECT_NODE_BEGIN( ObjectNode, Node )
+    REFLECT( m_CompilerInputFile, MetaFile() )
 
     // Internal State
-    REFLECT( m_PrecompiledHeader,                   "PrecompiledHeader",                MetaHidden() )
-    REFLECT( m_CompilerFlags.m_Flags,               "CompilerFlags",                    MetaHidden() )
-    REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
-    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
-    REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
+    REFLECT_RENAME( m_CompilerFlags.m_Flags, "CompilerFlags", MetaHidden() )
+    REFLECT_RENAME( m_PreprocessorFlags.m_Flags, "PreprocessorFlags", MetaHidden() )
+    REFLECT( m_PCHCacheKey, MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_OwnerObjectList, MetaHidden() )
+    REFLECT( m_OwnerObjectListHash, MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -107,21 +92,12 @@ ObjectNode::ObjectNode()
 /*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     ASSERT( m_OwnerObjectList ); // Must be set before we get here
+    ASSERT( m_OwnerObjectListHash );
 
-    // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    // .PreBuildDependencies (OwnerObjectList will have handled checks/errors)
+    m_PreBuildDependencies = m_OwnerObjectList->GetPreBuildDependencies();
 
     // NOTE: ConcurrencyGroup stored in mOwnerObjectList
-
-    // .Compiler
-    CompilerNode * compiler( nullptr );
-    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compiler ) )
-    {
-        return false; // GetCompilerNode will have emitted an error
-    }
 
     // .CompilerInputFile
     Dependencies compilerInputFile;
@@ -131,31 +107,34 @@ ObjectNode::ObjectNode()
     }
     ASSERT( compilerInputFile.GetSize() == 1 ); // Should not be possible to expand to > 1 thing
 
-    // .Preprocessor
-    CompilerNode * preprocessor( nullptr );
-    if ( m_Preprocessor.IsEmpty() == false )
-    {
-        if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, preprocessor ) )
-        {
-            return false; // GetCompilerNode will have emitted an error
-        }
-    }
-
     // .CompilerForceUsing
     Dependencies compilerForceUsing;
-    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
+    if ( !Function::GetFileNodes( nodeGraph,
+                                  iter,
+                                  function,
+                                  m_OwnerObjectList->GetCompilerForceUsing(),
+                                  ".CompilerForceUsing",
+                                  compilerForceUsing ) )
     {
         return false; // GetFileNode will have emitted an error
     }
 
     // Precompiled Header
     Dependencies precompiledHeader;
-    if ( m_PrecompiledHeader.IsEmpty() == false )
+    if ( GetPrecompiledHeaderName().IsEmpty() == false )
     {
         // m_PrecompiledHeader is only set if our associated ObjectList or Library created one
-        VERIFY( Function::GetFileNode( nodeGraph, iter, function, m_PrecompiledHeader, ".PrecompiledHeader", precompiledHeader ) );
+        VERIFY( Function::GetFileNode( nodeGraph,
+                                       iter,
+                                       function,
+                                       GetPrecompiledHeaderName(),
+                                       ".PrecompiledHeader",
+                                       precompiledHeader ) );
         ASSERT( precompiledHeader.GetSize() == 1 );
     }
+
+    CompilerNode * compiler = m_OwnerObjectList->GetCompiler();
+    CompilerNode * preprocessor = m_OwnerObjectList->GetPreprocessor();
 
     // Store Dependencies
     m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
@@ -171,38 +150,9 @@ ObjectNode::ObjectNode()
     return true;
 }
 
-// CONSTRUCTOR (Remote)
-//------------------------------------------------------------------------------
-ObjectNode::ObjectNode( AString && objectName,
-                        NodeProxy * srcFile,
-                        const AString & compilerOptions,
-                        uint32_t flags )
-    : FileNode()
-    , m_CompilerOptions( compilerOptions )
-    , m_Remote( true )
-{
-    SetName( Move( objectName ) );
-    m_Type = OBJECT_NODE;
-    m_LastBuildTimeMs = 5000; // higher default than a file node
-    m_CompilerFlags.m_Flags = flags;
-
-    m_StaticDependencies.SetCapacity( 2 );
-    m_StaticDependencies.Add( nullptr );
-    m_StaticDependencies.Add( srcFile );
-}
-
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::~ObjectNode()
-{
-    // remote worker owns the ProxyNode for the source file, so must free it
-    if ( m_Remote )
-    {
-        Node * srcFile = GetSourceFile();
-        ASSERT( srcFile->GetType() == Node::PROXY_NODE );
-        FDELETE srcFile;
-    }
-}
+ObjectNode::~ObjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -221,7 +171,7 @@ ObjectNode::~ObjectNode()
         }
         if ( IsMSVC() && IsCreatingPCH() )
         {
-            if ( DoPreBuildFileDeletion( m_PCHObjectFileName ) == false )
+            if ( DoPreBuildFileDeletion( GetPCHObjectName() ) == false )
             {
                 return BuildResult::eFailed; // HandleFileDeletion will have emitted an error
             }
@@ -238,7 +188,7 @@ ObjectNode::~ObjectNode()
     bool useDeoptimization = ShouldUseDeoptimization();
 
     const bool useCache = ShouldUseCache();
-    const bool useDist = m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+    const bool useDist = IsDistributionAllowed();
     const bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
     bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
     if ( GetDedicatedPreprocessor() )
@@ -434,7 +384,11 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     if ( useCache && GetCompiler()->GetUseLightCache() )
     {
         LightCache lc;
-        if ( lc.Hash( this, fullArgs.GetRawArgs(), m_LightCacheKey, m_Includes ) == false )
+        if ( lc.Hash( this,
+                      GetOwnerObjectList().GetCompilerInfo(),
+                      fullArgs.GetRawArgs(),
+                      m_LightCacheKey,
+                      m_Includes ) == false )
         {
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
@@ -461,7 +415,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
             // Cache miss
             const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
-            const bool canDistribute = belowMemoryLimit && m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+            const bool canDistribute = belowMemoryLimit && IsDistributionAllowed();
             if ( canDistribute == false )
             {
                 // can't distribute, so generating preprocessed output is useless
@@ -519,7 +473,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     }
 
     // can we do the rest of the work remotely?
-    const bool canDistribute = useSimpleDist || ( m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed );
+    const bool canDistribute = useSimpleDist || IsDistributionAllowed();
     const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
     if ( canDistribute && belowMemoryLimit )
     {
@@ -926,7 +880,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     AString name;
     AString sourceFile;
     uint32_t flags;
-    AStackString compilerArgs;
+    AString compilerArgs;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
@@ -937,7 +891,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     NodeProxy * srcFile = FNEW( NodeProxy( Move( sourceFile ) ) );
 
-    return FNEW( ObjectNode( Move( name ), srcFile, compilerArgs, flags ) );
+    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags ) );
 }
 
 // DetermineFlags
@@ -960,6 +914,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 
     const bool isDistributableCompiler = compilerNode->CanBeDistributed();
+    const bool isCacheableCompiler = compilerNode->CanBeCached();
 
     // Compiler Type - TODO:C Eliminate duplication of these flags
     const CompilerNode::CompilerFamily compilerFamily = compilerNode->GetCompilerFamily();
@@ -1038,6 +993,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             {
                 flags.Set( CompilerFlags::FLAG_DYNAMIC_DEOPT );
             }
+            else if ( flags.IsClangCl() && IsCompilerArg_MSVC( token, "nostdinc" ) )
+            {
+                // Clang-Cl has -nostdinc, but not -nostdinc++
+                flags.Set( CompilerFlags::FLAG_NOSTDINC );
+            }
         }
 
         // 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
@@ -1059,7 +1019,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             }
 
             // TODO:A Support caching of 7i format
-            if ( flags.IsUsingPDB() == false )
+            if ( isCacheableCompiler &&
+                 ( flags.IsUsingPDB() == false ) )
             {
                 flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
             }
@@ -1127,6 +1088,15 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                     }
                 }
             }
+            else if ( ( token == "-nostdinc" ) ||
+                      ( token == "--no-standard-includes" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_NOSTDINC );
+            }
+            else if ( ( token == "-nostdinc++" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_NOSTDINCPP );
+            }
         }
 
         if ( coverage )
@@ -1157,14 +1127,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
 
         // all objects can be cached with GCC/SNC/Clang (including PCH files)
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     // CUDA Compiler
     if ( flags.IsCUDANVCC() )
     {
         // Can cache objects
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     if ( flags.IsOrbisWavePSSLC() )
@@ -1175,7 +1151,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
 
         // Can cache objects
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     return flags;
@@ -1232,7 +1211,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 /*virtual*/ void ObjectNode::SaveRemote( IOStream & stream ) const
 {
     // Force using implies /clr which is not distributable
-    ASSERT( m_CompilerForceUsing.IsEmpty() );
+    ASSERT( m_OwnerObjectList->GetCompilerForceUsing().IsEmpty() );
 
     // Save minimal information for the remote worker
     stream.Write( m_Name );
@@ -1241,7 +1220,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     // TODO:B would be nice to make ShouldUseDeoptimization cache the result for this build
     // instead of opening the file again.
-    const AString & compilerOptions = ShouldUseDeoptimization() ? m_CompilerOptionsDeoptimized : m_CompilerOptions;
+    const AString & compilerOptions = ShouldUseDeoptimization() ? m_OwnerObjectList->GetCompilerOptionsDeoptimized()
+                                                                : m_OwnerObjectList->GetCompilerOptions();
 
     // Prepare args for remote worker
     UniquePtr<CompilerDriverBase> driver;
@@ -1286,23 +1266,15 @@ CompilerNode * ObjectNode::GetCompiler() const
 //------------------------------------------------------------------------------
 CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
 {
-    if ( m_Preprocessor.IsEmpty() )
-    {
-        return nullptr;
-    }
-    size_t preprocessorIndex = 2;
-    if ( m_PrecompiledHeader.IsEmpty() == false )
-    {
-        ++preprocessorIndex;
-    }
-    return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo<CompilerNode>();
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPreprocessor()
+                             : nullptr;
 }
 
 // GetPrecompiledHeader()
 //------------------------------------------------------------------------------
 ObjectNode * ObjectNode::GetPrecompiledHeader() const
 {
-    ASSERT( m_PrecompiledHeader.IsEmpty() == false );
+    ASSERT( GetPrecompiledHeaderName().IsEmpty() == false );
     return m_StaticDependencies[ 2 ].GetNode()->CastTo<ObjectNode>();
 }
 
@@ -1321,7 +1293,7 @@ void ObjectNode::GetNativeAnalysisXMLPath( AString & outXMLFileName ) const
 {
     ASSERT( IsUsingStaticAnalysisMSVC() );
 
-    const AString & sourceName = m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName;
+    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
 
     // TODO:B The xml path can be manually specified with /analyze:log
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
@@ -1347,12 +1319,26 @@ void ObjectNode::GetAltObjPath( AString & altObjName ) const
 {
     ASSERT( IsUsingDynamicDeopt() );
 
-    const AString & sourceName = m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName;
+    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
 
     // TODO:B The suffix ('.alt') can be manually specified with /dynamicdeopt:suffix
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
     altObjName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
     altObjName += ".alt.obj";
+}
+
+//------------------------------------------------------------------------------
+const AString & ObjectNode::GetPCHObjectName() const
+{
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPCHObjectFileName()
+                             : AString::GetEmpty();
+}
+
+//------------------------------------------------------------------------------
+const AString & ObjectNode::GetPrecompiledHeaderName() const
+{
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPrecompiledHeaderName()
+                             : AString::GetEmpty();
 }
 
 // GetCacheName
@@ -1369,7 +1355,8 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
-    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey : xxHash3::Calc64( job->GetData(), job->GetDataSize() );
+    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey
+                                                           : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
     ASSERT( preprocessedSourceKey );
 
     // hash the build "environment"
@@ -1447,7 +1434,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         uint64_t pchKey = 0;
         if ( IsCreatingPCH() && IsMSVC() )
         {
-            pchKey = xxHash3::Calc64( cacheData, cacheDataSize );
+            pchKey = xxHash3::Calc64Big( cacheData, cacheDataSize );
         }
 
         const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
@@ -1645,7 +1632,7 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
         // Dependent objects need to know the PCH key to be able to pull from the cache
         if ( IsCreatingPCH() && IsMSVC() )
         {
-            m_PCHCacheKey = xxHash3::Calc64( compressedData, compressedDataSize );
+            m_PCHCacheKey = xxHash3::Calc64Big( compressedData, compressedDataSize );
         }
 
         const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
@@ -1705,7 +1692,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
          ( objectNode->m_CompilerFlags.IsMSVC() || objectNode->m_CompilerFlags.IsClangCl() ) )
     {
         // .pch.obj
-        outFileNames.Append( m_PCHObjectFileName );
+        outFileNames.Append( GetPCHObjectName() );
     }
 
     // MSVC static analysis adds extra files
@@ -1716,9 +1703,9 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFi
             // .pchast (precompiled headers only)
 
             // Get file name start
-            ASSERT( PathUtils::IsFullPath( m_PCHObjectFileName ) ); // Something is terribly wrong
+            ASSERT( PathUtils::IsFullPath( GetPCHObjectName() ) ); // Something is terribly wrong
 
-            AStackString pchASTFileName( m_PCHObjectFileName );
+            AStackString pchASTFileName( GetPCHObjectName() );
             if ( pchASTFileName.EndsWithI( ".obj" ) )
             {
                 pchASTFileName.SetLength( pchASTFileName.GetLength() - 4 );
@@ -1806,19 +1793,10 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     StackArray<AString> tokens;
 
     const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
-    if ( useDedicatedPreprocessor )
-    {
-        m_PreprocessorOptions.Tokenize( tokens );
-    }
-    else if ( useDeoptimization )
-    {
-        ASSERT( !m_CompilerOptionsDeoptimized.IsEmpty() );
-        m_CompilerOptionsDeoptimized.Tokenize( tokens );
-    }
-    else
-    {
-        m_CompilerOptions.Tokenize( tokens );
-    }
+
+    const AString & commandLine = GetCommandLine( useDedicatedPreprocessor, useDeoptimization );
+    ASSERT( !commandLine.IsEmpty() );
+    commandLine.Tokenize( tokens );
     fullArgs.Clear();
 
     // Get base path if needed
@@ -1917,7 +1895,10 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 //------------------------------------------------------------------------------
 void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const
 {
-    const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1u : 0u ) + ( !m_Preprocessor.IsEmpty() ? 1u : 0u ); // Skip Compiler, InputFile, PCH and Preprocessor
+    // Skip Compiler, InputFile, PCH and Preprocessor
+    const size_t startIndex = 2 +
+                              ( !GetPrecompiledHeaderName().IsEmpty() ? 1u : 0u ) +
+                              ( ( GetDedicatedPreprocessor() != nullptr ) ? 1u : 0u );
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i = startIndex; i < endIndex; ++i )
     {
@@ -2137,11 +2118,11 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         PathUtils::EnsureTrailingSlash( basePath );
         AStackString relativeFileName;
         PathUtils::GetRelativePath( basePath, sourceFile->GetName(), relativeFileName );
-        sourceNameHash = xxHash::Calc32( relativeFileName.Get(), relativeFileName.GetLength() );
+        sourceNameHash = xxHash3::Calc32( relativeFileName.Get(), relativeFileName.GetLength() );
     }
     else
     {
-        sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+        sourceNameHash = xxHash3::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
     }
 
     FileStream tmpFile;
@@ -2252,15 +2233,9 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     tmpFileName += fileName;
     if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
     {
-        FileIO::WorkAroundForWindowsFilePermissionProblem( tmpFileName, FileStream::WRITE_ONLY, 10 ); // 10s max wait
-
-        // Try again
-        if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
-        {
-            job->Error( "Failed to create temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
-            job->OnSystemError();
-            return false;
-        }
+        job->Error( "Failed to create temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
+        job->OnSystemError();
+        return false;
     }
     if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
     {
@@ -2382,7 +2357,7 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
 
 // CompileHelper::CONSTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool * abortPointer )
+ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const Atomic<bool> * abortPointer )
     : m_HandleOutput( handleOutput )
     , m_Process( FBuild::GetAbortBuildPointer(), abortPointer )
     , m_Result( 0 )
@@ -2685,8 +2660,8 @@ bool ObjectNode::ShouldUseDeoptimization() const
         return false; // disabled for Unity files (which are always writable)
     }
 
-    if ( ( m_DeoptimizeWritableFilesWithToken == false ) &&
-         ( m_DeoptimizeWritableFiles == false ) )
+    if ( ( GetDeoptimizeWritableFilesWithToken() == false ) &&
+         ( GetDeoptimizeWritableFiles() == false ) )
     {
         return false; // feature not enabled
     }
@@ -2699,7 +2674,7 @@ bool ObjectNode::ShouldUseDeoptimization() const
         return false; // file is read only (not modified)
     }
 
-    if ( m_DeoptimizeWritableFiles )
+    if ( GetDeoptimizeWritableFiles() )
     {
         return true; // file modified - deoptimize with or without token
     }
@@ -2725,12 +2700,30 @@ bool ObjectNode::ShouldUseDeoptimization() const
     return false;
 }
 
+//------------------------------------------------------------------------------
+bool ObjectNode::GetDeoptimizeWritableFiles() const
+{
+    ASSERT( m_OwnerObjectList );
+    return !m_CompilerFlags.IsCreatingPCH() &&
+           m_OwnerObjectList &&
+           m_OwnerObjectList->GetDeoptimizeWritableFiles();
+}
+
+//------------------------------------------------------------------------------
+bool ObjectNode::GetDeoptimizeWritableFilesWithToken() const
+{
+    ASSERT( m_OwnerObjectList );
+    return !m_CompilerFlags.IsCreatingPCH() &&
+           m_OwnerObjectList &&
+           m_OwnerObjectList->GetDeoptimizeWritableFilesWithToken();
+}
+
 // ShouldUseCache
 //------------------------------------------------------------------------------
 bool ObjectNode::ShouldUseCache() const
 {
     bool useCache = IsCacheable() &&
-                    m_AllowCaching &&
+                    m_OwnerObjectList->IsCachingAllowed() &&
                     ( FBuild::Get().GetOptions().m_UseCacheRead ||
                       FBuild::Get().GetOptions().m_UseCacheWrite );
     if ( IsIsolatedFromUnity() )
@@ -2754,6 +2747,14 @@ bool ObjectNode::ShouldUseCache() const
         }
     }
     return useCache;
+}
+
+//------------------------------------------------------------------------------
+bool ObjectNode::IsDistributionAllowed() const
+{
+    return m_CompilerFlags.IsDistributable() &&
+           m_OwnerObjectList->IsDistributionAllowed() &&
+           FBuild::Get().GetOptions().m_AllowDistributed;
 }
 
 // GetResponseFileMode
@@ -2999,6 +3000,72 @@ void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
     }
 
     outDriver->Init( this, remoteSourceRoot );
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & ObjectNode::GetCommandLine( bool useDedicatedPreprocessor,
+                                                        bool useDeoptimization ) const
+{
+    // Objects compiled locally in all situations source their command line
+    // from the OwnerObjectList node
+
+    if ( useDedicatedPreprocessor )
+    {
+        return m_OwnerObjectList->GetPreprocessorOptions();
+    }
+
+    if ( useDeoptimization )
+    {
+        return m_OwnerObjectList->GetCompilerOptionsDeoptimized();
+    }
+
+    if ( IsCreatingPCH() )
+    {
+        return m_OwnerObjectList->GetCompilerOptionsPCH();
+    }
+
+    return m_OwnerObjectList->GetCompilerOptions();
+}
+
+//------------------------------------------------------------------------------
+ObjectNodeRemote::ObjectNodeRemote( AString && objectName,
+                                    NodeProxy * srcFile,
+                                    AString && compilerOptions,
+                                    uint32_t flags )
+    : ObjectNode()
+    , m_CompilerOptions( Move( compilerOptions ) )
+{
+    SetName( Move( objectName ) );
+    m_CompilerFlags.m_Flags = flags;
+
+    m_StaticDependencies.SetCapacity( 2 );
+    m_StaticDependencies.Add( nullptr );
+    m_StaticDependencies.Add( srcFile );
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ ObjectNodeRemote::~ObjectNodeRemote()
+{
+    // remote worker owns the ProxyNode for the source file, so must free it
+    Node * srcFile = GetSourceFile();
+    ASSERT( srcFile->GetType() == Node::PROXY_NODE );
+    FDELETE srcFile;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & ObjectNodeRemote::GetCommandLine( bool useDedicatedPreprocessor,
+                                                              bool useDeoptimization ) const
+{
+    // Objects compiled remotely use the options serialized in the special
+    // derived node (and don't have access to the OwnerObjectList)
+
+    // Flags are unused compiling remotely (everything is baked into m_CompilerOptions)
+    ASSERT( !useDedicatedPreprocessor && !useDeoptimization );
+#if !defined( ASSERTS_ENABLED )
+    (void)useDedicatedPreprocessor;
+    (void)useDeoptimization;
+#endif
+    return m_CompilerOptions;
 }
 
 //------------------------------------------------------------------------------
