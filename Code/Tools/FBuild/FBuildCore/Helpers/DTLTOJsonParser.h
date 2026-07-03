@@ -4,7 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Containers/Array.h"
+#include "Tools/FBuild/FBuildCore/Helpers/DTLTOData.h"
 #include "Core/Strings/AString.h"
 
 // DTLTOJsonParser
@@ -12,19 +12,6 @@
 class DTLTOJsonParser
 {
 public:
-    // struct Job
-    // {
-    //     Array<AString> m_Args;
-    //     Array<AString> m_Inputs;
-    //     Array<AString> m_Outputs;
-    // };
-
-    struct DTLTOData
-    {
-        AString m_LinkerOutput;
-        // Array<Job> m_Jobs;
-    };
-
     explicit DTLTOJsonParser( const char * fileName );
 
     bool Load();
@@ -60,7 +47,7 @@ private:
     AString m_Buffer;   // Raw file contents; m_Pos/m_End index into this
     const char * m_Pos = nullptr;
     const char * m_End = nullptr;
-    // Job m_CurrentJob;
+    // DTLTOData::Job * m_CurrentJob = nullptr; // Job being parsed; points into m_Data.m_Jobs
     DTLTOData m_Data;
 };
 
