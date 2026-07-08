@@ -51,7 +51,7 @@ TEST_CASE( TestDTLTOGraphBuilder, BuildSynthesizesGraph )
     MakeDTLTOData( data );
 
     DTLTOGraphBuilder builder( nodeGraph );
-    Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
+    const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
 
     TEST_ASSERT( alias );
     TEST_ASSERT( alias->GetType() == Node::ALIAS_NODE );
@@ -82,7 +82,7 @@ TEST_CASE( TestDTLTOGraphBuilder, RejectsMissingCompiler )
     job.m_Outputs.EmplaceBack( "out.o" );
 
     DTLTOGraphBuilder builder( nodeGraph );
-    Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
+    const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
     TEST_ASSERT( alias == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: no compiler specified" ) );
 }
@@ -97,7 +97,7 @@ TEST_CASE( TestDTLTOGraphBuilder, RejectsEmptyJobs )
     data.m_Compiler = "clang.exe";
 
     DTLTOGraphBuilder builder( nodeGraph );
-    Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
+    const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
     TEST_ASSERT( alias == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: no jobs to build" ) );
 }
@@ -115,7 +115,7 @@ TEST_CASE( TestDTLTOGraphBuilder, RejectsDuplicateTarget )
     TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
 
     // second build with the same target name must be rejected
-    Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
+    const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
     TEST_ASSERT( alias == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "already exists" ) );
 }
@@ -137,7 +137,7 @@ TEST_CASE( TestDTLTOGraphBuilder, QuotesArguments )
     job.m_Outputs.EmplaceBack( "out.o" );
 
     DTLTOGraphBuilder builder( nodeGraph );
-    Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-quote" ) );
+    const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-quote" ) );
     TEST_ASSERT( alias );
 
     AStackString<> nodeName;
