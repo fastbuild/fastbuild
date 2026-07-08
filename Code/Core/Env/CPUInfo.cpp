@@ -100,7 +100,7 @@ namespace
         {
             if ( CPU_ISSET( i, &cpuSet ) )
             {
-                mask |= ( 1 << i );
+                mask |= ( 1ULL << i );
             }
         }
     #endif
@@ -117,7 +117,7 @@ namespace
         CPU_ZERO( &cpuSet );
         for ( size_t i = 0; i < 64; ++i )
         {
-            if ( mask & ( 1 << i ) )
+            if ( mask & ( 1ULL << i ) )
             {
                 CPU_SET( i, &cpuSet );
             }
