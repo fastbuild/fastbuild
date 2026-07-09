@@ -13,9 +13,8 @@
 class DTLTOJsonParser
 {
 public:
-    explicit DTLTOJsonParser( const char * fileName );
+    explicit DTLTOJsonParser( const AString & buffer );
 
-    bool Load();
     bool Parse();
     const DTLTOData & GetData() const { return m_Data; }
 
@@ -41,7 +40,8 @@ private:
     bool MatchObject( const PropertyMatcher ( &matchers )[ NUM_MATCHERS ] );
     template <typename ELEMENT_PARSER>
     bool MatchArray( ELEMENT_PARSER parseElement );
-    bool MatchStringArray( const char * propertyName, Array<AString> & out );
+    bool MatchStringArray( Array<AString> & out );
+    bool MatchStringArrayProp( const char * propertyName, Array<AString> & out );
 
     // DTLTO specific matchers
     bool MatchCommonProp();
@@ -49,9 +49,7 @@ private:
     bool MatchArgsProp();
     bool MatchInputsProp();
 
-    AString m_FileName;
-    AString m_Buffer;   // Raw file contents; m_Pos/m_End index into this
-    const char * m_Pos = nullptr;
+    const char * m_Pos = nullptr; // Cursor into the caller-owned buffer
     const char * m_End = nullptr;
     // DTLTOData::Job * m_CurrentJob = nullptr; // Job being parsed; points into m_Data.m_Jobs
     DTLTOData m_Data;

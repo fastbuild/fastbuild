@@ -7,6 +7,8 @@
 
 #include "Tools/FBuild/FBuildCore/Helpers/DTLTOJsonParser.h"
 
+#include "Core/Strings/AStackString.h"
+
 // TestDTLTOJsonParser
 //------------------------------------------------------------------------------
 TEST_GROUP( TestDTLTOJsonParser, FBuildTest )
@@ -14,162 +16,158 @@ TEST_GROUP( TestDTLTOJsonParser, FBuildTest )
 };
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, MatchObject )
+TEST_CASE( TestDTLTOJsonParser, Object_ErrorExpectedOpeningBrace )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/common.json" );
-    TEST_ASSERT( parser.Load() );
-    TEST_ASSERT( parser.Parse() );
-    TEST_ASSERT( parser.GetData().m_LinkerOutput == "out.exe" );
-}
-
-//------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, LoadMissingFile )
-{
-    DTLTOJsonParser parser( "does-not-exist.json" );
-    TEST_ASSERT( parser.Load() == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to open" ) );
-}
-
-//------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorExpectedRootObject )
-{
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/bad-root-type.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"([])" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected '{'" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorExpectedPropertyName )
+TEST_CASE( TestDTLTOJsonParser, Object_ErrorExpectedPropertyName )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/empty-object.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({})" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected property name" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorExpectedColonAfterProperty )
+TEST_CASE( TestDTLTOJsonParser, Object_ErrorExpectedColonAfterProperty )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/missing-colon.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common" })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected ':' after property 'common'" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorUnknownProperty )
+TEST_CASE( TestDTLTOJsonParser, Object_ErrorUnknownProperty )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/unknown-property.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "unknown": 1 })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: unknown property 'unknown'" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorExpectedCommaAfterPropertyValue )
+TEST_CASE( TestDTLTOJsonParser, Object_ErrorExpectedCommaAfterPropertyValue )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/missing-comma.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common": { "linker_output": "out.exe" } "jobs": [] })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected ',' after value for property 'common'" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorFailedToParseCommonValue )
+TEST_CASE( TestDTLTOJsonParser, String_ErrorExpectedString )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/common-wrong-type.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common": { "linker_output": 1 } })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to parse property value for 'common'" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected string" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorExpectedStringForLinkerOutput )
+TEST_CASE( TestDTLTOJsonParser, String_ErrorUnterminatedString )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/linker-output-wrong-type.json" );
-    TEST_ASSERT( parser.Load() );
-    TEST_ASSERT( parser.Parse() == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected string for 'linker_output'" ) );
-}
-
-//------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorFailedToParseLinkerOutputValue )
-{
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/linker-output-wrong-type.json" );
-    TEST_ASSERT( parser.Load() );
-    TEST_ASSERT( parser.Parse() == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to parse property value for 'linker_output'" ) );
-}
-
-//------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorUnterminatedString )
-{
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/unterminated-string.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common": { "linker_output": "out.exe }})" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: unterminated string" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorUnknownEscape )
+TEST_CASE( TestDTLTOJsonParser, String_ErrorUnknownEscape )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/unknown-escape.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common": { "linker_output": "out\q.exe" } })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: unknown escape '\\q'" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, MatchEmptyArray )
+TEST_CASE( TestDTLTOJsonParser, Array_MatchEmptyArray )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/common-empty-args.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common": { "args": [] } })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() );
     TEST_ASSERT( parser.GetData().m_CommonArgs.GetSize() == 0 );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorExpectedArrayBracket )
+TEST_CASE( TestDTLTOJsonParser, Array_ErrorExpectedArrayBracket )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/args-wrong-type.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common": { "args": "not-an-array" } })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected '['" ) );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorFailedToParseArgsValue )
+TEST_CASE( TestDTLTOJsonParser, Array_ErrorExpectedCommaOrBracketInArray )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/args-wrong-type.json" );
-    TEST_ASSERT( parser.Load() );
-    TEST_ASSERT( parser.Parse() == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to parse property value for 'args'" ) );
-}
-
-//------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorExpectedStringInArgs )
-{
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/args-element-wrong-type.json" );
-    TEST_ASSERT( parser.Load() );
-    TEST_ASSERT( parser.Parse() == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected string element in 'args'" ) );
-}
-
-//------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOJsonParser, ErrorExpectedCommaOrBracketInArray )
-{
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/args-missing-comma.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common": { "args": [ "-O2" "-flto" ] } })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected ',' or ']' in array" ) );
 }
 
 //------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOJsonParser, ErrorFailedToReadCommon )
+{
+    AStackString<> json( R"({ "common": 1 })" );
+    DTLTOJsonParser parser( json );
+    TEST_ASSERT( parser.Parse() == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to read property 'common'" ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOJsonParser, MatchLinkerOutput )
+{
+    AStackString<> json( R"({ "common": { "linker_output": "out.exe" } })" );
+    DTLTOJsonParser parser( json );
+    TEST_ASSERT( parser.Parse() );
+    TEST_ASSERT( parser.GetData().m_LinkerOutput == "out.exe" );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOJsonParser, ErrorFailedToReadLinkerOutput )
+{
+    AStackString<> json( R"({ "common": { "linker_output": 1 } })" );
+    DTLTOJsonParser parser( json );
+    TEST_ASSERT( parser.Parse() == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to read property 'linker_output'" ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOJsonParser, MatchArgs )
+{
+    AStackString<> json( R"({ "common": { "args": [ "-O2", "-flto" ] } })" );
+    DTLTOJsonParser parser( json );
+    TEST_ASSERT( parser.Parse() );
+
+    const Array<AString> & args = parser.GetData().m_CommonArgs;
+    TEST_ASSERT( args.GetSize() == 2 );
+    TEST_ASSERT( args[ 0 ] == "-O2" );
+    TEST_ASSERT( args[ 1 ] == "-flto" );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOJsonParser, ErrorFailedToReadArgs )
+{
+    AStackString<> json( R"({ "common": { "args": [ "-O2", 1 ] } })" );
+    DTLTOJsonParser parser( json );
+    TEST_ASSERT( parser.Parse() == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to read property 'args'" ) );
+}
+
+//------------------------------------------------------------------------------
 TEST_CASE( TestDTLTOJsonParser, MatchInputs )
 {
-    DTLTOJsonParser parser( "Tools/FBuild/FBuildTest/Data/TestDTLTOJsonParser/common-with-inputs.json" );
-    TEST_ASSERT( parser.Load() );
+    AStackString<> json( R"({ "common": { "inputs": [ "app_main.c.obj", "math.c.obj", "path with spaces.obj" ] } })" );
+    DTLTOJsonParser parser( json );
     TEST_ASSERT( parser.Parse() );
 
     const Array<AString> & inputs = parser.GetData().m_CommonInputs;
@@ -177,6 +175,15 @@ TEST_CASE( TestDTLTOJsonParser, MatchInputs )
     TEST_ASSERT( inputs[ 0 ] == "app_main.c.obj" );
     TEST_ASSERT( inputs[ 1 ] == "math.c.obj" );
     TEST_ASSERT( inputs[ 2 ] == "path with spaces.obj" );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOJsonParser, ErrorFailedToReadInputs )
+{
+    AStackString<> json( R"({ "common": { "inputs": [ "a.obj", 1 ] } })" );
+    DTLTOJsonParser parser( json );
+    TEST_ASSERT( parser.Parse() == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to read property 'inputs'" ) );
 }
 
 //------------------------------------------------------------------------------

@@ -9,38 +9,15 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
-#include "Core/Env/ErrorFormat.h"
-#include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-DTLTOJsonParser::DTLTOJsonParser( const char * fileName )
-    : m_FileName( fileName )
+DTLTOJsonParser::DTLTOJsonParser( const AString & buffer )
+    : m_Pos( buffer.Get() )
+    , m_End( buffer.GetEnd() )
 {
-}
-
-// Load
-//------------------------------------------------------------------------------
-bool DTLTOJsonParser::Load()
-{
-    FileStream f;
-    if ( !f.Open( m_FileName.Get(), FileStream::READ_ONLY ) )
-    {
-        FLOG_ERROR( "DTLTO: failed to open '%s'. Error: %s", m_FileName.Get(), LAST_ERROR_STR );
-        return false;
-    }
-
-    if ( !f.ReadIntoString( m_Buffer ) )
-    {
-        FLOG_ERROR( "DTLTO: failed to read '%s'", m_FileName.Get() );
-        return false;
-    }
-
-    m_Pos = m_Buffer.Get();
-    m_End = m_Buffer.GetEnd();
-    return true;
 }
 
 // SkipWhitespaces
@@ -73,6 +50,7 @@ bool DTLTOJsonParser::MatchString( AString & result )
     SkipWhitespaces();
     if ( Peek() != '"' )
     {
+        FLOG_ERROR( "DTLTO: expected string" );
         return false;
     }
     Consume();
@@ -152,8 +130,7 @@ bool DTLTOJsonParser::MatchObject( const PropertyMatcher ( &matchers )[ NUM_MATC
             {
                 if ( !( this->*( matcher.m_Matcher ) )() )
                 {
-                    FLOG_ERROR( "DTLTO: failed to parse property value for '%s'", key.Get() );
-                    return false;
+                    return false; // matcher emits its own error
                 }
                 found = true;
                 break;
@@ -217,13 +194,12 @@ bool DTLTOJsonParser::MatchArray( ELEMENT_PARSER parseElement )
 
 // MatchStringArray
 //------------------------------------------------------------------------------
-bool DTLTOJsonParser::MatchStringArray( const char * propertyName, Array<AString> & out )
+bool DTLTOJsonParser::MatchStringArray( Array<AString> & out )
 {
-    return MatchArray( [ this, propertyName, &out ]() -> bool {
+    return MatchArray( [ this, &out ]() -> bool {
         AStackString<> element;
         if ( !MatchString( element ) )
         {
-            FLOG_ERROR( "DTLTO: expected string element in '%s'", propertyName );
             return false;
         }
         out.Append( element );
@@ -253,7 +229,12 @@ bool DTLTOJsonParser::MatchCommonProp()
         { "inputs", &DTLTOJsonParser::MatchInputsProp },
     };
 
-    return MatchObject( matchers );
+    if ( !MatchObject( matchers ) )
+    {
+        FLOG_ERROR( "DTLTO: failed to read property 'common'" );
+        return false;
+    }
+    return true;
 }
 
 // MatchLinkerOutputProp
@@ -263,7 +244,7 @@ bool DTLTOJsonParser::MatchLinkerOutputProp()
     AStackString<> propVal;
     if ( !MatchString( propVal ) )
     {
-        FLOG_ERROR( "DTLTO: expected string for 'linker_output'" );
+        FLOG_ERROR( "DTLTO: failed to read property 'linker_output'" );
         return false;
     }
 
@@ -271,18 +252,30 @@ bool DTLTOJsonParser::MatchLinkerOutputProp()
     return true;
 }
 
+// MatchStringArrayProp
+//------------------------------------------------------------------------------
+bool DTLTOJsonParser::MatchStringArrayProp( const char * propertyName, Array<AString> & out )
+{
+    if ( !MatchStringArray( out ) )
+    {
+        FLOG_ERROR( "DTLTO: failed to read property '%s'", propertyName );
+        return false;
+    }
+    return true;
+}
+
 // MatchArgsProp
 //------------------------------------------------------------------------------
 bool DTLTOJsonParser::MatchArgsProp()
 {
-    return MatchStringArray( "args", m_Data.m_CommonArgs );
+    return MatchStringArrayProp( "args", m_Data.m_CommonArgs );
 }
 
 // MatchInputsProp
 //------------------------------------------------------------------------------
 bool DTLTOJsonParser::MatchInputsProp()
 {
-    return MatchStringArray( "inputs", m_Data.m_CommonInputs );
+    return MatchStringArrayProp( "inputs", m_Data.m_CommonInputs );
 }
 
 //------------------------------------------------------------------------------
