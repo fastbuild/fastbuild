@@ -30,91 +30,192 @@
       Overview
     </div>
     <div class='newsitembody'>
-<p>A minimal configuration is shown for compiling a simple "Hello World" application on Windows.</p>
-<p>This examples illustrates:
+<p>A minimal configuration for compiling a simple "Hello World" application on Windows.</p>
+<p>The same program is shown built with two common Windows toolchains:</p>
 <ul>
-  <li>Compiling a directory of cpp files</li>
-  <li>Linking those object files into an Executable</li>
-  <li>Linking against the standard libraries</li>
+  <li><b>MSVC</b> - the Microsoft Visual C++ toolchain.</li>
+  <li><b>MinGW-w64</b> - native GCC or Clang, which ship their own headers, import
+      libraries and runtime.</li>
 </ul>
-To make the sample easier to understand, it is more verbose than is required.
-</p>
+<p>Each example illustrates:</p>
+<ul>
+  <li>Declaring a <a href='../functions/compiler.html'>Compiler</a>()</li>
+  <li>Compiling a directory of cpp files with an <a href='../functions/objectlist.html'>ObjectList</a>()</li>
+  <li>Linking the object files into an <a href='../functions/executable.html'>Executable</a>()</li>
+</ul>
+<p>The examples are deliberately explicit; real configurations usually factor shared
+settings into variables to reduce duplication.</p>
+</div>
+
+    <div class='newsitemheader'>Supported compilers on Windows</div>
+    <div class='newsitembody'>
+<p>FASTBuild supports the following compilers on Windows: <b>MSVC</b>, <b>Clang</b>
+(including <code>clang-cl</code>) and <b>GCC</b> - including the GCC and Clang toolchains
+that come with <b>MinGW-w64</b>. The compiler family is normally detected automatically
+from the executable name, and can be set explicitly via
+<a href='../functions/compiler.html'>.CompilerFamily</a> when needed.</p>
+<p><b>Note:</b> the <code>.bff</code> files in the FASTBuild <i>source</i> repository
+configure how FASTBuild builds <i>itself</i> (which uses MSVC on Windows). They do not
+constrain which compiler is used to build other projects - for that, point a
+<code>Compiler()</code> at the toolchain to use, as shown below.</p>
+<p>FASTBuild does not read the <code>CC</code>/<code>CXX</code> environment variables to
+select a compiler; declare a <code>Compiler()</code> explicitly (and <code>#import CXX</code>
+if environment-driven selection is desired).</p>
 </div>
 
     <div class='newsitemheader'>Code (main.cpp)</div>
     <div class='newsitembody'>
-<div class='code'>#include "stdio.h"
+<div class='code'>#include &lt;cstdio&gt;
 
-int main(int, char[])
+int main()
 {
-    printf( "Hello!\n" );
+    std::printf( "Hello!\n" );
     return 0;
 }</div>
 </div>
 
-    <div class='newsitemheader'>Configuration (fbuild.bff)</div>
+    <div class='newsitemheader'>Configuration (fbuild.bff) - MSVC</div>
     <div class='newsitembody'>
-<div class='code'>// HelloWorld
+<p>The paths below are illustrative - adjust <code>.VSBasePath</code>,
+<code>.WindowsSDKBasePath</code> and <code>.WindowsSDKVersion</code> to match your
+installed Visual Studio and Windows SDK.</p>
+<div class='code'>// HelloWorld - MSVC
 //------------------------------------------------------------------------------
 
-// Windows Platform (VS 2013 Compiler, Windows 7.1A SDK)
+// Windows Platform (MSVC compiler + Windows SDK)
 //------------------------------------------------------------------------------
-.VSBasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio 12.0'
-.WindowsSDKBasePath = 'C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A'
+.VSBasePath         = 'C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207'
+.WindowsSDKBasePath = 'C:\Program Files (x86)\Windows Kits\10'
+.WindowsSDKVersion  = '10.0.26100.0'
 
 // Settings
 //------------------------------------------------------------------------------
 Settings
 {
-    .Environment    = { "PATH=$VSBasePath$\Common7\IDE\;$VSBasePath$\VC\bin\",
+    .Environment    = { "PATH=$VSBasePath$\bin\Hostx64\x64",
                         "TMP=C:\Windows\Temp",
                         "SystemRoot=C:\Windows" }
 }
 
-// X86 ToolChain
+// Compiler
 //------------------------------------------------------------------------------
-.Compiler           = '$VSBasePath$\VC\bin\cl.exe'
+Compiler( 'Compiler-MSVC' )
+{
+    .Executable     = '$VSBasePath$\bin\Hostx64\x64\cl.exe'
+}
+
+// ToolChain
+//------------------------------------------------------------------------------
+.Compiler           = 'Compiler-MSVC'
 .CompilerOptions    = '"%1"'           // Input
                     + ' /Fo"%2"'       // Output
-                    + ' /Z7'           // Debug format (in .obj)
                     + ' /c'            // Compile only
+                    + ' /Z7'           // Debug format (in .obj)
                     + ' /nologo'       // No compiler spam
                     + ' /W4'           // Warning level 4
                     + ' /WX'           // Warnings as errors
-.Linker             = '$VSBasePath$\VC\bin\link.exe'
+                    + ' /I"./"'
+                    + ' /I"$VSBasePath$\include"'
+                    + ' /I"$WindowsSDKBasePath$\Include\$WindowsSDKVersion$\ucrt"'
+                    + ' /I"$WindowsSDKBasePath$\Include\$WindowsSDKVersion$\shared"'
+                    + ' /I"$WindowsSDKBasePath$\Include\$WindowsSDKVersion$\um"'
+
+.Linker             = '$VSBasePath$\bin\Hostx64\x64\link.exe'
 .LinkerOptions      = ' /OUT:"%2"'     // Output
                     + ' "%1"'          // Input
                     + ' /WX'           // Warnings as errors
                     + ' /NOLOGO'       // No linker spam
                     + ' /DEBUG'        // Keep debug info when linking
-                    + ' /NODEFAULTLIB' // We'll specify the libs explicitly
-
-// Include paths
-//------------------------------------------------------------------------------
-.BaseIncludePaths   = ' /I"./"'
-                    + ' /I"$VSBasePath$/VC/include/"'
-.CompilerOptions    + .BaseIncludePaths
-
-// Library paths
-//------------------------------------------------------------------------------
-.LibPaths           = ' /LIBPATH:"$WindowsSDKBasePath$\Lib"'
-                    + ' /LIBPATH:"$VSBasePath$\VC\lib"'
-.LinkerOptions      + .LibPaths
+                    + ' /LIBPATH:"$VSBasePath$\lib\x64"'
+                    + ' /LIBPATH:"$WindowsSDKBasePath$\Lib\$WindowsSDKVersion$\ucrt\x64"'
+                    + ' /LIBPATH:"$WindowsSDKBasePath$\Lib\$WindowsSDKVersion$\um\x64"'
 
 // HelloWorld
 //------------------------------------------------------------------------------
-ObjectList( 'HelloWorld-Lib' )
+ObjectList( 'HelloWorld-Obj' )
 {
-    .CompilerInputPath  = '\'
+    .CompilerInputPath  = '.\'
     .CompilerOutputPath = 'Out\'
 }
 
 Executable( 'HelloWorld' )
 {
-    .Libraries          = { "HelloWorld-Lib" }
+    .Libraries          = { 'HelloWorld-Obj' }
     .LinkerOutput       = 'Out\HelloWorld.exe'
-    .LinkerOptions      + ' libcmt.lib'     // Std Lib (Multi-Threaded, Static, Release)
-                        + ' kernel32.lib'   // Kernel functions
+}
+
+// All
+//------------------------------------------------------------------------------
+Alias( 'all' ) { .Targets = { 'HelloWorld' } }
+</div>
+</div>
+
+    <div class='newsitemheader'>Configuration (fbuild.bff) - MinGW-w64 (GCC / Clang)</div>
+    <div class='newsitembody'>
+<p>MinGW-w64 ships its own headers, import libraries and runtime, so <b>no Visual Studio
+or Windows Kits installation is required</b>. Point <code>.MinGWBasePath</code> at the
+root of your MinGW-w64 install (the folder that contains <code>bin\g++.exe</code>). To
+build with Clang instead of GCC, replace <code>g++.exe</code> with <code>clang++.exe</code>.</p>
+<div class='code'>// HelloWorld - MinGW-w64 (GCC / Clang)
+//------------------------------------------------------------------------------
+
+// MinGW-w64 install root (contains bin\g++.exe)
+//------------------------------------------------------------------------------
+.MinGWBasePath      = 'C:\mingw64'
+
+// Settings
+//------------------------------------------------------------------------------
+Settings
+{
+    // The MinGW bin dir must be on PATH so the compiler and the DLLs it depends
+    // on can be found. SystemRoot and TMP are needed by spawned processes.
+    .Environment    = { "PATH=$MinGWBasePath$\bin",
+                        "TMP=C:\Windows\Temp",
+                        "SystemRoot=C:\Windows" }
+}
+
+// Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-MinGW' )
+{
+    .Executable     = '$MinGWBasePath$\bin\g++.exe'    // or clang++.exe
+    // .CompilerFamily is auto-detected from the executable name (here: gcc).
+    // Only set it for a non-standard/wrapper exe name FASTBuild can't detect;
+    // the value is the family, e.g: .CompilerFamily = 'gcc'
+}
+
+// ToolChain
+//------------------------------------------------------------------------------
+.Compiler           = 'Compiler-MinGW'
+.CompilerOptions    = '"%1"'           // Input
+                    + ' -o "%2"'       // Output
+                    + ' -c'            // Compile only
+                    + ' -g'            // Debug info
+                    + ' -Wall'         // Enable warnings
+                    + ' -Werror'       // Warnings as errors
+                    + ' -I./'
+
+// g++ / clang++ act as the linker driver here. FASTBuild only auto-detects a
+// GCC-style linker from an executable named 'gcc'/'gcc.exe', so set .LinkerType
+// explicitly. clang++ is also driven as 'gcc' (there is no separate 'clang' type).
+.Linker             = '$MinGWBasePath$\bin\g++.exe'    // or clang++.exe
+.LinkerType         = 'gcc'
+.LinkerOptions      = ' -o "%2"'       // Output
+                    + ' "%1"'          // Input
+                                       // (MinGW links the standard libraries automatically)
+
+// HelloWorld
+//------------------------------------------------------------------------------
+ObjectList( 'HelloWorld-Obj' )
+{
+    .CompilerInputPath  = '.\'
+    .CompilerOutputPath = 'Out\'
+}
+
+Executable( 'HelloWorld' )
+{
+    .Libraries          = { 'HelloWorld-Obj' }
+    .LinkerOutput       = 'Out\HelloWorld.exe'
 }
 
 // All
