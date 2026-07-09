@@ -213,7 +213,7 @@ bool DTLTOJsonParser::Parse()
 {
     const PropertyMatcher matchers[] = {
         { "common", &DTLTOJsonParser::MatchCommonProp },
-        // TODO: { "jobs", &DTLTOJsonParser::MatchJobsProp },
+        { "jobs", &DTLTOJsonParser::MatchJobsProp },
     };
 
     return MatchObject( matchers );
@@ -276,6 +276,48 @@ bool DTLTOJsonParser::MatchArgsProp()
 bool DTLTOJsonParser::MatchInputsProp()
 {
     return MatchStringArrayProp( "inputs", m_Data.m_CommonInputs );
+}
+
+// MatchJobsProp
+//------------------------------------------------------------------------------
+bool DTLTOJsonParser::MatchJobsProp()
+{
+    const bool ok = MatchArray( [ this ]() -> bool {
+        m_CurrentJob = &m_Data.m_Jobs.EmplaceBack();
+        const PropertyMatcher matchers[] = {
+            { "args", &DTLTOJsonParser::MatchJobArgsProp },
+            { "inputs", &DTLTOJsonParser::MatchJobInputsProp },
+            { "outputs", &DTLTOJsonParser::MatchJobOutputsProp },
+        };
+        return MatchObject( matchers );
+    } );
+    if ( !ok )
+    {
+        FLOG_ERROR( "DTLTO: failed to read property 'jobs'" );
+        return false;
+    }
+    return true;
+}
+
+// MatchJobArgsProp
+//------------------------------------------------------------------------------
+bool DTLTOJsonParser::MatchJobArgsProp()
+{
+    return MatchStringArrayProp( "args", m_CurrentJob->m_Args );
+}
+
+// MatchJobInputsProp
+//------------------------------------------------------------------------------
+bool DTLTOJsonParser::MatchJobInputsProp()
+{
+    return MatchStringArrayProp( "inputs", m_CurrentJob->m_Inputs );
+}
+
+// MatchJobOutputsProp
+//------------------------------------------------------------------------------
+bool DTLTOJsonParser::MatchJobOutputsProp()
+{
+    return MatchStringArrayProp( "outputs", m_CurrentJob->m_Outputs );
 }
 
 //------------------------------------------------------------------------------

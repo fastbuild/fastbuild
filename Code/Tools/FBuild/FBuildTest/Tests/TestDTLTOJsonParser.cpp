@@ -187,3 +187,40 @@ TEST_CASE( TestDTLTOJsonParser, ErrorFailedToReadInputs )
 }
 
 //------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOJsonParser, MatchJobs )
+{
+    AStackString<> json( R"({
+        "jobs": [
+            { "args": [ "a.obj", "-o", "a.o" ], "inputs": [ "a.obj", "a.thinlto.bc" ], "outputs": [ "a.o" ] },
+            { "args": [], "inputs": [ "b.obj" ], "outputs": [ "b.o" ] }
+        ]
+    })" );
+    DTLTOJsonParser parser( json );
+    TEST_ASSERT( parser.Parse() );
+
+    const Array<DTLTOData::Job> & jobs = parser.GetData().m_Jobs;
+    TEST_ASSERT( jobs.GetSize() == 2 );
+
+    TEST_ASSERT( jobs[ 0 ].m_Args.GetSize() == 3 );
+    TEST_ASSERT( jobs[ 0 ].m_Args[ 0 ] == "a.obj" );
+    TEST_ASSERT( jobs[ 0 ].m_Args[ 2 ] == "a.o" );
+    TEST_ASSERT( jobs[ 0 ].m_Inputs.GetSize() == 2 );
+    TEST_ASSERT( jobs[ 0 ].m_Inputs[ 1 ] == "a.thinlto.bc" );
+    TEST_ASSERT( jobs[ 0 ].m_Outputs.GetSize() == 1 );
+    TEST_ASSERT( jobs[ 0 ].m_Outputs[ 0 ] == "a.o" );
+
+    TEST_ASSERT( jobs[ 1 ].m_Args.GetSize() == 0 );
+    TEST_ASSERT( jobs[ 1 ].m_Inputs.GetSize() == 1 );
+    TEST_ASSERT( jobs[ 1 ].m_Outputs[ 0 ] == "b.o" );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOJsonParser, ErrorFailedToReadJobs )
+{
+    AStackString<> json( R"({ "jobs": [ { "outputs": [ 1 ] } ] })" );
+    DTLTOJsonParser parser( json );
+    TEST_ASSERT( parser.Parse() == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: failed to read property 'jobs'" ) );
+}
+
+//------------------------------------------------------------------------------

@@ -48,10 +48,14 @@ private:
     bool MatchLinkerOutputProp();
     bool MatchArgsProp();
     bool MatchInputsProp();
+    bool MatchJobsProp();
+    bool MatchJobArgsProp();
+    bool MatchJobInputsProp();
+    bool MatchJobOutputsProp();
 
     const char * m_Pos = nullptr; // Cursor into the caller-owned buffer
     const char * m_End = nullptr;
-    // DTLTOData::Job * m_CurrentJob = nullptr; // Job being parsed; points into m_Data.m_Jobs
+    DTLTOData::Job * m_CurrentJob = nullptr; // Job being parsed; points into m_Data.m_Jobs
     DTLTOData m_Data;
 };
 
