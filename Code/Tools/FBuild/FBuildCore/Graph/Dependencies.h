@@ -214,17 +214,23 @@ inline void Dependencies::Add( const Dependencies & deps )
 //------------------------------------------------------------------------------
 inline Dependencies & Dependencies::operator=( const Dependencies & other )
 {
-    Clear();
-    Add( other );
+    if ( this != &other ) // Guard against self-assignment (Clear() would wipe the source)
+    {
+        Clear();
+        Add( other );
+    }
     return *this;
 }
 
 //------------------------------------------------------------------------------
 inline Dependencies & Dependencies::operator=( Dependencies && other )
 {
-    Clear();
-    m_DependencyList = other.m_DependencyList;
-    other.m_DependencyList = nullptr;
+    if ( this != &other ) // Guard against self-move (would free our own storage)
+    {
+        Clear();
+        m_DependencyList = other.m_DependencyList;
+        other.m_DependencyList = nullptr;
+    }
     return *this;
 }
 

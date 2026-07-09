@@ -263,6 +263,66 @@ TEST_CASE( TestDependencies, OperatorEquals )
             TEST_ASSERT( d1[ index ].GetNode() == d2[ index ].GetNode() );
         }
     }
+
+    // Self-assignment (copy) must not wipe the list
+    {
+        Node * nodes[] = { (Node *)0x01, (Node *)0x02, (Node *)0x03 };
+        Dependencies d;
+        d.Add( nodes[ 0 ], 0x1111, false );
+        d.Add( nodes[ 1 ], 0x2222, true );
+        d.Add( nodes[ 2 ], 0x3333, false );
+
+        const size_t sizeBefore = d.GetSize();
+        const size_t capacityBefore = d.GetCapacity();
+
+        // Assign to self (via a non-const reference so the compiler doesn't fold it away)
+        PRAGMA_DISABLE_PUSH_MSVC( 26496 ) // 'self' is intentionally non-const as we want that
+        Dependencies & self = d;
+        PRAGMA_DISABLE_POP_MSVC
+        d = self;
+
+        TEST_ASSERT( d.GetSize() == sizeBefore );
+        TEST_ASSERT( d.GetCapacity() == capacityBefore );
+        TEST_ASSERT( d[ 0 ].GetNode() == nodes[ 0 ] );
+        TEST_ASSERT( d[ 1 ].GetNode() == nodes[ 1 ] );
+        TEST_ASSERT( d[ 2 ].GetNode() == nodes[ 2 ] );
+        TEST_ASSERT( d[ 0 ].GetNodeStamp() == 0x1111 );
+        TEST_ASSERT( d[ 1 ].GetNodeStamp() == 0x2222 );
+        TEST_ASSERT( d[ 2 ].GetNodeStamp() == 0x3333 );
+        TEST_ASSERT( d[ 0 ].IsWeak() == false );
+        TEST_ASSERT( d[ 1 ].IsWeak() == true );
+        TEST_ASSERT( d[ 2 ].IsWeak() == false );
+    }
+
+    // Self-assignment (move) must not free our own storage
+    {
+        Node * nodes[] = { (Node *)0x04, (Node *)0x05, (Node *)0x06 };
+        Dependencies d;
+        d.Add( nodes[ 0 ], 0x4444, true );
+        d.Add( nodes[ 1 ], 0x5555, false );
+        d.Add( nodes[ 2 ], 0x6666, true );
+
+        const size_t sizeBefore = d.GetSize();
+        const size_t capacityBefore = d.GetCapacity();
+
+        // Move-assign to self (via a non-const reference so the compiler doesn't fold it away)
+        PRAGMA_DISABLE_PUSH_MSVC( 26496 ) // 'self' is intentionally non-const as we want that
+        Dependencies & self = d;
+        PRAGMA_DISABLE_POP_MSVC
+        d = Move( self );
+
+        TEST_ASSERT( d.GetSize() == sizeBefore );
+        TEST_ASSERT( d.GetCapacity() == capacityBefore );
+        TEST_ASSERT( d[ 0 ].GetNode() == nodes[ 0 ] );
+        TEST_ASSERT( d[ 1 ].GetNode() == nodes[ 1 ] );
+        TEST_ASSERT( d[ 2 ].GetNode() == nodes[ 2 ] );
+        TEST_ASSERT( d[ 0 ].GetNodeStamp() == 0x4444 );
+        TEST_ASSERT( d[ 1 ].GetNodeStamp() == 0x5555 );
+        TEST_ASSERT( d[ 2 ].GetNodeStamp() == 0x6666 );
+        TEST_ASSERT( d[ 0 ].IsWeak() == true );
+        TEST_ASSERT( d[ 1 ].IsWeak() == false );
+        TEST_ASSERT( d[ 2 ].IsWeak() == true );
+    }
 }
 
 //------------------------------------------------------------------------------
