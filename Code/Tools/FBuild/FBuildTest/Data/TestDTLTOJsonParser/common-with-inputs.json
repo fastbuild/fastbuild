@@ -1,0 +1,5 @@
+{
+  "common": {
+    "inputs": [ "app_main.c.obj", "math.c.obj", "path with spaces.obj" ]
+  }
+}

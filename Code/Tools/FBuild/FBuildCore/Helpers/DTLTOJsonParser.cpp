@@ -179,6 +179,58 @@ bool DTLTOJsonParser::MatchObject( const PropertyMatcher ( &matchers )[ NUM_MATC
     }
 }
 
+// MatchArray
+//------------------------------------------------------------------------------
+template <typename ELEMENT_PARSER>
+bool DTLTOJsonParser::MatchArray( ELEMENT_PARSER parseElement )
+{
+    if ( !MatchChar( '[' ) )
+    {
+        FLOG_ERROR( "DTLTO: expected '['" );
+        return false;
+    }
+
+    if ( MatchChar( ']' ) )
+    {
+        return true;
+    }
+
+    for ( ;; )
+    {
+        if ( !parseElement() )
+        {
+            return false;
+        }
+
+        if ( MatchChar( ']' ) )
+        {
+            return true;
+        }
+
+        if ( !MatchChar( ',' ) )
+        {
+            FLOG_ERROR( "DTLTO: expected ',' or ']' in array" );
+            return false;
+        }
+    }
+}
+
+// MatchStringArray
+//------------------------------------------------------------------------------
+bool DTLTOJsonParser::MatchStringArray( const char * propertyName, Array<AString> & out )
+{
+    return MatchArray( [ this, propertyName, &out ]() -> bool {
+        AStackString<> element;
+        if ( !MatchString( element ) )
+        {
+            FLOG_ERROR( "DTLTO: expected string element in '%s'", propertyName );
+            return false;
+        }
+        out.Append( element );
+        return true;
+    } );
+}
+
 // Parse
 //------------------------------------------------------------------------------
 bool DTLTOJsonParser::Parse()
@@ -197,8 +249,8 @@ bool DTLTOJsonParser::MatchCommonProp()
 {
     const PropertyMatcher matchers[] = {
         { "linker_output", &DTLTOJsonParser::MatchLinkerOutputProp },
-        // TODO: { "args", &DTLTOJsonParser::MatchArgsProp },
-        // TODO: { "inputs", &DTLTOJsonParser::MatchInputsProp },
+        { "args", &DTLTOJsonParser::MatchArgsProp },
+        { "inputs", &DTLTOJsonParser::MatchInputsProp },
     };
 
     return MatchObject( matchers );
@@ -217,6 +269,20 @@ bool DTLTOJsonParser::MatchLinkerOutputProp()
 
     m_Data.m_LinkerOutput = propVal;
     return true;
+}
+
+// MatchArgsProp
+//------------------------------------------------------------------------------
+bool DTLTOJsonParser::MatchArgsProp()
+{
+    return MatchStringArray( "args", m_Data.m_CommonArgs );
+}
+
+// MatchInputsProp
+//------------------------------------------------------------------------------
+bool DTLTOJsonParser::MatchInputsProp()
+{
+    return MatchStringArray( "inputs", m_Data.m_CommonInputs );
 }
 
 //------------------------------------------------------------------------------

@@ -39,10 +39,15 @@ private:
     bool MatchString( AString & outString );
     template <size_t NUM_MATCHERS>
     bool MatchObject( const PropertyMatcher ( &matchers )[ NUM_MATCHERS ] );
+    template <typename ELEMENT_PARSER>
+    bool MatchArray( ELEMENT_PARSER parseElement );
+    bool MatchStringArray( const char * propertyName, Array<AString> & out );
 
     // DTLTO specific matchers
     bool MatchCommonProp();
     bool MatchLinkerOutputProp();
+    bool MatchArgsProp();
+    bool MatchInputsProp();
 
     AString m_FileName;
     AString m_Buffer;   // Raw file contents; m_Pos/m_End index into this
